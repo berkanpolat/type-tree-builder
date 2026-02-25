@@ -121,6 +121,90 @@ export type Database = {
         }
         Relationships: []
       }
+      firmalar: {
+        Row: {
+          created_at: string
+          firma_tipi_id: string
+          firma_turu_id: string
+          firma_unvani: string
+          id: string
+          updated_at: string
+          user_id: string
+          vergi_dairesi: string
+          vergi_numarasi: string
+        }
+        Insert: {
+          created_at?: string
+          firma_tipi_id: string
+          firma_turu_id: string
+          firma_unvani: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          vergi_dairesi: string
+          vergi_numarasi: string
+        }
+        Update: {
+          created_at?: string
+          firma_tipi_id?: string
+          firma_turu_id?: string
+          firma_unvani?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          vergi_dairesi?: string
+          vergi_numarasi?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firmalar_firma_tipi_id_fkey"
+            columns: ["firma_tipi_id"]
+            isOneToOne: false
+            referencedRelation: "firma_tipleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firmalar_firma_turu_id_fkey"
+            columns: ["firma_turu_id"]
+            isOneToOne: false
+            referencedRelation: "firma_turleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          ad: string
+          created_at: string
+          id: string
+          iletisim_email: string
+          iletisim_numarasi: string | null
+          soyad: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad: string
+          created_at?: string
+          id?: string
+          iletisim_email: string
+          iletisim_numarasi?: string | null
+          soyad: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad?: string
+          created_at?: string
+          id?: string
+          iletisim_email?: string
+          iletisim_numarasi?: string | null
+          soyad?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
