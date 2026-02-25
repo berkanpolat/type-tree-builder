@@ -112,6 +112,13 @@ const Index = () => {
     "Makine Kategorisi",
     "Teknoloji ve Yazılım Kategorisi",
     "Sertifika Kategorisi",
+    "Ana Hizmet Kategorileri",
+    "KDV Durumu",
+    "Ödeme Seçenekleri",
+    "Ödeme Vadeleri",
+    "Kargo Masrafı Ödemesi",
+    "Kargo Şirketi Anlaşması",
+    "Birim Türleri",
   ];
 
   const sortedKategoriler = kategoriler
