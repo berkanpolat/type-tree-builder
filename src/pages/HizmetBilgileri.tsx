@@ -18,7 +18,12 @@ const KATEGORI_SIRASI = [
   "Kargo Masrafı Ödemesi",
   "Kargo Şirketi Anlaşması",
   "Birim Türleri",
+  "İl",
 ];
+
+const ALT_LABEL_MAP: Record<string, string> = {
+  "İl": "İlçe",
+};
 
 const HizmetBilgileri = () => {
   const [selections, setSelections] = useState<Record<string, string>>({});
@@ -102,7 +107,7 @@ const HizmetBilgileri = () => {
               {altSecenekler.length > 0 && (
                 <div className="ml-4 space-y-2">
                   <Label className="text-sm text-muted-foreground">
-                    {secenekler.find((s) => s.id === selectedId)?.name} Türleri
+                    {ALT_LABEL_MAP[kat.name] || `${secenekler.find((s) => s.id === selectedId)?.name} Türleri`}
                   </Label>
                   <Select
                     value={subSelections[kat.id] || ""}
