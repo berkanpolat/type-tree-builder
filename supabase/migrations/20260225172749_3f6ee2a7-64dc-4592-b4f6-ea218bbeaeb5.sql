@@ -1,0 +1,1 @@
+ALTER TABLE public.firma_bilgi_kategorileri ADD COLUMN format text NOT NULL DEFAULT 'text';
