@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      firma_bilgi_kategorileri: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      firma_bilgi_secenekleri: {
+        Row: {
+          created_at: string
+          id: string
+          kategori_id: string
+          name: string
+          parent_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kategori_id: string
+          name: string
+          parent_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kategori_id?: string
+          name?: string
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_bilgi_secenekleri_kategori_id_fkey"
+            columns: ["kategori_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_kategorileri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_bilgi_secenekleri_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firma_tipleri: {
         Row: {
           created_at: string
