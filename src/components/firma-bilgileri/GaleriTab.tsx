@@ -121,7 +121,7 @@ export default function GaleriTab({ userId }: GaleriTabProps) {
 
       {fotolar.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground border-2 border-dashed border-border rounded-lg">
-          <Image className="w-12 h-12 mb-3 opacity-40" />
+          <ImageIcon className="w-12 h-12 mb-3 opacity-40" />
           <p className="text-sm">Henüz fotoğraf eklenmemiş</p>
           <p className="text-xs mt-1">Yukarıdaki butonu kullanarak fotoğraf yükleyebilirsiniz</p>
         </div>
