@@ -677,6 +677,82 @@ export type Database = {
           },
         ]
       }
+      ihale_filtreler: {
+        Row: {
+          created_at: string
+          filtre_tipi: string
+          id: string
+          ihale_id: string
+          secenek_id: string
+        }
+        Insert: {
+          created_at?: string
+          filtre_tipi: string
+          id?: string
+          ihale_id: string
+          secenek_id: string
+        }
+        Update: {
+          created_at?: string
+          filtre_tipi?: string
+          id?: string
+          ihale_id?: string
+          secenek_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ihale_filtreler_ihale_id_fkey"
+            columns: ["ihale_id"]
+            isOneToOne: false
+            referencedRelation: "ihaleler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ihale_stok: {
+        Row: {
+          created_at: string
+          id: string
+          ihale_id: string
+          miktar_tipi: string
+          stok_sayisi: number
+          varyant_1_label: string
+          varyant_1_value: string
+          varyant_2_label: string | null
+          varyant_2_value: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ihale_id: string
+          miktar_tipi?: string
+          stok_sayisi?: number
+          varyant_1_label: string
+          varyant_1_value: string
+          varyant_2_label?: string | null
+          varyant_2_value?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ihale_id?: string
+          miktar_tipi?: string
+          stok_sayisi?: number
+          varyant_1_label?: string
+          varyant_1_value?: string
+          varyant_2_label?: string | null
+          varyant_2_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ihale_stok_ihale_id_fkey"
+            columns: ["ihale_id"]
+            isOneToOne: false
+            referencedRelation: "ihaleler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ihale_teklifler: {
         Row: {
           created_at: string
@@ -711,45 +787,108 @@ export type Database = {
       }
       ihaleler: {
         Row: {
+          aciklama: string | null
+          baslangic_fiyati: number | null
           baslangic_tarihi: string | null
           baslik: string
           bitis_tarihi: string | null
           created_at: string
           durum: string
+          ek_dosya_url: string | null
+          firma_adi_gizle: boolean | null
           foto_url: string | null
           goruntuleme_sayisi: number
+          hizmet_kategori_id: string | null
+          hizmet_tur_id: string | null
           id: string
           ihale_no: string
+          ihale_turu: string
+          kargo_masrafi: string | null
+          kargo_sirketi_anlasmasi: string | null
+          kdv_durumu: string | null
+          min_teklif_degisim: number | null
+          odeme_secenekleri: string | null
+          odeme_vadesi: string | null
+          ozel_filtreleme: boolean | null
+          para_birimi: string | null
           teklif_usulu: string
+          teknik_detaylar: Json | null
+          teslimat_tarihi: string | null
+          teslimat_yeri: string | null
           updated_at: string
+          urun_grup_id: string | null
+          urun_kategori_id: string | null
+          urun_tur_id: string | null
           user_id: string
         }
         Insert: {
+          aciklama?: string | null
+          baslangic_fiyati?: number | null
           baslangic_tarihi?: string | null
           baslik: string
           bitis_tarihi?: string | null
           created_at?: string
           durum?: string
+          ek_dosya_url?: string | null
+          firma_adi_gizle?: boolean | null
           foto_url?: string | null
           goruntuleme_sayisi?: number
+          hizmet_kategori_id?: string | null
+          hizmet_tur_id?: string | null
           id?: string
           ihale_no: string
+          ihale_turu?: string
+          kargo_masrafi?: string | null
+          kargo_sirketi_anlasmasi?: string | null
+          kdv_durumu?: string | null
+          min_teklif_degisim?: number | null
+          odeme_secenekleri?: string | null
+          odeme_vadesi?: string | null
+          ozel_filtreleme?: boolean | null
+          para_birimi?: string | null
           teklif_usulu?: string
+          teknik_detaylar?: Json | null
+          teslimat_tarihi?: string | null
+          teslimat_yeri?: string | null
           updated_at?: string
+          urun_grup_id?: string | null
+          urun_kategori_id?: string | null
+          urun_tur_id?: string | null
           user_id: string
         }
         Update: {
+          aciklama?: string | null
+          baslangic_fiyati?: number | null
           baslangic_tarihi?: string | null
           baslik?: string
           bitis_tarihi?: string | null
           created_at?: string
           durum?: string
+          ek_dosya_url?: string | null
+          firma_adi_gizle?: boolean | null
           foto_url?: string | null
           goruntuleme_sayisi?: number
+          hizmet_kategori_id?: string | null
+          hizmet_tur_id?: string | null
           id?: string
           ihale_no?: string
+          ihale_turu?: string
+          kargo_masrafi?: string | null
+          kargo_sirketi_anlasmasi?: string | null
+          kdv_durumu?: string | null
+          min_teklif_degisim?: number | null
+          odeme_secenekleri?: string | null
+          odeme_vadesi?: string | null
+          ozel_filtreleme?: boolean | null
+          para_birimi?: string | null
           teklif_usulu?: string
+          teknik_detaylar?: Json | null
+          teslimat_tarihi?: string | null
+          teslimat_yeri?: string | null
           updated_at?: string
+          urun_grup_id?: string | null
+          urun_kategori_id?: string | null
+          urun_tur_id?: string | null
           user_id?: string
         }
         Relationships: []
