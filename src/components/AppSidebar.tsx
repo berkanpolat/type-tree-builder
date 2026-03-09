@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import logoImg from "@/assets/tekstil-as-logo.png";
 import {
   Home,
   Building2,
@@ -80,13 +81,12 @@ export function AppSidebar() {
 
       {/* Logo */}
       <div className="px-4 pt-2 pb-3 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center">
-          <span className="text-primary-foreground text-xs font-bold">T</span>
-        </div>
-        {!collapsed && (
-          <span className="text-base font-bold text-foreground">
-            Tekstil A.Ş.
-          </span>
+        {!collapsed ? (
+          <img src={logoImg} alt="Tekstil A.Ş." className="h-8 object-contain" />
+        ) : (
+          <div className="w-7 h-7 rounded-full overflow-hidden">
+            <img src={logoImg} alt="Tekstil A.Ş." className="h-full object-contain" />
+          </div>
         )}
       </div>
 
