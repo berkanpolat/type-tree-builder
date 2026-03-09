@@ -107,7 +107,7 @@ export default function GaleriTab({ userId }: GaleriTabProps) {
     <div className="bg-card border border-border rounded-xl p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Image className="w-5 h-5 text-primary" />
+          <ImageIcon className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-bold text-foreground">Galeri</h2>
         </div>
         <label className="cursor-pointer">
