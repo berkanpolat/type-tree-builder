@@ -11,7 +11,6 @@ interface Props {
   updateForm: (u: Partial<IhaleFormData>) => void;
 }
 
-// Helper to get category name from ID
 function useCategoryName(id: string) {
   return useQuery({
     queryKey: ["secenek_name", id],
@@ -36,7 +35,6 @@ function useKategoriSecenekler(kategoriName: string) {
   });
 }
 
-// Dropdown field component
 function DropdownField({ label, kategoriName, value, onChange }: { label: string; kategoriName: string; value: string; onChange: (v: string) => void }) {
   const { data: options } = useKategoriSecenekler(kategoriName);
   return (
@@ -61,6 +59,74 @@ function TextField({ label, value, onChange, placeholder }: { label: string; val
   );
 }
 
+// Kategori seçimi component for hizmet teknik detaylarında ürün kategori/grup/tür seçimi
+function UrunKategoriSecimi({ label, td, setTD, prefixKey }: { label: string; td: Record<string, any>; setTD: (k: string, v: any) => void; prefixKey: string }) {
+  const { data: kategoriler } = useQuery({
+    queryKey: ["teknik_urun_kategoriler"],
+    queryFn: async () => {
+      const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "Ana Ürün Kategorileri").single();
+      if (!kat) return [];
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("kategori_id", kat.id).is("parent_id", null).order("name");
+      return data || [];
+    },
+  });
+
+  const selectedKat = td[`${prefixKey}_kategori`];
+  const { data: gruplar } = useQuery({
+    queryKey: ["teknik_urun_gruplar", selectedKat],
+    queryFn: async () => {
+      if (!selectedKat) return [];
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", selectedKat).order("name");
+      return data || [];
+    },
+    enabled: !!selectedKat,
+  });
+
+  const selectedGrup = td[`${prefixKey}_grup`];
+  const { data: turler } = useQuery({
+    queryKey: ["teknik_urun_turler", selectedGrup],
+    queryFn: async () => {
+      if (!selectedGrup) return [];
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", selectedGrup).order("name");
+      return data || [];
+    },
+    enabled: !!selectedGrup,
+  });
+
+  return (
+    <div className="space-y-3 border rounded-lg p-3">
+      <Label className="text-sm font-medium">{label}</Label>
+      <div className="space-y-2">
+        <Label className="text-xs">Ana Kategori</Label>
+        <Select value={selectedKat || ""} onValueChange={(v) => { setTD(`${prefixKey}_kategori`, v); setTD(`${prefixKey}_grup`, ""); setTD(`${prefixKey}_tur`, ""); }}>
+          <SelectTrigger><SelectValue placeholder="Kategori seçiniz" /></SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            {(kategoriler || []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs">Grup</Label>
+        <Select value={selectedGrup || ""} onValueChange={(v) => { setTD(`${prefixKey}_grup`, v); setTD(`${prefixKey}_tur`, ""); }} disabled={!selectedKat}>
+          <SelectTrigger><SelectValue placeholder="Grup seçiniz" /></SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            {(gruplar || []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs">Tür</Label>
+        <Select value={td[`${prefixKey}_tur`] || ""} onValueChange={(v) => setTD(`${prefixKey}_tur`, v)} disabled={!selectedGrup}>
+          <SelectTrigger><SelectValue placeholder="Tür seçiniz" /></SelectTrigger>
+          <SelectContent className="bg-popover z-50">
+            {(turler || []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+    </div>
+  );
+}
+
 export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
   const { data: kategoriName } = useCategoryName(formData.urun_kategori_id || formData.hizmet_kategori_id);
   const { data: grupName } = useCategoryName(formData.urun_grup_id || formData.hizmet_tur_id);
@@ -72,7 +138,6 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
 
   const isHizmet = formData.ihale_turu === "hizmet_alim";
 
-  // Determine which fields to show based on category
   const renderUrunFields = () => {
     const cat = kategoriName?.toLowerCase() || "";
 
@@ -165,7 +230,6 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
     }
 
     if (cat.includes("makine") || cat.includes("yedek parça")) {
-      // Generate year options
       const years = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
       return (
         <>
@@ -197,6 +261,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
     if (hizmetName.includes("ürün hizmeti") || hizmetName.includes("üretim hizmeti")) {
       return (
         <>
+          <UrunKategoriSecimi label="Ürün Kategorisi / Grubu / Türü" td={td} setTD={setTD} prefixKey="hizmet_urun" />
           <DropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={td.kumas_grubu} onChange={(v) => setTD("kumas_grubu", v)} />
           <DropdownField label="Kumaş Türü" kategoriName="Kumaş Türü" value={td.kumas_turu} onChange={(v) => setTD("kumas_turu", v)} />
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
@@ -209,9 +274,10 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
     if (hizmetName.includes("teknik") || hizmetName.includes("tasarım")) {
       return (
         <>
-          <TextField label="Tasarım Türü" value={td.tasarim_turu} onChange={(v) => setTD("tasarim_turu", v)} />
-          <TextField label="Dosya Teslim Formatı" value={td.dosya_format} onChange={(v) => setTD("dosya_format", v)} />
-          <TextField label="Revizyon Hakkı" value={td.revizyon_hakki} onChange={(v) => setTD("revizyon_hakki", v)} />
+          <UrunKategoriSecimi label="Hedef Ürün Grubu" td={td} setTD={setTD} prefixKey="hedef_urun" />
+          <DropdownField label="Tasarım Türü" kategoriName="Tasarım Türü" value={td.tasarim_turu} onChange={(v) => setTD("tasarim_turu", v)} />
+          <DropdownField label="Dosya Teslim Formatı" kategoriName="Dosya Teslim Formatı" value={td.dosya_format} onChange={(v) => setTD("dosya_format", v)} />
+          <DropdownField label="Revizyon Hakkı" kategoriName="Revizyon Hakkı" value={td.revizyon_hakki} onChange={(v) => setTD("revizyon_hakki", v)} />
           <DropdownField label="Kalıp" kategoriName="Kalıp" value={td.kalip} onChange={(v) => setTD("kalip", v)} />
         </>
       );
@@ -220,9 +286,10 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
     if (hizmetName.includes("mümessil") || hizmetName.includes("sipariş")) {
       return (
         <>
-          <TextField label="Hedeflenen Pazar" value={td.hedeflenen_pazar} onChange={(v) => setTD("hedeflenen_pazar", v)} />
-          <TextField label="Sipariş Türü" value={td.siparis_turu} onChange={(v) => setTD("siparis_turu", v)} />
-          <TextField label="Ürün Segmenti" value={td.urun_segmenti} onChange={(v) => setTD("urun_segmenti", v)} />
+          <DropdownField label="Hedeflenen Pazar" kategoriName="Hedeflenen Pazarlar" value={td.hedeflenen_pazar} onChange={(v) => setTD("hedeflenen_pazar", v)} />
+          <DropdownField label="Sipariş Türü" kategoriName="Sipariş Türü" value={td.siparis_turu} onChange={(v) => setTD("siparis_turu", v)} />
+          <UrunKategoriSecimi label="Ürün Kategorisi / Grubu / Türü" td={td} setTD={setTD} prefixKey="mumessil_urun" />
+          <DropdownField label="Ürün Segmenti" kategoriName="Ürün Segmenti" value={td.urun_segmenti} onChange={(v) => setTD("urun_segmenti", v)} />
         </>
       );
     }

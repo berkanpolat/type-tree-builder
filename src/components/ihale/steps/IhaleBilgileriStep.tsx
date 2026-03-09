@@ -19,15 +19,31 @@ interface Props {
 }
 
 const PARA_BIRIMLERI = ["TRY", "USD", "EUR", "GBP"];
-const KDV_DURUMLARI = ["KDV Dahil", "KDV Hariç"];
-const ODEME_SECENEKLERI = ["Peşin", "Vadeli", "Peşin + Vadeli"];
-const ODEME_VADELERI = ["30 Gün", "60 Gün", "90 Gün", "120 Gün", "180 Gün"];
-const KARGO_MASRAFI = ["Alıcı Öder", "Satıcı Öder", "Karşılıklı Anlaşma"];
-const KARGO_SIRKETI = ["Evet, Anlaşma Var", "Hayır, Anlaşma Yok"];
+
+function useKategoriSecenekler(kategoriName: string, enabled = true) {
+  return useQuery({
+    queryKey: ["ihale_bilgi_secenekler", kategoriName],
+    queryFn: async () => {
+      const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", kategoriName).single();
+      if (!kat) return [];
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("kategori_id", kat.id).is("parent_id", null).order("name");
+      return data || [];
+    },
+    enabled,
+  });
+}
 
 export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Props) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+
+  // DB-sourced dropdown options
+  const { data: kdvOptions } = useKategoriSecenekler("KDV Durumu");
+  const { data: odemeSecenekleriOptions } = useKategoriSecenekler("Ödeme Seçenekleri");
+  const { data: odemeVadesiOptions } = useKategoriSecenekler("Ödeme Vadeleri");
+  const { data: kargoMasrafiOptions } = useKategoriSecenekler("Kargo Masrafı Ödemesi");
+  const { data: kargoSirketiOptions } = useKategoriSecenekler("Kargo Şirketi Anlaşması");
+  const { data: teslimatYeriOptions } = useKategoriSecenekler("Teslimat Yeri");
 
   // Fetch firma türleri, tipleri, ölçekleri for filtering
   const { data: firmaTurleri } = useQuery({
@@ -48,38 +64,9 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
     enabled: formData.ozel_filtreleme,
   });
 
-  const { data: firmaOlcekleri } = useQuery({
-    queryKey: ["firma_olcekleri_filter"],
-    queryFn: async () => {
-      const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "Firma Ölçeği").single();
-      if (!kat) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("kategori_id", kat.id).is("parent_id", null).order("name");
-      return data || [];
-    },
-    enabled: formData.ozel_filtreleme,
-  });
-
-  const { data: sertifikalar } = useQuery({
-    queryKey: ["sertifikalar_filter"],
-    queryFn: async () => {
-      const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "Sertifika Kategorileri").single();
-      if (!kat) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("kategori_id", kat.id).is("parent_id", null).order("name");
-      return data || [];
-    },
-    enabled: formData.ozel_filtreleme,
-  });
-
-  const { data: iller } = useQuery({
-    queryKey: ["iller_filter"],
-    queryFn: async () => {
-      const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "İl").single();
-      if (!kat) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("kategori_id", kat.id).is("parent_id", null).order("name");
-      return data || [];
-    },
-    enabled: formData.ozel_filtreleme,
-  });
+  const { data: firmaOlcekleri } = useKategoriSecenekler("Firma Ölçeği", formData.ozel_filtreleme);
+  const { data: sertifikalar } = useKategoriSecenekler("Sertifika Kategorileri", formData.ozel_filtreleme);
+  const { data: iller } = useKategoriSecenekler("İl", formData.ozel_filtreleme);
 
   const addFilter = (filtre_tipi: string, secenek_id: string) => {
     if (formData.filtreler.some((f) => f.filtre_tipi === filtre_tipi && f.secenek_id === secenek_id)) return;
@@ -149,7 +136,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
             <Input type="number" value={formData.baslangic_fiyati ?? ""} onChange={(e) => updateForm({ baslangic_fiyati: e.target.value ? Number(e.target.value) : null })} placeholder="0.00" min={0} />
           </div>
           <div className="space-y-2">
-            <Label>Para Birimi *</Label>
+            <Label>Para Birimi</Label>
             <Select value={formData.para_birimi} onValueChange={(v) => updateForm({ para_birimi: v })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent className="bg-popover z-50">
@@ -172,7 +159,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
             <Select value={formData.kdv_durumu} onValueChange={(v) => updateForm({ kdv_durumu: v })}>
               <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
               <SelectContent className="bg-popover z-50">
-                {KDV_DURUMLARI.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}
+                {(kdvOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -181,7 +168,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
             <Select value={formData.odeme_secenekleri} onValueChange={(v) => updateForm({ odeme_secenekleri: v })}>
               <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
               <SelectContent className="bg-popover z-50">
-                {ODEME_SECENEKLERI.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                {(odemeSecenekleriOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -193,16 +180,16 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
             <Select value={formData.odeme_vadesi} onValueChange={(v) => updateForm({ odeme_vadesi: v })}>
               <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
               <SelectContent className="bg-popover z-50">
-                {ODEME_VADELERI.map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                {(odemeVadesiOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Kargo Masrafı Ödemesi</Label>
+            <Label>Kargo Masrafı Ödemesi *</Label>
             <Select value={formData.kargo_masrafi} onValueChange={(v) => updateForm({ kargo_masrafi: v })}>
               <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
               <SelectContent className="bg-popover z-50">
-                {KARGO_MASRAFI.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}
+                {(kargoMasrafiOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -210,17 +197,22 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Kargo Şirketi Anlaşması</Label>
+            <Label>Kargo Şirketi Anlaşması *</Label>
             <Select value={formData.kargo_sirketi_anlasmasi} onValueChange={(v) => updateForm({ kargo_sirketi_anlasmasi: v })}>
               <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
               <SelectContent className="bg-popover z-50">
-                {KARGO_SIRKETI.map((k) => <SelectItem key={k} value={k}>{k}</SelectItem>)}
+                {(kargoSirketiOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
             <Label>Teslimat Yeri</Label>
-            <Input value={formData.teslimat_yeri} onChange={(e) => updateForm({ teslimat_yeri: e.target.value })} placeholder="Teslimat yeri" />
+            <Select value={formData.teslimat_yeri} onValueChange={(v) => updateForm({ teslimat_yeri: v })}>
+              <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                {(teslimatYeriOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 

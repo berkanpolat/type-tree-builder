@@ -43,7 +43,7 @@ export default function StokStep({ formData, updateForm }: Props) {
   const isHazirGiyim = kategoriName?.toLowerCase().includes("hazır giyim");
 
   const varyant1Label = isHazirGiyim ? "Beden" : "Birim";
-  const varyant1KategoriName = isHazirGiyim ? "Beden" : "Beden"; // Adjust if needed
+  const varyant1KategoriName = isHazirGiyim ? "Beden" : "Birim Türleri";
   const varyant2Label = "Renk";
 
   const { data: varyant1Options } = useKategoriSecenekler(varyant1KategoriName);
