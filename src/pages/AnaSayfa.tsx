@@ -218,7 +218,7 @@ export default function AnaSayfa() {
     setUrunLoading(true);
     let query = supabase
       .from("urunler")
-      .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, urun_kategori_id, urun_grup_id, urun_tur_id, min_siparis_miktari")
+      .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, urun_kategori_id, urun_grup_id, urun_tur_id, min_siparis_miktari, user_id")
       .eq("durum", "aktif")
       .order("created_at", { ascending: false })
       .limit(50);
@@ -245,30 +245,79 @@ export default function AnaSayfa() {
     }
 
     const { data } = await query;
-    if (data) {
-      setUrunler(data);
-      // Resolve names
-      const ids = new Set<string>();
+    if (data && data.length > 0) {
+      // Resolve category names
+      const catIds = new Set<string>();
       data.forEach((u) => {
-        if (u.urun_kategori_id) ids.add(u.urun_kategori_id);
-        if (u.urun_grup_id) ids.add(u.urun_grup_id);
+        if (u.urun_kategori_id) catIds.add(u.urun_kategori_id);
+        if (u.urun_grup_id) catIds.add(u.urun_grup_id);
       });
-      if (ids.size > 0) {
+      if (catIds.size > 0) {
         const { data: names } = await supabase
           .from("firma_bilgi_secenekleri")
           .select("id, name")
-          .in("id", Array.from(ids));
+          .in("id", Array.from(catIds));
         if (names) {
           const map: Record<string, string> = { ...secenekMap };
-          names.forEach((n) => {
-            map[n.id] = n.name;
-          });
+          names.forEach((n) => { map[n.id] = n.name; });
           setSecenekMap(map);
         }
       }
+
+      // Fetch firma info for product owners
+      const userIds = [...new Set(data.map((u) => u.user_id))];
+      const { data: firmalarData } = await supabase
+        .from("firmalar")
+        .select("user_id, firma_unvani, logo_url")
+        .in("user_id", userIds);
+      const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
+      firmalarData?.forEach((f) => { firmaMap[f.user_id] = f; });
+
+      // Fetch variant price ranges for varyasyonlu products
+      const varyasyonluIds = data.filter((u) => u.fiyat_tipi === "varyasyonlu").map((u) => u.id);
+      const varyantMap: Record<string, { min: number; max: number }> = {};
+      if (varyasyonluIds.length > 0) {
+        const { data: varyantlar } = await supabase
+          .from("urun_varyasyonlar")
+          .select("urun_id, birim_fiyat")
+          .in("urun_id", varyasyonluIds);
+        if (varyantlar) {
+          varyantlar.forEach((v) => {
+            if (!varyantMap[v.urun_id]) {
+              varyantMap[v.urun_id] = { min: v.birim_fiyat, max: v.birim_fiyat };
+            } else {
+              if (v.birim_fiyat < varyantMap[v.urun_id].min) varyantMap[v.urun_id].min = v.birim_fiyat;
+              if (v.birim_fiyat > varyantMap[v.urun_id].max) varyantMap[v.urun_id].max = v.birim_fiyat;
+            }
+          });
+        }
+      }
+
+      // Fetch favorites
+      let favSet = new Set<string>();
+      if (currentUserId) {
+        const { data: favs } = await supabase
+          .from("urun_favoriler")
+          .select("urun_id")
+          .eq("user_id", currentUserId);
+        if (favs) favs.forEach((f) => favSet.add(f.urun_id));
+      }
+
+      // Enrich products
+      const enriched: UrunWithExtra[] = data.map((u) => ({
+        ...u,
+        firma_unvani: firmaMap[u.user_id]?.firma_unvani,
+        firma_logo_url: firmaMap[u.user_id]?.logo_url,
+        min_varyant_fiyat: varyantMap[u.id]?.min ?? null,
+        max_varyant_fiyat: varyantMap[u.id]?.max ?? null,
+        is_favorited: favSet.has(u.id),
+      }));
+      setUrunler(enriched);
+    } else {
+      setUrunler([]);
     }
     setUrunLoading(false);
-  }, [activeFilter, selectedKategori, kategoriSecenekler, activeTab]);
+  }, [activeFilter, selectedKategori, kategoriSecenekler, activeTab, currentUserId]);
 
   // Fetch companies
   const fetchFirmalar = useCallback(async () => {
