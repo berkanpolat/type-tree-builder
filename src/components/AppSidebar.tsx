@@ -71,11 +71,11 @@ export function AppSidebar() {
       {/* User email dropdown area */}
       {!collapsed && (
         <div className="px-4 pt-3 pb-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground border border-border rounded-md px-2 py-1.5">
+          <div className="flex items-center gap-1 text-xs text-sidebar-foreground/60 border border-sidebar-border rounded-md px-2 py-1.5">
             <span className="truncate flex-1">{userEmail || "..."}</span>
             <ChevronDown className="w-3 h-3 shrink-0" />
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1 px-0.5 truncate">{userEmail}</p>
+          <p className="text-[10px] text-sidebar-foreground/50 mt-1 px-0.5 truncate">{userEmail}</p>
         </div>
       )}
 
