@@ -121,8 +121,56 @@ export type Database = {
         }
         Relationships: []
       }
+      firma_urun_hizmet_secimler: {
+        Row: {
+          created_at: string
+          firma_id: string
+          id: string
+          kategori_id: string
+          secenek_id: string
+        }
+        Insert: {
+          created_at?: string
+          firma_id: string
+          id?: string
+          kategori_id: string
+          secenek_id: string
+        }
+        Update: {
+          created_at?: string
+          firma_id?: string
+          id?: string
+          kategori_id?: string
+          secenek_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_urun_hizmet_secimler_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_urun_hizmet_secimler_kategori_id_fkey"
+            columns: ["kategori_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_kategorileri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_urun_hizmet_secimler_secenek_id_fkey"
+            columns: ["secenek_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firmalar: {
         Row: {
+          aylik_uretim_kapasitesi: number | null
+          bagimsiz_denetim_id: string | null
           created_at: string
           facebook: string | null
           firma_hakkinda: string | null
@@ -132,6 +180,7 @@ export type Database = {
           firma_tipi_id: string
           firma_turu_id: string
           firma_unvani: string
+          hizli_numune_id: string | null
           id: string
           instagram: string | null
           kapak_fotografi_url: string | null
@@ -140,8 +189,10 @@ export type Database = {
           kurulus_tarihi: string | null
           linkedin: string | null
           logo_url: string | null
+          moq: number | null
           tiktok: string | null
           updated_at: string
+          uretim_vardiyasi_id: string | null
           user_id: string
           vergi_dairesi: string
           vergi_numarasi: string
@@ -149,6 +200,8 @@ export type Database = {
           x_twitter: string | null
         }
         Insert: {
+          aylik_uretim_kapasitesi?: number | null
+          bagimsiz_denetim_id?: string | null
           created_at?: string
           facebook?: string | null
           firma_hakkinda?: string | null
@@ -158,6 +211,7 @@ export type Database = {
           firma_tipi_id: string
           firma_turu_id: string
           firma_unvani: string
+          hizli_numune_id?: string | null
           id?: string
           instagram?: string | null
           kapak_fotografi_url?: string | null
@@ -166,8 +220,10 @@ export type Database = {
           kurulus_tarihi?: string | null
           linkedin?: string | null
           logo_url?: string | null
+          moq?: number | null
           tiktok?: string | null
           updated_at?: string
+          uretim_vardiyasi_id?: string | null
           user_id: string
           vergi_dairesi: string
           vergi_numarasi: string
@@ -175,6 +231,8 @@ export type Database = {
           x_twitter?: string | null
         }
         Update: {
+          aylik_uretim_kapasitesi?: number | null
+          bagimsiz_denetim_id?: string | null
           created_at?: string
           facebook?: string | null
           firma_hakkinda?: string | null
@@ -184,6 +242,7 @@ export type Database = {
           firma_tipi_id?: string
           firma_turu_id?: string
           firma_unvani?: string
+          hizli_numune_id?: string | null
           id?: string
           instagram?: string | null
           kapak_fotografi_url?: string | null
@@ -192,8 +251,10 @@ export type Database = {
           kurulus_tarihi?: string | null
           linkedin?: string | null
           logo_url?: string | null
+          moq?: number | null
           tiktok?: string | null
           updated_at?: string
+          uretim_vardiyasi_id?: string | null
           user_id?: string
           vergi_dairesi?: string
           vergi_numarasi?: string
@@ -201,6 +262,13 @@ export type Database = {
           x_twitter?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "firmalar_bagimsiz_denetim_id_fkey"
+            columns: ["bagimsiz_denetim_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "firmalar_firma_olcegi_id_fkey"
             columns: ["firma_olcegi_id"]
@@ -220,6 +288,20 @@ export type Database = {
             columns: ["firma_turu_id"]
             isOneToOne: false
             referencedRelation: "firma_turleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firmalar_hizli_numune_id_fkey"
+            columns: ["hizli_numune_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firmalar_uretim_vardiyasi_id_fkey"
+            columns: ["uretim_vardiyasi_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
             referencedColumns: ["id"]
           },
         ]
