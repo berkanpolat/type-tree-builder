@@ -95,26 +95,20 @@ const GirisKayit = () => {
       const userId = authData.user?.id;
       if (!userId) throw new Error("Kullanıcı oluşturulamadı");
 
-      // Insert profile
-      const { error: profileError } = await supabase.from("profiles").insert({
-        user_id: userId,
-        ad,
-        soyad,
-        iletisim_email: email,
-        iletisim_numarasi: telefon,
+      // Insert profile + firma via SECURITY DEFINER function
+      const { error: rpcError } = await supabase.rpc("register_user", {
+        p_user_id: userId,
+        p_ad: ad,
+        p_soyad: soyad,
+        p_iletisim_email: email,
+        p_iletisim_numarasi: telefon,
+        p_firma_turu_id: selectedTurId,
+        p_firma_tipi_id: selectedTipId,
+        p_firma_unvani: firmaUnvani,
+        p_vergi_numarasi: vergiNumarasi,
+        p_vergi_dairesi: vergiDairesi,
       });
-      if (profileError) throw profileError;
-
-      // Insert firma
-      const { error: firmaError } = await supabase.from("firmalar").insert({
-        user_id: userId,
-        firma_turu_id: selectedTurId,
-        firma_tipi_id: selectedTipId,
-        firma_unvani: firmaUnvani,
-        vergi_numarasi: vergiNumarasi,
-        vergi_dairesi: vergiDairesi,
-      });
-      if (firmaError) throw firmaError;
+      if (rpcError) throw rpcError;
 
       toast({ title: "Kayıt başarılı", description: "Lütfen e-posta adresinizi doğrulayın." });
       setActiveTab("giris");
