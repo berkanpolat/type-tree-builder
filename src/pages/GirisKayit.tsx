@@ -157,6 +157,9 @@ const GirisKayit = () => {
       {/* Right side - Form */}
       <div className="w-full lg:w-1/2 flex items-start justify-center p-6 pt-12 bg-background overflow-y-auto">
         <div className="w-full max-w-md space-y-6">
+          <div className="flex justify-center mb-2">
+            <img src={logoImg} alt="Tekstil A.Ş." className="h-10 object-contain" />
+          </div>
           {/* Tab switcher */}
           <div className="flex rounded-lg border border-border overflow-hidden">
             <button
