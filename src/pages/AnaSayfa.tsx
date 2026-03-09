@@ -738,7 +738,8 @@ export default function AnaSayfa() {
               </div>
             </div>
 
-            {/* Product Grid */}
+            {/* Popüler Ürünler */}
+            <h2 className="text-xl font-bold text-foreground">Popüler Ürünler</h2>
             {urunLoading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -748,52 +749,74 @@ export default function AnaSayfa() {
                 Henüz aktif ürün bulunmamaktadır.
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {urunler.map((urun) => (
-                  <Card key={urun.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer group">
-                    <div className="aspect-square bg-muted relative overflow-hidden">
-                      {urun.foto_url ? (
-                        <img
-                          src={urun.foto_url}
-                          alt={urun.baslik}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ImageIcon className="w-10 h-10 text-muted-foreground/40" />
-                        </div>
-                      )}
-                      <button className="absolute top-2 right-2 p-1.5 bg-background/80 rounded-md hover:bg-background transition-colors">
-                        <Bookmark className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                    </div>
-                    <div className="p-3">
-                      <p className="text-xs text-muted-foreground mb-1">
-                        {urun.urun_kategori_id ? secenekMap[urun.urun_kategori_id] || "" : ""}
-                      </p>
-                      <p className="text-sm font-medium text-foreground line-clamp-2 mb-2">
-                        {urun.baslik}
-                      </p>
-                      <div className="flex items-baseline gap-1">
-                        {urun.fiyat != null ? (
-                          <span className="text-base font-bold text-foreground">
-                            {urun.fiyat.toLocaleString("tr-TR")}{" "}
-                            {paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi}
-                          </span>
-                        ) : urun.fiyat_tipi === "varyasyonlu" ? (
-                          <span className="text-sm text-muted-foreground">Fiyat için tıklayın</span>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {urunler.map((urun) => {
+                  const sym = paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi || "₺";
+                  let priceDisplay: React.ReactNode = <span className="text-sm text-muted-foreground">—</span>;
+                  if (urun.fiyat_tipi === "varyasyonlu" && urun.min_varyant_fiyat != null && urun.max_varyant_fiyat != null) {
+                    if (urun.min_varyant_fiyat === urun.max_varyant_fiyat) {
+                      priceDisplay = <span className="text-sm font-bold text-foreground">{sym}{urun.min_varyant_fiyat.toFixed(2)}</span>;
+                    } else {
+                      priceDisplay = <span className="text-sm font-bold text-foreground">{sym}{urun.min_varyant_fiyat.toFixed(2)} - {sym} {urun.max_varyant_fiyat.toFixed(2)}</span>;
+                    }
+                  } else if (urun.fiyat != null) {
+                    priceDisplay = <span className="text-sm font-bold text-foreground">{sym}{urun.fiyat.toFixed(2)}</span>;
+                  }
+
+                  return (
+                    <Card key={urun.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col">
+                      {/* Image */}
+                      <div className="aspect-square bg-muted relative overflow-hidden">
+                        {urun.foto_url ? (
+                          <img
+                            src={urun.foto_url}
+                            alt={urun.baslik}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
                         ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ImageIcon className="w-10 h-10 text-muted-foreground/40" />
+                          </div>
                         )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleFavorite(urun.id, !!urun.is_favorited); }}
+                          className="absolute top-2 right-2 p-2 bg-background/80 rounded-full hover:bg-background transition-colors"
+                        >
+                          <Heart
+                            className={`w-4 h-4 ${urun.is_favorited ? "fill-primary text-primary" : "text-muted-foreground"}`}
+                          />
+                        </button>
                       </div>
-                      {urun.min_siparis_miktari && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Min. {urun.min_siparis_miktari} adet
+                      {/* Info */}
+                      <div className="p-3 flex flex-col flex-1">
+                        <p className="text-sm font-medium text-foreground line-clamp-2 mb-2 min-h-[2.5rem]">
+                          {urun.baslik}
                         </p>
-                      )}
-                    </div>
-                  </Card>
-                ))}
+                        {/* Firma info */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
+                            {urun.firma_logo_url ? (
+                              <img src={urun.firma_logo_url} alt="" className="w-full h-full object-contain" />
+                            ) : (
+                              <span className="text-[8px] font-bold text-muted-foreground">
+                                {urun.firma_unvani?.charAt(0) || "?"}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground truncate">
+                            {urun.firma_unvani || ""}
+                          </span>
+                        </div>
+                        {/* Price */}
+                        <div className="mb-3">{priceDisplay}</div>
+                        {/* CTA */}
+                        <Button size="sm" className="w-full mt-auto bg-primary text-primary-foreground hover:bg-primary/90">
+                          Ürünü Göster
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>
