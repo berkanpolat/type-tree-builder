@@ -346,9 +346,9 @@ export default function YeniUrun() {
 
     let urunId = draftId;
     if (urunId) {
-      await supabase.from("urunler").update(payload).eq("id", urunId);
+      await supabase.from("urunler").update(payload as any).eq("id", urunId);
     } else {
-      const { data } = await supabase.from("urunler").insert(payload).select("id").single();
+      const { data } = await supabase.from("urunler").insert([payload as any]).select("id").single();
       urunId = data?.id || null;
     }
 

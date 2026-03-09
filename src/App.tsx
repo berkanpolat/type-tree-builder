@@ -13,6 +13,8 @@ import FirmaBilgilerim from "./pages/FirmaBilgilerim";
 import ManuIhale from "./pages/ManuIhale";
 import YeniIhale from "./pages/YeniIhale";
 import Tekliflerim from "./pages/Tekliflerim";
+import ManuPazar from "./pages/ManuPazar";
+import YeniUrun from "./pages/YeniUrun";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
