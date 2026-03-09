@@ -71,11 +71,11 @@ export function AppSidebar() {
       {/* User email dropdown area */}
       {!collapsed && (
         <div className="px-4 pt-3 pb-1">
-          <div className="flex items-center gap-1 text-xs text-muted-foreground border border-border rounded-md px-2 py-1.5">
+          <div className="flex items-center gap-1 text-xs text-sidebar-foreground/60 border border-sidebar-border rounded-md px-2 py-1.5">
             <span className="truncate flex-1">{userEmail || "..."}</span>
             <ChevronDown className="w-3 h-3 shrink-0" />
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1 px-0.5 truncate">{userEmail}</p>
+          <p className="text-[10px] text-sidebar-foreground/50 mt-1 px-0.5 truncate">{userEmail}</p>
         </div>
       )}
 
@@ -100,8 +100,8 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                      activeClassName="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                      activeClassName="bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:text-secondary-foreground"
                     >
                       <item.icon className="h-5 w-5 shrink-0" />
                       {!collapsed && (
@@ -129,8 +129,8 @@ export function AppSidebar() {
                 <NavLink
                   to={item.url}
                   end
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                  activeClassName="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground"
+                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                  activeClassName="bg-secondary text-secondary-foreground hover:bg-secondary/90 hover:text-secondary-foreground"
                 >
                   <item.icon className="h-5 w-5 shrink-0" />
                   {!collapsed && <span>{item.title}</span>}
@@ -141,7 +141,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleLogout}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+              className="flex items-center gap-3 px-3 py-2 rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors cursor-pointer"
             >
               <LogOut className="h-5 w-5 shrink-0" />
               {!collapsed && <span>Çıkış</span>}
