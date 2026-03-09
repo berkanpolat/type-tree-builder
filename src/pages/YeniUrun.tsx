@@ -534,17 +534,80 @@ export default function YeniUrun() {
                   )}
 
                   {fiyatTipi === "varyasyonlu" && (
-                    <div>
-                      <Label>Para Birimi*</Label>
-                      <Select value={paraBirimi} onValueChange={setParaBirimi}>
-                        <SelectTrigger className="max-w-[200px]"><SelectValue /></SelectTrigger>
-                        <SelectContent className="bg-popover z-50">
-                          <SelectItem value="TRY">₺ TRY</SelectItem>
-                          <SelectItem value="USD">$ USD</SelectItem>
-                          <SelectItem value="EUR">€ EUR</SelectItem>
-                          <SelectItem value="GBP">£ GBP</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Para Birimi*</Label>
+                        <Select value={paraBirimi} onValueChange={setParaBirimi}>
+                          <SelectTrigger className="max-w-[200px]"><SelectValue /></SelectTrigger>
+                          <SelectContent className="bg-popover z-50">
+                            <SelectItem value="TRY">₺ TRY</SelectItem>
+                            <SelectItem value="USD">$ USD</SelectItem>
+                            <SelectItem value="EUR">€ EUR</SelectItem>
+                            <SelectItem value="GBP">£ GBP</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <h4 className="font-semibold text-foreground">Fiyat Aralıkları</h4>
+                      <div className="border rounded-lg overflow-hidden">
+                        <table className="w-full text-sm">
+                          <thead className="bg-muted">
+                            <tr>
+                              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Minimum Adet</th>
+                              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Maksimum Adet</th>
+                              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Birim Fiyat</th>
+                              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Para Birimi</th>
+                              <th className="px-4 py-3 w-10"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {varyasyonlar.map((v, idx) => (
+                              <tr key={idx} className="border-t">
+                                <td className="px-4 py-2">
+                                  <Input
+                                    type="number"
+                                    value={v.min_adet}
+                                    onChange={e => updateVaryasyon(idx, "min_adet", parseInt(e.target.value) || 0)}
+                                    disabled={idx > 0}
+                                    min={1}
+                                  />
+                                </td>
+                                <td className="px-4 py-2">
+                                  <Input
+                                    type="number"
+                                    value={v.max_adet}
+                                    onChange={e => updateVaryasyon(idx, "max_adet", parseInt(e.target.value) || 0)}
+                                    min={v.min_adet + 1}
+                                  />
+                                </td>
+                                <td className="px-4 py-2">
+                                  <Input
+                                    type="number"
+                                    value={v.birim_fiyat}
+                                    onChange={e => updateVaryasyon(idx, "birim_fiyat", parseFloat(e.target.value) || 0)}
+                                    min={0}
+                                    step="0.01"
+                                  />
+                                </td>
+                                <td className="px-4 py-2 text-muted-foreground">
+                                  {paraBirimi}
+                                </td>
+                                <td className="px-4 py-2">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeVaryasyon(idx)}>
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <button
+                          onClick={addVaryasyon}
+                          className="w-full py-3 text-sm text-muted-foreground hover:bg-muted/50 transition-colors flex items-center justify-center gap-1 border-t"
+                        >
+                          <Plus className="w-4 h-4" /> Yeni Varyasyon Ekle
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -602,78 +665,11 @@ export default function YeniUrun() {
               </div>
             )}
 
-            {/* Step 3: Varyasyon / Onay */}
+            {/* Step 3: Onay */}
             {step === 3 && (
-              <div className="space-y-6">
-                {fiyatTipi === "varyasyonlu" ? (
-                  <>
-                    <h3 className="text-lg font-semibold">Fiyat Aralıkları</h3>
-                    <div className="border rounded-lg overflow-hidden">
-                      <table className="w-full text-sm">
-                        <thead className="bg-muted">
-                          <tr>
-                            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Minimum Adet</th>
-                            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Maksimum Adet</th>
-                            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Birim Fiyat</th>
-                            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Para Birimi</th>
-                            <th className="px-4 py-3 w-10"></th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {varyasyonlar.map((v, idx) => (
-                            <tr key={idx} className="border-t">
-                              <td className="px-4 py-2">
-                                <Input
-                                  type="number"
-                                  value={v.min_adet}
-                                  onChange={e => updateVaryasyon(idx, "min_adet", parseInt(e.target.value) || 0)}
-                                  disabled={idx > 0}
-                                  min={1}
-                                />
-                              </td>
-                              <td className="px-4 py-2">
-                                <Input
-                                  type="number"
-                                  value={v.max_adet}
-                                  onChange={e => updateVaryasyon(idx, "max_adet", parseInt(e.target.value) || 0)}
-                                  min={v.min_adet + 1}
-                                />
-                              </td>
-                              <td className="px-4 py-2">
-                                <Input
-                                  type="number"
-                                  value={v.birim_fiyat}
-                                  onChange={e => updateVaryasyon(idx, "birim_fiyat", parseFloat(e.target.value) || 0)}
-                                  min={0}
-                                  step="0.01"
-                                />
-                              </td>
-                              <td className="px-4 py-2 text-muted-foreground">
-                                {paraBirimi}
-                              </td>
-                              <td className="px-4 py-2">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeVaryasyon(idx)}>
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      <button
-                        onClick={addVaryasyon}
-                        className="w-full py-3 text-sm text-muted-foreground hover:bg-muted/50 transition-colors flex items-center justify-center gap-1 border-t"
-                      >
-                        <Plus className="w-4 h-4" /> Yeni Varyasyon Ekle
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <div className="text-center py-8 space-y-4">
-                    <h3 className="text-lg font-semibold text-foreground">Ürün Onaya Hazır</h3>
-                    <p className="text-muted-foreground">Tüm bilgiler tamamlandı. Ürünü onaya göndermek için "Gönder" butonuna tıklayın.</p>
-                  </div>
-                )}
+              <div className="text-center py-8 space-y-4">
+                <h3 className="text-lg font-semibold text-foreground">Ürün Onaya Hazır</h3>
+                <p className="text-muted-foreground">Tüm bilgiler tamamlandı. Ürünü onaya göndermek için "Gönder" butonuna tıklayın.</p>
               </div>
             )}
           </CardContent>
