@@ -111,14 +111,17 @@ const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" 
   ],
 };
 
+interface FiyatKademesi {
+  min_adet: number;
+  max_adet: number;
+  birim_fiyat: number;
+}
+
 interface UrunVaryasyon {
   varyant_1_label: string;
   varyant_1_value: string;
   varyant_2_label: string;
   varyant_2_value: string;
-  min_adet: number;
-  max_adet: number;
-  birim_fiyat: number;
   foto_url: string;
   foto_file?: File;
 }
