@@ -313,7 +313,7 @@ export default function Tekliflerim() {
                         ₺{teklif.tutar.toLocaleString("tr-TR")}
                       </TableCell>
                       <TableCell className="text-center text-sm font-medium">
-                        {teklif.teklif_sirasi !== null ? `₺${teklif.tutar.toLocaleString("tr-TR")}` : "-"}
+                        {teklif.teklif_sirasi !== null ? teklif.teklif_sirasi : "-"}
                       </TableCell>
                       <TableCell>
                         <div className="text-xs text-muted-foreground space-y-0.5">
