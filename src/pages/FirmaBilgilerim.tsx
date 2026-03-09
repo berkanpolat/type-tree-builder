@@ -7,6 +7,7 @@ import GenelFirmaBilgileri from "@/components/firma-bilgileri/GenelFirmaBilgiler
 import UrunHizmetTab from "@/components/firma-bilgileri/UrunHizmetTab";
 import UretimSatisTab from "@/components/firma-bilgileri/UretimSatisTab";
 import TesisBilgileriTab from "@/components/firma-bilgileri/TesisBilgileriTab";
+import MakineParkuruTab from "@/components/firma-bilgileri/MakineParkuruTab";
 import PlaceholderTab from "@/components/firma-bilgileri/PlaceholderTab";
 import {
   ClipboardList,
