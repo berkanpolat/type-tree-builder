@@ -121,6 +121,65 @@ export type Database = {
         }
         Relationships: []
       }
+      firma_uretim_satis: {
+        Row: {
+          created_at: string
+          firma_id: string
+          grup_id: string
+          id: string
+          kategori_id: string
+          tip: string
+          tur_id: string
+        }
+        Insert: {
+          created_at?: string
+          firma_id: string
+          grup_id: string
+          id?: string
+          kategori_id: string
+          tip: string
+          tur_id: string
+        }
+        Update: {
+          created_at?: string
+          firma_id?: string
+          grup_id?: string
+          id?: string
+          kategori_id?: string
+          tip?: string
+          tur_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_uretim_satis_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_uretim_satis_grup_id_fkey"
+            columns: ["grup_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_uretim_satis_kategori_id_fkey"
+            columns: ["kategori_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_uretim_satis_tur_id_fkey"
+            columns: ["tur_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firma_urun_hizmet_secimler: {
         Row: {
           created_at: string
@@ -192,6 +251,7 @@ export type Database = {
           moq: number | null
           tiktok: string | null
           updated_at: string
+          uretim_satis_rolu: string | null
           uretim_vardiyasi_id: string | null
           user_id: string
           vergi_dairesi: string
@@ -223,6 +283,7 @@ export type Database = {
           moq?: number | null
           tiktok?: string | null
           updated_at?: string
+          uretim_satis_rolu?: string | null
           uretim_vardiyasi_id?: string | null
           user_id: string
           vergi_dairesi: string
@@ -254,6 +315,7 @@ export type Database = {
           moq?: number | null
           tiktok?: string | null
           updated_at?: string
+          uretim_satis_rolu?: string | null
           uretim_vardiyasi_id?: string | null
           user_id?: string
           vergi_dairesi?: string
