@@ -32,7 +32,7 @@ interface ProfileRow {
 
 interface SelectOption { id: string; name: string; }
 
-export default function GenelFirmaBilgileri({ userId }: Props) {
+export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
