@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import logoImg from "@/assets/tekstil-as-logo.png";
 import {
   Home,
   Building2,
