@@ -86,6 +86,19 @@ const paraBirimiSymbol: Record<string, string> = {
 
 export default function AnaSayfa() {
   const navigate = useNavigate();
+  const [firmaUnvani, setFirmaUnvani] = useState("");
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const check = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate("/giris-kayit"); return; }
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", user.id).single();
+      if (firma) setFirmaUnvani(firma.firma_unvani);
+      setAuthLoading(false);
+    };
+    check();
+  }, [navigate]);
   const [activeTab, setActiveTab] = useState<"urunler" | "firma">("urunler");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
