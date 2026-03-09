@@ -133,6 +133,90 @@ export type Database = {
           },
         ]
       }
+      firma_referanslar: {
+        Row: {
+          created_at: string
+          firma_id: string
+          id: string
+          logo_url: string | null
+          referans_adi: string
+        }
+        Insert: {
+          created_at?: string
+          firma_id: string
+          id?: string
+          logo_url?: string | null
+          referans_adi: string
+        }
+        Update: {
+          created_at?: string
+          firma_id?: string
+          id?: string
+          logo_url?: string | null
+          referans_adi?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_referanslar_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      firma_sertifikalar: {
+        Row: {
+          created_at: string
+          firma_id: string
+          gecerlilik_tarihi: string | null
+          id: string
+          sertifika_kategori_id: string
+          sertifika_tur_id: string
+          verilis_tarihi: string | null
+        }
+        Insert: {
+          created_at?: string
+          firma_id: string
+          gecerlilik_tarihi?: string | null
+          id?: string
+          sertifika_kategori_id: string
+          sertifika_tur_id: string
+          verilis_tarihi?: string | null
+        }
+        Update: {
+          created_at?: string
+          firma_id?: string
+          gecerlilik_tarihi?: string | null
+          id?: string
+          sertifika_kategori_id?: string
+          sertifika_tur_id?: string
+          verilis_tarihi?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_sertifikalar_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_sertifikalar_sertifika_kategori_id_fkey"
+            columns: ["sertifika_kategori_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_sertifikalar_sertifika_tur_id_fkey"
+            columns: ["sertifika_tur_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firma_teknolojiler: {
         Row: {
           created_at: string
