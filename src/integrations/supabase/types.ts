@@ -74,6 +74,35 @@ export type Database = {
           },
         ]
       }
+      firma_favoriler: {
+        Row: {
+          created_at: string
+          firma_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          firma_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          firma_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_favoriler_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firma_galeri: {
         Row: {
           created_at: string
@@ -928,6 +957,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      urun_favoriler: {
+        Row: {
+          created_at: string
+          id: string
+          urun_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          urun_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          urun_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "urun_favoriler_urun_id_fkey"
+            columns: ["urun_id"]
+            isOneToOne: false
+            referencedRelation: "urunler"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       urun_varyasyonlar: {
         Row: {
