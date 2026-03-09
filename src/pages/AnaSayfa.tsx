@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import DashboardLayout from "@/components/DashboardLayout";
+import logoImg from "@/assets/tekstil-as-logo.png";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +25,7 @@ import {
   ImageIcon,
   Bookmark,
 } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import bannerKomisyon from "@/assets/banner-komisyon.jpg";
 import bannerStoktan from "@/assets/banner-stoktan.jpg";
 import bannerSatis from "@/assets/banner-satis.jpg";
@@ -85,6 +86,19 @@ const paraBirimiSymbol: Record<string, string> = {
 
 export default function AnaSayfa() {
   const navigate = useNavigate();
+  const [firmaUnvani, setFirmaUnvani] = useState("");
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const check = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate("/giris-kayit"); return; }
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", user.id).single();
+      if (firma) setFirmaUnvani(firma.firma_unvani);
+      setAuthLoading(false);
+    };
+    check();
+  }, [navigate]);
   const [activeTab, setActiveTab] = useState<"urunler" | "firma">("urunler");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -470,9 +484,38 @@ export default function AnaSayfa() {
     );
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
   return (
-    <DashboardLayout title="">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen bg-muted/30 font-sans">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-8">
+            <Link to="/anasayfa">
+              <img src={logoImg} alt="Tekstil A.Ş." className="h-9 object-contain" />
+            </Link>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link to="/anasayfa" className="text-sm font-medium text-foreground hover:text-secondary transition-colors">TekPazar</Link>
+              <Link to="/manuihale" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Tekİhale</Link>
+            </nav>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
+              <span className="truncate max-w-[200px]">{firmaUnvani}</span>
+              <ChevronDown className="w-4 h-4" />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* Search Header */}
         <div className="bg-primary rounded-xl p-6 pb-0">
           {/* Tabs */}
@@ -809,7 +852,7 @@ export default function AnaSayfa() {
             </div>
           </div>
         )}
-      </div>
-    </DashboardLayout>
+      </main>
+    </div>
   );
 }

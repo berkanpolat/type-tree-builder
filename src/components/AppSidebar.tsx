@@ -33,7 +33,6 @@ import {
 
 const mainItems = [
   { title: "Ana Sayfa", url: "/dashboard", icon: Home },
-  { title: "Kontrol Paneli", url: "/dashboard/panel", icon: Home },
   { title: "Firma Bilgilerim", url: "/firma-bilgilerim", icon: Building2 },
   { title: "Manuİhale", url: "/manuihale", icon: Gavel },
   { title: "Tekliflerim", url: "/tekliflerim", icon: FileText },
