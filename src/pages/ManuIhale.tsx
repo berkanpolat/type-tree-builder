@@ -55,7 +55,8 @@ interface IhaleTeklif {
 }
 
 const durumLabels: Record<string, string> = {
-  taslak: "Taslak",
+  duzenleniyor: "Düzenleniyor",
+  onay_bekliyor: "Onay Bekliyor",
   devam_ediyor: "Devam Ediyor",
   tamamlandi: "Tamamlandı",
   iptal: "İptal Edildi",
