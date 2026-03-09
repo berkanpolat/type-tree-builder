@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import AnaSayfa from "./pages/AnaSayfa";
 import HizmetBilgileri from "./pages/HizmetBilgileri";
 import UrunBilgileri from "./pages/UrunBilgileri";
 import UrunKategorisi from "./pages/UrunKategorisi";
@@ -31,7 +32,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/test-index" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<AnaSayfa />} />
+          <Route path="/dashboard/panel" element={<Dashboard />} />
           <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
           <Route path="/manuihale" element={<ManuIhale />} />
           <Route path="/manuihale/yeni" element={<YeniIhale />} />
