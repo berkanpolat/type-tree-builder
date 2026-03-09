@@ -142,7 +142,7 @@ export default function GenelFirmaBilgileri({ userId }: Props) {
           {/* Firma Türü */}
           <div className="space-y-1.5">
             <Label className="text-sm font-medium text-foreground">Firma Türü</Label>
-            <Select value={firmaTuruId} onValueChange={(v) => { setFirmaTuruId(v); setFirmaTipiId(""); }}>
+            <Select value={firmaTuruId} onValueChange={(v) => { setFirmaTuruId(v); setFirmaTipiId(""); onFirmaTuruChange?.(v); }}>
               <SelectTrigger className="bg-muted/50">
                 <SelectValue placeholder="Firma Türü Seçiniz" />
               </SelectTrigger>
