@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Image, Upload, Trash2, Pencil, Check, X } from "lucide-react";
+import { Image as ImageIcon, Upload, Trash2, Pencil, Check, X } from "lucide-react";
 
 interface Foto {
   id: string;
@@ -107,7 +107,7 @@ export default function GaleriTab({ userId }: GaleriTabProps) {
     <div className="bg-card border border-border rounded-xl p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Image className="w-5 h-5 text-primary" />
+          <ImageIcon className="w-5 h-5 text-primary" />
           <h2 className="text-lg font-bold text-foreground">Galeri</h2>
         </div>
         <label className="cursor-pointer">
@@ -121,7 +121,7 @@ export default function GaleriTab({ userId }: GaleriTabProps) {
 
       {fotolar.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground border-2 border-dashed border-border rounded-lg">
-          <Image className="w-12 h-12 mb-3 opacity-40" />
+          <ImageIcon className="w-12 h-12 mb-3 opacity-40" />
           <p className="text-sm">Henüz fotoğraf eklenmemiş</p>
           <p className="text-xs mt-1">Yukarıdaki butonu kullanarak fotoğraf yükleyebilirsiniz</p>
         </div>
