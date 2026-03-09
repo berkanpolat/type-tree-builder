@@ -200,7 +200,8 @@ export default function ManuIhale() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="taslak">Taslak</SelectItem>
+              <SelectItem value="duzenleniyor">Düzenleniyor</SelectItem>
+              <SelectItem value="onay_bekliyor">Onay Bekliyor</SelectItem>
               <SelectItem value="devam_ediyor">Devam Ediyor</SelectItem>
               <SelectItem value="tamamlandi">Tamamlandı</SelectItem>
               <SelectItem value="iptal">İptal</SelectItem>
