@@ -24,8 +24,9 @@ import {
   ArrowRight,
   ImageIcon,
   Bookmark,
+  Heart,
+  ChevronDown,
 } from "lucide-react";
-import { ChevronDown } from "lucide-react";
 import bannerKomisyon from "@/assets/banner-komisyon.jpg";
 import bannerStoktan from "@/assets/banner-stoktan.jpg";
 import bannerSatis from "@/assets/banner-satis.jpg";
@@ -62,6 +63,15 @@ interface UrunListItem {
   urun_grup_id: string | null;
   urun_tur_id: string | null;
   min_siparis_miktari: number | null;
+  user_id: string;
+}
+
+interface UrunWithExtra extends UrunListItem {
+  firma_unvani?: string;
+  firma_logo_url?: string | null;
+  min_varyant_fiyat?: number | null;
+  max_varyant_fiyat?: number | null;
+  is_favorited?: boolean;
 }
 
 interface FirmaListItem {
@@ -93,6 +103,7 @@ export default function AnaSayfa() {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/giris-kayit"); return; }
+      setCurrentUserId(user.id);
       const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", user.id).single();
       if (firma) setFirmaUnvani(firma.firma_unvani);
       setAuthLoading(false);
@@ -107,9 +118,10 @@ export default function AnaSayfa() {
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Ürünler state
-  const [urunler, setUrunler] = useState<UrunListItem[]>([]);
+  const [urunler, setUrunler] = useState<UrunWithExtra[]>([]);
   const [urunLoading, setUrunLoading] = useState(true);
   const [selectedKategori, setSelectedKategori] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   // Firma state
   const [firmalar, setFirmalar] = useState<FirmaListItem[]>([]);
@@ -207,7 +219,7 @@ export default function AnaSayfa() {
     setUrunLoading(true);
     let query = supabase
       .from("urunler")
-      .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, urun_kategori_id, urun_grup_id, urun_tur_id, min_siparis_miktari")
+      .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, urun_kategori_id, urun_grup_id, urun_tur_id, min_siparis_miktari, user_id")
       .eq("durum", "aktif")
       .order("created_at", { ascending: false })
       .limit(50);
@@ -234,30 +246,79 @@ export default function AnaSayfa() {
     }
 
     const { data } = await query;
-    if (data) {
-      setUrunler(data);
-      // Resolve names
-      const ids = new Set<string>();
+    if (data && data.length > 0) {
+      // Resolve category names
+      const catIds = new Set<string>();
       data.forEach((u) => {
-        if (u.urun_kategori_id) ids.add(u.urun_kategori_id);
-        if (u.urun_grup_id) ids.add(u.urun_grup_id);
+        if (u.urun_kategori_id) catIds.add(u.urun_kategori_id);
+        if (u.urun_grup_id) catIds.add(u.urun_grup_id);
       });
-      if (ids.size > 0) {
+      if (catIds.size > 0) {
         const { data: names } = await supabase
           .from("firma_bilgi_secenekleri")
           .select("id, name")
-          .in("id", Array.from(ids));
+          .in("id", Array.from(catIds));
         if (names) {
           const map: Record<string, string> = { ...secenekMap };
-          names.forEach((n) => {
-            map[n.id] = n.name;
-          });
+          names.forEach((n) => { map[n.id] = n.name; });
           setSecenekMap(map);
         }
       }
+
+      // Fetch firma info for product owners
+      const userIds = [...new Set(data.map((u) => u.user_id))];
+      const { data: firmalarData } = await supabase
+        .from("firmalar")
+        .select("user_id, firma_unvani, logo_url")
+        .in("user_id", userIds);
+      const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
+      firmalarData?.forEach((f) => { firmaMap[f.user_id] = f; });
+
+      // Fetch variant price ranges for varyasyonlu products
+      const varyasyonluIds = data.filter((u) => u.fiyat_tipi === "varyasyonlu").map((u) => u.id);
+      const varyantMap: Record<string, { min: number; max: number }> = {};
+      if (varyasyonluIds.length > 0) {
+        const { data: varyantlar } = await supabase
+          .from("urun_varyasyonlar")
+          .select("urun_id, birim_fiyat")
+          .in("urun_id", varyasyonluIds);
+        if (varyantlar) {
+          varyantlar.forEach((v) => {
+            if (!varyantMap[v.urun_id]) {
+              varyantMap[v.urun_id] = { min: v.birim_fiyat, max: v.birim_fiyat };
+            } else {
+              if (v.birim_fiyat < varyantMap[v.urun_id].min) varyantMap[v.urun_id].min = v.birim_fiyat;
+              if (v.birim_fiyat > varyantMap[v.urun_id].max) varyantMap[v.urun_id].max = v.birim_fiyat;
+            }
+          });
+        }
+      }
+
+      // Fetch favorites
+      let favSet = new Set<string>();
+      if (currentUserId) {
+        const { data: favs } = await supabase
+          .from("urun_favoriler")
+          .select("urun_id")
+          .eq("user_id", currentUserId);
+        if (favs) favs.forEach((f) => favSet.add(f.urun_id));
+      }
+
+      // Enrich products
+      const enriched: UrunWithExtra[] = data.map((u) => ({
+        ...u,
+        firma_unvani: firmaMap[u.user_id]?.firma_unvani,
+        firma_logo_url: firmaMap[u.user_id]?.logo_url,
+        min_varyant_fiyat: varyantMap[u.id]?.min ?? null,
+        max_varyant_fiyat: varyantMap[u.id]?.max ?? null,
+        is_favorited: favSet.has(u.id),
+      }));
+      setUrunler(enriched);
+    } else {
+      setUrunler([]);
     }
     setUrunLoading(false);
-  }, [activeFilter, selectedKategori, kategoriSecenekler, activeTab]);
+  }, [activeFilter, selectedKategori, kategoriSecenekler, activeTab, currentUserId]);
 
   // Fetch companies
   const fetchFirmalar = useCallback(async () => {
@@ -484,6 +545,18 @@ export default function AnaSayfa() {
     );
   };
 
+  const toggleFavorite = async (urunId: string, isFav: boolean) => {
+    if (!currentUserId) return;
+    if (isFav) {
+      await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", urunId);
+    } else {
+      await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: urunId });
+    }
+    setUrunler((prev) =>
+      prev.map((u) => u.id === urunId ? { ...u, is_favorited: !isFav } : u)
+    );
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -666,7 +739,8 @@ export default function AnaSayfa() {
               </div>
             </div>
 
-            {/* Product Grid */}
+            {/* Popüler Ürünler */}
+            <h2 className="text-xl font-bold text-foreground">Popüler Ürünler</h2>
             {urunLoading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -676,52 +750,74 @@ export default function AnaSayfa() {
                 Henüz aktif ürün bulunmamaktadır.
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {urunler.map((urun) => (
-                  <Card key={urun.id} className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer group">
-                    <div className="aspect-square bg-muted relative overflow-hidden">
-                      {urun.foto_url ? (
-                        <img
-                          src={urun.foto_url}
-                          alt={urun.baslik}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ImageIcon className="w-10 h-10 text-muted-foreground/40" />
-                        </div>
-                      )}
-                      <button className="absolute top-2 right-2 p-1.5 bg-background/80 rounded-md hover:bg-background transition-colors">
-                        <Bookmark className="w-4 h-4 text-muted-foreground" />
-                      </button>
-                    </div>
-                    <div className="p-3">
-                      <p className="text-xs text-muted-foreground mb-1">
-                        {urun.urun_kategori_id ? secenekMap[urun.urun_kategori_id] || "" : ""}
-                      </p>
-                      <p className="text-sm font-medium text-foreground line-clamp-2 mb-2">
-                        {urun.baslik}
-                      </p>
-                      <div className="flex items-baseline gap-1">
-                        {urun.fiyat != null ? (
-                          <span className="text-base font-bold text-foreground">
-                            {urun.fiyat.toLocaleString("tr-TR")}{" "}
-                            {paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi}
-                          </span>
-                        ) : urun.fiyat_tipi === "varyasyonlu" ? (
-                          <span className="text-sm text-muted-foreground">Fiyat için tıklayın</span>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                {urunler.map((urun) => {
+                  const sym = paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi || "₺";
+                  let priceDisplay: React.ReactNode = <span className="text-sm text-muted-foreground">—</span>;
+                  if (urun.fiyat_tipi === "varyasyonlu" && urun.min_varyant_fiyat != null && urun.max_varyant_fiyat != null) {
+                    if (urun.min_varyant_fiyat === urun.max_varyant_fiyat) {
+                      priceDisplay = <span className="text-sm font-bold text-foreground">{sym}{urun.min_varyant_fiyat.toFixed(2)}</span>;
+                    } else {
+                      priceDisplay = <span className="text-sm font-bold text-foreground">{sym}{urun.min_varyant_fiyat.toFixed(2)} - {sym} {urun.max_varyant_fiyat.toFixed(2)}</span>;
+                    }
+                  } else if (urun.fiyat != null) {
+                    priceDisplay = <span className="text-sm font-bold text-foreground">{sym}{urun.fiyat.toFixed(2)}</span>;
+                  }
+
+                  return (
+                    <Card key={urun.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col">
+                      {/* Image */}
+                      <div className="aspect-square bg-muted relative overflow-hidden">
+                        {urun.foto_url ? (
+                          <img
+                            src={urun.foto_url}
+                            alt={urun.baslik}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
                         ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ImageIcon className="w-10 h-10 text-muted-foreground/40" />
+                          </div>
                         )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); toggleFavorite(urun.id, !!urun.is_favorited); }}
+                          className="absolute top-2 right-2 p-2 bg-background/80 rounded-full hover:bg-background transition-colors"
+                        >
+                          <Heart
+                            className={`w-4 h-4 ${urun.is_favorited ? "fill-primary text-primary" : "text-muted-foreground"}`}
+                          />
+                        </button>
                       </div>
-                      {urun.min_siparis_miktari && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Min. {urun.min_siparis_miktari} adet
+                      {/* Info */}
+                      <div className="p-3 flex flex-col flex-1">
+                        <p className="text-sm font-medium text-foreground line-clamp-2 mb-2 min-h-[2.5rem]">
+                          {urun.baslik}
                         </p>
-                      )}
-                    </div>
-                  </Card>
-                ))}
+                        {/* Firma info */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
+                            {urun.firma_logo_url ? (
+                              <img src={urun.firma_logo_url} alt="" className="w-full h-full object-contain" />
+                            ) : (
+                              <span className="text-[8px] font-bold text-muted-foreground">
+                                {urun.firma_unvani?.charAt(0) || "?"}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-xs text-muted-foreground truncate">
+                            {urun.firma_unvani || ""}
+                          </span>
+                        </div>
+                        {/* Price */}
+                        <div className="mb-3">{priceDisplay}</div>
+                        {/* CTA */}
+                        <Button size="sm" className="w-full mt-auto bg-primary text-primary-foreground hover:bg-primary/90">
+                          Ürünü Göster
+                        </Button>
+                      </div>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </div>
