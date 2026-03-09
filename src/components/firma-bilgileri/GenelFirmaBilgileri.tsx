@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Props {
   userId: string;
+  onFirmaTuruChange?: (turuId: string) => void;
 }
 
 interface FirmaRow {
@@ -31,7 +32,7 @@ interface ProfileRow {
 
 interface SelectOption { id: string; name: string; }
 
-export default function GenelFirmaBilgileri({ userId }: Props) {
+export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -141,7 +142,7 @@ export default function GenelFirmaBilgileri({ userId }: Props) {
           {/* Firma Türü */}
           <div className="space-y-1.5">
             <Label className="text-sm font-medium text-foreground">Firma Türü</Label>
-            <Select value={firmaTuruId} onValueChange={(v) => { setFirmaTuruId(v); setFirmaTipiId(""); }}>
+            <Select value={firmaTuruId} onValueChange={(v) => { setFirmaTuruId(v); setFirmaTipiId(""); onFirmaTuruChange?.(v); }}>
               <SelectTrigger className="bg-muted/50">
                 <SelectValue placeholder="Firma Türü Seçiniz" />
               </SelectTrigger>
