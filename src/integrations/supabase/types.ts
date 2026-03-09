@@ -677,6 +677,83 @@ export type Database = {
           },
         ]
       }
+      ihale_teklifler: {
+        Row: {
+          created_at: string
+          id: string
+          ihale_id: string
+          teklif_veren_user_id: string
+          tutar: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ihale_id: string
+          teklif_veren_user_id: string
+          tutar: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ihale_id?: string
+          teklif_veren_user_id?: string
+          tutar?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ihale_teklifler_ihale_id_fkey"
+            columns: ["ihale_id"]
+            isOneToOne: false
+            referencedRelation: "ihaleler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ihaleler: {
+        Row: {
+          baslangic_tarihi: string | null
+          baslik: string
+          bitis_tarihi: string | null
+          created_at: string
+          durum: string
+          foto_url: string | null
+          goruntuleme_sayisi: number
+          id: string
+          ihale_no: string
+          teklif_usulu: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          baslangic_tarihi?: string | null
+          baslik: string
+          bitis_tarihi?: string | null
+          created_at?: string
+          durum?: string
+          foto_url?: string | null
+          goruntuleme_sayisi?: number
+          id?: string
+          ihale_no: string
+          teklif_usulu?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          baslangic_tarihi?: string | null
+          baslik?: string
+          bitis_tarihi?: string | null
+          created_at?: string
+          durum?: string
+          foto_url?: string | null
+          goruntuleme_sayisi?: number
+          id?: string
+          ihale_no?: string
+          teklif_usulu?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           ad: string
