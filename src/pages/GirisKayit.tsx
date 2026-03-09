@@ -69,7 +69,7 @@ const GirisKayit = () => {
       });
       if (error) throw error;
       toast({ title: "Giriş başarılı" });
-      navigate("/");
+      navigate("/dashboard");
     } catch (error: any) {
       toast({ title: "Hata", description: error.message, variant: "destructive" });
     } finally {
