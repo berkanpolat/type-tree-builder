@@ -756,6 +756,7 @@ export type Database = {
       ihale_teklifler: {
         Row: {
           created_at: string
+          durum: string
           id: string
           ihale_id: string
           teklif_veren_user_id: string
@@ -763,6 +764,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          durum?: string
           id?: string
           ihale_id: string
           teklif_veren_user_id: string
@@ -770,6 +772,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          durum?: string
           id?: string
           ihale_id?: string
           teklif_veren_user_id?: string

@@ -12,6 +12,7 @@ import GirisKayit from "./pages/GirisKayit";
 import FirmaBilgilerim from "./pages/FirmaBilgilerim";
 import ManuIhale from "./pages/ManuIhale";
 import YeniIhale from "./pages/YeniIhale";
+import Tekliflerim from "./pages/Tekliflerim";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/manuihale" element={<ManuIhale />} />
           <Route path="/manuihale/yeni" element={<YeniIhale />} />
           <Route path="/manuihale/duzenle/:id" element={<YeniIhale />} />
+          <Route path="/tekliflerim" element={<Tekliflerim />} />
           <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
           <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
           <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
