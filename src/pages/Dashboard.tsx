@@ -117,7 +117,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <DashboardLayout title="Ana Sayfa">
         <div className="flex items-center justify-center h-64">
           <p className="text-muted-foreground">Yükleniyor...</p>
         </div>
@@ -126,7 +126,7 @@ const Dashboard = () => {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Ana Sayfa">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Top Cards: Firma + Kullanıcı */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
