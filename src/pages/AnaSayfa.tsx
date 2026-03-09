@@ -24,8 +24,8 @@ import {
   ArrowRight,
   ImageIcon,
   Bookmark,
+  Heart,
 } from "lucide-react";
-import { ChevronDown } from "lucide-react";
 import bannerKomisyon from "@/assets/banner-komisyon.jpg";
 import bannerStoktan from "@/assets/banner-stoktan.jpg";
 import bannerSatis from "@/assets/banner-satis.jpg";
