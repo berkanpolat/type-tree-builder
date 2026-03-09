@@ -32,7 +32,16 @@ const KAT = {
   URETIM_VARDIYASI: "a0000001-0000-0000-0000-000000000011",
   TEDARIK_HIZMET_TIPI: "a0000001-0000-0000-0000-000000000012",
   FAALIYET_ALANI_TEDARIKCI: "a0000001-0000-0000-0000-000000000013",
+  MEVCUT_PAZARLAR: "a0000001-0000-0000-0000-000000000019",
+  HEDEFLENEN_PAZARLAR: "a0000001-0000-0000-0000-000000000020",
+  ONLINE_SATIS_PLATFORMLARI: "a0000001-0000-0000-0000-000000000021",
+  URETICI_TEDARIKCI_SECIM_KRITERLERI: "a0000001-0000-0000-0000-000000000022",
+  IL: "61fbe0a7-638f-4900-97a0-c2c8310e01af",
+  BIRIM_TURLERI: "ef259cd0-d622-46f9-8e58-ce5e0d846650",
 };
+
+// Special category ID used for storing "Tercih Edilen Bölgeler" in firma_urun_hizmet_secimler
+const TERCIH_BOLGE_PSEUDO_KAT = "a0000001-0000-0000-0000-000000000099";
 
 // Which multi-select categories each firma türü uses
 const MULTI_FIELDS: Record<string, { kategoriId: string; label: string }[]> = {
@@ -46,6 +55,10 @@ const MULTI_FIELDS: Record<string, { kategoriId: string; label: string }[]> = {
     { kategoriId: KAT.FAALIYET_ALANI, label: "Faaliyet Alanı" },
     { kategoriId: KAT.URUN_SEGMENTI, label: "Ürün Segmenti" },
     { kategoriId: KAT.URETIM_MODELI, label: "Üretim Modeli" },
+    { kategoriId: KAT.MEVCUT_PAZARLAR, label: "Mevcut Pazarlar" },
+    { kategoriId: KAT.HEDEFLENEN_PAZARLAR, label: "Hedeflenen Pazarlar" },
+    { kategoriId: KAT.ONLINE_SATIS_PLATFORMLARI, label: "Online Satış Platformları" },
+    { kategoriId: KAT.URETICI_TEDARIKCI_SECIM_KRITERLERI, label: "Üretici / Tedarikçi Seçim Kriterleri" },
   ],
   "Mümessil Ofis": [
     { kategoriId: KAT.FAALIYET_ALANI, label: "Faaliyet Alanı" },
@@ -75,6 +88,10 @@ const HAS_NUMBER_FIELDS: Record<string, boolean> = {
 // Which firma türü has single-select fields (Fason Atölye only)
 const HAS_SINGLE_SELECTS = ["Fason Atölye"];
 
+// Marka-specific extras
+const IS_MARKA = (name: string) => name === "Marka";
+const IS_TEDARIKCI = (name: string) => name === "Tedarikçi";
+
 export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -96,9 +113,21 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
   const [hizliNumuneId, setHizliNumuneId] = useState("");
   const [singleOptions, setSingleOptions] = useState<Record<string, SelectOption[]>>({});
 
+  // Marka-specific
+  const [fizikselMagazaSayisi, setFizikselMagazaSayisi] = useState("");
+  const [tercihBolgeler, setTercihBolgeler] = useState<string[]>([]);
+  const [iller, setIller] = useState<SelectOption[]>([]);
+
+  // Tedarikçi-specific
+  const [aylikTedarikSayisi, setAylikTedarikSayisi] = useState("");
+  const [aylikTedarikBirimId, setAylikTedarikBirimId] = useState("");
+  const [birimOptions, setBirimOptions] = useState<SelectOption[]>([]);
+
   const multiFields = MULTI_FIELDS[firmaTuruName] || [];
   const showNumbers = HAS_NUMBER_FIELDS[firmaTuruName] || false;
   const showSingles = HAS_SINGLE_SELECTS.includes(firmaTuruName);
+  const isMarka = IS_MARKA(firmaTuruName);
+  const isTedarikci = IS_TEDARIKCI(firmaTuruName);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -107,7 +136,7 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
       // Get firma id
       const { data: firma } = await supabase
         .from("firmalar")
-        .select("id, moq, aylik_uretim_kapasitesi, uretim_vardiyasi_id, bagimsiz_denetim_id, hizli_numune_id")
+        .select("*")
         .eq("user_id", userId)
         .single();
 
@@ -118,6 +147,9 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
       setUretimVardiyasiId((firma as any).uretim_vardiyasi_id || "");
       setBagimsizDenetimId((firma as any).bagimsiz_denetim_id || "");
       setHizliNumuneId((firma as any).hizli_numune_id || "");
+      setFizikselMagazaSayisi((firma as any).fiziksel_magaza_sayisi?.toString() || "");
+      setAylikTedarikSayisi((firma as any).aylik_tedarik_sayisi?.toString() || "");
+      setAylikTedarikBirimId((firma as any).aylik_tedarik_birim_id || "");
 
       // Collect all needed category IDs
       const neededCats = multiFields.map(f => f.kategoriId);
@@ -126,11 +158,28 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
       }
       const uniqueCats = [...new Set(neededCats)];
 
+      // Additional fetches for Marka and Tedarikçi
+      const extraPromises: PromiseLike<any>[] = [];
+
+      if (isMarka) {
+        extraPromises.push(
+          supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KAT.IL).is("parent_id", null).order("name").then(r => r)
+        );
+      }
+      if (isTedarikci) {
+        extraPromises.push(
+          supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KAT.BIRIM_TURLERI).order("name").then(r => r)
+        );
+      }
+
       // Fetch options for all categories in parallel
       const optionPromises = uniqueCats.map(catId =>
         supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", catId).order("name")
       );
-      const optionResults = await Promise.all(optionPromises);
+      const [optionResults, ...extraResults] = await Promise.all([
+        Promise.all(optionPromises),
+        ...extraPromises,
+      ]);
 
       const newOptionsMap: Record<string, SelectOption[]> = {};
       const newSingleOptions: Record<string, SelectOption[]> = {};
@@ -144,7 +193,18 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
       setOptionsMap(newOptionsMap);
       setSingleOptions(newSingleOptions);
 
-      // Fetch existing multi-select selections
+      // Set Marka-specific data
+      let extraIdx = 0;
+      if (isMarka && extraResults[extraIdx]) {
+        setIller(extraResults[extraIdx].data || []);
+        extraIdx++;
+      }
+      if (isTedarikci && extraResults[extraIdx]) {
+        setBirimOptions(extraResults[extraIdx].data || []);
+        extraIdx++;
+      }
+
+      // Fetch existing multi-select selections (including pseudo-category for bölgeler)
       const { data: existingSelections } = await supabase
         .from("firma_urun_hizmet_secimler")
         .select("kategori_id, secenek_id")
@@ -152,12 +212,18 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
 
       const newMulti: Record<string, string[]> = {};
       multiFields.forEach(f => { newMulti[f.kategoriId] = []; });
+      const bolgeler: string[] = [];
       existingSelections?.forEach(s => {
         const catId = s.kategori_id;
-        if (!newMulti[catId]) newMulti[catId] = [];
-        newMulti[catId].push(s.secenek_id);
+        if (catId === TERCIH_BOLGE_PSEUDO_KAT) {
+          bolgeler.push(s.secenek_id);
+        } else {
+          if (!newMulti[catId]) newMulti[catId] = [];
+          newMulti[catId].push(s.secenek_id);
+        }
       });
       setMultiSelections(newMulti);
+      setTercihBolgeler(bolgeler);
 
       setLoading(false);
     };
@@ -184,14 +250,23 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
         updateData.bagimsiz_denetim_id = bagimsizDenetimId || null;
         updateData.hizli_numune_id = hizliNumuneId || null;
       }
+      if (isMarka) {
+        updateData.fiziksel_magaza_sayisi = fizikselMagazaSayisi ? parseInt(fizikselMagazaSayisi) : null;
+      }
+      if (isTedarikci) {
+        updateData.aylik_tedarik_sayisi = aylikTedarikSayisi ? parseInt(aylikTedarikSayisi) : null;
+        updateData.aylik_tedarik_birim_id = aylikTedarikBirimId || null;
+      }
 
       if (Object.keys(updateData).length > 0) {
         const { error } = await supabase.from("firmalar").update(updateData as any).eq("id", firmaId);
         if (error) throw error;
       }
 
-      // 2. Delete existing multi-selections for this firma's relevant categories
-      const relevantCats = multiFields.map(f => f.kategoriId);
+      // 2. Delete existing multi-selections for this firma's relevant categories + pseudo bolge
+      const relevantCats = [...multiFields.map(f => f.kategoriId)];
+      if (isMarka) relevantCats.push(TERCIH_BOLGE_PSEUDO_KAT);
+
       for (const catId of relevantCats) {
         await supabase
           .from("firma_urun_hizmet_secimler")
@@ -202,12 +277,19 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
 
       // 3. Insert new multi-selections
       const inserts: { firma_id: string; kategori_id: string; secenek_id: string }[] = [];
-      for (const catId of relevantCats) {
-        const selected = multiSelections[catId] || [];
+      for (const field of multiFields) {
+        const selected = multiSelections[field.kategoriId] || [];
         for (const secId of selected) {
-          inserts.push({ firma_id: firmaId, kategori_id: catId, secenek_id: secId });
+          inserts.push({ firma_id: firmaId, kategori_id: field.kategoriId, secenek_id: secId });
         }
       }
+      // Insert tercih edilen bölgeler
+      if (isMarka) {
+        for (const ilId of tercihBolgeler) {
+          inserts.push({ firma_id: firmaId, kategori_id: TERCIH_BOLGE_PSEUDO_KAT, secenek_id: ilId });
+        }
+      }
+
       if (inserts.length > 0) {
         const { error } = await supabase.from("firma_urun_hizmet_secimler").insert(inserts as any);
         if (error) throw error;
@@ -247,6 +329,33 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
             </div>
           ))}
 
+          {/* Marka: Fiziksel Mağaza Sayısı */}
+          {isMarka && (
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium text-foreground">Fiziksel Mağaza Sayısı</Label>
+              <Input
+                type="number"
+                value={fizikselMagazaSayisi}
+                onChange={e => setFizikselMagazaSayisi(e.target.value)}
+                placeholder="Mağaza sayısı giriniz"
+                className="bg-muted/50"
+              />
+            </div>
+          )}
+
+          {/* Marka: Tercih Edilen Üretici / Tedarikçi Bölgeleri (multi-select İl) */}
+          {isMarka && (
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium text-foreground">Tercih Edilen Üretici / Tedarikçi Bölgeleri</Label>
+              <MultiSelectDropdown
+                options={iller}
+                selected={tercihBolgeler}
+                onChange={setTercihBolgeler}
+                placeholder="İl Seçiniz"
+              />
+            </div>
+          )}
+
           {/* Number fields */}
           {showNumbers && (
             <>
@@ -269,6 +378,35 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
                   placeholder="Adet giriniz"
                   className="bg-muted/50"
                 />
+              </div>
+            </>
+          )}
+
+          {/* Tedarikçi: Aylık Tedarik Sayısı + Birim */}
+          {isTedarikci && (
+            <>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-foreground">Aylık Tedarik Sayısı</Label>
+                <Input
+                  type="number"
+                  value={aylikTedarikSayisi}
+                  onChange={e => setAylikTedarikSayisi(e.target.value)}
+                  placeholder="Sayı giriniz"
+                  className="bg-muted/50"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-foreground">Birim</Label>
+                <Select value={aylikTedarikBirimId} onValueChange={setAylikTedarikBirimId}>
+                  <SelectTrigger className="bg-muted/50">
+                    <SelectValue placeholder="Birim Seçiniz" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {birimOptions.map(o => (
+                      <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </>
           )}
