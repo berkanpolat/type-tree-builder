@@ -210,7 +210,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      register_user: {
+        Args: {
+          p_ad: string
+          p_firma_tipi_id: string
+          p_firma_turu_id: string
+          p_firma_unvani: string
+          p_iletisim_email: string
+          p_iletisim_numarasi: string
+          p_soyad: string
+          p_user_id: string
+          p_vergi_dairesi: string
+          p_vergi_numarasi: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
