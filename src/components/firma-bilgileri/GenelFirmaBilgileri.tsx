@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Props {
   userId: string;
+  onFirmaTuruChange?: (turuId: string) => void;
 }
 
 interface FirmaRow {
