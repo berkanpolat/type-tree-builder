@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
-import { Image, Upload, Trash2, Pencil, Check, X } from "lucide-react";
+import { Image as ImageIcon, Upload, Trash2, Pencil, Check, X } from "lucide-react";
 
 interface Foto {
   id: string;
