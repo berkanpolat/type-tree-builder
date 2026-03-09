@@ -82,40 +82,53 @@ const FirmaBilgilerim = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("genel");
   const [firmaTuruName, setFirmaTuruName] = useState("");
+  const [firmaTurleriMap, setFirmaTurleriMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
 
   useEffect(() => {
-    const fetchFirmaTuru = async () => {
+    const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/giris-kayit"); return; }
       setUserId(user.id);
 
-      const { data: firma } = await supabase
-        .from("firmalar")
-        .select("firma_turu_id")
-        .eq("user_id", user.id)
-        .single();
+      const [firmaRes, turleriRes] = await Promise.all([
+        supabase.from("firmalar").select("firma_turu_id").eq("user_id", user.id).single(),
+        supabase.from("firma_turleri").select("id, name"),
+      ]);
 
-      if (firma) {
-        const { data: tur } = await supabase
-          .from("firma_turleri")
-          .select("name")
-          .eq("id", firma.firma_turu_id)
-          .single();
-        if (tur) setFirmaTuruName(tur.name);
+      // Build id->name map
+      const map: Record<string, string> = {};
+      turleriRes.data?.forEach(t => { map[t.id] = t.name; });
+      setFirmaTurleriMap(map);
+
+      if (firmaRes.data) {
+        setFirmaTuruName(map[firmaRes.data.firma_turu_id] || "");
       }
       setLoading(false);
     };
-    fetchFirmaTuru();
+    fetchData();
   }, [navigate]);
+
+  // Called by GenelFirmaBilgileri when firma türü changes
+  const handleFirmaTuruChange = (turuId: string) => {
+    const name = firmaTurleriMap[turuId];
+    if (name) {
+      setFirmaTuruName(name);
+      // Reset to genel tab if current tab doesn't exist in new menu
+      const newTabs = tabsByFirmaTuru[name] || [];
+      if (!newTabs.find(t => t.id === activeTab)) {
+        setActiveTab("genel");
+      }
+    }
+  };
 
   const tabs = tabsByFirmaTuru[firmaTuruName] || tabsByFirmaTuru["Hazır Giyim Üreticisi"] || [];
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "genel":
-        return <GenelFirmaBilgileri userId={userId} />;
+        return <GenelFirmaBilgileri userId={userId} onFirmaTuruChange={handleFirmaTuruChange} />;
       default:
         return <PlaceholderTab label={tabs.find(t => t.id === activeTab)?.label || activeTab} />;
     }
