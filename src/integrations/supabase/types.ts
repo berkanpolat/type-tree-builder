@@ -74,6 +74,38 @@ export type Database = {
           },
         ]
       }
+      firma_galeri: {
+        Row: {
+          created_at: string
+          firma_id: string
+          foto_adi: string | null
+          foto_url: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          firma_id: string
+          foto_adi?: string | null
+          foto_url: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          firma_id?: string
+          foto_adi?: string | null
+          foto_url?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_galeri_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firma_makineler: {
         Row: {
           created_at: string
