@@ -8,6 +8,8 @@ import UrunHizmetTab from "@/components/firma-bilgileri/UrunHizmetTab";
 import UretimSatisTab from "@/components/firma-bilgileri/UretimSatisTab";
 import TesisBilgileriTab from "@/components/firma-bilgileri/TesisBilgileriTab";
 import MakineParkuruTab from "@/components/firma-bilgileri/MakineParkuruTab";
+import SertifikalarTab from "@/components/firma-bilgileri/SertifikalarTab";
+import ReferanslarTab from "@/components/firma-bilgileri/ReferanslarTab";
 import PlaceholderTab from "@/components/firma-bilgileri/PlaceholderTab";
 import {
   ClipboardList,
