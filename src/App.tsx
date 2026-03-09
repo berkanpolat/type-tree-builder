@@ -11,6 +11,7 @@ import UrunKategorisi from "./pages/UrunKategorisi";
 import GirisKayit from "./pages/GirisKayit";
 import FirmaBilgilerim from "./pages/FirmaBilgilerim";
 import ManuIhale from "./pages/ManuIhale";
+import YeniIhale from "./pages/YeniIhale";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
