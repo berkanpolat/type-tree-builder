@@ -55,14 +55,16 @@ interface IhaleTeklif {
 }
 
 const durumLabels: Record<string, string> = {
-  taslak: "Taslak",
+  duzenleniyor: "Düzenleniyor",
+  onay_bekliyor: "Onay Bekliyor",
   devam_ediyor: "Devam Ediyor",
   tamamlandi: "Tamamlandı",
   iptal: "İptal Edildi",
 };
 
 const durumColors: Record<string, string> = {
-  taslak: "bg-muted text-muted-foreground",
+  duzenleniyor: "bg-muted text-muted-foreground",
+  onay_bekliyor: "bg-amber-100 text-amber-700",
   devam_ediyor: "bg-emerald-100 text-emerald-700",
   tamamlandi: "bg-blue-100 text-blue-700",
   iptal: "bg-red-100 text-red-700",
