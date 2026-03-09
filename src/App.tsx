@@ -9,6 +9,7 @@ import HizmetBilgileri from "./pages/HizmetBilgileri";
 import UrunBilgileri from "./pages/UrunBilgileri";
 import UrunKategorisi from "./pages/UrunKategorisi";
 import GirisKayit from "./pages/GirisKayit";
+import FirmaBilgilerim from "./pages/FirmaBilgilerim";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
