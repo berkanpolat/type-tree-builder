@@ -159,7 +159,7 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
       const uniqueCats = [...new Set(neededCats)];
 
       // Additional fetches for Marka and Tedarikçi
-      const extraPromises: Promise<any>[] = [];
+      const extraPromises: PromiseLike<any>[] = [];
 
       if (isMarka) {
         extraPromises.push(
