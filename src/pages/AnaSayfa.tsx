@@ -62,6 +62,15 @@ interface UrunListItem {
   urun_grup_id: string | null;
   urun_tur_id: string | null;
   min_siparis_miktari: number | null;
+  user_id: string;
+}
+
+interface UrunWithExtra extends UrunListItem {
+  firma_unvani?: string;
+  firma_logo_url?: string | null;
+  min_varyant_fiyat?: number | null;
+  max_varyant_fiyat?: number | null;
+  is_favorited?: boolean;
 }
 
 interface FirmaListItem {
