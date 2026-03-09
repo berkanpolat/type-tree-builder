@@ -200,7 +200,8 @@ export default function ManuIhale() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tümü</SelectItem>
-              <SelectItem value="taslak">Taslak</SelectItem>
+              <SelectItem value="duzenleniyor">Düzenleniyor</SelectItem>
+              <SelectItem value="onay_bekliyor">Onay Bekliyor</SelectItem>
               <SelectItem value="devam_ediyor">Devam Ediyor</SelectItem>
               <SelectItem value="tamamlandi">Tamamlandı</SelectItem>
               <SelectItem value="iptal">İptal</SelectItem>
@@ -288,7 +289,13 @@ export default function ManuIhale() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => navigate(`/manuihale/${ihale.id}`)}
+                              onClick={() => {
+                                if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") {
+                                  navigate(`/manuihale/duzenle/${ihale.id}`);
+                                } else {
+                                  navigate(`/manuihale/${ihale.id}`);
+                                }
+                              }}
                             >
                               <ExternalLink className="w-4 h-4" />
                             </Button>
