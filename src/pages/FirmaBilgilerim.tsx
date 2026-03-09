@@ -136,6 +136,8 @@ const FirmaBilgilerim = () => {
         return <UrunHizmetTab userId={userId} firmaTuruName={firmaTuruName} />;
       case "uretim-satis":
         return <UretimSatisTab userId={userId} />;
+      case "tesis":
+        return <TesisBilgileriTab userId={userId} />;
       default:
         return <PlaceholderTab label={tabs.find(t => t.id === activeTab)?.label || activeTab} />;
     }
