@@ -1,0 +1,378 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import DashboardLayout from "@/components/DashboardLayout";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Layers, CheckCircle2, XCircle, Plus, Search, Pencil, Trash2, ImageIcon,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+
+interface Urun {
+  id: string;
+  urun_no: string;
+  baslik: string;
+  foto_url: string | null;
+  urun_kategori_id: string | null;
+  urun_grup_id: string | null;
+  urun_tur_id: string | null;
+  fiyat_tipi: string;
+  fiyat: number | null;
+  para_birimi: string | null;
+  durum: string;
+  updated_at: string;
+}
+
+const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
+
+const paraBirimiSymbol: Record<string, string> = {
+  TRY: "₺", USD: "$", EUR: "€", GBP: "£",
+};
+
+export default function ManuPazar() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [urunler, setUrunler] = useState<Urun[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterKategori, setFilterKategori] = useState("all");
+  const [filterGrup, setFilterGrup] = useState("all");
+  const [filterTur, setFilterTur] = useState("all");
+
+  // Category options for filters
+  const [kategoriler, setKategoriler] = useState<{ id: string; name: string }[]>([]);
+  const [gruplar, setGruplar] = useState<{ id: string; name: string }[]>([]);
+  const [turler, setTurler] = useState<{ id: string; name: string }[]>([]);
+  // Name maps
+  const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetchData();
+    fetchKategoriler();
+  }, []);
+
+  useEffect(() => {
+    if (filterKategori && filterKategori !== "all") {
+      fetchGruplar(filterKategori);
+    } else {
+      setGruplar([]);
+      setFilterGrup("all");
+      setFilterTur("all");
+    }
+  }, [filterKategori]);
+
+  useEffect(() => {
+    if (filterGrup && filterGrup !== "all") {
+      fetchTurler(filterGrup);
+    } else {
+      setTurler([]);
+      setFilterTur("all");
+    }
+  }, [filterGrup]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { setLoading(false); return; }
+
+    const { data } = await supabase
+      .from("urunler")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (data) {
+      setUrunler(data);
+      // Collect all secenek IDs to resolve names
+      const ids = new Set<string>();
+      data.forEach((u) => {
+        if (u.urun_kategori_id) ids.add(u.urun_kategori_id);
+        if (u.urun_grup_id) ids.add(u.urun_grup_id);
+        if (u.urun_tur_id) ids.add(u.urun_tur_id);
+      });
+      if (ids.size > 0) {
+        const { data: secenekler } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name")
+          .in("id", Array.from(ids));
+        if (secenekler) {
+          const map: Record<string, string> = {};
+          secenekler.forEach((s) => { map[s.id] = s.name; });
+          setSecenekMap(map);
+        }
+      }
+    }
+    setLoading(false);
+  };
+
+  const fetchKategoriler = async () => {
+    const { data } = await supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name")
+      .eq("kategori_id", KATEGORI_ID)
+      .is("parent_id", null)
+      .order("name");
+    if (data) setKategoriler(data);
+  };
+
+  const fetchGruplar = async (parentId: string) => {
+    const { data } = await supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name")
+      .eq("kategori_id", KATEGORI_ID)
+      .eq("parent_id", parentId)
+      .order("name");
+    if (data) setGruplar(data);
+  };
+
+  const fetchTurler = async (parentId: string) => {
+    const { data } = await supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name")
+      .eq("kategori_id", KATEGORI_ID)
+      .eq("parent_id", parentId)
+      .order("name");
+    if (data) setTurler(data);
+  };
+
+  const handleToggleDurum = async (urun: Urun) => {
+    const newDurum = urun.durum === "aktif" ? "pasif" : "aktif";
+    const { error } = await supabase.from("urunler").update({ durum: newDurum }).eq("id", urun.id);
+    if (error) {
+      toast({ title: "Hata", description: "Durum güncellenemedi.", variant: "destructive" });
+    } else {
+      setUrunler((prev) => prev.map((u) => u.id === urun.id ? { ...u, durum: newDurum } : u));
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from("urunler").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Hata", description: "Ürün silinemedi.", variant: "destructive" });
+    } else {
+      toast({ title: "Ürün silindi" });
+      setUrunler((prev) => prev.filter((u) => u.id !== id));
+    }
+  };
+
+  const toplamUrun = urunler.length;
+  const aktifUrun = urunler.filter((u) => u.durum === "aktif").length;
+  const pasifUrun = urunler.filter((u) => u.durum === "pasif").length;
+
+  const filteredUrunler = urunler.filter((u) => {
+    const matchSearch =
+      u.baslik.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.urun_no.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchKat = filterKategori === "all" || u.urun_kategori_id === filterKategori;
+    const matchGrup = filterGrup === "all" || u.urun_grup_id === filterGrup;
+    const matchTur = filterTur === "all" || u.urun_tur_id === filterTur;
+    return matchSearch && matchKat && matchGrup && matchTur;
+  });
+
+  return (
+    <DashboardLayout title="Pazarım">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Pazarım</h2>
+            <p className="text-sm text-muted-foreground">Mağazandaki ürünleri yönet, düzenle ve yeni ürün ekle.</p>
+          </div>
+          <Button onClick={() => navigate("/manupazar/yeni")} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Yeni Ürün
+          </Button>
+        </div>
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-l-4 border-l-primary">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+                <Layers className="w-4 h-4 text-primary" />
+                Toplam Ürün
+              </div>
+              <p className="text-3xl font-bold text-foreground">{toplamUrun}</p>
+              <p className="text-xs text-muted-foreground mt-1">Tüm ürünler</p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-emerald-500">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                Aktif Ürün
+              </div>
+              <p className="text-3xl font-bold text-foreground">{aktifUrun}</p>
+              <p className="text-xs text-muted-foreground mt-1">Aktif ürünler</p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-destructive">
+            <CardContent className="p-5">
+              <div className="flex items-center gap-2 text-muted-foreground text-sm mb-2">
+                <XCircle className="w-4 h-4 text-destructive" />
+                Pasif Ürün
+              </div>
+              <p className="text-3xl font-bold text-foreground">{pasifUrun}</p>
+              <p className="text-xs text-muted-foreground mt-1">Pasif ürünler</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Ürün adı, SKU/ID, kategori..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={filterKategori} onValueChange={(v) => { setFilterKategori(v); setFilterGrup("all"); setFilterTur("all"); }}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Kategori: Tümü" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all">Kategori: Tümü</SelectItem>
+              {kategoriler.map((k) => (
+                <SelectItem key={k.id} value={k.id}>{k.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterGrup} onValueChange={(v) => { setFilterGrup(v); setFilterTur("all"); }} disabled={filterKategori === "all"}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Grup Seçin" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all">Grup: Tümü</SelectItem>
+              {gruplar.map((g) => (
+                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={filterTur} onValueChange={setFilterTur} disabled={filterGrup === "all"}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Tür Seçin" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              <SelectItem value="all">Tür: Tümü</SelectItem>
+              {turler.map((t) => (
+                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Table */}
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Ürün</TableHead>
+                  <TableHead>Kategori</TableHead>
+                  <TableHead>Grup</TableHead>
+                  <TableHead>Fiyat</TableHead>
+                  <TableHead>Güncelleme</TableHead>
+                  <TableHead>Durum</TableHead>
+                  <TableHead className="text-center">İşlemler</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Yükleniyor...</TableCell>
+                  </TableRow>
+                ) : filteredUrunler.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Henüz ürün bulunmamaktadır.</TableCell>
+                  </TableRow>
+                ) : (
+                  filteredUrunler.map((urun) => (
+                    <TableRow key={urun.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                            {urun.foto_url ? (
+                              <img src={urun.foto_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-foreground text-sm truncate max-w-[200px]">{urun.baslik}</p>
+                            <p className="text-xs text-muted-foreground">{urun.urun_no}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground truncate max-w-[120px]">
+                        {urun.urun_kategori_id ? secenekMap[urun.urun_kategori_id] || "-" : "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground truncate max-w-[120px]">
+                        {urun.urun_grup_id ? secenekMap[urun.urun_grup_id] || "-" : "-"}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {urun.fiyat != null
+                          ? `${urun.fiyat.toLocaleString("tr-TR")} ${paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi}`
+                          : urun.fiyat_tipi === "varyasyonlu" ? "Varyasyonlu" : "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Switch
+                            checked={urun.durum === "aktif"}
+                            onCheckedChange={() => handleToggleDurum(urun)}
+                            disabled={urun.durum === "taslak" || urun.durum === "onay_bekliyor"}
+                          />
+                          <Badge
+                            variant="secondary"
+                            className={
+                              urun.durum === "aktif"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : urun.durum === "pasif"
+                                ? "bg-muted text-muted-foreground"
+                                : urun.durum === "onay_bekliyor"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-muted text-muted-foreground"
+                            }
+                          >
+                            {urun.durum === "aktif" ? "Aktif" : urun.durum === "pasif" ? "Pasif" : urun.durum === "onay_bekliyor" ? "Onay Bekliyor" : "Taslak"}
+                          </Badge>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(urun.id)}>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </DashboardLayout>
+  );
+}
