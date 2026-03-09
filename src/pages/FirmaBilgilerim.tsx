@@ -130,6 +130,8 @@ const FirmaBilgilerim = () => {
     switch (activeTab) {
       case "genel":
         return <GenelFirmaBilgileri userId={userId} onFirmaTuruChange={handleFirmaTuruChange} />;
+      case "urun-hizmet":
+        return <UrunHizmetTab userId={userId} firmaTuruName={firmaTuruName} />;
       default:
         return <PlaceholderTab label={tabs.find(t => t.id === activeTab)?.label || activeTab} />;
     }
