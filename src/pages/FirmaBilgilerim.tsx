@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
 import FirmaTabMenu from "@/components/firma-bilgileri/FirmaTabMenu";
 import GenelFirmaBilgileri from "@/components/firma-bilgileri/GenelFirmaBilgileri";
+import UrunHizmetTab from "@/components/firma-bilgileri/UrunHizmetTab";
 import PlaceholderTab from "@/components/firma-bilgileri/PlaceholderTab";
 import {
   ClipboardList,
