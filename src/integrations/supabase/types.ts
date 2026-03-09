@@ -521,6 +521,8 @@ export type Database = {
       }
       firmalar: {
         Row: {
+          aylik_tedarik_birim_id: string | null
+          aylik_tedarik_sayisi: number | null
           aylik_uretim_kapasitesi: number | null
           bagimsiz_denetim_id: string | null
           created_at: string
@@ -532,6 +534,7 @@ export type Database = {
           firma_tipi_id: string
           firma_turu_id: string
           firma_unvani: string
+          fiziksel_magaza_sayisi: number | null
           hizli_numune_id: string | null
           id: string
           instagram: string | null
@@ -553,6 +556,8 @@ export type Database = {
           x_twitter: string | null
         }
         Insert: {
+          aylik_tedarik_birim_id?: string | null
+          aylik_tedarik_sayisi?: number | null
           aylik_uretim_kapasitesi?: number | null
           bagimsiz_denetim_id?: string | null
           created_at?: string
@@ -564,6 +569,7 @@ export type Database = {
           firma_tipi_id: string
           firma_turu_id: string
           firma_unvani: string
+          fiziksel_magaza_sayisi?: number | null
           hizli_numune_id?: string | null
           id?: string
           instagram?: string | null
@@ -585,6 +591,8 @@ export type Database = {
           x_twitter?: string | null
         }
         Update: {
+          aylik_tedarik_birim_id?: string | null
+          aylik_tedarik_sayisi?: number | null
           aylik_uretim_kapasitesi?: number | null
           bagimsiz_denetim_id?: string | null
           created_at?: string
@@ -596,6 +604,7 @@ export type Database = {
           firma_tipi_id?: string
           firma_turu_id?: string
           firma_unvani?: string
+          fiziksel_magaza_sayisi?: number | null
           hizli_numune_id?: string | null
           id?: string
           instagram?: string | null
@@ -617,6 +626,13 @@ export type Database = {
           x_twitter?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "firmalar_aylik_tedarik_birim_id_fkey"
+            columns: ["aylik_tedarik_birim_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "firmalar_bagimsiz_denetim_id_fkey"
             columns: ["bagimsiz_denetim_id"]
