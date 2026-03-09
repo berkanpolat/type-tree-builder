@@ -852,7 +852,7 @@ export default function AnaSayfa() {
             </div>
           </div>
         )}
-      </div>
-    </DashboardLayout>
+      </main>
+    </div>
   );
 }
