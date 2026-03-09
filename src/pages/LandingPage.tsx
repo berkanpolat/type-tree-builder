@@ -35,7 +35,7 @@ const LandingPage = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/dashboard", { replace: true });
+        navigate("/anasayfa", { replace: true });
       } else {
         setLoading(false);
       }
