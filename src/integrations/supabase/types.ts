@@ -74,6 +74,78 @@ export type Database = {
           },
         ]
       }
+      firma_tesisler: {
+        Row: {
+          created_at: string
+          firma_id: string
+          id: string
+          il_id: string | null
+          ilce_id: string | null
+          is_gucu_id: string | null
+          makine_gucu: string | null
+          tesis_adi_id: string
+          tesis_adresi: string | null
+        }
+        Insert: {
+          created_at?: string
+          firma_id: string
+          id?: string
+          il_id?: string | null
+          ilce_id?: string | null
+          is_gucu_id?: string | null
+          makine_gucu?: string | null
+          tesis_adi_id: string
+          tesis_adresi?: string | null
+        }
+        Update: {
+          created_at?: string
+          firma_id?: string
+          id?: string
+          il_id?: string | null
+          ilce_id?: string | null
+          is_gucu_id?: string | null
+          makine_gucu?: string | null
+          tesis_adi_id?: string
+          tesis_adresi?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_tesisler_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_tesisler_il_id_fkey"
+            columns: ["il_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_tesisler_ilce_id_fkey"
+            columns: ["ilce_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_tesisler_is_gucu_id_fkey"
+            columns: ["is_gucu_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_tesisler_tesis_adi_id_fkey"
+            columns: ["tesis_adi_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firma_tipleri: {
         Row: {
           created_at: string
