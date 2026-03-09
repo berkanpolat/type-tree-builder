@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -82,21 +82,92 @@ const STEPS = ["İhale Türü", "Teklif Usulü", "Kategori", "İhale Bilgileri",
 
 export default function YeniIhale() {
   const navigate = useNavigate();
+  const { id: editId } = useParams<{ id?: string }>();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<IhaleFormData>(INITIAL_FORM);
   const [saving, setSaving] = useState(false);
   const [ihaleId, setIhaleId] = useState<string | null>(null);
+  const [loadingEdit, setLoadingEdit] = useState(!!editId);
 
-  // Determine if stok step should be shown
-  const shouldShowStok = () => {
-    if (formData.ihale_turu === "hizmet_alim") {
-      // Hizmet alım - check if it's "Teknik ve Tasarım Hizmeti" category
-      // If so, no stok
-      return true; // We'll refine this based on selected hizmet category
-    }
-    return true;
-  };
+  // Load existing ihale for editing
+  useEffect(() => {
+    if (!editId) return;
+    const loadIhale = async () => {
+      setLoadingEdit(true);
+      const { data: ihale, error } = await supabase.from("ihaleler").select("*").eq("id", editId).single();
+      if (error || !ihale) {
+        toast({ title: "Hata", description: "İhale bulunamadı.", variant: "destructive" });
+        navigate("/manuihale");
+        return;
+      }
+
+      // Only allow editing if duzenleniyor or onay_bekliyor
+      if (ihale.durum !== "duzenleniyor" && ihale.durum !== "onay_bekliyor") {
+        toast({ title: "Hata", description: "Bu ihale düzenlenemez.", variant: "destructive" });
+        navigate("/manuihale");
+        return;
+      }
+
+      // Load filtreler and stoklar
+      const [filtreRes, stokRes] = await Promise.all([
+        supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", editId),
+        supabase.from("ihale_stok").select("varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value, miktar_tipi, stok_sayisi").eq("ihale_id", editId),
+      ]);
+
+      const formatDatetime = (val: string | null) => {
+        if (!val) return "";
+        try {
+          return new Date(val).toISOString().slice(0, 16);
+        } catch { return ""; }
+      };
+
+      setFormData({
+        id: ihale.id,
+        ihale_no: ihale.ihale_no,
+        ihale_turu: ihale.ihale_turu || "",
+        teklif_usulu: ihale.teklif_usulu || "",
+        urun_kategori_id: ihale.urun_kategori_id || "",
+        urun_grup_id: ihale.urun_grup_id || "",
+        urun_tur_id: ihale.urun_tur_id || "",
+        hizmet_kategori_id: ihale.hizmet_kategori_id || "",
+        hizmet_tur_id: ihale.hizmet_tur_id || "",
+        baslik: ihale.baslik || "",
+        aciklama: ihale.aciklama || "",
+        baslangic_fiyati: ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati) : null,
+        para_birimi: ihale.para_birimi || "TRY",
+        kdv_durumu: ihale.kdv_durumu || "",
+        odeme_secenekleri: ihale.odeme_secenekleri || "",
+        odeme_vadesi: ihale.odeme_vadesi || "",
+        kargo_masrafi: ihale.kargo_masrafi || "",
+        kargo_sirketi_anlasmasi: ihale.kargo_sirketi_anlasmasi || "",
+        teslimat_tarihi: formatDatetime(ihale.teslimat_tarihi),
+        teslimat_yeri: ihale.teslimat_yeri || "",
+        baslangic_tarihi: formatDatetime(ihale.baslangic_tarihi),
+        bitis_tarihi: formatDatetime(ihale.bitis_tarihi),
+        foto_url: ihale.foto_url,
+        ek_dosya_url: ihale.ek_dosya_url,
+        ozel_filtreleme: ihale.ozel_filtreleme || false,
+        firma_adi_gizle: ihale.firma_adi_gizle || false,
+        min_teklif_degisim: ihale.min_teklif_degisim ? Number(ihale.min_teklif_degisim) : null,
+        teknik_detaylar: (ihale.teknik_detaylar as Record<string, any>) || {},
+        filtreler: (filtreRes.data || []).map((f) => ({ filtre_tipi: f.filtre_tipi, secenek_id: f.secenek_id })),
+        stoklar: (stokRes.data || []).map((s) => ({
+          varyant_1_label: s.varyant_1_label,
+          varyant_1_value: s.varyant_1_value,
+          varyant_2_label: s.varyant_2_label || undefined,
+          varyant_2_value: s.varyant_2_value || undefined,
+          miktar_tipi: s.miktar_tipi,
+          stok_sayisi: s.stok_sayisi,
+        })),
+      });
+
+      setIhaleId(editId);
+      setLoadingEdit(false);
+    };
+
+    loadIhale();
+  }, [editId]);
 
   const updateForm = (updates: Partial<IhaleFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -119,7 +190,6 @@ export default function YeniIhale() {
 
   const handleNext = async () => {
     if (currentStep === 1 && !ihaleId) {
-      // Create ihale in DB after step 2 (teklif usulü selected)
       await createIhale();
     }
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
@@ -212,18 +282,25 @@ export default function YeniIhale() {
     await handleSave();
     if (!ihaleId) return;
 
-    // Update status to onay_bekliyor
     await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihaleId);
     toast({ title: "İhale onaya gönderildi" });
     navigate("/manuihale");
   };
 
+  if (loadingEdit) {
+    return (
+      <DashboardLayout title="İhale Düzenle">
+        <div className="flex items-center justify-center py-20 text-muted-foreground">Yükleniyor...</div>
+      </DashboardLayout>
+    );
+  }
+
   return (
-    <DashboardLayout title="Yeni İhale">
+    <DashboardLayout title={editId ? "İhale Düzenle" : "Yeni İhale"}>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Yeni ihale</h2>
+            <h2 className="text-2xl font-bold text-foreground">{editId ? "İhale Düzenle" : "Yeni ihale"}</h2>
             {formData.ihale_no && (
               <p className="text-sm text-muted-foreground mt-1">#{formData.ihale_no}</p>
             )}

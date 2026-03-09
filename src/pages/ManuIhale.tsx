@@ -289,7 +289,13 @@ export default function ManuIhale() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => navigate(`/manuihale/${ihale.id}`)}
+                              onClick={() => {
+                                if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") {
+                                  navigate(`/manuihale/duzenle/${ihale.id}`);
+                                } else {
+                                  navigate(`/manuihale/${ihale.id}`);
+                                }
+                              }}
                             >
                               <ExternalLink className="w-4 h-4" />
                             </Button>
