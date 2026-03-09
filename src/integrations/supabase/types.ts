@@ -124,38 +124,90 @@ export type Database = {
       firmalar: {
         Row: {
           created_at: string
+          facebook: string | null
+          firma_hakkinda: string | null
+          firma_iletisim_email: string | null
+          firma_iletisim_numarasi: string | null
+          firma_olcegi_id: string | null
           firma_tipi_id: string
           firma_turu_id: string
           firma_unvani: string
           id: string
+          instagram: string | null
+          kapak_fotografi_url: string | null
+          kurulus_il_id: string | null
+          kurulus_ilce_id: string | null
+          kurulus_tarihi: string | null
+          linkedin: string | null
+          logo_url: string | null
+          tiktok: string | null
           updated_at: string
           user_id: string
           vergi_dairesi: string
           vergi_numarasi: string
+          web_sitesi: string | null
+          x_twitter: string | null
         }
         Insert: {
           created_at?: string
+          facebook?: string | null
+          firma_hakkinda?: string | null
+          firma_iletisim_email?: string | null
+          firma_iletisim_numarasi?: string | null
+          firma_olcegi_id?: string | null
           firma_tipi_id: string
           firma_turu_id: string
           firma_unvani: string
           id?: string
+          instagram?: string | null
+          kapak_fotografi_url?: string | null
+          kurulus_il_id?: string | null
+          kurulus_ilce_id?: string | null
+          kurulus_tarihi?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
+          tiktok?: string | null
           updated_at?: string
           user_id: string
           vergi_dairesi: string
           vergi_numarasi: string
+          web_sitesi?: string | null
+          x_twitter?: string | null
         }
         Update: {
           created_at?: string
+          facebook?: string | null
+          firma_hakkinda?: string | null
+          firma_iletisim_email?: string | null
+          firma_iletisim_numarasi?: string | null
+          firma_olcegi_id?: string | null
           firma_tipi_id?: string
           firma_turu_id?: string
           firma_unvani?: string
           id?: string
+          instagram?: string | null
+          kapak_fotografi_url?: string | null
+          kurulus_il_id?: string | null
+          kurulus_ilce_id?: string | null
+          kurulus_tarihi?: string | null
+          linkedin?: string | null
+          logo_url?: string | null
+          tiktok?: string | null
           updated_at?: string
           user_id?: string
           vergi_dairesi?: string
           vergi_numarasi?: string
+          web_sitesi?: string | null
+          x_twitter?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "firmalar_firma_olcegi_id_fkey"
+            columns: ["firma_olcegi_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "firmalar_firma_tipi_id_fkey"
             columns: ["firma_tipi_id"]
