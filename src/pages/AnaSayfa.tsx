@@ -116,9 +116,10 @@ export default function AnaSayfa() {
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Ürünler state
-  const [urunler, setUrunler] = useState<UrunListItem[]>([]);
+  const [urunler, setUrunler] = useState<UrunWithExtra[]>([]);
   const [urunLoading, setUrunLoading] = useState(true);
   const [selectedKategori, setSelectedKategori] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
 
   // Firma state
   const [firmalar, setFirmalar] = useState<FirmaListItem[]>([]);
