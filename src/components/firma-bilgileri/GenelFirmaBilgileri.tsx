@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Upload, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Props {
@@ -13,77 +14,106 @@ interface Props {
   onFirmaTuruChange?: (turuId: string) => void;
 }
 
-interface FirmaRow {
+interface SelectOption {
   id: string;
-  firma_turu_id: string;
-  firma_tipi_id: string;
-  firma_unvani: string;
-  vergi_numarasi: string;
-  vergi_dairesi: string;
+  name: string;
 }
 
-interface ProfileRow {
-  id: string;
-  ad: string;
-  soyad: string;
-  iletisim_email: string;
-  iletisim_numarasi: string | null;
-}
-
-interface SelectOption { id: string; name: string; }
+// Category IDs from database
+const KATEGORI_IDS = {
+  FIRMA_OLCEGI: "a0000001-0000-0000-0000-000000000001",
+  IL: "61fbe0a7-638f-4900-97a0-c2c8310e01af",
+};
 
 export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const kapakInputRef = useRef<HTMLInputElement>(null);
 
-  // Data
-  const [firma, setFirma] = useState<FirmaRow | null>(null);
-  const [profile, setProfile] = useState<ProfileRow | null>(null);
-
-  // Form fields
+  // Firma fields
   const [firmaTuruId, setFirmaTuruId] = useState("");
   const [firmaTipiId, setFirmaTipiId] = useState("");
   const [firmaUnvani, setFirmaUnvani] = useState("");
+  const [firmaOlcegiId, setFirmaOlcegiId] = useState("");
   const [vergiNumarasi, setVergiNumarasi] = useState("");
   const [vergiDairesi, setVergiDairesi] = useState("");
-  const [iletisimNumarasi, setIletisimNumarasi] = useState("");
-  const [iletisimEmail, setIletisimEmail] = useState("");
+  const [kurulusTarihi, setKurulusTarihi] = useState("");
+  const [kurulusIlId, setKurulusIlId] = useState("");
+  const [kurulusIlceId, setKurulusIlceId] = useState("");
+  const [webSitesi, setWebSitesi] = useState("");
+  const [firmaIletisimNumarasi, setFirmaIletisimNumarasi] = useState("");
+  const [firmaIletisimEmail, setFirmaIletisimEmail] = useState("");
+  const [instagram, setInstagram] = useState("");
+  const [facebook, setFacebook] = useState("");
+  const [linkedin, setLinkedin] = useState("");
+  const [xTwitter, setXTwitter] = useState("");
+  const [tiktok, setTiktok] = useState("");
+  const [logoUrl, setLogoUrl] = useState("");
+  const [kapakUrl, setKapakUrl] = useState("");
+  const [firmaHakkinda, setFirmaHakkinda] = useState("");
 
   // Dropdown options
   const [firmaTurleri, setFirmaTurleri] = useState<SelectOption[]>([]);
-  const [firmaTipleri, setFirmaTipleri] = useState<SelectOption[]>([]);
-  const [filteredTipleri, setFilteredTipleri] = useState<SelectOption[]>([]);
-
-  // All firma_tipleri for filtering
   const [allTipleri, setAllTipleri] = useState<{ id: string; name: string; firma_turu_id: string }[]>([]);
+  const [filteredTipleri, setFilteredTipleri] = useState<SelectOption[]>([]);
+  const [firmaOlcekleri, setFirmaOlcekleri] = useState<SelectOption[]>([]);
+  const [iller, setIller] = useState<SelectOption[]>([]);
+  const [ilceler, setIlceler] = useState<SelectOption[]>([]);
+
+  // Image upload states
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingKapak, setUploadingKapak] = useState(false);
 
   useEffect(() => {
     const fetchAll = async () => {
-      const [firmaRes, profileRes, turleriRes, tipleriRes] = await Promise.all([
+      const [firmaRes, turleriRes, tipleriRes, olcekRes, ilRes] = await Promise.all([
         supabase.from("firmalar").select("*").eq("user_id", userId).single(),
-        supabase.from("profiles").select("*").eq("user_id", userId).single(),
         supabase.from("firma_turleri").select("id, name"),
         supabase.from("firma_tipleri").select("id, name, firma_turu_id"),
+        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KATEGORI_IDS.FIRMA_OLCEGI),
+        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KATEGORI_IDS.IL).is("parent_id", null).order("name"),
       ]);
 
       if (turleriRes.data) setFirmaTurleri(turleriRes.data);
       if (tipleriRes.data) setAllTipleri(tipleriRes.data);
+      if (olcekRes.data) setFirmaOlcekleri(olcekRes.data);
+      if (ilRes.data) setIller(ilRes.data);
 
       if (firmaRes.data) {
-        const f = firmaRes.data;
-        setFirma(f);
-        setFirmaTuruId(f.firma_turu_id);
-        setFirmaTipiId(f.firma_tipi_id);
-        setFirmaUnvani(f.firma_unvani);
-        setVergiNumarasi(f.vergi_numarasi);
-        setVergiDairesi(f.vergi_dairesi);
-      }
-      if (profileRes.data) {
-        const p = profileRes.data;
-        setProfile(p);
-        setIletisimEmail(p.iletisim_email);
-        setIletisimNumarasi(p.iletisim_numarasi || "");
+        const f = firmaRes.data as any;
+        setFirmaTuruId(f.firma_turu_id || "");
+        setFirmaTipiId(f.firma_tipi_id || "");
+        setFirmaUnvani(f.firma_unvani || "");
+        setFirmaOlcegiId(f.firma_olcegi_id || "");
+        setVergiNumarasi(f.vergi_numarasi || "");
+        setVergiDairesi(f.vergi_dairesi || "");
+        setKurulusTarihi(f.kurulus_tarihi || "");
+        setKurulusIlId(f.kurulus_il_id || "");
+        setKurulusIlceId(f.kurulus_ilce_id || "");
+        setWebSitesi(f.web_sitesi || "");
+        setFirmaIletisimNumarasi(f.firma_iletisim_numarasi || "");
+        setFirmaIletisimEmail(f.firma_iletisim_email || "");
+        setInstagram(f.instagram || "");
+        setFacebook(f.facebook || "");
+        setLinkedin(f.linkedin || "");
+        setXTwitter(f.x_twitter || "");
+        setTiktok(f.tiktok || "");
+        setLogoUrl(f.logo_url || "");
+        setKapakUrl(f.kapak_fotografi_url || "");
+        setFirmaHakkinda(f.firma_hakkinda || "");
+
+        // Load ilçeler for selected il
+        if (f.kurulus_il_id) {
+          const { data: ilceData } = await supabase
+            .from("firma_bilgi_secenekleri")
+            .select("id, name")
+            .eq("kategori_id", KATEGORI_IDS.IL)
+            .eq("parent_id", f.kurulus_il_id)
+            .order("name");
+          if (ilceData) setIlceler(ilceData);
+        }
       }
 
       setLoading(false);
@@ -91,7 +121,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
     if (userId) fetchAll();
   }, [userId]);
 
-  // Filter firma tipleri based on selected firma türü
+  // Filter firma tipleri
   useEffect(() => {
     if (firmaTuruId) {
       setFilteredTipleri(allTipleri.filter(t => t.firma_turu_id === firmaTuruId));
@@ -100,23 +130,66 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
     }
   }, [firmaTuruId, allTipleri]);
 
+  // Load ilçeler when il changes
+  const handleIlChange = async (ilId: string) => {
+    setKurulusIlId(ilId);
+    setKurulusIlceId("");
+    const { data } = await supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name")
+      .eq("kategori_id", KATEGORI_IDS.IL)
+      .eq("parent_id", ilId)
+      .order("name");
+    setIlceler(data || []);
+  };
+
+  // Image upload handler
+  const handleImageUpload = async (file: File, type: "logo" | "kapak") => {
+    const setUploading = type === "logo" ? setUploadingLogo : setUploadingKapak;
+    const setUrl = type === "logo" ? setLogoUrl : setKapakUrl;
+    setUploading(true);
+
+    const ext = file.name.split(".").pop();
+    const path = `${userId}/${type}-${Date.now()}.${ext}`;
+
+    const { error } = await supabase.storage.from("firma-images").upload(path, file, { upsert: true });
+    if (error) {
+      toast({ title: "Hata", description: "Dosya yüklenemedi.", variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+
+    const { data: publicUrl } = supabase.storage.from("firma-images").getPublicUrl(path);
+    setUrl(publicUrl.publicUrl);
+    setUploading(false);
+  };
+
   const handleSave = async () => {
     setSaving(true);
-    const [firmaUpdate, profileUpdate] = await Promise.all([
-      supabase.from("firmalar").update({
-        firma_turu_id: firmaTuruId,
-        firma_tipi_id: firmaTipiId,
-        firma_unvani: firmaUnvani,
-        vergi_numarasi: vergiNumarasi,
-        vergi_dairesi: vergiDairesi,
-      }).eq("user_id", userId),
-      supabase.from("profiles").update({
-        iletisim_email: iletisimEmail,
-        iletisim_numarasi: iletisimNumarasi || null,
-      }).eq("user_id", userId),
-    ]);
+    const { error } = await supabase.from("firmalar").update({
+      firma_turu_id: firmaTuruId,
+      firma_tipi_id: firmaTipiId,
+      firma_unvani: firmaUnvani,
+      firma_olcegi_id: firmaOlcegiId || null,
+      vergi_numarasi: vergiNumarasi,
+      vergi_dairesi: vergiDairesi,
+      kurulus_tarihi: kurulusTarihi || null,
+      kurulus_il_id: kurulusIlId || null,
+      kurulus_ilce_id: kurulusIlceId || null,
+      web_sitesi: webSitesi || null,
+      firma_iletisim_numarasi: firmaIletisimNumarasi || null,
+      firma_iletisim_email: firmaIletisimEmail || null,
+      instagram: instagram || null,
+      facebook: facebook || null,
+      linkedin: linkedin || null,
+      x_twitter: xTwitter || null,
+      tiktok: tiktok || null,
+      logo_url: logoUrl || null,
+      kapak_fotografi_url: kapakUrl || null,
+      firma_hakkinda: firmaHakkinda || null,
+    } as any).eq("user_id", userId);
 
-    if (firmaUpdate.error || profileUpdate.error) {
+    if (error) {
       toast({ title: "Hata", description: "Bilgiler kaydedilemedi.", variant: "destructive" });
     } else {
       toast({ title: "Başarılı", description: "Firma bilgileri güncellendi." });
@@ -175,6 +248,21 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
             <Input value={firmaUnvani} onChange={e => setFirmaUnvani(e.target.value)} className="bg-muted/50" />
           </div>
 
+          {/* Firma Ölçeği */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium text-foreground">Firma Ölçeği</Label>
+            <Select value={firmaOlcegiId} onValueChange={setFirmaOlcegiId}>
+              <SelectTrigger className="bg-muted/50">
+                <SelectValue placeholder="Firma Ölçeği Seçiniz" />
+              </SelectTrigger>
+              <SelectContent>
+                {firmaOlcekleri.map(t => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Vergi Numarası */}
           <div className="space-y-1.5">
             <Label className="text-sm font-medium text-foreground">Vergi Numarası</Label>
@@ -187,17 +275,151 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
             <Input value={vergiDairesi} onChange={e => setVergiDairesi(e.target.value)} className="bg-muted/50" />
           </div>
 
+          {/* Kuruluş Tarihi */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium text-foreground">Kuruluş Tarihi</Label>
+            <Input
+              value={kurulusTarihi}
+              onChange={e => setKurulusTarihi(e.target.value)}
+              placeholder="AA/YYYY"
+              className="bg-muted/50"
+            />
+          </div>
+
+          {/* Kuruluş Bölgesi İl / İlçe */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium text-foreground">Kuruluş Bölgesi</Label>
+            <div className="grid grid-cols-2 gap-3">
+              <Select value={kurulusIlId} onValueChange={handleIlChange}>
+                <SelectTrigger className="bg-muted/50">
+                  <SelectValue placeholder="İl Seçiniz" />
+                </SelectTrigger>
+                <SelectContent>
+                  {iller.map(il => (
+                    <SelectItem key={il.id} value={il.id}>{il.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={kurulusIlceId} onValueChange={setKurulusIlceId} disabled={!kurulusIlId}>
+                <SelectTrigger className="bg-muted/50">
+                  <SelectValue placeholder="İlçe Seçiniz" />
+                </SelectTrigger>
+                <SelectContent>
+                  {ilceler.map(ilce => (
+                    <SelectItem key={ilce.id} value={ilce.id}>{ilce.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Web Sitesi */}
+          <div className="space-y-1.5 md:col-span-2">
+            <Label className="text-sm font-medium text-foreground">Web Sitesi</Label>
+            <Input value={webSitesi} onChange={e => setWebSitesi(e.target.value)} placeholder="www.example.com" className="bg-muted/50" />
+          </div>
+
           {/* İletişim Numarası */}
           <div className="space-y-1.5">
             <Label className="text-sm font-medium text-foreground">İletişim Numarası</Label>
-            <Input value={iletisimNumarasi} onChange={e => setIletisimNumarasi(e.target.value)} className="bg-muted/50" />
+            <Input value={firmaIletisimNumarasi} onChange={e => setFirmaIletisimNumarasi(e.target.value)} className="bg-muted/50" />
           </div>
 
           {/* İletişim Email */}
-          <div className="space-y-1.5 md:col-span-2">
+          <div className="space-y-1.5">
             <Label className="text-sm font-medium text-foreground">İletişim Email</Label>
-            <Input value={iletisimEmail} onChange={e => setIletisimEmail(e.target.value)} className="bg-muted/50" />
+            <Input value={firmaIletisimEmail} onChange={e => setFirmaIletisimEmail(e.target.value)} className="bg-muted/50" />
           </div>
+        </div>
+
+        {/* Sosyal Medya */}
+        <div>
+          <h3 className="text-sm font-semibold text-foreground mb-3">Sosyal Medya</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Instagram</Label>
+              <Input value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="@kullaniciadi" className="bg-muted/50" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Facebook</Label>
+              <Input value={facebook} onChange={e => setFacebook(e.target.value)} placeholder="facebook.com/sayfa" className="bg-muted/50" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">LinkedIn</Label>
+              <Input value={linkedin} onChange={e => setLinkedin(e.target.value)} placeholder="linkedin.com/company/firma" className="bg-muted/50" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">X (Twitter)</Label>
+              <Input value={xTwitter} onChange={e => setXTwitter(e.target.value)} placeholder="@kullaniciadi" className="bg-muted/50" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">TikTok</Label>
+              <Input value={tiktok} onChange={e => setTiktok(e.target.value)} placeholder="@kullaniciadi" className="bg-muted/50" />
+            </div>
+          </div>
+        </div>
+
+        {/* Logo & Kapak Fotoğrafı */}
+        <div>
+          <h3 className="text-sm font-semibold text-foreground mb-3">Görseller</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            {/* Logo */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Logo</Label>
+              <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0], "logo"); }} />
+              {logoUrl ? (
+                <div className="relative w-24 h-24 rounded-lg border border-border overflow-hidden group">
+                  <img src={logoUrl} alt="Logo" className="w-full h-full object-cover" />
+                  <button onClick={() => setLogoUrl("")} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => logoInputRef.current?.click()}
+                  disabled={uploadingLogo}
+                  className="w-24 h-24 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground hover:border-primary/50 transition-colors"
+                >
+                  <Upload className="w-5 h-5 mb-1" />
+                  <span className="text-[10px]">{uploadingLogo ? "Yükleniyor" : "Logo Yükle"}</span>
+                </button>
+              )}
+            </div>
+
+            {/* Kapak Fotoğrafı */}
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground">Kapak Fotoğrafı</Label>
+              <input ref={kapakInputRef} type="file" accept="image/*" className="hidden" onChange={e => { if (e.target.files?.[0]) handleImageUpload(e.target.files[0], "kapak"); }} />
+              {kapakUrl ? (
+                <div className="relative w-full h-24 rounded-lg border border-border overflow-hidden group">
+                  <img src={kapakUrl} alt="Kapak" className="w-full h-full object-cover" />
+                  <button onClick={() => setKapakUrl("")} className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => kapakInputRef.current?.click()}
+                  disabled={uploadingKapak}
+                  className="w-full h-24 rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground hover:border-primary/50 transition-colors"
+                >
+                  <Upload className="w-5 h-5 mb-1" />
+                  <span className="text-[10px]">{uploadingKapak ? "Yükleniyor" : "Kapak Fotoğrafı Yükle"}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Firma Hakkında */}
+        <div className="space-y-1.5">
+          <Label className="text-sm font-medium text-foreground">Firma Hakkında</Label>
+          <Textarea
+            value={firmaHakkinda}
+            onChange={e => setFirmaHakkinda(e.target.value)}
+            placeholder="Firmanız hakkında kısa bir açıklama yazınız..."
+            className="bg-muted/50 min-h-[100px]"
+          />
         </div>
 
         {/* Save button */}
