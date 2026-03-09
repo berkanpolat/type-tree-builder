@@ -17,7 +17,7 @@ export default function KategoriStep({ formData, updateForm }: Props) {
   const { data: kategoriler } = useQuery({
     queryKey: ["ihale_kategoriler", isHizmet ? "hizmet" : "urun"],
     queryFn: async () => {
-      const categoryName = isHizmet ? "Ana Hizmet Kategorileri" : "Ana Ürün Kategorisi";
+      const categoryName = isHizmet ? "Ana Hizmet Kategorileri" : "Ana Ürün Kategorileri";
       const { data } = await supabase
         .from("firma_bilgi_kategorileri")
         .select("*")
