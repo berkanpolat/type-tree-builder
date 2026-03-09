@@ -10,6 +10,7 @@ import UrunBilgileri from "./pages/UrunBilgileri";
 import UrunKategorisi from "./pages/UrunKategorisi";
 import GirisKayit from "./pages/GirisKayit";
 import FirmaBilgilerim from "./pages/FirmaBilgilerim";
+import ManuIhale from "./pages/ManuIhale";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
+          <Route path="/manuihale" element={<ManuIhale />} />
           <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
           <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
           <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
