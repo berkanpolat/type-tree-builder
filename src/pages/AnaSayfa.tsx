@@ -102,6 +102,7 @@ export default function AnaSayfa() {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/giris-kayit"); return; }
+      setCurrentUserId(user.id);
       const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", user.id).single();
       if (firma) setFirmaUnvani(firma.firma_unvani);
       setAuthLoading(false);
