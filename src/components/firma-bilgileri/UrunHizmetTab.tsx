@@ -163,12 +163,12 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
 
       if (isMarka) {
         extraPromises.push(
-          supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KAT.IL).is("parent_id", null).order("name")
+          supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KAT.IL).is("parent_id", null).order("name").then(r => r)
         );
       }
       if (isTedarikci) {
         extraPromises.push(
-          supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KAT.BIRIM_TURLERI).order("name")
+          supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KAT.BIRIM_TURLERI).order("name").then(r => r)
         );
       }
 
