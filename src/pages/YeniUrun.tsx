@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Pencil, FileText, Settings, Package, Plus, Trash2 } from "lucide-react";
+import { Pencil, FileText, Settings, Package, Plus, Trash2, X, Upload, ImageIcon } from "lucide-react";
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 
@@ -107,10 +111,16 @@ const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" 
   ],
 };
 
-interface Varyasyon {
+interface UrunVaryasyon {
+  varyant_1_label: string;
+  varyant_1_value: string;
+  varyant_2_label: string;
+  varyant_2_value: string;
   min_adet: number;
   max_adet: number;
   birim_fiyat: number;
+  foto_url: string;
+  foto_file?: File;
 }
 
 export default function YeniUrun() {
@@ -120,7 +130,7 @@ export default function YeniUrun() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
 
-  // Step 1: Kategori
+  // Step 0: Kategori
   const [kategoriler, setKategoriler] = useState<{ id: string; name: string }[]>([]);
   const [gruplar, setGruplar] = useState<{ id: string; name: string }[]>([]);
   const [turler, setTurler] = useState<{ id: string; name: string }[]>([]);
@@ -129,7 +139,7 @@ export default function YeniUrun() {
   const [selectedTur, setSelectedTur] = useState("");
   const [kategoriName, setKategoriName] = useState("");
 
-  // Step 2: Ürün Bilgileri
+  // Step 1: Ürün Bilgileri
   const [baslik, setBaslik] = useState("");
   const [aciklama, setAciklama] = useState("");
   const [minSiparisMiktari, setMinSiparisMiktari] = useState("");
@@ -137,27 +147,30 @@ export default function YeniUrun() {
   const [paraBirimi, setParaBirimi] = useState("TRY");
   const [fiyat, setFiyat] = useState("");
 
-  // Step 3: Teknik Detaylar
+  // Step 2: Teknik Detaylar
   const [teknikDetaylar, setTeknikDetaylar] = useState<Record<string, string>>({});
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, { id: string; name: string }[]>>({});
 
-  // Step 4: Varyasyonlar
-  const [varyasyonlar, setVaryasyonlar] = useState<Varyasyon[]>([]);
+  // Step 3: Varyasyonlar
+  const [varyasyonlar, setVaryasyonlar] = useState<UrunVaryasyon[]>([]);
+  const [selectedV1, setSelectedV1] = useState<string[]>([]);
+  const [selectedV2, setSelectedV2] = useState<string[]>([]);
+  const [varyant1Options, setVaryant1Options] = useState<{ id: string; name: string }[]>([]);
+  const [renkOptions, setRenkOptions] = useState<{ id: string; name: string }[]>([]);
 
   // Draft ID for auto-save
   const [draftId, setDraftId] = useState<string | null>(editId || null);
 
+  const isHazirGiyim = kategoriName?.toLowerCase().includes("hazır giyim");
+  const varyant1Label = isHazirGiyim ? "Beden" : "Birim";
+  const varyant2Label = "Renk";
+
   // Load edit data
   useEffect(() => {
-    if (editId) {
-      loadUrun(editId);
-    }
+    if (editId) loadUrun(editId);
   }, [editId]);
 
-  // Fetch kategoriler on mount
-  useEffect(() => {
-    fetchKategoriler();
-  }, []);
+  useEffect(() => { fetchKategoriler(); }, []);
 
   useEffect(() => {
     if (selectedKategori) {
@@ -171,58 +184,62 @@ export default function YeniUrun() {
     if (selectedGrup) fetchChildren(selectedGrup, setTurler);
   }, [selectedGrup]);
 
-  // Load dropdown options for teknik detaylar when kategoriName changes
   useEffect(() => {
-    if (kategoriName) loadTeknikDropdownOptions();
+    if (kategoriName) {
+      loadTeknikDropdownOptions();
+      loadVaryantOptions();
+    }
   }, [kategoriName]);
 
   const fetchKategoriler = async () => {
     const { data } = await supabase
-      .from("firma_bilgi_secenekleri")
-      .select("id, name")
-      .eq("kategori_id", KATEGORI_ID)
-      .is("parent_id", null)
-      .order("name");
+      .from("firma_bilgi_secenekleri").select("id, name")
+      .eq("kategori_id", KATEGORI_ID).is("parent_id", null).order("name");
     if (data) setKategoriler(data);
   };
 
   const fetchChildren = async (parentId: string, setter: (v: { id: string; name: string }[]) => void) => {
     const { data } = await supabase
-      .from("firma_bilgi_secenekleri")
-      .select("id, name")
-      .eq("kategori_id", KATEGORI_ID)
-      .eq("parent_id", parentId)
-      .order("name");
+      .from("firma_bilgi_secenekleri").select("id, name")
+      .eq("kategori_id", KATEGORI_ID).eq("parent_id", parentId).order("name");
     if (data) setter(data);
+  };
+
+  const loadVaryantOptions = async () => {
+    const v1KatName = kategoriName?.toLowerCase().includes("hazır giyim") ? "Beden" : "Birim Türleri";
+    const [v1Res, renkRes] = await Promise.all([
+      supabase.from("firma_bilgi_kategorileri").select("id").eq("name", v1KatName).single(),
+      supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "Renk").single(),
+    ]);
+    if (v1Res.data) {
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name")
+        .eq("kategori_id", v1Res.data.id).is("parent_id", null).order("name");
+      if (data) setVaryant1Options(data);
+    }
+    if (renkRes.data) {
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name")
+        .eq("kategori_id", renkRes.data.id).is("parent_id", null).order("name");
+      if (data) setRenkOptions(data);
+    }
   };
 
   const loadTeknikDropdownOptions = async () => {
     const alanlar = getTeknikAlanlar();
     const dropdownAlanlar = alanlar.filter(a => a.type === "dropdown" && a.kategoriName);
     const kategoriNames = [...new Set(dropdownAlanlar.map(a => a.kategoriName!))];
-
     if (kategoriNames.length === 0) return;
 
-    // Get kategori IDs by name
     const { data: katData } = await supabase
-      .from("firma_bilgi_kategorileri")
-      .select("id, name")
-      .in("name", kategoriNames);
-
+      .from("firma_bilgi_kategorileri").select("id, name").in("name", kategoriNames);
     if (!katData) return;
 
     const newOpts: Record<string, { id: string; name: string }[]> = {};
-    const promises = katData.map(async (kat) => {
+    await Promise.all(katData.map(async (kat) => {
       const { data: secenekler } = await supabase
-        .from("firma_bilgi_secenekleri")
-        .select("id, name")
-        .eq("kategori_id", kat.id)
-        .is("parent_id", null)
-        .order("name");
+        .from("firma_bilgi_secenekleri").select("id, name")
+        .eq("kategori_id", kat.id).is("parent_id", null).order("name");
       if (secenekler) newOpts[kat.name] = secenekler;
-    });
-
-    await Promise.all(promises);
+    }));
     setDropdownOptions(newOpts);
   };
 
@@ -242,17 +259,23 @@ export default function YeniUrun() {
     setTeknikDetaylar(data.teknik_detaylar as Record<string, string> || {});
     setDraftId(urunId);
 
-    // Load varyasyonlar
     const { data: vars } = await supabase
-      .from("urun_varyasyonlar")
-      .select("*")
-      .eq("urun_id", urunId)
-      .order("min_adet");
-    if (vars) setVaryasyonlar(vars.map(v => ({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat })));
+      .from("urun_varyasyonlar").select("*").eq("urun_id", urunId).order("created_at");
+    if (vars) {
+      setVaryasyonlar(vars.map(v => ({
+        varyant_1_label: v.varyant_1_label,
+        varyant_1_value: v.varyant_1_value,
+        varyant_2_label: v.varyant_2_label || "",
+        varyant_2_value: v.varyant_2_value || "",
+        min_adet: v.min_adet,
+        max_adet: v.max_adet,
+        birim_fiyat: v.birim_fiyat,
+        foto_url: v.foto_url,
+      })));
+    }
   };
 
   const getTeknikAlanlar = () => {
-    // Try matching exact name, then partial
     if (TEKNIK_ALANLAR[kategoriName]) return TEKNIK_ALANLAR[kategoriName];
     const key = Object.keys(TEKNIK_ALANLAR).find(k => kategoriName.toLowerCase().includes(k.toLowerCase()));
     return key ? TEKNIK_ALANLAR[key] : [];
@@ -286,7 +309,6 @@ export default function YeniUrun() {
   };
 
   const handleNext = async () => {
-    // Validations
     if (step === 0 && (!selectedKategori || !selectedGrup || !selectedTur)) {
       toast({ title: "Lütfen kategori, grup ve tür seçiniz.", variant: "destructive" });
       return;
@@ -310,19 +332,35 @@ export default function YeniUrun() {
         }
       }
     }
-
-    // Auto-save draft
     await saveDraft();
+    if (step < STEPS.length - 1) setStep(step + 1);
+  };
 
-    if (step < STEPS.length - 1) {
-      setStep(step + 1);
+  const uploadVaryasyonFoto = async (file: File): Promise<string | null> => {
+    const ext = file.name.split(".").pop();
+    const path = `varyasyonlar/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("urun-images").upload(path, file);
+    if (error) {
+      toast({ title: "Fotoğraf yüklenemedi", variant: "destructive" });
+      return null;
     }
+    const { data: urlData } = supabase.storage.from("urun-images").getPublicUrl(path);
+    return urlData.publicUrl;
   };
 
   const handleSubmit = async () => {
-    if (fiyatTipi === "varyasyonlu" && varyasyonlar.length === 0) {
-      toast({ title: "En az bir varyasyon ekleyiniz.", variant: "destructive" });
-      return;
+    // Validate varyasyonlar
+    if (fiyatTipi === "varyasyonlu") {
+      if (varyasyonlar.length === 0) {
+        toast({ title: "En az bir varyasyon ekleyiniz.", variant: "destructive" });
+        return;
+      }
+      for (const v of varyasyonlar) {
+        if (!v.foto_url && !v.foto_file) {
+          toast({ title: "Her varyasyon için fotoğraf zorunludur.", variant: "destructive" });
+          return;
+        }
+      }
     }
 
     setSaving(true);
@@ -355,10 +393,29 @@ export default function YeniUrun() {
     // Save varyasyonlar
     if (urunId && fiyatTipi === "varyasyonlu") {
       await supabase.from("urun_varyasyonlar").delete().eq("urun_id", urunId);
-      if (varyasyonlar.length > 0) {
-        await supabase.from("urun_varyasyonlar").insert(
-          varyasyonlar.map(v => ({ urun_id: urunId!, ...v }))
-        );
+
+      // Upload photos for new files
+      const dbRows = [];
+      for (const v of varyasyonlar) {
+        let fotoUrl = v.foto_url;
+        if (v.foto_file) {
+          const uploaded = await uploadVaryasyonFoto(v.foto_file);
+          if (uploaded) fotoUrl = uploaded;
+        }
+        dbRows.push({
+          urun_id: urunId,
+          varyant_1_label: v.varyant_1_label,
+          varyant_1_value: v.varyant_1_value,
+          varyant_2_label: v.varyant_2_label,
+          varyant_2_value: v.varyant_2_value,
+          min_adet: v.min_adet,
+          max_adet: v.max_adet,
+          birim_fiyat: v.birim_fiyat,
+          foto_url: fotoUrl,
+        });
+      }
+      if (dbRows.length > 0) {
+        await supabase.from("urun_varyasyonlar").insert(dbRows as any);
       }
     }
 
@@ -367,20 +424,64 @@ export default function YeniUrun() {
     navigate("/manupazar");
   };
 
-  const addVaryasyon = () => {
-    const lastMax = varyasyonlar.length > 0 ? varyasyonlar[varyasyonlar.length - 1].max_adet : 0;
-    setVaryasyonlar([...varyasyonlar, { min_adet: lastMax + 1, max_adet: lastMax + 10, birim_fiyat: 0 }]);
+  // Varyasyon helpers
+  const getOptionName = (options: { id: string; name: string }[], id: string) =>
+    options.find(o => o.id === id)?.name || id;
+
+  const toggleSelection = (list: string[], setList: (l: string[]) => void, id: string) => {
+    setList(list.includes(id) ? list.filter(i => i !== id) : [...list, id]);
   };
 
-  const updateVaryasyon = (idx: number, field: keyof Varyasyon, value: number) => {
+  const handleGenerateVaryasyonlar = () => {
+    if (selectedV1.length === 0 || selectedV2.length === 0) return;
+
+    const lastMax = varyasyonlar.length > 0 ? varyasyonlar[varyasyonlar.length - 1].max_adet : 0;
+    const newItems: UrunVaryasyon[] = [];
+
+    for (const v1 of selectedV1) {
+      for (const v2 of selectedV2) {
+        const v1Name = getOptionName(varyant1Options, v1);
+        const v2Name = getOptionName(renkOptions, v2);
+        // Skip duplicates
+        if (!varyasyonlar.some(v => v.varyant_1_value === v1Name && v.varyant_2_value === v2Name) &&
+            !newItems.some(v => v.varyant_1_value === v1Name && v.varyant_2_value === v2Name)) {
+          const base = lastMax + newItems.length * 10;
+          newItems.push({
+            varyant_1_label: varyant1Label,
+            varyant_1_value: v1Name,
+            varyant_2_label: varyant2Label,
+            varyant_2_value: v2Name,
+            min_adet: base + 1,
+            max_adet: base + 10,
+            birim_fiyat: 0,
+            foto_url: "",
+          });
+        }
+      }
+    }
+
+    setVaryasyonlar(prev => [...prev, ...newItems]);
+    setSelectedV1([]);
+    setSelectedV2([]);
+  };
+
+  const updateVaryasyonField = (idx: number, field: string, value: any) => {
     setVaryasyonlar(prev => {
       const updated = [...prev];
       updated[idx] = { ...updated[idx], [field]: value };
-
       // Auto-adjust next min_adet
       if (field === "max_adet" && idx < updated.length - 1) {
-        updated[idx + 1] = { ...updated[idx + 1], min_adet: value + 1 };
+        updated[idx + 1] = { ...updated[idx + 1], min_adet: (value as number) + 1 };
       }
+      return updated;
+    });
+  };
+
+  const handleVaryasyonFotoChange = (idx: number, file: File) => {
+    const previewUrl = URL.createObjectURL(file);
+    setVaryasyonlar(prev => {
+      const updated = [...prev];
+      updated[idx] = { ...updated[idx], foto_url: previewUrl, foto_file: file };
       return updated;
     });
   };
@@ -534,80 +635,17 @@ export default function YeniUrun() {
                   )}
 
                   {fiyatTipi === "varyasyonlu" && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Para Birimi*</Label>
-                        <Select value={paraBirimi} onValueChange={setParaBirimi}>
-                          <SelectTrigger className="max-w-[200px]"><SelectValue /></SelectTrigger>
-                          <SelectContent className="bg-popover z-50">
-                            <SelectItem value="TRY">₺ TRY</SelectItem>
-                            <SelectItem value="USD">$ USD</SelectItem>
-                            <SelectItem value="EUR">€ EUR</SelectItem>
-                            <SelectItem value="GBP">£ GBP</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <h4 className="font-semibold text-foreground">Fiyat Aralıkları</h4>
-                      <div className="border rounded-lg overflow-hidden">
-                        <table className="w-full text-sm">
-                          <thead className="bg-muted">
-                            <tr>
-                              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Minimum Adet</th>
-                              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Maksimum Adet</th>
-                              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Birim Fiyat</th>
-                              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Para Birimi</th>
-                              <th className="px-4 py-3 w-10"></th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {varyasyonlar.map((v, idx) => (
-                              <tr key={idx} className="border-t">
-                                <td className="px-4 py-2">
-                                  <Input
-                                    type="number"
-                                    value={v.min_adet}
-                                    onChange={e => updateVaryasyon(idx, "min_adet", parseInt(e.target.value) || 0)}
-                                    disabled={idx > 0}
-                                    min={1}
-                                  />
-                                </td>
-                                <td className="px-4 py-2">
-                                  <Input
-                                    type="number"
-                                    value={v.max_adet}
-                                    onChange={e => updateVaryasyon(idx, "max_adet", parseInt(e.target.value) || 0)}
-                                    min={v.min_adet + 1}
-                                  />
-                                </td>
-                                <td className="px-4 py-2">
-                                  <Input
-                                    type="number"
-                                    value={v.birim_fiyat}
-                                    onChange={e => updateVaryasyon(idx, "birim_fiyat", parseFloat(e.target.value) || 0)}
-                                    min={0}
-                                    step="0.01"
-                                  />
-                                </td>
-                                <td className="px-4 py-2 text-muted-foreground">
-                                  {paraBirimi}
-                                </td>
-                                <td className="px-4 py-2">
-                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeVaryasyon(idx)}>
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <button
-                          onClick={addVaryasyon}
-                          className="w-full py-3 text-sm text-muted-foreground hover:bg-muted/50 transition-colors flex items-center justify-center gap-1 border-t"
-                        >
-                          <Plus className="w-4 h-4" /> Yeni Varyasyon Ekle
-                        </button>
-                      </div>
+                    <div>
+                      <Label>Para Birimi*</Label>
+                      <Select value={paraBirimi} onValueChange={setParaBirimi}>
+                        <SelectTrigger className="max-w-[200px]"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-popover z-50">
+                          <SelectItem value="TRY">₺ TRY</SelectItem>
+                          <SelectItem value="USD">$ USD</SelectItem>
+                          <SelectItem value="EUR">€ EUR</SelectItem>
+                          <SelectItem value="GBP">£ GBP</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   )}
                 </div>
@@ -638,25 +676,11 @@ export default function YeniUrun() {
                             </SelectContent>
                           </Select>
                         ) : alan.type === "date" ? (
-                          <Input
-                            type="date"
-                            value={teknikDetaylar[alan.label] || ""}
-                            onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))}
-                          />
+                          <Input type="date" value={teknikDetaylar[alan.label] || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} />
                         ) : alan.type === "number" ? (
-                          <Input
-                            type="number"
-                            value={teknikDetaylar[alan.label] || ""}
-                            onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))}
-                            placeholder={alan.label}
-                          />
+                          <Input type="number" value={teknikDetaylar[alan.label] || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} placeholder={alan.label} />
                         ) : (
-                          <Input
-                            value={teknikDetaylar[alan.label] || ""}
-                            onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))}
-                            placeholder={alan.label}
-                            maxLength={500}
-                          />
+                          <Input value={teknikDetaylar[alan.label] || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} placeholder={alan.label} maxLength={500} />
                         )}
                       </div>
                     ))}
@@ -665,11 +689,162 @@ export default function YeniUrun() {
               </div>
             )}
 
-            {/* Step 3: Onay */}
+            {/* Step 3: Varyasyon */}
             {step === 3 && (
-              <div className="text-center py-8 space-y-4">
-                <h3 className="text-lg font-semibold text-foreground">Ürün Onaya Hazır</h3>
-                <p className="text-muted-foreground">Tüm bilgiler tamamlandı. Ürünü onaya göndermek için "Gönder" butonuna tıklayın.</p>
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <Package className="w-5 h-5 text-primary" />
+                  Varyasyonlar
+                </h3>
+
+                {fiyatTipi === "varyasyonlu" ? (
+                  <>
+                    {/* Variant selectors */}
+                    <div className="border rounded-lg p-4 space-y-4">
+                      <div className="flex items-center gap-4 flex-wrap">
+                        {/* Varyant 1 */}
+                        <div className="flex-1 min-w-[200px]">
+                          <Label className="text-sm mb-2 block">{varyant1Label}</Label>
+                          <div className="flex flex-wrap gap-1 border rounded-lg p-2 min-h-[40px]">
+                            {selectedV1.map(id => (
+                              <Badge key={id} variant="secondary" className="gap-1">
+                                {getOptionName(varyant1Options, id)}
+                                <button onClick={() => toggleSelection(selectedV1, setSelectedV1, id)}><X className="w-3 h-3" /></button>
+                              </Badge>
+                            ))}
+                            <select
+                              className="border-0 bg-transparent text-sm outline-none flex-1 min-w-[100px]"
+                              value=""
+                              onChange={e => { if (e.target.value) toggleSelection(selectedV1, setSelectedV1, e.target.value); }}
+                            >
+                              <option value="">Ekle...</option>
+                              {varyant1Options.filter(o => !selectedV1.includes(o.id)).map(o => (
+                                <option key={o.id} value={o.id}>{o.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Varyant 2: Renk */}
+                        <div className="flex-1 min-w-[200px]">
+                          <Label className="text-sm mb-2 block">{varyant2Label}</Label>
+                          <div className="flex flex-wrap gap-1 border rounded-lg p-2 min-h-[40px]">
+                            {selectedV2.map(id => (
+                              <Badge key={id} variant="secondary" className="gap-1">
+                                {getOptionName(renkOptions, id)}
+                                <button onClick={() => toggleSelection(selectedV2, setSelectedV2, id)}><X className="w-3 h-3" /></button>
+                              </Badge>
+                            ))}
+                            <select
+                              className="border-0 bg-transparent text-sm outline-none flex-1 min-w-[100px]"
+                              value=""
+                              onChange={e => { if (e.target.value) toggleSelection(selectedV2, setSelectedV2, e.target.value); }}
+                            >
+                              <option value="">Ekle...</option>
+                              {renkOptions.filter(o => !selectedV2.includes(o.id)).map(o => (
+                                <option key={o.id} value={o.id}>{o.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        <Button onClick={handleGenerateVaryasyonlar} disabled={selectedV1.length === 0 || selectedV2.length === 0} className="mt-6">
+                          <Plus className="w-4 h-4 mr-1" /> Ekle
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Generated variations table */}
+                    {varyasyonlar.length > 0 && (
+                      <div className="border rounded-lg overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Fotoğraf</TableHead>
+                              <TableHead>{varyant1Label}</TableHead>
+                              <TableHead>{varyant2Label}</TableHead>
+                              <TableHead>Min Adet</TableHead>
+                              <TableHead>Max Adet</TableHead>
+                              <TableHead>Birim Fiyat</TableHead>
+                              <TableHead>Para Birimi</TableHead>
+                              <TableHead className="w-10"></TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {varyasyonlar.map((v, idx) => (
+                              <TableRow key={idx}>
+                                <TableCell>
+                                  <label className="cursor-pointer">
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={e => {
+                                        const file = e.target.files?.[0];
+                                        if (file) handleVaryasyonFotoChange(idx, file);
+                                      }}
+                                    />
+                                    {v.foto_url ? (
+                                      <div className="w-12 h-12 rounded overflow-hidden border">
+                                        <img src={v.foto_url} alt="" className="w-full h-full object-cover" />
+                                      </div>
+                                    ) : (
+                                      <div className="w-12 h-12 rounded border-2 border-dashed border-muted-foreground/40 flex items-center justify-center hover:border-primary transition-colors">
+                                        <Upload className="w-4 h-4 text-muted-foreground" />
+                                      </div>
+                                    )}
+                                  </label>
+                                </TableCell>
+                                <TableCell className="text-sm">{v.varyant_1_value}</TableCell>
+                                <TableCell className="text-sm">{v.varyant_2_value}</TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={v.min_adet}
+                                    onChange={e => updateVaryasyonField(idx, "min_adet", parseInt(e.target.value) || 0)}
+                                    disabled={idx > 0}
+                                    className="w-20"
+                                    min={1}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={v.max_adet}
+                                    onChange={e => updateVaryasyonField(idx, "max_adet", parseInt(e.target.value) || 0)}
+                                    className="w-20"
+                                    min={v.min_adet + 1}
+                                  />
+                                </TableCell>
+                                <TableCell>
+                                  <Input
+                                    type="number"
+                                    value={v.birim_fiyat}
+                                    onChange={e => updateVaryasyonField(idx, "birim_fiyat", parseFloat(e.target.value) || 0)}
+                                    className="w-24"
+                                    min={0}
+                                    step="0.01"
+                                  />
+                                </TableCell>
+                                <TableCell className="text-sm text-muted-foreground">{paraBirimi}</TableCell>
+                                <TableCell>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeVaryasyon(idx)}>
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8 space-y-4">
+                    <h3 className="text-lg font-semibold text-foreground">Ürün Onaya Hazır</h3>
+                    <p className="text-muted-foreground">Tek fiyat seçildi. Ürünü onaya göndermek için "Gönder" butonuna tıklayın.</p>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

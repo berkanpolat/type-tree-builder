@@ -933,26 +933,41 @@ export type Database = {
         Row: {
           birim_fiyat: number
           created_at: string
+          foto_url: string
           id: string
           max_adet: number
           min_adet: number
           urun_id: string
+          varyant_1_label: string
+          varyant_1_value: string
+          varyant_2_label: string | null
+          varyant_2_value: string | null
         }
         Insert: {
-          birim_fiyat: number
+          birim_fiyat?: number
           created_at?: string
+          foto_url: string
           id?: string
-          max_adet: number
-          min_adet: number
+          max_adet?: number
+          min_adet?: number
           urun_id: string
+          varyant_1_label: string
+          varyant_1_value: string
+          varyant_2_label?: string | null
+          varyant_2_value?: string | null
         }
         Update: {
           birim_fiyat?: number
           created_at?: string
+          foto_url?: string
           id?: string
           max_adet?: number
           min_adet?: number
           urun_id?: string
+          varyant_1_label?: string
+          varyant_1_value?: string
+          varyant_2_label?: string | null
+          varyant_2_value?: string | null
         }
         Relationships: [
           {
