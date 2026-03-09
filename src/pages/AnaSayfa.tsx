@@ -544,6 +544,18 @@ export default function AnaSayfa() {
     );
   };
 
+  const toggleFavorite = async (urunId: string, isFav: boolean) => {
+    if (!currentUserId) return;
+    if (isFav) {
+      await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", urunId);
+    } else {
+      await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: urunId });
+    }
+    setUrunler((prev) =>
+      prev.map((u) => u.id === urunId ? { ...u, is_favorited: !isFav } : u)
+    );
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
