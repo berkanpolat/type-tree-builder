@@ -133,6 +133,8 @@ const FirmaBilgilerim = () => {
         return <GenelFirmaBilgileri userId={userId} onFirmaTuruChange={handleFirmaTuruChange} />;
       case "urun-hizmet":
         return <UrunHizmetTab userId={userId} firmaTuruName={firmaTuruName} />;
+      case "uretim-satis":
+        return <UretimSatisTab userId={userId} />;
       default:
         return <PlaceholderTab label={tabs.find(t => t.id === activeTab)?.label || activeTab} />;
     }
