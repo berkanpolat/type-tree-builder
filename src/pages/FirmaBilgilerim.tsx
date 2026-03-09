@@ -143,6 +143,10 @@ const FirmaBilgilerim = () => {
         return <TesisBilgileriTab userId={userId} />;
       case "makine":
         return <MakineParkuruTab userId={userId} />;
+      case "sertifikalar":
+        return <SertifikalarTab userId={userId} />;
+      case "referanslar":
+        return <ReferanslarTab userId={userId} />;
       default:
         return <PlaceholderTab label={tabs.find(t => t.id === activeTab)?.label || activeTab} />;
     }
