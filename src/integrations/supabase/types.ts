@@ -929,6 +929,123 @@ export type Database = {
         }
         Relationships: []
       }
+      urun_varyasyonlar: {
+        Row: {
+          birim_fiyat: number
+          created_at: string
+          id: string
+          max_adet: number
+          min_adet: number
+          urun_id: string
+        }
+        Insert: {
+          birim_fiyat: number
+          created_at?: string
+          id?: string
+          max_adet: number
+          min_adet: number
+          urun_id: string
+        }
+        Update: {
+          birim_fiyat?: number
+          created_at?: string
+          id?: string
+          max_adet?: number
+          min_adet?: number
+          urun_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "urun_varyasyonlar_urun_id_fkey"
+            columns: ["urun_id"]
+            isOneToOne: false
+            referencedRelation: "urunler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      urunler: {
+        Row: {
+          aciklama: string | null
+          baslik: string
+          created_at: string
+          durum: string
+          fiyat: number | null
+          fiyat_tipi: string
+          foto_url: string | null
+          id: string
+          min_siparis_miktari: number | null
+          para_birimi: string | null
+          teknik_detaylar: Json | null
+          updated_at: string
+          urun_grup_id: string | null
+          urun_kategori_id: string | null
+          urun_no: string
+          urun_tur_id: string | null
+          user_id: string
+        }
+        Insert: {
+          aciklama?: string | null
+          baslik: string
+          created_at?: string
+          durum?: string
+          fiyat?: number | null
+          fiyat_tipi?: string
+          foto_url?: string | null
+          id?: string
+          min_siparis_miktari?: number | null
+          para_birimi?: string | null
+          teknik_detaylar?: Json | null
+          updated_at?: string
+          urun_grup_id?: string | null
+          urun_kategori_id?: string | null
+          urun_no: string
+          urun_tur_id?: string | null
+          user_id: string
+        }
+        Update: {
+          aciklama?: string | null
+          baslik?: string
+          created_at?: string
+          durum?: string
+          fiyat?: number | null
+          fiyat_tipi?: string
+          foto_url?: string | null
+          id?: string
+          min_siparis_miktari?: number | null
+          para_birimi?: string | null
+          teknik_detaylar?: Json | null
+          updated_at?: string
+          urun_grup_id?: string | null
+          urun_kategori_id?: string | null
+          urun_no?: string
+          urun_tur_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "urunler_urun_grup_id_fkey"
+            columns: ["urun_grup_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "urunler_urun_kategori_id_fkey"
+            columns: ["urun_kategori_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "urunler_urun_tur_id_fkey"
+            columns: ["urun_tur_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
