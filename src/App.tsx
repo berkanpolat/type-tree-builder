@@ -16,6 +16,7 @@ import Tekliflerim from "./pages/Tekliflerim";
 import ManuPazar from "./pages/ManuPazar";
 import YeniUrun from "./pages/YeniUrun";
 import Favoriler from "./pages/Favoriler";
+import Mesajlar from "./pages/Mesajlar";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/manupazar/yeni" element={<YeniUrun />} />
           <Route path="/manupazar/duzenle/:id" element={<YeniUrun />} />
           <Route path="/favoriler" element={<Favoriler />} />
+          <Route path="/mesajlar" element={<Mesajlar />} />
           <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
           <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
           <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
