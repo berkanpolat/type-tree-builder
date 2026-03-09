@@ -39,6 +39,7 @@ const App = () => (
           <Route path="/manupazar/yeni" element={<YeniUrun />} />
           <Route path="/manupazar/duzenle/:id" element={<YeniUrun />} />
           <Route path="/favoriler" element={<Favoriler />} />
+          <Route path="/mesajlar" element={<Mesajlar />} />
           <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
           <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
           <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
