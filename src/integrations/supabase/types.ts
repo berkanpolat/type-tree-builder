@@ -74,6 +74,111 @@ export type Database = {
           },
         ]
       }
+      firma_makineler: {
+        Row: {
+          created_at: string
+          firma_id: string
+          id: string
+          makine_kategori_id: string
+          makine_sayisi: string | null
+          makine_tur_id: string
+          tesis_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          firma_id: string
+          id?: string
+          makine_kategori_id: string
+          makine_sayisi?: string | null
+          makine_tur_id: string
+          tesis_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          firma_id?: string
+          id?: string
+          makine_kategori_id?: string
+          makine_sayisi?: string | null
+          makine_tur_id?: string
+          tesis_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_makineler_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_makineler_makine_kategori_id_fkey"
+            columns: ["makine_kategori_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_makineler_makine_tur_id_fkey"
+            columns: ["makine_tur_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_makineler_tesis_id_fkey"
+            columns: ["tesis_id"]
+            isOneToOne: false
+            referencedRelation: "firma_tesisler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      firma_teknolojiler: {
+        Row: {
+          created_at: string
+          firma_id: string
+          id: string
+          teknoloji_kategori_id: string
+          teknoloji_tur_id: string
+        }
+        Insert: {
+          created_at?: string
+          firma_id: string
+          id?: string
+          teknoloji_kategori_id: string
+          teknoloji_tur_id: string
+        }
+        Update: {
+          created_at?: string
+          firma_id?: string
+          id?: string
+          teknoloji_kategori_id?: string
+          teknoloji_tur_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_teknolojiler_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_teknolojiler_teknoloji_kategori_id_fkey"
+            columns: ["teknoloji_kategori_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_teknolojiler_teknoloji_tur_id_fkey"
+            columns: ["teknoloji_tur_id"]
+            isOneToOne: false
+            referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firma_tesisler: {
         Row: {
           created_at: string
