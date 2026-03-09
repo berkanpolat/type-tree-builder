@@ -7,6 +7,7 @@ import GenelFirmaBilgileri from "@/components/firma-bilgileri/GenelFirmaBilgiler
 import UrunHizmetTab from "@/components/firma-bilgileri/UrunHizmetTab";
 import UretimSatisTab from "@/components/firma-bilgileri/UretimSatisTab";
 import TesisBilgileriTab from "@/components/firma-bilgileri/TesisBilgileriTab";
+import MakineParkuruTab from "@/components/firma-bilgileri/MakineParkuruTab";
 import PlaceholderTab from "@/components/firma-bilgileri/PlaceholderTab";
 import {
   ClipboardList,
@@ -138,6 +139,8 @@ const FirmaBilgilerim = () => {
         return <UretimSatisTab userId={userId} />;
       case "tesis":
         return <TesisBilgileriTab userId={userId} />;
+      case "makine":
+        return <MakineParkuruTab userId={userId} />;
       default:
         return <PlaceholderTab label={tabs.find(t => t.id === activeTab)?.label || activeTab} />;
     }
