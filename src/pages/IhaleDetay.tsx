@@ -872,8 +872,8 @@ export default function IhaleDetay() {
                 </div>
               )}
 
-              {/* Teklif Formu - sadece ihale sahibi değilse */}
-              {!isOwner && (
+              {/* Teklif Formu - sadece ihale sahibi değilse ve ihale devam ediyorsa */}
+              {!isOwner && ihale.durum === "devam_ediyor" && (
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Teklif Tutarı ({sym})</label>
