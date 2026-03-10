@@ -21,6 +21,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -807,17 +818,34 @@ export default function IhaleDetay() {
                     Düzenle
                   </Button>
                   {ihale.durum === "duzenleniyor" && (
-                    <Button
-                      className="flex-1 gap-2"
-                      onClick={async () => {
-                        await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id);
-                        toast({ title: "İhale onaya gönderildi!" });
-                        navigate("/manuihale");
-                      }}
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                      Onayla
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button className="flex-1 gap-2">
+                          <CheckCircle2 className="w-4 h-4" />
+                          Onayla
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>İhaleyi Onaya Göndermek İstediğinize Emin Misiniz?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            İhaleniz süper admin onayına gönderilecektir. Onay sürecinde düzenleme yapamazsınız.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>İptal</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={async () => {
+                              await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id);
+                              toast({ title: "İhale onaya gönderildi!" });
+                              navigate("/manuihale");
+                            }}
+                          >
+                            Evet, Onayla
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   )}
                 </div>
               </Card>

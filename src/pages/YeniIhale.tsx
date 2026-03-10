@@ -12,7 +12,7 @@ import KategoriStep from "@/components/ihale/steps/KategoriStep";
 import IhaleBilgileriStep from "@/components/ihale/steps/IhaleBilgileriStep";
 import TeknikDetaylarStep from "@/components/ihale/steps/TeknikDetaylarStep";
 import StokStep from "@/components/ihale/steps/StokStep";
-import OnayStep from "@/components/ihale/steps/OnayStep";
+
 
 export interface IhaleFormData {
   id?: string;
@@ -78,7 +78,7 @@ const INITIAL_FORM: IhaleFormData = {
   stoklar: [],
 };
 
-const STEPS = ["İhale Türü", "Teklif Usulü", "Kategori", "İhale Bilgileri", "Teknik Detaylar", "Stok", "Onay"];
+const STEPS = ["İhale Türü", "Teklif Usulü", "Kategori", "İhale Bilgileri", "Teknik Detaylar", "Stok"];
 
 export default function YeniIhale() {
   const navigate = useNavigate();
@@ -349,7 +349,7 @@ export default function YeniIhale() {
           <span className="text-sm text-muted-foreground">{currentStep + 1}</span>
         </div>
 
-        <IhaleWizardStepper steps={STEPS} currentStep={currentStep} />
+        <IhaleWizardStepper steps={STEPS} currentStep={currentStep} onStepClick={(step) => setCurrentStep(step)} />
 
         <Card>
           <CardContent className="p-6">
@@ -359,7 +359,6 @@ export default function YeniIhale() {
             {currentStep === 3 && <IhaleBilgileriStep formData={formData} updateForm={updateForm} ihaleId={ihaleId} />}
             {currentStep === 4 && <TeknikDetaylarStep formData={formData} updateForm={updateForm} />}
             {currentStep === 5 && <StokStep formData={formData} updateForm={updateForm} />}
-            {currentStep === 6 && <OnayStep formData={formData} />}
 
             <div className="flex justify-between mt-8 pt-6 border-t">
               {currentStep > 0 ? (
