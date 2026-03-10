@@ -219,7 +219,7 @@ export default function AdminKullanicilar() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((u) => (
+                {paginatedUsers.map((u) => (
                   <TableRow key={u.id} className="border-slate-700 hover:bg-slate-700/30">
                     <TableCell className="text-white font-medium">
                       <div className="flex items-center gap-2">
