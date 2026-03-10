@@ -37,9 +37,9 @@ import {
 const mainItems = [
   { title: "Ana Sayfa", url: "/dashboard", icon: Home },
   { title: "Firma Bilgilerim", url: "/firma-bilgilerim", icon: Building2 },
-  { title: "Manuİhale", url: "/manuihale", icon: Gavel },
+  { title: "Tekİhale", url: "/manuihale", icon: Gavel },
   { title: "Tekliflerim", url: "/tekliflerim", icon: FileText },
-  { title: "ManuPazar", url: "/manupazar", icon: ShoppingBag },
+  { title: "TekPazar", url: "/manupazar", icon: ShoppingBag },
   { title: "Favoriler", url: "/favoriler", icon: Heart },
   { title: "Mesajlar", url: "/mesajlar", icon: MessageSquare, badgeKey: "mesajlar" },
   { title: "Bildirimler", url: "/bildirimler", icon: Bell, badge: true },
