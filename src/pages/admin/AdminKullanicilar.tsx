@@ -274,6 +274,46 @@ export default function AdminKullanicilar() {
             </Table>
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <Button
+              variant="outline" size="sm" disabled={safePage <= 1}
+              onClick={() => setCurrentPage(safePage - 1)}
+              className="text-xs border-slate-700 text-slate-300"
+            >
+              ← Önceki
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
+              .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, idx) =>
+                typeof p === "string" ? (
+                  <span key={`ellipsis-${idx}`} className="px-1 text-xs text-slate-500">…</span>
+                ) : (
+                  <Button
+                    key={p} size="sm" variant={p === safePage ? "default" : "outline"}
+                    onClick={() => setCurrentPage(p as number)}
+                    className={p === safePage ? "bg-amber-500 hover:bg-amber-600 text-white text-xs w-8 h-8 p-0" : "text-xs w-8 h-8 p-0 border-slate-700 text-slate-300"}
+                  >
+                    {p}
+                  </Button>
+                )
+              )}
+            <Button
+              variant="outline" size="sm" disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage(safePage + 1)}
+              className="text-xs border-slate-700 text-slate-300"
+            >
+              Sonraki →
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Create/Edit Dialog */}
