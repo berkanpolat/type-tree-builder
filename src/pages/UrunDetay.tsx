@@ -832,6 +832,9 @@ export default function UrunDetay() {
           </div>
         )}
       </main>
+      {urun && (
+        <BildirDialog open={bildirOpen} onOpenChange={setBildirOpen} tur="urun" referansId={urun.id} />
+      )}
       <Footer />
     </div>
   );

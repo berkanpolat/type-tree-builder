@@ -1007,6 +1007,9 @@ export default function FirmaDetay() {
         </div>
 
       </div>
+      {firma && (
+        <BildirDialog open={bildirOpen} onOpenChange={setBildirOpen} tur="profil" referansId={firma.id} />
+      )}
       <Footer />
     </div>
   );
