@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
+import { useNotificationCount } from "@/hooks/use-notifications";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import {
   Home,
