@@ -141,16 +141,17 @@ export default function AdminIhaleler() {
   const [selectedHizmetKategorileri, setSelectedHizmetKategorileri] = useState<string[]>([]);
   const [selectedHizmetTurleri, setSelectedHizmetTurleri] = useState<string[]>([]);
 
-  // Category options for filters
+  // Raw category data for hierarchical filtering
+  const [allUrunSecenekler, setAllUrunSecenekler] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
+  const [allHizmetSecenekler, setAllHizmetSecenekler] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
+
+  // Category options for filters (computed)
   const [categoryOptions, setCategoryOptions] = useState<{
     urunKategorileri: { id: string; name: string }[];
-    urunGruplari: { id: string; name: string }[];
-    urunTurleri: { id: string; name: string }[];
     hizmetKategorileri: { id: string; name: string }[];
-    hizmetTurleri: { id: string; name: string }[];
   }>({
-    urunKategorileri: [], urunGruplari: [], urunTurleri: [],
-    hizmetKategorileri: [], hizmetTurleri: [],
+    urunKategorileri: [],
+    hizmetKategorileri: [],
   });
 
   // Sorting
