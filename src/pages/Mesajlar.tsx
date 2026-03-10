@@ -65,28 +65,34 @@ export default function Mesajlar() {
   }, []);
 
   // Handle navigation state (from "Satıcıya Sor")
+  const handledStateRef = useRef(false);
+
   useEffect(() => {
+    if (handledStateRef.current) return;
+
     const state = location.state as {
       openConversationId?: string;
       otherUserId?: string;
       quote?: QuoteData;
     } | null;
 
-    if (state?.quote) {
+    if (!state?.openConversationId || !currentUserId || conversations.length === 0) return;
+
+    handledStateRef.current = true;
+
+    if (state.quote) {
       setQuote(state.quote);
     }
 
-    if (state?.openConversationId && currentUserId && conversations.length > 0) {
-      const conv = conversations.find((c) => c.id === state.openConversationId);
-      if (conv) {
-        selectConversation(conv);
-      } else if (state.otherUserId) {
-        // Conv might not be in list yet, fetch and add
-        fetchAndOpenConversation(state.openConversationId, state.otherUserId);
-      }
-      // Clear the state so it doesn't re-trigger
-      window.history.replaceState({}, document.title);
+    const conv = conversations.find((c) => c.id === state.openConversationId);
+    if (conv) {
+      selectConversation(conv);
+    } else if (state.otherUserId) {
+      fetchAndOpenConversation(state.openConversationId, state.otherUserId);
     }
+
+    // Clear the state so it doesn't re-trigger on refresh
+    window.history.replaceState({}, document.title);
   }, [currentUserId, conversations, location.state]);
 
   const fetchAndOpenConversation = async (convId: string, otherUserId: string) => {
