@@ -121,6 +121,8 @@ export default function AnaSayfa() {
   const [urunler, setUrunler] = useState<UrunWithExtra[]>([]);
   const [urunLoading, setUrunLoading] = useState(true);
   const [selectedKategori, setSelectedKategori] = useState<string | null>(null);
+  const [selectedGrupId, setSelectedGrupId] = useState<string | null>(null);
+  const [selectedTurId, setSelectedTurId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
   // Firma state
