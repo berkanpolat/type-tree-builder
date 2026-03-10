@@ -124,8 +124,8 @@ export default function UrunDetay() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/giris-kayit"); return; }
       setCurrentUserId(user.id);
-      const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", user.id).single();
-      if (f) setFirmaUnvani(f.firma_unvani);
+      const { data: f } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).single();
+      if (f) { setFirmaUnvani(f.firma_unvani); setFirmaLogoUrl(f.logo_url); }
     };
     init();
   }, [navigate]);
