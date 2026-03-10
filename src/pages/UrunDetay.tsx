@@ -23,12 +23,12 @@ import {
   X,
 } from "lucide-react";
 import {
-  SiLinkedin,
+  SiLinkerd,
   SiInstagram,
   SiFacebook,
-  SiX,
   SiTiktok,
 } from "react-icons/si";
+import { RiTwitterXFill } from "react-icons/ri";
 
 const paraBirimiSymbol: Record<string, string> = {
   TRY: "₺", USD: "$", EUR: "€", GBP: "£",
