@@ -76,12 +76,15 @@ interface FirmaDetail {
   email: string | null;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminFirmalar() {
   const { token } = useAdminAuth();
   const { toast } = useToast();
   const [firmalar, setFirmalar] = useState<FirmaItem[]>([]);
   const [stats, setStats] = useState<FirmaStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [statsDays, setStatsDays] = useState(7);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -231,6 +234,13 @@ export default function AdminFirmalar() {
     return true;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedFirmalar = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterMinIhale, filterMaxIhale, filterMinTeklif, filterMaxTeklif, filterMinUrun, filterMaxUrun, filterMinProfil, filterMaxProfil]);
+
   const durumBadge = (durum: string) => {
     switch (durum) {
       case "onaylandi": return <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[10px] px-1.5 py-0">Onaylı</Badge>;
@@ -373,8 +383,9 @@ export default function AdminFirmalar() {
         </div>
 
         {/* Result count */}
-        <div className="text-xs" style={s.muted}>
-          {filtered.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}
+        <div className="flex items-center justify-between text-xs" style={s.muted}>
+          <span>{filtered.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}</span>
+          <span>Sayfa {safePage} / {totalPages}</span>
         </div>
 
         {/* Firma List */}
@@ -387,7 +398,7 @@ export default function AdminFirmalar() {
             {filtered.length === 0 && (
               <div className="text-center py-12" style={s.muted}>Firma bulunamadı.</div>
             )}
-            {filtered.map((firma) => (
+            {paginatedFirmalar.map((firma) => (
               <div key={firma.id} style={s.card} className="p-5 hover:shadow-lg transition-all">
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex items-center gap-4">
@@ -445,6 +456,49 @@ export default function AdminFirmalar() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <Button
+              variant="outline" size="sm" disabled={safePage <= 1}
+              onClick={() => setCurrentPage(safePage - 1)}
+              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+              className="text-xs"
+            >
+              ← Önceki
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
+              .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, idx) =>
+                typeof p === "string" ? (
+                  <span key={`ellipsis-${idx}`} className="px-1 text-xs" style={s.muted}>…</span>
+                ) : (
+                  <Button
+                    key={p} size="sm" variant={p === safePage ? "default" : "outline"}
+                    onClick={() => setCurrentPage(p)}
+                    className={p === safePage ? "bg-amber-500 hover:bg-amber-600 text-white text-xs w-8 h-8 p-0" : "text-xs w-8 h-8 p-0"}
+                    style={p !== safePage ? { borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" } : undefined}
+                  >
+                    {p}
+                  </Button>
+                )
+              )}
+            <Button
+              variant="outline" size="sm" disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage(safePage + 1)}
+              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+              className="text-xs"
+            >
+              Sonraki →
+            </Button>
           </div>
         )}
       </div>

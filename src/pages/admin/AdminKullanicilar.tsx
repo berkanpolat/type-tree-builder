@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, CSSProperties } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -45,11 +45,14 @@ const DEFAULT_PERMISSIONS = Object.fromEntries(
   Object.keys(PERMISSION_LABELS).map((k) => [k, false])
 );
 
+const USERS_PER_PAGE = 10;
+
 export default function AdminKullanicilar() {
   const { token, hasPermission, user: currentUser } = useAdminAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
 
@@ -180,6 +183,10 @@ export default function AdminKullanicilar() {
   const canManage = hasPermission("kullanici_yonet") || currentUser?.is_primary;
   const canAdd = hasPermission("kullanici_ekle") || currentUser?.is_primary;
 
+  const totalPages = Math.max(1, Math.ceil(users.length / USERS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedUsers = users.slice((safePage - 1) * USERS_PER_PAGE, safePage * USERS_PER_PAGE);
+
   return (
     <AdminLayout title="Panel Kullanıcıları">
       <div className="space-y-6">
@@ -212,7 +219,7 @@ export default function AdminKullanicilar() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((u) => (
+                {paginatedUsers.map((u) => (
                   <TableRow key={u.id} className="border-slate-700 hover:bg-slate-700/30">
                     <TableCell className="text-white font-medium">
                       <div className="flex items-center gap-2">
@@ -267,6 +274,46 @@ export default function AdminKullanicilar() {
             </Table>
           )}
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <Button
+              variant="outline" size="sm" disabled={safePage <= 1}
+              onClick={() => setCurrentPage(safePage - 1)}
+              className="text-xs border-slate-700 text-slate-300"
+            >
+              ← Önceki
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
+              .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
+                acc.push(p);
+                return acc;
+              }, [])
+              .map((p, idx) =>
+                typeof p === "string" ? (
+                  <span key={`ellipsis-${idx}`} className="px-1 text-xs text-slate-500">…</span>
+                ) : (
+                  <Button
+                    key={p} size="sm" variant={p === safePage ? "default" : "outline"}
+                    onClick={() => setCurrentPage(p as number)}
+                    className={p === safePage ? "bg-amber-500 hover:bg-amber-600 text-white text-xs w-8 h-8 p-0" : "text-xs w-8 h-8 p-0 border-slate-700 text-slate-300"}
+                  >
+                    {p}
+                  </Button>
+                )
+              )}
+            <Button
+              variant="outline" size="sm" disabled={safePage >= totalPages}
+              onClick={() => setCurrentPage(safePage + 1)}
+              className="text-xs border-slate-700 text-slate-300"
+            >
+              Sonraki →
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Create/Edit Dialog */}
