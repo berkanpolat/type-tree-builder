@@ -854,6 +854,11 @@ export default function IhaleDetay() {
                   <Button className="w-full h-12 gap-2 text-base" onClick={handleTeklifSubmit}>
                     <Send className="w-4 h-4" /> {myTeklif ? "Teklifi Güncelle" : "Teklif Ver"}
                   </Button>
+                  {myTeklif && (
+                    <Button variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" onClick={handleTeklifGeriCek}>
+                      <Trash2 className="w-4 h-4" /> Teklifi Geri Çek
+                    </Button>
+                  )}
                 </div>
               )}
             </Card>
