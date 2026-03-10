@@ -95,6 +95,7 @@ interface FirmaListItem {
   kurulus_ilce_id: string | null;
   web_sitesi: string | null;
   kurulus_tarihi: string | null;
+  moq: number | null;
 }
 
 const paraBirimiSymbol: Record<string, string> = {
