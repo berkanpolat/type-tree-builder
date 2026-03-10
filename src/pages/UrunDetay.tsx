@@ -601,8 +601,13 @@ export default function UrunDetay() {
                 <MessageSquare className="w-5 h-5" />
                 Satıcıya Soru Sor
               </Button>
+              {urun.user_id !== currentUserId && (
+                <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
+                  <Flag className="w-4 h-4" />
+                  Ürünü Bildir
+                </Button>
+              )}
             </Card>
-
             {/* Seller Info Card */}
             {firma && (
               <Card className="p-6">
