@@ -1,7 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { FaLinkedinIn, FaInstagram, FaFacebookF, FaXTwitter } from "react-icons/fa6";
+
+function FooterLink({ to, children }: { to: string; children: React.ReactNode }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => { navigate(to); window.scrollTo(0, 0); }}
+      className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors text-left"
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function Footer() {
   return (
@@ -49,14 +61,10 @@ export default function Footer() {
             <h4 className="text-secondary font-bold text-sm mb-4">Tekstil A.Ş.</h4>
             <ul className="space-y-2.5">
               <li>
-                <Link to="/hakkimizda" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  Hakkımızda
-                </Link>
+                <FooterLink to="/hakkimizda">Hakkımızda</FooterLink>
               </li>
               <li>
-                <Link to="/iletisim" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  İletişim
-                </Link>
+                <FooterLink to="/iletisim">İletişim</FooterLink>
               </li>
             </ul>
           </div>
@@ -66,19 +74,13 @@ export default function Footer() {
             <h4 className="text-secondary font-bold text-sm mb-4">Modüller</h4>
             <ul className="space-y-2.5">
               <li>
-                <Link to="/anasayfa" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  Üretici &amp; tedarikçi keşfi
-                </Link>
+                <FooterLink to="/anasayfa">Üretici &amp; tedarikçi keşfi</FooterLink>
               </li>
               <li>
-                <Link to="/tekihale" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  TekIhale – Teklif alma &amp; verme sistemi
-                </Link>
+                <FooterLink to="/tekihale">TekIhale – Teklif alma &amp; verme sistemi</FooterLink>
               </li>
               <li>
-                <Link to="/anasayfa" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  TekPazar – B2B ürün listeleme
-                </Link>
+                <FooterLink to="/anasayfa">TekPazar – B2B ürün listeleme</FooterLink>
               </li>
             </ul>
           </div>
@@ -87,31 +89,11 @@ export default function Footer() {
           <div>
             <h4 className="text-secondary font-bold text-sm mb-4">Kurumsal Bilgi</h4>
             <ul className="space-y-2.5">
-              <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  SSS
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  KVKK Aydınlatma Metni
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  Gizlilik Koşulları
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  Kullanım Koşulları &amp; Üyelik Sözleşmesi
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  Mesafeli Satış Sözleşmesi
-                </Link>
-              </li>
+              <li><FooterLink to="/">SSS</FooterLink></li>
+              <li><FooterLink to="/">KVKK Aydınlatma Metni</FooterLink></li>
+              <li><FooterLink to="/">Gizlilik Koşulları</FooterLink></li>
+              <li><FooterLink to="/">Kullanım Koşulları &amp; Üyelik Sözleşmesi</FooterLink></li>
+              <li><FooterLink to="/">Mesafeli Satış Sözleşmesi</FooterLink></li>
             </ul>
           </div>
         </div>
