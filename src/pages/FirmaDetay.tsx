@@ -200,6 +200,7 @@ export default function FirmaDetay() {
   const [firmaTuruName, setFirmaTuruName] = useState("");
   const [firmaTipiName, setFirmaTipiName] = useState("");
   const [isFavorited, setIsFavorited] = useState(false);
+  const [bildirOpen, setBildirOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("");
 
   const [tesisler, setTesisler] = useState<Tesis[]>([]);

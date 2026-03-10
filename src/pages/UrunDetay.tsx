@@ -135,6 +135,7 @@ export default function UrunDetay() {
   const [varyasyonlar, setVaryasyonlar] = useState<VaryasyonData[]>([]);
   const [firma, setFirma] = useState<FirmaData | null>(null);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [bildirOpen, setBildirOpen] = useState(false);
   const [benzerUrunler, setBenzerUrunler] = useState<BenzerUrun[]>([]);
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
   const [resolvedTeknikDetaylar, setResolvedTeknikDetaylar] = useState<Record<string, string>>({});
