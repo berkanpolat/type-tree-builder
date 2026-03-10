@@ -198,6 +198,7 @@ export default function IhaleDetay() {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [bildirOpen, setBildirOpen] = useState(false);
 
   // DB dropdown options
   const [dbOdemeSecenekleri, setDbOdemeSecenekleri] = useState<string[]>([]);
