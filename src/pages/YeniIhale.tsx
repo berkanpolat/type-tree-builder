@@ -27,10 +27,11 @@ export interface IhaleFormData {
   baslik: string;
   aciklama: string;
   baslangic_fiyati: number | null;
+  birim: string;
   para_birimi: string;
   kdv_durumu: string;
-  odeme_secenekleri: string;
-  odeme_vadesi: string;
+  odeme_secenekleri: string[];
+  odeme_vadesi: string[];
   kargo_masrafi: string;
   kargo_sirketi_anlasmasi: string;
   teslimat_tarihi: string;
