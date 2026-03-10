@@ -453,6 +453,210 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ─── LIST ALL IHALELER (for admin panel) ───
+    if (action === "list-ihaleler") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const { data: ihaleler, error } = await supabase
+        .from("ihaleler")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Get firma names for all user_ids
+      const userIds = [...new Set((ihaleler || []).map((i: any) => i.user_id))];
+      const { data: firmalar } = await supabase
+        .from("firmalar")
+        .select("user_id, firma_unvani")
+        .in("user_id", userIds);
+
+      // Get teklif counts per ihale
+      const ihaleIds = (ihaleler || []).map((i: any) => i.id);
+      const { data: teklifler } = await supabase
+        .from("ihale_teklifler")
+        .select("ihale_id, id")
+        .in("ihale_id", ihaleIds);
+
+      // Get category names
+      const catIds = [
+        ...(ihaleler || []).map((i: any) => i.urun_kategori_id).filter(Boolean),
+        ...(ihaleler || []).map((i: any) => i.urun_grup_id).filter(Boolean),
+        ...(ihaleler || []).map((i: any) => i.urun_tur_id).filter(Boolean),
+        ...(ihaleler || []).map((i: any) => i.hizmet_kategori_id).filter(Boolean),
+        ...(ihaleler || []).map((i: any) => i.hizmet_tur_id).filter(Boolean),
+      ];
+      const uniqueCatIds = [...new Set(catIds)];
+      let catMap: Record<string, string> = {};
+      if (uniqueCatIds.length > 0) {
+        const { data: cats } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name")
+          .in("id", uniqueCatIds);
+        if (cats) catMap = Object.fromEntries(cats.map((c: any) => [c.id, c.name]));
+      }
+
+      const enriched = (ihaleler || []).map((i: any) => {
+        const firma = (firmalar || []).find((f: any) => f.user_id === i.user_id);
+        const teklifCount = (teklifler || []).filter((t: any) => t.ihale_id === i.id).length;
+
+        // Determine category label
+        let kategoriLabel = "";
+        if (i.ihale_turu === "hizmet") {
+          const hk = i.hizmet_kategori_id ? catMap[i.hizmet_kategori_id] : "";
+          const ht = i.hizmet_tur_id ? catMap[i.hizmet_tur_id] : "";
+          kategoriLabel = [hk, ht].filter(Boolean).join(" > ");
+        } else {
+          const uk = i.urun_kategori_id ? catMap[i.urun_kategori_id] : "";
+          const ug = i.urun_grup_id ? catMap[i.urun_grup_id] : "";
+          const ut = i.urun_tur_id ? catMap[i.urun_tur_id] : "";
+          kategoriLabel = [uk, ug, ut].filter(Boolean).join(" > ");
+        }
+
+        return {
+          ...i,
+          firma_unvani: firma?.firma_unvani || "—",
+          teklif_sayisi: teklifCount,
+          kategori_label: kategoriLabel || "—",
+        };
+      });
+
+      return jsonResponse({ ihaleler: enriched });
+    }
+
+    // ─── IHALE STATS ───
+    if (action === "ihale-stats") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const { count: totalCount } = await supabase
+        .from("ihaleler")
+        .select("*", { count: "exact", head: true });
+
+      const { count: activeCount } = await supabase
+        .from("ihaleler")
+        .select("*", { count: "exact", head: true })
+        .eq("durum", "devam_ediyor");
+
+      // Category distribution for urun vs hizmet
+      const { data: ihaleler } = await supabase
+        .from("ihaleler")
+        .select("ihale_turu, urun_kategori_id, hizmet_kategori_id");
+
+      const urunCount = (ihaleler || []).filter((i: any) => i.ihale_turu !== "hizmet").length;
+      const hizmetCount = (ihaleler || []).filter((i: any) => i.ihale_turu === "hizmet").length;
+
+      // Get top urun categories
+      const urunCatIds = (ihaleler || [])
+        .filter((i: any) => i.ihale_turu !== "hizmet" && i.urun_kategori_id)
+        .map((i: any) => i.urun_kategori_id);
+      const hizmetCatIds = (ihaleler || [])
+        .filter((i: any) => i.ihale_turu === "hizmet" && i.hizmet_kategori_id)
+        .map((i: any) => i.hizmet_kategori_id);
+
+      const allCatIds = [...new Set([...urunCatIds, ...hizmetCatIds])];
+      let catMap: Record<string, string> = {};
+      if (allCatIds.length > 0) {
+        const { data: cats } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name")
+          .in("id", allCatIds);
+        if (cats) catMap = Object.fromEntries(cats.map((c: any) => [c.id, c.name]));
+      }
+
+      // Count per category
+      const urunCatCounts: Record<string, number> = {};
+      for (const cid of urunCatIds) {
+        const name = catMap[cid] || "Diğer";
+        urunCatCounts[name] = (urunCatCounts[name] || 0) + 1;
+      }
+      const hizmetCatCounts: Record<string, number> = {};
+      for (const cid of hizmetCatIds) {
+        const name = catMap[cid] || "Diğer";
+        hizmetCatCounts[name] = (hizmetCatCounts[name] || 0) + 1;
+      }
+
+      const urunKategoriDagilimi = Object.entries(urunCatCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+      const hizmetKategoriDagilimi = Object.entries(hizmetCatCounts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+
+      return jsonResponse({
+        total: totalCount || 0,
+        active: activeCount || 0,
+        urunCount,
+        hizmetCount,
+        urunKategoriDagilimi,
+        hizmetKategoriDagilimi,
+      });
+    }
+
+    // ─── UPDATE IHALE (admin can edit without restrictions) ───
+    if (action === "update-ihale") {
+      const { token, ihaleId, updates } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const { data, error } = await supabase
+        .from("ihaleler")
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq("id", ihaleId)
+        .select()
+        .single();
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ ihale: data });
+    }
+
+    // ─── APPROVE/REJECT IHALE ───
+    if (action === "approve-ihale" || action === "reject-ihale") {
+      const { token, ihaleId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const newStatus = action === "approve-ihale" ? "devam_ediyor" : "reddedildi";
+
+      const { data, error } = await supabase
+        .from("ihaleler")
+        .update({ durum: newStatus, updated_at: new Date().toISOString() })
+        .eq("id", ihaleId)
+        .select("id, baslik, ihale_no, user_id")
+        .single();
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true, ihale: data });
+    }
+
+    // ─── REMOVE IHALE (set to iptal) ───
+    if (action === "remove-ihale") {
+      const { token, ihaleId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const { data, error } = await supabase
+        .from("ihaleler")
+        .update({ durum: "iptal", updated_at: new Date().toISOString() })
+        .eq("id", ihaleId)
+        .select("id")
+        .single();
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
