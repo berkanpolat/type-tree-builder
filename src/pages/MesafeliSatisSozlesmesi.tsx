@@ -28,7 +28,7 @@ export default function MesafeliSatisSozlesmesi() {
     <div className="min-h-screen flex flex-col bg-background">
       {isLoggedIn && <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />}
       <div className="max-w-4xl mx-auto px-6 py-12 md:py-16 flex-1 w-full">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-10">TEKSTİLAS MESAFELİ SATIŞ SÖZLEŞMESİ</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-10">MANUFIXO MESAFELİ SATIŞ SÖZLEŞMESİ</h1>
 
         <div className="prose prose-sm max-w-none text-foreground space-y-8">
           <section>
@@ -38,7 +38,7 @@ export default function MesafeliSatisSozlesmesi() {
             <ul className="list-none pl-0 space-y-1 text-muted-foreground">
               <li><strong className="text-foreground">Unvan:</strong> Manufixo Teknoloji A.Ş.</li>
               <li><strong className="text-foreground">Adres:</strong> Çobançeşme mah. Bilge 1 sk. No:9/11 K:2 Bahçelievler / İstanbul</li>
-              <li><strong className="text-foreground">E-posta:</strong>{" "}<a href="mailto:info@tekstilas.com" className="text-primary underline hover:text-primary/80">info@tekstilas.com</a></li>
+              <li><strong className="text-foreground">E-posta:</strong>{" "}<a href="mailto:info@manufixo.com" className="text-primary underline hover:text-primary/80">info@manufixo.com</a></li>
               <li><strong className="text-foreground">Mersis No:</strong> 0612181102800001</li>
             </ul>
 

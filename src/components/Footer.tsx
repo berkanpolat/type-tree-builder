@@ -24,12 +24,12 @@ export default function Footer() {
           <div className="space-y-4">
             <img src={logoImg} alt="Tekstil A.Ş." className="h-8 brightness-0 invert" />
             <p className="text-primary-foreground/60 text-sm leading-relaxed">
-              Manufixo Bilişim Teknolojileri A.Ş. tarafından geliştirilmiştir.
+              Manufixo Teknoloji A.Ş. tarafından geliştirilmiştir.
             </p>
             <div className="space-y-2.5">
               <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
                 <Mail className="w-4 h-4 shrink-0" />
-                <span>info@tekstilas.com</span>
+                <span>info@manufixo.com</span>
               </div>
               <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
                 <Phone className="w-4 h-4 shrink-0" />
@@ -101,7 +101,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-primary-foreground/10">
           <p className="text-primary-foreground/50 text-sm text-center">
-            © 2026 Tekstil A.Ş. – Manufixo Bilişim Teknolojileri A.Ş. Tüm hakları saklıdır.
+            © 2026 Tekstil A.Ş. – Manufixo Teknoloji A.Ş. Tüm hakları saklıdır.
           </p>
         </div>
       </div>
