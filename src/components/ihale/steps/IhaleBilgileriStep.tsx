@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import MultiSelectDropdown from "@/components/firma-bilgileri/MultiSelectDropdown";
 import type { IhaleFormData } from "@/pages/YeniIhale";
 
 interface Props {
@@ -56,6 +57,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
   const { data: odemeVadesiOptions } = useKategoriSecenekler("Ödeme Vadeleri");
   const { data: kargoMasrafiOptions } = useKategoriSecenekler("Kargo Masrafı Ödemesi");
   const { data: kargoSirketiOptions } = useKategoriSecenekler("Kargo Şirketi Anlaşması");
+  const { data: birimOptions } = useKategoriSecenekler("Birim Türleri");
 
   // Fetch firma türleri, tipleri, ölçekleri for filtering
   const { data: firmaTurleri } = useQuery({
@@ -131,6 +133,20 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
 
   const showMinTeklifDegisim = formData.teklif_usulu === "acik_indirme" || formData.teklif_usulu === "acik_arttirma";
 
+  // Convert odeme multi-select: store name values as string[]
+  const odemeSecenekleriSelected = (odemeSecenekleriOptions || []).filter(o => formData.odeme_secenekleri.includes(o.name)).map(o => o.id);
+  const odemeVadesiSelected = (odemeVadesiOptions || []).filter(o => formData.odeme_vadesi.includes(o.name)).map(o => o.id);
+
+  const handleOdemeSecenekleriChange = (ids: string[]) => {
+    const names = (odemeSecenekleriOptions || []).filter(o => ids.includes(o.id)).map(o => o.name);
+    updateForm({ odeme_secenekleri: names });
+  };
+
+  const handleOdemeVadesiChange = (ids: string[]) => {
+    const names = (odemeVadesiOptions || []).filter(o => ids.includes(o.id)).map(o => o.name);
+    updateForm({ odeme_vadesi: names });
+  };
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-1">
@@ -150,10 +166,19 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
           <Textarea value={formData.aciklama} onChange={(e) => updateForm({ aciklama: e.target.value })} placeholder="İhale açıklaması giriniz" rows={4} maxLength={2000} />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>İhale Başlangıç Fiyatı (Birim Fiyat) *</Label>
             <Input type="number" value={formData.baslangic_fiyati ?? ""} onChange={(e) => updateForm({ baslangic_fiyati: e.target.value ? Number(e.target.value) : null })} placeholder="0.00" min={0} />
+          </div>
+          <div className="space-y-2">
+            <Label>Birim *</Label>
+            <Select value={formData.birim} onValueChange={(v) => updateForm({ birim: v })}>
+              <SelectTrigger><SelectValue placeholder="Birim seçiniz" /></SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                {(birimOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label>Para Birimi</Label>
@@ -185,24 +210,24 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
           </div>
           <div className="space-y-2">
             <Label>Ödeme Seçenekleri *</Label>
-            <Select value={formData.odeme_secenekleri} onValueChange={(v) => updateForm({ odeme_secenekleri: v })}>
-              <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {(odemeSecenekleriOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <MultiSelectDropdown
+              options={(odemeSecenekleriOptions || []).map(o => ({ id: o.id, name: o.name }))}
+              selected={odemeSecenekleriSelected}
+              onChange={handleOdemeSecenekleriChange}
+              placeholder="Seçiniz"
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Ödeme Vadesi *</Label>
-            <Select value={formData.odeme_vadesi} onValueChange={(v) => updateForm({ odeme_vadesi: v })}>
-              <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {(odemeVadesiOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <MultiSelectDropdown
+              options={(odemeVadesiOptions || []).map(o => ({ id: o.id, name: o.name }))}
+              selected={odemeVadesiSelected}
+              onChange={handleOdemeVadesiChange}
+              placeholder="Seçiniz"
+            />
           </div>
           <div className="space-y-2">
             <Label>Kargo Masrafı Ödemesi *</Label>

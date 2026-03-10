@@ -49,6 +49,9 @@ export default function StokStep({ formData, updateForm }: Props) {
   const { data: varyant1Options } = useKategoriSecenekler(varyant1KategoriName);
   const { data: renkOptions } = useKategoriSecenekler("Renk");
 
+  // Birim from previous step
+  const birimFromForm = formData.birim;
+
   const [selectedV1, setSelectedV1] = useState<string[]>([]);
   const [selectedV2, setSelectedV2] = useState<string[]>([]);
 
@@ -56,16 +59,17 @@ export default function StokStep({ formData, updateForm }: Props) {
 
   const handleGenerate = () => {
     const newStoklar: IhaleFormData["stoklar"] = [];
+    // Use birim from form for miktar_tipi
+    const miktarTipi = birimFromForm || "Adet";
     for (const v1 of selectedV1) {
       for (const v2 of selectedV2) {
-        // Check if already exists
         if (!formData.stoklar.some((s) => s.varyant_1_value === getOptionName(varyant1Options, v1) && s.varyant_2_value === getOptionName(renkOptions, v2))) {
           newStoklar.push({
             varyant_1_label: varyant1Label,
             varyant_1_value: getOptionName(varyant1Options, v1),
             varyant_2_label: varyant2Label,
             varyant_2_value: getOptionName(renkOptions, v2),
-            miktar_tipi: "Adet",
+            miktar_tipi: miktarTipi,
             stok_sayisi: 0,
           });
         }
@@ -94,7 +98,12 @@ export default function StokStep({ formData, updateForm }: Props) {
         <Package className="w-5 h-5 text-primary" />
         <h3 className="text-lg font-semibold text-foreground">Stok</h3>
       </div>
-      <p className="text-sm text-muted-foreground mb-6">{kategoriName} Stok</p>
+      <p className="text-sm text-muted-foreground mb-2">{kategoriName} Stok</p>
+      {birimFromForm && (
+        <p className="text-sm text-muted-foreground mb-6">
+          Birim: <strong>{birimFromForm}</strong> (İhale bilgilerinde seçildi)
+        </p>
+      )}
 
       <div className="border rounded-lg p-4 space-y-4">
         <div className="flex items-center gap-4 flex-wrap">
@@ -159,7 +168,7 @@ export default function StokStep({ formData, updateForm }: Props) {
               <TableRow>
                 <TableHead>{varyant1Label}</TableHead>
                 <TableHead>{varyant2Label}</TableHead>
-                <TableHead>Miktar Tipi</TableHead>
+                <TableHead>Birim</TableHead>
                 <TableHead>Stok</TableHead>
                 <TableHead>Sil</TableHead>
               </TableRow>

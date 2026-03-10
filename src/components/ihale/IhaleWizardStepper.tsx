@@ -19,7 +19,7 @@ export default function IhaleWizardStepper({ steps, currentStep, onStepClick }: 
 
         return (
           <div key={label} className="flex items-center">
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center w-[90px]">
               <div
                 onClick={() => isClickable && onStepClick?.(i)}
                 className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ${
@@ -36,7 +36,7 @@ export default function IhaleWizardStepper({ steps, currentStep, onStepClick }: 
               </div>
               <span
                 onClick={() => isClickable && onStepClick?.(i)}
-                className={`text-xs mt-2 text-center max-w-[80px] ${
+                className={`text-xs mt-2 text-center h-8 flex items-center justify-center leading-tight ${
                   isClickable ? "cursor-pointer" : ""
                 } ${
                   isActive ? "text-orange-500 font-semibold" : isDone ? "text-foreground" : "text-muted-foreground"
