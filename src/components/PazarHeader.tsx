@@ -45,7 +45,7 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
       <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link to="/anasayfa">
-            <img src={logoImg} alt="Tekstil A.Ş." className="h-9 object-contain" />
+            <img src={logoImg} alt="Tekstil A.Ş." className="h-7 object-contain" />
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <Link to="/anasayfa" className="text-sm font-medium text-foreground hover:text-secondary transition-colors">TekPazar</Link>
