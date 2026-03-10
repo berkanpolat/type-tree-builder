@@ -49,6 +49,7 @@ const App = () => (
           <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
           <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
           <Route path="/giris-kayit" element={<GirisKayit />} />
+          <Route path="/urun/:id" element={<UrunDetay />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
