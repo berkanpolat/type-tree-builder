@@ -325,7 +325,7 @@ export default function AnaSayfa() {
       setUrunler([]);
     }
     setUrunLoading(false);
-  }, [activeFilter, selectedKategori, kategoriSecenekler, activeTab, currentUserId]);
+  }, [activeFilter, selectedKategori, selectedGrupId, selectedTurId, kategoriSecenekler, activeTab, currentUserId]);
 
   // Fetch companies
   const fetchFirmalar = useCallback(async () => {
