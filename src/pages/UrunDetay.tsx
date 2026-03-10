@@ -121,6 +121,7 @@ interface BenzerUrun {
 export default function UrunDetay() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
