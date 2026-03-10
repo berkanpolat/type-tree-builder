@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import { Mail, Phone, MapPin } from "lucide-react";
+import { FaLinkedinIn, FaInstagram, FaFacebookF, FaXTwitter } from "react-icons/fa6";
 
 export default function Footer() {
   return (
@@ -26,6 +27,20 @@ export default function Footer() {
                 <MapPin className="w-4 h-4 shrink-0" />
                 <span>Ataşehir, İstanbul</span>
               </div>
+            </div>
+            <div className="flex items-center gap-3 mt-4">
+              <a href="https://www.linkedin.com/company/tekstilas/?originalSubdomain=tr" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/70 hover:bg-primary-foreground/20 hover:text-primary-foreground transition-colors">
+                <FaLinkedinIn className="w-3.5 h-3.5" />
+              </a>
+              <a href="https://www.instagram.com/tekstilascom/" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/70 hover:bg-primary-foreground/20 hover:text-primary-foreground transition-colors">
+                <FaInstagram className="w-3.5 h-3.5" />
+              </a>
+              <a href="https://www.facebook.com/tekstilas" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/70 hover:bg-primary-foreground/20 hover:text-primary-foreground transition-colors">
+                <FaFacebookF className="w-3.5 h-3.5" />
+              </a>
+              <span className="w-8 h-8 rounded-full bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/30 cursor-default" title="Yakında">
+                <FaXTwitter className="w-3.5 h-3.5" />
+              </span>
             </div>
           </div>
 
