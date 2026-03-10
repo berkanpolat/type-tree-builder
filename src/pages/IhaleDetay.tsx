@@ -464,11 +464,7 @@ export default function IhaleDetay() {
       return;
     }
 
-    // Yeni teklif, kullanıcının önceki teklifinden farklı olmalıdır
-    if (myTeklif && tutar === Number(myTeklif.tutar)) {
-      toast({ title: "Hata", description: "Yeni teklifiniz önceki teklifinizden farklı olmalıdır.", variant: "destructive" });
-      return;
-    }
+    // Aynı tutar verilebilir - kısıtlama yok
 
     // Açık usullerde: son teklif varsa ona göre, yoksa başlangıç fiyatına göre kontrol
     const otherTeklifler = teklifler.filter(t => t.teklif_veren_user_id !== currentUserId);
