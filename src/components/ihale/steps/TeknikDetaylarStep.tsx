@@ -168,8 +168,8 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
-          <DropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={td.kumas_grubu} onChange={(v) => setTD("kumas_grubu", v)} />
-          <DropdownField label="Kumaş Türü" kategoriName="Kumaş Türü" value={td.kumas_turu} onChange={(v) => setTD("kumas_turu", v)} />
+          <DropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={td.kumas_grubu} onChange={(v) => { setTD("kumas_grubu", v); setTD("kumas_turu", ""); }} />
+          <DependentDropdownField label="Kumaş Türü" parentId={td.kumas_grubu || null} value={td.kumas_turu} onChange={(v) => setTD("kumas_turu", v)} />
           <DropdownField label="Sezon" kategoriName="Sezon" value={td.sezon} onChange={(v) => setTD("sezon", v)} />
           <DropdownField label="Cinsiyet" kategoriName="Cinsiyet" value={td.cinsiyet} onChange={(v) => setTD("cinsiyet", v)} />
           <DropdownField label="Yaş Grubu" kategoriName="Yaş Grubu" value={td.yas_grubu} onChange={(v) => setTD("yas_grubu", v)} />
