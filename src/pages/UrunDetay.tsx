@@ -110,7 +110,7 @@ export default function UrunDetay() {
   // Image gallery
   const [allImages, setAllImages] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [zoomOpen, setZoomOpen] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
