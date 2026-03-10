@@ -2,7 +2,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
-import KategoriMegaMenu from "@/components/anasayfa/KategoriMegaMenu";
+import PazarHeader from "@/components/PazarHeader";
 import UrunFiltreler, { type FilterState } from "@/components/anasayfa/UrunFiltreler";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
