@@ -76,12 +76,15 @@ interface FirmaDetail {
   email: string | null;
 }
 
+const ITEMS_PER_PAGE = 10;
+
 export default function AdminFirmalar() {
   const { token } = useAdminAuth();
   const { toast } = useToast();
   const [firmalar, setFirmalar] = useState<FirmaItem[]>([]);
   const [stats, setStats] = useState<FirmaStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [statsDays, setStatsDays] = useState(7);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
