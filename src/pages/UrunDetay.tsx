@@ -27,7 +27,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import {
-  SiLinkerd,
+  
   SiInstagram,
   SiFacebook,
   SiTiktok,
