@@ -25,6 +25,7 @@ import Mesajlar from "./pages/Mesajlar";
 import Bildirimler from "./pages/Bildirimler";
 import UrunDetay from "./pages/UrunDetay";
 import FirmaDetay from "./pages/FirmaDetay";
+import ProfilAyarlari from "./pages/ProfilAyarlari";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
