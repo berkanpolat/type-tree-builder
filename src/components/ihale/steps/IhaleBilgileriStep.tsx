@@ -55,10 +55,17 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
     enabled: formData.ozel_filtreleme,
   });
 
+  // Get selected firma_turu IDs from filters to filter firma_tipleri
+  const selectedFirmaTuruIds = formData.filtreler.filter(f => f.filtre_tipi === "firma_turu").map(f => f.secenek_id);
+
   const { data: firmaTipleri } = useQuery({
-    queryKey: ["firma_tipleri_filter"],
+    queryKey: ["firma_tipleri_filter", selectedFirmaTuruIds],
     queryFn: async () => {
-      const { data } = await supabase.from("firma_tipleri").select("*").order("name");
+      let query = supabase.from("firma_tipleri").select("*").order("name");
+      if (selectedFirmaTuruIds.length > 0) {
+        query = query.in("firma_turu_id", selectedFirmaTuruIds);
+      }
+      const { data } = await query;
       return data || [];
     },
     enabled: formData.ozel_filtreleme,
