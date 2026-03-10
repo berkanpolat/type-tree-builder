@@ -467,6 +467,16 @@ export default function IhaleDetay() {
 
     // Aynı tutar verilebilir - kısıtlama yok
 
+    // Hizmet ihalesi + kapalı teklif: başlangıç fiyatından yüksek teklif verilemez
+    if (ihale?.ihale_turu === "hizmet_alim" && ihale?.teklif_usulu === "kapali_teklif") {
+      const basFiyat = ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati) : null;
+      if (basFiyat !== null && tutar > basFiyat) {
+        const sym = ihale.para_birimi === "USD" ? "$" : ihale.para_birimi === "EUR" ? "€" : ihale.para_birimi === "GBP" ? "£" : "₺";
+        toast({ title: "Hata", description: `Hizmet ihalelerinde başlangıç fiyatından (${sym}${basFiyat.toLocaleString("tr-TR")}) yüksek teklif verilemez.`, variant: "destructive" });
+        return;
+      }
+    }
+
     // Açık usullerde: son teklif varsa ona göre, yoksa başlangıç fiyatına göre kontrol
     const otherTeklifler = teklifler.filter(t => t.teklif_veren_user_id !== currentUserId);
     const baslangicFiyati = ihale?.baslangic_fiyati ? Number(ihale.baslangic_fiyati) : null;

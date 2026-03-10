@@ -62,7 +62,7 @@ export default function TeklifUsuluStep({ formData, updateForm }: Props) {
               key={u.value}
               disabled={disabled}
               onClick={() => !disabled && updateForm({ teklif_usulu: u.value })}
-              className={`p-6 rounded-lg border-2 text-left transition-all relative ${
+              className={`p-6 rounded-lg border-2 text-left transition-all relative flex flex-col items-center ${
                 disabled
                   ? "border-border bg-muted/50 opacity-50 cursor-not-allowed"
                   : selected
@@ -70,13 +70,13 @@ export default function TeklifUsuluStep({ formData, updateForm }: Props) {
                   : "border-border hover:border-muted-foreground/40 hover:shadow-md"
               }`}
             >
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${
                 selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
               }`}>
                 <Icon className="w-6 h-6" />
               </div>
-              <h4 className="font-semibold text-foreground text-center mb-2">{u.label}</h4>
-              <p className="text-xs text-muted-foreground text-center">{u.description}</p>
+              <h4 className="font-semibold text-foreground text-center mb-2 h-6 flex items-center">{u.label}</h4>
+              <p className="text-xs text-muted-foreground text-center h-10 flex items-center">{u.description}</p>
               {disabled && (
                 <p className="text-xs text-destructive text-center mt-2">{getDisabledReason(u.value)}</p>
               )}
