@@ -80,7 +80,7 @@ export default function Footer() {
                 <FooterLink to="/tekihale-tanitim">TekIhale – Teklif alma &amp; verme sistemi</FooterLink>
               </li>
               <li>
-                <FooterLink to="/anasayfa">TekPazar – B2B ürün listeleme</FooterLink>
+                <FooterLink to="/tekpazar-tanitim">TekPazar – B2B ürün listeleme</FooterLink>
               </li>
             </ul>
           </div>
