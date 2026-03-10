@@ -57,6 +57,7 @@ export function AppSidebar() {
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState("");
   const unreadMessages = useUnreadMessages();
+  const unreadNotifications = useNotificationCount();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
