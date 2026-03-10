@@ -45,7 +45,6 @@ const ODEME_SECENEKLERI_OPTIONS = [
 ];
 
 const ODEME_VADESI_OPTIONS = [
-  "Belirtmek İstemiyorum",
   "Vadesiz",
   "0-30 gün",
   "30-60 gün",
