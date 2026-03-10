@@ -371,7 +371,7 @@ export default function UrunDetay() {
                       selectedImageIndex === i ? "border-primary" : "border-border hover:border-primary/50"
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img} alt="" className="w-full h-full object-contain p-0.5" />
                   </button>
                 ))}
               </div>
