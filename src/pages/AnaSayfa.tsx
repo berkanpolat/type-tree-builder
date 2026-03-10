@@ -57,7 +57,7 @@ const URUN_KATEGORILERI = [
 interface SearchResult {
   id: string;
   name: string;
-  type: "Kategori" | "Grup" | "Tür" | "Ürün" | "Firma";
+  type: "Kategori" | "Grup" | "Tür" | "Ürün";
 }
 
 interface UrunListItem {
