@@ -571,13 +571,13 @@ export default function AdminIhaleler() {
                 />
                 <MultiSelectFilter
                   label="Ürün Grubu"
-                  options={categoryOptions.urunGruplari}
+                  options={filteredUrunGruplari.map(o => ({ id: o.id, name: o.name }))}
                   selected={selectedUrunGruplari}
                   onChange={setSelectedUrunGruplari}
                 />
                 <MultiSelectFilter
                   label="Ürün Türü"
-                  options={categoryOptions.urunTurleri}
+                  options={filteredUrunTurleri.map(o => ({ id: o.id, name: o.name }))}
                   selected={selectedUrunTurleri}
                   onChange={setSelectedUrunTurleri}
                 />
@@ -589,7 +589,7 @@ export default function AdminIhaleler() {
                 />
                 <MultiSelectFilter
                   label="Hizmet Türü"
-                  options={categoryOptions.hizmetTurleri}
+                  options={filteredHizmetTurleri.map(o => ({ id: o.id, name: o.name }))}
                   selected={selectedHizmetTurleri}
                   onChange={setSelectedHizmetTurleri}
                 />
