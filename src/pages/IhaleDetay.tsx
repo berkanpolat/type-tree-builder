@@ -73,6 +73,7 @@ import { FaLinkedinIn } from "react-icons/fa";
 import { RiTwitterXFill } from "react-icons/ri";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import BildirDialog from "@/components/BildirDialog";
 
 // Check if a value looks like a UUID
 const isUUID = (val: string): boolean =>
