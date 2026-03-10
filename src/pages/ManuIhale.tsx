@@ -93,12 +93,16 @@ export default function ManuIhale() {
   const fetchData = async () => {
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
+    console.log("ManuIhale fetchData - user:", user?.id);
     if (!user) { setLoading(false); return; }
 
     const [ihaleRes, teklifRes] = await Promise.all([
       supabase.from("ihaleler").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
       supabase.from("ihale_teklifler").select("ihale_id, tutar"),
     ]);
+
+    console.log("ManuIhale fetchData - ihaleRes:", ihaleRes.data?.length, ihaleRes.error);
+    console.log("ManuIhale fetchData - teklifRes:", teklifRes.data?.length, teklifRes.error);
 
     if (ihaleRes.data) setIhaleler(ihaleRes.data);
     if (teklifRes.data) setTeklifler(teklifRes.data);
