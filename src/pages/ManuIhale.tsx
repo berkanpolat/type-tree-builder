@@ -301,7 +301,7 @@ export default function ManuIhale() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                             {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
                               <Button
                                 variant="ghost"

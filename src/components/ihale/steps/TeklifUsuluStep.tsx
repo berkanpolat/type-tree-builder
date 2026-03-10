@@ -42,6 +42,8 @@ export default function TeklifUsuluStep({ formData, updateForm }: Props) {
       return "Ürün Alış ihalelerinde açık arttırma kullanılamaz.";
     if (formData.ihale_turu === "urun_satis" && value === "acik_indirme")
       return "Ürün Satış ihalelerinde açık indirme kullanılamaz.";
+    if (formData.ihale_turu === "hizmet_alim" && value === "acik_arttirma")
+      return "Hizmet Alım ihalelerinde açık arttırma kullanılamaz.";
     return "";
   };
 

@@ -33,6 +33,7 @@ import {
   SiTiktok,
 } from "react-icons/si";
 import { RiTwitterXFill } from "react-icons/ri";
+import { FaLinkedinIn } from "react-icons/fa";
 
 const paraBirimiSymbol: Record<string, string> = {
   TRY: "₺", USD: "$", EUR: "€", GBP: "£",
