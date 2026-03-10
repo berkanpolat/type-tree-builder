@@ -789,7 +789,7 @@ export default function UrunDetay() {
           </div>
         )}
       </main>
-
+      <Footer />
     </div>
   );
 }
