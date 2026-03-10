@@ -41,6 +41,8 @@ const App = () => (
           <Route path="/manuihale" element={<ManuIhale />} />
           <Route path="/manuihale/yeni" element={<YeniIhale />} />
           <Route path="/tekihale" element={<TekIhale />} />
+          <Route path="/tekihale/:id" element={<IhaleDetay />} />
+          <Route path="/ihale/:id" element={<IhaleDetay />} />
           <Route path="/manuihale/duzenle/:id" element={<YeniIhale />} />
           <Route path="/tekliflerim" element={<Tekliflerim />} />
           <Route path="/manupazar" element={<ManuPazar />} />
