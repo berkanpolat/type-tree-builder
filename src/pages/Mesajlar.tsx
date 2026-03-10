@@ -408,6 +408,19 @@ export default function Mesajlar() {
     if (currentUserId) fetchConversations(currentUserId);
   };
 
+  const handleDeleteConversation = async () => {
+    if (!deleteConvTarget || !currentUserId) return;
+    await supabase.from("messages").delete().eq("conversation_id", deleteConvTarget.id);
+    await supabase.from("conversations").delete().eq("id", deleteConvTarget.id);
+    setConversations((prev) => prev.filter((c) => c.id !== deleteConvTarget.id));
+    if (selectedConv?.id === deleteConvTarget.id) {
+      setSelectedConv(null);
+      setMessages([]);
+    }
+    setDeleteConvTarget(null);
+    toast({ title: "Sohbet silindi" });
+  };
+
   const isImageFile = (name: string) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name);
 
   const renderMessageContent = (msg: Message, isMine: boolean) => {
