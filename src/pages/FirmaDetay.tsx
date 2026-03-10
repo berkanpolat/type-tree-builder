@@ -501,13 +501,33 @@ export default function FirmaDetay() {
     return secenekMap[idVal] || "Belirtilmedi";
   };
 
-  const kurulusYili = firma?.kurulus_tarihi || "Belirtilmedi";
-  const ilIlce = firma ? `${resolve(firma.kurulus_il_id)}${firma.kurulus_ilce_id ? `, ${resolve(firma.kurulus_ilce_id)}` : ""}` : "Belirtilmedi";
+  const kurulusYili = textOrBelirtilmedi(firma?.kurulus_tarihi);
+  const ilName = firma?.kurulus_il_id ? resolve(firma.kurulus_il_id) : "";
+  const ilceName = firma?.kurulus_ilce_id ? resolve(firma.kurulus_ilce_id) : "";
+  const ilIlce = [ilName, ilceName].filter(Boolean).join(", ") || "Belirtilmedi";
 
-  // Faaliyet alanı: unique kategori values from üretim/satış items
-  const faaliyetAlani = uretimSatisItems.length > 0
-    ? [...new Set(uretimSatisItems.map(u => u.kategori))].filter(Boolean).join(", ") || "Belirtilmedi"
-    : "Belirtilmedi";
+  const faaliyetAlaniFromUrunHizmet = [
+    ...new Set(
+      urunHizmetItems
+        .filter((item) => normalizeText(item.kategoriName).includes("faaliyet"))
+        .map((item) => item.secenek)
+        .filter((item) => item && item !== "Belirtilmedi")
+    ),
+  ];
+
+  const faaliyetAlaniFallback = [
+    ...new Set(
+      uretimSatisItems
+        .map((item) => item.kategori)
+        .filter((item) => item && item !== "Belirtilmedi")
+    ),
+  ];
+
+  const faaliyetAlani =
+    (faaliyetAlaniFromUrunHizmet.length > 0
+      ? faaliyetAlaniFromUrunHizmet
+      : faaliyetAlaniFallback
+    ).join(", ") || "Belirtilmedi";
 
   // Üretim modeli: map uretim_satis_rolu to readable labels
   const uretimModeli = firma?.uretim_satis_rolu
@@ -516,23 +536,36 @@ export default function FirmaDetay() {
 
   // Group ürün/hizmet by category
   const urunHizmetGrouped = urunHizmetItems.reduce<Record<string, string[]>>((acc, item) => {
+    if (!item.secenek || item.secenek === "Belirtilmedi") return acc;
     if (!acc[item.kategoriName]) acc[item.kategoriName] = [];
-    acc[item.kategoriName].push(item.secenek);
+    if (!acc[item.kategoriName].includes(item.secenek)) {
+      acc[item.kategoriName].push(item.secenek);
+    }
     return acc;
   }, {});
 
-  // Group üretim/satış by tip then by grup
-  const uretimItems = uretimSatisItems.filter(u => u.tip === "uretim");
-  const satisItems = uretimSatisItems.filter(u => u.tip === "satis");
+  const buildUretimSatisGrouped = (tip: "uretim" | "satis") => {
+    const grouped: Record<string, Record<string, string[]>> = {};
 
-  const groupByGrup = (items: typeof uretimItems) => {
-    const grouped: Record<string, string[]> = {};
-    items.forEach(item => {
-      if (!grouped[item.grup]) grouped[item.grup] = [];
-      grouped[item.grup].push(item.tur);
-    });
+    uretimSatisItems
+      .filter((item) => item.tip === tip)
+      .forEach((item) => {
+        const kategori = item.kategori !== "Belirtilmedi" ? item.kategori : "Diğer";
+        const grup = item.grup !== "Belirtilmedi" ? item.grup : "Diğer";
+
+        if (!grouped[kategori]) grouped[kategori] = {};
+        if (!grouped[kategori][grup]) grouped[kategori][grup] = [];
+
+        if (item.tur && item.tur !== "Belirtilmedi" && !grouped[kategori][grup].includes(item.tur)) {
+          grouped[kategori][grup].push(item.tur);
+        }
+      });
+
     return grouped;
   };
+
+  const uretimGrouped = buildUretimSatisGrouped("uretim");
+  const satisGrouped = buildUretimSatisGrouped("satis");
 
   if (loading) {
     return (
