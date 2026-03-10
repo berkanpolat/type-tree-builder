@@ -322,13 +322,10 @@ export default function YeniIhale() {
     setSaving(false);
   };
 
-  const handlePublish = async () => {
+  const handlePreview = async () => {
     await handleSave();
     if (!ihaleId) return;
-
-    await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihaleId);
-    toast({ title: "İhale onaya gönderildi" });
-    navigate("/manuihale");
+    navigate(`/tekihale/${ihaleId}`);
   };
 
   if (loadingEdit) {
@@ -372,8 +369,8 @@ export default function YeniIhale() {
               {currentStep < STEPS.length - 1 ? (
                 <Button onClick={handleNext}>İleri</Button>
               ) : (
-                <Button onClick={handlePublish} disabled={saving}>
-                  {saving ? "Kaydediliyor..." : "Onaya Gönder"}
+                <Button onClick={handlePreview} disabled={saving}>
+                  {saving ? "Kaydediliyor..." : "İlerle ve Önizle"}
                 </Button>
               )}
             </div>

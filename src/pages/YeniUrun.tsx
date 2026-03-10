@@ -361,7 +361,7 @@ export default function YeniUrun() {
       para_birimi: paraBirimi,
       min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
       teknik_detaylar: teknikDetaylar,
-      durum: "onay_bekliyor",
+      durum: "duzenleniyor",
     };
 
     let urunId = draftId;
@@ -406,8 +406,8 @@ export default function YeniUrun() {
     }
 
     setSaving(false);
-    toast({ title: "Ürün onaya gönderildi!" });
-    navigate("/manupazar");
+    toast({ title: "Ürün kaydedildi!" });
+    navigate(`/urun/${urunId}`);
   };
 
   // --- Fiyat Kademesi helpers ---
@@ -827,7 +827,7 @@ export default function YeniUrun() {
           {step < STEPS.length - 1 ? (
             <Button onClick={handleNext}>İleri</Button>
           ) : (
-            <Button onClick={handleSubmit} disabled={saving}>{saving ? "Gönderiliyor..." : "Gönder"}</Button>
+            <Button onClick={handleSubmit} disabled={saving}>{saving ? "Kaydediliyor..." : "İlerle ve Önizle"}</Button>
           )}
         </div>
       </div>

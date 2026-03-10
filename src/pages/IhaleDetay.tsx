@@ -781,6 +781,47 @@ export default function IhaleDetay() {
 
           {/* Right Sidebar */}
           <div className="lg:col-span-2 space-y-4">
+            {/* Onay Bloğu - sadece sahip ve duzenleniyor/onay_bekliyor durumunda */}
+            {isOwner && (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") && (
+              <Card className="p-5 border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-foreground">
+                    {ihale.durum === "onay_bekliyor" ? "Onay Bekliyor" : "Önizleme"}
+                  </h3>
+                  <Badge className={ihale.durum === "onay_bekliyor" ? "bg-amber-500 text-white" : "bg-blue-500 text-white"}>
+                    {ihale.durum === "onay_bekliyor" ? "İnceleniyor" : "Taslak"}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {ihale.durum === "onay_bekliyor"
+                    ? "Bu ilan yayına alınmak için onayınızı beklemektedir. Lütfen ilanı inceleyip karar veriniz."
+                    : "İhalenizin önizlemesini kontrol edin. Bilgiler doğruysa onaya gönderin veya düzenlemeye devam edin."}
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 gap-2"
+                    onClick={() => navigate(`/manuihale/duzenle/${ihale.id}`)}
+                  >
+                    <FileText className="w-4 h-4" />
+                    Düzenle
+                  </Button>
+                  {ihale.durum === "duzenleniyor" && (
+                    <Button
+                      className="flex-1 gap-2"
+                      onClick={async () => {
+                        await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id);
+                        toast({ title: "İhale onaya gönderildi!" });
+                        navigate("/manuihale");
+                      }}
+                    >
+                      <CheckCircle2 className="w-4 h-4" />
+                      Onayla
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            )}
             {/* Title & Countdown */}
             <Card className="p-6">
               <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>

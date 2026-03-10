@@ -5,6 +5,7 @@ import PazarHeader from "@/components/PazarHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import {
   Heart,
@@ -20,6 +21,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ZoomIn,
+  Pencil,
+  XCircle,
+  CheckCircle,
 } from "lucide-react";
 import {
   SiLinkerd,
@@ -70,6 +74,7 @@ interface UrunData {
   urun_grup_id: string | null;
   urun_tur_id: string | null;
   user_id: string;
+  durum: string;
 }
 
 interface VaryasyonData {
@@ -116,6 +121,7 @@ interface BenzerUrun {
 export default function UrunDetay() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
@@ -158,7 +164,7 @@ export default function UrunDetay() {
 
     const { data: urunData } = await supabase
       .from("urunler")
-      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id")
+      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum")
       .eq("id", id)
       .single();
 
@@ -480,6 +486,47 @@ export default function UrunDetay() {
 
           {/* Right: Product Info + Seller */}
           <div className="lg:col-span-2 space-y-4">
+            {/* Onay Bloğu - sadece sahip ve duzenleniyor/onay_bekliyor durumunda */}
+            {urun.user_id === currentUserId && (urun.durum === "duzenleniyor" || urun.durum === "onay_bekliyor") && (
+              <Card className="p-5 border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-foreground">
+                    {urun.durum === "onay_bekliyor" ? "Onay Bekliyor" : "Önizleme"}
+                  </h3>
+                  <Badge className={urun.durum === "onay_bekliyor" ? "bg-amber-500 text-white" : "bg-blue-500 text-white"}>
+                    {urun.durum === "onay_bekliyor" ? "İnceleniyor" : "Taslak"}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {urun.durum === "onay_bekliyor"
+                    ? "Bu ilan yayına alınmak için onayınızı beklemektedir. Lütfen ilanı inceleyip karar veriniz."
+                    : "Ürününüzün önizlemesini kontrol edin. Bilgiler doğruysa onaya gönderin veya düzenlemeye devam edin."}
+                </p>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="flex-1 gap-2"
+                    onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Düzenle
+                  </Button>
+                  {urun.durum === "duzenleniyor" && (
+                    <Button
+                      className="flex-1 gap-2"
+                      onClick={async () => {
+                        await supabase.from("urunler").update({ durum: "onay_bekliyor" } as any).eq("id", urun.id);
+                        toast({ title: "Ürün onaya gönderildi!" });
+                        navigate("/manupazar");
+                      }}
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Onayla
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            )}
             {/* Product Info Card */}
             <Card className="p-6">
               <p className="text-sm text-muted-foreground mb-1">#{urun.urun_no.replace("#", "")}</p>
