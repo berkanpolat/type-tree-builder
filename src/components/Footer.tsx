@@ -29,7 +29,7 @@ export default function Footer() {
             <div className="space-y-2.5">
               <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
                 <Mail className="w-4 h-4 shrink-0" />
-                <span>info@tekstilas.com</span>
+                <span>info@manufixo.com</span>
               </div>
               <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
                 <Phone className="w-4 h-4 shrink-0" />
