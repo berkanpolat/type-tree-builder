@@ -403,6 +403,12 @@ export default function YeniUrun() {
         }
       }
       if (dbRows.length > 0) await supabase.from("urun_varyasyonlar").insert(dbRows as any);
+
+      // Set first variation photo as main product photo if not already set
+      const firstFoto = dbRows[0]?.foto_url;
+      if (firstFoto) {
+        await supabase.from("urunler").update({ foto_url: firstFoto }).eq("id", urunId);
+      }
     }
 
     setSaving(false);
