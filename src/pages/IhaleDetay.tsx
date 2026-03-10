@@ -1261,6 +1261,14 @@ export default function IhaleDetay() {
           </div>
         </DialogContent>
       </Dialog>
+      {ihale && (
+        <BildirDialog
+          open={bildirOpen}
+          onOpenChange={setBildirOpen}
+          tur="ihale"
+          referansId={ihale.id}
+        />
+      )}
       <Footer />
     </div>
   );
