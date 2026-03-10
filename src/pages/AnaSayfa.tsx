@@ -722,7 +722,7 @@ export default function AnaSayfa() {
                 />
               </div>
               {activeTab === "firma" && (
-                <Select value={selectedFirmaTuru} onValueChange={setSelectedFirmaTuru}>
+                <Select value={selectedFirmaTuru} onValueChange={handleFirmaTuruChange}>
                   <SelectTrigger className="w-[180px] h-12 bg-muted border-0">
                     <SelectValue placeholder="Firma Türü" />
                   </SelectTrigger>
