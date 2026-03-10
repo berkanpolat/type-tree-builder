@@ -5,6 +5,7 @@ import logoImg from "@/assets/tekstil-as-logo.png";
 import PazarHeader from "@/components/PazarHeader";
 import KategoriMegaMenu from "@/components/anasayfa/KategoriMegaMenu";
 import UrunFiltreler, { type FilterState } from "@/components/anasayfa/UrunFiltreler";
+import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
