@@ -222,11 +222,11 @@ export default function ProfilAyarlari() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-sm font-medium text-foreground">Telefon</Label>
-              <Input value={telefon} onChange={(e) => setTelefon(e.target.value)} placeholder="Telefon" />
+              <Input value={telefon} readOnly disabled className="bg-muted" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-sm font-medium text-foreground">E-posta</Label>
-              <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-posta" />
+              <Input value={email} readOnly disabled className="bg-muted" />
             </div>
 
             <div className="flex justify-end pt-2">
