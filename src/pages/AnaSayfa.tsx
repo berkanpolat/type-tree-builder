@@ -153,11 +153,9 @@ export default function AnaSayfa() {
   const [firmalar, setFirmalar] = useState<FirmaListItem[]>([]);
   const [firmaLoading, setFirmaLoading] = useState(false);
   const [firmaTurleri, setFirmaTurleri] = useState<{ id: string; name: string }[]>([]);
-  const [firmaTipleri, setFirmaTipleri] = useState<{ id: string; name: string }[]>([]);
   const [selectedFirmaTuru, setSelectedFirmaTuru] = useState<string>("");
-  const [selectedFirmaTipleri, setSelectedFirmaTipleri] = useState<string[]>([]);
-  const [firmaOlcekleri, setFirmaOlcekleri] = useState<{ id: string; name: string }[]>([]);
-  const [selectedOlcekler, setSelectedOlcekler] = useState<string[]>([]);
+  const [selectedFirmaTuruName, setSelectedFirmaTuruName] = useState<string>("");
+  const [firmaFilterState, setFirmaFilterState] = useState<FirmaFilterState | null>(null);
 
   // Name maps
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
