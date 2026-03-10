@@ -107,6 +107,7 @@ export default function AnaSayfa() {
   const navigate = useNavigate();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useEffect(() => {
