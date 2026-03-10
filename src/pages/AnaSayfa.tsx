@@ -28,6 +28,7 @@ import {
   ArrowRight,
   ImageIcon,
   Heart,
+  Bookmark,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
