@@ -1034,9 +1034,15 @@ export default function AnaSayfa() {
                   Henüz kayıtlı firma bulunmamaktadır.
                 </div>
               ) : (
-                firmalar.map((firma) => (
-                  <Card key={firma.id} className="p-5 hover:shadow-md transition-shadow">
+                <div className="space-y-3">
+                {firmalar.map((firma) => (
+                  <Card
+                    key={firma.id}
+                    className="p-5 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/firma/${firma.id}`)}
+                  >
                     <div className="flex items-start gap-4">
+                      {/* Logo */}
                       <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
                         {firma.logo_url ? (
                           <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
@@ -1044,57 +1050,80 @@ export default function AnaSayfa() {
                           <span className="text-lg font-bold text-muted-foreground">{firma.firma_unvani.charAt(0)}</span>
                         )}
                       </div>
+
+                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap mb-1">
                           <h3 className="font-semibold text-foreground text-lg">{firma.firma_unvani}</h3>
-                          <Badge className="bg-secondary/10 text-secondary border-secondary/30 text-xs">
-                            {secenekMap[firma.firma_tipi_id] || ""}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {firma.firma_turu_name || ""}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {firma.firma_tipi_name || ""}
                           </Badge>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mt-2">
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
                           {(firma.kurulus_il_id || firma.kurulus_ilce_id) && (
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <MapPin className="w-3.5 h-3.5" />
+                              <MapPin className="w-3.5 h-3.5 shrink-0" />
                               <span>
                                 {firma.kurulus_il_id ? secenekMap[firma.kurulus_il_id] || "" : ""}
                                 {firma.kurulus_ilce_id ? `, ${secenekMap[firma.kurulus_ilce_id] || ""}` : ""}
                               </span>
                             </div>
                           )}
-                          {firma.firma_olcegi_id && (
+                          {firma.firma_olcegi_id && secenekMap[firma.firma_olcegi_id] && (
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Users className="w-3.5 h-3.5" />
-                              <span>{secenekMap[firma.firma_olcegi_id] || ""}</span>
+                              <Users className="w-3.5 h-3.5 shrink-0" />
+                              <span>{secenekMap[firma.firma_olcegi_id]}</span>
                             </div>
                           )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mt-1">
-                          {firma.web_sitesi && (
+                          {firma.faaliyet_alani && (
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Globe className="w-3.5 h-3.5" />
+                              <Globe className="w-3.5 h-3.5 shrink-0" />
+                              <span>{firma.faaliyet_alani}</span>
                             </div>
                           )}
                           {firma.kurulus_tarihi && (
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <CalendarDays className="w-3.5 h-3.5" />
+                              <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                              <span>{firma.kurulus_tarihi}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        <button className="p-2 hover:bg-muted rounded-md transition-colors">
-                          <Bookmark className="w-5 h-5 text-muted-foreground" />
+
+                      {/* Actions */}
+                      <div className="flex flex-col items-end gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)}
+                          className="p-2 hover:bg-muted rounded-md transition-colors"
+                        >
+                          <Heart className={`w-5 h-5 ${firma.is_favorited ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
                         </button>
-                        <Button size="sm" variant="outline" className="gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-2"
+                          onClick={() => handleMessageFirma(firma.user_id)}
+                        >
                           <MessageSquare className="w-4 h-4" /> Mesaj
                         </Button>
-                        <button className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
-                          <ArrowRight className="w-3.5 h-3.5" /> Profili Gör
-                        </button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="gap-1 text-sm text-muted-foreground hover:text-foreground"
+                          onClick={() => navigate(`/firma/${firma.id}`)}
+                        >
+                          Profili Gör <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
                     </div>
                   </Card>
-                ))
+                ))}
+                </div>
               )}
             </div>
           </div>
