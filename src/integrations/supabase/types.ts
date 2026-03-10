@@ -1338,6 +1338,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_hash_password: { Args: { p_password: string }; Returns: string }
+      admin_verify_password: {
+        Args: { p_password: string; p_username: string }
+        Returns: boolean
+      }
       get_or_create_conversation: {
         Args: { p_user1: string; p_user2: string }
         Returns: string
