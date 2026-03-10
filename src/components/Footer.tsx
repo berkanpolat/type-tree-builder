@@ -24,7 +24,7 @@ export default function Footer() {
           <div className="space-y-4">
             <img src={logoImg} alt="Tekstil A.Ş." className="h-8 brightness-0 invert" />
             <p className="text-primary-foreground/60 text-sm leading-relaxed">
-              Manufixo Bilişim Teknolojileri A.Ş. tarafından geliştirilmiştir.
+              Manufixo Teknoloji A.Ş. tarafından geliştirilmiştir.
             </p>
             <div className="space-y-2.5">
               <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
