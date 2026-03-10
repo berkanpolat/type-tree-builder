@@ -285,13 +285,32 @@ export default function IhaleDetay() {
     if (!id || !currentUserId) return;
     setLoading(true);
 
-    const { data: ihaleData, error } = await supabase
+    let ihaleData: any = null;
+
+    const { data: directData, error } = await supabase
       .from("ihaleler")
       .select("*")
       .eq("id", id)
       .single();
 
-    if (error || !ihaleData) { setLoading(false); return; }
+    if (directData) {
+      ihaleData = directData;
+    } else {
+      // Fallback: try admin edge function if admin token exists
+      const adminToken = localStorage.getItem("admin_token");
+      if (adminToken) {
+        try {
+          const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth/get-ihale-detail", {
+            body: { token: adminToken, ihaleId: id },
+          });
+          if (!adminErr && adminRes?.ihale) {
+            ihaleData = adminRes.ihale;
+          }
+        } catch {}
+      }
+    }
+
+    if (!ihaleData) { setLoading(false); return; }
     setIhale(ihaleData);
 
     // Images
