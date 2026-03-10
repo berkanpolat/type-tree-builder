@@ -22,6 +22,7 @@ import ManuPazar from "./pages/ManuPazar";
 import YeniUrun from "./pages/YeniUrun";
 import Favoriler from "./pages/Favoriler";
 import Mesajlar from "./pages/Mesajlar";
+import Bildirimler from "./pages/Bildirimler";
 import UrunDetay from "./pages/UrunDetay";
 import FirmaDetay from "./pages/FirmaDetay";
 import NotFound from "./pages/NotFound";
@@ -53,6 +54,7 @@ const App = () => (
           <Route path="/manupazar/duzenle/:id" element={<YeniUrun />} />
           <Route path="/favoriler" element={<Favoriler />} />
           <Route path="/mesajlar" element={<Mesajlar />} />
+          <Route path="/bildirimler" element={<Bildirimler />} />
           <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
           <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
           <Route path="/urun-kategorisi" element={<UrunKategorisi />} />

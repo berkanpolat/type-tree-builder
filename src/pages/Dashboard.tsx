@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useNotificationCount } from "@/hooks/use-notifications";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -39,6 +40,7 @@ const Dashboard = () => {
   const [firmaTuruName, setFirmaTuruName] = useState("");
   const [firmaTipiName, setFirmaTipiName] = useState("");
   const [loading, setLoading] = useState(true);
+  const unreadNotifications = useNotificationCount();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,7 +100,7 @@ const Dashboard = () => {
     },
     {
       title: "Bildirimler",
-      value: 0,
+      value: unreadNotifications,
       subtitle: "İşlem bekleyen",
       icon: Bell,
       color: "text-red-500",

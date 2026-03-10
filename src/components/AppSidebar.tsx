@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
+import { useNotificationCount } from "@/hooks/use-notifications";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import {
   Home,
@@ -56,6 +57,7 @@ export function AppSidebar() {
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState("");
   const unreadMessages = useUnreadMessages();
+  const unreadNotifications = useNotificationCount();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -126,9 +128,9 @@ export function AppSidebar() {
                           {unreadMessages > 99 ? "99+" : unreadMessages}
                         </span>
                       )}
-                      {!collapsed && item.badge && (
+                      {!collapsed && item.badge && unreadNotifications > 0 && (
                         <span className="w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
-                          0
+                          {unreadNotifications > 99 ? "99+" : unreadNotifications}
                         </span>
                       )}
                     </NavLink>
