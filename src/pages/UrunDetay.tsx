@@ -381,15 +381,20 @@ export default function UrunDetay() {
             <div className="flex-1 relative">
               <div
                 ref={imageContainerRef}
-                className="aspect-square bg-background rounded-xl overflow-hidden border border-border relative group cursor-zoom-in"
-                onMouseMove={handleImageZoomMove}
-                onClick={() => setZoomOpen(true)}
+                className="aspect-square bg-background rounded-xl overflow-hidden border border-border relative group"
+                onMouseMove={(e) => { handleImageZoomMove(e); setIsZoomed(true); }}
+                onMouseLeave={() => setIsZoomed(false)}
+                style={{ cursor: "crosshair" }}
               >
                 {allImages.length > 0 ? (
                   <img
                     src={allImages[selectedImageIndex]}
                     alt={urun.baslik}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain transition-transform duration-200"
+                    style={isZoomed ? {
+                      transform: "scale(2.5)",
+                      transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                    } : undefined}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -398,9 +403,11 @@ export default function UrunDetay() {
                 )}
 
                 {/* Zoom icon overlay */}
-                <div className="absolute bottom-3 right-3 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ZoomIn className="w-5 h-5 text-muted-foreground" />
-                </div>
+                {!isZoomed && (
+                  <div className="absolute bottom-3 right-3 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ZoomIn className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                )}
 
                 {/* Favorite button */}
                 <button
