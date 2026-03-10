@@ -1064,33 +1064,26 @@ export default function AnaSayfa() {
                           </Badge>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-                          {(firma.kurulus_il_id || firma.kurulus_ilce_id) && (
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <MapPin className="w-3.5 h-3.5 shrink-0" />
-                              <span>
-                                {firma.kurulus_il_id ? secenekMap[firma.kurulus_il_id] || "" : ""}
-                                {firma.kurulus_ilce_id ? `, ${secenekMap[firma.kurulus_ilce_id] || ""}` : ""}
-                              </span>
-                            </div>
-                          )}
-                          {firma.firma_olcegi_id && secenekMap[firma.firma_olcegi_id] && (
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Users className="w-3.5 h-3.5 shrink-0" />
-                              <span>{secenekMap[firma.firma_olcegi_id]}</span>
-                            </div>
-                          )}
-                          {firma.faaliyet_alani && (
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Globe className="w-3.5 h-3.5 shrink-0" />
-                              <span>{firma.faaliyet_alani}</span>
-                            </div>
-                          )}
-                          {firma.kurulus_tarihi && (
-                            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <CalendarDays className="w-3.5 h-3.5 shrink-0" />
-                              <span>{firma.kurulus_tarihi}</span>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <MapPin className="w-3.5 h-3.5 shrink-0" />
+                            <span>
+                              {firma.kurulus_il_id && secenekMap[firma.kurulus_il_id]
+                                ? `${secenekMap[firma.kurulus_il_id]}${firma.kurulus_ilce_id && secenekMap[firma.kurulus_ilce_id] ? `, ${secenekMap[firma.kurulus_ilce_id]}` : ""}`
+                                : "Bilinmiyor"}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Users className="w-3.5 h-3.5 shrink-0" />
+                            <span>{(firma.firma_olcegi_id && secenekMap[firma.firma_olcegi_id]) || "Bilinmiyor"}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <Globe className="w-3.5 h-3.5 shrink-0" />
+                            <span>{firma.faaliyet_alani || "Bilinmiyor"}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                            <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                            <span>{firma.kurulus_tarihi || "Bilinmiyor"}</span>
+                          </div>
                         </div>
                       </div>
 
