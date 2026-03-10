@@ -505,7 +505,8 @@ export default function IhaleDetay() {
 
   const handleTeklifGeriCek = async () => {
     if (!myTeklif) return;
-    const { error } = await supabase.from("ihale_teklifler").delete().eq("id", myTeklif.id);
+    // Delete all of user's bids for this ihale
+    const { error } = await supabase.from("ihale_teklifler").delete().eq("ihale_id", id!).eq("teklif_veren_user_id", currentUserId);
     if (error) {
       toast({ title: "Hata", description: "Teklif geri çekilemedi.", variant: "destructive" });
     } else {
