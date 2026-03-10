@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useNotificationCount } from "@/hooks/use-notifications";
+import { useUnreadMessages } from "@/hooks/use-unread-messages";
+import { useProfileCompletion } from "@/hooks/use-profile-completion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -40,7 +42,11 @@ const Dashboard = () => {
   const [firmaTuruName, setFirmaTuruName] = useState("");
   const [firmaTipiName, setFirmaTipiName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [activeIhaleCount, setActiveIhaleCount] = useState(0);
+  const [activeUrunCount, setActiveUrunCount] = useState(0);
   const unreadNotifications = useNotificationCount();
+  const unreadMessages = useUnreadMessages();
+  const { percentage: profileCompletion } = useProfileCompletion();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -50,15 +56,19 @@ const Dashboard = () => {
         return;
       }
 
-      const [profileRes, firmaRes] = await Promise.all([
+      const [profileRes, firmaRes, ihaleCountRes, urunCountRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", user.id).single(),
         supabase.from("firmalar").select("*").eq("user_id", user.id).single(),
+        supabase.from("ihaleler").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("durum", "devam_ediyor"),
+        supabase.from("urunler").select("id", { count: "exact", head: true }).eq("user_id", user.id).eq("durum", "aktif"),
       ]);
 
       if (profileRes.data) setProfile(profileRes.data);
+      setActiveIhaleCount(ihaleCountRes.count || 0);
+      setActiveUrunCount(urunCountRes.count || 0);
+
       if (firmaRes.data) {
         setFirma(firmaRes.data);
-        // Fetch firma türü and tipi names
         const [turRes, tipRes] = await Promise.all([
           supabase.from("firma_turleri").select("name").eq("id", firmaRes.data.firma_turu_id).single(),
           supabase.from("firma_tipleri").select("name").eq("id", firmaRes.data.firma_tipi_id).single(),
@@ -75,28 +85,41 @@ const Dashboard = () => {
 
   const statsCards = [
     {
-      title: "Aktif İhaleler",
-      value: 0,
-      subtitle: "Teklif bekleyen",
-      icon: Gavel,
-      color: "text-blue-500",
-      bgColor: "bg-blue-50",
+      title: "Profil Tamamlama",
+      value: profileCompletion,
+      subtitle: "",
+      icon: UserCheck,
+      color: "text-primary",
+      bgColor: "bg-primary/10",
+      isProgress: true,
+      href: "/firma-bilgilerim",
     },
     {
       title: "Aktif Ürünler",
-      value: 0,
+      value: activeUrunCount,
       subtitle: "Pazar yerinde yayında",
       icon: ShoppingBag,
       color: "text-green-500",
       bgColor: "bg-green-50",
+      href: "/manupazar",
+    },
+    {
+      title: "Aktif İhaleler",
+      value: activeIhaleCount,
+      subtitle: "Teklif bekleyen",
+      icon: Gavel,
+      color: "text-blue-500",
+      bgColor: "bg-blue-50",
+      href: "/manuihale",
     },
     {
       title: "Mesajlar",
-      value: 0,
+      value: unreadMessages,
       subtitle: "Okunmamış",
       icon: MessageSquare,
       color: "text-orange-500",
       bgColor: "bg-orange-50",
+      href: "/mesajlar",
     },
     {
       title: "Bildirimler",
@@ -105,15 +128,7 @@ const Dashboard = () => {
       icon: Bell,
       color: "text-red-500",
       bgColor: "bg-red-50",
-    },
-    {
-      title: "Profil Tamamlama",
-      value: 85,
-      subtitle: "",
-      icon: UserCheck,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-      isProgress: true,
+      href: "/bildirimler",
     },
   ];
 
@@ -150,7 +165,10 @@ const Dashboard = () => {
                     </div>
                   </div>
                 </div>
-                <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+                <button
+                  onClick={() => navigate("/firma-bilgilerim")}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                >
                   <Pencil className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -177,7 +195,10 @@ const Dashboard = () => {
                   </h2>
                   <p className="text-sm text-muted-foreground">Firma Yetkilisi</p>
                 </div>
-                <button className="p-2 rounded-lg hover:bg-muted transition-colors">
+                <button
+                  onClick={() => navigate("/profil-ayarlari")}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                >
                   <Pencil className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -198,7 +219,11 @@ const Dashboard = () => {
         {/* Özet İstatistik Kartları */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {statsCards.map((stat) => (
-            <Card key={stat.title} className="hover:shadow-md transition-shadow">
+            <Card
+              key={stat.title}
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => stat.href && navigate(stat.href)}
+            >
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm font-medium text-muted-foreground">
