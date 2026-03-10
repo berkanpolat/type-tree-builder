@@ -238,7 +238,12 @@ export default function AnaSayfa() {
       }
     }
 
-    if (selectedKategori) {
+    // Apply mega-menu group/type filters
+    if (selectedTurId) {
+      query = query.eq("urun_tur_id", selectedTurId);
+    } else if (selectedGrupId) {
+      query = query.eq("urun_grup_id", selectedGrupId);
+    } else if (selectedKategori) {
       const match = kategoriSecenekler.find(
         (k) => k.name.toLowerCase() === selectedKategori.toLowerCase()
       );
