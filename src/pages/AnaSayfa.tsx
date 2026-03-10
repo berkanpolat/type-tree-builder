@@ -681,6 +681,26 @@ export default function AnaSayfa() {
     setAllUrunler((prev) => prev.map((u) => u.id === urunId ? { ...u, is_favorited: !isFav } : u));
   };
 
+  const toggleFirmaFavorite = async (firmaId: string, isFav: boolean) => {
+    if (!currentUserId) return;
+    if (isFav) {
+      await supabase.from("firma_favoriler").delete().eq("user_id", currentUserId).eq("firma_id", firmaId);
+    } else {
+      await supabase.from("firma_favoriler").insert({ user_id: currentUserId, firma_id: firmaId });
+    }
+    setFirmaFavSet((prev) => {
+      const next = new Set(prev);
+      if (isFav) next.delete(firmaId); else next.add(firmaId);
+      return next;
+    });
+    setFirmalar((prev) => prev.map((f) => f.id === firmaId ? { ...f, is_favorited: !isFav } : f));
+  };
+
+  const handleMessageFirma = async (firmaUserId: string) => {
+    if (!currentUserId || firmaUserId === currentUserId) return;
+    navigate("/mesajlar", { state: { targetUserId: firmaUserId } });
+  };
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
