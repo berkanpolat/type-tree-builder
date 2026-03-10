@@ -190,6 +190,7 @@ export default function Mesajlar() {
         firma_unvani: firma?.firma_unvani || "Bilinmeyen Firma",
         logo_url: firma?.logo_url || null,
         last_message: lastMsgMap[c.id]?.content || "",
+        last_message_sender_id: lastMsgMap[c.id]?.senderId || "",
         unread_count: lastMsgMap[c.id]?.unread || 0,
       };
     });
