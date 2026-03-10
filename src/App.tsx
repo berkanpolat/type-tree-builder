@@ -32,6 +32,7 @@ import Iletisim from "./pages/Iletisim";
 import UreticiTedarikciKesfi from "./pages/UreticiTedarikciKesfi";
 import TekIhaleTanitim from "./pages/TekIhaleTanitim";
 import TekPazarTanitim from "./pages/TekPazarTanitim";
+import SSS from "./pages/SSS";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ const App = () => (
           <Route path="/uretici-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
           <Route path="/tekihale-tanitim" element={<TekIhaleTanitim />} />
           <Route path="/tekpazar-tanitim" element={<TekPazarTanitim />} />
+          <Route path="/sss" element={<SSS />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
