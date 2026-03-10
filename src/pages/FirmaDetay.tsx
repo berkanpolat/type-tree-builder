@@ -626,6 +626,9 @@ export default function FirmaDetay() {
                 <MessageSquare className="w-4 h-4" />
                 Mesaj
               </Button>
+              <Button variant="outline" size="icon" onClick={() => setBildirOpen(true)} title="Bildir">
+                <Flag className="w-4 h-4 text-muted-foreground" />
+              </Button>
             </div>
           </div>
 
