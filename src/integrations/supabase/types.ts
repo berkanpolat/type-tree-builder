@@ -654,6 +654,7 @@ export type Database = {
           linkedin: string | null
           logo_url: string | null
           moq: number | null
+          onay_durumu: string
           tiktok: string | null
           updated_at: string
           uretim_satis_rolu: string | null
@@ -689,6 +690,7 @@ export type Database = {
           linkedin?: string | null
           logo_url?: string | null
           moq?: number | null
+          onay_durumu?: string
           tiktok?: string | null
           updated_at?: string
           uretim_satis_rolu?: string | null
@@ -724,6 +726,7 @@ export type Database = {
           linkedin?: string | null
           logo_url?: string | null
           moq?: number | null
+          onay_durumu?: string
           tiktok?: string | null
           updated_at?: string
           uretim_satis_rolu?: string | null
