@@ -529,15 +529,16 @@ export default function AnaSayfa() {
     setActiveFilter(null);
     setSearchTerm("");
     setSelectedKategori(null);
+    setSelectedGrupId(null);
+    setSelectedTurId(null);
   };
 
-  const handleKategoriClick = (kat: string) => {
-    if (selectedKategori === kat) {
-      setSelectedKategori(null);
-    } else {
-      setSelectedKategori(kat);
-      setActiveFilter(null);
-    }
+  const handleMegaMenuSelect = (katName: string, grupId?: string, turId?: string) => {
+    setActiveFilter(null);
+    setSearchTerm("");
+    setSelectedKategori(katName);
+    setSelectedGrupId(grupId || null);
+    setSelectedTurId(turId || null);
   };
 
   const toggleFirmaTipi = (id: string) => {
