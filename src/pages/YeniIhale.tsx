@@ -370,7 +370,7 @@ export default function YeniIhale() {
               ) : <div />}
               
               {currentStep < STEPS.length - 1 ? (
-                <Button onClick={handleNext} disabled={!canProceed()}>İleri</Button>
+                <Button onClick={handleNext}>İleri</Button>
               ) : (
                 <Button onClick={handlePublish} disabled={saving}>
                   {saving ? "Kaydediliyor..." : "Onaya Gönder"}
