@@ -524,6 +524,7 @@ export default function TekIhale() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
