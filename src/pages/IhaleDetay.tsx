@@ -546,12 +546,30 @@ export default function IhaleDetay() {
   };
 
   const handleMesajGonder = async () => {
-    if (!currentUserId || !firma) return;
+    if (!currentUserId || !firma || !ihale) return;
     const { data: convId } = await supabase.rpc("get_or_create_conversation", {
       p_user1: currentUserId,
       p_user2: firma.user_id,
     });
-    if (convId) navigate("/mesajlar", { state: { openConversationId: convId, otherUserId: firma.user_id } });
+    if (!convId) return;
+
+    const priceText = ihale.baslangic_fiyati
+      ? `${sym}${Number(ihale.baslangic_fiyati).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`
+      : "";
+
+    navigate("/mesajlar", {
+      state: {
+        openConversationId: convId,
+        otherUserId: firma.user_id,
+        quote: {
+          urunBaslik: ihale.baslik,
+          urunNo: ihale.ihale_no,
+          fiyat: priceText,
+          moq: null,
+          fotoUrl: ihale.foto_url,
+        },
+      },
+    });
   };
 
   const handleImageZoomMove = (e: React.MouseEvent<HTMLDivElement>) => {

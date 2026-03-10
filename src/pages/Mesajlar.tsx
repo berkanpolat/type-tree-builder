@@ -142,6 +142,17 @@ export default function Mesajlar() {
       return;
     }
 
+    // Filter: only show conversations that have at least one message
+    const convIds = convs.map((c) => c.id);
+    const { data: msgCheck } = await supabase
+      .from("messages")
+      .select("conversation_id")
+      .in("conversation_id", convIds)
+      .limit(1000);
+
+    const convsWithMessages = new Set(msgCheck?.map((m) => m.conversation_id) || []);
+    const filteredConvs = convs.filter((c) => convsWithMessages.has(c.id));
+
     const otherUserIds = convs.map((c) =>
       c.user1_id === userId ? c.user2_id : c.user1_id
     );
