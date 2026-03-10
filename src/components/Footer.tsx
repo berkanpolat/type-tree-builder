@@ -89,31 +89,11 @@ export default function Footer() {
           <div>
             <h4 className="text-secondary font-bold text-sm mb-4">Kurumsal Bilgi</h4>
             <ul className="space-y-2.5">
-              <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  SSS
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  KVKK Aydınlatma Metni
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  Gizlilik Koşulları
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  Kullanım Koşulları &amp; Üyelik Sözleşmesi
-                </Link>
-              </li>
-              <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  Mesafeli Satış Sözleşmesi
-                </Link>
-              </li>
+              <li><FooterLink to="/">SSS</FooterLink></li>
+              <li><FooterLink to="/">KVKK Aydınlatma Metni</FooterLink></li>
+              <li><FooterLink to="/">Gizlilik Koşulları</FooterLink></li>
+              <li><FooterLink to="/">Kullanım Koşulları &amp; Üyelik Sözleşmesi</FooterLink></li>
+              <li><FooterLink to="/">Mesafeli Satış Sözleşmesi</FooterLink></li>
             </ul>
           </div>
         </div>

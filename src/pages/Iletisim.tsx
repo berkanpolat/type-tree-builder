@@ -32,6 +32,7 @@ export default function Iletisim() {
       {isLoggedIn && <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />}
 
       <div className="max-w-5xl mx-auto px-6 py-12 md:py-16 flex-1 w-full">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-10">İletişim</h1>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Sol: Bilgiler */}
           <div className="space-y-8">
