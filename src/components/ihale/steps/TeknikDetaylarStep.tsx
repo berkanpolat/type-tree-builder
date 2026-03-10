@@ -50,6 +50,29 @@ function DropdownField({ label, kategoriName, value, onChange }: { label: string
   );
 }
 
+function DependentDropdownField({ label, parentId, value, onChange, disabled }: { label: string; parentId: string | null; value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const { data: options } = useQuery({
+    queryKey: ["dependent_options", parentId],
+    queryFn: async () => {
+      if (!parentId) return [];
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", parentId).order("name");
+      return data || [];
+    },
+    enabled: !!parentId,
+  });
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Select value={value || ""} onValueChange={onChange} disabled={disabled || !parentId}>
+        <SelectTrigger><SelectValue placeholder={parentId ? `${label} seçiniz` : "Önce grup seçiniz"} /></SelectTrigger>
+        <SelectContent className="bg-popover z-50">
+          {(options || []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 function TextField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div className="space-y-2">
@@ -145,8 +168,8 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
-          <DropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={td.kumas_grubu} onChange={(v) => setTD("kumas_grubu", v)} />
-          <DropdownField label="Kumaş Türü" kategoriName="Kumaş Türü" value={td.kumas_turu} onChange={(v) => setTD("kumas_turu", v)} />
+          <DropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={td.kumas_grubu} onChange={(v) => { setTD("kumas_grubu", v); setTD("kumas_turu", ""); }} />
+          <DependentDropdownField label="Kumaş Türü" parentId={td.kumas_grubu || null} value={td.kumas_turu} onChange={(v) => setTD("kumas_turu", v)} />
           <DropdownField label="Sezon" kategoriName="Sezon" value={td.sezon} onChange={(v) => setTD("sezon", v)} />
           <DropdownField label="Cinsiyet" kategoriName="Cinsiyet" value={td.cinsiyet} onChange={(v) => setTD("cinsiyet", v)} />
           <DropdownField label="Yaş Grubu" kategoriName="Yaş Grubu" value={td.yas_grubu} onChange={(v) => setTD("yas_grubu", v)} />
@@ -262,8 +285,8 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       return (
         <>
           <UrunKategoriSecimi label="Ürün Kategorisi / Grubu / Türü" td={td} setTD={setTD} prefixKey="hizmet_urun" />
-          <DropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={td.kumas_grubu} onChange={(v) => setTD("kumas_grubu", v)} />
-          <DropdownField label="Kumaş Türü" kategoriName="Kumaş Türü" value={td.kumas_turu} onChange={(v) => setTD("kumas_turu", v)} />
+          <DropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={td.kumas_grubu} onChange={(v) => { setTD("kumas_grubu", v); setTD("kumas_turu", ""); }} />
+          <DependentDropdownField label="Kumaş Türü" parentId={td.kumas_grubu || null} value={td.kumas_turu} onChange={(v) => setTD("kumas_turu", v)} />
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
           <DropdownField label="Desen" kategoriName="Desen" value={td.desen} onChange={(v) => setTD("desen", v)} />
           <DropdownField label="Baskı" kategoriName="Baskı" value={td.baski} onChange={(v) => setTD("baski", v)} />

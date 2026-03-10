@@ -33,9 +33,22 @@ function useKategoriSecenekler(kategoriName: string, enabled = true) {
   });
 }
 
+function useAltSecenekler(parentId: string | null) {
+  return useQuery({
+    queryKey: ["alt_secenekler", parentId],
+    queryFn: async () => {
+      if (!parentId) return [];
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", parentId).order("name");
+      return data || [];
+    },
+    enabled: !!parentId,
+  });
+}
+
 export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Props) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const [selectedSertifikaKat, setSelectedSertifikaKat] = useState<string | null>(null);
 
   // DB-sourced dropdown options
   const { data: kdvOptions } = useKategoriSecenekler("KDV Durumu");
@@ -43,7 +56,6 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
   const { data: odemeVadesiOptions } = useKategoriSecenekler("Ödeme Vadeleri");
   const { data: kargoMasrafiOptions } = useKategoriSecenekler("Kargo Masrafı Ödemesi");
   const { data: kargoSirketiOptions } = useKategoriSecenekler("Kargo Şirketi Anlaşması");
-  const { data: teslimatYeriOptions } = useKategoriSecenekler("Teslimat Yeri");
 
   // Fetch firma türleri, tipleri, ölçekleri for filtering
   const { data: firmaTurleri } = useQuery({
@@ -55,17 +67,25 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
     enabled: formData.ozel_filtreleme,
   });
 
+  // Firma tipi filtered by selected firma türü
+  const selectedFirmaTuruIds = formData.filtreler.filter(f => f.filtre_tipi === "firma_turu").map(f => f.secenek_id);
+
   const { data: firmaTipleri } = useQuery({
-    queryKey: ["firma_tipleri_filter"],
+    queryKey: ["firma_tipleri_filter", selectedFirmaTuruIds],
     queryFn: async () => {
-      const { data } = await supabase.from("firma_tipleri").select("*").order("name");
+      let query = supabase.from("firma_tipleri").select("*").order("name");
+      if (selectedFirmaTuruIds.length > 0) {
+        query = query.in("firma_turu_id", selectedFirmaTuruIds);
+      }
+      const { data } = await query;
       return data || [];
     },
     enabled: formData.ozel_filtreleme,
   });
 
   const { data: firmaOlcekleri } = useKategoriSecenekler("Firma Ölçeği", formData.ozel_filtreleme);
-  const { data: sertifikalar } = useKategoriSecenekler("Sertifika Kategorileri", formData.ozel_filtreleme);
+  const { data: sertifikaKategorileri } = useKategoriSecenekler("Sertifika Kategorisi", formData.ozel_filtreleme);
+  const { data: sertifikaTurleri } = useAltSecenekler(selectedSertifikaKat);
   const { data: iller } = useKategoriSecenekler("İl", formData.ozel_filtreleme);
 
   const addFilter = (filtre_tipi: string, secenek_id: string) => {
@@ -82,7 +102,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
     if (filtre_tipi === "firma_turu") list = firmaTurleri || [];
     else if (filtre_tipi === "firma_tipi") list = firmaTipleri || [];
     else if (filtre_tipi === "firma_olcegi") list = firmaOlcekleri || [];
-    else if (filtre_tipi === "sertifika") list = sertifikalar || [];
+    else if (filtre_tipi === "sertifika") list = [...(sertifikaKategorileri || []), ...(sertifikaTurleri || [])];
     else if (filtre_tipi === "il") list = iller || [];
     return list.find((i) => i.id === secenek_id)?.name || secenek_id;
   };
@@ -207,12 +227,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
           </div>
           <div className="space-y-2">
             <Label>Teslimat Yeri</Label>
-            <Select value={formData.teslimat_yeri} onValueChange={(v) => updateForm({ teslimat_yeri: v })}>
-              <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {(teslimatYeriOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Input value={formData.teslimat_yeri} onChange={(e) => updateForm({ teslimat_yeri: e.target.value })} placeholder="Teslimat yeri giriniz" />
           </div>
         </div>
 
@@ -280,23 +295,25 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
           <div className="flex items-center justify-between">
             <div>
               <Label>Özel Filtrelendirme</Label>
-              <p className="text-xs text-muted-foreground">Şartları sağlamayan firmalar teklif veremez</p>
+              <p className="text-xs text-muted-foreground">Şartları sağlamayan firmalar teklif veremez. Tüm alanları doldurmak zorunlu değildir.</p>
             </div>
             <Switch checked={formData.ozel_filtreleme} onCheckedChange={(v) => updateForm({ ozel_filtreleme: v, filtreler: v ? formData.filtreler : [] })} />
           </div>
 
           {formData.ozel_filtreleme && (
             <div className="space-y-3 pt-2 border-t">
+              {/* Firma Türü */}
               {[
                 { label: "Firma Türü", tipi: "firma_turu", options: firmaTurleri },
                 { label: "Firma Tipi", tipi: "firma_tipi", options: firmaTipleri },
                 { label: "Firma Ölçeği", tipi: "firma_olcegi", options: firmaOlcekleri },
-                { label: "Sertifika", tipi: "sertifika", options: sertifikalar },
-                { label: "İl", tipi: "il", options: iller },
               ].map(({ label, tipi, options }) => (
                 <div key={tipi} className="space-y-1">
                   <Label className="text-sm">{label}</Label>
-                  <Select onValueChange={(v) => addFilter(tipi, v)}>
+                  {tipi === "firma_tipi" && selectedFirmaTuruIds.length === 0 && (
+                    <p className="text-xs text-muted-foreground">Önce firma türü seçiniz</p>
+                  )}
+                  <Select onValueChange={(v) => addFilter(tipi, v)} disabled={tipi === "firma_tipi" && selectedFirmaTuruIds.length === 0}>
                     <SelectTrigger className="w-full"><SelectValue placeholder={`${label} seçiniz`} /></SelectTrigger>
                     <SelectContent className="bg-popover z-50">
                       {(options || []).map((o: any) => (
@@ -314,6 +331,58 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
                   </div>
                 </div>
               ))}
+
+              {/* Sertifika with Kategori -> Tür hierarchy */}
+              <div className="space-y-1">
+                <Label className="text-sm">Sertifika</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={selectedSertifikaKat || ""} onValueChange={(v) => setSelectedSertifikaKat(v)}>
+                    <SelectTrigger><SelectValue placeholder="Sertifika Kategorisi" /></SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {(sertifikaKategorileri || []).map((o: any) => (
+                        <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select onValueChange={(v) => addFilter("sertifika", v)} disabled={!selectedSertifikaKat}>
+                    <SelectTrigger><SelectValue placeholder="Sertifika Türü" /></SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {(sertifikaTurleri || []).map((o: any) => (
+                        <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {formData.filtreler.filter((f) => f.filtre_tipi === "sertifika").map((f) => (
+                    <Badge key={f.secenek_id} variant="secondary" className="gap-1">
+                      {getFilterName("sertifika", f.secenek_id)}
+                      <button onClick={() => removeFilter("sertifika", f.secenek_id)}><X className="w-3 h-3" /></button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* İhale Bölgesi (İl) */}
+              <div className="space-y-1">
+                <Label className="text-sm">İhale Bölgesi</Label>
+                <Select onValueChange={(v) => addFilter("il", v)}>
+                  <SelectTrigger className="w-full"><SelectValue placeholder="İl seçiniz" /></SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    {(iller || []).map((o: any) => (
+                      <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {formData.filtreler.filter((f) => f.filtre_tipi === "il").map((f) => (
+                    <Badge key={f.secenek_id} variant="secondary" className="gap-1">
+                      {getFilterName("il", f.secenek_id)}
+                      <button onClick={() => removeFilter("il", f.secenek_id)}><X className="w-3 h-3" /></button>
+                    </Badge>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>

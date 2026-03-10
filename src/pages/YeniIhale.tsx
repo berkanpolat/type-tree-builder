@@ -188,7 +188,51 @@ export default function YeniIhale() {
     }
   };
 
+  const getMissingFields = (): string[] => {
+    const missing: string[] = [];
+    switch (currentStep) {
+      case 0:
+        if (!formData.ihale_turu) missing.push("İhale Türü");
+        break;
+      case 1:
+        if (!formData.teklif_usulu) missing.push("Teklif Usulü");
+        break;
+      case 2:
+        if (formData.ihale_turu === "hizmet_alim") {
+          if (!formData.hizmet_kategori_id) missing.push("Hizmet Kategorisi");
+          if (!formData.hizmet_tur_id) missing.push("Hizmet Türü");
+        } else {
+          if (!formData.urun_kategori_id) missing.push("Ürün Kategorisi");
+          if (!formData.urun_grup_id) missing.push("Ürün Grubu");
+          if (!formData.urun_tur_id) missing.push("Ürün Türü");
+        }
+        break;
+      case 3:
+        if (!formData.baslik) missing.push("İhale Başlığı");
+        if (!formData.aciklama) missing.push("Açıklama");
+        if (!formData.baslangic_fiyati) missing.push("Başlangıç Fiyatı");
+        if (!formData.kdv_durumu) missing.push("KDV Durumu");
+        if (!formData.odeme_secenekleri) missing.push("Ödeme Seçenekleri");
+        if (!formData.odeme_vadesi) missing.push("Ödeme Vadesi");
+        if (!formData.kargo_masrafi) missing.push("Kargo Masrafı Ödemesi");
+        if (!formData.kargo_sirketi_anlasmasi) missing.push("Kargo Şirketi Anlaşması");
+        if (!formData.baslangic_tarihi) missing.push("Başlangıç Tarihi");
+        if (!formData.bitis_tarihi) missing.push("Bitiş Tarihi");
+        break;
+    }
+    return missing;
+  };
+
   const handleNext = async () => {
+    if (!canProceed()) {
+      const missing = getMissingFields();
+      toast({
+        title: "Eksik Alanlar",
+        description: `Lütfen şu alanları doldurun: ${missing.join(", ")}`,
+        variant: "destructive",
+      });
+      return;
+    }
     if (currentStep === 1 && !ihaleId) {
       await createIhale();
     }
@@ -326,7 +370,7 @@ export default function YeniIhale() {
               ) : <div />}
               
               {currentStep < STEPS.length - 1 ? (
-                <Button onClick={handleNext} disabled={!canProceed()}>İleri</Button>
+                <Button onClick={handleNext}>İleri</Button>
               ) : (
                 <Button onClick={handlePublish} disabled={saving}>
                   {saving ? "Kaydediliyor..." : "Onaya Gönder"}
