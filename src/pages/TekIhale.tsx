@@ -435,7 +435,7 @@ export default function TekIhale() {
                       {/* Image */}
                       <div className="w-[140px] h-[140px] rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                         {ihale.foto_url ? (
-                          <img src={ihale.foto_url} alt="" className="w-full h-full object-cover" />
+                          <img src={ihale.foto_url} alt="" className="w-full h-full object-contain" />
                         ) : (
                           <ImageIcon className="w-8 h-8 text-muted-foreground" />
                         )}
