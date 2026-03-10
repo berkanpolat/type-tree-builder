@@ -40,7 +40,7 @@ const mainItems = [
   { title: "Tekliflerim", url: "/tekliflerim", icon: FileText },
   { title: "ManuPazar", url: "/manupazar", icon: ShoppingBag },
   { title: "Favoriler", url: "/favoriler", icon: Heart },
-  { title: "Mesajlar", url: "/mesajlar", icon: MessageSquare },
+  { title: "Mesajlar", url: "/mesajlar", icon: MessageSquare, badgeKey: "mesajlar" },
   { title: "Bildirimler", url: "/bildirimler", icon: Bell, badge: true },
   { title: "Paketler", url: "/paketler", icon: Package },
 ];
