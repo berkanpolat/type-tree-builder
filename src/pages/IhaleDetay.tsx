@@ -355,58 +355,52 @@ export default function IhaleDetay() {
       setResolvedTeknikDetaylar(resolved);
     }
 
-    // Teklifler
+    // Teklifler - only latest per user counts
     const allTeklifler = (teklifRes.data || []) as any[];
     if (allTeklifler.length > 0) {
       const teklifUserIds = [...new Set(allTeklifler.map(t => t.teklif_veren_user_id))];
       let firmaNameMap: Record<string, string> = {};
-      // Always get firma names (for masking or showing)
       const { data: fData } = await supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", teklifUserIds);
       fData?.forEach(f => { firmaNameMap[f.user_id] = f.firma_unvani; });
 
-      const enriched: TeklifForList[] = allTeklifler.map(t => ({
+      // Deduplicate: keep only latest teklif per user (already sorted desc by created_at)
+      const latestPerUser = new Map<string, any>();
+      for (const t of allTeklifler) {
+        if (!latestPerUser.has(t.teklif_veren_user_id)) {
+          latestPerUser.set(t.teklif_veren_user_id, t);
+        }
+      }
+      const uniqueTeklifler = Array.from(latestPerUser.values());
+
+      const enriched: TeklifForList[] = uniqueTeklifler.map(t => ({
         ...t,
         firma_unvani: firmaNameMap[t.teklif_veren_user_id] || "",
       }));
 
       setTeklifler(enriched);
 
-      const tutarlar = allTeklifler.map(t => t.tutar);
+      // Min/max based on latest per user only
+      const tutarlar = uniqueTeklifler.map(t => t.tutar);
       setMinTeklif(Math.min(...tutarlar));
       setMaxTeklif(Math.max(...tutarlar));
 
       // My teklif - get the latest one and pre-fill form
-      const mine = allTeklifler.filter(t => t.teklif_veren_user_id === currentUserId);
-      if (mine.length > 0) {
-        const latest = mine[0]; // already sorted desc
-        setMyTeklif({ ...latest, firma_unvani: "" });
-        // Pre-fill form with last teklif values
-        setTeklifTutar(String(latest.tutar));
-        if (latest.odeme_secenekleri) setTeklifOdemeSecenekleri(latest.odeme_secenekleri);
-        if (latest.kargo_masrafi) setTeklifKargoMasrafi(latest.kargo_masrafi);
-        if (latest.odeme_vadesi) setTeklifOdemeVadesi(latest.odeme_vadesi);
-        if (latest.ek_dosya_url) { setTeklifDosyaUrl(latest.ek_dosya_url); setTeklifDosyaName(latest.ek_dosya_adi || "Dosya"); }
+      const myLatest = latestPerUser.get(currentUserId);
+      if (myLatest) {
+        setMyTeklif({ ...myLatest, firma_unvani: "" });
+        setTeklifTutar(String(myLatest.tutar));
+        if (myLatest.odeme_secenekleri) setTeklifOdemeSecenekleri(myLatest.odeme_secenekleri);
+        if (myLatest.kargo_masrafi) setTeklifKargoMasrafi(myLatest.kargo_masrafi);
+        if (myLatest.odeme_vadesi) setTeklifOdemeVadesi(myLatest.odeme_vadesi);
+        if (myLatest.ek_dosya_url) { setTeklifDosyaUrl(myLatest.ek_dosya_url); setTeklifDosyaName(myLatest.ek_dosya_adi || "Dosya"); }
       }
 
-      // Rank
-      const bestPerUser = new Map<string, number>();
-      for (const t of allTeklifler) {
-        const existing = bestPerUser.get(t.teklif_veren_user_id);
-        if (existing === undefined) {
-          bestPerUser.set(t.teklif_veren_user_id, t.tutar);
-        } else {
-          if (ihaleData.teklif_usulu === "acik_indirme") {
-            bestPerUser.set(t.teklif_veren_user_id, Math.min(existing, t.tutar));
-          } else {
-            bestPerUser.set(t.teklif_veren_user_id, Math.max(existing, t.tutar));
-          }
-        }
-      }
-      const sorted = Array.from(bestPerUser.entries()).sort((a, b) => {
-        if (ihaleData.teklif_usulu === "acik_indirme") return a[1] - b[1];
-        return b[1] - a[1];
+      // Rank based on latest per user
+      const sorted = uniqueTeklifler.sort((a: any, b: any) => {
+        if (ihaleData.teklif_usulu === "acik_indirme") return a.tutar - b.tutar;
+        return b.tutar - a.tutar;
       });
-      const myIndex = sorted.findIndex(([uid]) => uid === currentUserId);
+      const myIndex = sorted.findIndex((t: any) => t.teklif_veren_user_id === currentUserId);
       if (myIndex >= 0) setMyRank(myIndex + 1);
     }
 
