@@ -4,7 +4,7 @@ import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon
+  Gavel, Package, HeadphonesIcon, Building2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
