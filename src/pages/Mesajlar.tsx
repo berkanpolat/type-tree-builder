@@ -153,7 +153,7 @@ export default function Mesajlar() {
     const convsWithMessages = new Set(msgCheck?.map((m) => m.conversation_id) || []);
     const filteredConvs = convs.filter((c) => convsWithMessages.has(c.id));
 
-    const otherUserIds = convs.map((c) =>
+    const otherUserIds = filteredConvs.map((c) =>
       c.user1_id === userId ? c.user2_id : c.user1_id
     );
 
@@ -165,22 +165,22 @@ export default function Mesajlar() {
     const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
     firmalar?.forEach((f) => { firmaMap[f.user_id] = f; });
 
-    const convIds = convs.map((c) => c.id);
+    const filteredConvIds = filteredConvs.map((c) => c.id);
     const { data: lastMessages } = await supabase
       .from("messages")
       .select("conversation_id, content, is_read, sender_id")
-      .in("conversation_id", convIds)
+      .in("conversation_id", filteredConvIds)
       .order("created_at", { ascending: false });
 
     const lastMsgMap: Record<string, { content: string; unread: number }> = {};
-    convIds.forEach((cid) => {
+    filteredConvIds.forEach((cid) => {
       const msgs = lastMessages?.filter((m) => m.conversation_id === cid) || [];
       const lastMsg = msgs[0];
       const unread = msgs.filter((m) => !m.is_read && m.sender_id !== userId).length;
       lastMsgMap[cid] = { content: lastMsg?.content || "", unread };
     });
 
-    const mapped: Conversation[] = convs.map((c) => {
+    const mapped: Conversation[] = filteredConvs.map((c) => {
       const otherId = c.user1_id === userId ? c.user2_id : c.user1_id;
       const firma = firmaMap[otherId];
       return {
