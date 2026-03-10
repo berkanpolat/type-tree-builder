@@ -74,12 +74,12 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       {/* Logo */}
-      <div className="px-4 pt-2 pb-3 flex items-center gap-2">
+      <div className="px-4 pt-4 pb-4 flex items-center gap-2 border-b border-sidebar-border mb-1">
         <Link to="/anasayfa" className="flex items-center gap-2">
           {!collapsed ? (
-            <img src={logoImg} alt="Tekstil A.Ş." className="h-8 object-contain" />
+            <img src={logoImg} alt="Tekstil A.Ş." className="h-6 object-contain" />
           ) : (
-            <div className="w-7 h-7 rounded-full overflow-hidden">
+            <div className="w-6 h-6 rounded-full overflow-hidden">
               <img src={logoImg} alt="Tekstil A.Ş." className="h-full object-contain" />
             </div>
           )}
@@ -87,10 +87,10 @@ export function AppSidebar() {
         {!collapsed && (
           <Link
             to="/anasayfa"
-            className="ml-auto p-1.5 rounded-md hover:bg-sidebar-accent transition-colors"
+            className="ml-auto p-1 rounded-md hover:bg-sidebar-accent transition-colors"
             title="Ana Sayfaya Git"
           >
-            <Globe className="w-4 h-4 text-sidebar-foreground/60" />
+            <Globe className="w-4 h-4 text-sidebar-foreground/40" />
           </Link>
         )}
       </div>
