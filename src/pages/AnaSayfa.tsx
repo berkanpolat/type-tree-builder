@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
+import PazarHeader from "@/components/PazarHeader";
 import KategoriMegaMenu from "@/components/anasayfa/KategoriMegaMenu";
 import UrunFiltreler, { type FilterState } from "@/components/anasayfa/UrunFiltreler";
 import { Input } from "@/components/ui/input";
@@ -105,6 +106,7 @@ const paraBirimiSymbol: Record<string, string> = {
 export default function AnaSayfa() {
   const navigate = useNavigate();
   const [firmaUnvani, setFirmaUnvani] = useState("");
+  const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
@@ -113,8 +115,8 @@ export default function AnaSayfa() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate("/giris-kayit"); return; }
       setCurrentUserId(user.id);
-      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", user.id).single();
-      if (firma) setFirmaUnvani(firma.firma_unvani);
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).single();
+      if (firma) { setFirmaUnvani(firma.firma_unvani); setFirmaLogoUrl(firma.logo_url); }
       setAuthLoading(false);
     };
     check();
@@ -655,25 +657,7 @@ export default function AnaSayfa() {
   return (
     <div className="min-h-screen bg-muted/30 font-sans">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link to="/anasayfa">
-              <img src={logoImg} alt="Tekstil A.Ş." className="h-9 object-contain" />
-            </Link>
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/anasayfa" className="text-sm font-medium text-foreground hover:text-secondary transition-colors">TekPazar</Link>
-              <Link to="/manuihale" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Tekİhale</Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="truncate max-w-[200px]">{firmaUnvani}</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
-          </div>
-        </div>
-      </header>
+      <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
 
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* Search Header */}
