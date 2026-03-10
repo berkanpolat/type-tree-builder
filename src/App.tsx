@@ -23,6 +23,7 @@ import YeniUrun from "./pages/YeniUrun";
 import Favoriler from "./pages/Favoriler";
 import Mesajlar from "./pages/Mesajlar";
 import UrunDetay from "./pages/UrunDetay";
+import FirmaDetay from "./pages/FirmaDetay";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
