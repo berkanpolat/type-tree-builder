@@ -383,7 +383,10 @@ export default function AdminFirmalar() {
         </div>
 
         {/* Result count */}
-        <div className="text-xs" style={s.muted}>
+        <div className="flex items-center justify-between text-xs" style={s.muted}>
+          <span>{filtered.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}</span>
+          <span>Sayfa {safePage} / {totalPages}</span>
+        </div>
           {filtered.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}
         </div>
 
