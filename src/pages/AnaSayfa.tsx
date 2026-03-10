@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
+import KategoriMegaMenu from "@/components/anasayfa/KategoriMegaMenu";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -121,6 +122,8 @@ export default function AnaSayfa() {
   const [urunler, setUrunler] = useState<UrunWithExtra[]>([]);
   const [urunLoading, setUrunLoading] = useState(true);
   const [selectedKategori, setSelectedKategori] = useState<string | null>(null);
+  const [selectedGrupId, setSelectedGrupId] = useState<string | null>(null);
+  const [selectedTurId, setSelectedTurId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
   // Firma state
@@ -236,7 +239,12 @@ export default function AnaSayfa() {
       }
     }
 
-    if (selectedKategori) {
+    // Apply mega-menu group/type filters
+    if (selectedTurId) {
+      query = query.eq("urun_tur_id", selectedTurId);
+    } else if (selectedGrupId) {
+      query = query.eq("urun_grup_id", selectedGrupId);
+    } else if (selectedKategori) {
       const match = kategoriSecenekler.find(
         (k) => k.name.toLowerCase() === selectedKategori.toLowerCase()
       );
@@ -318,7 +326,7 @@ export default function AnaSayfa() {
       setUrunler([]);
     }
     setUrunLoading(false);
-  }, [activeFilter, selectedKategori, kategoriSecenekler, activeTab, currentUserId]);
+  }, [activeFilter, selectedKategori, selectedGrupId, selectedTurId, kategoriSecenekler, activeTab, currentUserId]);
 
   // Fetch companies
   const fetchFirmalar = useCallback(async () => {
@@ -522,15 +530,16 @@ export default function AnaSayfa() {
     setActiveFilter(null);
     setSearchTerm("");
     setSelectedKategori(null);
+    setSelectedGrupId(null);
+    setSelectedTurId(null);
   };
 
-  const handleKategoriClick = (kat: string) => {
-    if (selectedKategori === kat) {
-      setSelectedKategori(null);
-    } else {
-      setSelectedKategori(kat);
-      setActiveFilter(null);
-    }
+  const handleMegaMenuSelect = (katName: string, grupId?: string, turId?: string) => {
+    setActiveFilter(null);
+    setSearchTerm("");
+    setSelectedKategori(katName);
+    setSelectedGrupId(grupId || null);
+    setSelectedTurId(turId || null);
   };
 
   const toggleFirmaTipi = (id: string) => {
@@ -675,21 +684,11 @@ export default function AnaSayfa() {
           {/* Category bar (only for urunler) */}
           {activeTab === "urunler" && (
             <div className="bg-background rounded-t-xl -mx-6 px-6">
-              <div className="flex items-center justify-center gap-6 overflow-x-auto py-3 scrollbar-hide">
-                {URUN_KATEGORILERI.map((kat) => (
-                  <button
-                    key={kat}
-                    onClick={() => handleKategoriClick(kat)}
-                    className={`whitespace-nowrap text-sm font-medium transition-colors ${
-                      selectedKategori === kat
-                        ? "text-secondary border-b-2 border-secondary pb-1"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {kat}
-                  </button>
-                ))}
-              </div>
+              <KategoriMegaMenu
+                kategoriler={URUN_KATEGORILERI}
+                selectedKategori={selectedKategori}
+                onSelect={handleMegaMenuSelect}
+              />
             </div>
           )}
           {activeTab === "firma" && <div className="h-4" />}
