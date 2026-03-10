@@ -19,6 +19,7 @@ import ManuPazar from "./pages/ManuPazar";
 import YeniUrun from "./pages/YeniUrun";
 import Favoriler from "./pages/Favoriler";
 import Mesajlar from "./pages/Mesajlar";
+import UrunDetay from "./pages/UrunDetay";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
           <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
           <Route path="/giris-kayit" element={<GirisKayit />} />
+          <Route path="/urun/:id" element={<UrunDetay />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
