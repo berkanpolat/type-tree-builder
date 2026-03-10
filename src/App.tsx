@@ -38,8 +38,16 @@ import KVKKAydinlatma from "./pages/KVKKAydinlatma";
 import KullanimKosullari from "./pages/KullanimKosullari";
 import MesafeliSatisSozlesmesi from "./pages/MesafeliSatisSozlesmesi";
 import NotFound from "./pages/NotFound";
+import AdminGiris from "./pages/admin/AdminGiris";
+import AdminPanel from "./pages/admin/AdminPanel";
+import AdminKullanicilar from "./pages/admin/AdminKullanicilar";
+import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 
 const queryClient = new QueryClient();
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => (
+  <AdminAuthProvider>{children}</AdminAuthProvider>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -85,6 +93,12 @@ const App = () => (
           <Route path="/kvkk-aydinlatma" element={<KVKKAydinlatma />} />
           <Route path="/kullanim-kosullari" element={<KullanimKosullari />} />
           <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
+          
+          {/* Admin Panel Routes */}
+          <Route path="/yonetim" element={<AdminRoute><AdminGiris /></AdminRoute>} />
+          <Route path="/yonetim/panel" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+          <Route path="/yonetim/kullanicilar" element={<AdminRoute><AdminKullanicilar /></AdminRoute>} />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
