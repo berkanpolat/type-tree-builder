@@ -78,7 +78,7 @@ const INITIAL_FORM: IhaleFormData = {
   stoklar: [],
 };
 
-const STEPS = ["İhale Türü", "Teklif Usulü", "Kategori", "İhale Bilgileri", "Teknik Detaylar", "Stok", "Onay"];
+const STEPS = ["İhale Türü", "Teklif Usulü", "Kategori", "İhale Bilgileri", "Teknik Detaylar", "Stok"];
 
 export default function YeniIhale() {
   const navigate = useNavigate();
