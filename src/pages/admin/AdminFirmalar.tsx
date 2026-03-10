@@ -111,13 +111,14 @@ export default function AdminFirmalar() {
   }, [token, statsDays, callApi, toast]);
 
   const fetchDropdowns = useCallback(async () => {
+    const ilKatId = await getIlKategoriId();
     const [{ data: t }, { data: tp }, { data: il }] = await Promise.all([
       supabase.from("firma_turleri").select("id, name").order("name"),
       supabase.from("firma_tipleri").select("id, name, firma_turu_id").order("name"),
-      supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", await getIlKategoriId()).order("name"),
+      supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
     ]);
     setTurler(t || []);
-    setTipler(tp || []);
+    setTipler((tp || []) as any);
     setIller(il || []);
   }, []);
 
