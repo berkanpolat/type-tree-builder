@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Send, Building2, Paperclip, X, FileText, Image as ImageIcon, Download, Trash2 } from "lucide-react";
+import { Search, Send, Building2, Paperclip, X, FileText, Image as ImageIcon, Download, Trash2, Flag, MoreVertical } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
