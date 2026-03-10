@@ -624,14 +624,14 @@ export default function UrunDetay() {
               </Card>
             )}
 
-            {urun.teknik_detaylar && Object.keys(urun.teknik_detaylar).length > 0 && (
+            {Object.keys(resolvedTeknikDetaylar).length > 0 && (
               <Card className="p-6">
                 <h2 className="text-lg font-bold text-foreground mb-4">Teknik Özellikler</h2>
                 <div className="space-y-4">
-                  {Object.entries(urun.teknik_detaylar).map(([key, value]) => (
+                  {Object.entries(resolvedTeknikDetaylar).map(([key, value]) => (
                     <div key={key}>
-                      <p className="text-sm font-semibold text-foreground">{key}</p>
-                      <p className="text-sm text-muted-foreground mt-0.5">{value}</p>
+                      <p className="text-sm font-semibold text-foreground">{formatLabel(key)}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{value || "Belirtilmedi"}</p>
                     </div>
                   ))}
                 </div>
