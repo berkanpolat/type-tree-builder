@@ -22,17 +22,6 @@ const KATEGORI_FILTRELER: Record<string, { label: string; kategoriName: string }
     { label: "Desen", kategoriName: "Desen" },
     { label: "Kalıp", kategoriName: "Kalıp" },
   ],
-  "Hazır Giyim (Üretim)": [
-    { label: "Renk", kategoriName: "Renk" },
-    { label: "Sezon", kategoriName: "Sezon" },
-    { label: "Cinsiyet", kategoriName: "Cinsiyet" },
-    { label: "Yaş Grubu", kategoriName: "Yaş Grubu" },
-    { label: "Beden", kategoriName: "Beden" },
-    { label: "Kumaş Grubu", kategoriName: "Kumaş Grubu" },
-    { label: "Kumaş Türü", kategoriName: "Kumaş Türü" },
-    { label: "Desen", kategoriName: "Desen" },
-    { label: "Kalıp", kategoriName: "Kalıp" },
-  ],
   "Kumaş": [
     { label: "Renk", kategoriName: "Renk" },
     { label: "İplik Numarası", kategoriName: "İplik Numarası" },
