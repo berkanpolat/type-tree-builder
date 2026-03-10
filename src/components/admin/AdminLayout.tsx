@@ -1,0 +1,110 @@
+import { useEffect } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { Button } from "@/components/ui/button";
+import {
+  Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
+  Gavel, Package, HeadphonesIcon
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface AdminLayoutProps {
+  children: React.ReactNode;
+  title?: string;
+}
+
+const menuItems = [
+  { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null },
+  { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: "kullanici_yonet" as const },
+  { label: "Şikayetler", path: "/yonetim/sikayetler", icon: MessageSquareWarning, permission: "sikayet_goruntule" as const },
+  { label: "İhaleler", path: "/yonetim/ihaleler", icon: Gavel, permission: "ihale_goruntule" as const },
+  { label: "Ürünler", path: "/yonetim/urunler", icon: Package, permission: "urun_goruntule" as const },
+  { label: "Destek Talepleri", path: "/yonetim/destek", icon: HeadphonesIcon, permission: "destek_talepleri" as const },
+];
+
+export default function AdminLayout({ children, title }: AdminLayoutProps) {
+  const { user, loading, logout, hasPermission } = useAdminAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/yonetim");
+    }
+  }, [user, loading, navigate]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
+  const visibleMenuItems = menuItems.filter(
+    (item) => !item.permission || hasPermission(item.permission)
+  );
+
+  return (
+    <div className="min-h-screen flex bg-slate-900">
+      {/* Sidebar */}
+      <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
+        <div className="p-4 border-b border-slate-700">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+              <Shield className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-white">Yönetim Paneli</h2>
+              <p className="text-xs text-slate-400">{user.ad} {user.soyad}</p>
+            </div>
+          </div>
+        </div>
+
+        <nav className="flex-1 p-3 space-y-1">
+          {visibleMenuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                    : "text-slate-400 hover:text-white hover:bg-slate-700/50"
+                )}
+              >
+                <item.icon className="w-4 h-4" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="p-3 border-t border-slate-700">
+          <Button
+            variant="ghost"
+            onClick={() => { logout(); navigate("/yonetim"); }}
+            className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Çıkış Yap
+          </Button>
+        </div>
+      </aside>
+
+      {/* Main */}
+      <div className="flex-1 flex flex-col">
+        <header className="h-14 flex items-center border-b border-slate-700 bg-slate-800/50 px-6">
+          {title && <h1 className="text-lg font-bold text-white">{title}</h1>}
+        </header>
+        <main className="flex-1 overflow-y-auto p-6">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
