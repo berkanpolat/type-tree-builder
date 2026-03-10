@@ -5,11 +5,14 @@ import logoImg from "@/assets/tekstil-as-logo.png";
 import {
   ChevronDown,
   LayoutDashboard,
-  MessageSquare,
   HelpCircle,
   LogOut,
   Building2,
+  Bell,
 } from "lucide-react";
+import { useNotificationCount } from "@/hooks/use-notifications";
+import HeaderMessagePanel from "@/components/header/HeaderMessagePanel";
+import HeaderFavoritesPanel from "@/components/header/HeaderFavoritesPanel";
 
 interface PazarHeaderProps {
   firmaUnvani: string;
@@ -20,6 +23,7 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const unreadNotifications = useNotificationCount();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -36,7 +40,6 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
 
   const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { label: "Mesajlar", icon: MessageSquare, path: "/mesajlar" },
     { label: "Yardım", icon: HelpCircle, path: "#" },
   ];
 
@@ -53,47 +56,72 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
           </nav>
         </div>
 
-        {/* User menu */}
-        <div className="relative" ref={menuRef}>
+        {/* Right side: icons + user menu */}
+        <div className="flex items-center gap-1">
+          {/* Favorites */}
+          <HeaderFavoritesPanel />
+
+          {/* Messages */}
+          <HeaderMessagePanel />
+
+          {/* Notifications */}
           <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+            onClick={() => navigate("/bildirimler")}
+            className="relative p-2 rounded-lg hover:bg-muted transition-colors"
           >
-            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
-              {firmaLogoUrl ? (
-                <img src={firmaLogoUrl} alt="" className="w-full h-full object-contain p-0.5" />
-              ) : (
-                <Building2 className="w-4 h-4 text-muted-foreground" />
-              )}
-            </div>
-            <span className="hidden md:block text-sm font-medium text-foreground truncate max-w-[200px]">
-              {firmaUnvani}
-            </span>
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            <Bell className="w-5 h-5 text-muted-foreground" />
+            {unreadNotifications > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                {unreadNotifications > 99 ? "99+" : unreadNotifications}
+              </span>
+            )}
           </button>
 
-          {menuOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-background border border-border rounded-xl shadow-lg py-2 z-50">
-              {menuItems.map((item) => (
+          {/* Divider */}
+          <div className="w-px h-6 bg-border mx-2" />
+
+          {/* User menu */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setMenuOpen(!menuOpen)}
+              className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
+            >
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
+                {firmaLogoUrl ? (
+                  <img src={firmaLogoUrl} alt="" className="w-full h-full object-contain p-0.5" />
+                ) : (
+                  <Building2 className="w-4 h-4 text-muted-foreground" />
+                )}
+              </div>
+              <span className="hidden md:block text-sm font-medium text-foreground truncate max-w-[200px]">
+                {firmaUnvani}
+              </span>
+              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+            </button>
+
+            {menuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-background border border-border rounded-xl shadow-lg py-2 z-50">
+                {menuItems.map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => { setMenuOpen(false); navigate(item.path); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    <item.icon className="w-4 h-4 text-muted-foreground" />
+                    {item.label}
+                  </button>
+                ))}
+                <div className="border-t border-border my-1" />
                 <button
-                  key={item.label}
-                  onClick={() => { setMenuOpen(false); navigate(item.path); }}
+                  onClick={() => { setMenuOpen(false); handleLogout(); }}
                   className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                 >
-                  <item.icon className="w-4 h-4 text-muted-foreground" />
-                  {item.label}
+                  <LogOut className="w-4 h-4 text-muted-foreground" />
+                  Çıkış Yap
                 </button>
-              ))}
-              <div className="border-t border-border my-1" />
-              <button
-                onClick={() => { setMenuOpen(false); handleLogout(); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-              >
-                <LogOut className="w-4 h-4 text-muted-foreground" />
-                Çıkış Yap
-              </button>
-            </div>
-          )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
