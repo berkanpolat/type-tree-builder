@@ -117,6 +117,7 @@ const paraBirimiSymbol: Record<string, string> = {
 
 export default function AnaSayfa() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -133,6 +134,19 @@ export default function AnaSayfa() {
     };
     check();
   }, [navigate]);
+
+  // Read location.state for breadcrumb navigation from detail pages
+  useEffect(() => {
+    const state = location.state as { kategori?: string; kategoriId?: string; grupId?: string; turId?: string } | null;
+    if (state?.kategori) {
+      setActiveTab("urunler");
+      setSelectedKategori(state.kategori);
+      setSelectedGrupId(state.grupId || null);
+      setSelectedTurId(state.turId || null);
+      // Clear state to prevent re-applying on re-renders
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const [activeTab, setActiveTab] = useState<"urunler" | "firma">("firma");
   const [searchTerm, setSearchTerm] = useState("");
