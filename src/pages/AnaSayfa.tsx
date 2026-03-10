@@ -290,6 +290,10 @@ export default function AnaSayfa() {
         .in("urun_id", varyasyonluIds);
       if (varyantlar) {
         varyantlar.forEach((v) => {
+          // Use first variation photo as fallback
+          if (!varyantFotoMap[v.urun_id] && v.foto_url) {
+            varyantFotoMap[v.urun_id] = v.foto_url;
+          }
           // Prices
           if (!varyantPriceMap[v.urun_id]) {
             varyantPriceMap[v.urun_id] = { min: v.birim_fiyat, max: v.birim_fiyat };
