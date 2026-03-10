@@ -44,17 +44,17 @@ export default function IhaleTuruStep({ formData, updateForm }: Props) {
             <button
               key={t.value}
               onClick={() => updateForm({ ihale_turu: t.value, teklif_usulu: "", urun_kategori_id: "", urun_grup_id: "", urun_tur_id: "", hizmet_kategori_id: "", hizmet_tur_id: "" })}
-              className={`p-6 rounded-lg border-2 text-left transition-all hover:shadow-md ${
+              className={`p-6 rounded-lg border-2 text-left transition-all hover:shadow-md flex flex-col items-center ${
                 selected ? "border-primary bg-primary/5" : "border-border hover:border-muted-foreground/40"
               }`}
             >
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 ${
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${
                 selected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
               }`}>
                 <Icon className="w-6 h-6" />
               </div>
-              <h4 className="font-semibold text-foreground text-center mb-2">{t.label}</h4>
-              <p className="text-xs text-muted-foreground text-center">{t.description}</p>
+              <h4 className="font-semibold text-foreground text-center mb-2 h-6 flex items-center">{t.label}</h4>
+              <p className="text-xs text-muted-foreground text-center h-10 flex items-center">{t.description}</p>
             </button>
           );
         })}

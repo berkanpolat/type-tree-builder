@@ -862,6 +862,7 @@ export type Database = {
           baslangic_fiyati: number | null
           baslangic_tarihi: string | null
           baslik: string
+          birim: string | null
           bitis_tarihi: string | null
           created_at: string
           durum: string
@@ -897,6 +898,7 @@ export type Database = {
           baslangic_fiyati?: number | null
           baslangic_tarihi?: string | null
           baslik: string
+          birim?: string | null
           bitis_tarihi?: string | null
           created_at?: string
           durum?: string
@@ -932,6 +934,7 @@ export type Database = {
           baslangic_fiyati?: number | null
           baslangic_tarihi?: string | null
           baslik?: string
+          birim?: string | null
           bitis_tarihi?: string | null
           created_at?: string
           durum?: string

@@ -27,10 +27,11 @@ export interface IhaleFormData {
   baslik: string;
   aciklama: string;
   baslangic_fiyati: number | null;
+  birim: string;
   para_birimi: string;
   kdv_durumu: string;
-  odeme_secenekleri: string;
-  odeme_vadesi: string;
+  odeme_secenekleri: string[];
+  odeme_vadesi: string[];
   kargo_masrafi: string;
   kargo_sirketi_anlasmasi: string;
   teslimat_tarihi: string;
@@ -58,10 +59,11 @@ const INITIAL_FORM: IhaleFormData = {
   baslik: "",
   aciklama: "",
   baslangic_fiyati: null,
+  birim: "",
   para_birimi: "TRY",
   kdv_durumu: "",
-  odeme_secenekleri: "",
-  odeme_vadesi: "",
+  odeme_secenekleri: [],
+  odeme_vadesi: [],
   kargo_masrafi: "",
   kargo_sirketi_anlasmasi: "",
   teslimat_tarihi: "",
@@ -136,9 +138,10 @@ export default function YeniIhale() {
         aciklama: ihale.aciklama || "",
         baslangic_fiyati: ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati) : null,
         para_birimi: ihale.para_birimi || "TRY",
+        birim: (ihale as any).birim || "",
         kdv_durumu: ihale.kdv_durumu || "",
-        odeme_secenekleri: ihale.odeme_secenekleri || "",
-        odeme_vadesi: ihale.odeme_vadesi || "",
+        odeme_secenekleri: ihale.odeme_secenekleri ? (ihale.odeme_secenekleri as string).split(",").map(s => s.trim()).filter(Boolean) : [],
+        odeme_vadesi: ihale.odeme_vadesi ? (ihale.odeme_vadesi as string).split(",").map(s => s.trim()).filter(Boolean) : [],
         kargo_masrafi: ihale.kargo_masrafi || "",
         kargo_sirketi_anlasmasi: ihale.kargo_sirketi_anlasmasi || "",
         teslimat_tarihi: formatDatetime(ihale.teslimat_tarihi),
@@ -183,7 +186,7 @@ export default function YeniIhale() {
         }
         return !!formData.urun_kategori_id && !!formData.urun_grup_id && !!formData.urun_tur_id;
       case 3:
-        return !!(formData.baslik && formData.aciklama && formData.baslangic_fiyati && formData.kdv_durumu && formData.odeme_secenekleri && formData.odeme_vadesi && formData.kargo_masrafi && formData.kargo_sirketi_anlasmasi && formData.baslangic_tarihi && formData.bitis_tarihi);
+        return !!(formData.baslik && formData.aciklama && formData.baslangic_fiyati && formData.birim && formData.kdv_durumu && formData.odeme_secenekleri.length > 0 && formData.odeme_vadesi.length > 0 && formData.kargo_masrafi && formData.kargo_sirketi_anlasmasi && formData.baslangic_tarihi && formData.bitis_tarihi);
       default: return true;
     }
   };
@@ -211,9 +214,10 @@ export default function YeniIhale() {
         if (!formData.baslik) missing.push("İhale Başlığı");
         if (!formData.aciklama) missing.push("Açıklama");
         if (!formData.baslangic_fiyati) missing.push("Başlangıç Fiyatı");
+        if (!formData.birim) missing.push("Birim");
         if (!formData.kdv_durumu) missing.push("KDV Durumu");
-        if (!formData.odeme_secenekleri) missing.push("Ödeme Seçenekleri");
-        if (!formData.odeme_vadesi) missing.push("Ödeme Vadesi");
+        if (formData.odeme_secenekleri.length === 0) missing.push("Ödeme Seçenekleri");
+        if (formData.odeme_vadesi.length === 0) missing.push("Ödeme Vadesi");
         if (!formData.kargo_masrafi) missing.push("Kargo Masrafı Ödemesi");
         if (!formData.kargo_sirketi_anlasmasi) missing.push("Kargo Şirketi Anlaşması");
         if (!formData.baslangic_tarihi) missing.push("Başlangıç Tarihi");
@@ -276,10 +280,11 @@ export default function YeniIhale() {
       baslik: formData.baslik,
       aciklama: formData.aciklama,
       baslangic_fiyati: formData.baslangic_fiyati,
+      birim: formData.birim || null,
       para_birimi: formData.para_birimi,
       kdv_durumu: formData.kdv_durumu,
-      odeme_secenekleri: formData.odeme_secenekleri,
-      odeme_vadesi: formData.odeme_vadesi,
+      odeme_secenekleri: formData.odeme_secenekleri.join(", "),
+      odeme_vadesi: formData.odeme_vadesi.join(", "),
       kargo_masrafi: formData.kargo_masrafi,
       kargo_sirketi_anlasmasi: formData.kargo_sirketi_anlasmasi,
       teslimat_tarihi: formData.teslimat_tarihi || null,
