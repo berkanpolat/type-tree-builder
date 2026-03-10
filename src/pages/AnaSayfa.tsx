@@ -608,6 +608,8 @@ export default function AnaSayfa() {
             if (parents) parents.forEach((p) => { parentMap[p.id] = p; });
           }
           secenekler.forEach((s) => {
+            // Hide categories that should not appear in search
+            if (HIDDEN_KATEGORILER.some((h) => s.name.toLowerCase() === h.toLowerCase())) return;
             let type: SearchResult["type"] = "Tür";
             if (!s.parent_id) type = "Kategori";
             else {
