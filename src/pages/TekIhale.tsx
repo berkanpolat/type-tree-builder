@@ -361,8 +361,8 @@ export default function TekIhale() {
               ))}
             </FilterSection>
 
-            {/* Ürün kategorileri - show when NOT hizmet only */}
-            {!isHizmetMode && (
+            {/* Ürün kategorileri - show only when ürün türü selected */}
+            {isUrunMode && (
               <FilterSection title="Ürün Kategorisi" icon={Layers}>
                 {kategoriler.map((k) => (
                   <CheckboxFilter key={k.id} label={k.name} checked={filterKategori.includes(k.id)} onChange={() => toggleFilter(filterKategori, k.id, setFilterKategori)} />
