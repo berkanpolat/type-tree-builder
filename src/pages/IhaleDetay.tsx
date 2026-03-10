@@ -168,6 +168,9 @@ export default function IhaleDetay() {
   // Benzer ihaleler
   const [benzerIhaleler, setBenzerIhaleler] = useState<any[]>([]);
 
+  // Resolved teknik detaylar (UUID -> name)
+  const [resolvedTeknikDetaylar, setResolvedTeknikDetaylar] = useState<Record<string, string>>({});
+
   // Breadcrumbs
   const [breadcrumbKategori, setBreadcrumbKategori] = useState("");
   const [breadcrumbGrup, setBreadcrumbGrup] = useState("");
