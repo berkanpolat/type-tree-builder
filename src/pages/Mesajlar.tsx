@@ -293,15 +293,15 @@ export default function Mesajlar() {
 
   const uploadFile = async (file: File): Promise<{ url: string; name: string } | null> => {
     const ext = file.name.split(".").pop() || "file";
-    const path = `chat/${currentUserId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const path = `${currentUserId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const { error } = await supabase.storage.from("firma-images").upload(path, file);
+    const { error } = await supabase.storage.from("chat-files").upload(path, file);
     if (error) {
       toast({ title: "Yükleme hatası", description: error.message, variant: "destructive" });
       return null;
     }
 
-    const { data: urlData } = supabase.storage.from("firma-images").getPublicUrl(path);
+    const { data: urlData } = supabase.storage.from("chat-files").getPublicUrl(path);
     return { url: urlData.publicUrl, name: file.name };
   };
 

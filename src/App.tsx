@@ -16,6 +16,7 @@ import ManuIhale from "./pages/ManuIhale";
 import YeniIhale from "./pages/YeniIhale";
 import TekIhale from "./pages/TekIhale";
 import IhaleDetay from "./pages/IhaleDetay";
+import IhaleTakip from "./pages/IhaleTakip";
 import Tekliflerim from "./pages/Tekliflerim";
 import ManuPazar from "./pages/ManuPazar";
 import YeniUrun from "./pages/YeniUrun";
@@ -44,6 +45,7 @@ const App = () => (
           <Route path="/tekihale/:id" element={<IhaleDetay />} />
           <Route path="/ihale/:id" element={<IhaleDetay />} />
           <Route path="/manuihale/duzenle/:id" element={<YeniIhale />} />
+          <Route path="/manuihale/takip/:id" element={<IhaleTakip />} />
           <Route path="/tekliflerim" element={<Tekliflerim />} />
           <Route path="/manupazar" element={<ManuPazar />} />
           <Route path="/manupazar/yeni" element={<YeniUrun />} />
