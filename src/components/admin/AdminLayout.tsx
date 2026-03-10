@@ -1,12 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, createContext, useContext } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
   Gavel, Package, HeadphonesIcon, Building2, Sun, Moon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Theme context so children can read it
+const AdminThemeContext = createContext<boolean>(false);
+export const useAdminTheme = () => useContext(AdminThemeContext);
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -43,7 +48,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(217 33% 12%)" }}>
         <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
       </div>
     );
@@ -55,86 +60,102 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     (item) => !item.permission || hasPermission(item.permission)
   );
 
+  const t = lightMode; // shorthand
+
   return (
-    <div className={cn("min-h-screen flex", lightMode ? "admin-light" : "admin-dark")}>
-      {/* Sidebar */}
-      <aside className={cn(
-        "w-64 border-r flex flex-col",
-        lightMode ? "bg-white border-slate-200" : "bg-slate-800 border-slate-700"
-      )}>
-        <div className={cn("p-4 border-b", lightMode ? "border-slate-200" : "border-slate-700")}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className={cn("text-sm font-bold", lightMode ? "text-slate-900" : "text-white")}>Yönetim Paneli</h2>
-              <p className={cn("text-xs", lightMode ? "text-slate-500" : "text-slate-400")}>{user.ad} {user.soyad}</p>
+    <AdminThemeContext.Provider value={lightMode}>
+      <div className={cn("min-h-screen flex", t ? "admin-light" : "admin-dark")}>
+        {/* Sidebar */}
+        <aside
+          className="w-64 border-r flex flex-col"
+          style={{
+            background: `hsl(var(--admin-sidebar))`,
+            borderColor: `hsl(var(--admin-border))`,
+          }}
+        >
+          <div className="p-4 border-b" style={{ borderColor: `hsl(var(--admin-border))` }}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-sm font-bold" style={{ color: `hsl(var(--admin-text))` }}>Yönetim Paneli</h2>
+                <p className="text-xs" style={{ color: `hsl(var(--admin-muted))` }}>{user.ad} {user.soyad}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <nav className="flex-1 p-3 space-y-1">
-          {visibleMenuItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                  isActive
-                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                    : lightMode
-                      ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-                      : "text-slate-400 hover:text-white hover:bg-slate-700/50"
-                )}
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+          <nav className="flex-1 p-3 space-y-1">
+            {visibleMenuItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                    isActive && "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+                  )}
+                  style={!isActive ? {
+                    color: `hsl(var(--admin-muted))`,
+                  } : undefined}
+                  onMouseEnter={(e) => {
+                    if (!isActive) e.currentTarget.style.background = `hsl(var(--admin-hover))`;
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) e.currentTarget.style.background = 'transparent';
+                  }}
+                >
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </nav>
 
-        <div className={cn("p-3 border-t space-y-1", lightMode ? "border-slate-200" : "border-slate-700")}>
-          <Button
-            variant="ghost"
-            onClick={() => setLightMode(!lightMode)}
-            className={cn(
-              "w-full justify-start text-xs",
-              lightMode ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : "text-slate-400 hover:text-white hover:bg-slate-700"
-            )}
+          <div className="p-3 border-t space-y-3" style={{ borderColor: `hsl(var(--admin-border))` }}>
+            {/* Theme toggle */}
+            <div className="flex items-center justify-between px-3 py-1">
+              <div className="flex items-center gap-2">
+                {lightMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-blue-400" />}
+                <span className="text-xs" style={{ color: `hsl(var(--admin-muted))` }}>
+                  {lightMode ? "Aydınlık" : "Koyu"}
+                </span>
+              </div>
+              <Switch
+                checked={lightMode}
+                onCheckedChange={setLightMode}
+                className="data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-600"
+              />
+            </div>
+
+            <Button
+              variant="ghost"
+              onClick={() => { logout(); navigate("/yonetim"); }}
+              className="w-full justify-start text-red-500 hover:text-red-600 hover:bg-red-500/10"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Çıkış Yap
+            </Button>
+          </div>
+        </aside>
+
+        {/* Main */}
+        <div className="flex-1 flex flex-col" style={{ background: `hsl(var(--admin-bg))` }}>
+          <header
+            className="h-14 flex items-center border-b px-6"
+            style={{
+              background: `hsl(var(--admin-header))`,
+              borderColor: `hsl(var(--admin-border))`,
+            }}
           >
-            {lightMode ? <Moon className="w-4 h-4 mr-2" /> : <Sun className="w-4 h-4 mr-2" />}
-            {lightMode ? "Koyu Görünüm" : "Aydınlık Görünüm"}
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => { logout(); navigate("/yonetim"); }}
-            className={cn(
-              "w-full justify-start",
-              lightMode ? "text-slate-500 hover:text-red-600 hover:bg-red-50" : "text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-            )}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Çıkış Yap
-          </Button>
+            {title && <h1 className="text-lg font-bold" style={{ color: `hsl(var(--admin-text))` }}>{title}</h1>}
+          </header>
+          <main className="flex-1 overflow-y-auto p-6">
+            {children}
+          </main>
         </div>
-      </aside>
-
-      {/* Main */}
-      <div className={cn("flex-1 flex flex-col", lightMode ? "bg-slate-50" : "bg-slate-900")}>
-        <header className={cn(
-          "h-14 flex items-center border-b px-6",
-          lightMode ? "bg-white border-slate-200" : "bg-slate-800/50 border-slate-700"
-        )}>
-          {title && <h1 className={cn("text-lg font-bold", lightMode ? "text-slate-900" : "text-white")}>{title}</h1>}
-        </header>
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
       </div>
-    </div>
+    </AdminThemeContext.Provider>
   );
 }
