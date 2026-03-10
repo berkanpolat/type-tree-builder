@@ -33,6 +33,10 @@ import UreticiTedarikciKesfi from "./pages/UreticiTedarikciKesfi";
 import TekIhaleTanitim from "./pages/TekIhaleTanitim";
 import TekPazarTanitim from "./pages/TekPazarTanitim";
 import SSS from "./pages/SSS";
+import GizlilikKosullari from "./pages/GizlilikKosullari";
+import KVKKAydinlatma from "./pages/KVKKAydinlatma";
+import KullanimKosullari from "./pages/KullanimKosullari";
+import MesafeliSatisSozlesmesi from "./pages/MesafeliSatisSozlesmesi";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
