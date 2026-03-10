@@ -40,6 +40,7 @@ const Dashboard = () => {
   const [firmaTuruName, setFirmaTuruName] = useState("");
   const [firmaTipiName, setFirmaTipiName] = useState("");
   const [loading, setLoading] = useState(true);
+  const unreadNotifications = useNotificationCount();
 
   useEffect(() => {
     const fetchData = async () => {
