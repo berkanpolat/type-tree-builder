@@ -23,7 +23,6 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const unreadNotifications = useNotificationCount();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
