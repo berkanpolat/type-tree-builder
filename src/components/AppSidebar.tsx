@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useUnreadMessages } from "@/hooks/use-unread-messages";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import {
   Home,
@@ -39,7 +40,7 @@ const mainItems = [
   { title: "Tekliflerim", url: "/tekliflerim", icon: FileText },
   { title: "ManuPazar", url: "/manupazar", icon: ShoppingBag },
   { title: "Favoriler", url: "/favoriler", icon: Heart },
-  { title: "Mesajlar", url: "/mesajlar", icon: MessageSquare },
+  { title: "Mesajlar", url: "/mesajlar", icon: MessageSquare, badgeKey: "mesajlar" },
   { title: "Bildirimler", url: "/bildirimler", icon: Bell, badge: true },
   { title: "Paketler", url: "/paketler", icon: Package },
 ];
@@ -54,6 +55,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState("");
+  const unreadMessages = useUnreadMessages();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -118,6 +120,11 @@ export function AppSidebar() {
                       <item.icon className="h-5 w-5 shrink-0" />
                       {!collapsed && (
                         <span className="flex-1">{item.title}</span>
+                      )}
+                      {!collapsed && item.badgeKey === "mesajlar" && unreadMessages > 0 && (
+                        <span className="w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                          {unreadMessages > 99 ? "99+" : unreadMessages}
+                        </span>
                       )}
                       {!collapsed && item.badge && (
                         <span className="w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
