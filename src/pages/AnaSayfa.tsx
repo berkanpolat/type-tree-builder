@@ -186,6 +186,13 @@ export default function AnaSayfa() {
     });
   }, []);
 
+  // Fetch kategori seçenekleri (for ürün tab)
+  useEffect(() => {
+    supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KATEGORI_ID).is("parent_id", null).order("name").then(({ data }) => {
+      if (data) setKategoriSecenekler(data);
+    });
+  }, []);
+
   // Fetch products
   const fetchUrunler = useCallback(async () => {
     setUrunLoading(true);
