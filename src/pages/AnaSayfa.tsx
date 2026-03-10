@@ -27,7 +27,7 @@ import {
   MessageSquare,
   ArrowRight,
   ImageIcon,
-  Bookmark,
+  ImageIcon,
   Heart,
   ChevronDown,
   ChevronLeft,
