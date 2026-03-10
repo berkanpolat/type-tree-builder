@@ -27,7 +27,6 @@ import {
   MessageSquare,
   ArrowRight,
   ImageIcon,
-  ImageIcon,
   Heart,
   ChevronDown,
   ChevronLeft,
