@@ -39,7 +39,7 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
 
   const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { label: "Yardım", icon: HelpCircle, path: "#" },
+    { label: "Yardım", icon: HelpCircle, path: "/sss" },
   ];
 
   return (
