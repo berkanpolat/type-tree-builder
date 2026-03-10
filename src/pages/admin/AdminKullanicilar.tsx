@@ -45,11 +45,14 @@ const DEFAULT_PERMISSIONS = Object.fromEntries(
   Object.keys(PERMISSION_LABELS).map((k) => [k, false])
 );
 
+const USERS_PER_PAGE = 10;
+
 export default function AdminKullanicilar() {
   const { token, hasPermission, user: currentUser } = useAdminAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
 
