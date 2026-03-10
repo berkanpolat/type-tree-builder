@@ -29,6 +29,7 @@ import ProfilAyarlari from "./pages/ProfilAyarlari";
 import TekRehber from "./pages/TekRehber";
 import Hakkimizda from "./pages/Hakkimizda";
 import Iletisim from "./pages/Iletisim";
+import UreticiTedarikciKesfi from "./pages/UreticiTedarikciKesfi";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
