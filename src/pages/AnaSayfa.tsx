@@ -135,19 +135,6 @@ export default function AnaSayfa() {
     check();
   }, [navigate]);
 
-  // Read location.state for breadcrumb navigation from detail pages
-  useEffect(() => {
-    const state = location.state as { kategori?: string; kategoriId?: string; grupId?: string; turId?: string } | null;
-    if (state?.kategori) {
-      setActiveTab("urunler");
-      setSelectedKategori(state.kategori);
-      setSelectedGrupId(state.grupId || null);
-      setSelectedTurId(state.turId || null);
-      // Clear state to prevent re-applying on re-renders
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
-
   const [activeTab, setActiveTab] = useState<"urunler" | "firma">("firma");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -161,6 +148,18 @@ export default function AnaSayfa() {
   const [selectedKategori, setSelectedKategori] = useState<string | null>(null);
   const [selectedGrupId, setSelectedGrupId] = useState<string | null>(null);
   const [selectedTurId, setSelectedTurId] = useState<string | null>(null);
+
+  // Read location.state for breadcrumb navigation from detail pages
+  useEffect(() => {
+    const state = location.state as { kategori?: string; kategoriId?: string; grupId?: string; turId?: string } | null;
+    if (state?.kategori) {
+      setActiveTab("urunler");
+      setSelectedKategori(state.kategori);
+      setSelectedGrupId(state.grupId || null);
+      setSelectedTurId(state.turId || null);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Filter state from sidebar
   const [filterState, setFilterState] = useState<FilterState | null>(null);
