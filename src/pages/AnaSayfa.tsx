@@ -281,10 +281,12 @@ export default function AnaSayfa() {
     const varyantPriceMap: Record<string, { min: number; max: number }> = {};
     const varyantDataMap: Record<string, { renk: Set<string>; beden: Set<string> }> = {};
 
+    const varyantFotoMap: Record<string, string> = {};
+
     if (varyasyonluIds.length > 0) {
       const { data: varyantlar } = await supabase
         .from("urun_varyasyonlar")
-        .select("urun_id, birim_fiyat, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
+        .select("urun_id, birim_fiyat, foto_url, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
         .in("urun_id", varyasyonluIds);
       if (varyantlar) {
         varyantlar.forEach((v) => {
