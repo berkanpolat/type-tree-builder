@@ -97,6 +97,7 @@ export default function UrunDetay() {
   const navigate = useNavigate();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [firmaUnvani, setFirmaUnvani] = useState("");
+  const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [urun, setUrun] = useState<UrunData | null>(null);
