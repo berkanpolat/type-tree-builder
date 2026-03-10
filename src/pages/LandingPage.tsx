@@ -428,15 +428,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-primary py-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <img src={logoImg} alt="Tekstil A.Ş." className="h-8 brightness-0 invert" />
-          <p className="text-primary-foreground/70 text-sm">
-            © 2026 Tekstil A.Ş. Tüm hakları saklıdır.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
