@@ -1,10 +1,10 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2
+  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,12 +27,19 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const { user, loading, logout, hasPermission } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [lightMode, setLightMode] = useState(() => {
+    return localStorage.getItem("admin-theme") === "light";
+  });
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/yonetim");
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    localStorage.setItem("admin-theme", lightMode ? "light" : "dark");
+  }, [lightMode]);
 
   if (loading) {
     return (
@@ -49,17 +56,20 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen flex bg-slate-900">
+    <div className={cn("min-h-screen flex", lightMode ? "admin-light" : "admin-dark")}>
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col">
-        <div className="p-4 border-b border-slate-700">
+      <aside className={cn(
+        "w-64 border-r flex flex-col",
+        lightMode ? "bg-white border-slate-200" : "bg-slate-800 border-slate-700"
+      )}>
+        <div className={cn("p-4 border-b", lightMode ? "border-slate-200" : "border-slate-700")}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
               <Shield className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">Yönetim Paneli</h2>
-              <p className="text-xs text-slate-400">{user.ad} {user.soyad}</p>
+              <h2 className={cn("text-sm font-bold", lightMode ? "text-slate-900" : "text-white")}>Yönetim Paneli</h2>
+              <p className={cn("text-xs", lightMode ? "text-slate-500" : "text-slate-400")}>{user.ad} {user.soyad}</p>
             </div>
           </div>
         </div>
@@ -74,8 +84,10 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                    : "text-slate-400 hover:text-white hover:bg-slate-700/50"
+                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                    : lightMode
+                      ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      : "text-slate-400 hover:text-white hover:bg-slate-700/50"
                 )}
               >
                 <item.icon className="w-4 h-4" />
@@ -85,11 +97,25 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           })}
         </nav>
 
-        <div className="p-3 border-t border-slate-700">
+        <div className={cn("p-3 border-t space-y-1", lightMode ? "border-slate-200" : "border-slate-700")}>
+          <Button
+            variant="ghost"
+            onClick={() => setLightMode(!lightMode)}
+            className={cn(
+              "w-full justify-start text-xs",
+              lightMode ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100" : "text-slate-400 hover:text-white hover:bg-slate-700"
+            )}
+          >
+            {lightMode ? <Moon className="w-4 h-4 mr-2" /> : <Sun className="w-4 h-4 mr-2" />}
+            {lightMode ? "Koyu Görünüm" : "Aydınlık Görünüm"}
+          </Button>
           <Button
             variant="ghost"
             onClick={() => { logout(); navigate("/yonetim"); }}
-            className="w-full justify-start text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+            className={cn(
+              "w-full justify-start",
+              lightMode ? "text-slate-500 hover:text-red-600 hover:bg-red-50" : "text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+            )}
           >
             <LogOut className="w-4 h-4 mr-2" />
             Çıkış Yap
@@ -98,9 +124,12 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col">
-        <header className="h-14 flex items-center border-b border-slate-700 bg-slate-800/50 px-6">
-          {title && <h1 className="text-lg font-bold text-white">{title}</h1>}
+      <div className={cn("flex-1 flex flex-col", lightMode ? "bg-slate-50" : "bg-slate-900")}>
+        <header className={cn(
+          "h-14 flex items-center border-b px-6",
+          lightMode ? "bg-white border-slate-200" : "bg-slate-800/50 border-slate-700"
+        )}>
+          {title && <h1 className={cn("text-lg font-bold", lightMode ? "text-slate-900" : "text-white")}>{title}</h1>}
         </header>
         <main className="flex-1 overflow-y-auto p-6">
           {children}

@@ -100,3 +100,49 @@
     image-rendering: crisp-edges;
   }
 }
+
+/* Admin Panel Theme Classes */
+@layer components {
+  .admin-dark {
+    --admin-bg: 215 28% 17%;
+    --admin-card-bg: 217 33% 17%;
+    --admin-text: 0 0% 100%;
+    --admin-muted: 215 16% 47%;
+    --admin-border: 217 33% 25%;
+    --admin-input-bg: 217 33% 22%;
+  }
+  .admin-light {
+    --admin-bg: 210 20% 98%;
+    --admin-card-bg: 0 0% 100%;
+    --admin-text: 215 28% 17%;
+    --admin-muted: 215 16% 47%;
+    --admin-border: 220 13% 91%;
+    --admin-input-bg: 210 20% 98%;
+  }
+
+  .admin-card {
+    background: hsl(var(--admin-card-bg));
+    border: 1px solid hsl(var(--admin-border));
+    border-radius: 0.75rem;
+  }
+  .admin-text {
+    color: hsl(var(--admin-text));
+  }
+  .admin-input {
+    background: hsl(var(--admin-input-bg));
+    border-color: hsl(var(--admin-border));
+    color: hsl(var(--admin-text));
+  }
+  .admin-dropdown {
+    background: hsl(var(--admin-card-bg));
+    border-color: hsl(var(--admin-border));
+    color: hsl(var(--admin-text));
+  }
+  .admin-btn-outline {
+    border-color: hsl(var(--admin-border));
+    color: hsl(var(--admin-muted));
+  }
+  .admin-btn-outline:hover {
+    background: hsl(var(--admin-input-bg));
+  }
+}

@@ -14,7 +14,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   Building2, Users, Clock, AlertCircle, CheckCircle, XCircle,
-  Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon
+  Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp
 } from "lucide-react";
 
 interface FirmaItem {
@@ -175,6 +175,26 @@ export default function AdminFirmalar() {
     }
   };
 
+  const clearFilters = () => {
+    setFilterTuru("all");
+    setFilterTipi("all");
+    setFilterIl("all");
+    setFilterDurum("all");
+    setFilterMinIhale("");
+    setFilterMaxIhale("");
+    setFilterMinTeklif("");
+    setFilterMaxTeklif("");
+    setFilterMinUrun("");
+    setFilterMaxUrun("");
+    setFilterMinProfil("");
+    setFilterMaxProfil("");
+    setSearchTerm("");
+  };
+
+  const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" ||
+    filterMinIhale || filterMaxIhale || filterMinTeklif || filterMaxTeklif ||
+    filterMinUrun || filterMaxUrun || filterMinProfil || filterMaxProfil || searchTerm;
+
   // Filter logic
   const filtered = firmalar.filter((f) => {
     if (searchTerm && !f.firma_unvani.toLowerCase().includes(searchTerm.toLowerCase())) return false;
@@ -195,10 +215,10 @@ export default function AdminFirmalar() {
 
   const durumBadge = (durum: string) => {
     switch (durum) {
-      case "onaylandi": return <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Onaylı</Badge>;
-      case "onay_bekliyor": return <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Onay Bekliyor</Badge>;
-      case "onaysiz": return <Badge className="bg-red-500/20 text-red-400 border-red-500/30">Reddedildi</Badge>;
-      default: return <Badge variant="secondary">{durum}</Badge>;
+      case "onaylandi": return <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[10px] px-1.5 py-0">Onaylı</Badge>;
+      case "onay_bekliyor": return <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-[10px] px-1.5 py-0">Onay Bekliyor</Badge>;
+      case "onaysiz": return <Badge className="bg-red-500/20 text-red-500 border-red-500/30 text-[10px] px-1.5 py-0">Reddedildi</Badge>;
+      default: return <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{durum}</Badge>;
     }
   };
 
@@ -213,54 +233,71 @@ export default function AdminFirmalar() {
       <div className="space-y-6">
         {/* Summary Cards */}
         {stats && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-slate-800 border-slate-700">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-400">Toplam Firma</CardTitle>
-                <Building2 className="w-4 h-4 text-blue-400" />
-              </CardHeader>
-              <CardContent><div className="text-2xl font-bold text-white">{stats.total}</div></CardContent>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <Card className="admin-card">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Building2 className="w-5 h-5 text-blue-400" />
+                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Toplam</span>
+                </div>
+                <div className="text-3xl font-bold admin-text">{stats.total}</div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Kayıtlı firma</p>
+              </CardContent>
             </Card>
 
-            <Card className="bg-slate-800 border-slate-700">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-400">Onay Bekleyen</CardTitle>
-                <AlertCircle className="w-4 h-4 text-amber-400" />
-              </CardHeader>
-              <CardContent><div className="text-2xl font-bold text-amber-400">{stats.pending}</div></CardContent>
+            <Card className="admin-card">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <AlertCircle className="w-5 h-5 text-amber-400" />
+                  <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Bekleyen</span>
+                </div>
+                <div className="text-3xl font-bold text-amber-500">{stats.pending}</div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Onay bekliyor</p>
+              </CardContent>
             </Card>
 
-            <Card className="bg-slate-800 border-slate-700">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-slate-400 flex items-center gap-2">
-                  Son
+            <Card className="admin-card">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Clock className="w-5 h-5 text-purple-400" />
                   <Select value={String(statsDays)} onValueChange={(v) => setStatsDays(Number(v))}>
-                    <SelectTrigger className="w-16 h-6 text-xs bg-slate-700 border-slate-600 text-white">
+                    <SelectTrigger className="w-auto h-5 text-[10px] admin-input border-0 bg-transparent px-1 gap-1">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700">
-                      <SelectItem value="7" className="text-white">7</SelectItem>
-                      <SelectItem value="15" className="text-white">15</SelectItem>
-                      <SelectItem value="30" className="text-white">30</SelectItem>
+                    <SelectContent className="admin-dropdown">
+                      <SelectItem value="1" className="text-xs">24 Saat</SelectItem>
+                      <SelectItem value="7" className="text-xs">7 Gün</SelectItem>
+                      <SelectItem value="15" className="text-xs">15 Gün</SelectItem>
+                      <SelectItem value="30" className="text-xs">30 Gün</SelectItem>
                     </SelectContent>
                   </Select>
-                  Gün
-                </CardTitle>
-                <Clock className="w-4 h-4 text-purple-400" />
-              </CardHeader>
-              <CardContent><div className="text-2xl font-bold text-white">{stats.recent}</div></CardContent>
+                </div>
+                <div className="text-3xl font-bold admin-text">{stats.recent}</div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {statsDays === 1 ? "Son 24 saat" : `Son ${statsDays} gün`}
+                </p>
+              </CardContent>
             </Card>
 
-            <Card className="bg-slate-800 border-slate-700">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-400">Tür Dağılımı</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1">
+            <Card className="admin-card col-span-2">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Tür Dağılımı</span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
                   {stats.turDagilimi.map((t) => (
-                    <div key={t.name} className="flex items-center justify-between text-xs">
-                      <span className="text-slate-400 truncate">{t.name}</span>
-                      <span className="text-white font-semibold">{t.count}</span>
+                    <div key={t.name} className="flex items-center justify-between text-xs gap-2">
+                      <span className="text-slate-500 dark:text-slate-400 truncate">{t.name}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-blue-500"
+                            style={{ width: `${stats.total > 0 ? (t.count / stats.total) * 100 : 0}%` }}
+                          />
+                        </div>
+                        <span className="admin-text font-semibold w-4 text-right">{t.count}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -273,121 +310,138 @@ export default function AdminFirmalar() {
         <div className="flex flex-col gap-3">
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <Input
                 placeholder="Firma adı ile ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-slate-800 border-slate-700 text-white"
+                className="pl-10 admin-input"
               />
             </div>
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
-              className="border-slate-700 text-slate-300 hover:bg-slate-700"
+              className="admin-btn-outline"
             >
               <Filter className="w-4 h-4 mr-2" />
               Filtreler
+              {hasActiveFilters && (
+                <span className="ml-2 w-2 h-2 rounded-full bg-amber-500" />
+              )}
             </Button>
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                onClick={clearFilters}
+                className="text-slate-500 hover:text-red-500 text-xs px-3"
+              >
+                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                Temizle
+              </Button>
+            )}
           </div>
 
           {showFilters && (
-            <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="admin-card rounded-xl p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="space-y-1">
-                <Label className="text-slate-400 text-xs">Durum</Label>
+                <Label className="text-slate-500 dark:text-slate-400 text-xs">Durum</Label>
                 <Select value={filterDurum} onValueChange={setFilterDurum}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white text-xs h-8">
-                    <SelectValue placeholder="Tümü" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="all" className="text-white">Tümü</SelectItem>
-                    <SelectItem value="onay_bekliyor" className="text-white">Onay Bekliyor</SelectItem>
-                    <SelectItem value="onaylandi" className="text-white">Onaylı</SelectItem>
-                    <SelectItem value="onaysiz" className="text-white">Reddedildi</SelectItem>
+                  <SelectTrigger className="admin-input text-xs h-8"><SelectValue placeholder="Tümü" /></SelectTrigger>
+                  <SelectContent className="admin-dropdown">
+                    <SelectItem value="all" className="text-xs">Tümü</SelectItem>
+                    <SelectItem value="onay_bekliyor" className="text-xs">Onay Bekliyor</SelectItem>
+                    <SelectItem value="onaylandi" className="text-xs">Onaylı</SelectItem>
+                    <SelectItem value="onaysiz" className="text-xs">Reddedildi</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-slate-400 text-xs">Firma Türü</Label>
+                <Label className="text-slate-500 dark:text-slate-400 text-xs">Firma Türü</Label>
                 <Select value={filterTuru} onValueChange={setFilterTuru}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white text-xs h-8">
-                    <SelectValue placeholder="Tümü" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="all" className="text-white">Tümü</SelectItem>
+                  <SelectTrigger className="admin-input text-xs h-8"><SelectValue placeholder="Tümü" /></SelectTrigger>
+                  <SelectContent className="admin-dropdown">
+                    <SelectItem value="all" className="text-xs">Tümü</SelectItem>
                     {turler.map((t) => (
-                      <SelectItem key={t.id} value={t.id} className="text-white">{t.name}</SelectItem>
+                      <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-slate-400 text-xs">Firma Tipi</Label>
+                <Label className="text-slate-500 dark:text-slate-400 text-xs">Firma Tipi</Label>
                 <Select value={filterTipi} onValueChange={setFilterTipi}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white text-xs h-8">
-                    <SelectValue placeholder="Tümü" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="all" className="text-white">Tümü</SelectItem>
+                  <SelectTrigger className="admin-input text-xs h-8"><SelectValue placeholder="Tümü" /></SelectTrigger>
+                  <SelectContent className="admin-dropdown">
+                    <SelectItem value="all" className="text-xs">Tümü</SelectItem>
                     {tipler
                       .filter((tp) => filterTuru === "all" || tp.firma_turu_id === filterTuru)
                       .map((tp) => (
-                        <SelectItem key={tp.id} value={tp.id} className="text-white">{tp.name}</SelectItem>
+                        <SelectItem key={tp.id} value={tp.id} className="text-xs">{tp.name}</SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-slate-400 text-xs">İl</Label>
+                <Label className="text-slate-500 dark:text-slate-400 text-xs">İl</Label>
                 <Select value={filterIl} onValueChange={setFilterIl}>
-                  <SelectTrigger className="bg-slate-700 border-slate-600 text-white text-xs h-8">
-                    <SelectValue placeholder="Tümü" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="all" className="text-white">Tümü</SelectItem>
+                  <SelectTrigger className="admin-input text-xs h-8"><SelectValue placeholder="Tümü" /></SelectTrigger>
+                  <SelectContent className="admin-dropdown">
+                    <SelectItem value="all" className="text-xs">Tümü</SelectItem>
                     {iller.map((il) => (
-                      <SelectItem key={il.id} value={il.id} className="text-white">{il.name}</SelectItem>
+                      <SelectItem key={il.id} value={il.id} className="text-xs">{il.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-slate-400 text-xs">İhale Sayısı</Label>
+                <Label className="text-slate-500 dark:text-slate-400 text-xs">İhale Sayısı</Label>
                 <div className="flex gap-1">
-                  <Input placeholder="Min" value={filterMinIhale} onChange={(e) => setFilterMinIhale(e.target.value)} className="bg-slate-700 border-slate-600 text-white text-xs h-8" />
-                  <Input placeholder="Max" value={filterMaxIhale} onChange={(e) => setFilterMaxIhale(e.target.value)} className="bg-slate-700 border-slate-600 text-white text-xs h-8" />
+                  <Input placeholder="Min" value={filterMinIhale} onChange={(e) => setFilterMinIhale(e.target.value)} className="admin-input text-xs h-8" />
+                  <Input placeholder="Max" value={filterMaxIhale} onChange={(e) => setFilterMaxIhale(e.target.value)} className="admin-input text-xs h-8" />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-slate-400 text-xs">Teklif Sayısı</Label>
+                <Label className="text-slate-500 dark:text-slate-400 text-xs">Teklif Sayısı</Label>
                 <div className="flex gap-1">
-                  <Input placeholder="Min" value={filterMinTeklif} onChange={(e) => setFilterMinTeklif(e.target.value)} className="bg-slate-700 border-slate-600 text-white text-xs h-8" />
-                  <Input placeholder="Max" value={filterMaxTeklif} onChange={(e) => setFilterMaxTeklif(e.target.value)} className="bg-slate-700 border-slate-600 text-white text-xs h-8" />
+                  <Input placeholder="Min" value={filterMinTeklif} onChange={(e) => setFilterMinTeklif(e.target.value)} className="admin-input text-xs h-8" />
+                  <Input placeholder="Max" value={filterMaxTeklif} onChange={(e) => setFilterMaxTeklif(e.target.value)} className="admin-input text-xs h-8" />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-slate-400 text-xs">Ürün Sayısı</Label>
+                <Label className="text-slate-500 dark:text-slate-400 text-xs">Ürün Sayısı</Label>
                 <div className="flex gap-1">
-                  <Input placeholder="Min" value={filterMinUrun} onChange={(e) => setFilterMinUrun(e.target.value)} className="bg-slate-700 border-slate-600 text-white text-xs h-8" />
-                  <Input placeholder="Max" value={filterMaxUrun} onChange={(e) => setFilterMaxUrun(e.target.value)} className="bg-slate-700 border-slate-600 text-white text-xs h-8" />
+                  <Input placeholder="Min" value={filterMinUrun} onChange={(e) => setFilterMinUrun(e.target.value)} className="admin-input text-xs h-8" />
+                  <Input placeholder="Max" value={filterMaxUrun} onChange={(e) => setFilterMaxUrun(e.target.value)} className="admin-input text-xs h-8" />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-slate-400 text-xs">Profil Doluluk %</Label>
+                <Label className="text-slate-500 dark:text-slate-400 text-xs">Profil Doluluk %</Label>
                 <div className="flex gap-1">
-                  <Input placeholder="Min" value={filterMinProfil} onChange={(e) => setFilterMinProfil(e.target.value)} className="bg-slate-700 border-slate-600 text-white text-xs h-8" />
-                  <Input placeholder="Max" value={filterMaxProfil} onChange={(e) => setFilterMaxProfil(e.target.value)} className="bg-slate-700 border-slate-600 text-white text-xs h-8" />
+                  <Input placeholder="Min" value={filterMinProfil} onChange={(e) => setFilterMinProfil(e.target.value)} className="admin-input text-xs h-8" />
+                  <Input placeholder="Max" value={filterMaxProfil} onChange={(e) => setFilterMaxProfil(e.target.value)} className="admin-input text-xs h-8" />
                 </div>
+              </div>
+
+              <div className="col-span-2 md:col-span-4 flex justify-end">
+                <Button variant="ghost" onClick={clearFilters} className="text-xs text-slate-500 hover:text-red-500">
+                  <RotateCcw className="w-3 h-3 mr-1.5" />
+                  Tüm Filtreleri Temizle
+                </Button>
               </div>
             </div>
           )}
+        </div>
+
+        {/* Result count */}
+        <div className="text-xs text-slate-500 dark:text-slate-400">
+          {filtered.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}
         </div>
 
         {/* Firma List */}
@@ -396,36 +450,36 @@ export default function AdminFirmalar() {
             <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filtered.length === 0 && (
               <div className="text-center text-slate-500 py-12">Firma bulunamadı.</div>
             )}
             {filtered.map((firma) => (
               <div
                 key={firma.id}
-                className="bg-slate-800 border border-slate-700 rounded-xl p-5 hover:border-slate-600 transition-colors"
+                className="admin-card rounded-xl p-5 hover:shadow-lg transition-all"
               >
-                {/* Top row: logo, name, actions */}
+                {/* Top row: logo, name + badge, actions */}
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-lg bg-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0">
                       {firma.logo_url ? (
                         <img src={firma.logo_url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <Building2 className="w-6 h-6 text-slate-500" />
+                        <Building2 className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                       )}
                     </div>
                     <div>
-                      <h3 className="text-white font-semibold text-base">{firma.firma_unvani}</h3>
-                      <p className="text-slate-400 text-sm">
+                      <div className="flex items-center gap-2">
+                        <h3 className="admin-text font-semibold text-base">{firma.firma_unvani}</h3>
+                        {durumBadge(firma.onay_durumu)}
+                      </div>
+                      <p className="text-slate-500 dark:text-slate-400 text-sm">
                         {firma.firma_turu_name || "—"} · {firma.firma_tipi_name || "—"}
                       </p>
-                      <div className="flex items-center gap-3 mt-1">
-                        {durumBadge(firma.onay_durumu)}
-                        {firma.il_name && (
-                          <span className="text-slate-500 text-xs">{firma.il_name}{firma.ilce_name ? ` / ${firma.ilce_name}` : ""}</span>
-                        )}
-                      </div>
+                      {firma.il_name && (
+                        <span className="text-slate-400 dark:text-slate-500 text-xs">{firma.il_name}{firma.ilce_name ? ` / ${firma.ilce_name}` : ""}</span>
+                      )}
                     </div>
                   </div>
 
@@ -444,7 +498,7 @@ export default function AdminFirmalar() {
                       onClick={(e) => { e.stopPropagation(); handleImpersonate(firma.user_id); }}
                       variant="outline"
                       size="sm"
-                      className="border-slate-600 text-slate-300 hover:bg-slate-700 text-xs"
+                      className="admin-btn-outline text-xs"
                     >
                       <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
                       Kullanıcıyı Yönet
@@ -453,7 +507,7 @@ export default function AdminFirmalar() {
                 </div>
 
                 {/* Dates */}
-                <div className="flex items-center gap-6 mb-3 text-xs text-slate-500">
+                <div className="flex items-center gap-6 mb-3 text-xs text-slate-400 dark:text-slate-500">
                   <span>Kayıt: {formatDate(firma.created_at)}</span>
                   <span>Son Hareket: {formatDate(firma.updated_at)}</span>
                 </div>
@@ -475,10 +529,10 @@ export default function AdminFirmalar() {
 
       {/* Review Dialog */}
       <Dialog open={reviewDialogOpen} onOpenChange={setReviewDialogOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="admin-card border max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Başvuruyu Değerlendir</DialogTitle>
-            <DialogDescription className="text-slate-400">Firma kayıt bilgilerini inceleyin ve onaylayın veya reddedin.</DialogDescription>
+            <DialogTitle className="admin-text">Başvuruyu Değerlendir</DialogTitle>
+            <DialogDescription className="text-slate-500 dark:text-slate-400">Firma kayıt bilgilerini inceleyin ve onaylayın veya reddedin.</DialogDescription>
           </DialogHeader>
 
           {reviewLoading ? (
@@ -491,7 +545,7 @@ export default function AdminFirmalar() {
               <InfoRow label="Ad Soyad" value={`${reviewDetail.profile?.ad || ""} ${reviewDetail.profile?.soyad || ""}`} />
               <InfoRow label="İletişim E-posta" value={reviewDetail.profile?.iletisim_email} />
               <InfoRow label="Telefon" value={reviewDetail.profile?.iletisim_numarasi} />
-              <div className="border-t border-slate-700 pt-3" />
+              <div className="border-t border-slate-200 dark:border-slate-700 pt-3" />
               <InfoRow label="Firma Ünvanı" value={reviewDetail.firma?.firma_unvani} />
               <InfoRow label="Firma Türü" value={reviewDetail.firma?.firma_turu_name} />
               <InfoRow label="Firma Tipi" value={reviewDetail.firma?.firma_tipi_name} />
@@ -505,7 +559,7 @@ export default function AdminFirmalar() {
               <Button
                 variant="ghost"
                 onClick={() => handleReject(reviewDetail.firma.id)}
-                className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
               >
                 <XCircle className="w-4 h-4 mr-2" />
                 Reddet
@@ -527,10 +581,10 @@ export default function AdminFirmalar() {
 
 function StatBox({ icon: Icon, label, value }: { icon: any; label: string; value: string | number }) {
   return (
-    <div className="bg-slate-700/40 rounded-lg p-2.5 text-center">
-      <Icon className="w-3.5 h-3.5 text-slate-500 mx-auto mb-1" />
-      <div className="text-white font-semibold text-sm">{value}</div>
-      <div className="text-slate-500 text-[10px]">{label}</div>
+    <div className="bg-slate-50 dark:bg-slate-700/40 rounded-lg p-2.5 text-center">
+      <Icon className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 mx-auto mb-1" />
+      <div className="admin-text font-semibold text-sm">{value}</div>
+      <div className="text-slate-400 dark:text-slate-500 text-[10px]">{label}</div>
     </div>
   );
 }
@@ -538,8 +592,8 @@ function StatBox({ icon: Icon, label, value }: { icon: any; label: string; value
 function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-slate-400 text-sm">{label}</span>
-      <span className="text-white text-sm font-medium">{value || "—"}</span>
+      <span className="text-slate-500 dark:text-slate-400 text-sm">{label}</span>
+      <span className="admin-text text-sm font-medium">{value || "—"}</span>
     </div>
   );
 }
