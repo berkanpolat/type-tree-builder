@@ -381,12 +381,31 @@ Deno.serve(async (req) => {
         email: targetUser.email,
       });
 
-      if (linkError) return jsonResponse({ error: linkError.message }, 400);
+      if (linkError || !linkData) return jsonResponse({ error: linkError?.message || "Link oluşturulamadı" }, 400);
+
+      // Extract the hashed_token from action_link and build a verify URL
+      const actionLink = linkData.properties?.action_link;
+      if (!actionLink) return jsonResponse({ error: "Action link bulunamadı" }, 500);
+
+      // We need to verify this token server-side to get session tokens
+      const url = new URL(actionLink);
+      const tokenHash = url.searchParams.get("token") || url.hash?.split("token=")[1];
+      const type = url.searchParams.get("type") || "magiclink";
+      
+      // Verify the OTP to get actual session tokens
+      const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash: tokenHash!,
+        type: type as any,
+      });
+
+      if (verifyError || !verifyData.session) {
+        return jsonResponse({ error: verifyError?.message || "Token doğrulanamadı" }, 400);
+      }
 
       return jsonResponse({
         success: true,
-        access_token: linkData.properties?.access_token,
-        refresh_token: linkData.properties?.refresh_token,
+        access_token: verifyData.session.access_token,
+        refresh_token: verifyData.session.refresh_token,
       });
     }
 
