@@ -37,7 +37,8 @@ const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 
 // Product categories for the horizontal bar
 const URUN_KATEGORILERI = [
-  "Hazır Giyim",
+  "Hazır Giyim (Satış)",
+  "Hazır Giyim (Üretim)",
   "Kumaş",
   "İplik",
   "Aksesuar",
