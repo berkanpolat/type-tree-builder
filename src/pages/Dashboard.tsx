@@ -100,7 +100,7 @@ const Dashboard = () => {
     },
     {
       title: "Bildirimler",
-      value: 0,
+      value: unreadNotifications,
       subtitle: "İşlem bekleyen",
       icon: Bell,
       color: "text-red-500",
