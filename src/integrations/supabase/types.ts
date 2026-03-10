@@ -1208,6 +1208,16 @@ export type Database = {
         Args: { p_user1: string; p_user2: string }
         Returns: string
       }
+      get_user_bid_ihale_ids: { Args: { _user_id: string }; Returns: string[] }
+      get_user_ihale_ids: { Args: { _user_id: string }; Returns: string[] }
+      has_bid_on_ihale: {
+        Args: { _ihale_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_ihale_owner: {
+        Args: { _ihale_id: string; _user_id: string }
+        Returns: boolean
+      }
       register_user: {
         Args: {
           p_ad: string
