@@ -1010,6 +1010,14 @@ export default function IhaleDetay() {
               )}
             </Card>
 
+            {/* Bildir button */}
+            {!isOwner && (
+              <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
+                <Flag className="w-4 h-4" />
+                İhaleyi Bildir
+              </Button>
+            )}
+
             {/* Teklifler Card */}
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
