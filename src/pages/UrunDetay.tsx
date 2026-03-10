@@ -371,7 +371,7 @@ export default function UrunDetay() {
                       selectedImageIndex === i ? "border-primary" : "border-border hover:border-primary/50"
                     }`}
                   >
-                    <img src={img} alt="" className="w-full h-full object-cover" />
+                    <img src={img} alt="" className="w-full h-full object-contain p-0.5" />
                   </button>
                 ))}
               </div>
@@ -655,7 +655,7 @@ export default function UrunDetay() {
                   <Card key={b.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer" onClick={() => navigate(`/urun/${b.id}`)}>
                     <div className="aspect-square bg-muted relative overflow-hidden">
                       {b.foto_url ? (
-                        <img src={b.foto_url} alt={b.baslik} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        <img src={b.foto_url} alt={b.baslik} className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center"><ImageIcon className="w-10 h-10 text-muted-foreground/40" /></div>
                       )}
@@ -725,7 +725,7 @@ export default function UrunDetay() {
                     selectedImageIndex === i ? "border-white" : "border-white/30 hover:border-white/60"
                   }`}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={img} alt="" className="w-full h-full object-contain p-0.5" />
                 </button>
               ))}
             </div>

@@ -45,7 +45,6 @@ const ODEME_SECENEKLERI_OPTIONS = [
 ];
 
 const ODEME_VADESI_OPTIONS = [
-  "Belirtmek İstemiyorum",
   "Vadesiz",
   "0-30 gün",
   "30-60 gün",
@@ -149,8 +148,8 @@ export default function TekIhale() {
   // Name map for category display
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
 
-  const isHizmetMode = filterIhaleTuru.length === 1 && filterIhaleTuru[0] === "hizmet_alim";
-  const isUrunMode = filterIhaleTuru.length > 0 && !filterIhaleTuru.includes("hizmet_alim");
+  const isHizmetMode = filterIhaleTuru.length > 0 && filterIhaleTuru.every(v => v === "hizmet_alim");
+  const isUrunMode = filterIhaleTuru.length > 0 && filterIhaleTuru.every(v => v === "urun_alis" || v === "urun_satis");
 
   // Fetch user firm info
   useEffect(() => {
@@ -362,8 +361,8 @@ export default function TekIhale() {
               ))}
             </FilterSection>
 
-            {/* Ürün kategorileri - show when NOT hizmet only */}
-            {!isHizmetMode && (
+            {/* Ürün kategorileri - show only when ürün türü selected */}
+            {isUrunMode && (
               <FilterSection title="Ürün Kategorisi" icon={Layers}>
                 {kategoriler.map((k) => (
                   <CheckboxFilter key={k.id} label={k.name} checked={filterKategori.includes(k.id)} onChange={() => toggleFilter(filterKategori, k.id, setFilterKategori)} />
@@ -387,8 +386,8 @@ export default function TekIhale() {
               </FilterSection>
             )}
 
-            {/* Hizmet kategorileri - show when hizmet selected or no ihale turu filter */}
-            {(isHizmetMode || filterIhaleTuru.length === 0) && hizmetKategoriler.length > 0 && (
+            {/* Hizmet kategorileri - show only when hizmet selected */}
+            {isHizmetMode && hizmetKategoriler.length > 0 && (
               <FilterSection title="Hizmet Kategorisi" icon={Layers}>
                 {hizmetKategoriler.map((k) => (
                   <CheckboxFilter key={k.id} label={k.name} checked={filterHizmetKategori.includes(k.id)} onChange={() => toggleFilter(filterHizmetKategori, k.id, setFilterHizmetKategori)} />
@@ -436,7 +435,7 @@ export default function TekIhale() {
                       {/* Image */}
                       <div className="w-[140px] h-[140px] rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                         {ihale.foto_url ? (
-                          <img src={ihale.foto_url} alt="" className="w-full h-full object-cover" />
+                          <img src={ihale.foto_url} alt="" className="w-full h-full object-contain" />
                         ) : (
                           <ImageIcon className="w-8 h-8 text-muted-foreground" />
                         )}
