@@ -63,6 +63,7 @@ const App = () => (
           <Route path="/giris-kayit" element={<GirisKayit />} />
           <Route path="/urun/:id" element={<UrunDetay />} />
           <Route path="/firma/:id" element={<FirmaDetay />} />
+          <Route path="/tekrehber" element={<TekRehber />} />
           <Route path="/ayarlar" element={<ProfilAyarlari />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

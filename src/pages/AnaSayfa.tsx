@@ -153,7 +153,6 @@ export default function AnaSayfa() {
   useEffect(() => {
     const state = location.state as { kategori?: string; kategoriId?: string; grupId?: string; turId?: string } | null;
     if (state?.kategori) {
-      setActiveTab("urunler");
       setSelectedKategori(state.kategori);
       setSelectedGrupId(state.grupId || null);
       setSelectedTurId(state.turId || null);
