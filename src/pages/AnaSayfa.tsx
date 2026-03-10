@@ -28,6 +28,7 @@ import {
   ArrowRight,
   ImageIcon,
   Heart,
+  Bookmark,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -1042,58 +1043,58 @@ export default function AnaSayfa() {
                   >
                     <div className="flex items-start gap-4">
                       {/* Logo */}
-                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
+                      <div className="w-[72px] h-[72px] rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
                         {firma.logo_url ? (
                           <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
                         ) : (
-                          <span className="text-lg font-bold text-muted-foreground">{firma.firma_unvani.charAt(0)}</span>
+                          <span className="text-xl font-bold text-muted-foreground">{firma.firma_unvani.charAt(0)}</span>
                         )}
                       </div>
 
-                      {/* Info */}
+                      {/* Middle: title + badges on top, 4 icons in 2x2 grid below */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 flex-wrap mb-1">
-                          <h3 className="font-semibold text-foreground text-lg">{firma.firma_unvani}</h3>
+                        {/* Row 1: Title + Badge */}
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <h3 className="font-semibold text-foreground text-lg leading-tight">{firma.firma_unvani}</h3>
+                          {(firma.firma_turu_name || firma.firma_tipi_name) && (
+                            <Badge className="bg-primary/10 text-primary border border-primary/20 text-xs font-medium">
+                              {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
+                            </Badge>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 flex-wrap mb-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {firma.firma_turu_name || ""}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {firma.firma_tipi_name || ""}
-                          </Badge>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <MapPin className="w-3.5 h-3.5 shrink-0" />
+
+                        {/* Row 2-3: 4 icons in 2-column grid */}
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-1 mt-2.5">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <MapPin className="w-4 h-4 shrink-0 text-muted-foreground/70" />
                             <span>
                               {firma.kurulus_il_id && secenekMap[firma.kurulus_il_id]
                                 ? `${secenekMap[firma.kurulus_il_id]}${firma.kurulus_ilce_id && secenekMap[firma.kurulus_ilce_id] ? `, ${secenekMap[firma.kurulus_ilce_id]}` : ""}`
                                 : "Bilinmiyor"}
                             </span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Users className="w-3.5 h-3.5 shrink-0" />
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Users className="w-4 h-4 shrink-0 text-muted-foreground/70" />
                             <span>{(firma.firma_olcegi_id && secenekMap[firma.firma_olcegi_id]) || "Bilinmiyor"}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <Globe className="w-3.5 h-3.5 shrink-0" />
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <Globe className="w-4 h-4 shrink-0 text-muted-foreground/70" />
                             <span>{firma.faaliyet_alani || "Bilinmiyor"}</span>
                           </div>
-                          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                            <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <CalendarDays className="w-4 h-4 shrink-0 text-muted-foreground/70" />
                             <span>{firma.kurulus_tarihi || "Bilinmiyor"}</span>
                           </div>
                         </div>
                       </div>
 
-                      {/* Actions */}
+                      {/* Right: Bookmark + Mesaj + Profili Gör */}
                       <div className="flex flex-col items-end gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)}
-                          className="p-2 hover:bg-muted rounded-md transition-colors"
+                          className="p-1"
                         >
-                          <Heart className={`w-5 h-5 ${firma.is_favorited ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+                          <Bookmark className={`w-6 h-6 ${firma.is_favorited ? "fill-primary text-primary" : "text-muted-foreground/50"}`} />
                         </button>
                         <Button
                           size="sm"
@@ -1103,14 +1104,12 @@ export default function AnaSayfa() {
                         >
                           <MessageSquare className="w-4 h-4" /> Mesaj
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="gap-1 text-sm text-muted-foreground hover:text-foreground"
+                        <button
+                          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                           onClick={() => navigate(`/firma/${firma.id}`)}
                         >
-                          Profili Gör <ArrowRight className="w-3.5 h-3.5" />
-                        </Button>
+                          <ArrowRight className="w-3 h-3" /> Profili Gör
+                        </button>
                       </div>
                     </div>
                   </Card>
