@@ -396,6 +396,14 @@ export default function Mesajlar() {
     return format(date, "dd MMM", { locale: tr });
   };
 
+  const handleDeleteMessage = async () => {
+    if (!deleteTarget || !currentUserId) return;
+    await supabase.from("messages").delete().eq("id", deleteTarget.id);
+    setMessages((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+    setDeleteTarget(null);
+    if (currentUserId) fetchConversations(currentUserId);
+  };
+
   const isImageFile = (name: string) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name);
 
   const renderMessageContent = (msg: Message, isMine: boolean) => {
