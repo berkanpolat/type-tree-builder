@@ -663,6 +663,24 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── GET IHALE DETAIL (for admin preview) ───
+    if (action === "get-ihale-detail") {
+      const { token, ihaleId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const { data: ihaleData, error } = await supabase
+        .from("ihaleler")
+        .select("*")
+        .eq("id", ihaleId)
+        .single();
+
+      if (error || !ihaleData) return jsonResponse({ error: "İhale bulunamadı" }, 404);
+      return jsonResponse({ ihale: ihaleData });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
