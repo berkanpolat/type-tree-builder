@@ -580,8 +580,9 @@ export default function FirmaDetay() {
       <PazarHeader firmaUnvani="" />
 
       {/* ===== HEADER / BANNER ===== */}
-      <div className="relative">
-        <div className="w-full h-[160px] md:h-[180px] bg-muted overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 mt-4">
+        {/* Banner */}
+        <div className="w-full h-[140px] md:h-[160px] bg-muted overflow-hidden rounded-t-xl">
           {firma.kapak_fotografi_url ? (
             <img src={firma.kapak_fotografi_url} alt="Kapak" className="w-full h-full object-cover" />
           ) : (
@@ -589,59 +590,58 @@ export default function FirmaDetay() {
           )}
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 -mt-10 md:-mt-12 relative z-10">
-          <div className="bg-card border border-border rounded-xl shadow-sm p-5">
-            <div className="flex flex-col md:flex-row items-start gap-4">
-              <div className="w-20 h-20 rounded-lg border border-border bg-background flex items-center justify-center overflow-hidden shrink-0">
-                {firma.logo_url ? (
-                  <img src={firma.logo_url} alt="Logo" className="w-full h-full object-contain p-1" />
-                ) : (
-                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                )}
-              </div>
+        {/* Header Card */}
+        <div className="bg-card border border-t-0 border-border rounded-b-xl shadow-sm p-5">
+          <div className="flex flex-col md:flex-row items-start gap-4">
+            <div className="w-20 h-20 rounded-lg border border-border bg-background flex items-center justify-center overflow-hidden shrink-0 -mt-14">
+              {firma.logo_url ? (
+                <img src={firma.logo_url} alt="Logo" className="w-full h-full object-contain p-1" />
+              ) : (
+                <ImageIcon className="w-8 h-8 text-muted-foreground" />
+              )}
+            </div>
 
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold text-foreground">{firma.firma_unvani}</h1>
-                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                  <Badge className="bg-secondary text-secondary-foreground text-xs">{firmaTuruName}</Badge>
-                  <Badge variant="outline" className="text-xs border-secondary text-secondary">{firmaTipiName}</Badge>
-                  <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                    <MapPin className="w-3.5 h-3.5" />
-                    {ilIlce}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 shrink-0">
-                <Button variant="outline" className="gap-1.5" onClick={toggleFavorite}>
-                  <Bookmark className={`w-4 h-4 ${isFavorited ? "fill-secondary text-secondary" : ""}`} />
-                  Kaydet
-                </Button>
-                <Button className="gap-1.5 bg-primary" onClick={handleMessage}>
-                  <MessageSquare className="w-4 h-4" />
-                  Mesaj
-                </Button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold text-foreground">{firma.firma_unvani}</h1>
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                <Badge className="bg-secondary text-secondary-foreground text-xs">{firmaTuruName}</Badge>
+                <Badge variant="outline" className="text-xs border-secondary text-secondary">{firmaTipiName}</Badge>
+                <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <MapPin className="w-3.5 h-3.5" />
+                  {ilIlce}
+                </span>
               </div>
             </div>
 
-            <Separator className="my-4" />
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Kuruluş</p>
-                <p className="text-sm font-semibold text-foreground mt-0.5">{kurulusYili}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Üretim Modeli</p>
-                <p className="text-sm font-semibold text-foreground mt-0.5">{uretimModeli}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Şirket Ölçeği</p>
-                <p className="text-sm font-semibold text-foreground mt-0.5">{resolve(firma.firma_olcegi_id)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Faaliyet Alanı</p>
-                <p className="text-sm font-semibold text-foreground mt-0.5">{faaliyetAlani}</p>
-              </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="outline" className="gap-1.5" onClick={toggleFavorite}>
+                <Bookmark className={`w-4 h-4 ${isFavorited ? "fill-secondary text-secondary" : ""}`} />
+                Kaydet
+              </Button>
+              <Button className="gap-1.5 bg-primary" onClick={handleMessage}>
+                <MessageSquare className="w-4 h-4" />
+                Mesaj
+              </Button>
+            </div>
+          </div>
+
+          <Separator className="my-4" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Kuruluş</p>
+              <p className="text-sm font-semibold text-foreground mt-0.5">{kurulusYili}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Üretim Modeli</p>
+              <p className="text-sm font-semibold text-foreground mt-0.5">{uretimModeli}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Şirket Ölçeği</p>
+              <p className="text-sm font-semibold text-foreground mt-0.5">{resolve(firma.firma_olcegi_id)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Faaliyet Alanı</p>
+              <p className="text-sm font-semibold text-foreground mt-0.5">{faaliyetAlani}</p>
             </div>
           </div>
         </div>
