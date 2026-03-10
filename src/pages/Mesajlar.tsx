@@ -19,6 +19,7 @@ interface Conversation {
   firma_unvani: string;
   logo_url: string | null;
   last_message?: string;
+  last_message_sender_id?: string;
   unread_count: number;
 }
 
