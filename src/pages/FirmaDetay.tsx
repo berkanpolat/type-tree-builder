@@ -342,7 +342,7 @@ export default function FirmaDetay() {
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30">
-        <PazarHeader />
+        <PazarHeader firmaUnvani="" />
         <div className="flex items-center justify-center h-96">
           <p className="text-muted-foreground">Yükleniyor...</p>
         </div>
