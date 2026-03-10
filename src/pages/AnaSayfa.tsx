@@ -105,7 +105,7 @@ const paraBirimiSymbol: Record<string, string> = {
 export default function AnaSayfa() {
   const navigate = useNavigate();
   const [firmaUnvani, setFirmaUnvani] = useState("");
-  const [authLoading, setAuthLoading] = useState(true);
+  const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
   useEffect(() => {
