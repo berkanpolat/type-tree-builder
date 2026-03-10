@@ -50,6 +50,29 @@ function DropdownField({ label, kategoriName, value, onChange }: { label: string
   );
 }
 
+function DependentDropdownField({ label, parentId, value, onChange, disabled }: { label: string; parentId: string | null; value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const { data: options } = useQuery({
+    queryKey: ["dependent_options", parentId],
+    queryFn: async () => {
+      if (!parentId) return [];
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", parentId).order("name");
+      return data || [];
+    },
+    enabled: !!parentId,
+  });
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <Select value={value || ""} onValueChange={onChange} disabled={disabled || !parentId}>
+        <SelectTrigger><SelectValue placeholder={parentId ? `${label} seçiniz` : "Önce grup seçiniz"} /></SelectTrigger>
+        <SelectContent className="bg-popover z-50">
+          {(options || []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
 function TextField({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div className="space-y-2">
