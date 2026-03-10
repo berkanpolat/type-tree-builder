@@ -43,7 +43,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
   const { data: odemeVadesiOptions } = useKategoriSecenekler("Ödeme Vadeleri");
   const { data: kargoMasrafiOptions } = useKategoriSecenekler("Kargo Masrafı Ödemesi");
   const { data: kargoSirketiOptions } = useKategoriSecenekler("Kargo Şirketi Anlaşması");
-  const { data: teslimatYeriOptions } = useKategoriSecenekler("Teslimat Yeri");
+  // Teslimat yeri is now a free-text field, no dropdown needed
 
   // Fetch firma türleri, tipleri, ölçekleri for filtering
   const { data: firmaTurleri } = useQuery({
