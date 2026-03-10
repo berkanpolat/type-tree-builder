@@ -499,7 +499,7 @@ export default function Mesajlar() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
-                      <p className={`text-xs truncate ${
+                      <p className={`text-xs truncate max-w-[160px] ${
                         conv.unread_count > 0 && conv.last_message_sender_id !== currentUserId
                           ? "text-foreground font-semibold"
                           : "text-muted-foreground"
