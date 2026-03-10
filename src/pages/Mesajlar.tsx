@@ -4,7 +4,17 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Send, Building2, Paperclip, X, FileText, Image as ImageIcon, Download } from "lucide-react";
+import { Search, Send, Building2, Paperclip, X, FileText, Image as ImageIcon, Download, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
