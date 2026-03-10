@@ -1000,6 +1000,7 @@ export default function FirmaDetay() {
         </div>
 
       </div>
+      <Footer />
     </div>
   );
 }
