@@ -281,6 +281,16 @@ export default function IhaleDetay() {
     setIhaleFiltreler(filtreData);
     filtreData.forEach(f => idsToResolve.push(f.secenek_id));
 
+    // Collect UUID values from teknik_detaylar for resolving
+    const teknikData = (ihaleData.teknik_detaylar as Record<string, any>) || {};
+    const teknikUUIDs: string[] = [];
+    Object.values(teknikData).forEach(val => {
+      if (typeof val === "string" && isUUID(val)) teknikUUIDs.push(val);
+    });
+
+    // Add teknik UUIDs to resolve list
+    teknikUUIDs.forEach(uid => idsToResolve.push(uid));
+
     // Resolve names
     if (idsToResolve.length > 0) {
       const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...new Set(idsToResolve)]);
@@ -293,7 +303,25 @@ export default function IhaleDetay() {
         if (ihaleData.urun_tur_id) setBreadcrumbTur(map[ihaleData.urun_tur_id] || "");
         if (ihaleData.hizmet_kategori_id) setBreadcrumbKategori(map[ihaleData.hizmet_kategori_id] || "");
         if (ihaleData.hizmet_tur_id) setBreadcrumbGrup(map[ihaleData.hizmet_tur_id] || "");
+
+        // Resolve teknik detaylar values
+        const resolved: Record<string, string> = {};
+        Object.entries(teknikData).forEach(([key, val]) => {
+          if (typeof val === "string" && isUUID(val)) {
+            resolved[key] = map[val] || String(val);
+          } else {
+            resolved[key] = val ? String(val) : "";
+          }
+        });
+        setResolvedTeknikDetaylar(resolved);
       }
+    } else {
+      // No UUIDs to resolve, just use raw values
+      const resolved: Record<string, string> = {};
+      Object.entries(teknikData).forEach(([key, val]) => {
+        resolved[key] = val ? String(val) : "";
+      });
+      setResolvedTeknikDetaylar(resolved);
     }
 
     // Teklifler
