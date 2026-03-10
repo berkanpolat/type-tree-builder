@@ -354,7 +354,7 @@ export default function FirmaDetay() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <PazarHeader />
+      <PazarHeader firmaUnvani="" />
 
       {/* ===== HEADER / BANNER ===== */}
       <div className="relative">
