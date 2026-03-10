@@ -30,6 +30,7 @@ import TekRehber from "./pages/TekRehber";
 import Hakkimizda from "./pages/Hakkimizda";
 import Iletisim from "./pages/Iletisim";
 import UreticiTedarikciKesfi from "./pages/UreticiTedarikciKesfi";
+import TekIhaleTanitim from "./pages/TekIhaleTanitim";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
