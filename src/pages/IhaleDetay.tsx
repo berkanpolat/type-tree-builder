@@ -70,7 +70,6 @@ import {
 } from "react-icons/si";
 import { FaLinkedinIn } from "react-icons/fa";
 import { RiTwitterXFill } from "react-icons/ri";
-import { RiTwitterXFill } from "react-icons/ri";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
