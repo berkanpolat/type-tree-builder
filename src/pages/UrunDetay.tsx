@@ -190,7 +190,7 @@ export default function UrunDetay() {
       .single();
     setFirma(firmaData);
 
-    // Resolve location names
+    // Resolve location names + teknik detaylar UUIDs
     const idsToResolve: string[] = [];
     if (firmaData?.kurulus_il_id) idsToResolve.push(firmaData.kurulus_il_id);
     if (firmaData?.kurulus_ilce_id) idsToResolve.push(firmaData.kurulus_ilce_id);
@@ -198,8 +198,13 @@ export default function UrunDetay() {
     if (urunData.urun_grup_id) idsToResolve.push(urunData.urun_grup_id);
     if (urunData.urun_tur_id) idsToResolve.push(urunData.urun_tur_id);
 
+    const teknikData = (urunData.teknik_detaylar as Record<string, any>) || {};
+    Object.values(teknikData).forEach(val => {
+      if (typeof val === "string" && isUUID(val)) idsToResolve.push(val);
+    });
+
     if (idsToResolve.length > 0) {
-      const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", idsToResolve);
+      const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...new Set(idsToResolve)]);
       if (names) {
         const map: Record<string, string> = {};
         names.forEach(n => { map[n.id] = n.name; });
@@ -207,7 +212,20 @@ export default function UrunDetay() {
         if (urunData.urun_kategori_id) setBreadcrumbKategori(map[urunData.urun_kategori_id] || "");
         if (urunData.urun_grup_id) setBreadcrumbGrup(map[urunData.urun_grup_id] || "");
         if (urunData.urun_tur_id) setBreadcrumbTur(map[urunData.urun_tur_id] || "");
+
+        const resolved: Record<string, string> = {};
+        Object.entries(teknikData).forEach(([key, val]) => {
+          if (typeof val === "string" && isUUID(val)) resolved[key] = map[val] || String(val);
+          else resolved[key] = val ? String(val) : "";
+        });
+        setResolvedTeknikDetaylar(resolved);
       }
+    } else {
+      const resolved: Record<string, string> = {};
+      Object.entries(teknikData).forEach(([key, val]) => {
+        resolved[key] = val ? String(val) : "";
+      });
+      setResolvedTeknikDetaylar(resolved);
     }
 
     // Favorite check
