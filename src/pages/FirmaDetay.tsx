@@ -820,6 +820,59 @@ export default function FirmaDetay() {
               </CollapsibleBlock>
             </div>
 
+            {/* Galeri */}
+            <div ref={el => { sectionRefs.current["galeri"] = el; }}>
+              <CollapsibleBlock title="Galeri" maxHeight={300}>
+                {galeri.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {galeri.map(g => (
+                      <div key={g.id} className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                        <img src={g.foto_url} alt={g.foto_adi || "Galeri"} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Henüz galeri fotoğrafı eklenmemiştir.</p>
+                )}
+              </CollapsibleBlock>
+            </div>
+
+            {/* Ürünler */}
+            <div ref={el => { sectionRefs.current["urunler"] = el; }}>
+              <Card className="p-6">
+                <h2 className="text-lg font-bold text-foreground mb-4">Ürünler</h2>
+                {urunler.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {urunler.map(u => (
+                      <Link
+                        key={u.id}
+                        to={`/urun/${u.id}`}
+                        className="group border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-background"
+                      >
+                        <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                          {u.foto_url ? (
+                            <img src={u.foto_url} alt={u.baslik} className="w-full h-full object-contain" />
+                          ) : (
+                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="p-2.5">
+                          <p className="text-xs font-medium text-foreground truncate">{u.baslik}</p>
+                          {u.fiyat != null && (
+                            <p className="text-xs font-bold text-secondary mt-0.5">
+                              {paraBirimiSymbol[u.para_birimi || "TRY"]}{u.fiyat.toLocaleString("tr-TR")}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Henüz ürün eklenmemiştir.</p>
+                )}
+              </Card>
+            </div>
+
           </div>
 
           {/* RIGHT COLUMN (1/3) */}
