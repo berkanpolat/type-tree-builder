@@ -538,9 +538,28 @@ export default function Mesajlar() {
                     <Building2 className="w-4 h-4 text-muted-foreground" />
                   )}
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="font-semibold text-foreground text-sm">{selectedConv.firma_unvani}</p>
                   <p className="text-xs text-emerald-500">Çevrimiçi</p>
+                </div>
+                <div className="flex items-center gap-1 ml-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1.5 rounded-full hover:bg-muted transition-colors">
+                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setBildirOpen(true)} className="gap-2 text-foreground">
+                        <Flag className="w-4 h-4" />
+                        Bildir
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeleteConvTarget(selectedConv)} className="gap-2 text-destructive focus:text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                        Sohbeti Sil
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
 
