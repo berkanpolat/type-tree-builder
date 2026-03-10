@@ -387,7 +387,7 @@ export default function AdminFirmalar() {
           <span>{filtered.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}</span>
           <span>Sayfa {safePage} / {totalPages}</span>
         </div>
-          {filtered.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}
+        </div>
         </div>
 
         {/* Firma List */}
