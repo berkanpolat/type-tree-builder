@@ -221,7 +221,7 @@ export default function TekIhale() {
   // Fetch ürün kategorileri
   useEffect(() => {
     (async () => {
-      const { data: katData } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "Ürün Kategorisi").maybeSingle();
+      const { data: katData } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "Ana Ürün Kategorileri").maybeSingle();
       if (!katData) return;
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", katData.id).is("parent_id", null).order("name");
       if (data) setKategoriler(data);
@@ -231,7 +231,7 @@ export default function TekIhale() {
   // Fetch hizmet kategorileri
   useEffect(() => {
     (async () => {
-      const { data: katData } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "Ana Hizmetler").maybeSingle();
+      const { data: katData } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "Ana Hizmet Kategorileri").maybeSingle();
       if (!katData) return;
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", katData.id).is("parent_id", null).order("name");
       if (data) setHizmetKategoriler(data);
