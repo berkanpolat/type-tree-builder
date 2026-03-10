@@ -322,13 +322,10 @@ export default function YeniIhale() {
     setSaving(false);
   };
 
-  const handlePublish = async () => {
+  const handlePreview = async () => {
     await handleSave();
     if (!ihaleId) return;
-
-    await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihaleId);
-    toast({ title: "İhale onaya gönderildi" });
-    navigate("/manuihale");
+    navigate(`/tekihale/${ihaleId}`);
   };
 
   if (loadingEdit) {
