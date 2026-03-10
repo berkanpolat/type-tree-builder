@@ -94,4 +94,9 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+
+  img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
 }
