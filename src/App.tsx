@@ -14,6 +14,7 @@ import GirisKayit from "./pages/GirisKayit";
 import FirmaBilgilerim from "./pages/FirmaBilgilerim";
 import ManuIhale from "./pages/ManuIhale";
 import YeniIhale from "./pages/YeniIhale";
+import TekIhale from "./pages/TekIhale";
 import Tekliflerim from "./pages/Tekliflerim";
 import ManuPazar from "./pages/ManuPazar";
 import YeniUrun from "./pages/YeniUrun";
