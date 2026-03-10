@@ -27,7 +27,6 @@ import {
   MessageSquare,
   ArrowRight,
   ImageIcon,
-  Bookmark,
   Heart,
   ChevronDown,
   ChevronLeft,
@@ -96,6 +95,14 @@ interface FirmaListItem {
   web_sitesi: string | null;
   kurulus_tarihi: string | null;
   moq: number | null;
+  user_id: string;
+}
+
+interface FirmaWithExtra extends FirmaListItem {
+  firma_turu_name?: string;
+  firma_tipi_name?: string;
+  faaliyet_alani?: string;
+  is_favorited?: boolean;
 }
 
 const paraBirimiSymbol: Record<string, string> = {
@@ -151,12 +158,13 @@ export default function AnaSayfa() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Firma state
-  const [firmalar, setFirmalar] = useState<FirmaListItem[]>([]);
+  const [firmalar, setFirmalar] = useState<FirmaWithExtra[]>([]);
   const [firmaLoading, setFirmaLoading] = useState(false);
   const [firmaTurleri, setFirmaTurleri] = useState<{ id: string; name: string }[]>([]);
   const [selectedFirmaTuru, setSelectedFirmaTuru] = useState<string>("");
   const [selectedFirmaTuruName, setSelectedFirmaTuruName] = useState<string>("");
   const [firmaFilterState, setFirmaFilterState] = useState<FirmaFilterState | null>(null);
+  const [firmaFavSet, setFirmaFavSet] = useState<Set<string>>(new Set());
 
   // Name maps
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
@@ -467,7 +475,7 @@ export default function AnaSayfa() {
 
     // Step 2: Build main query
     let query = supabase.from("firmalar")
-      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq")
+      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id")
       .order("firma_unvani").limit(100);
 
     if (selectedFirmaTuru) query = query.eq("firma_turu_id", selectedFirmaTuru);
@@ -487,7 +495,7 @@ export default function AnaSayfa() {
 
     const { data } = await query;
     if (data) {
-      setFirmalar(data);
+      // Resolve all IDs (secenek names)
       const ids = new Set<string>();
       data.forEach((f) => {
         if (f.firma_tipi_id) ids.add(f.firma_tipi_id);
@@ -496,27 +504,70 @@ export default function AnaSayfa() {
         if (f.kurulus_ilce_id) ids.add(f.kurulus_ilce_id);
       });
       const allIds = [...ids];
+      let newSecenekMap = { ...secenekMap };
       if (allIds.length > 0) {
         const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", allIds);
-        if (names) {
-          const map: Record<string, string> = { ...secenekMap };
-          names.forEach((n) => { map[n.id] = n.name; });
-          setSecenekMap(map);
+        if (names) names.forEach((n) => { newSecenekMap[n.id] = n.name; });
+      }
+
+      // Firma tipleri names
+      const tipIds = [...new Set(data.map((f) => f.firma_tipi_id))];
+      if (tipIds.length > 0) {
+        const { data: tipNames } = await supabase.from("firma_tipleri").select("id, name").in("id", tipIds);
+        if (tipNames) tipNames.forEach((n) => { newSecenekMap[n.id] = n.name; });
+      }
+
+      // Firma türü names map
+      const turNameMap: Record<string, string> = {};
+      firmaTurleri.forEach((t) => { turNameMap[t.id] = t.name; });
+
+      // Fetch faaliyet alanı for listed firms
+      const firmaIds = data.map((f) => f.id);
+      const faaliyetMap: Record<string, string> = {};
+      if (firmaIds.length > 0) {
+        const { data: faaliyetData } = await supabase
+          .from("firma_urun_hizmet_secimler")
+          .select("firma_id, secenek_id")
+          .in("firma_id", firmaIds);
+        if (faaliyetData && faaliyetData.length > 0) {
+          const faaliyetSecIds = [...new Set(faaliyetData.map((f) => f.secenek_id))];
+          const { data: faaliyetNames } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", faaliyetSecIds);
+          const fNameMap: Record<string, string> = {};
+          if (faaliyetNames) faaliyetNames.forEach((n) => { fNameMap[n.id] = n.name; });
+          // Take first faaliyet per firma
+          const seen = new Set<string>();
+          faaliyetData.forEach((f) => {
+            if (!seen.has(f.firma_id) && fNameMap[f.secenek_id]) {
+              faaliyetMap[f.firma_id] = fNameMap[f.secenek_id];
+              seen.add(f.firma_id);
+            }
+          });
         }
       }
-      const tipIds = new Set<string>();
-      data.forEach((f) => tipIds.add(f.firma_tipi_id));
-      if (tipIds.size > 0) {
-        const { data: tipNames } = await supabase.from("firma_tipleri").select("id, name").in("id", Array.from(tipIds));
-        if (tipNames) {
-          const map: Record<string, string> = { ...secenekMap };
-          tipNames.forEach((n) => { map[n.id] = n.name; });
-          setSecenekMap(map);
-        }
+
+      // Fetch firma favorites
+      let favSet = new Set<string>();
+      if (currentUserId) {
+        const { data: favs } = await supabase.from("firma_favoriler").select("firma_id").eq("user_id", currentUserId);
+        if (favs) favs.forEach((f) => favSet.add(f.firma_id));
       }
+      setFirmaFavSet(favSet);
+
+      setSecenekMap(newSecenekMap);
+
+      // Enrich firmalar
+      const enriched: FirmaWithExtra[] = data.map((f) => ({
+        ...f,
+        firma_turu_name: turNameMap[f.firma_turu_id] || "",
+        firma_tipi_name: newSecenekMap[f.firma_tipi_id] || "",
+        faaliyet_alani: faaliyetMap[f.id] || "",
+        is_favorited: favSet.has(f.id),
+      }));
+
+      setFirmalar(enriched);
     }
     setFirmaLoading(false);
-  }, [selectedFirmaTuru, firmaFilterState, activeFilter, activeTab]);
+  }, [selectedFirmaTuru, firmaFilterState, activeFilter, activeTab, firmaTurleri, currentUserId]);
 
   useEffect(() => {
     if (activeTab === "urunler") fetchUrunler();
@@ -627,6 +678,26 @@ export default function AnaSayfa() {
       await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: urunId });
     }
     setAllUrunler((prev) => prev.map((u) => u.id === urunId ? { ...u, is_favorited: !isFav } : u));
+  };
+
+  const toggleFirmaFavorite = async (firmaId: string, isFav: boolean) => {
+    if (!currentUserId) return;
+    if (isFav) {
+      await supabase.from("firma_favoriler").delete().eq("user_id", currentUserId).eq("firma_id", firmaId);
+    } else {
+      await supabase.from("firma_favoriler").insert({ user_id: currentUserId, firma_id: firmaId });
+    }
+    setFirmaFavSet((prev) => {
+      const next = new Set(prev);
+      if (isFav) next.delete(firmaId); else next.add(firmaId);
+      return next;
+    });
+    setFirmalar((prev) => prev.map((f) => f.id === firmaId ? { ...f, is_favorited: !isFav } : f));
+  };
+
+  const handleMessageFirma = async (firmaUserId: string) => {
+    if (!currentUserId || firmaUserId === currentUserId) return;
+    navigate("/mesajlar", { state: { targetUserId: firmaUserId } });
   };
 
   if (authLoading) {
@@ -962,9 +1033,15 @@ export default function AnaSayfa() {
                   Henüz kayıtlı firma bulunmamaktadır.
                 </div>
               ) : (
-                firmalar.map((firma) => (
-                  <Card key={firma.id} className="p-5 hover:shadow-md transition-shadow">
+                <div className="space-y-3">
+                {firmalar.map((firma) => (
+                  <Card
+                    key={firma.id}
+                    className="p-5 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => navigate(`/firma/${firma.id}`)}
+                  >
                     <div className="flex items-start gap-4">
+                      {/* Logo */}
                       <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
                         {firma.logo_url ? (
                           <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
@@ -972,57 +1049,80 @@ export default function AnaSayfa() {
                           <span className="text-lg font-bold text-muted-foreground">{firma.firma_unvani.charAt(0)}</span>
                         )}
                       </div>
+
+                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 flex-wrap mb-1">
                           <h3 className="font-semibold text-foreground text-lg">{firma.firma_unvani}</h3>
-                          <Badge className="bg-secondary/10 text-secondary border-secondary/30 text-xs">
-                            {secenekMap[firma.firma_tipi_id] || ""}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <Badge variant="secondary" className="text-xs">
+                            {firma.firma_turu_name || ""}
+                          </Badge>
+                          <Badge variant="outline" className="text-xs">
+                            {firma.firma_tipi_name || ""}
                           </Badge>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mt-2">
+                        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
                           {(firma.kurulus_il_id || firma.kurulus_ilce_id) && (
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <MapPin className="w-3.5 h-3.5" />
+                              <MapPin className="w-3.5 h-3.5 shrink-0" />
                               <span>
                                 {firma.kurulus_il_id ? secenekMap[firma.kurulus_il_id] || "" : ""}
                                 {firma.kurulus_ilce_id ? `, ${secenekMap[firma.kurulus_ilce_id] || ""}` : ""}
                               </span>
                             </div>
                           )}
-                          {firma.firma_olcegi_id && (
+                          {firma.firma_olcegi_id && secenekMap[firma.firma_olcegi_id] && (
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Users className="w-3.5 h-3.5" />
-                              <span>{secenekMap[firma.firma_olcegi_id] || ""}</span>
+                              <Users className="w-3.5 h-3.5 shrink-0" />
+                              <span>{secenekMap[firma.firma_olcegi_id]}</span>
                             </div>
                           )}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 mt-1">
-                          {firma.web_sitesi && (
+                          {firma.faaliyet_alani && (
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Globe className="w-3.5 h-3.5" />
+                              <Globe className="w-3.5 h-3.5 shrink-0" />
+                              <span>{firma.faaliyet_alani}</span>
                             </div>
                           )}
                           {firma.kurulus_tarihi && (
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <CalendarDays className="w-3.5 h-3.5" />
+                              <CalendarDays className="w-3.5 h-3.5 shrink-0" />
+                              <span>{firma.kurulus_tarihi}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        <button className="p-2 hover:bg-muted rounded-md transition-colors">
-                          <Bookmark className="w-5 h-5 text-muted-foreground" />
+
+                      {/* Actions */}
+                      <div className="flex flex-col items-end gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)}
+                          className="p-2 hover:bg-muted rounded-md transition-colors"
+                        >
+                          <Heart className={`w-5 h-5 ${firma.is_favorited ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
                         </button>
-                        <Button size="sm" variant="outline" className="gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="gap-2"
+                          onClick={() => handleMessageFirma(firma.user_id)}
+                        >
                           <MessageSquare className="w-4 h-4" /> Mesaj
                         </Button>
-                        <button className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1">
-                          <ArrowRight className="w-3.5 h-3.5" /> Profili Gör
-                        </button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="gap-1 text-sm text-muted-foreground hover:text-foreground"
+                          onClick={() => navigate(`/firma/${firma.id}`)}
+                        >
+                          Profili Gör <ArrowRight className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
                     </div>
                   </Card>
-                ))
+                ))}
+                </div>
               )}
             </div>
           </div>
