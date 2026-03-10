@@ -13,9 +13,10 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  Globe,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -81,12 +82,23 @@ export function AppSidebar() {
 
       {/* Logo */}
       <div className="px-4 pt-2 pb-3 flex items-center gap-2">
-        {!collapsed ? (
-          <img src={logoImg} alt="Tekstil A.Ş." className="h-8 object-contain" />
-        ) : (
-          <div className="w-7 h-7 rounded-full overflow-hidden">
-            <img src={logoImg} alt="Tekstil A.Ş." className="h-full object-contain" />
-          </div>
+        <Link to="/anasayfa" className="flex items-center gap-2">
+          {!collapsed ? (
+            <img src={logoImg} alt="Tekstil A.Ş." className="h-8 object-contain" />
+          ) : (
+            <div className="w-7 h-7 rounded-full overflow-hidden">
+              <img src={logoImg} alt="Tekstil A.Ş." className="h-full object-contain" />
+            </div>
+          )}
+        </Link>
+        {!collapsed && (
+          <Link
+            to="/anasayfa"
+            className="ml-auto p-1.5 rounded-md hover:bg-sidebar-accent transition-colors"
+            title="Ana Sayfaya Git"
+          >
+            <Globe className="w-4 h-4 text-sidebar-foreground/60" />
+          </Link>
         )}
       </div>
 
