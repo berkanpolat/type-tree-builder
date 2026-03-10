@@ -605,12 +605,10 @@ export default function AnaSayfa() {
     setSelectedTurId(turId || null);
   };
 
-  const toggleFirmaTipi = (id: string) => {
-    setSelectedFirmaTipleri((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-  };
-
-  const toggleOlcek = (id: string) => {
-    setSelectedOlcekler((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  const handleFirmaTuruChange = (value: string) => {
+    setSelectedFirmaTuru(value);
+    const turName = firmaTurleri.find((t) => t.id === value)?.name || "";
+    setSelectedFirmaTuruName(turName);
   };
 
   const toggleFavorite = async (urunId: string, isFav: boolean) => {
