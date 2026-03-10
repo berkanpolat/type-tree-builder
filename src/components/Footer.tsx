@@ -74,19 +74,13 @@ export default function Footer() {
             <h4 className="text-secondary font-bold text-sm mb-4">Modüller</h4>
             <ul className="space-y-2.5">
               <li>
-                <Link to="/anasayfa" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  Üretici &amp; tedarikçi keşfi
-                </Link>
+                <FooterLink to="/anasayfa">Üretici &amp; tedarikçi keşfi</FooterLink>
               </li>
               <li>
-                <Link to="/tekihale" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  TekIhale – Teklif alma &amp; verme sistemi
-                </Link>
+                <FooterLink to="/tekihale">TekIhale – Teklif alma &amp; verme sistemi</FooterLink>
               </li>
               <li>
-                <Link to="/anasayfa" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  TekPazar – B2B ürün listeleme
-                </Link>
+                <FooterLink to="/anasayfa">TekPazar – B2B ürün listeleme</FooterLink>
               </li>
             </ul>
           </div>
