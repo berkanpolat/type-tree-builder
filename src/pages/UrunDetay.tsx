@@ -556,6 +556,24 @@ export default function UrunDetay() {
                 </div>
               )}
 
+              {/* Renk Seçenekleri */}
+              {(() => {
+                const uniqueColors = [...new Set(varyasyonlar.filter(v => v.varyant_2_value).map(v => v.varyant_2_value!))];
+                if (uniqueColors.length === 0) return null;
+                return (
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-foreground mb-2">Renk Seçenekleri</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {uniqueColors.map(color => (
+                        <Badge key={color} variant="outline" className="px-3 py-1.5 text-sm font-normal">
+                          {color}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
               <Button
                 onClick={handleSaticiyaSor}
                 className="w-full h-12 gap-2 text-base"
