@@ -566,6 +566,8 @@ export default function FirmaDetay() {
 
   const uretimGrouped = buildUretimSatisGrouped("uretim");
   const satisGrouped = buildUretimSatisGrouped("satis");
+  const hasUretimData = Object.keys(uretimGrouped).length > 0;
+  const hasSatisData = Object.keys(satisGrouped).length > 0;
 
   if (loading) {
     return (
