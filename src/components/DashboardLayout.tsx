@@ -3,6 +3,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Bell } from "lucide-react";
 import { useNotificationCount } from "@/hooks/use-notifications";
+import HeaderMessagePanel from "@/components/header/HeaderMessagePanel";
+import HeaderFavoritesPanel from "@/components/header/HeaderFavoritesPanel";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -23,7 +25,9 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
             {title && (
               <h1 className="text-lg font-bold text-foreground">{title}</h1>
             )}
-            <div className="ml-auto flex items-center gap-2">
+            <div className="ml-auto flex items-center gap-1">
+              <HeaderFavoritesPanel />
+              <HeaderMessagePanel />
               <button
                 onClick={() => navigate("/bildirimler")}
                 className="relative p-2 rounded-lg hover:bg-muted transition-colors"
