@@ -373,28 +373,18 @@ Deno.serve(async (req) => {
       const payload = verifyToken(token);
       if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
 
-      // Generate a magic link or create a session for the user
-      // Using generateLink to create a magic link
-      const { data, error } = await supabase.auth.admin.generateLink({
-        type: "magiclink",
-        email: "",
-      });
-
-      // Alternative: get user and generate a custom token
       const { data: { user: targetUser } } = await supabase.auth.admin.getUserById(userId);
-      if (!targetUser) return jsonResponse({ error: "Kullanıcı bulunamadı" }, 404);
+      if (!targetUser || !targetUser.email) return jsonResponse({ error: "Kullanıcı bulunamadı" }, 404);
 
-      // Generate magic link for this user
       const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
         type: "magiclink",
-        email: targetUser.email!,
+        email: targetUser.email,
       });
 
       if (linkError) return jsonResponse({ error: linkError.message }, 400);
 
       return jsonResponse({
         success: true,
-        // Return the hashed token so the frontend can use it to sign in
         access_token: linkData.properties?.access_token,
         refresh_token: linkData.properties?.refresh_token,
       });
