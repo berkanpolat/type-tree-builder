@@ -28,7 +28,7 @@ export default function GizlilikKosullari() {
     <div className="min-h-screen flex flex-col bg-background">
       {isLoggedIn && <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />}
       <div className="max-w-4xl mx-auto px-6 py-12 md:py-16 flex-1 w-full">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">TEKSTİLAS GİZLİLİK KOŞULLARI</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">MANUFIXO GİZLİLİK KOŞULLARI</h1>
         <p className="text-sm text-muted-foreground mb-10">Son Güncelleme Tarihi: 16/01/2026</p>
 
         <div className="prose prose-sm max-w-none text-foreground space-y-8">
