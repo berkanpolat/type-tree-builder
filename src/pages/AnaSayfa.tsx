@@ -135,7 +135,7 @@ export default function AnaSayfa() {
     check();
   }, [navigate]);
 
-  const [activeTab, setActiveTab] = useState<"urunler" | "firma">("firma");
+  const [activeTab] = useState<"urunler">("urunler");
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
