@@ -21,7 +21,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
           <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
             {children}
           </main>
-          <Footer />
+          
         </div>
       </div>
     </SidebarProvider>
