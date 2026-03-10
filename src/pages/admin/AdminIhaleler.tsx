@@ -141,16 +141,17 @@ export default function AdminIhaleler() {
   const [selectedHizmetKategorileri, setSelectedHizmetKategorileri] = useState<string[]>([]);
   const [selectedHizmetTurleri, setSelectedHizmetTurleri] = useState<string[]>([]);
 
-  // Category options for filters
+  // Raw category data for hierarchical filtering
+  const [allUrunSecenekler, setAllUrunSecenekler] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
+  const [allHizmetSecenekler, setAllHizmetSecenekler] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
+
+  // Category options for filters (computed)
   const [categoryOptions, setCategoryOptions] = useState<{
     urunKategorileri: { id: string; name: string }[];
-    urunGruplari: { id: string; name: string }[];
-    urunTurleri: { id: string; name: string }[];
     hizmetKategorileri: { id: string; name: string }[];
-    hizmetTurleri: { id: string; name: string }[];
   }>({
-    urunKategorileri: [], urunGruplari: [], urunTurleri: [],
-    hizmetKategorileri: [], hizmetTurleri: [],
+    urunKategorileri: [],
+    hizmetKategorileri: [],
   });
 
   // Sorting
@@ -170,6 +171,40 @@ export default function AdminIhaleler() {
     return data;
   }, []);
 
+  // Derived: filtered urun groups based on selected categories
+  const filteredUrunGruplari = allUrunSecenekler.filter(o =>
+    o.parent_id && (selectedUrunKategorileri.length === 0
+      ? allUrunSecenekler.filter(r => !r.parent_id).some(r => r.id === o.parent_id)
+      : selectedUrunKategorileri.includes(o.parent_id))
+  );
+
+  // Derived: filtered urun types based on selected groups
+  const filteredUrunTurleri = allUrunSecenekler.filter(o =>
+    o.parent_id && (selectedUrunGruplari.length === 0
+      ? filteredUrunGruplari.some(g => g.id === o.parent_id)
+      : selectedUrunGruplari.includes(o.parent_id))
+  );
+
+  // Derived: filtered hizmet types based on selected hizmet categories
+  const filteredHizmetTurleri = allHizmetSecenekler.filter(o =>
+    o.parent_id && (selectedHizmetKategorileri.length === 0
+      ? allHizmetSecenekler.filter(r => !r.parent_id).some(r => r.id === o.parent_id)
+      : selectedHizmetKategorileri.includes(o.parent_id))
+  );
+
+  // Clear child selections when parent changes
+  useEffect(() => {
+    setSelectedUrunGruplari(prev => prev.filter(id => filteredUrunGruplari.some(g => g.id === id)));
+  }, [selectedUrunKategorileri]);
+
+  useEffect(() => {
+    setSelectedUrunTurleri(prev => prev.filter(id => filteredUrunTurleri.some(t => t.id === id)));
+  }, [selectedUrunGruplari, selectedUrunKategorileri]);
+
+  useEffect(() => {
+    setSelectedHizmetTurleri(prev => prev.filter(id => filteredHizmetTurleri.some(t => t.id === id)));
+  }, [selectedHizmetKategorileri]);
+
   // Fetch category options for filters
   const fetchCategoryOptions = useCallback(async () => {
     try {
@@ -188,14 +223,11 @@ export default function AdminIhaleler() {
           .select("id, name, parent_id")
           .eq("kategori_id", urunKatKat.id);
         if (urunKats) {
+          setAllUrunSecenekler(urunKats);
           const roots = urunKats.filter((o: any) => !o.parent_id);
-          const level2 = urunKats.filter((o: any) => o.parent_id && roots.some((r: any) => r.id === o.parent_id));
-          const level3 = urunKats.filter((o: any) => o.parent_id && level2.some((r: any) => r.id === o.parent_id));
           setCategoryOptions(prev => ({
             ...prev,
             urunKategorileri: roots.map((r: any) => ({ id: r.id, name: r.name })),
-            urunGruplari: level2.map((r: any) => ({ id: r.id, name: r.name })),
-            urunTurleri: level3.map((r: any) => ({ id: r.id, name: r.name })),
           }));
         }
       }
@@ -206,12 +238,11 @@ export default function AdminIhaleler() {
           .select("id, name, parent_id")
           .eq("kategori_id", hizmetKatKat.id);
         if (hizmetKats) {
+          setAllHizmetSecenekler(hizmetKats);
           const roots = hizmetKats.filter((o: any) => !o.parent_id);
-          const level2 = hizmetKats.filter((o: any) => o.parent_id);
           setCategoryOptions(prev => ({
             ...prev,
             hizmetKategorileri: roots.map((r: any) => ({ id: r.id, name: r.name })),
-            hizmetTurleri: level2.map((r: any) => ({ id: r.id, name: r.name })),
           }));
         }
       }
@@ -540,13 +571,13 @@ export default function AdminIhaleler() {
                 />
                 <MultiSelectFilter
                   label="Ürün Grubu"
-                  options={categoryOptions.urunGruplari}
+                  options={filteredUrunGruplari.map(o => ({ id: o.id, name: o.name }))}
                   selected={selectedUrunGruplari}
                   onChange={setSelectedUrunGruplari}
                 />
                 <MultiSelectFilter
                   label="Ürün Türü"
-                  options={categoryOptions.urunTurleri}
+                  options={filteredUrunTurleri.map(o => ({ id: o.id, name: o.name }))}
                   selected={selectedUrunTurleri}
                   onChange={setSelectedUrunTurleri}
                 />
@@ -558,7 +589,7 @@ export default function AdminIhaleler() {
                 />
                 <MultiSelectFilter
                   label="Hizmet Türü"
-                  options={categoryOptions.hizmetTurleri}
+                  options={filteredHizmetTurleri.map(o => ({ id: o.id, name: o.name }))}
                   selected={selectedHizmetTurleri}
                   onChange={setSelectedHizmetTurleri}
                 />
