@@ -323,13 +323,14 @@ export default function Mesajlar() {
     // Build content with quote if present
     let content = newMessage.trim();
     if (quote) {
+      const isIhale = quote.urunNo && !quote.urunNo.startsWith("#");
       const quoteParts = [
-        `📦 Ürün Hakkında Bilgi Talebi`,
+        isIhale ? `📋 İhale Hakkında Bilgi Talebi` : `📦 Ürün Hakkında Bilgi Talebi`,
         `━━━━━━━━━━━━━━━━`,
         `🏷️ ${quote.urunBaslik}`,
-        `🔢 Ürün No: ${quote.urunNo}`,
+        isIhale ? `🔢 İhale No: #${quote.urunNo}` : `🔢 Ürün No: ${quote.urunNo}`,
       ];
-      if (quote.fiyat) quoteParts.push(`💰 Fiyat: ${quote.fiyat}`);
+      if (quote.fiyat) quoteParts.push(isIhale ? `💰 Başlangıç Fiyatı: ${quote.fiyat}` : `💰 Fiyat: ${quote.fiyat}`);
       if (quote.moq) quoteParts.push(`📦 Min. Sipariş: ${quote.moq} Adet`);
       quoteParts.push(`━━━━━━━━━━━━━━━━`);
       if (content) quoteParts.push(`\n${content}`);
