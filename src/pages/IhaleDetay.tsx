@@ -470,32 +470,49 @@ export default function IhaleDetay() {
       return;
     }
 
-    // Açık usullerde diğer kullanıcıların teklifleri üzerinden kontrol yap (kendi teklifimizi hariç tut)
+    // Açık usullerde: son teklif varsa ona göre, yoksa başlangıç fiyatına göre kontrol
     const otherTeklifler = teklifler.filter(t => t.teklif_veren_user_id !== currentUserId);
+    const baslangicFiyati = ihale?.baslangic_fiyati ? Number(ihale.baslangic_fiyati) : null;
 
-    // Açık indirme: yeni teklif <= diğer kullanıcıların en düşük teklifine eşit veya daha düşük olmalı
-    if (ihale?.teklif_usulu === "acik_indirme" && otherTeklifler.length > 0) {
-      const otherMin = Math.min(...otherTeklifler.map(t => Number(t.tutar)));
-      if (ihale.min_teklif_degisim && tutar > otherMin - ihale.min_teklif_degisim) {
-        toast({ title: "Hata", description: `Yeni teklif, mevcut en düşük tekliften en az ${sym}${ihale.min_teklif_degisim} düşük olmalıdır.`, variant: "destructive" });
-        return;
-      }
-      if (!ihale.min_teklif_degisim && tutar > otherMin) {
-        toast({ title: "Hata", description: "Açık indirmede yeni teklif mevcut en düşük teklife eşit veya daha düşük olmalıdır.", variant: "destructive" });
-        return;
+    if (ihale?.teklif_usulu === "acik_indirme") {
+      // Referans fiyat: diğer tekliflerin en düşüğü, yoksa başlangıç fiyatı
+      const referansFiyat = otherTeklifler.length > 0
+        ? Math.min(...otherTeklifler.map(t => Number(t.tutar)))
+        : baslangicFiyati;
+
+      if (referansFiyat !== null) {
+        if (ihale.min_teklif_degisim) {
+          if (tutar > referansFiyat - ihale.min_teklif_degisim) {
+            toast({ title: "Hata", description: `Yeni teklif, referans fiyattan (${sym}${referansFiyat.toLocaleString("tr-TR")}) en az ${sym}${ihale.min_teklif_degisim} düşük olmalıdır.`, variant: "destructive" });
+            return;
+          }
+        } else {
+          if (tutar > referansFiyat) {
+            toast({ title: "Hata", description: `Açık indirmede teklif, ${sym}${referansFiyat.toLocaleString("tr-TR")} veya daha düşük olmalıdır.`, variant: "destructive" });
+            return;
+          }
+        }
       }
     }
 
-    // Açık arttırma: yeni teklif >= diğer kullanıcıların en yüksek teklifine eşit veya daha yüksek olmalı
-    if (ihale?.teklif_usulu === "acik_arttirma" && otherTeklifler.length > 0) {
-      const otherMax = Math.max(...otherTeklifler.map(t => Number(t.tutar)));
-      if (ihale.min_teklif_degisim && tutar < otherMax + ihale.min_teklif_degisim) {
-        toast({ title: "Hata", description: `Yeni teklif, mevcut en yüksek tekliften en az ${sym}${ihale.min_teklif_degisim} yüksek olmalıdır.`, variant: "destructive" });
-        return;
-      }
-      if (!ihale.min_teklif_degisim && tutar < otherMax) {
-        toast({ title: "Hata", description: "Açık arttırmada yeni teklif mevcut en yüksek teklife eşit veya daha yüksek olmalıdır.", variant: "destructive" });
-        return;
+    if (ihale?.teklif_usulu === "acik_arttirma") {
+      // Referans fiyat: diğer tekliflerin en yükseği, yoksa başlangıç fiyatı
+      const referansFiyat = otherTeklifler.length > 0
+        ? Math.max(...otherTeklifler.map(t => Number(t.tutar)))
+        : baslangicFiyati;
+
+      if (referansFiyat !== null) {
+        if (ihale.min_teklif_degisim) {
+          if (tutar < referansFiyat + ihale.min_teklif_degisim) {
+            toast({ title: "Hata", description: `Yeni teklif, referans fiyattan (${sym}${referansFiyat.toLocaleString("tr-TR")}) en az ${sym}${ihale.min_teklif_degisim} yüksek olmalıdır.`, variant: "destructive" });
+            return;
+          }
+        } else {
+          if (tutar < referansFiyat) {
+            toast({ title: "Hata", description: `Açık arttırmada teklif, ${sym}${referansFiyat.toLocaleString("tr-TR")} veya daha yüksek olmalıdır.`, variant: "destructive" });
+            return;
+          }
+        }
       }
     }
 
