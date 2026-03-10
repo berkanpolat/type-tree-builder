@@ -265,17 +265,20 @@ export default function UrunDetay() {
       priceText = `${sym}${urun.fiyat.toFixed(2)}`;
     }
 
-    const quotedMessage = `📦 Ürün Hakkında Bilgi Talebi\n━━━━━━━━━━━━━━━━\n🏷️ ${urun.baslik}\n🔢 Ürün No: ${urun.urun_no}${priceText ? `\n💰 Fiyat: ${priceText}` : ""}${urun.min_siparis_miktari ? `\n📦 Min. Sipariş: ${urun.min_siparis_miktari} Adet` : ""}\n━━━━━━━━━━━━━━━━\n\nMerhaba, yukarıdaki ürün hakkında bilgi almak istiyorum.`;
-
-    await supabase.from("messages").insert({
-      conversation_id: convId,
-      sender_id: currentUserId,
-      content: quotedMessage,
+    // Navigate to mesajlar with quote data instead of sending directly
+    navigate("/mesajlar", {
+      state: {
+        openConversationId: convId,
+        otherUserId: firma.user_id,
+        quote: {
+          urunBaslik: urun.baslik,
+          urunNo: urun.urun_no,
+          fiyat: priceText,
+          moq: urun.min_siparis_miktari,
+          fotoUrl: urun.foto_url,
+        },
+      },
     });
-
-    await supabase.from("conversations").update({ last_message_at: new Date().toISOString() }).eq("id", convId);
-
-    navigate("/mesajlar");
   };
 
   const handleImageZoomMove = (e: React.MouseEvent<HTMLDivElement>) => {

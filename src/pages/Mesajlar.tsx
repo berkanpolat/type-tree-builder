@@ -1,12 +1,14 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Send, Building2 } from "lucide-react";
+import { Search, Send, Building2, Paperclip, X, FileText, Image as ImageIcon, Download } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "@/hooks/use-toast";
 
 interface Conversation {
   id: string;
@@ -27,9 +29,20 @@ interface Message {
   content: string;
   is_read: boolean;
   created_at: string;
+  file_url?: string | null;
+  file_name?: string | null;
+}
+
+interface QuoteData {
+  urunBaslik: string;
+  urunNo: string;
+  fiyat: string;
+  moq: number | null;
+  fotoUrl: string | null;
 }
 
 export default function Mesajlar() {
+  const location = useLocation();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConv, setSelectedConv] = useState<Conversation | null>(null);
@@ -37,7 +50,11 @@ export default function Mesajlar() {
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [quote, setQuote] = useState<QuoteData | null>(null);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,6 +63,57 @@ export default function Mesajlar() {
   useEffect(() => {
     initUser();
   }, []);
+
+  // Handle navigation state (from "Satıcıya Sor")
+  useEffect(() => {
+    const state = location.state as {
+      openConversationId?: string;
+      otherUserId?: string;
+      quote?: QuoteData;
+    } | null;
+
+    if (state?.quote) {
+      setQuote(state.quote);
+    }
+
+    if (state?.openConversationId && currentUserId && conversations.length > 0) {
+      const conv = conversations.find((c) => c.id === state.openConversationId);
+      if (conv) {
+        selectConversation(conv);
+      } else if (state.otherUserId) {
+        // Conv might not be in list yet, fetch and add
+        fetchAndOpenConversation(state.openConversationId, state.otherUserId);
+      }
+      // Clear the state so it doesn't re-trigger
+      window.history.replaceState({}, document.title);
+    }
+  }, [currentUserId, conversations, location.state]);
+
+  const fetchAndOpenConversation = async (convId: string, otherUserId: string) => {
+    const { data: firmaData } = await supabase
+      .from("firmalar")
+      .select("user_id, firma_unvani, logo_url")
+      .eq("user_id", otherUserId)
+      .single();
+
+    const conv: Conversation = {
+      id: convId,
+      user1_id: "",
+      user2_id: "",
+      last_message_at: new Date().toISOString(),
+      other_user_id: otherUserId,
+      firma_unvani: firmaData?.firma_unvani || "Bilinmeyen Firma",
+      logo_url: firmaData?.logo_url || null,
+      last_message: "",
+      unread_count: 0,
+    };
+
+    setConversations((prev) => {
+      if (prev.find((c) => c.id === convId)) return prev;
+      return [conv, ...prev];
+    });
+    selectConversation(conv);
+  };
 
   const initUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -68,12 +136,10 @@ export default function Mesajlar() {
       return;
     }
 
-    // Get other user IDs
     const otherUserIds = convs.map((c) =>
       c.user1_id === userId ? c.user2_id : c.user1_id
     );
 
-    // Get firma info for other users
     const { data: firmalar } = await supabase
       .from("firmalar")
       .select("user_id, firma_unvani, logo_url")
@@ -82,7 +148,6 @@ export default function Mesajlar() {
     const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
     firmalar?.forEach((f) => { firmaMap[f.user_id] = f; });
 
-    // Get last message for each conversation
     const convIds = convs.map((c) => c.id);
     const { data: lastMessages } = await supabase
       .from("messages")
@@ -118,7 +183,6 @@ export default function Mesajlar() {
     setSelectedConv(conv);
     await fetchMessages(conv.id);
 
-    // Mark messages as read
     if (currentUserId) {
       await supabase
         .from("messages")
@@ -140,7 +204,7 @@ export default function Mesajlar() {
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
 
-    setMessages(data || []);
+    setMessages((data as Message[]) || []);
     setTimeout(scrollToBottom, 100);
   };
 
@@ -166,7 +230,6 @@ export default function Mesajlar() {
           });
           setTimeout(scrollToBottom, 100);
 
-          // Mark as read if from other user
           if (currentUserId && newMsg.sender_id !== currentUserId) {
             supabase
               .from("messages")
@@ -200,23 +263,82 @@ export default function Mesajlar() {
     return () => { supabase.removeChannel(channel); };
   }, [currentUserId]);
 
-  const handleSend = async () => {
-    if (!newMessage.trim() || !selectedConv || !currentUserId) return;
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Dosya çok büyük", description: "Maksimum 10MB dosya yükleyebilirsiniz.", variant: "destructive" });
+      return;
+    }
+    setPendingFile(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
-    const content = newMessage.trim();
+  const uploadFile = async (file: File): Promise<{ url: string; name: string } | null> => {
+    const ext = file.name.split(".").pop() || "file";
+    const path = `chat/${currentUserId}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const { error } = await supabase.storage.from("firma-images").upload(path, file);
+    if (error) {
+      toast({ title: "Yükleme hatası", description: error.message, variant: "destructive" });
+      return null;
+    }
+
+    const { data: urlData } = supabase.storage.from("firma-images").getPublicUrl(path);
+    return { url: urlData.publicUrl, name: file.name };
+  };
+
+  const handleSend = async () => {
+    if ((!newMessage.trim() && !pendingFile && !quote) || !selectedConv || !currentUserId) return;
+
+    setUploading(true);
+    let fileUrl: string | null = null;
+    let fileName: string | null = null;
+
+    if (pendingFile) {
+      const result = await uploadFile(pendingFile);
+      if (!result) { setUploading(false); return; }
+      fileUrl = result.url;
+      fileName = result.name;
+      setPendingFile(null);
+    }
+
+    // Build content with quote if present
+    let content = newMessage.trim();
+    if (quote) {
+      const quoteParts = [
+        `📦 Ürün Hakkında Bilgi Talebi`,
+        `━━━━━━━━━━━━━━━━`,
+        `🏷️ ${quote.urunBaslik}`,
+        `🔢 Ürün No: ${quote.urunNo}`,
+      ];
+      if (quote.fiyat) quoteParts.push(`💰 Fiyat: ${quote.fiyat}`);
+      if (quote.moq) quoteParts.push(`📦 Min. Sipariş: ${quote.moq} Adet`);
+      quoteParts.push(`━━━━━━━━━━━━━━━━`);
+      if (content) quoteParts.push(`\n${content}`);
+
+      content = quoteParts.join("\n");
+      setQuote(null);
+    }
+
+    if (!content && !fileUrl) { setUploading(false); return; }
+
     setNewMessage("");
 
     await supabase.from("messages").insert({
       conversation_id: selectedConv.id,
       sender_id: currentUserId,
-      content,
+      content: content || (fileName ? `📎 ${fileName}` : ""),
+      file_url: fileUrl,
+      file_name: fileName,
     });
 
-    // Update last_message_at
     await supabase
       .from("conversations")
       .update({ last_message_at: new Date().toISOString() })
       .eq("id", selectedConv.id);
+
+    setUploading(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -241,6 +363,55 @@ export default function Mesajlar() {
     if (date.toDateString() === yesterday.toDateString()) return "Dün";
 
     return format(date, "dd MMM", { locale: tr });
+  };
+
+  const isImageFile = (name: string) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name);
+
+  const renderMessageContent = (msg: Message, isMine: boolean) => {
+    return (
+      <>
+        {/* File attachment */}
+        {msg.file_url && msg.file_name && (
+          <div className="mb-1.5">
+            {isImageFile(msg.file_name) ? (
+              <a href={msg.file_url} target="_blank" rel="noopener noreferrer">
+                <img
+                  src={msg.file_url}
+                  alt={msg.file_name}
+                  className="max-w-[240px] max-h-[200px] rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                />
+              </a>
+            ) : (
+              <a
+                href={msg.file_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex items-center gap-2 p-2 rounded-lg border transition-colors ${
+                  isMine
+                    ? "border-primary-foreground/20 hover:bg-primary-foreground/10"
+                    : "border-border hover:bg-background"
+                }`}
+              >
+                <FileText className="w-5 h-5 shrink-0" />
+                <span className="text-xs truncate max-w-[160px]">{msg.file_name}</span>
+                <Download className="w-4 h-4 shrink-0 ml-auto" />
+              </a>
+            )}
+          </div>
+        )}
+        {/* Text content */}
+        {msg.content && !(msg.file_url && msg.content === `📎 ${msg.file_name}`) && (
+          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+        )}
+        <p
+          className={`text-[10px] mt-1 ${
+            isMine ? "text-primary-foreground/70" : "text-muted-foreground"
+          }`}
+        >
+          {format(new Date(msg.created_at), "HH:mm")}
+        </p>
+      </>
+    );
   };
 
   return (
@@ -343,14 +514,7 @@ export default function Mesajlar() {
                               : "bg-muted text-foreground rounded-bl-md"
                           }`}
                         >
-                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                          <p
-                            className={`text-[10px] mt-1 ${
-                              isMine ? "text-primary-foreground/70" : "text-muted-foreground"
-                            }`}
-                          >
-                            {format(new Date(msg.created_at), "HH:mm")}
-                          </p>
+                          {renderMessageContent(msg, isMine)}
                         </div>
                       </div>
                     );
@@ -359,23 +523,79 @@ export default function Mesajlar() {
                 </div>
               </ScrollArea>
 
+              {/* Quote preview */}
+              {quote && (
+                <div className="px-4 pt-3 border-t border-border">
+                  <div className="flex items-start gap-3 bg-muted/60 rounded-lg p-3 border-l-4 border-primary relative">
+                    {quote.fotoUrl && (
+                      <img src={quote.fotoUrl} alt="" className="w-12 h-12 rounded-md object-cover shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{quote.urunBaslik}</p>
+                      <p className="text-xs text-muted-foreground">Ürün No: {quote.urunNo}</p>
+                      {quote.fiyat && <p className="text-xs text-muted-foreground">Fiyat: {quote.fiyat}</p>}
+                    </div>
+                    <button
+                      onClick={() => setQuote(null)}
+                      className="p-1 rounded-full hover:bg-muted transition-colors shrink-0"
+                    >
+                      <X className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Pending file preview */}
+              {pendingFile && (
+                <div className="px-4 pt-2">
+                  <div className="flex items-center gap-2 bg-muted/60 rounded-lg px-3 py-2 border border-border">
+                    {isImageFile(pendingFile.name) ? (
+                      <ImageIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                    ) : (
+                      <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                    )}
+                    <span className="text-sm text-foreground truncate flex-1">{pendingFile.name}</span>
+                    <button onClick={() => setPendingFile(null)} className="p-1 rounded-full hover:bg-muted shrink-0">
+                      <X className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Input */}
               <div className="px-4 py-3 border-t border-border">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileSelect}
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar"
+                />
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                  >
+                    <Paperclip className="w-5 h-5 text-muted-foreground" />
+                  </Button>
                   <Input
                     placeholder="Bir mesaj yazın..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     onKeyDown={handleKeyDown}
                     className="flex-1"
+                    disabled={uploading}
                   />
                   <Button
                     onClick={handleSend}
-                    disabled={!newMessage.trim()}
+                    disabled={(!newMessage.trim() && !pendingFile && !quote) || uploading}
                     size="sm"
                     className="gap-1.5"
                   >
-                    Gönder
+                    {uploading ? "..." : "Gönder"}
                     <Send className="w-4 h-4" />
                   </Button>
                 </div>
