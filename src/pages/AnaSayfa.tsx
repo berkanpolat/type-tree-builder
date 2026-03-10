@@ -935,30 +935,11 @@ export default function AnaSayfa() {
         ) : (
           /* Firma Tab */
           <div className="flex gap-6">
-            <div className="w-80 shrink-0 space-y-6 hidden lg:block">
-              <Card className="p-5">
-                <h3 className="font-semibold text-foreground mb-4">Firma Tipi</h3>
-                <div className="space-y-3">
-                  {firmaTipleri.map((tip) => (
-                    <label key={tip.id} className="flex items-center gap-3 cursor-pointer">
-                      <Checkbox checked={selectedFirmaTipleri.includes(tip.id)} onCheckedChange={() => toggleFirmaTipi(tip.id)} />
-                      <span className="text-sm text-foreground">{tip.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </Card>
-              <Card className="p-5">
-                <h3 className="font-semibold text-foreground mb-4">Firma Ölçeği</h3>
-                <div className="space-y-3">
-                  {firmaOlcekleri.map((olcek) => (
-                    <label key={olcek.id} className="flex items-center gap-3 cursor-pointer">
-                      <Checkbox checked={selectedOlcekler.includes(olcek.id)} onCheckedChange={() => toggleOlcek(olcek.id)} />
-                      <span className="text-sm text-foreground">{olcek.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </Card>
-            </div>
+            <FirmaFiltreler
+              firmaTuruId={selectedFirmaTuru}
+              firmaTuruName={selectedFirmaTuruName}
+              onFilterChange={setFirmaFilterState}
+            />
 
             <div className="flex-1 space-y-4">
               {firmaLoading ? (
