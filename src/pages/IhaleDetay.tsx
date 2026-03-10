@@ -677,9 +677,39 @@ export default function IhaleDetay() {
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
           <Link to="/tekihale" className="hover:text-foreground transition-colors">İhale Anasayfa</Link>
-          {breadcrumbKategori && <><span>/</span><span>{breadcrumbKategori}</span></>}
-          {breadcrumbGrup && <><span>/</span><span>{breadcrumbGrup}</span></>}
-          {breadcrumbTur && <><span>/</span><span>{breadcrumbTur}</span></>}
+          {breadcrumbKategori && (
+            <>
+              <span>/</span>
+              <button
+                onClick={() => navigate("/tekihale", { state: { kategoriId: ihale.urun_kategori_id || ihale.hizmet_kategori_id, isHizmet: !!ihale.hizmet_kategori_id } })}
+                className="hover:text-foreground transition-colors"
+              >
+                {breadcrumbKategori}
+              </button>
+            </>
+          )}
+          {breadcrumbGrup && (
+            <>
+              <span>/</span>
+              <button
+                onClick={() => navigate("/tekihale", { state: { kategoriId: ihale.urun_kategori_id || ihale.hizmet_kategori_id, grupId: ihale.urun_grup_id || ihale.hizmet_tur_id, isHizmet: !!ihale.hizmet_kategori_id } })}
+                className="hover:text-foreground transition-colors"
+              >
+                {breadcrumbGrup}
+              </button>
+            </>
+          )}
+          {breadcrumbTur && (
+            <>
+              <span>/</span>
+              <button
+                onClick={() => navigate("/tekihale", { state: { kategoriId: ihale.urun_kategori_id, grupId: ihale.urun_grup_id, turId: ihale.urun_tur_id } })}
+                className="hover:text-foreground transition-colors"
+              >
+                {breadcrumbTur}
+              </button>
+            </>
+          )}
           <span>/</span>
           <span className="text-foreground font-medium truncate max-w-[300px]">{ihale.baslik}</span>
         </nav>

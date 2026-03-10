@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
 import Footer from "@/components/Footer";
@@ -119,6 +119,7 @@ function CountdownBadge({ date }: { date: string | null }) {
 
 export default function TekIhale() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [ihaleler, setIhaleler] = useState<IhaleWithExtra[]>([]);
@@ -161,6 +162,23 @@ export default function TekIhale() {
       if (data) { setFirmaUnvani(data.firma_unvani); setFirmaLogoUrl(data.logo_url); }
     })();
   }, []);
+
+  // Read location.state for breadcrumb navigation from detail pages
+  useEffect(() => {
+    const state = location.state as { kategoriId?: string; grupId?: string; turId?: string; isHizmet?: boolean } | null;
+    if (state?.kategoriId) {
+      if (state.isHizmet) {
+        setFilterHizmetKategori([state.kategoriId]);
+        if (state.grupId) setFilterHizmetTur([state.grupId]);
+        setFilterIhaleTuru(["hizmet_alim"]);
+      } else {
+        setFilterKategori([state.kategoriId]);
+        if (state.grupId) setFilterGrup([state.grupId]);
+        if (state.turId) setFilterTur([state.turId]);
+      }
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Fetch active ihaleler
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import PazarHeader from "@/components/PazarHeader";
@@ -117,6 +117,7 @@ const paraBirimiSymbol: Record<string, string> = {
 
 export default function AnaSayfa() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -147,6 +148,18 @@ export default function AnaSayfa() {
   const [selectedKategori, setSelectedKategori] = useState<string | null>(null);
   const [selectedGrupId, setSelectedGrupId] = useState<string | null>(null);
   const [selectedTurId, setSelectedTurId] = useState<string | null>(null);
+
+  // Read location.state for breadcrumb navigation from detail pages
+  useEffect(() => {
+    const state = location.state as { kategori?: string; kategoriId?: string; grupId?: string; turId?: string } | null;
+    if (state?.kategori) {
+      setActiveTab("urunler");
+      setSelectedKategori(state.kategori);
+      setSelectedGrupId(state.grupId || null);
+      setSelectedTurId(state.turId || null);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   // Filter state from sidebar
   const [filterState, setFilterState] = useState<FilterState | null>(null);

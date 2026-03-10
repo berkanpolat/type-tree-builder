@@ -397,19 +397,34 @@ export default function UrunDetay() {
           {breadcrumbKategori && (
             <>
               <span>/</span>
-              <span className="hover:text-foreground cursor-pointer">{breadcrumbKategori}</span>
+              <button
+                onClick={() => navigate("/anasayfa", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id } })}
+                className="hover:text-foreground transition-colors"
+              >
+                {breadcrumbKategori}
+              </button>
             </>
           )}
           {breadcrumbGrup && (
             <>
               <span>/</span>
-              <span className="hover:text-foreground cursor-pointer">{breadcrumbGrup}</span>
+              <button
+                onClick={() => navigate("/anasayfa", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id, grupId: urun.urun_grup_id } })}
+                className="hover:text-foreground transition-colors"
+              >
+                {breadcrumbGrup}
+              </button>
             </>
           )}
           {breadcrumbTur && (
             <>
               <span>/</span>
-              <span className="hover:text-foreground cursor-pointer">{breadcrumbTur}</span>
+              <button
+                onClick={() => navigate("/anasayfa", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id, grupId: urun.urun_grup_id, turId: urun.urun_tur_id } })}
+                className="hover:text-foreground transition-colors"
+              >
+                {breadcrumbTur}
+              </button>
             </>
           )}
           <span>/</span>
