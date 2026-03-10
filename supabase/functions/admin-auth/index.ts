@@ -5,6 +5,19 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function verifyToken(token: string) {
+  const payload = JSON.parse(atob(token));
+  if (payload.exp < Date.now()) throw new Error("Token süresi dolmuş");
+  return payload;
+}
+
+function jsonResponse(data: unknown, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -20,9 +33,9 @@ Deno.serve(async (req) => {
     const action = url.pathname.split("/").pop();
     const body = await req.json();
 
+    // ─── LOGIN ───
     if (action === "login") {
       const { username, password } = body;
-      
       const { data, error } = await supabase
         .from("admin_users")
         .select("*")
@@ -30,99 +43,65 @@ Deno.serve(async (req) => {
         .single();
 
       if (error || !data) {
-        return new Response(JSON.stringify({ error: "Geçersiz kullanıcı adı veya şifre" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Geçersiz kullanıcı adı veya şifre" }, 401);
       }
 
-      // Verify password using pgcrypto via RPC
       const { data: match } = await supabase.rpc("admin_verify_password", {
         p_username: username,
         p_password: password,
       });
 
       if (!match) {
-        return new Response(JSON.stringify({ error: "Geçersiz kullanıcı adı veya şifre" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Geçersiz kullanıcı adı veya şifre" }, 401);
       }
 
-      // Create a simple token (base64 encoded user info + timestamp)
       const tokenPayload = {
         id: data.id,
         username: data.username,
         is_primary: data.is_primary,
         permissions: data.permissions,
-        exp: Date.now() + 24 * 60 * 60 * 1000, // 24h
+        exp: Date.now() + 24 * 60 * 60 * 1000,
       };
       const token = btoa(JSON.stringify(tokenPayload));
-
       const { password_hash, ...user } = data;
-      return new Response(JSON.stringify({ user, token }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ user, token });
     }
 
+    // ─── VERIFY ───
     if (action === "verify") {
       const { token } = body;
       try {
-        const payload = JSON.parse(atob(token));
-        if (payload.exp < Date.now()) {
-          return new Response(JSON.stringify({ error: "Token süresi dolmuş" }), {
-            status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        // Fetch fresh user data
+        const payload = verifyToken(token);
         const { data } = await supabase
           .from("admin_users")
           .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
           .eq("id", payload.id)
           .single();
-
-        if (!data) {
-          return new Response(JSON.stringify({ error: "Kullanıcı bulunamadı" }), {
-            status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        return new Response(JSON.stringify({ user: data }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        if (!data) return jsonResponse({ error: "Kullanıcı bulunamadı" }, 401);
+        return jsonResponse({ user: data });
       } catch {
-        return new Response(JSON.stringify({ error: "Geçersiz token" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        return jsonResponse({ error: "Geçersiz token" }, 401);
       }
     }
 
+    // ─── LIST ADMIN USERS ───
     if (action === "list-users") {
-      const { token } = body;
-      const payload = JSON.parse(atob(token));
-      if (payload.exp < Date.now()) {
-        return new Response(JSON.stringify({ error: "Yetkisiz" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
+      const payload = verifyToken(body.token);
       const { data } = await supabase
         .from("admin_users")
         .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
         .order("created_at", { ascending: true });
-
-      return new Response(JSON.stringify({ users: data }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse({ users: data });
     }
 
+    // ─── CREATE ADMIN USER ───
     if (action === "create-user") {
       const { token, user: newUser } = body;
-      const payload = JSON.parse(atob(token));
-      if (payload.exp < Date.now() || (!payload.is_primary && !payload.permissions?.kullanici_ekle)) {
-        return new Response(JSON.stringify({ error: "Yetkisiz" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.kullanici_ekle) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
-      // Hash password
       const { data: hashResult } = await supabase.rpc("admin_hash_password", {
         p_password: newUser.password,
       });
@@ -143,24 +122,16 @@ Deno.serve(async (req) => {
         .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
         .single();
 
-      if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify({ user: data }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ user: data });
     }
 
+    // ─── UPDATE ADMIN USER ───
     if (action === "update-user") {
       const { token, userId, updates } = body;
-      const payload = JSON.parse(atob(token));
-      if (payload.exp < Date.now() || (!payload.is_primary && !payload.permissions?.kullanici_yonet)) {
-        return new Response(JSON.stringify({ error: "Yetkisiz" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.kullanici_yonet) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
       const updateData: Record<string, unknown> = {
@@ -187,25 +158,15 @@ Deno.serve(async (req) => {
         .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
         .single();
 
-      if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      return new Response(JSON.stringify({ user: data }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ user: data });
     }
 
+    // ─── DELETE ADMIN USER ───
     if (action === "delete-user") {
       const { token, userId } = body;
-      const payload = JSON.parse(atob(token));
-      if (payload.exp < Date.now() || !payload.is_primary) {
-        return new Response(JSON.stringify({ error: "Yetkisiz" }), {
-          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      const payload = verifyToken(token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
 
       const { error } = await supabase
         .from("admin_users")
@@ -213,20 +174,277 @@ Deno.serve(async (req) => {
         .eq("id", userId)
         .eq("is_primary", false);
 
-      if (error) {
-        return new Response(JSON.stringify({ error: error.message }), {
-          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
+    // ─── LIST FIRMALAR (for admin panel) ───
+    if (action === "list-firmalar") {
+      const payload = verifyToken(body.token);
+
+      // Get all firmalar with profiles, firma_turleri, firma_tipleri
+      const { data: firmalar, error } = await supabase
+        .from("firmalar")
+        .select(`
+          id, firma_unvani, logo_url, created_at, updated_at, onay_durumu, user_id,
+          firma_turu_id, firma_tipi_id, kurulus_il_id, kurulus_ilce_id,
+          firma_olcegi_id, vergi_numarasi, vergi_dairesi,
+          firma_iletisim_email, firma_iletisim_numarasi, web_sitesi,
+          instagram, facebook, linkedin, x_twitter, tiktok,
+          kapak_fotografi_url, firma_hakkinda, kurulus_tarihi,
+          kurulus_il_id, kurulus_ilce_id, moq, aylik_uretim_kapasitesi,
+          firma_turleri:firma_turu_id(id, name),
+          firma_tipleri:firma_tipi_id(id, name)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Get profiles for all users
+      const userIds = (firmalar || []).map((f: any) => f.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, ad, soyad, iletisim_email, iletisim_numarasi")
+        .in("user_id", userIds);
+
+      // Get counts per firma
+      const { data: ihaleCounts } = await supabase
+        .from("ihaleler")
+        .select("user_id")
+        .in("user_id", userIds);
+
+      const { data: teklifCounts } = await supabase
+        .from("ihale_teklifler")
+        .select("teklif_veren_user_id")
+        .in("teklif_veren_user_id", userIds);
+
+      const { data: urunCounts } = await supabase
+        .from("urunler")
+        .select("user_id")
+        .in("user_id", userIds);
+
+      const { data: sikayetCounts } = await supabase
+        .from("sikayetler")
+        .select("bildiren_user_id")
+        .in("bildiren_user_id", userIds);
+
+      // Get il/ilce names
+      const ilIds = (firmalar || []).map((f: any) => f.kurulus_il_id).filter(Boolean);
+      const ilceIds = (firmalar || []).map((f: any) => f.kurulus_ilce_id).filter(Boolean);
+      const allLocationIds = [...new Set([...ilIds, ...ilceIds])];
+      
+      let locationMap: Record<string, string> = {};
+      if (allLocationIds.length > 0) {
+        const { data: locations } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name")
+          .in("id", allLocationIds);
+        if (locations) {
+          locationMap = Object.fromEntries(locations.map((l: any) => [l.id, l.name]));
+        }
+      }
+
+      // Calculate profile completion
+      const FIRMA_FIELDS = [
+        "firma_unvani", "firma_turu_id", "firma_tipi_id", "vergi_numarasi", "vergi_dairesi",
+        "firma_olcegi_id", "kurulus_tarihi", "kurulus_il_id", "kurulus_ilce_id", "web_sitesi",
+        "firma_iletisim_numarasi", "firma_iletisim_email", "instagram", "facebook", "linkedin",
+        "x_twitter", "tiktok", "logo_url", "kapak_fotografi_url", "firma_hakkinda",
+      ];
+
+      const enriched = (firmalar || []).map((f: any) => {
+        const profile = (profiles || []).find((p: any) => p.user_id === f.user_id);
+        const ihaleCount = (ihaleCounts || []).filter((i: any) => i.user_id === f.user_id).length;
+        const teklifCount = (teklifCounts || []).filter((t: any) => t.teklif_veren_user_id === f.user_id).length;
+        const urunCount = (urunCounts || []).filter((u: any) => u.user_id === f.user_id).length;
+        const sikayetCount = (sikayetCounts || []).filter((s: any) => s.bildiren_user_id === f.user_id).length;
+
+        let filled = 0;
+        for (const field of FIRMA_FIELDS) {
+          const val = f[field];
+          if (val !== null && val !== undefined && val !== "") filled++;
+        }
+        const profilDoluluk = Math.round((filled / FIRMA_FIELDS.length) * 100);
+
+        return {
+          ...f,
+          profile,
+          firma_turu_name: f.firma_turleri?.name || null,
+          firma_tipi_name: f.firma_tipleri?.name || null,
+          il_name: f.kurulus_il_id ? locationMap[f.kurulus_il_id] || null : null,
+          ilce_name: f.kurulus_ilce_id ? locationMap[f.kurulus_ilce_id] || null : null,
+          ihale_sayisi: ihaleCount,
+          teklif_sayisi: teklifCount,
+          urun_sayisi: urunCount,
+          sikayet_sayisi: sikayetCount,
+          profil_doluluk: profilDoluluk,
+        };
+      });
+
+      return jsonResponse({ firmalar: enriched });
+    }
+
+    // ─── APPROVE/REJECT FIRMA ───
+    if (action === "approve-firma" || action === "reject-firma") {
+      const { token, firmaId } = body;
+      const payload = verifyToken(token);
+
+      const newStatus = action === "approve-firma" ? "onaylandi" : "onaysiz";
+
+      const { data: firma, error: firmaError } = await supabase
+        .from("firmalar")
+        .update({ onay_durumu: newStatus })
+        .eq("id", firmaId)
+        .select("user_id, firma_unvani")
+        .single();
+
+      if (firmaError) return jsonResponse({ error: firmaError.message }, 400);
+
+      // Get user email from auth
+      const { data: { user: authUser } } = await supabase.auth.admin.getUserById(firma.user_id);
+      
+      if (authUser?.email) {
+        // Send notification email via Supabase Auth admin
+        // For now, create a notification in the notifications table
+        const message = action === "approve-firma"
+          ? `${firma.firma_unvani} firmanızın başvurusu onaylanmıştır. Artık hesabınızı kullanmaya başlayabilirsiniz.`
+          : `${firma.firma_unvani} firmanızın başvurusu reddedilmiştir. Detaylı bilgi için bizimle iletişime geçebilirsiniz.`;
+
+        await supabase.from("notifications").insert({
+          user_id: firma.user_id,
+          type: action === "approve-firma" ? "firma_onaylandi" : "firma_reddedildi",
+          message,
+          link: "/dashboard",
         });
       }
 
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return jsonResponse({ success: true, status: newStatus });
+    }
+
+    // ─── GET FIRMA DETAIL (for review popup) ───
+    if (action === "get-firma-detail") {
+      const { token, firmaId } = body;
+      const payload = verifyToken(token);
+
+      const { data: firma } = await supabase
+        .from("firmalar")
+        .select("*")
+        .eq("id", firmaId)
+        .single();
+
+      if (!firma) return jsonResponse({ error: "Firma bulunamadı" }, 404);
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", firma.user_id)
+        .single();
+
+      // Get firma türü and tipi names
+      const { data: firmaType } = await supabase
+        .from("firma_turleri")
+        .select("name")
+        .eq("id", firma.firma_turu_id)
+        .single();
+
+      const { data: firmaTip } = await supabase
+        .from("firma_tipleri")
+        .select("name")
+        .eq("id", firma.firma_tipi_id)
+        .single();
+
+      // Get user email
+      const { data: { user: authUser } } = await supabase.auth.admin.getUserById(firma.user_id);
+
+      return jsonResponse({
+        firma: {
+          ...firma,
+          firma_turu_name: firmaType?.name,
+          firma_tipi_name: firmaTip?.name,
+        },
+        profile,
+        email: authUser?.email,
       });
     }
 
-    return new Response(JSON.stringify({ error: "Geçersiz istek" }), {
-      status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // ─── IMPERSONATE (login as firma user) ───
+    if (action === "impersonate") {
+      const { token, userId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+
+      // Generate a magic link or create a session for the user
+      // Using generateLink to create a magic link
+      const { data, error } = await supabase.auth.admin.generateLink({
+        type: "magiclink",
+        email: "",
+      });
+
+      // Alternative: get user and generate a custom token
+      const { data: { user: targetUser } } = await supabase.auth.admin.getUserById(userId);
+      if (!targetUser) return jsonResponse({ error: "Kullanıcı bulunamadı" }, 404);
+
+      // Generate magic link for this user
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: "magiclink",
+        email: targetUser.email!,
+      });
+
+      if (linkError) return jsonResponse({ error: linkError.message }, 400);
+
+      return jsonResponse({
+        success: true,
+        // Return the hashed token so the frontend can use it to sign in
+        access_token: linkData.properties?.access_token,
+        refresh_token: linkData.properties?.refresh_token,
+      });
+    }
+
+    // ─── FIRMA STATS (for summary cards) ───
+    if (action === "firma-stats") {
+      const { token, days } = body;
+      const payload = verifyToken(token);
+
+      const { count: totalCount } = await supabase
+        .from("firmalar")
+        .select("*", { count: "exact", head: true });
+
+      // Count by firma_turu
+      const { data: firmalar } = await supabase
+        .from("firmalar")
+        .select("firma_turu_id");
+
+      const { data: turler } = await supabase
+        .from("firma_turleri")
+        .select("id, name");
+
+      const turDagilimi = (turler || []).map((t: any) => ({
+        name: t.name,
+        count: (firmalar || []).filter((f: any) => f.firma_turu_id === t.id).length,
+      }));
+
+      // Recent registrations
+      const daysAgo = new Date();
+      daysAgo.setDate(daysAgo.getDate() - (days || 7));
+      const { count: recentCount } = await supabase
+        .from("firmalar")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", daysAgo.toISOString());
+
+      const { count: pendingCount } = await supabase
+        .from("firmalar")
+        .select("*", { count: "exact", head: true })
+        .eq("onay_durumu", "onay_bekliyor");
+
+      return jsonResponse({
+        total: totalCount || 0,
+        turDagilimi,
+        recent: recentCount || 0,
+        pending: pendingCount || 0,
+      });
+    }
+
+    return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
