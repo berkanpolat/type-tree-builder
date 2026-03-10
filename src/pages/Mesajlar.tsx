@@ -173,12 +173,12 @@ export default function Mesajlar() {
       .in("conversation_id", filteredConvIds)
       .order("created_at", { ascending: false });
 
-    const lastMsgMap: Record<string, { content: string; unread: number }> = {};
+    const lastMsgMap: Record<string, { content: string; unread: number; senderId: string }> = {};
     filteredConvIds.forEach((cid) => {
       const msgs = lastMessages?.filter((m) => m.conversation_id === cid) || [];
       const lastMsg = msgs[0];
       const unread = msgs.filter((m) => !m.is_read && m.sender_id !== userId).length;
-      lastMsgMap[cid] = { content: lastMsg?.content || "", unread };
+      lastMsgMap[cid] = { content: lastMsg?.content || "", unread, senderId: lastMsg?.sender_id || "" };
     });
 
     const mapped: Conversation[] = filteredConvs.map((c) => {
