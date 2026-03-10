@@ -64,17 +64,8 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
           <HeaderMessagePanel />
 
           {/* Notifications */}
-          <button
-            onClick={() => navigate("/bildirimler")}
-            className="relative p-2 rounded-lg hover:bg-muted transition-colors"
-          >
-            <Bell className="w-5 h-5 text-muted-foreground" />
-            {unreadNotifications > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
-                {unreadNotifications > 99 ? "99+" : unreadNotifications}
-              </span>
-            )}
-          </button>
+          {/* Notifications */}
+          <HeaderNotificationsPanel />
 
           {/* Divider */}
           <div className="w-px h-6 bg-border mx-2" />
