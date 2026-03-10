@@ -80,7 +80,7 @@ export default function KVKKAydinlatma() {
 
           {/* Saklama ve İmha */}
           <section>
-            <h2 className="text-xl font-bold text-foreground mb-4">TEKSTİLAS KİŞİSEL VERİ SAKLAMA VE İMHA POLİTİKASI</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">MANUFIXO KİŞİSEL VERİ SAKLAMA VE İMHA POLİTİKASI</h2>
 
             <h3 className="text-lg font-bold text-foreground mb-3">2.1. Amaç</h3>
             <p className="text-muted-foreground">Bu Politika, Manufixo tarafından işlenen kişisel verilerin; saklama sürelerinin belirlenmesi ve süresi dolan verilerin imhasına ilişkin usul ve esasları düzenler.</p>
