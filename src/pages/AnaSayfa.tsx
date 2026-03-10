@@ -173,41 +173,10 @@ export default function AnaSayfa() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Firma state
-  const [firmalar, setFirmalar] = useState<FirmaWithExtra[]>([]);
-  const [firmaLoading, setFirmaLoading] = useState(false);
-  const [firmaTurleri, setFirmaTurleri] = useState<{ id: string; name: string }[]>([]);
-  const [selectedFirmaTuru, setSelectedFirmaTuru] = useState<string>("");
-  const [selectedFirmaTuruName, setSelectedFirmaTuruName] = useState<string>("");
-  const [firmaFilterState, setFirmaFilterState] = useState<FirmaFilterState | null>(null);
-  const [firmaFavSet, setFirmaFavSet] = useState<Set<string>>(new Set());
 
   // Name maps
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
   const [kategoriSecenekler, setKategoriSecenekler] = useState<{ id: string; name: string }[]>([]);
-
-  // Determine if we're in "filtered" mode (category selected)
-  const isFiltered = !!selectedKategori || !!activeFilter;
-
-  // Click outside
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowDropdown(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  // Fetch firma türleri
-  useEffect(() => {
-    supabase.from("firma_turleri").select("id, name").order("name").then(({ data }) => {
-      if (data) {
-        setFirmaTurleri(data);
-        const tedarikci = data.find((t) => t.name.toLowerCase().includes("tedarikçi"));
-        if (tedarikci) { setSelectedFirmaTuru(tedarikci.id); setSelectedFirmaTuruName(tedarikci.name); }
-        else if (data.length > 0) { setSelectedFirmaTuru(data[0].id); setSelectedFirmaTuruName(data[0].name); }
-      }
-    });
-  }, []);
 
   // Fetch kategori seçenekleri (for ürün tab)
   useEffect(() => {
