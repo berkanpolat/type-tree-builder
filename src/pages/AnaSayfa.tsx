@@ -684,21 +684,11 @@ export default function AnaSayfa() {
           {/* Category bar (only for urunler) */}
           {activeTab === "urunler" && (
             <div className="bg-background rounded-t-xl -mx-6 px-6">
-              <div className="flex items-center justify-center gap-6 overflow-x-auto py-3 scrollbar-hide">
-                {URUN_KATEGORILERI.map((kat) => (
-                  <button
-                    key={kat}
-                    onClick={() => handleKategoriClick(kat)}
-                    className={`whitespace-nowrap text-sm font-medium transition-colors ${
-                      selectedKategori === kat
-                        ? "text-secondary border-b-2 border-secondary pb-1"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    {kat}
-                  </button>
-                ))}
-              </div>
+              <KategoriMegaMenu
+                kategoriler={URUN_KATEGORILERI}
+                selectedKategori={selectedKategori}
+                onSelect={handleMegaMenuSelect}
+              />
             </div>
           )}
           {activeTab === "firma" && <div className="h-4" />}
