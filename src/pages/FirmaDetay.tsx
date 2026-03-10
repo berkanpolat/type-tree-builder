@@ -544,30 +544,23 @@ export default function FirmaDetay() {
     return acc;
   }, {});
 
-  const buildUretimSatisGrouped = (tip: "uretim" | "satis") => {
-    const grouped: Record<string, Record<string, string[]>> = {};
+  const uretimItems = uretimSatisItems.filter((item) => item.tip === "uretim");
+  const satisItems = uretimSatisItems.filter((item) => item.tip === "satis");
 
-    uretimSatisItems
-      .filter((item) => item.tip === tip)
-      .forEach((item) => {
-        const kategori = item.kategori !== "Belirtilmedi" ? item.kategori : "Diğer";
-        const grup = item.grup !== "Belirtilmedi" ? item.grup : "Diğer";
+  const groupByGrup = (items: typeof uretimItems) => {
+    const grouped: Record<string, string[]> = {};
 
-        if (!grouped[kategori]) grouped[kategori] = {};
-        if (!grouped[kategori][grup]) grouped[kategori][grup] = [];
+    items.forEach((item) => {
+      const grupName = item.grup && item.grup !== "Belirtilmedi" ? item.grup : "Diğer";
+      if (!grouped[grupName]) grouped[grupName] = [];
 
-        if (item.tur && item.tur !== "Belirtilmedi" && !grouped[kategori][grup].includes(item.tur)) {
-          grouped[kategori][grup].push(item.tur);
-        }
-      });
+      if (item.tur && item.tur !== "Belirtilmedi" && !grouped[grupName].includes(item.tur)) {
+        grouped[grupName].push(item.tur);
+      }
+    });
 
     return grouped;
   };
-
-  const uretimGrouped = buildUretimSatisGrouped("uretim");
-  const satisGrouped = buildUretimSatisGrouped("satis");
-  const hasUretimData = Object.keys(uretimGrouped).length > 0;
-  const hasSatisData = Object.keys(satisGrouped).length > 0;
 
   if (loading) {
     return (
