@@ -43,9 +43,10 @@ import bannerIplik from "@/assets/banner-iplik.jpg";
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 const ITEMS_PER_PAGE = 24;
 
+const HIDDEN_KATEGORILER = ["Hazır Giyim (Üretim)"];
+
 const URUN_KATEGORILERI = [
   "Hazır Giyim (Satış)",
-  "Hazır Giyim (Üretim)",
   "Kumaş",
   "İplik",
   "Aksesuar",
