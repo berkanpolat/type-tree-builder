@@ -950,6 +950,9 @@ export default function AnaSayfa() {
             />
 
             <div className="flex-1 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{firmalar.length}</span> firma bulundu
+              </p>
               {firmaLoading ? (
                 <div className="flex justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
