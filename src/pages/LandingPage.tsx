@@ -8,6 +8,7 @@ import tekrehberImg from "@/assets/landing-tekrehber.png";
 import tekpazarImg from "@/assets/landing-tekpazar.png";
 import fabricImg from "@/assets/landing-fabric.jpg";
 import warehouseImg from "@/assets/landing-warehouse.jpg";
+import Footer from "@/components/Footer";
 import {
   Zap,
   BarChart3,
