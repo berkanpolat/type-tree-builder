@@ -49,6 +49,7 @@ import {
   FileText,
   Send,
   Upload,
+  Trash2,
 } from "lucide-react";
 import {
   SiInstagram,
