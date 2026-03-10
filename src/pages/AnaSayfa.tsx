@@ -1120,6 +1120,7 @@ export default function AnaSayfa() {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
