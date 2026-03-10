@@ -464,25 +464,36 @@ export default function IhaleDetay() {
       return;
     }
 
-    // Açık indirme: yeni teklif <= son en düşük teklif olmalı
-    if (ihale?.teklif_usulu === "acik_indirme" && minTeklif != null && teklifler.length > 0) {
-      if (ihale.min_teklif_degisim && tutar > minTeklif - ihale.min_teklif_degisim) {
+    // Yeni teklif, kullanıcının önceki teklifinden farklı olmalıdır
+    if (myTeklif && tutar === Number(myTeklif.tutar)) {
+      toast({ title: "Hata", description: "Yeni teklifiniz önceki teklifinizden farklı olmalıdır.", variant: "destructive" });
+      return;
+    }
+
+    // Açık usullerde diğer kullanıcıların teklifleri üzerinden kontrol yap (kendi teklifimizi hariç tut)
+    const otherTeklifler = teklifler.filter(t => t.teklif_veren_user_id !== currentUserId);
+
+    // Açık indirme: yeni teklif <= diğer kullanıcıların en düşük teklifine eşit veya daha düşük olmalı
+    if (ihale?.teklif_usulu === "acik_indirme" && otherTeklifler.length > 0) {
+      const otherMin = Math.min(...otherTeklifler.map(t => Number(t.tutar)));
+      if (ihale.min_teklif_degisim && tutar > otherMin - ihale.min_teklif_degisim) {
         toast({ title: "Hata", description: `Yeni teklif, mevcut en düşük tekliften en az ${sym}${ihale.min_teklif_degisim} düşük olmalıdır.`, variant: "destructive" });
         return;
       }
-      if (!ihale.min_teklif_degisim && tutar > minTeklif) {
+      if (!ihale.min_teklif_degisim && tutar > otherMin) {
         toast({ title: "Hata", description: "Açık indirmede yeni teklif mevcut en düşük teklife eşit veya daha düşük olmalıdır.", variant: "destructive" });
         return;
       }
     }
 
-    // Açık arttırma: yeni teklif >= son en yüksek teklif olmalı
-    if (ihale?.teklif_usulu === "acik_arttirma" && maxTeklif != null && teklifler.length > 0) {
-      if (ihale.min_teklif_degisim && tutar < maxTeklif + ihale.min_teklif_degisim) {
+    // Açık arttırma: yeni teklif >= diğer kullanıcıların en yüksek teklifine eşit veya daha yüksek olmalı
+    if (ihale?.teklif_usulu === "acik_arttirma" && otherTeklifler.length > 0) {
+      const otherMax = Math.max(...otherTeklifler.map(t => Number(t.tutar)));
+      if (ihale.min_teklif_degisim && tutar < otherMax + ihale.min_teklif_degisim) {
         toast({ title: "Hata", description: `Yeni teklif, mevcut en yüksek tekliften en az ${sym}${ihale.min_teklif_degisim} yüksek olmalıdır.`, variant: "destructive" });
         return;
       }
-      if (!ihale.min_teklif_degisim && tutar < maxTeklif) {
+      if (!ihale.min_teklif_degisim && tutar < otherMax) {
         toast({ title: "Hata", description: "Açık arttırmada yeni teklif mevcut en yüksek teklife eşit veya daha yüksek olmalıdır.", variant: "destructive" });
         return;
       }
