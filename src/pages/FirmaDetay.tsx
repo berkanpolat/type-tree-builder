@@ -673,7 +673,7 @@ export default function FirmaDetay() {
               <div className="flex items-center justify-center gap-3">
                 {firma.linkedin && (
                   <a href={firma.linkedin.startsWith("http") ? firma.linkedin : `https://${firma.linkedin}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                    <SiLinkedin className="w-4 h-4" /> LinkedIn
+                    <FaLinkedinIn className="w-4 h-4" /> LinkedIn
                   </a>
                 )}
                 {firma.instagram && (
