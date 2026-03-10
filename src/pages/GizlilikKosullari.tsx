@@ -93,7 +93,7 @@ export default function GizlilikKosullari() {
             <h2 className="text-lg font-bold text-foreground mb-3">8. İLETİŞİM</h2>
             <p className="text-muted-foreground">
               Gizlilikle ilgili her türlü soru, görüş veya veri silme talebiniz için{" "}
-              <a href="mailto:info@tekstilas.com" className="text-primary underline hover:text-primary/80">info@tekstilas.com</a>{" "}
+              <a href="mailto:info@manufixo.com" className="text-primary underline hover:text-primary/80">info@manufixo.com</a>{" "}
               adresi üzerinden bizimle iletişime geçebilirsiniz.
             </p>
           </section>

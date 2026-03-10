@@ -162,11 +162,11 @@ export default function SSS() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <a
-              href="mailto:destek@tekstilas.com"
+              href="mailto:destek@manufixo.com"
               className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-secondary transition-colors"
             >
               <Mail className="w-4 h-4 text-secondary" />
-              destek@tekstilas.com
+              destek@manufixo.com
             </a>
             <a
               href="tel:08502425700"

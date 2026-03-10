@@ -38,7 +38,7 @@ export default function MesafeliSatisSozlesmesi() {
             <ul className="list-none pl-0 space-y-1 text-muted-foreground">
               <li><strong className="text-foreground">Unvan:</strong> Manufixo Teknoloji A.Ş.</li>
               <li><strong className="text-foreground">Adres:</strong> Çobançeşme mah. Bilge 1 sk. No:9/11 K:2 Bahçelievler / İstanbul</li>
-              <li><strong className="text-foreground">E-posta:</strong>{" "}<a href="mailto:info@tekstilas.com" className="text-primary underline hover:text-primary/80">info@tekstilas.com</a></li>
+              <li><strong className="text-foreground">E-posta:</strong>{" "}<a href="mailto:info@manufixo.com" className="text-primary underline hover:text-primary/80">info@manufixo.com</a></li>
               <li><strong className="text-foreground">Mersis No:</strong> 0612181102800001</li>
             </ul>
 

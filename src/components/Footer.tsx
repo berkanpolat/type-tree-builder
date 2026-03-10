@@ -101,7 +101,7 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-10 pt-6 border-t border-primary-foreground/10">
           <p className="text-primary-foreground/50 text-sm text-center">
-            © 2026 Tekstil A.Ş. – Manufixo Bilişim Teknolojileri A.Ş. Tüm hakları saklıdır.
+            © 2026 Tekstil A.Ş. – Manufixo Teknoloji A.Ş. Tüm hakları saklıdır.
           </p>
         </div>
       </div>

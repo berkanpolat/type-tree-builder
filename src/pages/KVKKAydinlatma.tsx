@@ -168,7 +168,7 @@ export default function KVKKAydinlatma() {
             </ul>
             <p className="text-muted-foreground mt-2">
               haklarına sahipsiniz. Başvurular:{" "}
-              <a href="mailto:info@tekstilas.com" className="text-primary underline hover:text-primary/80">info@tekstilas.com</a>{" "}
+              <a href="mailto:info@manufixo.com" className="text-primary underline hover:text-primary/80">info@manufixo.com</a>{" "}
               üzerinden yapılabilir.
             </p>
           </section>
