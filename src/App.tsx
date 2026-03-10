@@ -27,6 +27,7 @@ import UrunDetay from "./pages/UrunDetay";
 import FirmaDetay from "./pages/FirmaDetay";
 import ProfilAyarlari from "./pages/ProfilAyarlari";
 import TekRehber from "./pages/TekRehber";
+import Hakkimizda from "./pages/Hakkimizda";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
