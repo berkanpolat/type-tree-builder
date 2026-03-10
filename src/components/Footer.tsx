@@ -54,7 +54,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
+                <Link to="/iletisim" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
                   İletişim
                 </Link>
               </li>
