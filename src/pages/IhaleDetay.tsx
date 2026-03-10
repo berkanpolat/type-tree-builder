@@ -509,7 +509,25 @@ export default function IhaleDetay() {
     setSubmitting(false);
   };
 
-  const handleMesajGonder = async () => {
+  const handleTeklifGeriCek = async () => {
+    if (!myTeklif) return;
+    const { error } = await supabase.from("ihale_teklifler").delete().eq("id", myTeklif.id);
+    if (error) {
+      toast({ title: "Hata", description: "Teklif geri çekilemedi.", variant: "destructive" });
+    } else {
+      toast({ title: "Başarılı", description: "Teklifiniz geri çekildi." });
+      setMyTeklif(null);
+      setTeklifTutar("");
+      setTeklifOdemeSecenekleri("");
+      setTeklifKargoMasrafi("");
+      setTeklifOdemeVadesi("");
+      setTeklifDosyaUrl(null);
+      setTeklifDosyaName(null);
+      setMyRank(null);
+      fetchIhale();
+    }
+  };
+
     if (!currentUserId || !firma) return;
     const { data: convId } = await supabase.rpc("get_or_create_conversation", {
       p_user1: currentUserId,
