@@ -286,6 +286,17 @@ export default function ManuIhale() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-1">
+                            {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                title="İhale Takip"
+                                onClick={() => navigate(`/manuihale/takip/${ihale.id}`)}
+                              >
+                                <TrendingUp className="w-4 h-4" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon"
@@ -294,7 +305,7 @@ export default function ManuIhale() {
                                 if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") {
                                   navigate(`/manuihale/duzenle/${ihale.id}`);
                                 } else {
-                                  navigate(`/manuihale/${ihale.id}`);
+                                  navigate(`/ihale/${ihale.id}`);
                                 }
                               }}
                             >
