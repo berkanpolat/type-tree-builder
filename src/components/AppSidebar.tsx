@@ -73,17 +73,6 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
-      {/* User email dropdown area */}
-      {!collapsed && (
-        <div className="px-4 pt-3 pb-1">
-          <div className="flex items-center gap-1 text-xs text-sidebar-foreground/60 border border-sidebar-border rounded-md px-2 py-1.5">
-            <span className="truncate flex-1">{userEmail || "..."}</span>
-            <ChevronDown className="w-3 h-3 shrink-0" />
-          </div>
-          <p className="text-[10px] text-sidebar-foreground/50 mt-1 px-0.5 truncate">{userEmail}</p>
-        </div>
-      )}
-
       {/* Logo */}
       <div className="px-4 pt-2 pb-3 flex items-center gap-2">
         <Link to="/anasayfa" className="flex items-center gap-2">
