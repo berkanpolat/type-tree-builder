@@ -159,12 +159,13 @@ export default function AnaSayfa() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Firma state
-  const [firmalar, setFirmalar] = useState<FirmaListItem[]>([]);
+  const [firmalar, setFirmalar] = useState<FirmaWithExtra[]>([]);
   const [firmaLoading, setFirmaLoading] = useState(false);
   const [firmaTurleri, setFirmaTurleri] = useState<{ id: string; name: string }[]>([]);
   const [selectedFirmaTuru, setSelectedFirmaTuru] = useState<string>("");
   const [selectedFirmaTuruName, setSelectedFirmaTuruName] = useState<string>("");
   const [firmaFilterState, setFirmaFilterState] = useState<FirmaFilterState | null>(null);
+  const [firmaFavSet, setFirmaFavSet] = useState<Set<string>>(new Set());
 
   // Name maps
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
