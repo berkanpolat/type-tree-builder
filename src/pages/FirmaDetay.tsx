@@ -775,3 +775,7 @@ export default function FirmaDetay() {
             )}
           </Card>
         </div>
+      </div>
+    </div>
+  );
+}
