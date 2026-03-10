@@ -55,6 +55,7 @@ export function AppSidebar() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [userEmail, setUserEmail] = useState("");
+  const unreadMessages = useUnreadMessages();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
