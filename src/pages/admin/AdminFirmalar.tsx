@@ -234,6 +234,13 @@ export default function AdminFirmalar() {
     return true;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedFirmalar = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterMinIhale, filterMaxIhale, filterMinTeklif, filterMaxTeklif, filterMinUrun, filterMaxUrun, filterMinProfil, filterMaxProfil]);
+
   const durumBadge = (durum: string) => {
     switch (durum) {
       case "onaylandi": return <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[10px] px-1.5 py-0">Onaylı</Badge>;
