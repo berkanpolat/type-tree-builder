@@ -543,7 +543,6 @@ Deno.serve(async (req) => {
         .select("*", { count: "exact", head: true })
         .eq("durum", "devam_ediyor");
 
-      // Category distribution for urun vs hizmet
       const { data: ihaleler } = await supabase
         .from("ihaleler")
         .select("ihale_turu, urun_kategori_id, hizmet_kategori_id");
@@ -551,7 +550,33 @@ Deno.serve(async (req) => {
       const urunCount = (ihaleler || []).filter((i: any) => i.ihale_turu !== "hizmet").length;
       const hizmetCount = (ihaleler || []).filter((i: any) => i.ihale_turu === "hizmet").length;
 
-      // Get top urun categories
+      // Get ALL categories (including those with 0 ihaleler)
+      const { data: kategoriler } = await supabase
+        .from("firma_bilgi_kategorileri")
+        .select("id, name");
+
+      const urunKatKat = (kategoriler || []).find((k: any) => k.name === "Ana Ürün Kategorileri");
+      const hizmetKatKat = (kategoriler || []).find((k: any) => k.name === "Ana Hizmet Kategorileri");
+
+      let allUrunCats: any[] = [];
+      let allHizmetCats: any[] = [];
+
+      if (urunKatKat) {
+        const { data } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name, parent_id")
+          .eq("kategori_id", urunKatKat.id);
+        allUrunCats = (data || []).filter((d: any) => !d.parent_id);
+      }
+      if (hizmetKatKat) {
+        const { data } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name, parent_id")
+          .eq("kategori_id", hizmetKatKat.id);
+        allHizmetCats = (data || []).filter((d: any) => !d.parent_id);
+      }
+
+      // Count per category
       const urunCatIds = (ihaleler || [])
         .filter((i: any) => i.ihale_turu !== "hizmet" && i.urun_kategori_id)
         .map((i: any) => i.urun_kategori_id);
@@ -559,34 +584,15 @@ Deno.serve(async (req) => {
         .filter((i: any) => i.ihale_turu === "hizmet" && i.hizmet_kategori_id)
         .map((i: any) => i.hizmet_kategori_id);
 
-      const allCatIds = [...new Set([...urunCatIds, ...hizmetCatIds])];
-      let catMap: Record<string, string> = {};
-      if (allCatIds.length > 0) {
-        const { data: cats } = await supabase
-          .from("firma_bilgi_secenekleri")
-          .select("id, name")
-          .in("id", allCatIds);
-        if (cats) catMap = Object.fromEntries(cats.map((c: any) => [c.id, c.name]));
-      }
+      const urunKategoriDagilimi = allUrunCats.map((c: any) => ({
+        name: c.name,
+        count: urunCatIds.filter((id: string) => id === c.id).length,
+      })).sort((a: any, b: any) => b.count - a.count);
 
-      // Count per category
-      const urunCatCounts: Record<string, number> = {};
-      for (const cid of urunCatIds) {
-        const name = catMap[cid] || "Diğer";
-        urunCatCounts[name] = (urunCatCounts[name] || 0) + 1;
-      }
-      const hizmetCatCounts: Record<string, number> = {};
-      for (const cid of hizmetCatIds) {
-        const name = catMap[cid] || "Diğer";
-        hizmetCatCounts[name] = (hizmetCatCounts[name] || 0) + 1;
-      }
-
-      const urunKategoriDagilimi = Object.entries(urunCatCounts)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count);
-      const hizmetKategoriDagilimi = Object.entries(hizmetCatCounts)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count);
+      const hizmetKategoriDagilimi = allHizmetCats.map((c: any) => ({
+        name: c.name,
+        count: hizmetCatIds.filter((id: string) => id === c.id).length,
+      })).sort((a: any, b: any) => b.count - a.count);
 
       return jsonResponse({
         total: totalCount || 0,

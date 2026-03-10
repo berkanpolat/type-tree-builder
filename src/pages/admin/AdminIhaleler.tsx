@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, CSSProperties } from "react";
+import { useState, useEffect, useCallback, CSSProperties, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
@@ -7,10 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription
-} from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -18,10 +16,12 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   Gavel, Eye, Clock, Filter, Search, RotateCcw, TrendingUp, Package, HeadphonesIcon,
-  CheckCircle, XCircle, ExternalLink, Pencil, Trash2, ArrowUpDown, FileText, ChevronLeft, ChevronRight,
-  Image as ImageIcon
+  ExternalLink, Pencil, Trash2, ArrowUpDown, FileText, ChevronLeft, ChevronRight,
+  Image as ImageIcon, BarChart3, X, ChevronDown, Activity
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
+/* ── Theme-aware style helpers ── */
 const s = {
   card: {
     background: "hsl(var(--admin-card-bg))",
@@ -36,11 +36,12 @@ const s = {
     borderColor: "hsl(var(--admin-border))",
     color: "hsl(var(--admin-text))",
   } as CSSProperties,
-  statBox: {
-    background: "hsl(var(--admin-hover))",
+  selectContent: {
+    background: "hsl(var(--admin-card-bg))",
+    border: "1px solid hsl(var(--admin-border))",
     borderRadius: "0.5rem",
-    padding: "0.625rem",
-    textAlign: "center" as const,
+    padding: "0.25rem",
+    backdropFilter: "none",
   } as CSSProperties,
 };
 
@@ -103,6 +104,12 @@ const DURUM_LABELS: Record<string, string> = {
 type SortField = "created_at" | "teklif_sayisi" | "goruntuleme_sayisi" | "bitis_tarihi";
 type SortDir = "asc" | "desc";
 
+const CHART_COLORS = [
+  "#f59e0b", "#3b82f6", "#10b981", "#8b5cf6", "#ef4444",
+  "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#6366f1",
+  "#14b8a6", "#e11d48",
+];
+
 export default function AdminIhaleler() {
   const { token } = useAdminAuth();
   const { toast } = useToast();
@@ -127,25 +134,88 @@ export default function AdminIhaleler() {
   const [filterStartDate, setFilterStartDate] = useState("");
   const [filterEndDate, setFilterEndDate] = useState("");
 
+  // Multi-select category filters
+  const [selectedUrunKategorileri, setSelectedUrunKategorileri] = useState<string[]>([]);
+  const [selectedUrunGruplari, setSelectedUrunGruplari] = useState<string[]>([]);
+  const [selectedUrunTurleri, setSelectedUrunTurleri] = useState<string[]>([]);
+  const [selectedHizmetKategorileri, setSelectedHizmetKategorileri] = useState<string[]>([]);
+  const [selectedHizmetTurleri, setSelectedHizmetTurleri] = useState<string[]>([]);
+
+  // Category options for filters
+  const [categoryOptions, setCategoryOptions] = useState<{
+    urunKategorileri: { id: string; name: string }[];
+    urunGruplari: { id: string; name: string }[];
+    urunTurleri: { id: string; name: string }[];
+    hizmetKategorileri: { id: string; name: string }[];
+    hizmetTurleri: { id: string; name: string }[];
+  }>({
+    urunKategorileri: [], urunGruplari: [], urunTurleri: [],
+    hizmetKategorileri: [], hizmetTurleri: [],
+  });
+
   // Sorting
   const [sortField, setSortField] = useState<SortField>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   // Firma list for dropdown
   const [firmaList, setFirmaList] = useState<{ user_id: string; firma_unvani: string }[]>([]);
+  const [firmaSearch, setFirmaSearch] = useState("");
 
   // Confirm dialog
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; desc: string; action: () => void }>({ open: false, title: "", desc: "", action: () => {} });
-
-  // Edit dialog
-  const [editDialog, setEditDialog] = useState(false);
-  const [editIhale, setEditIhale] = useState<IhaleItem | null>(null);
-  const [editForm, setEditForm] = useState({ baslik: "", durum: "", ihale_turu: "", teklif_usulu: "" });
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
     if (error) throw error;
     return data;
+  }, []);
+
+  // Fetch category options for filters
+  const fetchCategoryOptions = useCallback(async () => {
+    try {
+      const { data: kategoriler } = await supabase
+        .from("firma_bilgi_kategorileri")
+        .select("id, name");
+
+      if (!kategoriler) return;
+
+      const urunKatKat = kategoriler.find((k: any) => k.name === "Ana Ürün Kategorileri");
+      const hizmetKatKat = kategoriler.find((k: any) => k.name === "Ana Hizmet Kategorileri");
+
+      if (urunKatKat) {
+        const { data: urunKats } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name, parent_id")
+          .eq("kategori_id", urunKatKat.id);
+        if (urunKats) {
+          const roots = urunKats.filter((o: any) => !o.parent_id);
+          const level2 = urunKats.filter((o: any) => o.parent_id && roots.some((r: any) => r.id === o.parent_id));
+          const level3 = urunKats.filter((o: any) => o.parent_id && level2.some((r: any) => r.id === o.parent_id));
+          setCategoryOptions(prev => ({
+            ...prev,
+            urunKategorileri: roots.map((r: any) => ({ id: r.id, name: r.name })),
+            urunGruplari: level2.map((r: any) => ({ id: r.id, name: r.name })),
+            urunTurleri: level3.map((r: any) => ({ id: r.id, name: r.name })),
+          }));
+        }
+      }
+
+      if (hizmetKatKat) {
+        const { data: hizmetKats } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name, parent_id")
+          .eq("kategori_id", hizmetKatKat.id);
+        if (hizmetKats) {
+          const roots = hizmetKats.filter((o: any) => !o.parent_id);
+          const level2 = hizmetKats.filter((o: any) => o.parent_id);
+          setCategoryOptions(prev => ({
+            ...prev,
+            hizmetKategorileri: roots.map((r: any) => ({ id: r.id, name: r.name })),
+            hizmetTurleri: level2.map((r: any) => ({ id: r.id, name: r.name })),
+          }));
+        }
+      }
+    } catch { }
   }, []);
 
   const fetchData = useCallback(async () => {
@@ -158,7 +228,6 @@ export default function AdminIhaleler() {
       setIhaleler(ihaleData.ihaleler || []);
       setStats(statsData);
 
-      // Build unique firma list
       const firms = (ihaleData.ihaleler || []).reduce((acc: any[], i: any) => {
         if (!acc.find((f: any) => f.user_id === i.user_id)) {
           acc.push({ user_id: i.user_id, firma_unvani: i.firma_unvani });
@@ -173,24 +242,21 @@ export default function AdminIhaleler() {
     }
   }, [token, callApi, toast]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { fetchData(); fetchCategoryOptions(); }, [fetchData, fetchCategoryOptions]);
 
   const clearFilters = () => {
-    setSearchTerm("");
-    setFilterTuru("all");
-    setFilterUsulu("all");
-    setFilterDurum("all");
-    setFilterFirma("all");
-    setFilterMinTeklif("");
-    setFilterMaxTeklif("");
-    setFilterMinGoruntuleme("");
-    setFilterMaxGoruntuleme("");
-    setFilterStartDate("");
-    setFilterEndDate("");
+    setSearchTerm(""); setFilterTuru("all"); setFilterUsulu("all"); setFilterDurum("all");
+    setFilterFirma("all"); setFilterMinTeklif(""); setFilterMaxTeklif("");
+    setFilterMinGoruntuleme(""); setFilterMaxGoruntuleme("");
+    setFilterStartDate(""); setFilterEndDate("");
+    setSelectedUrunKategorileri([]); setSelectedUrunGruplari([]); setSelectedUrunTurleri([]);
+    setSelectedHizmetKategorileri([]); setSelectedHizmetTurleri([]);
   };
 
   const hasActiveFilters = searchTerm || filterTuru !== "all" || filterUsulu !== "all" || filterDurum !== "all" || filterFirma !== "all" ||
-    filterMinTeklif || filterMaxTeklif || filterMinGoruntuleme || filterMaxGoruntuleme || filterStartDate || filterEndDate;
+    filterMinTeklif || filterMaxTeklif || filterMinGoruntuleme || filterMaxGoruntuleme || filterStartDate || filterEndDate ||
+    selectedUrunKategorileri.length > 0 || selectedUrunGruplari.length > 0 || selectedUrunTurleri.length > 0 ||
+    selectedHizmetKategorileri.length > 0 || selectedHizmetTurleri.length > 0;
 
   const filtered = ihaleler
     .filter((i) => {
@@ -208,6 +274,12 @@ export default function AdminIhaleler() {
       if (filterMaxGoruntuleme && i.goruntuleme_sayisi > Number(filterMaxGoruntuleme)) return false;
       if (filterStartDate && i.created_at < filterStartDate) return false;
       if (filterEndDate && i.created_at > filterEndDate + "T23:59:59") return false;
+      // Multi-select category filters
+      if (selectedUrunKategorileri.length > 0 && !selectedUrunKategorileri.includes(i.urun_kategori_id || "")) return false;
+      if (selectedUrunGruplari.length > 0 && !selectedUrunGruplari.includes(i.urun_grup_id || "")) return false;
+      if (selectedUrunTurleri.length > 0 && !selectedUrunTurleri.includes(i.urun_tur_id || "")) return false;
+      if (selectedHizmetKategorileri.length > 0 && !selectedHizmetKategorileri.includes(i.hizmet_kategori_id || "")) return false;
+      if (selectedHizmetTurleri.length > 0 && !selectedHizmetTurleri.includes(i.hizmet_tur_id || "")) return false;
       return true;
     })
     .sort((a, b) => {
@@ -226,76 +298,17 @@ export default function AdminIhaleler() {
   const safePage = Math.min(currentPage, totalPages);
   const paginated = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterUsulu, filterDurum, filterFirma, filterMinTeklif, filterMaxTeklif, filterMinGoruntuleme, filterMaxGoruntuleme, filterStartDate, filterEndDate, sortField, sortDir]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterUsulu, filterDurum, filterFirma, filterMinTeklif, filterMaxTeklif, filterMinGoruntuleme, filterMaxGoruntuleme, filterStartDate, filterEndDate, sortField, sortDir, selectedUrunKategorileri, selectedUrunGruplari, selectedUrunTurleri, selectedHizmetKategorileri, selectedHizmetTurleri]);
 
   const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDir("desc");
-    }
+    if (sortField === field) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("desc"); }
   };
 
   // Actions
-  const openEdit = (ihale: IhaleItem) => {
-    setEditIhale(ihale);
-    setEditForm({ baslik: ihale.baslik, durum: ihale.durum, ihale_turu: ihale.ihale_turu, teklif_usulu: ihale.teklif_usulu });
-    setEditDialog(true);
-  };
-
-  const handleEditSave = async () => {
-    if (!editIhale) return;
-    try {
-      await callApi("update-ihale", { token, ihaleId: editIhale.id, updates: editForm });
-      toast({ title: "Başarılı", description: "İhale güncellendi" });
-      setEditDialog(false);
-      fetchData();
-    } catch (err: any) {
-      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
-    }
-  };
-
-  const handleApprove = (ihale: IhaleItem) => {
-    setConfirmDialog({
-      open: true,
-      title: "İhaleyi Onayla",
-      desc: `"${ihale.baslik}" (${ihale.ihale_no}) başlıklı ihaleyi onaylamak istediğinize emin misiniz? İhale "Devam Ediyor" durumuna geçecektir.`,
-      action: async () => {
-        try {
-          await callApi("approve-ihale", { token, ihaleId: ihale.id });
-          toast({ title: "Başarılı", description: "İhale onaylandı" });
-          fetchData();
-        } catch (err: any) {
-          toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
-        }
-        setConfirmDialog(prev => ({ ...prev, open: false }));
-      },
-    });
-  };
-
-  const handleReject = (ihale: IhaleItem) => {
-    setConfirmDialog({
-      open: true,
-      title: "İhaleyi Reddet",
-      desc: `"${ihale.baslik}" (${ihale.ihale_no}) başlıklı ihaleyi reddetmek istediğinize emin misiniz?`,
-      action: async () => {
-        try {
-          await callApi("reject-ihale", { token, ihaleId: ihale.id });
-          toast({ title: "Başarılı", description: "İhale reddedildi" });
-          fetchData();
-        } catch (err: any) {
-          toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
-        }
-        setConfirmDialog(prev => ({ ...prev, open: false }));
-      },
-    });
-  };
-
   const handleRemove = (ihale: IhaleItem) => {
     setConfirmDialog({
-      open: true,
-      title: "İhaleyi Kaldır",
+      open: true, title: "İhaleyi Kaldır",
       desc: `"${ihale.baslik}" (${ihale.ihale_no}) başlıklı ihaleyi kaldırmak istediğinize emin misiniz? İhale "İptal" durumuna geçecektir.`,
       action: async () => {
         try {
@@ -312,15 +325,15 @@ export default function AdminIhaleler() {
 
   const durumBadge = (durum: string) => {
     const colors: Record<string, string> = {
-      devam_ediyor: "bg-emerald-500/20 text-emerald-500 border-emerald-500/30",
-      onay_bekliyor: "bg-amber-500/20 text-amber-500 border-amber-500/30",
-      tamamlandi: "bg-blue-500/20 text-blue-500 border-blue-500/30",
-      iptal: "bg-red-500/20 text-red-500 border-red-500/30",
-      reddedildi: "bg-red-500/20 text-red-500 border-red-500/30",
-      duzenleniyor: "bg-slate-500/20 text-slate-400 border-slate-500/30",
-      taslak: "bg-slate-500/20 text-slate-400 border-slate-500/30",
+      devam_ediyor: "bg-emerald-500/15 text-emerald-600 border-emerald-500/25",
+      onay_bekliyor: "bg-amber-500/15 text-amber-600 border-amber-500/25",
+      tamamlandi: "bg-blue-500/15 text-blue-600 border-blue-500/25",
+      iptal: "bg-red-500/15 text-red-500 border-red-500/25",
+      reddedildi: "bg-red-500/15 text-red-500 border-red-500/25",
+      duzenleniyor: "bg-slate-500/15 text-slate-500 border-slate-500/25",
+      taslak: "bg-slate-500/15 text-slate-500 border-slate-500/25",
     };
-    return <Badge className={`${colors[durum] || ""} text-[10px] px-1.5 py-0`}>{DURUM_LABELS[durum] || durum}</Badge>;
+    return <Badge variant="outline" className={`${colors[durum] || ""} text-[11px] px-2 py-0.5 font-medium`}>{DURUM_LABELS[durum] || durum}</Badge>;
   };
 
   const formatDate = (d: string | null) => {
@@ -330,163 +343,238 @@ export default function AdminIhaleler() {
 
   const getRemainingTime = (bitis: string | null) => {
     if (!bitis) return null;
-    const end = new Date(bitis).getTime();
-    const now = Date.now();
-    const diff = end - now;
+    const diff = new Date(bitis).getTime() - Date.now();
     if (diff <= 0) return "Süre doldu";
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    if (days > 0) return `${days}g ${hours}s kaldı`;
+    if (days > 0) return `${days}g ${hours}s`;
     const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    return `${hours}s ${mins}dk kaldı`;
+    return `${hours}s ${mins}dk`;
   };
 
   const SortButton = ({ field, label }: { field: SortField; label: string }) => (
     <button
       onClick={() => handleSort(field)}
-      className="flex items-center gap-1 text-[10px] font-medium uppercase tracking-wider hover:opacity-80 transition-opacity"
-      style={sortField === field ? { color: "hsl(32 92% 54%)" } : s.muted}
+      className="flex items-center gap-1 text-[11px] font-medium hover:opacity-80 transition-opacity px-2 py-1 rounded-md"
+      style={sortField === field ? { color: "#f59e0b", background: "rgba(245,158,11,0.08)" } : s.muted}
     >
       {label}
       <ArrowUpDown className="w-3 h-3" />
     </button>
   );
 
+  const filteredFirmaList = firmaSearch
+    ? firmaList.filter(f => f.firma_unvani.toLowerCase().includes(firmaSearch.toLowerCase()))
+    : firmaList;
+
   return (
     <AdminLayout title="İhaleler">
-      <div className="space-y-6">
-        {/* Summary Cards */}
+      <div className="space-y-5">
+        {/* ── Summary Stats ── */}
         {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div style={s.card} className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <Gavel className="w-5 h-5 text-blue-400" />
-                <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Toplam</span>
-              </div>
-              <div className="text-3xl font-bold" style={s.text}>{stats.total}</div>
-              <p className="text-xs mt-1" style={s.muted}>Açılmış ihale</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Top row: counts */}
+            <div className="grid grid-cols-2 gap-3">
+              <StatCard
+                icon={<Gavel className="w-5 h-5" />}
+                iconBg="bg-blue-500/10"
+                iconColor="text-blue-500"
+                label="Toplam İhale"
+                value={stats.total}
+              />
+              <StatCard
+                icon={<Activity className="w-5 h-5" />}
+                iconBg="bg-emerald-500/10"
+                iconColor="text-emerald-500"
+                label="Aktif İhale"
+                value={stats.active}
+                valueColor="text-emerald-500"
+              />
             </div>
 
-            <div style={s.card} className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <Clock className="w-5 h-5 text-emerald-400" />
-                <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Aktif</span>
-              </div>
-              <div className="text-3xl font-bold text-emerald-500">{stats.active}</div>
-              <p className="text-xs mt-1" style={s.muted}>Devam ediyor</p>
-            </div>
-
-            <div style={s.card} className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Package className="w-4 h-4 text-purple-400" />
-                <span className="text-xs font-medium" style={s.muted}>Ürün Kategorisi ({stats.urunCount})</span>
-              </div>
-              <div className="space-y-1.5 max-h-24 overflow-y-auto">
-                {stats.urunKategoriDagilimi.slice(0, 5).map((c) => (
-                  <div key={c.name} className="flex items-center justify-between text-xs gap-2">
-                    <span className="truncate" style={s.muted}>{c.name}</span>
-                    <span className="font-semibold flex-shrink-0" style={s.text}>{c.count}</span>
+            {/* Category distribution charts */}
+            <div className="grid grid-cols-2 gap-3">
+              <div style={s.card} className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Package className="w-4 h-4 text-purple-500" />
+                  <span className="text-xs font-semibold" style={s.text}>Ürün Kategorileri</span>
+                  <span className="text-[10px] ml-auto px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-500 font-medium">{stats.urunCount}</span>
+                </div>
+                {stats.urunKategoriDagilimi.length > 0 ? (
+                  <div className="h-[120px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats.urunKategoriDagilimi.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
+                        <XAxis type="number" hide />
+                        <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 10, fill: "hsl(var(--admin-muted))" }} />
+                        <Tooltip
+                          contentStyle={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.5rem", fontSize: 12 }}
+                          labelStyle={{ color: "hsl(var(--admin-text))" }}
+                        />
+                        <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={16}>
+                          {stats.urunKategoriDagilimi.slice(0, 8).map((_, idx) => (
+                            <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} opacity={0.8} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
-                ))}
-                {stats.urunKategoriDagilimi.length === 0 && <span className="text-xs" style={s.muted}>Veri yok</span>}
+                ) : (
+                  <p className="text-xs text-center py-6" style={s.muted}>Henüz veri yok</p>
+                )}
               </div>
-            </div>
 
-            <div style={s.card} className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <HeadphonesIcon className="w-4 h-4 text-orange-400" />
-                <span className="text-xs font-medium" style={s.muted}>Hizmet Kategorisi ({stats.hizmetCount})</span>
-              </div>
-              <div className="space-y-1.5 max-h-24 overflow-y-auto">
-                {stats.hizmetKategoriDagilimi.slice(0, 5).map((c) => (
-                  <div key={c.name} className="flex items-center justify-between text-xs gap-2">
-                    <span className="truncate" style={s.muted}>{c.name}</span>
-                    <span className="font-semibold flex-shrink-0" style={s.text}>{c.count}</span>
+              <div style={s.card} className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <HeadphonesIcon className="w-4 h-4 text-orange-500" />
+                  <span className="text-xs font-semibold" style={s.text}>Hizmet Kategorileri</span>
+                  <span className="text-[10px] ml-auto px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-500 font-medium">{stats.hizmetCount}</span>
+                </div>
+                {stats.hizmetKategoriDagilimi.length > 0 ? (
+                  <div className="h-[120px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={stats.hizmetKategoriDagilimi.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
+                        <XAxis type="number" hide />
+                        <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 10, fill: "hsl(var(--admin-muted))" }} />
+                        <Tooltip
+                          contentStyle={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.5rem", fontSize: 12 }}
+                          labelStyle={{ color: "hsl(var(--admin-text))" }}
+                        />
+                        <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={16}>
+                          {stats.hizmetKategoriDagilimi.slice(0, 8).map((_, idx) => (
+                            <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} opacity={0.8} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
                   </div>
-                ))}
-                {stats.hizmetKategoriDagilimi.length === 0 && <span className="text-xs" style={s.muted}>Veri yok</span>}
+                ) : (
+                  <p className="text-xs text-center py-6" style={s.muted}>Henüz veri yok</p>
+                )}
               </div>
             </div>
           </div>
         )}
 
-        {/* Search, Sort & Filters */}
+        {/* ── Search, Sort & Filters ── */}
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
               <Input
-                placeholder="İhale ID, başlık, firma veya kategori ile ara..."
+                placeholder="İhale ID, başlık, firma veya kategori ara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-9"
                 style={s.input}
               />
             </div>
             <Button
-              variant="outline"
+              variant="outline" size="sm"
               onClick={() => setShowFilters(!showFilters)}
-              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}
+              className="h-9 gap-2"
+              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))", background: showFilters ? "hsl(var(--admin-hover))" : "transparent" }}
             >
-              <Filter className="w-4 h-4 mr-2" />
+              <Filter className="w-3.5 h-3.5" />
               Filtreler
-              {hasActiveFilters && <span className="ml-2 w-2 h-2 rounded-full bg-amber-500" />}
+              {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-amber-500" />}
             </Button>
             {hasActiveFilters && (
-              <Button variant="ghost" onClick={clearFilters} className="text-red-500 hover:text-red-600 text-xs px-3">
-                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+              <Button variant="ghost" onClick={clearFilters} size="sm" className="text-red-500 hover:text-red-600 h-9 gap-1.5">
+                <RotateCcw className="w-3 h-3" />
                 Temizle
               </Button>
             )}
           </div>
 
-          {/* Sort buttons row */}
-          <div className="flex items-center gap-4 px-1">
-            <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Sırala:</span>
+          {/* Sort row */}
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] font-medium mr-1" style={s.muted}>Sırala:</span>
             <SortButton field="created_at" label="Tarih" />
             <SortButton field="teklif_sayisi" label="Teklif" />
             <SortButton field="goruntuleme_sayisi" label="Görüntülenme" />
             <SortButton field="bitis_tarihi" label="Bitiş" />
           </div>
 
+          {/* Filters panel */}
           {showFilters && (
-            <div style={s.card} className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <FilterSelect label="İhale Türü" value={filterTuru} onChange={setFilterTuru}
-                options={[{ value: "all", label: "Tümü" }, ...Object.entries(IHALE_TURU_LABELS).map(([v, l]) => ({ value: v, label: l }))]} />
-              <FilterSelect label="Teklif Usulü" value={filterUsulu} onChange={setFilterUsulu}
-                options={[{ value: "all", label: "Tümü" }, ...Object.entries(TEKLIF_USULU_LABELS).map(([v, l]) => ({ value: v, label: l }))]} />
-              <FilterSelect label="Durum" value={filterDurum} onChange={setFilterDurum}
-                options={[{ value: "all", label: "Tümü" }, ...Object.entries(DURUM_LABELS).map(([v, l]) => ({ value: v, label: l }))]} />
-              <div className="space-y-1">
-                <Label className="text-xs" style={s.muted}>Firma</Label>
-                <Select value={filterFirma} onValueChange={setFilterFirma}>
-                  <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue placeholder="Tümü" /></SelectTrigger>
-                  <SelectContent style={{ ...s.card, padding: "0.25rem" }} className="max-h-60">
-                    <SelectItem value="all" className="text-xs">Tümü</SelectItem>
-                    {firmaList.map(f => (
-                      <SelectItem key={f.user_id} value={f.user_id} className="text-xs">{f.firma_unvani}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div style={s.card} className="p-4 space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <FilterSelect label="İhale Türü" value={filterTuru} onChange={setFilterTuru}
+                  options={[{ value: "all", label: "Tümü" }, ...Object.entries(IHALE_TURU_LABELS).map(([v, l]) => ({ value: v, label: l }))]} />
+                <FilterSelect label="Teklif Usulü" value={filterUsulu} onChange={setFilterUsulu}
+                  options={[{ value: "all", label: "Tümü" }, ...Object.entries(TEKLIF_USULU_LABELS).map(([v, l]) => ({ value: v, label: l }))]} />
+                <FilterSelect label="Durum" value={filterDurum} onChange={setFilterDurum}
+                  options={[{ value: "all", label: "Tümü" }, ...Object.entries(DURUM_LABELS).map(([v, l]) => ({ value: v, label: l }))]} />
+
+                {/* Firma dropdown with search */}
+                <div className="space-y-1">
+                  <Label className="text-xs" style={s.muted}>Firma</Label>
+                  <Select value={filterFirma} onValueChange={setFilterFirma}>
+                    <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue placeholder="Tümü" /></SelectTrigger>
+                    <SelectContent style={s.selectContent} className="max-h-60 z-[100]">
+                      <div className="px-2 pb-1.5 pt-1 sticky top-0" style={{ background: "hsl(var(--admin-card-bg))" }}>
+                        <Input
+                          placeholder="Firma ara..."
+                          value={firmaSearch}
+                          onChange={(e) => setFirmaSearch(e.target.value)}
+                          className="h-7 text-xs"
+                          style={s.input}
+                        />
+                      </div>
+                      <SelectItem value="all" className="text-xs">Tümü</SelectItem>
+                      {filteredFirmaList.map(f => (
+                        <SelectItem key={f.user_id} value={f.user_id} className="text-xs">{f.firma_unvani}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
-              <FilterRange label="Teklif Sayısı" min={filterMinTeklif} max={filterMaxTeklif} onMinChange={setFilterMinTeklif} onMaxChange={setFilterMaxTeklif} />
-              <FilterRange label="Görüntülenme" min={filterMinGoruntuleme} max={filterMaxGoruntuleme} onMinChange={setFilterMinGoruntuleme} onMaxChange={setFilterMaxGoruntuleme} />
-
-              <div className="space-y-1">
-                <Label className="text-xs" style={s.muted}>Başlangıç Tarihi</Label>
-                <Input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} className="text-xs h-8" style={s.input} />
+              {/* Multi-select category filters */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <MultiSelectFilter
+                  label="Ürün Kategorisi"
+                  options={categoryOptions.urunKategorileri}
+                  selected={selectedUrunKategorileri}
+                  onChange={setSelectedUrunKategorileri}
+                />
+                <MultiSelectFilter
+                  label="Ürün Grubu"
+                  options={categoryOptions.urunGruplari}
+                  selected={selectedUrunGruplari}
+                  onChange={setSelectedUrunGruplari}
+                />
+                <MultiSelectFilter
+                  label="Ürün Türü"
+                  options={categoryOptions.urunTurleri}
+                  selected={selectedUrunTurleri}
+                  onChange={setSelectedUrunTurleri}
+                />
+                <MultiSelectFilter
+                  label="Hizmet Kategorisi"
+                  options={categoryOptions.hizmetKategorileri}
+                  selected={selectedHizmetKategorileri}
+                  onChange={setSelectedHizmetKategorileri}
+                />
+                <MultiSelectFilter
+                  label="Hizmet Türü"
+                  options={categoryOptions.hizmetTurleri}
+                  selected={selectedHizmetTurleri}
+                  onChange={setSelectedHizmetTurleri}
+                />
               </div>
-              <div className="space-y-1">
-                <Label className="text-xs" style={s.muted}>Bitiş Tarihi</Label>
-                <Input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} className="text-xs h-8" style={s.input} />
-              </div>
 
-              <div className="col-span-2 md:col-span-4 flex justify-end">
-                <Button variant="ghost" onClick={clearFilters} className="text-xs text-red-500 hover:text-red-600">
-                  <RotateCcw className="w-3 h-3 mr-1.5" />
-                  Tüm Filtreleri Temizle
-                </Button>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <FilterRange label="Teklif Sayısı" min={filterMinTeklif} max={filterMaxTeklif} onMinChange={setFilterMinTeklif} onMaxChange={setFilterMaxTeklif} />
+                <FilterRange label="Görüntülenme" min={filterMinGoruntuleme} max={filterMaxGoruntuleme} onMinChange={setFilterMinGoruntuleme} onMaxChange={setFilterMaxGoruntuleme} />
+                <div className="space-y-1">
+                  <Label className="text-xs" style={s.muted}>Başlangıç Tarihi</Label>
+                  <Input type="date" value={filterStartDate} onChange={(e) => setFilterStartDate(e.target.value)} className="text-xs h-8" style={s.input} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs" style={s.muted}>Bitiş Tarihi</Label>
+                  <Input type="date" value={filterEndDate} onChange={(e) => setFilterEndDate(e.target.value)} className="text-xs h-8" style={s.input} />
+                </div>
               </div>
             </div>
           )}
@@ -494,115 +582,122 @@ export default function AdminIhaleler() {
 
         {/* Result count */}
         <div className="flex items-center justify-between text-xs" style={s.muted}>
-          <span>{filtered.length} ihale listeleniyor {hasActiveFilters && `(${ihaleler.length} toplam)`}</span>
+          <span>{filtered.length} ihale {hasActiveFilters && `(${ihaleler.length} toplam)`}</span>
           <span>Sayfa {safePage} / {totalPages}</span>
         </div>
 
-        {/* İhale List */}
+        {/* ── İhale Cards ── */}
         {loading ? (
-          <div className="flex items-center justify-center p-12">
+          <div className="flex items-center justify-center p-16">
             <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
           </div>
         ) : (
           <div className="space-y-3">
             {filtered.length === 0 && (
-              <div className="text-center py-12" style={s.muted}>İhale bulunamadı.</div>
+              <div className="text-center py-16" style={s.muted}>
+                <Gavel className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p>İhale bulunamadı.</p>
+              </div>
             )}
             {paginated.map((ihale) => (
-              <div key={ihale.id} style={s.card} className="p-5 hover:shadow-lg transition-all">
-                <div className="flex items-start gap-4">
+              <div key={ihale.id} style={s.card} className="overflow-hidden hover:shadow-md transition-shadow">
+                <div className="flex">
                   {/* Photo */}
-                  <div className="w-16 h-16 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center" style={{ background: "hsl(var(--admin-hover))" }}>
+                  <div className="w-24 min-h-[120px] flex-shrink-0 flex items-center justify-center relative" style={{ background: "hsl(var(--admin-hover))" }}>
                     {ihale.foto_url ? (
                       <img src={ihale.foto_url} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <ImageIcon className="w-6 h-6" style={s.muted} />
+                      <ImageIcon className="w-8 h-8 opacity-20" style={s.muted} />
                     )}
                   </div>
 
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded" style={{ background: "hsl(var(--admin-hover))", ...s.text }}>
-                        {ihale.ihale_no}
-                      </span>
-                      <h3 className="font-semibold text-sm truncate" style={s.text}>{ihale.baslik}</h3>
-                      {durumBadge(ihale.durum)}
-                    </div>
+                  {/* Content */}
+                  <div className="flex-1 p-4 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        {/* Title row */}
+                        <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                          <code className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ background: "hsl(var(--admin-hover))", ...s.text }}>
+                            {ihale.ihale_no}
+                          </code>
+                          {durumBadge(ihale.durum)}
+                        </div>
+                        <h3 className="font-semibold text-sm mb-1 truncate" style={s.text}>{ihale.baslik}</h3>
 
-                    <div className="flex items-center gap-4 text-xs flex-wrap mb-2" style={s.secondary}>
-                      <span>{ihale.firma_unvani}</span>
-                      <span>·</span>
-                      <span>{IHALE_TURU_LABELS[ihale.ihale_turu] || ihale.ihale_turu}</span>
-                      <span>·</span>
-                      <span>{TEKLIF_USULU_LABELS[ihale.teklif_usulu] || ihale.teklif_usulu}</span>
-                    </div>
+                        {/* Meta info */}
+                        <div className="flex items-center gap-2 text-[11px] flex-wrap mb-2" style={s.secondary}>
+                          <span className="font-medium">{ihale.firma_unvani}</span>
+                          <span className="opacity-40">•</span>
+                          <span>{IHALE_TURU_LABELS[ihale.ihale_turu] || ihale.ihale_turu}</span>
+                          <span className="opacity-40">•</span>
+                          <span>{TEKLIF_USULU_LABELS[ihale.teklif_usulu] || ihale.teklif_usulu}</span>
+                          {ihale.kategori_label !== "—" && (
+                            <>
+                              <span className="opacity-40">•</span>
+                              <span className="text-purple-500">{ihale.kategori_label}</span>
+                            </>
+                          )}
+                        </div>
 
-                    <div className="flex items-center gap-4 text-xs flex-wrap mb-2" style={s.muted}>
-                      <span>Kategori: {ihale.kategori_label}</span>
-                    </div>
-
-                    <div className="flex items-center gap-6 text-xs" style={s.muted}>
-                      <span>Başlangıç: {formatDate(ihale.baslangic_tarihi)}</span>
-                      <span>Bitiş: {formatDate(ihale.bitis_tarihi)}</span>
-                      {ihale.durum === "devam_ediyor" && ihale.bitis_tarihi && (
-                        <span className="text-amber-500 font-medium">{getRemainingTime(ihale.bitis_tarihi)}</span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-6 mt-2">
-                      <div className="flex items-center gap-1.5 text-xs" style={s.muted}>
-                        <FileText className="w-3.5 h-3.5" />
-                        <span className="font-semibold" style={s.text}>{ihale.teklif_sayisi}</span> Teklif
+                        {/* Dates & Stats */}
+                        <div className="flex items-center gap-4 text-[11px] flex-wrap" style={s.muted}>
+                          <span>{formatDate(ihale.baslangic_tarihi)} — {formatDate(ihale.bitis_tarihi)}</span>
+                          {ihale.durum === "devam_ediyor" && ihale.bitis_tarihi && (
+                            <span className="text-amber-500 font-semibold">{getRemainingTime(ihale.bitis_tarihi)}</span>
+                          )}
+                          <span className="flex items-center gap-1">
+                            <FileText className="w-3 h-3" />
+                            <strong style={s.text}>{ihale.teklif_sayisi}</strong> teklif
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Eye className="w-3 h-3" />
+                            <strong style={s.text}>{ihale.goruntuleme_sayisi}</strong> görüntülenme
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs" style={s.muted}>
-                        <Eye className="w-3.5 h-3.5" />
-                        <span className="font-semibold" style={s.text}>{ihale.goruntuleme_sayisi}</span> Görüntülenme
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <Button
+                          onClick={() => window.open(`/manuihale/duzenle/${ihale.id}`, "_blank")}
+                          variant="outline" size="sm"
+                          className="text-[11px] h-7 px-2.5 gap-1"
+                          style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                        >
+                          <Pencil className="w-3 h-3" /> Düzenle
+                        </Button>
+
+                        <Button
+                          onClick={() => window.open(`/tekihale/${ihale.id}`, "_blank")}
+                          variant="outline" size="sm"
+                          className="text-[11px] h-7 px-2.5 gap-1"
+                          style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                        >
+                          <ExternalLink className="w-3 h-3" /> İncele
+                        </Button>
+
+                        {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
+                          <Button
+                            onClick={() => window.open(`/manuihale/takip/${ihale.id}`, "_blank")}
+                            variant="outline" size="sm"
+                            className="text-[11px] h-7 px-2.5 gap-1"
+                            style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                          >
+                            <TrendingUp className="w-3 h-3" /> Takip
+                          </Button>
+                        )}
+
+                        {ihale.durum !== "iptal" && ihale.durum !== "tamamlandi" && (
+                          <Button
+                            onClick={() => handleRemove(ihale)}
+                            variant="ghost" size="sm"
+                            className="text-[11px] h-7 px-2 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        )}
                       </div>
                     </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex flex-col gap-1.5 flex-shrink-0">
-                    <Button onClick={() => openEdit(ihale)} variant="outline" size="sm" className="text-xs justify-start"
-                      style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
-                      <Pencil className="w-3.5 h-3.5 mr-1.5" />
-                      Düzenle
-                    </Button>
-
-                    {ihale.durum === "onay_bekliyor" && (
-                      <>
-                        <Button onClick={() => handleApprove(ihale)} size="sm" className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white justify-start">
-                          <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
-                          Onayla
-                        </Button>
-                        <Button onClick={() => handleReject(ihale)} size="sm" variant="outline" className="text-xs text-red-500 border-red-500/30 hover:bg-red-500/10 justify-start">
-                          <XCircle className="w-3.5 h-3.5 mr-1.5" />
-                          Reddet
-                        </Button>
-                      </>
-                    )}
-
-                    <Button onClick={() => window.open(`/tekihale/${ihale.id}`, "_blank")} variant="outline" size="sm" className="text-xs justify-start"
-                      style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
-                      <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-                      Detay
-                    </Button>
-
-                    {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
-                      <Button onClick={() => window.open(`/manuihale/takip/${ihale.id}`, "_blank")} variant="outline" size="sm" className="text-xs justify-start"
-                        style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
-                        <TrendingUp className="w-3.5 h-3.5 mr-1.5" />
-                        Takip
-                      </Button>
-                    )}
-
-                    {ihale.durum !== "iptal" && ihale.durum !== "tamamlandi" && (
-                      <Button onClick={() => handleRemove(ihale)} variant="ghost" size="sm" className="text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10 justify-start">
-                        <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-                        Kaldır
-                      </Button>
-                    )}
                   </div>
                 </div>
               </div>
@@ -612,116 +707,47 @@ export default function AdminIhaleler() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 pt-2">
-            <Button
-              variant="outline" size="sm" disabled={safePage <= 1}
-              onClick={() => setCurrentPage(safePage - 1)}
-              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
-              className="text-xs"
-            >
+          <div className="flex items-center justify-center gap-1.5 pt-2">
+            <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setCurrentPage(safePage - 1)}
+              className="text-xs h-8 w-8 p-0"
+              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>
               <ChevronLeft className="w-4 h-4" />
             </Button>
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
               .reduce<(number | string)[]>((acc, p, idx, arr) => {
                 if (idx > 0 && p - (arr[idx - 1] as number) > 1) acc.push("...");
-                acc.push(p);
-                return acc;
+                acc.push(p); return acc;
               }, [])
               .map((p, idx) =>
                 typeof p === "string" ? (
-                  <span key={`ellipsis-${idx}`} className="px-1 text-xs" style={s.muted}>…</span>
+                  <span key={`e-${idx}`} className="px-1 text-xs" style={s.muted}>…</span>
                 ) : (
-                  <Button
-                    key={p} size="sm" variant={p === safePage ? "default" : "outline"}
-                    onClick={() => setCurrentPage(p as number)}
-                    className={p === safePage ? "bg-amber-500 hover:bg-amber-600 text-white text-xs w-8 h-8 p-0" : "text-xs w-8 h-8 p-0"}
-                    style={p !== safePage ? { borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" } : undefined}
-                  >
+                  <Button key={p} size="sm" variant={p === safePage ? "default" : "outline"} onClick={() => setCurrentPage(p as number)}
+                    className={p === safePage ? "bg-amber-500 hover:bg-amber-600 text-white text-xs h-8 w-8 p-0" : "text-xs h-8 w-8 p-0"}
+                    style={p !== safePage ? { borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" } : undefined}>
                     {p}
                   </Button>
                 )
               )}
-            <Button
-              variant="outline" size="sm" disabled={safePage >= totalPages}
-              onClick={() => setCurrentPage(safePage + 1)}
-              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
-              className="text-xs"
-            >
+            <Button variant="outline" size="sm" disabled={safePage >= totalPages} onClick={() => setCurrentPage(safePage + 1)}
+              className="text-xs h-8 w-8 p-0"
+              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>
               <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         )}
       </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialog} onOpenChange={setEditDialog}>
-        <DialogContent style={s.card} className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle style={s.text}>İhaleyi Düzenle</DialogTitle>
-            <DialogDescription style={s.muted}>
-              {editIhale?.ihale_no} numaralı ihaleyi düzenleyin.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <Label className="text-xs" style={s.muted}>Başlık</Label>
-              <Input value={editForm.baslik} onChange={(e) => setEditForm({ ...editForm, baslik: e.target.value })} style={s.input} />
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label className="text-xs" style={s.muted}>Durum</Label>
-                <Select value={editForm.durum} onValueChange={(v) => setEditForm({ ...editForm, durum: v })}>
-                  <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue /></SelectTrigger>
-                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
-                    {Object.entries(DURUM_LABELS).map(([v, l]) => (
-                      <SelectItem key={v} value={v} className="text-xs">{l}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs" style={s.muted}>İhale Türü</Label>
-                <Select value={editForm.ihale_turu} onValueChange={(v) => setEditForm({ ...editForm, ihale_turu: v })}>
-                  <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue /></SelectTrigger>
-                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
-                    {Object.entries(IHALE_TURU_LABELS).map(([v, l]) => (
-                      <SelectItem key={v} value={v} className="text-xs">{l}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs" style={s.muted}>Teklif Usulü</Label>
-                <Select value={editForm.teklif_usulu} onValueChange={(v) => setEditForm({ ...editForm, teklif_usulu: v })}>
-                  <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue /></SelectTrigger>
-                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
-                    {Object.entries(TEKLIF_USULU_LABELS).map(([v, l]) => (
-                      <SelectItem key={v} value={v} className="text-xs">{l}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 mt-4">
-            <Button variant="ghost" onClick={() => setEditDialog(false)} style={s.muted}>İptal</Button>
-            <Button onClick={handleEditSave} className="bg-amber-500 hover:bg-amber-600 text-white">Kaydet</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Confirm Dialog */}
       <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
-        <AlertDialogContent style={s.card}>
+        <AlertDialogContent style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
           <AlertDialogHeader>
             <AlertDialogTitle style={s.text}>{confirmDialog.title}</AlertDialogTitle>
             <AlertDialogDescription style={s.muted}>{confirmDialog.desc}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel style={s.muted}>Vazgeç</AlertDialogCancel>
+            <AlertDialogCancel style={{ color: "hsl(var(--admin-muted))", borderColor: "hsl(var(--admin-border))" }}>Vazgeç</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDialog.action} className="bg-amber-500 hover:bg-amber-600 text-white">
               Evet, Onayla
             </AlertDialogAction>
@@ -729,6 +755,26 @@ export default function AdminIhaleler() {
         </AlertDialogContent>
       </AlertDialog>
     </AdminLayout>
+  );
+}
+
+/* ── Reusable Components ── */
+
+function StatCard({ icon, iconBg, iconColor, label, value, valueColor }: {
+  icon: React.ReactNode; iconBg: string; iconColor: string; label: string; value: number; valueColor?: string;
+}) {
+  return (
+    <div style={s.card} className="p-4">
+      <div className="flex items-center gap-3">
+        <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center ${iconColor}`}>
+          {icon}
+        </div>
+        <div>
+          <p className="text-[11px] font-medium" style={s.muted}>{label}</p>
+          <p className={`text-2xl font-bold ${valueColor || ""}`} style={!valueColor ? s.text : undefined}>{value}</p>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -741,7 +787,7 @@ function FilterSelect({ label, value, onChange, options }: {
       <Label className="text-xs" style={s.muted}>{label}</Label>
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue placeholder="Tümü" /></SelectTrigger>
-        <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
+        <SelectContent style={s.selectContent} className="z-[100]">
           {options.map(o => (
             <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
           ))}
@@ -761,6 +807,98 @@ function FilterRange({ label, min, max, onMinChange, onMaxChange }: {
         <Input placeholder="Min" value={min} onChange={(e) => onMinChange(e.target.value)} className="text-xs h-8" style={s.input} />
         <Input placeholder="Max" value={max} onChange={(e) => onMaxChange(e.target.value)} className="text-xs h-8" style={s.input} />
       </div>
+    </div>
+  );
+}
+
+function MultiSelectFilter({ label, options, selected, onChange }: {
+  label: string;
+  options: { id: string; name: string }[];
+  selected: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = search
+    ? options.filter(o => o.name.toLowerCase().includes(search.toLowerCase()))
+    : options;
+
+  const toggle = (id: string) => {
+    onChange(selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id]);
+  };
+
+  return (
+    <div className="space-y-1 relative" ref={ref}>
+      <Label className="text-xs" style={s.muted}>{label}</Label>
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center justify-between w-full h-8 rounded-md border px-2.5 text-xs"
+        style={s.input}
+      >
+        <span className="truncate" style={selected.length ? s.text : s.muted}>
+          {selected.length > 0 ? `${selected.length} seçili` : "Tümü"}
+        </span>
+        <ChevronDown className="w-3 h-3 flex-shrink-0 ml-1" style={s.muted} />
+      </button>
+
+      {open && (
+        <div
+          className="absolute top-full left-0 right-0 mt-1 rounded-lg shadow-lg z-[100] max-h-52 overflow-hidden flex flex-col"
+          style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}
+        >
+          <div className="p-1.5 border-b" style={{ borderColor: "hsl(var(--admin-border))" }}>
+            <Input
+              placeholder="Ara..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-7 text-xs"
+              style={s.input}
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto flex-1 p-1">
+            {filteredOptions.length === 0 && (
+              <p className="text-xs px-2 py-3 text-center" style={s.muted}>Sonuç yok</p>
+            )}
+            {filteredOptions.map((opt) => (
+              <label
+                key={opt.id}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:opacity-80 transition-opacity text-xs"
+                style={s.text}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "hsl(var(--admin-hover))")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+              >
+                <Checkbox
+                  checked={selected.includes(opt.id)}
+                  onCheckedChange={() => toggle(opt.id)}
+                  className="h-3.5 w-3.5"
+                />
+                <span className="truncate">{opt.name}</span>
+              </label>
+            ))}
+          </div>
+          {selected.length > 0 && (
+            <div className="border-t p-1.5" style={{ borderColor: "hsl(var(--admin-border))" }}>
+              <button
+                onClick={() => onChange([])}
+                className="text-[11px] text-red-500 hover:text-red-600 w-full text-center py-1"
+              >
+                Temizle ({selected.length})
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
