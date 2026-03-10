@@ -256,7 +256,8 @@ export default function YeniIhale() {
     } as any).select().single();
 
     if (error) {
-      toast({ title: "Hata", description: "İhale oluşturulamadı.", variant: "destructive" });
+      console.error("İhale oluşturma hatası:", error);
+      toast({ title: "Hata", description: `İhale oluşturulamadı: ${error.message}`, variant: "destructive" });
       return;
     }
     if (data) {
