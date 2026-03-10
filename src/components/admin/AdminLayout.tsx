@@ -15,6 +15,7 @@ interface AdminLayoutProps {
 
 const menuItems = [
   { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null },
+  { label: "Firmalar", path: "/yonetim/firmalar", icon: Building2, permission: null },
   { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: "kullanici_yonet" as const },
   { label: "Şikayetler", path: "/yonetim/sikayetler", icon: MessageSquareWarning, permission: "sikayet_goruntule" as const },
   { label: "İhaleler", path: "/yonetim/ihaleler", icon: Gavel, permission: "ihale_goruntule" as const },
