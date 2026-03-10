@@ -1,0 +1,1 @@
+ALTER TABLE public.ihaleler ADD COLUMN IF NOT EXISTS birim text DEFAULT NULL;
