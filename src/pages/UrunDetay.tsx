@@ -27,12 +27,13 @@ import {
   CheckCircle,
 } from "lucide-react";
 import {
-  SiLinkerd,
+  
   SiInstagram,
   SiFacebook,
   SiTiktok,
 } from "react-icons/si";
 import { RiTwitterXFill } from "react-icons/ri";
+import { FaLinkedinIn } from "react-icons/fa";
 
 const paraBirimiSymbol: Record<string, string> = {
   TRY: "₺", USD: "$", EUR: "€", GBP: "£",
@@ -673,7 +674,7 @@ export default function UrunDetay() {
                       {firma.linkedin && (
                         <a href={firma.linkedin.startsWith("http") ? firma.linkedin : `https://${firma.linkedin}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <SiLinkerd className="w-4 h-4" /> LinkedIn
+                          <FaLinkedinIn className="w-4 h-4" /> LinkedIn
                         </a>
                       )}
                       {firma.instagram && (

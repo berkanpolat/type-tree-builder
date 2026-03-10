@@ -247,7 +247,19 @@ export default function ManuIhale() {
                     const teklifSayisi = getTeklifSayisi(ihale.id);
                     const enIyiTeklif = getEnIyiTeklif(ihale);
                     return (
-                      <TableRow key={ihale.id}>
+                      <TableRow
+                        key={ihale.id}
+                        className="cursor-pointer"
+                        onClick={() => {
+                          if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") {
+                            navigate(`/manuihale/duzenle/${ihale.id}`);
+                          } else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") {
+                            navigate(`/manuihale/takip/${ihale.id}`);
+                          } else {
+                            navigate(`/ihale/${ihale.id}`);
+                          }
+                        }}
+                      >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
@@ -289,7 +301,7 @@ export default function ManuIhale() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                             {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
                               <Button
                                 variant="ghost"
