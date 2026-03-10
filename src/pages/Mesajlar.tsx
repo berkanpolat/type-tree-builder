@@ -19,6 +19,8 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import BildirDialog from "@/components/BildirDialog";
 
 interface Conversation {
   id: string;
