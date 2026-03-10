@@ -121,6 +121,11 @@ export function AppSidebar() {
                       {!collapsed && (
                         <span className="flex-1">{item.title}</span>
                       )}
+                      {!collapsed && item.badgeKey === "mesajlar" && unreadMessages > 0 && (
+                        <span className="w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
+                          {unreadMessages > 99 ? "99+" : unreadMessages}
+                        </span>
+                      )}
                       {!collapsed && item.badge && (
                         <span className="w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center">
                           0
