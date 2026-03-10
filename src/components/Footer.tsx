@@ -61,14 +61,10 @@ export default function Footer() {
             <h4 className="text-secondary font-bold text-sm mb-4">Tekstil A.Ş.</h4>
             <ul className="space-y-2.5">
               <li>
-                <Link to="/hakkimizda" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  Hakkımızda
-                </Link>
+                <FooterLink to="/hakkimizda">Hakkımızda</FooterLink>
               </li>
               <li>
-                <Link to="/iletisim" className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors">
-                  İletişim
-                </Link>
+                <FooterLink to="/iletisim">İletişim</FooterLink>
               </li>
             </ul>
           </div>
