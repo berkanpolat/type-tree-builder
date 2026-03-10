@@ -127,6 +127,7 @@ export default function UrunDetay() {
   const [isFavorited, setIsFavorited] = useState(false);
   const [benzerUrunler, setBenzerUrunler] = useState<BenzerUrun[]>([]);
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
+  const [resolvedTeknikDetaylar, setResolvedTeknikDetaylar] = useState<Record<string, string>>({});
 
   // Image gallery
   const [allImages, setAllImages] = useState<string[]>([]);
