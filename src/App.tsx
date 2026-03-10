@@ -31,6 +31,7 @@ import Hakkimizda from "./pages/Hakkimizda";
 import Iletisim from "./pages/Iletisim";
 import UreticiTedarikciKesfi from "./pages/UreticiTedarikciKesfi";
 import TekIhaleTanitim from "./pages/TekIhaleTanitim";
+import TekPazarTanitim from "./pages/TekPazarTanitim";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
