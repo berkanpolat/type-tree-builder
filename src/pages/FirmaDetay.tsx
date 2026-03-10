@@ -135,6 +135,18 @@ const MENU_ITEMS = [
   { id: "urunler", label: "Ürünler" },
 ];
 
+const textOrBelirtilmedi = (value: string | null | undefined) => {
+  const cleaned = value?.trim();
+  return cleaned ? cleaned : "Belirtilmedi";
+};
+
+const normalizeText = (value: string) =>
+  value
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g, "i")
+    .replace(/İ/g, "i")
+    .trim();
+
 // Collapsible block component
 function CollapsibleBlock({ title, children, maxHeight = 160 }: { title: string; children: React.ReactNode; maxHeight?: number }) {
   const [expanded, setExpanded] = useState(false);
@@ -211,11 +223,17 @@ export default function FirmaDetay() {
 
   useEffect(() => {
     if (!id) return;
+
     const fetchAll = async () => {
       setLoading(true);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) setCurrentUserId(user.id);
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setCurrentUserId(user.id);
+      }
 
       const { data: firmaData } = await supabase
         .from("firmalar")
@@ -228,109 +246,229 @@ export default function FirmaDetay() {
         navigate("/anasayfa");
         return;
       }
+
       setFirma(firmaData as FirmaData);
 
       const [
-        secenekRes, kategoriRes, turleriRes, tipleriRes, favRes,
-        tesisRes, sertRes, refRes, galRes, urunRes, makRes, tekRes,
-        uretimSatisRes, urunHizmetRes,
+        favRes,
+        tesisRes,
+        sertRes,
+        refRes,
+        galRes,
+        urunRes,
+        makRes,
+        tekRes,
+        uretimSatisRes,
+        urunHizmetRes,
       ] = await Promise.all([
-        supabase.from("firma_bilgi_secenekleri").select("id, name"),
-        supabase.from("firma_bilgi_kategorileri").select("id, name"),
-        supabase.from("firma_turleri").select("id, name"),
-        supabase.from("firma_tipleri").select("id, name"),
-        user ? supabase.from("firma_favoriler").select("id").eq("user_id", user.id).eq("firma_id", id) : Promise.resolve({ data: [] }),
+        user
+          ? supabase
+              .from("firma_favoriler")
+              .select("id")
+              .eq("user_id", user.id)
+              .eq("firma_id", id)
+          : Promise.resolve({ data: [] }),
         supabase.from("firma_tesisler").select("*").eq("firma_id", id),
         supabase.from("firma_sertifikalar").select("*").eq("firma_id", id),
         supabase.from("firma_referanslar").select("*").eq("firma_id", id),
         supabase.from("firma_galeri").select("*").eq("firma_id", id),
-        supabase.from("urunler").select("id, baslik, foto_url, fiyat, para_birimi, urun_no, durum").eq("user_id", firmaData.user_id).eq("durum", "aktif"),
+        supabase
+          .from("urunler")
+          .select("id, baslik, foto_url, fiyat, para_birimi, urun_no, durum")
+          .eq("user_id", firmaData.user_id)
+          .eq("durum", "aktif"),
         supabase.from("firma_makineler").select("*").eq("firma_id", id),
         supabase.from("firma_teknolojiler").select("*").eq("firma_id", id),
         supabase.from("firma_uretim_satis").select("*").eq("firma_id", id),
-        supabase.from("firma_urun_hizmet_secimler").select("*").eq("firma_id", id),
+        supabase
+          .from("firma_urun_hizmet_secimler")
+          .select("*")
+          .eq("firma_id", id),
       ]);
 
-      // Build maps
+      const tesisRows = tesisRes.data || [];
+      const sertifikaRows = sertRes.data || [];
+      const makineRows = makRes.data || [];
+      const teknolojiRows = tekRes.data || [];
+      const uretimSatisRows = uretimSatisRes.data || [];
+      const urunHizmetRows = urunHizmetRes.data || [];
+
+      const secenekIdSet = new Set<string>();
+      const addSecenekId = (value: string | null | undefined) => {
+        if (value) secenekIdSet.add(value);
+      };
+
+      addSecenekId(firmaData.firma_olcegi_id);
+      addSecenekId(firmaData.kurulus_il_id);
+      addSecenekId(firmaData.kurulus_ilce_id);
+      addSecenekId(firmaData.uretim_vardiyasi_id);
+      addSecenekId(firmaData.bagimsiz_denetim_id);
+      addSecenekId(firmaData.hizli_numune_id);
+      addSecenekId(firmaData.aylik_tedarik_birim_id);
+
+      tesisRows.forEach((t: any) => {
+        addSecenekId(t.tesis_adi_id);
+        addSecenekId(t.il_id);
+        addSecenekId(t.ilce_id);
+        addSecenekId(t.is_gucu_id);
+      });
+
+      sertifikaRows.forEach((s: any) => {
+        addSecenekId(s.sertifika_kategori_id);
+        addSecenekId(s.sertifika_tur_id);
+      });
+
+      makineRows.forEach((m: any) => {
+        addSecenekId(m.makine_kategori_id);
+        addSecenekId(m.makine_tur_id);
+      });
+
+      teknolojiRows.forEach((t: any) => {
+        addSecenekId(t.teknoloji_kategori_id);
+        addSecenekId(t.teknoloji_tur_id);
+      });
+
+      uretimSatisRows.forEach((u: any) => {
+        addSecenekId(u.kategori_id);
+        addSecenekId(u.grup_id);
+        addSecenekId(u.tur_id);
+      });
+
+      urunHizmetRows.forEach((u: any) => {
+        addSecenekId(u.secenek_id);
+      });
+
+      const kategoriIds = [
+        ...new Set(
+          urunHizmetRows
+            .map((u: any) => u.kategori_id)
+            .filter((value: string | null) => Boolean(value))
+        ),
+      ];
+
+      const secenekIds = Array.from(secenekIdSet);
+
+      const [secenekRes, kategoriRes, turleriRes, tipleriRes] = await Promise.all([
+        secenekIds.length > 0
+          ? supabase
+              .from("firma_bilgi_secenekleri")
+              .select("id, name")
+              .in("id", secenekIds)
+          : Promise.resolve({ data: [] }),
+        kategoriIds.length > 0
+          ? supabase
+              .from("firma_bilgi_kategorileri")
+              .select("id, name")
+              .in("id", kategoriIds)
+          : Promise.resolve({ data: [] }),
+        supabase
+          .from("firma_turleri")
+          .select("name")
+          .eq("id", firmaData.firma_turu_id)
+          .maybeSingle(),
+        supabase
+          .from("firma_tipleri")
+          .select("name")
+          .eq("id", firmaData.firma_tipi_id)
+          .maybeSingle(),
+      ]);
+
       const sMap: Record<string, string> = {};
-      secenekRes.data?.forEach((s: any) => { sMap[s.id] = s.name; });
+      (secenekRes.data || []).forEach((s: any) => {
+        sMap[s.id] = s.name;
+      });
       setSecenekMap(sMap);
 
       const kMap: Record<string, string> = {};
-      kategoriRes.data?.forEach((k: any) => { kMap[k.id] = k.name; });
+      (kategoriRes.data || []).forEach((k: any) => {
+        kMap[k.id] = k.name;
+      });
       setKategoriMap(kMap);
 
-      // Firma turu/tipi
-      const turu = turleriRes.data?.find((t: any) => t.id === firmaData.firma_turu_id);
-      setFirmaTuruName(turu?.name || "Belirtilmedi");
-      const tipi = tipleriRes.data?.find((t: any) => t.id === firmaData.firma_tipi_id);
-      setFirmaTipiName(tipi?.name || "Belirtilmedi");
-
+      setFirmaTuruName(turleriRes.data?.name || "Belirtilmedi");
+      setFirmaTipiName(tipleriRes.data?.name || "Belirtilmedi");
       setIsFavorited((favRes.data || []).length > 0);
 
-      // Tesisler
-      setTesisler((tesisRes.data || []).map((t: any) => ({
-        id: t.id,
-        tesis_adi: sMap[t.tesis_adi_id] || "Belirtilmedi",
-        il: sMap[t.il_id] || "Belirtilmedi",
-        ilce: sMap[t.ilce_id] || "Belirtilmedi",
-        adres: t.tesis_adresi || "",
-        makine_gucu: t.makine_gucu || "Belirtilmedi",
-        is_gucu: sMap[t.is_gucu_id] || "Belirtilmedi",
-      })));
+      setTesisler(
+        tesisRows.map((t: any) => ({
+          id: t.id,
+          tesis_adi: textOrBelirtilmedi(sMap[t.tesis_adi_id]),
+          il: textOrBelirtilmedi(sMap[t.il_id]),
+          ilce: textOrBelirtilmedi(sMap[t.ilce_id]),
+          adres: t.tesis_adresi || "",
+          makine_gucu: textOrBelirtilmedi(t.makine_gucu),
+          is_gucu: textOrBelirtilmedi(sMap[t.is_gucu_id]),
+        }))
+      );
 
-      setSertifikalar((sertRes.data || []).map((s: any) => ({
-        id: s.id,
-        kategori: sMap[s.sertifika_kategori_id] || "",
-        tur: sMap[s.sertifika_tur_id] || "",
-        verilis: s.verilis_tarihi,
-        gecerlilik: s.gecerlilik_tarihi,
-      })));
+      setSertifikalar(
+        sertifikaRows.map((s: any) => ({
+          id: s.id,
+          kategori: textOrBelirtilmedi(sMap[s.sertifika_kategori_id]),
+          tur: textOrBelirtilmedi(sMap[s.sertifika_tur_id]),
+          verilis: s.verilis_tarihi,
+          gecerlilik: s.gecerlilik_tarihi,
+        }))
+      );
 
-      setReferanslar((refRes.data || []).map((r: any) => ({
-        id: r.id,
-        referans_adi: r.referans_adi,
-        logo_url: r.logo_url,
-      })));
+      setReferanslar(
+        (refRes.data || []).map((r: any) => ({
+          id: r.id,
+          referans_adi: r.referans_adi,
+          logo_url: r.logo_url,
+        }))
+      );
 
-      setGaleri((galRes.data || []).map((g: any) => ({
-        id: g.id,
-        foto_url: g.foto_url,
-        foto_adi: g.foto_adi,
-      })));
+      setGaleri(
+        (galRes.data || []).map((g: any) => ({
+          id: g.id,
+          foto_url: g.foto_url,
+          foto_adi: g.foto_adi,
+        }))
+      );
 
       setUrunler((urunRes.data || []) as Urun[]);
 
-      setMakineler((makRes.data || []).map((m: any) => ({
-        id: m.id,
-        kategori: sMap[m.makine_kategori_id] || "",
-        tur: sMap[m.makine_tur_id] || "",
-        sayisi: m.makine_sayisi || "Belirtilmedi",
-        tesis: sMap[(tesisRes.data || []).find((t: any) => t.id === m.tesis_id)?.tesis_adi_id] || "Belirtilmedi",
-      })));
+      setMakineler(
+        makineRows.map((m: any) => ({
+          id: m.id,
+          kategori: textOrBelirtilmedi(sMap[m.makine_kategori_id]),
+          tur: textOrBelirtilmedi(sMap[m.makine_tur_id]),
+          sayisi: textOrBelirtilmedi(m.makine_sayisi),
+          tesis: textOrBelirtilmedi(
+            sMap[tesisRows.find((t: any) => t.id === m.tesis_id)?.tesis_adi_id]
+          ),
+        }))
+      );
 
-      setTeknolojiler((tekRes.data || []).map((t: any) => ({
-        id: t.id,
-        kategori: sMap[t.teknoloji_kategori_id] || "",
-        tur: sMap[t.teknoloji_tur_id] || "",
-      })));
+      setTeknolojiler(
+        teknolojiRows.map((t: any) => ({
+          id: t.id,
+          kategori: textOrBelirtilmedi(sMap[t.teknoloji_kategori_id]),
+          tur: textOrBelirtilmedi(sMap[t.teknoloji_tur_id]),
+        }))
+      );
 
-      setUretimSatisItems((uretimSatisRes.data || []).map((u: any) => ({
-        tip: u.tip,
-        kategori: sMap[u.kategori_id] || "",
-        grup: sMap[u.grup_id] || "",
-        tur: sMap[u.tur_id] || "",
-      })));
+      setUretimSatisItems(
+        uretimSatisRows.map((u: any) => ({
+          tip: u.tip,
+          kategori: textOrBelirtilmedi(sMap[u.kategori_id]),
+          grup: textOrBelirtilmedi(sMap[u.grup_id]),
+          tur: textOrBelirtilmedi(sMap[u.tur_id]),
+        }))
+      );
 
-      // Ürün/Hizmet seçimleri with category name
-      setUrunHizmetItems((urunHizmetRes.data || []).map((u: any) => ({
-        kategoriId: u.kategori_id,
-        kategoriName: kMap[u.kategori_id] || u.kategori_id,
-        secenek: sMap[u.secenek_id] || "",
-      })));
+      setUrunHizmetItems(
+        urunHizmetRows.map((u: any) => ({
+          kategoriId: u.kategori_id,
+          kategoriName: textOrBelirtilmedi(kMap[u.kategori_id]),
+          secenek: textOrBelirtilmedi(sMap[u.secenek_id]),
+        }))
+      );
 
       setLoading(false);
     };
+
     fetchAll();
   }, [id, navigate, toast]);
 
@@ -363,13 +501,33 @@ export default function FirmaDetay() {
     return secenekMap[idVal] || "Belirtilmedi";
   };
 
-  const kurulusYili = firma?.kurulus_tarihi || "Belirtilmedi";
-  const ilIlce = firma ? `${resolve(firma.kurulus_il_id)}${firma.kurulus_ilce_id ? `, ${resolve(firma.kurulus_ilce_id)}` : ""}` : "Belirtilmedi";
+  const kurulusYili = textOrBelirtilmedi(firma?.kurulus_tarihi);
+  const ilName = firma?.kurulus_il_id ? resolve(firma.kurulus_il_id) : "";
+  const ilceName = firma?.kurulus_ilce_id ? resolve(firma.kurulus_ilce_id) : "";
+  const ilIlce = [ilName, ilceName].filter(Boolean).join(", ") || "Belirtilmedi";
 
-  // Faaliyet alanı: unique kategori values from üretim/satış items
-  const faaliyetAlani = uretimSatisItems.length > 0
-    ? [...new Set(uretimSatisItems.map(u => u.kategori))].filter(Boolean).join(", ") || "Belirtilmedi"
-    : "Belirtilmedi";
+  const faaliyetAlaniFromUrunHizmet = [
+    ...new Set(
+      urunHizmetItems
+        .filter((item) => normalizeText(item.kategoriName).includes("faaliyet"))
+        .map((item) => item.secenek)
+        .filter((item) => item && item !== "Belirtilmedi")
+    ),
+  ];
+
+  const faaliyetAlaniFallback = [
+    ...new Set(
+      uretimSatisItems
+        .map((item) => item.kategori)
+        .filter((item) => item && item !== "Belirtilmedi")
+    ),
+  ];
+
+  const faaliyetAlani =
+    (faaliyetAlaniFromUrunHizmet.length > 0
+      ? faaliyetAlaniFromUrunHizmet
+      : faaliyetAlaniFallback
+    ).join(", ") || "Belirtilmedi";
 
   // Üretim modeli: map uretim_satis_rolu to readable labels
   const uretimModeli = firma?.uretim_satis_rolu
@@ -378,21 +536,29 @@ export default function FirmaDetay() {
 
   // Group ürün/hizmet by category
   const urunHizmetGrouped = urunHizmetItems.reduce<Record<string, string[]>>((acc, item) => {
+    if (!item.secenek || item.secenek === "Belirtilmedi") return acc;
     if (!acc[item.kategoriName]) acc[item.kategoriName] = [];
-    acc[item.kategoriName].push(item.secenek);
+    if (!acc[item.kategoriName].includes(item.secenek)) {
+      acc[item.kategoriName].push(item.secenek);
+    }
     return acc;
   }, {});
 
-  // Group üretim/satış by tip then by grup
-  const uretimItems = uretimSatisItems.filter(u => u.tip === "uretim");
-  const satisItems = uretimSatisItems.filter(u => u.tip === "satis");
+  const uretimItems = uretimSatisItems.filter((item) => item.tip === "uretim");
+  const satisItems = uretimSatisItems.filter((item) => item.tip === "satis");
 
   const groupByGrup = (items: typeof uretimItems) => {
     const grouped: Record<string, string[]> = {};
-    items.forEach(item => {
-      if (!grouped[item.grup]) grouped[item.grup] = [];
-      grouped[item.grup].push(item.tur);
+
+    items.forEach((item) => {
+      const grupName = item.grup && item.grup !== "Belirtilmedi" ? item.grup : "Diğer";
+      if (!grouped[grupName]) grouped[grupName] = [];
+
+      if (item.tur && item.tur !== "Belirtilmedi" && !grouped[grupName].includes(item.tur)) {
+        grouped[grupName].push(item.tur);
+      }
     });
+
     return grouped;
   };
 
@@ -415,7 +581,7 @@ export default function FirmaDetay() {
 
       {/* ===== HEADER / BANNER ===== */}
       <div className="relative">
-        <div className="w-full h-[200px] bg-muted overflow-hidden">
+        <div className="w-full h-[160px] md:h-[180px] bg-muted overflow-hidden">
           {firma.kapak_fotografi_url ? (
             <img src={firma.kapak_fotografi_url} alt="Kapak" className="w-full h-full object-cover" />
           ) : (
@@ -423,7 +589,7 @@ export default function FirmaDetay() {
           )}
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 -mt-16 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 -mt-10 md:-mt-12 relative z-10">
           <div className="bg-card border border-border rounded-xl shadow-sm p-5">
             <div className="flex flex-col md:flex-row items-start gap-4">
               <div className="w-20 h-20 rounded-lg border border-border bg-background flex items-center justify-center overflow-hidden shrink-0">
@@ -482,9 +648,9 @@ export default function FirmaDetay() {
       </div>
 
       {/* ===== STICKY TAB MENU ===== */}
-      <div className="sticky top-0 z-30 bg-background border-b border-border mt-6">
+      <div className="sticky top-14 z-30 bg-background border-b border-border mt-4">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-6 overflow-x-auto py-3">
+          <div className="flex items-center gap-6 overflow-x-auto py-2">
             {MENU_ITEMS.map((item) => (
               <button
                 key={item.id}
@@ -654,6 +820,59 @@ export default function FirmaDetay() {
               </CollapsibleBlock>
             </div>
 
+            {/* Galeri */}
+            <div ref={el => { sectionRefs.current["galeri"] = el; }}>
+              <CollapsibleBlock title="Galeri" maxHeight={300}>
+                {galeri.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {galeri.map(g => (
+                      <div key={g.id} className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                        <img src={g.foto_url} alt={g.foto_adi || "Galeri"} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Henüz galeri fotoğrafı eklenmemiştir.</p>
+                )}
+              </CollapsibleBlock>
+            </div>
+
+            {/* Ürünler */}
+            <div ref={el => { sectionRefs.current["urunler"] = el; }}>
+              <Card className="p-6">
+                <h2 className="text-lg font-bold text-foreground mb-4">Ürünler</h2>
+                {urunler.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {urunler.map(u => (
+                      <Link
+                        key={u.id}
+                        to={`/urun/${u.id}`}
+                        className="group border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-background"
+                      >
+                        <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                          {u.foto_url ? (
+                            <img src={u.foto_url} alt={u.baslik} className="w-full h-full object-contain" />
+                          ) : (
+                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="p-2.5">
+                          <p className="text-xs font-medium text-foreground truncate">{u.baslik}</p>
+                          {u.fiyat != null && (
+                            <p className="text-xs font-bold text-secondary mt-0.5">
+                              {paraBirimiSymbol[u.para_birimi || "TRY"]}{u.fiyat.toLocaleString("tr-TR")}
+                            </p>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Henüz ürün eklenmemiştir.</p>
+                )}
+              </Card>
+            </div>
+
           </div>
 
           {/* RIGHT COLUMN (1/3) */}
@@ -780,58 +999,6 @@ export default function FirmaDetay() {
           </div>
         </div>
 
-        {/* Galeri - Full width */}
-        <div ref={el => { sectionRefs.current["galeri"] = el; }} className="mt-6">
-          <CollapsibleBlock title="Galeri" maxHeight={300}>
-            {galeri.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                {galeri.map(g => (
-                  <div key={g.id} className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
-                    <img src={g.foto_url} alt={g.foto_adi || "Galeri"} className="w-full h-full object-cover" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Henüz galeri fotoğrafı eklenmemiştir.</p>
-            )}
-          </CollapsibleBlock>
-        </div>
-
-        {/* Ürünler - Full width, after Galeri */}
-        <div ref={el => { sectionRefs.current["urunler"] = el; }} className="mt-6">
-          <Card className="p-6">
-            <h2 className="text-lg font-bold text-foreground mb-4">Ürünler</h2>
-            {urunler.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {urunler.map(u => (
-                  <Link
-                    key={u.id}
-                    to={`/urun/${u.id}`}
-                    className="group border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-background"
-                  >
-                    <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
-                      {u.foto_url ? (
-                        <img src={u.foto_url} alt={u.baslik} className="w-full h-full object-contain" />
-                      ) : (
-                        <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="p-2.5">
-                      <p className="text-xs font-medium text-foreground truncate">{u.baslik}</p>
-                      {u.fiyat != null && (
-                        <p className="text-xs font-bold text-secondary mt-0.5">
-                          {paraBirimiSymbol[u.para_birimi || "TRY"]}{u.fiyat.toLocaleString("tr-TR")}
-                        </p>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">Henüz ürün eklenmemiştir.</p>
-            )}
-          </Card>
-        </div>
       </div>
     </div>
   );
