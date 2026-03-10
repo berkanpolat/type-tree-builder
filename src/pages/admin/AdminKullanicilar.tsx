@@ -183,6 +183,10 @@ export default function AdminKullanicilar() {
   const canManage = hasPermission("kullanici_yonet") || currentUser?.is_primary;
   const canAdd = hasPermission("kullanici_ekle") || currentUser?.is_primary;
 
+  const totalPages = Math.max(1, Math.ceil(users.length / USERS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedUsers = users.slice((safePage - 1) * USERS_PER_PAGE, safePage * USERS_PER_PAGE);
+
   return (
     <AdminLayout title="Panel Kullanıcıları">
       <div className="space-y-6">
