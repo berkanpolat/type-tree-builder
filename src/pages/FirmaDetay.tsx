@@ -581,7 +581,7 @@ export default function FirmaDetay() {
 
       {/* ===== HEADER / BANNER ===== */}
       <div className="relative">
-        <div className="w-full h-[200px] bg-muted overflow-hidden">
+        <div className="w-full h-[160px] md:h-[180px] bg-muted overflow-hidden">
           {firma.kapak_fotografi_url ? (
             <img src={firma.kapak_fotografi_url} alt="Kapak" className="w-full h-full object-cover" />
           ) : (
@@ -589,7 +589,7 @@ export default function FirmaDetay() {
           )}
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 -mt-16 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 -mt-10 md:-mt-12 relative z-10">
           <div className="bg-card border border-border rounded-xl shadow-sm p-5">
             <div className="flex flex-col md:flex-row items-start gap-4">
               <div className="w-20 h-20 rounded-lg border border-border bg-background flex items-center justify-center overflow-hidden shrink-0">
