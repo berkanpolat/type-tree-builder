@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          ad: string
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          is_primary: boolean
+          password_hash: string
+          permissions: Json
+          pozisyon: string
+          soyad: string
+          telefon: string | null
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          ad: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          password_hash: string
+          permissions?: Json
+          pozisyon?: string
+          soyad: string
+          telefon?: string | null
+          updated_at?: string
+          username: string
+        }
+        Update: {
+          ad?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          is_primary?: boolean
+          password_hash?: string
+          permissions?: Json
+          pozisyon?: string
+          soyad?: string
+          telefon?: string | null
+          updated_at?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
