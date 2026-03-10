@@ -474,15 +474,19 @@ export default function Mesajlar() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="font-medium text-sm text-foreground truncate">{conv.firma_unvani}</p>
+                      <p className={`text-sm truncate ${conv.unread_count > 0 ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{conv.firma_unvani}</p>
                       <span className="text-xs text-muted-foreground shrink-0 ml-2">
                         {formatTime(conv.last_message_at)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
-                      <p className="text-xs text-muted-foreground truncate">{conv.last_message}</p>
+                      <p className={`text-xs truncate ${
+                        conv.unread_count > 0 && conv.last_message_sender_id !== currentUserId
+                          ? "text-foreground font-semibold"
+                          : "text-muted-foreground"
+                      }`}>{conv.last_message}</p>
                       {conv.unread_count > 0 && (
-                        <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center shrink-0 ml-2">
+                        <span className="min-w-5 h-5 rounded-full bg-secondary text-secondary-foreground text-[10px] font-bold flex items-center justify-center shrink-0 ml-2 px-1">
                           {conv.unread_count}
                         </span>
                       )}
