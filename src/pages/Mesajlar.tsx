@@ -548,8 +548,17 @@ export default function Mesajlar() {
                     return (
                       <div
                         key={msg.id}
-                        className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                        className={`flex group ${isMine ? "justify-end" : "justify-start"}`}
                       >
+                        {isMine && (
+                          <button
+                            onClick={() => setDeleteTarget(msg)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity self-center mr-2 p-1.5 rounded-full hover:bg-destructive/10"
+                            title="Mesajı sil"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                          </button>
+                        )}
                         <div
                           className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
                             isMine
@@ -559,6 +568,15 @@ export default function Mesajlar() {
                         >
                           {renderMessageContent(msg, isMine)}
                         </div>
+                        {!isMine && (
+                          <button
+                            onClick={() => setDeleteTarget(msg)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity self-center ml-2 p-1.5 rounded-full hover:bg-destructive/10"
+                            title="Mesajı sil"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                          </button>
+                        )}
                       </div>
                     );
                   })}
