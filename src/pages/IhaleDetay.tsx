@@ -745,12 +745,12 @@ export default function IhaleDetay() {
             </Card>
 
             {/* Teknik Detaylar */}
-            {Object.keys(teknikDetaylar).length > 0 && (
+            {Object.keys(resolvedTeknikDetaylar).length > 0 && (
               <Card className="p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">Ürün/Hizmet Teknik Detaylar</h3>
                 <div className="divide-y divide-border">
-                  {Object.entries(teknikDetaylar).map(([key, value]) => (
-                    <InfoRow key={key} label={key} value={value ? String(value) : null} />
+                  {Object.entries(resolvedTeknikDetaylar).map(([key, value]) => (
+                    <InfoRow key={key} label={formatLabel(key)} value={value || null} />
                   ))}
                 </div>
               </Card>
