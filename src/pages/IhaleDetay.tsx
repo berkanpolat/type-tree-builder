@@ -1210,6 +1210,7 @@ export default function IhaleDetay() {
           </div>
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 }
