@@ -29,6 +29,7 @@ import ProfilAyarlari from "./pages/ProfilAyarlari";
 import TekRehber from "./pages/TekRehber";
 import Hakkimizda from "./pages/Hakkimizda";
 import Iletisim from "./pages/Iletisim";
+import UreticiTedarikciKesfi from "./pages/UreticiTedarikciKesfi";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ const App = () => (
           <Route path="/ayarlar" element={<ProfilAyarlari />} />
           <Route path="/hakkimizda" element={<Hakkimizda />} />
           <Route path="/iletisim" element={<Iletisim />} />
+          <Route path="/uretici-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
