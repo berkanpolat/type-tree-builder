@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import {
   Select,
@@ -105,6 +104,11 @@ interface TeklifForList {
   created_at: string;
   teklif_veren_user_id: string;
   firma_unvani?: string;
+  odeme_secenekleri?: string | null;
+  kargo_masrafi?: string | null;
+  odeme_vadesi?: string | null;
+  ek_dosya_url?: string | null;
+  ek_dosya_adi?: string | null;
 }
 
 export default function IhaleDetay() {
@@ -127,7 +131,7 @@ export default function IhaleDetay() {
   // Images
   const [allImages, setAllImages] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [zoomOpen, setZoomOpen] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -149,6 +153,11 @@ export default function IhaleDetay() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  // DB dropdown options
+  const [dbOdemeSecenekleri, setDbOdemeSecenekleri] = useState<string[]>([]);
+  const [dbKargoMasrafi, setDbKargoMasrafi] = useState<string[]>([]);
+  const [dbOdemeVadeleri, setDbOdemeVadeleri] = useState<string[]>([]);
+
   // Stoklar
   const [stoklar, setStoklar] = useState<any[]>([]);
 
@@ -166,6 +175,49 @@ export default function IhaleDetay() {
   const countdown = useCountdown(ihale?.bitis_tarihi);
   const isOwner = currentUserId && ihale?.user_id === currentUserId;
   const sym = paraBirimiSymbol[ihale?.para_birimi || "TRY"] || "₺";
+
+  // Load dropdown options from DB
+  useEffect(() => {
+    const loadOptions = async () => {
+      const { data: cats } = await supabase
+        .from("firma_bilgi_kategorileri")
+        .select("id, name")
+        .in("name", ["Ödeme Seçenekleri", "Kargo Masrafı Ödemesi", "Ödeme Vadeleri"]);
+
+      if (!cats) return;
+
+      const catMap: Record<string, string> = {};
+      cats.forEach(c => { catMap[c.name] = c.id; });
+
+      const catIds = cats.map(c => c.id);
+      if (catIds.length === 0) return;
+
+      const { data: opts } = await supabase
+        .from("firma_bilgi_secenekleri")
+        .select("name, kategori_id")
+        .in("kategori_id", catIds)
+        .is("parent_id", null)
+        .order("name");
+
+      if (!opts) return;
+
+      const odeme: string[] = [];
+      const kargo: string[] = [];
+      const vade: string[] = [];
+
+      opts.forEach(o => {
+        if (o.name.toLowerCase().includes("belirtmek")) return; // exclude "Belirtmek İstemiyorum"
+        if (o.kategori_id === catMap["Ödeme Seçenekleri"]) odeme.push(o.name);
+        else if (o.kategori_id === catMap["Kargo Masrafı Ödemesi"]) kargo.push(o.name);
+        else if (o.kategori_id === catMap["Ödeme Vadeleri"]) vade.push(o.name);
+      });
+
+      setDbOdemeSecenekleri(odeme);
+      setDbKargoMasrafi(kargo);
+      setDbOdemeVadeleri(vade);
+    };
+    loadOptions();
+  }, []);
 
   // Init user
   useEffect(() => {
@@ -210,7 +262,7 @@ export default function IhaleDetay() {
       supabase.from("firmalar").select("firma_unvani, logo_url, firma_iletisim_numarasi, firma_iletisim_email, web_sitesi, instagram, facebook, linkedin, x_twitter, tiktok, kurulus_il_id, kurulus_ilce_id, user_id").eq("user_id", ihaleData.user_id).maybeSingle(),
       supabase.from("ihale_stok").select("*").eq("ihale_id", id),
       supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", id),
-      supabase.from("ihale_teklifler").select("id, tutar, created_at, teklif_veren_user_id").eq("ihale_id", id).order("created_at", { ascending: false }),
+      supabase.from("ihale_teklifler").select("id, tutar, created_at, teklif_veren_user_id, odeme_secenekleri, kargo_masrafi, odeme_vadesi, ek_dosya_url, ek_dosya_adi").eq("ihale_id", id).order("created_at", { ascending: false }),
     ]);
 
     setFirma(firmaRes.data);
@@ -241,15 +293,13 @@ export default function IhaleDetay() {
     }
 
     // Teklifler
-    const allTeklifler = teklifRes.data || [];
+    const allTeklifler = (teklifRes.data || []) as any[];
     if (allTeklifler.length > 0) {
-      // Get firma names for teklif owners (only if current user is ihale owner)
       const teklifUserIds = [...new Set(allTeklifler.map(t => t.teklif_veren_user_id))];
       let firmaNameMap: Record<string, string> = {};
-      if (ihaleData.user_id === currentUserId) {
-        const { data: fData } = await supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", teklifUserIds);
-        fData?.forEach(f => { firmaNameMap[f.user_id] = f.firma_unvani; });
-      }
+      // Always get firma names (for masking or showing)
+      const { data: fData } = await supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", teklifUserIds);
+      fData?.forEach(f => { firmaNameMap[f.user_id] = f.firma_unvani; });
 
       const enriched: TeklifForList[] = allTeklifler.map(t => ({
         ...t,
@@ -262,10 +312,17 @@ export default function IhaleDetay() {
       setMinTeklif(Math.min(...tutarlar));
       setMaxTeklif(Math.max(...tutarlar));
 
-      // My teklif
+      // My teklif - get the latest one and pre-fill form
       const mine = allTeklifler.filter(t => t.teklif_veren_user_id === currentUserId);
       if (mine.length > 0) {
-        setMyTeklif({ ...mine[0], firma_unvani: "" });
+        const latest = mine[0]; // already sorted desc
+        setMyTeklif({ ...latest, firma_unvani: "" });
+        // Pre-fill form with last teklif values
+        setTeklifTutar(String(latest.tutar));
+        if (latest.odeme_secenekleri) setTeklifOdemeSecenekleri(latest.odeme_secenekleri);
+        if (latest.kargo_masrafi) setTeklifKargoMasrafi(latest.kargo_masrafi);
+        if (latest.odeme_vadesi) setTeklifOdemeVadesi(latest.odeme_vadesi);
+        if (latest.ek_dosya_url) { setTeklifDosyaUrl(latest.ek_dosya_url); setTeklifDosyaName(latest.ek_dosya_adi || "Dosya"); }
       }
 
       // Rank
@@ -338,14 +395,31 @@ export default function IhaleDetay() {
       toast({ title: "Hata", description: "Geçerli bir miktar giriniz.", variant: "destructive" });
       return;
     }
-    // Check min teklif degisim
-    if (ihale?.min_teklif_degisim && myTeklif) {
-      const diff = Math.abs(tutar - myTeklif.tutar);
-      if (diff < ihale.min_teklif_degisim) {
-        toast({ title: "Hata", description: `Minimum teklif değişim tutarı: ${sym}${ihale.min_teklif_degisim}`, variant: "destructive" });
+
+    // Açık indirme: yeni teklif <= son en düşük teklif olmalı
+    if (ihale?.teklif_usulu === "acik_indirme" && minTeklif != null && teklifler.length > 0) {
+      if (ihale.min_teklif_degisim && tutar > minTeklif - ihale.min_teklif_degisim) {
+        toast({ title: "Hata", description: `Yeni teklif, mevcut en düşük tekliften en az ${sym}${ihale.min_teklif_degisim} düşük olmalıdır.`, variant: "destructive" });
+        return;
+      }
+      if (!ihale.min_teklif_degisim && tutar > minTeklif) {
+        toast({ title: "Hata", description: "Açık indirmede yeni teklif mevcut en düşük teklife eşit veya daha düşük olmalıdır.", variant: "destructive" });
         return;
       }
     }
+
+    // Açık arttırma: yeni teklif >= son en yüksek teklif olmalı
+    if (ihale?.teklif_usulu === "acik_arttirma" && maxTeklif != null && teklifler.length > 0) {
+      if (ihale.min_teklif_degisim && tutar < maxTeklif + ihale.min_teklif_degisim) {
+        toast({ title: "Hata", description: `Yeni teklif, mevcut en yüksek tekliften en az ${sym}${ihale.min_teklif_degisim} yüksek olmalıdır.`, variant: "destructive" });
+        return;
+      }
+      if (!ihale.min_teklif_degisim && tutar < maxTeklif) {
+        toast({ title: "Hata", description: "Açık arttırmada yeni teklif mevcut en yüksek teklife eşit veya daha yüksek olmalıdır.", variant: "destructive" });
+        return;
+      }
+    }
+
     setConfirmOpen(true);
   };
 
@@ -356,17 +430,16 @@ export default function IhaleDetay() {
       ihale_id: id!,
       teklif_veren_user_id: currentUserId,
       tutar,
-    });
+      odeme_secenekleri: teklifOdemeSecenekleri || null,
+      kargo_masrafi: teklifKargoMasrafi || null,
+      odeme_vadesi: teklifOdemeVadesi || null,
+      ek_dosya_url: teklifDosyaUrl || null,
+      ek_dosya_adi: teklifDosyaName || null,
+    } as any);
     if (error) {
       toast({ title: "Hata", description: "Teklif gönderilemedi.", variant: "destructive" });
     } else {
       toast({ title: "Başarılı", description: "Teklifiniz başarıyla gönderildi." });
-      setTeklifTutar("");
-      setTeklifOdemeSecenekleri("");
-      setTeklifKargoMasrafi("");
-      setTeklifOdemeVadesi("");
-      setTeklifDosyaUrl(null);
-      setTeklifDosyaName(null);
       setConfirmOpen(false);
       fetchIhale();
     }
@@ -426,6 +499,12 @@ export default function IhaleDetay() {
     return b.tutar - a.tutar;
   });
 
+  // For kapalı teklif: only show user's own teklifler + owner sees all
+  const isKapaliTeklif = ihale.teklif_usulu === "kapali_teklif";
+  const visibleTeklifler = isKapaliTeklif && !isOwner
+    ? sortedTeklifler.filter(t => t.teklif_veren_user_id === currentUserId)
+    : sortedTeklifler;
+
   // Group filters by type
   const filtreByType: Record<string, string[]> = {};
   ihaleFiltreler.forEach(f => {
@@ -436,6 +515,18 @@ export default function IhaleDetay() {
   const kategoriLabel = ihale.ihale_turu === "hizmet_alim"
     ? (ihale.hizmet_kategori_id ? secenekMap[ihale.hizmet_kategori_id] || "" : "")
     : (ihale.urun_kategori_id ? secenekMap[ihale.urun_kategori_id] || "" : "");
+
+  // Build category chain for display
+  const kategoriChain: string[] = [];
+  if (ihale.ihale_turu === "hizmet_alim") {
+    if (ihale.hizmet_kategori_id && secenekMap[ihale.hizmet_kategori_id]) kategoriChain.push(secenekMap[ihale.hizmet_kategori_id]);
+    if (ihale.hizmet_tur_id && secenekMap[ihale.hizmet_tur_id]) kategoriChain.push(secenekMap[ihale.hizmet_tur_id]);
+  } else {
+    if (ihale.urun_kategori_id && secenekMap[ihale.urun_kategori_id]) kategoriChain.push(secenekMap[ihale.urun_kategori_id]);
+    if (ihale.urun_grup_id && secenekMap[ihale.urun_grup_id]) kategoriChain.push(secenekMap[ihale.urun_grup_id]);
+    if (ihale.urun_tur_id && secenekMap[ihale.urun_tur_id]) kategoriChain.push(secenekMap[ihale.urun_tur_id]);
+  }
+  const kategoriDisplayLabel = kategoriChain.length > 0 ? kategoriChain.join(" > ") : null;
 
   return (
     <div className="min-h-screen bg-muted/30 font-sans">
@@ -456,7 +547,7 @@ export default function IhaleDetay() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
           {/* Left: Image + Details */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Image Gallery */}
+            {/* Image Gallery with inline zoom */}
             <div className="flex gap-4">
               {allImages.length > 1 && (
                 <div className="flex flex-col gap-2 shrink-0">
@@ -471,21 +562,29 @@ export default function IhaleDetay() {
               )}
               <div className="flex-1 relative">
                 <div ref={imageContainerRef}
-                  className="aspect-[4/3] bg-background rounded-xl overflow-hidden border border-border relative group cursor-zoom-in"
-                  onMouseMove={handleImageZoomMove}
-                  onClick={() => allImages.length > 0 && setZoomOpen(true)}
+                  className="aspect-[4/3] bg-background rounded-xl overflow-hidden border border-border relative group"
+                  onMouseMove={(e) => { handleImageZoomMove(e); setIsZoomed(true); }}
+                  onMouseLeave={() => setIsZoomed(false)}
+                  style={{ cursor: "crosshair" }}
                 >
                   {allImages.length > 0 ? (
                     <img src={allImages[selectedImageIndex]} alt={ihale.baslik}
-                      className="w-full h-full object-contain" />
+                      className="w-full h-full object-contain transition-transform duration-200"
+                      style={isZoomed ? {
+                        transform: "scale(2.5)",
+                        transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                      } : undefined}
+                    />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
                       <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
                     </div>
                   )}
-                  <div className="absolute bottom-3 right-3 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ZoomIn className="w-5 h-5 text-muted-foreground" />
-                  </div>
+                  {!isZoomed && (
+                    <div className="absolute bottom-3 right-3 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ZoomIn className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                  )}
                 </div>
                 {allImages.length > 1 && (
                   <>
@@ -516,11 +615,11 @@ export default function IhaleDetay() {
               <div className="divide-y divide-border">
                 <InfoRow label="İhale Türü" value={ihaleTuruLabel[ihale.ihale_turu] || ihale.ihale_turu} />
                 <InfoRow label="Teklif Usulü" value={teklifUsuluLabel[ihale.teklif_usulu] || ihale.teklif_usulu} />
-                <InfoRow label="İhale Kategorisi" value={kategoriLabel} />
-                <InfoRow label="Başlangıç Tarihi" value={ihale.baslangic_tarihi ? format(new Date(ihale.baslangic_tarihi), "dd/MM/yyyy", { locale: tr }) : "-"} />
-                <InfoRow label="Bitiş Tarihi" value={ihale.bitis_tarihi ? format(new Date(ihale.bitis_tarihi), "dd/MM/yyyy", { locale: tr }) : "-"} />
-                {ihale.teslimat_yeri && <InfoRow label="İhale Bölgesi" value={ihale.teslimat_yeri} />}
-                {ihale.firma_adi_gizle !== null && <InfoRow label="Mesaj Durumu" value={ihale.firma_adi_gizle ? "Hayır" : "Evet"} />}
+                <InfoRow label="İhale Kategorisi" value={kategoriDisplayLabel} />
+                <InfoRow label="Başlangıç Fiyatı" value={ihale.baslangic_fiyati != null ? `${sym}${Number(ihale.baslangic_fiyati).toLocaleString("tr-TR")}` : null} />
+                <InfoRow label="Başlangıç Tarihi" value={ihale.baslangic_tarihi ? format(new Date(ihale.baslangic_tarihi), "dd/MM/yyyy", { locale: tr }) : null} />
+                <InfoRow label="Bitiş Tarihi" value={ihale.bitis_tarihi ? format(new Date(ihale.bitis_tarihi), "dd/MM/yyyy", { locale: tr }) : null} />
+                <InfoRow label="Mesaj Durumu" value={ihale.firma_adi_gizle ? "Hayır" : "Evet"} />
                 {Object.keys(filtreByType).length > 0 && (
                   <>
                     {Object.entries(filtreByType).map(([type, values]) => (
@@ -545,10 +644,10 @@ export default function IhaleDetay() {
               <h3 className="text-lg font-bold text-foreground mb-4">Ödeme Bilgileri</h3>
               <div className="divide-y divide-border">
                 <InfoRow label="İhale Başlangıç Fiyatı (Birim Fiyat)"
-                  value={ihale.baslangic_fiyati != null ? `${sym}${Number(ihale.baslangic_fiyati).toLocaleString("tr-TR")}` : "-"} />
-                <InfoRow label="KDV Durum Bilgisi" value={ihale.kdv_durumu || "-"} />
-                <InfoRow label="Ödeme Seçenekleri" value={ihale.odeme_secenekleri || "-"} />
-                <InfoRow label="Tercih Edilen Ödeme Vadeleri" value={ihale.odeme_vadesi || "-"} />
+                  value={ihale.baslangic_fiyati != null ? `${sym}${Number(ihale.baslangic_fiyati).toLocaleString("tr-TR")}` : null} />
+                <InfoRow label="KDV Durum Bilgisi" value={ihale.kdv_durumu} />
+                <InfoRow label="Ödeme Seçenekleri" value={ihale.odeme_secenekleri} />
+                <InfoRow label="Tercih Edilen Ödeme Vadeleri" value={ihale.odeme_vadesi} />
               </div>
             </Card>
 
@@ -556,12 +655,10 @@ export default function IhaleDetay() {
             <Card className="p-6">
               <h3 className="text-lg font-bold text-foreground mb-4">Teslimat & Kargo Bilgileri</h3>
               <div className="divide-y divide-border">
-                <InfoRow label="Kargo Masrafı Ödemesi" value={ihale.kargo_masrafi || "-"} />
-                <InfoRow label="Kargo Şirketi Anlaşması" value={ihale.kargo_sirketi_anlasmasi || "-"} />
-                {ihale.teslimat_tarihi && (
-                  <InfoRow label="Teslimat Tarihi" value={format(new Date(ihale.teslimat_tarihi), "dd/MM/yyyy", { locale: tr })} />
-                )}
-                {ihale.teslimat_yeri && <InfoRow label="Teslimat Yeri" value={ihale.teslimat_yeri} />}
+                <InfoRow label="Kargo Masrafı Ödemesi" value={ihale.kargo_masrafi} />
+                <InfoRow label="Kargo Şirketi Anlaşması" value={ihale.kargo_sirketi_anlasmasi} />
+                <InfoRow label="Teslimat Tarihi" value={ihale.teslimat_tarihi ? format(new Date(ihale.teslimat_tarihi), "dd/MM/yyyy", { locale: tr }) : null} />
+                <InfoRow label="Teslimat Yeri" value={ihale.teslimat_yeri} />
               </div>
             </Card>
 
@@ -571,7 +668,7 @@ export default function IhaleDetay() {
                 <h3 className="text-lg font-bold text-foreground mb-4">Ürün/Hizmet Teknik Detaylar</h3>
                 <div className="divide-y divide-border">
                   {Object.entries(teknikDetaylar).map(([key, value]) => (
-                    <InfoRow key={key} label={key} value={String(value || "-")} />
+                    <InfoRow key={key} label={key} value={value ? String(value) : null} />
                   ))}
                 </div>
               </Card>
@@ -622,41 +719,46 @@ export default function IhaleDetay() {
               {!isOwner && (
                 <div className="space-y-3">
                   <div>
-                    <label className="text-sm font-medium text-foreground mb-1 block">Miktar</label>
-                    <div className="relative">
-                      <Input
-                        type="number"
-                        placeholder={`Min ${sym}${ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati).toFixed(2) : "0.00"}`}
-                        value={teklifTutar}
-                        onChange={(e) => setTeklifTutar(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
+                    <label className="text-sm font-medium text-foreground mb-1 block">Teklif Tutarı ({sym})</label>
                     <Input
-                      placeholder="Ödeme Seçenekleri"
-                      value={teklifOdemeSecenekleri}
-                      onChange={(e) => setTeklifOdemeSecenekleri(e.target.value)}
+                      type="number"
+                      placeholder={`${sym}${ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati).toFixed(2) : "0.00"}`}
+                      value={teklifTutar}
+                      onChange={(e) => setTeklifTutar(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-foreground mb-1 block">Kargo masrafı ödemesi</label>
-                    <Select value={teklifKargoMasrafi} onValueChange={setTeklifKargoMasrafi}>
-                      <SelectTrigger><SelectValue placeholder="Kargo masrafı ödemesi" /></SelectTrigger>
+                    <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
+                    <Select value={teklifOdemeSecenekleri} onValueChange={setTeklifOdemeSecenekleri}>
+                      <SelectTrigger><SelectValue placeholder="Ödeme Seçenekleri" /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Alıcı Öder">Alıcı Öder</SelectItem>
-                        <SelectItem value="Satıcı Öder">Satıcı Öder</SelectItem>
+                        {dbOdemeSecenekleri.map(o => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1 block">Kargo Masrafı Ödemesi</label>
+                    <Select value={teklifKargoMasrafi} onValueChange={setTeklifKargoMasrafi}>
+                      <SelectTrigger><SelectValue placeholder="Kargo Masrafı Ödemesi" /></SelectTrigger>
+                      <SelectContent>
+                        {dbKargoMasrafi.map(o => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Vadesi</label>
-                    <Input
-                      placeholder="Ödeme Vadesi"
-                      value={teklifOdemeVadesi}
-                      onChange={(e) => setTeklifOdemeVadesi(e.target.value)}
-                    />
+                    <Select value={teklifOdemeVadesi} onValueChange={setTeklifOdemeVadesi}>
+                      <SelectTrigger><SelectValue placeholder="Ödeme Vadesi" /></SelectTrigger>
+                      <SelectContent>
+                        {dbOdemeVadeleri.map(o => (
+                          <SelectItem key={o} value={o}>{o}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
                     <label className="relative flex items-center justify-center gap-2 h-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
@@ -668,7 +770,7 @@ export default function IhaleDetay() {
                     </label>
                   </div>
                   <Button className="w-full h-12 gap-2 text-base" onClick={handleTeklifSubmit}>
-                    <Send className="w-4 h-4" /> Teklif Ver
+                    <Send className="w-4 h-4" /> {myTeklif ? "Teklifi Güncelle" : "Teklif Ver"}
                   </Button>
                 </div>
               )}
@@ -681,46 +783,65 @@ export default function IhaleDetay() {
                   <Wifi className="w-4 h-4 text-primary" />
                   <h3 className="font-bold text-foreground">Teklifler</h3>
                 </div>
-                <Badge className="bg-destructive text-destructive-foreground text-xs">Canlı</Badge>
+                {!isKapaliTeklif && (
+                  <Badge className="bg-destructive text-destructive-foreground text-xs">Canlı</Badge>
+                )}
               </div>
 
               {/* Min / Max / My */}
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Min Teklif</p>
-                  <p className="font-bold text-foreground text-sm">
-                    {minTeklif != null ? `${sym}${minTeklif.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
-                  </p>
+              {!isKapaliTeklif && (
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Min Teklif</p>
+                    <p className="font-bold text-foreground text-sm">
+                      {minTeklif != null ? `${sym}${minTeklif.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
+                    </p>
+                  </div>
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Maks Teklif</p>
+                    <p className="font-bold text-foreground text-sm">
+                      {maxTeklif != null ? `${sym}${maxTeklif.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
+                    </p>
+                  </div>
+                  <div className="text-center p-3 bg-muted rounded-lg">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Sizin Teklifiniz</p>
+                    <p className="font-bold text-foreground text-sm">
+                      {myTeklif ? `${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-center p-3 bg-muted rounded-lg">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Maks Teklif</p>
-                  <p className="font-bold text-foreground text-sm">
-                    {maxTeklif != null ? `${sym}${maxTeklif.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
-                  </p>
-                </div>
-                <div className="text-center p-3 bg-muted rounded-lg">
+              )}
+
+              {isKapaliTeklif && !isOwner && myTeklif && (
+                <div className="text-center p-3 bg-muted rounded-lg mb-4">
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Sizin Teklifiniz</p>
                   <p className="font-bold text-foreground text-sm">
-                    {myTeklif ? `${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
+                    {`${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`}
                   </p>
                 </div>
-              </div>
+              )}
 
-              {myRank && (
+              {isKapaliTeklif && !isOwner && (
+                <p className="text-xs text-muted-foreground text-center mb-4">
+                  Kapalı teklif usulünde yalnızca kendi teklifinizi görebilirsiniz.
+                </p>
+              )}
+
+              {myRank && !isKapaliTeklif && (
                 <p className="text-sm text-center text-muted-foreground mb-4">
                   Teklif sıranız: <strong className="text-foreground">{myRank}.</strong>
                 </p>
               )}
 
               {/* Teklif list */}
-              {sortedTeklifler.length > 0 ? (
+              {visibleTeklifler.length > 0 ? (
                 <div className="space-y-0">
                   <div className="grid grid-cols-3 text-[10px] uppercase tracking-wider text-muted-foreground font-medium py-2 border-b border-border">
                     <span>Teklif Veren</span>
                     <span className="text-center">Zaman</span>
                     <span className="text-right">Teklif</span>
                   </div>
-                  {sortedTeklifler.map((t, i) => (
+                  {visibleTeklifler.map((t, i) => (
                     <div key={t.id} className={`grid grid-cols-3 py-2.5 text-sm border-b border-border/50 ${t.teklif_veren_user_id === currentUserId ? "bg-primary/5 rounded" : ""}`}>
                       <span className="text-muted-foreground">
                         {isOwner ? (t.firma_unvani || "Anonim") : maskName(t.firma_unvani || `Firma ${i + 1}`)}
@@ -729,7 +850,7 @@ export default function IhaleDetay() {
                         {format(new Date(t.created_at), "dd/MM HH:mm")}
                       </span>
                       <span className="text-right font-medium text-foreground">
-                        {isOwner ? `${sym}${t.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : `${sym}***`}
+                        {`${sym}${t.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`}
                       </span>
                     </div>
                   ))}
@@ -740,7 +861,14 @@ export default function IhaleDetay() {
             </Card>
 
             {/* İhale Sahibi Firma */}
-            {!ihale.firma_adi_gizle && firma && (
+            {ihale.firma_adi_gizle ? (
+              <Card className="p-6">
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <EyeOff className="w-5 h-5" />
+                  <p className="text-sm">Firma bilgileri gizlenmiştir.</p>
+                </div>
+              </Card>
+            ) : firma && (
               <Card className="p-6">
                 <h3 className="font-bold text-foreground mb-4">İhale Sahibi Firma</h3>
                 <div className="flex items-center gap-3 mb-4">
@@ -833,16 +961,6 @@ export default function IhaleDetay() {
         </div>
       </main>
 
-      {/* Zoom Modal */}
-      {zoomOpen && allImages.length > 0 && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={() => setZoomOpen(false)}>
-          <button className="absolute top-4 right-4 p-2 bg-background/20 rounded-full hover:bg-background/40">
-            <X className="w-6 h-6 text-white" />
-          </button>
-          <img src={allImages[selectedImageIndex]} alt="" className="max-w-[90vw] max-h-[90vh] object-contain" onClick={(e) => e.stopPropagation()} />
-        </div>
-      )}
-
       {/* Teklif Onay Dialog */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent className="max-w-md">
@@ -856,7 +974,7 @@ export default function IhaleDetay() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div className="p-3 bg-muted rounded-lg">
-                <p className="text-xs text-muted-foreground mb-1">Ürün</p>
+                <p className="text-xs text-muted-foreground mb-1">İhale</p>
                 <p className="font-semibold text-foreground text-sm">{ihale.baslik}</p>
               </div>
               <div className="p-3 bg-muted rounded-lg">
@@ -866,24 +984,18 @@ export default function IhaleDetay() {
             </div>
 
             <div className="space-y-2">
-              {teklifKargoMasrafi && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Kargo masrafı ödemesi</span>
-                  <span className="font-medium">{teklifKargoMasrafi}</span>
-                </div>
-              )}
-              {teklifOdemeSecenekleri && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Ödeme Seçenekleri</span>
-                  <span className="font-medium">{teklifOdemeSecenekleri}</span>
-                </div>
-              )}
-              {teklifOdemeVadesi && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Ödeme Vadesi</span>
-                  <span className="font-medium">{teklifOdemeVadesi}</span>
-                </div>
-              )}
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Ödeme Seçenekleri</span>
+                <span className="font-medium">{teklifOdemeSecenekleri || "Belirtilmedi"}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Kargo Masrafı Ödemesi</span>
+                <span className="font-medium">{teklifKargoMasrafi || "Belirtilmedi"}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Ödeme Vadesi</span>
+                <span className="font-medium">{teklifOdemeVadesi || "Belirtilmedi"}</span>
+              </div>
               {teklifDosyaName && (
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Dosya</span>
@@ -908,11 +1020,11 @@ export default function IhaleDetay() {
   );
 }
 
-function InfoRow({ label, value }: { label: string; value: string }) {
+function InfoRow({ label, value }: { label: string; value: string | null | undefined }) {
   return (
     <div className="flex justify-between items-center py-3">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium text-foreground text-right max-w-[60%]">{value || "-"}</span>
+      <span className="text-sm font-medium text-foreground text-right max-w-[60%]">{value || "Belirtilmedi"}</span>
     </div>
   );
 }

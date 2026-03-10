@@ -810,24 +810,39 @@ export type Database = {
         Row: {
           created_at: string
           durum: string
+          ek_dosya_adi: string | null
+          ek_dosya_url: string | null
           id: string
           ihale_id: string
+          kargo_masrafi: string | null
+          odeme_secenekleri: string | null
+          odeme_vadesi: string | null
           teklif_veren_user_id: string
           tutar: number
         }
         Insert: {
           created_at?: string
           durum?: string
+          ek_dosya_adi?: string | null
+          ek_dosya_url?: string | null
           id?: string
           ihale_id: string
+          kargo_masrafi?: string | null
+          odeme_secenekleri?: string | null
+          odeme_vadesi?: string | null
           teklif_veren_user_id: string
           tutar: number
         }
         Update: {
           created_at?: string
           durum?: string
+          ek_dosya_adi?: string | null
+          ek_dosya_url?: string | null
           id?: string
           ihale_id?: string
+          kargo_masrafi?: string | null
+          odeme_secenekleri?: string | null
+          odeme_vadesi?: string | null
           teklif_veren_user_id?: string
           tutar?: number
         }

@@ -20,7 +20,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ZoomIn,
-  X,
 } from "lucide-react";
 import {
   SiLinkerd,
@@ -110,7 +109,7 @@ export default function UrunDetay() {
   // Image gallery
   const [allImages, setAllImages] = useState<string[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [zoomOpen, setZoomOpen] = useState(false);
+  const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
@@ -381,15 +380,20 @@ export default function UrunDetay() {
             <div className="flex-1 relative">
               <div
                 ref={imageContainerRef}
-                className="aspect-square bg-background rounded-xl overflow-hidden border border-border relative group cursor-zoom-in"
-                onMouseMove={handleImageZoomMove}
-                onClick={() => setZoomOpen(true)}
+                className="aspect-square bg-background rounded-xl overflow-hidden border border-border relative group"
+                onMouseMove={(e) => { handleImageZoomMove(e); setIsZoomed(true); }}
+                onMouseLeave={() => setIsZoomed(false)}
+                style={{ cursor: "crosshair" }}
               >
                 {allImages.length > 0 ? (
                   <img
                     src={allImages[selectedImageIndex]}
                     alt={urun.baslik}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain transition-transform duration-200"
+                    style={isZoomed ? {
+                      transform: "scale(2.5)",
+                      transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                    } : undefined}
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -398,9 +402,11 @@ export default function UrunDetay() {
                 )}
 
                 {/* Zoom icon overlay */}
-                <div className="absolute bottom-3 right-3 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                  <ZoomIn className="w-5 h-5 text-muted-foreground" />
-                </div>
+                {!isZoomed && (
+                  <div className="absolute bottom-3 right-3 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ZoomIn className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                )}
 
                 {/* Favorite button */}
                 <button
@@ -683,55 +689,6 @@ export default function UrunDetay() {
         )}
       </main>
 
-      {/* Zoom Modal */}
-      {zoomOpen && allImages.length > 0 && (
-        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center" onClick={() => setZoomOpen(false)}>
-          <button className="absolute top-4 right-4 p-2 text-white hover:text-white/80" onClick={() => setZoomOpen(false)}>
-            <X className="w-8 h-8" />
-          </button>
-
-          {allImages.length > 1 && (
-            <>
-              <button
-                onClick={(e) => { e.stopPropagation(); setSelectedImageIndex(i => i > 0 ? i - 1 : allImages.length - 1); }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-white/10 rounded-full hover:bg-white/20 text-white"
-              >
-                <ChevronLeft className="w-8 h-8" />
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setSelectedImageIndex(i => i < allImages.length - 1 ? i + 1 : 0); }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 bg-white/10 rounded-full hover:bg-white/20 text-white"
-              >
-                <ChevronRight className="w-8 h-8" />
-              </button>
-            </>
-          )}
-
-          <img
-            src={allImages[selectedImageIndex]}
-            alt={urun.baslik}
-            className="max-w-[90vw] max-h-[90vh] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-
-          {/* Thumbnail strip */}
-          {allImages.length > 1 && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-              {allImages.map((img, i) => (
-                <button
-                  key={i}
-                  onClick={(e) => { e.stopPropagation(); setSelectedImageIndex(i); }}
-                  className={`w-12 h-12 rounded overflow-hidden border-2 transition-colors ${
-                    selectedImageIndex === i ? "border-white" : "border-white/30 hover:border-white/60"
-                  }`}
-                >
-                  <img src={img} alt="" className="w-full h-full object-contain p-0.5" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
     </div>
   );
 }
