@@ -546,7 +546,7 @@ export default function UrunDetay() {
                       {firma.linkedin && (
                         <a href={firma.linkedin.startsWith("http") ? firma.linkedin : `https://${firma.linkedin}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <SiLinkedin className="w-4 h-4" /> LinkedIn
+                          <SiLinkerd className="w-4 h-4" /> LinkedIn
                         </a>
                       )}
                       {firma.instagram && (
