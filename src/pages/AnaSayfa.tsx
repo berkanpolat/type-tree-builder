@@ -179,35 +179,8 @@ export default function AnaSayfa() {
       if (data) {
         setFirmaTurleri(data);
         const tedarikci = data.find((t) => t.name.toLowerCase().includes("tedarikçi"));
-        if (tedarikci) setSelectedFirmaTuru(tedarikci.id);
-        else if (data.length > 0) setSelectedFirmaTuru(data[0].id);
-      }
-    });
-  }, []);
-
-  // Fetch firma tipleri
-  useEffect(() => {
-    if (!selectedFirmaTuru) return;
-    supabase.from("firma_tipleri").select("id, name").eq("firma_turu_id", selectedFirmaTuru).order("name").then(({ data }) => {
-      if (data) setFirmaTipleri(data);
-    });
-    setSelectedFirmaTipleri([]);
-  }, [selectedFirmaTuru]);
-
-  // Fetch kategori seçenekleri
-  useEffect(() => {
-    supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KATEGORI_ID).is("parent_id", null).order("name").then(({ data }) => {
-      if (data) setKategoriSecenekler(data);
-    });
-  }, []);
-
-  // Fetch firma ölçekleri
-  useEffect(() => {
-    supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "Firma Ölçeği").single().then(({ data: kat }) => {
-      if (kat) {
-        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", kat.id).is("parent_id", null).order("name").then(({ data }) => {
-          if (data) setFirmaOlcekleri(data);
-        });
+        if (tedarikci) { setSelectedFirmaTuru(tedarikci.id); setSelectedFirmaTuruName(tedarikci.name); }
+        else if (data.length > 0) { setSelectedFirmaTuru(data[0].id); setSelectedFirmaTuruName(data[0].name); }
       }
     });
   }, []);
