@@ -386,8 +386,8 @@ export default function TekIhale() {
               </FilterSection>
             )}
 
-            {/* Hizmet kategorileri - show when hizmet selected or no ihale turu filter */}
-            {(isHizmetMode || filterIhaleTuru.length === 0) && hizmetKategoriler.length > 0 && (
+            {/* Hizmet kategorileri - show only when hizmet selected */}
+            {isHizmetMode && hizmetKategoriler.length > 0 && (
               <FilterSection title="Hizmet Kategorisi" icon={Layers}>
                 {hizmetKategoriler.map((k) => (
                   <CheckboxFilter key={k.id} label={k.name} checked={filterHizmetKategori.includes(k.id)} onChange={() => toggleFilter(filterHizmetKategori, k.id, setFilterHizmetKategori)} />
