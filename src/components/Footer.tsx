@@ -1,7 +1,19 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { FaLinkedinIn, FaInstagram, FaFacebookF, FaXTwitter } from "react-icons/fa6";
+
+function FooterLink({ to, children }: { to: string; children: React.ReactNode }) {
+  const navigate = useNavigate();
+  return (
+    <button
+      onClick={() => { navigate(to); window.scrollTo(0, 0); }}
+      className="text-primary-foreground/70 hover:text-primary-foreground text-sm transition-colors text-left"
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function Footer() {
   return (
