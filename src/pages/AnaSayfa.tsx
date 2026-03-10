@@ -476,7 +476,7 @@ export default function AnaSayfa() {
 
     // Step 2: Build main query
     let query = supabase.from("firmalar")
-      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq")
+      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id")
       .order("firma_unvani").limit(100);
 
     if (selectedFirmaTuru) query = query.eq("firma_turu_id", selectedFirmaTuru);
@@ -496,7 +496,7 @@ export default function AnaSayfa() {
 
     const { data } = await query;
     if (data) {
-      setFirmalar(data);
+      // Resolve all IDs (secenek names)
       const ids = new Set<string>();
       data.forEach((f) => {
         if (f.firma_tipi_id) ids.add(f.firma_tipi_id);
@@ -505,27 +505,70 @@ export default function AnaSayfa() {
         if (f.kurulus_ilce_id) ids.add(f.kurulus_ilce_id);
       });
       const allIds = [...ids];
+      let newSecenekMap = { ...secenekMap };
       if (allIds.length > 0) {
         const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", allIds);
-        if (names) {
-          const map: Record<string, string> = { ...secenekMap };
-          names.forEach((n) => { map[n.id] = n.name; });
-          setSecenekMap(map);
+        if (names) names.forEach((n) => { newSecenekMap[n.id] = n.name; });
+      }
+
+      // Firma tipleri names
+      const tipIds = [...new Set(data.map((f) => f.firma_tipi_id))];
+      if (tipIds.length > 0) {
+        const { data: tipNames } = await supabase.from("firma_tipleri").select("id, name").in("id", tipIds);
+        if (tipNames) tipNames.forEach((n) => { newSecenekMap[n.id] = n.name; });
+      }
+
+      // Firma türü names map
+      const turNameMap: Record<string, string> = {};
+      firmaTurleri.forEach((t) => { turNameMap[t.id] = t.name; });
+
+      // Fetch faaliyet alanı for listed firms
+      const firmaIds = data.map((f) => f.id);
+      const faaliyetMap: Record<string, string> = {};
+      if (firmaIds.length > 0) {
+        const { data: faaliyetData } = await supabase
+          .from("firma_urun_hizmet_secimler")
+          .select("firma_id, secenek_id")
+          .in("firma_id", firmaIds);
+        if (faaliyetData && faaliyetData.length > 0) {
+          const faaliyetSecIds = [...new Set(faaliyetData.map((f) => f.secenek_id))];
+          const { data: faaliyetNames } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", faaliyetSecIds);
+          const fNameMap: Record<string, string> = {};
+          if (faaliyetNames) faaliyetNames.forEach((n) => { fNameMap[n.id] = n.name; });
+          // Take first faaliyet per firma
+          const seen = new Set<string>();
+          faaliyetData.forEach((f) => {
+            if (!seen.has(f.firma_id) && fNameMap[f.secenek_id]) {
+              faaliyetMap[f.firma_id] = fNameMap[f.secenek_id];
+              seen.add(f.firma_id);
+            }
+          });
         }
       }
-      const tipIds = new Set<string>();
-      data.forEach((f) => tipIds.add(f.firma_tipi_id));
-      if (tipIds.size > 0) {
-        const { data: tipNames } = await supabase.from("firma_tipleri").select("id, name").in("id", Array.from(tipIds));
-        if (tipNames) {
-          const map: Record<string, string> = { ...secenekMap };
-          tipNames.forEach((n) => { map[n.id] = n.name; });
-          setSecenekMap(map);
-        }
+
+      // Fetch firma favorites
+      let favSet = new Set<string>();
+      if (currentUserId) {
+        const { data: favs } = await supabase.from("firma_favoriler").select("firma_id").eq("user_id", currentUserId);
+        if (favs) favs.forEach((f) => favSet.add(f.firma_id));
       }
+      setFirmaFavSet(favSet);
+
+      setSecenekMap(newSecenekMap);
+
+      // Enrich firmalar
+      const enriched: FirmaWithExtra[] = data.map((f) => ({
+        ...f,
+        firma_turu_name: turNameMap[f.firma_turu_id] || "",
+        firma_tipi_name: newSecenekMap[f.firma_tipi_id] || "",
+        faaliyet_alani: faaliyetMap[f.id] || "",
+        is_favorited: favSet.has(f.id),
+      }));
+
+      setFirmalar(enriched);
     }
     setFirmaLoading(false);
-  }, [selectedFirmaTuru, firmaFilterState, activeFilter, activeTab]);
+  }, [selectedFirmaTuru, firmaFilterState, activeFilter, activeTab, firmaTurleri, currentUserId]);
 
   useEffect(() => {
     if (activeTab === "urunler") fetchUrunler();
