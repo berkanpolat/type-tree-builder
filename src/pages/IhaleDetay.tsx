@@ -863,7 +863,7 @@ export default function IhaleDetay() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <Wifi className="w-4 h-4 text-primary" />
-                  <h3 className="font-bold text-foreground">Teklifler</h3>
+                  <h3 className="font-bold text-foreground">Teklifler ({visibleTeklifler.length})</h3>
                 </div>
                 {!isKapaliTeklif && (
                   <Badge className="bg-destructive text-destructive-foreground text-xs">Canlı</Badge>
