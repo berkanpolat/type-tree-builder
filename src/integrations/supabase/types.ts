@@ -1074,6 +1074,48 @@ export type Database = {
         }
         Relationships: []
       }
+      sikayetler: {
+        Row: {
+          aciklama: string | null
+          bildiren_user_id: string
+          created_at: string
+          durum: string
+          ek_dosya_adi: string | null
+          ek_dosya_url: string | null
+          id: string
+          referans_id: string
+          sebep: string
+          sikayet_no: string
+          tur: string
+        }
+        Insert: {
+          aciklama?: string | null
+          bildiren_user_id: string
+          created_at?: string
+          durum?: string
+          ek_dosya_adi?: string | null
+          ek_dosya_url?: string | null
+          id?: string
+          referans_id: string
+          sebep: string
+          sikayet_no?: string
+          tur: string
+        }
+        Update: {
+          aciklama?: string | null
+          bildiren_user_id?: string
+          created_at?: string
+          durum?: string
+          ek_dosya_adi?: string | null
+          ek_dosya_url?: string | null
+          id?: string
+          referans_id?: string
+          sebep?: string
+          sikayet_no?: string
+          tur?: string
+        }
+        Relationships: []
+      }
       urun_favoriler: {
         Row: {
           created_at: string
