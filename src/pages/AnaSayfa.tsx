@@ -350,6 +350,7 @@ export default function AnaSayfa() {
       const effective = u.fiyat_tipi === "varyasyonlu" ? (minV ?? null) : (u.fiyat ?? null);
       return {
         ...u,
+        foto_url: u.foto_url || varyantFotoMap[u.id] || null,
         teknik_detaylar: (u.teknik_detaylar as Record<string, string>) || null,
         firma_unvani: firmaMap[u.user_id]?.firma_unvani,
         firma_logo_url: firmaMap[u.user_id]?.logo_url,
