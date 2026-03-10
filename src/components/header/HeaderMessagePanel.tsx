@@ -124,7 +124,7 @@ export default function HeaderMessagePanel() {
                           {formatDistanceToNow(new Date(conv.lastMessageAt), { addSuffix: true, locale: tr })}
                         </span>
                       </div>
-                      <p className={`text-xs mt-0.5 truncate ${conv.unreadCount > 0 ? "text-foreground" : "text-muted-foreground"}`}>
+                      <p className={`text-xs mt-0.5 truncate max-w-[200px] ${conv.unreadCount > 0 ? "text-foreground" : "text-muted-foreground"}`}>
                         {conv.lastMessage}
                       </p>
                     </div>

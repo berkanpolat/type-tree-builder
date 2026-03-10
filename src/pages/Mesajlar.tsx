@@ -4,7 +4,17 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Send, Building2, Paperclip, X, FileText, Image as ImageIcon, Download } from "lucide-react";
+import { Search, Send, Building2, Paperclip, X, FileText, Image as ImageIcon, Download, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -56,6 +66,7 @@ export default function Mesajlar() {
   const [uploading, setUploading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -385,6 +396,14 @@ export default function Mesajlar() {
     return format(date, "dd MMM", { locale: tr });
   };
 
+  const handleDeleteMessage = async () => {
+    if (!deleteTarget || !currentUserId) return;
+    await supabase.from("messages").delete().eq("id", deleteTarget.id);
+    setMessages((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+    setDeleteTarget(null);
+    if (currentUserId) fetchConversations(currentUserId);
+  };
+
   const isImageFile = (name: string) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name);
 
   const renderMessageContent = (msg: Message, isMine: boolean) => {
@@ -480,7 +499,7 @@ export default function Mesajlar() {
                       </span>
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
-                      <p className={`text-xs truncate ${
+                      <p className={`text-xs truncate max-w-[160px] ${
                         conv.unread_count > 0 && conv.last_message_sender_id !== currentUserId
                           ? "text-foreground font-semibold"
                           : "text-muted-foreground"
@@ -529,8 +548,17 @@ export default function Mesajlar() {
                     return (
                       <div
                         key={msg.id}
-                        className={`flex ${isMine ? "justify-end" : "justify-start"}`}
+                        className={`flex group ${isMine ? "justify-end" : "justify-start"}`}
                       >
+                        {isMine && (
+                          <button
+                            onClick={() => setDeleteTarget(msg)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity self-center mr-2 p-1.5 rounded-full hover:bg-destructive/10"
+                            title="Mesajı sil"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                          </button>
+                        )}
                         <div
                           className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
                             isMine
@@ -540,6 +568,15 @@ export default function Mesajlar() {
                         >
                           {renderMessageContent(msg, isMine)}
                         </div>
+                        {!isMine && (
+                          <button
+                            onClick={() => setDeleteTarget(msg)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity self-center ml-2 p-1.5 rounded-full hover:bg-destructive/10"
+                            title="Mesajı sil"
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                          </button>
+                        )}
                       </div>
                     );
                   })}
@@ -628,6 +665,23 @@ export default function Mesajlar() {
           )}
         </div>
       </div>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mesajı silmek istediğinize emin misiniz?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu işlem geri alınamaz. Mesaj kalıcı olarak silinecektir.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteMessage} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
