@@ -564,7 +564,7 @@ export default function UrunDetay() {
                       {firma.x_twitter && (
                         <a href={firma.x_twitter.startsWith("http") ? firma.x_twitter : `https://x.com/${firma.x_twitter}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <SiX className="w-4 h-4" /> X
+                          <RiTwitterXFill className="w-4 h-4" /> X
                         </a>
                       )}
                       {firma.tiktok && (
