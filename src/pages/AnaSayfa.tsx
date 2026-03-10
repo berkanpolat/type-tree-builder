@@ -415,13 +415,67 @@ export default function AnaSayfa() {
   // Fetch companies
   const fetchFirmalar = useCallback(async () => {
     setFirmaLoading(true);
+    const fs = firmaFilterState;
+
+    // Step 1: Resolve junction table filters to firma IDs
+    let junctionFirmaIds: string[] | null = null;
+    if (fs) {
+      const allJunctionIds = Object.values(fs.junctionFilters).flat();
+      if (allJunctionIds.length > 0) {
+        const { data: junctionData } = await supabase
+          .from("firma_urun_hizmet_secimler")
+          .select("firma_id, secenek_id")
+          .in("secenek_id", allJunctionIds);
+
+        if (junctionData) {
+          let matchSet: Set<string> | null = null;
+          for (const [, ids] of Object.entries(fs.junctionFilters)) {
+            if (ids.length === 0) continue;
+            const groupIds = new Set(junctionData.filter((d) => ids.includes(d.secenek_id)).map((d) => d.firma_id));
+            if (matchSet === null) matchSet = groupIds;
+            else matchSet = new Set([...matchSet].filter((id) => groupIds.has(id)));
+          }
+          if (matchSet !== null) junctionFirmaIds = [...matchSet];
+        }
+      }
+
+      // Üretim/Satış filter
+      const usTurIds = fs.uretimSatisTurIds;
+      const usGrupIds = fs.uretimSatisGrupIds;
+      const usKatIds = fs.uretimSatisKategoriIds;
+      if (usTurIds.length > 0 || usGrupIds.length > 0 || usKatIds.length > 0) {
+        let usQuery = supabase.from("firma_uretim_satis").select("firma_id");
+        if (usTurIds.length > 0) usQuery = usQuery.in("tur_id", usTurIds);
+        else if (usGrupIds.length > 0) usQuery = usQuery.in("grup_id", usGrupIds);
+        else if (usKatIds.length > 0) usQuery = usQuery.in("kategori_id", usKatIds);
+        const { data: usData } = await usQuery;
+        if (usData) {
+          const usFirmaIds = new Set(usData.map((d) => d.firma_id));
+          if (junctionFirmaIds === null) junctionFirmaIds = [...usFirmaIds];
+          else junctionFirmaIds = junctionFirmaIds.filter((id) => usFirmaIds.has(id));
+        }
+      }
+    }
+
+    // Step 2: Build main query
     let query = supabase.from("firmalar")
-      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi")
-      .order("firma_unvani").limit(50);
+      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq")
+      .order("firma_unvani").limit(100);
+
     if (selectedFirmaTuru) query = query.eq("firma_turu_id", selectedFirmaTuru);
-    if (selectedFirmaTipleri.length > 0) query = query.in("firma_tipi_id", selectedFirmaTipleri);
-    if (selectedOlcekler.length > 0) query = query.in("firma_olcegi_id", selectedOlcekler);
     if (activeFilter && activeTab === "firma") query = query.ilike("firma_unvani", `%${activeFilter.name}%`);
+
+    if (fs) {
+      if (fs.firmaTipleri.length > 0) query = query.in("firma_tipi_id", fs.firmaTipleri);
+      if (fs.firmaOlcekleri.length > 0) query = query.in("firma_olcegi_id", fs.firmaOlcekleri);
+      if (fs.iller.length > 0) query = query.in("kurulus_il_id", fs.iller);
+      if (fs.moq) query = query.gte("moq", parseInt(fs.moq));
+    }
+
+    if (junctionFirmaIds !== null) {
+      if (junctionFirmaIds.length === 0) { setFirmalar([]); setFirmaLoading(false); return; }
+      query = query.in("id", junctionFirmaIds);
+    }
 
     const { data } = await query;
     if (data) {
@@ -433,8 +487,6 @@ export default function AnaSayfa() {
         if (f.kurulus_il_id) ids.add(f.kurulus_il_id);
         if (f.kurulus_ilce_id) ids.add(f.kurulus_ilce_id);
       });
-      const tipIds = new Set<string>();
-      data.forEach((f) => tipIds.add(f.firma_tipi_id));
       const allIds = [...ids];
       if (allIds.length > 0) {
         const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", allIds);
@@ -444,6 +496,8 @@ export default function AnaSayfa() {
           setSecenekMap(map);
         }
       }
+      const tipIds = new Set<string>();
+      data.forEach((f) => tipIds.add(f.firma_tipi_id));
       if (tipIds.size > 0) {
         const { data: tipNames } = await supabase.from("firma_tipleri").select("id, name").in("id", Array.from(tipIds));
         if (tipNames) {
@@ -454,7 +508,7 @@ export default function AnaSayfa() {
       }
     }
     setFirmaLoading(false);
-  }, [selectedFirmaTuru, selectedFirmaTipleri, selectedOlcekler, activeFilter, activeTab]);
+  }, [selectedFirmaTuru, firmaFilterState, activeFilter, activeTab]);
 
   useEffect(() => {
     if (activeTab === "urunler") fetchUrunler();
