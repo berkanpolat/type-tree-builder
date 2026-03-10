@@ -655,25 +655,7 @@ export default function AnaSayfa() {
   return (
     <div className="min-h-screen bg-muted/30 font-sans">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link to="/anasayfa">
-              <img src={logoImg} alt="Tekstil A.Ş." className="h-9 object-contain" />
-            </Link>
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/anasayfa" className="text-sm font-medium text-foreground hover:text-secondary transition-colors">TekPazar</Link>
-              <Link to="/manuihale" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Tekİhale</Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="truncate max-w-[200px]">{firmaUnvani}</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
-          </div>
-        </div>
-      </header>
+      <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
 
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* Search Header */}
