@@ -281,13 +281,19 @@ export default function AnaSayfa() {
     const varyantPriceMap: Record<string, { min: number; max: number }> = {};
     const varyantDataMap: Record<string, { renk: Set<string>; beden: Set<string> }> = {};
 
+    const varyantFotoMap: Record<string, string> = {};
+
     if (varyasyonluIds.length > 0) {
       const { data: varyantlar } = await supabase
         .from("urun_varyasyonlar")
-        .select("urun_id, birim_fiyat, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
+        .select("urun_id, birim_fiyat, foto_url, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
         .in("urun_id", varyasyonluIds);
       if (varyantlar) {
         varyantlar.forEach((v) => {
+          // Use first variation photo as fallback
+          if (!varyantFotoMap[v.urun_id] && v.foto_url) {
+            varyantFotoMap[v.urun_id] = v.foto_url;
+          }
           // Prices
           if (!varyantPriceMap[v.urun_id]) {
             varyantPriceMap[v.urun_id] = { min: v.birim_fiyat, max: v.birim_fiyat };
@@ -344,6 +350,7 @@ export default function AnaSayfa() {
       const effective = u.fiyat_tipi === "varyasyonlu" ? (minV ?? null) : (u.fiyat ?? null);
       return {
         ...u,
+        foto_url: u.foto_url || varyantFotoMap[u.id] || null,
         teknik_detaylar: (u.teknik_detaylar as Record<string, string>) || null,
         firma_unvani: firmaMap[u.user_id]?.firma_unvani,
         firma_logo_url: firmaMap[u.user_id]?.logo_url,
