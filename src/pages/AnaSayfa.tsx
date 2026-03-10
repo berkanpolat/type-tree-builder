@@ -96,6 +96,14 @@ interface FirmaListItem {
   web_sitesi: string | null;
   kurulus_tarihi: string | null;
   moq: number | null;
+  user_id: string;
+}
+
+interface FirmaWithExtra extends FirmaListItem {
+  firma_turu_name?: string;
+  firma_tipi_name?: string;
+  faaliyet_alani?: string;
+  is_favorited?: boolean;
 }
 
 const paraBirimiSymbol: Record<string, string> = {
