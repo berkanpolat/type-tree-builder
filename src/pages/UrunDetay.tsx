@@ -33,6 +33,28 @@ const paraBirimiSymbol: Record<string, string> = {
   TRY: "₺", USD: "$", EUR: "€", GBP: "£",
 };
 
+const isUUID = (val: string): boolean =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+const formatLabel = (key: string): string => {
+  const turkishMap: Record<string, string> = {
+    kumas_kompozisyonu: "Kumaş Kompozisyonu", kumas_grubu: "Kumaş Grubu", kumas_turu: "Kumaş Türü",
+    sezon: "Sezon", cinsiyet: "Cinsiyet", yas_grubu: "Yaş Grubu", desen: "Desen", kalip: "Kalıp",
+    aksesuar_kullanim_alani: "Aksesuar Kullanım Alanı", malzeme_turu: "Malzeme Türü", kaplama: "Kaplama",
+    ebat_olcu: "Ebat Ölçü", ambalaj_kullanim_alani: "Ambalaj Kullanım Alanı", baski: "Baskı",
+    gramaj: "Gramaj", kalinlik: "Kalınlık Bilgisi", iplik_kompozisyonu: "İplik Kompozisyonu",
+    iplik_kullanim_alani: "İplik Kullanım Alanı", bukum_tipi: "Büküm Tipi", mukavemet: "Mukavemet",
+    paket_tipi: "Paket Tipi", iplik_numarasi: "İplik Numarası", kimyasal_kullanim_alani: "Kimyasal Kullanım Alanı",
+    marka: "Marka", model: "Model", kimyasal_turu: "Kimyasal Türü", fiziksel_formu: "Fiziksel Formu",
+    depolama_kosulu: "Depolama Koşulu", yogunluk: "Yoğunluk / Viskozite", ph: "pH",
+    stt: "Son Tüketim Tarihi", en: "En (cm)", boy: "Boy (cm)", esneklik_orani: "Esneklik Oranı",
+    makine_kullanim_alani: "Makine Kullanım Alanı", kullanim_durumu: "Kullanım Durumu",
+    uretim_yili: "Üretim Yılı", motor_tipi: "Motor Tipi", motor_gucu: "Motor Gücü",
+  };
+  if (turkishMap[key]) return turkishMap[key];
+  return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
+
 interface UrunData {
   id: string;
   baslik: string;
@@ -105,6 +127,7 @@ export default function UrunDetay() {
   const [isFavorited, setIsFavorited] = useState(false);
   const [benzerUrunler, setBenzerUrunler] = useState<BenzerUrun[]>([]);
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
+  const [resolvedTeknikDetaylar, setResolvedTeknikDetaylar] = useState<Record<string, string>>({});
 
   // Image gallery
   const [allImages, setAllImages] = useState<string[]>([]);
@@ -167,7 +190,7 @@ export default function UrunDetay() {
       .single();
     setFirma(firmaData);
 
-    // Resolve location names
+    // Resolve location names + teknik detaylar UUIDs
     const idsToResolve: string[] = [];
     if (firmaData?.kurulus_il_id) idsToResolve.push(firmaData.kurulus_il_id);
     if (firmaData?.kurulus_ilce_id) idsToResolve.push(firmaData.kurulus_ilce_id);
@@ -175,8 +198,13 @@ export default function UrunDetay() {
     if (urunData.urun_grup_id) idsToResolve.push(urunData.urun_grup_id);
     if (urunData.urun_tur_id) idsToResolve.push(urunData.urun_tur_id);
 
+    const teknikData = (urunData.teknik_detaylar as Record<string, any>) || {};
+    Object.values(teknikData).forEach(val => {
+      if (typeof val === "string" && isUUID(val)) idsToResolve.push(val);
+    });
+
     if (idsToResolve.length > 0) {
-      const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", idsToResolve);
+      const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...new Set(idsToResolve)]);
       if (names) {
         const map: Record<string, string> = {};
         names.forEach(n => { map[n.id] = n.name; });
@@ -184,7 +212,20 @@ export default function UrunDetay() {
         if (urunData.urun_kategori_id) setBreadcrumbKategori(map[urunData.urun_kategori_id] || "");
         if (urunData.urun_grup_id) setBreadcrumbGrup(map[urunData.urun_grup_id] || "");
         if (urunData.urun_tur_id) setBreadcrumbTur(map[urunData.urun_tur_id] || "");
+
+        const resolved: Record<string, string> = {};
+        Object.entries(teknikData).forEach(([key, val]) => {
+          if (typeof val === "string" && isUUID(val)) resolved[key] = map[val] || String(val);
+          else resolved[key] = val ? String(val) : "";
+        });
+        setResolvedTeknikDetaylar(resolved);
       }
+    } else {
+      const resolved: Record<string, string> = {};
+      Object.entries(teknikData).forEach(([key, val]) => {
+        resolved[key] = val ? String(val) : "";
+      });
+      setResolvedTeknikDetaylar(resolved);
     }
 
     // Favorite check
@@ -583,14 +624,14 @@ export default function UrunDetay() {
               </Card>
             )}
 
-            {urun.teknik_detaylar && Object.keys(urun.teknik_detaylar).length > 0 && (
+            {Object.keys(resolvedTeknikDetaylar).length > 0 && (
               <Card className="p-6">
                 <h2 className="text-lg font-bold text-foreground mb-4">Teknik Özellikler</h2>
                 <div className="space-y-4">
-                  {Object.entries(urun.teknik_detaylar).map(([key, value]) => (
+                  {Object.entries(resolvedTeknikDetaylar).map(([key, value]) => (
                     <div key={key}>
-                      <p className="text-sm font-semibold text-foreground">{key}</p>
-                      <p className="text-sm text-muted-foreground mt-0.5">{value}</p>
+                      <p className="text-sm font-semibold text-foreground">{formatLabel(key)}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{value || "Belirtilmedi"}</p>
                     </div>
                   ))}
                 </div>

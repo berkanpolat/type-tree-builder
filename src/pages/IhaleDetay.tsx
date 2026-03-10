@@ -49,6 +49,7 @@ import {
   FileText,
   Send,
   Upload,
+  Trash2,
 } from "lucide-react";
 import {
   SiInstagram,
@@ -59,6 +60,37 @@ import { SiLinkerd } from "react-icons/si";
 import { RiTwitterXFill } from "react-icons/ri";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+
+// Check if a value looks like a UUID
+const isUUID = (val: string): boolean =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+// Format key to readable Turkish label
+const formatLabel = (key: string): string => {
+  const turkishMap: Record<string, string> = {
+    kumas_kompozisyonu: "Kumaş Kompozisyonu", kumas_grubu: "Kumaş Grubu", kumas_turu: "Kumaş Türü",
+    sezon: "Sezon", cinsiyet: "Cinsiyet", yas_grubu: "Yaş Grubu", desen: "Desen", kalip: "Kalıp",
+    aksesuar_kullanim_alani: "Aksesuar Kullanım Alanı", malzeme_turu: "Malzeme Türü", kaplama: "Kaplama",
+    ebat_olcu: "Ebat Ölçü", ambalaj_kullanim_alani: "Ambalaj Kullanım Alanı", baski: "Baskı",
+    gramaj: "Gramaj", kalinlik: "Kalınlık Bilgisi", iplik_kompozisyonu: "İplik Kompozisyonu",
+    iplik_kullanim_alani: "İplik Kullanım Alanı", bukum_tipi: "Büküm Tipi", mukavemet: "Mukavemet",
+    paket_tipi: "Paket Tipi", iplik_numarasi: "İplik Numarası", kimyasal_kullanim_alani: "Kimyasal Kullanım Alanı",
+    marka: "Marka", model: "Model", kimyasal_turu: "Kimyasal Türü", fiziksel_formu: "Fiziksel Formu",
+    depolama_kosulu: "Depolama Koşulu", yogunluk: "Yoğunluk / Viskozite", ph: "pH",
+    stt: "Son Tüketim Tarihi", en: "En (cm)", boy: "Boy (cm)", esneklik_orani: "Esneklik Oranı",
+    makine_kullanim_alani: "Makine Kullanım Alanı", kullanim_durumu: "Kullanım Durumu",
+    uretim_yili: "Üretim Yılı", motor_tipi: "Motor Tipi", motor_gucu: "Motor Gücü",
+    hedeflenen_pazar: "Hedeflenen Pazar", siparis_turu: "Sipariş Türü", urun_segmenti: "Ürün Segmenti",
+    tasarim_turu: "Tasarım Türü", dosya_format: "Dosya Teslim Formatı", revizyon_hakki: "Revizyon Hakkı",
+    hizmet_urun_kategori: "Hizmet Ürün Kategorisi", hizmet_urun_grup: "Hizmet Ürün Grubu",
+    hizmet_urun_tur: "Hizmet Ürün Türü", hedef_urun_kategori: "Hedef Ürün Kategorisi",
+    hedef_urun_grup: "Hedef Ürün Grubu", hedef_urun_tur: "Hedef Ürün Türü",
+    mumessil_urun_kategori: "Mümessil Ürün Kategorisi", mumessil_urun_grup: "Mümessil Ürün Grubu",
+    mumessil_urun_tur: "Mümessil Ürün Türü",
+  };
+  if (turkishMap[key]) return turkishMap[key];
+  return key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+};
 
 const paraBirimiSymbol: Record<string, string> = {
   TRY: "₺", USD: "$", EUR: "€", GBP: "£",
@@ -166,6 +198,9 @@ export default function IhaleDetay() {
 
   // Benzer ihaleler
   const [benzerIhaleler, setBenzerIhaleler] = useState<any[]>([]);
+
+  // Resolved teknik detaylar (UUID -> name)
+  const [resolvedTeknikDetaylar, setResolvedTeknikDetaylar] = useState<Record<string, string>>({});
 
   // Breadcrumbs
   const [breadcrumbKategori, setBreadcrumbKategori] = useState("");
@@ -277,6 +312,16 @@ export default function IhaleDetay() {
     setIhaleFiltreler(filtreData);
     filtreData.forEach(f => idsToResolve.push(f.secenek_id));
 
+    // Collect UUID values from teknik_detaylar for resolving
+    const teknikData = (ihaleData.teknik_detaylar as Record<string, any>) || {};
+    const teknikUUIDs: string[] = [];
+    Object.values(teknikData).forEach(val => {
+      if (typeof val === "string" && isUUID(val)) teknikUUIDs.push(val);
+    });
+
+    // Add teknik UUIDs to resolve list
+    teknikUUIDs.forEach(uid => idsToResolve.push(uid));
+
     // Resolve names
     if (idsToResolve.length > 0) {
       const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...new Set(idsToResolve)]);
@@ -289,7 +334,25 @@ export default function IhaleDetay() {
         if (ihaleData.urun_tur_id) setBreadcrumbTur(map[ihaleData.urun_tur_id] || "");
         if (ihaleData.hizmet_kategori_id) setBreadcrumbKategori(map[ihaleData.hizmet_kategori_id] || "");
         if (ihaleData.hizmet_tur_id) setBreadcrumbGrup(map[ihaleData.hizmet_tur_id] || "");
+
+        // Resolve teknik detaylar values
+        const resolved: Record<string, string> = {};
+        Object.entries(teknikData).forEach(([key, val]) => {
+          if (typeof val === "string" && isUUID(val)) {
+            resolved[key] = map[val] || String(val);
+          } else {
+            resolved[key] = val ? String(val) : "";
+          }
+        });
+        setResolvedTeknikDetaylar(resolved);
       }
+    } else {
+      // No UUIDs to resolve, just use raw values
+      const resolved: Record<string, string> = {};
+      Object.entries(teknikData).forEach(([key, val]) => {
+        resolved[key] = val ? String(val) : "";
+      });
+      setResolvedTeknikDetaylar(resolved);
     }
 
     // Teklifler
@@ -444,6 +507,25 @@ export default function IhaleDetay() {
       fetchIhale();
     }
     setSubmitting(false);
+  };
+
+  const handleTeklifGeriCek = async () => {
+    if (!myTeklif) return;
+    const { error } = await supabase.from("ihale_teklifler").delete().eq("id", myTeklif.id);
+    if (error) {
+      toast({ title: "Hata", description: "Teklif geri çekilemedi.", variant: "destructive" });
+    } else {
+      toast({ title: "Başarılı", description: "Teklifiniz geri çekildi." });
+      setMyTeklif(null);
+      setTeklifTutar("");
+      setTeklifOdemeSecenekleri("");
+      setTeklifKargoMasrafi("");
+      setTeklifOdemeVadesi("");
+      setTeklifDosyaUrl(null);
+      setTeklifDosyaName(null);
+      setMyRank(null);
+      fetchIhale();
+    }
   };
 
   const handleMesajGonder = async () => {
@@ -663,12 +745,12 @@ export default function IhaleDetay() {
             </Card>
 
             {/* Teknik Detaylar */}
-            {Object.keys(teknikDetaylar).length > 0 && (
+            {Object.keys(resolvedTeknikDetaylar).length > 0 && (
               <Card className="p-6">
                 <h3 className="text-lg font-bold text-foreground mb-4">Ürün/Hizmet Teknik Detaylar</h3>
                 <div className="divide-y divide-border">
-                  {Object.entries(teknikDetaylar).map(([key, value]) => (
-                    <InfoRow key={key} label={key} value={value ? String(value) : null} />
+                  {Object.entries(resolvedTeknikDetaylar).map(([key, value]) => (
+                    <InfoRow key={key} label={formatLabel(key)} value={value || null} />
                   ))}
                 </div>
               </Card>
@@ -772,6 +854,11 @@ export default function IhaleDetay() {
                   <Button className="w-full h-12 gap-2 text-base" onClick={handleTeklifSubmit}>
                     <Send className="w-4 h-4" /> {myTeklif ? "Teklifi Güncelle" : "Teklif Ver"}
                   </Button>
+                  {myTeklif && (
+                    <Button variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" onClick={handleTeklifGeriCek}>
+                      <Trash2 className="w-4 h-4" /> Teklifi Geri Çek
+                    </Button>
+                  )}
                 </div>
               )}
             </Card>
