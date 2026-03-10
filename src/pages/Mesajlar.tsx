@@ -69,6 +69,8 @@ export default function Mesajlar() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
+  const [deleteConvTarget, setDeleteConvTarget] = useState<Conversation | null>(null);
+  const [bildirOpen, setBildirOpen] = useState(false);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
