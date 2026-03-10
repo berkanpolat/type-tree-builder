@@ -25,11 +25,11 @@ import {
   ExternalLink,
 } from "lucide-react";
 import {
-  SiLinkedin,
   SiInstagram,
   SiFacebook,
   SiTiktok,
 } from "react-icons/si";
+import { FaLinkedinIn } from "react-icons/fa";
 import { RiTwitterXFill } from "react-icons/ri";
 
 interface FirmaData {
