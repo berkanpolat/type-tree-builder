@@ -406,8 +406,8 @@ export default function YeniUrun() {
     }
 
     setSaving(false);
-    toast({ title: "Ürün onaya gönderildi!" });
-    navigate("/manupazar");
+    toast({ title: "Ürün kaydedildi!" });
+    navigate(`/urun/${urunId}`);
   };
 
   // --- Fiyat Kademesi helpers ---
