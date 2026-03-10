@@ -675,7 +675,7 @@ export default function AnaSayfa() {
           {/* Category bar (only for urunler) */}
           {activeTab === "urunler" && (
             <div className="bg-background rounded-t-xl -mx-6 px-6">
-              <div className="flex items-center gap-6 overflow-x-auto py-3 scrollbar-hide">
+              <div className="flex items-center justify-center gap-6 overflow-x-auto py-3 scrollbar-hide">
                 {URUN_KATEGORILERI.map((kat) => (
                   <button
                     key={kat}
