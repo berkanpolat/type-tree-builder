@@ -135,6 +135,18 @@ const MENU_ITEMS = [
   { id: "urunler", label: "Ürünler" },
 ];
 
+const textOrBelirtilmedi = (value: string | null | undefined) => {
+  const cleaned = value?.trim();
+  return cleaned ? cleaned : "Belirtilmedi";
+};
+
+const normalizeText = (value: string) =>
+  value
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g, "i")
+    .replace(/İ/g, "i")
+    .trim();
+
 // Collapsible block component
 function CollapsibleBlock({ title, children, maxHeight = 160 }: { title: string; children: React.ReactNode; maxHeight?: number }) {
   const [expanded, setExpanded] = useState(false);
