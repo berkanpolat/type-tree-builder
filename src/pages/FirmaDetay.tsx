@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import adBannerImg from "@/assets/ad-banner.jpg";
+import BildirDialog from "@/components/BildirDialog";
 import {
   MessageSquare,
   Phone,
@@ -20,6 +21,7 @@ import {
   Award,
   ChevronDown,
   ChevronUp,
+  Flag,
 } from "lucide-react";
 import {
   SiInstagram,
@@ -198,6 +200,7 @@ export default function FirmaDetay() {
   const [firmaTuruName, setFirmaTuruName] = useState("");
   const [firmaTipiName, setFirmaTipiName] = useState("");
   const [isFavorited, setIsFavorited] = useState(false);
+  const [bildirOpen, setBildirOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("");
 
   const [tesisler, setTesisler] = useState<Tesis[]>([]);
@@ -623,6 +626,9 @@ export default function FirmaDetay() {
                 <MessageSquare className="w-4 h-4" />
                 Mesaj
               </Button>
+              <Button variant="outline" size="icon" onClick={() => setBildirOpen(true)} title="Bildir">
+                <Flag className="w-4 h-4 text-muted-foreground" />
+              </Button>
             </div>
           </div>
 
@@ -1001,6 +1007,9 @@ export default function FirmaDetay() {
         </div>
 
       </div>
+      {firma && (
+        <BildirDialog open={bildirOpen} onOpenChange={setBildirOpen} tur="profil" referansId={firma.id} />
+      )}
       <Footer />
     </div>
   );

@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Send, Building2, Paperclip, X, FileText, Image as ImageIcon, Download, Trash2 } from "lucide-react";
+import { Search, Send, Building2, Paperclip, X, FileText, Image as ImageIcon, Download, Trash2, Flag, MoreVertical } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,6 +19,8 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import BildirDialog from "@/components/BildirDialog";
 
 interface Conversation {
   id: string;
@@ -67,6 +69,8 @@ export default function Mesajlar() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
+  const [deleteConvTarget, setDeleteConvTarget] = useState<Conversation | null>(null);
+  const [bildirOpen, setBildirOpen] = useState(false);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -404,6 +408,19 @@ export default function Mesajlar() {
     if (currentUserId) fetchConversations(currentUserId);
   };
 
+  const handleDeleteConversation = async () => {
+    if (!deleteConvTarget || !currentUserId) return;
+    await supabase.from("messages").delete().eq("conversation_id", deleteConvTarget.id);
+    await supabase.from("conversations").delete().eq("id", deleteConvTarget.id);
+    setConversations((prev) => prev.filter((c) => c.id !== deleteConvTarget.id));
+    if (selectedConv?.id === deleteConvTarget.id) {
+      setSelectedConv(null);
+      setMessages([]);
+    }
+    setDeleteConvTarget(null);
+    toast({ title: "Sohbet silindi" });
+  };
+
   const isImageFile = (name: string) => /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(name);
 
   const renderMessageContent = (msg: Message, isMine: boolean) => {
@@ -534,9 +551,28 @@ export default function Mesajlar() {
                     <Building2 className="w-4 h-4 text-muted-foreground" />
                   )}
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="font-semibold text-foreground text-sm">{selectedConv.firma_unvani}</p>
                   <p className="text-xs text-emerald-500">Çevrimiçi</p>
+                </div>
+                <div className="flex items-center gap-1 ml-auto">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="p-1.5 rounded-full hover:bg-muted transition-colors">
+                        <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setBildirOpen(true)} className="gap-2 text-foreground">
+                        <Flag className="w-4 h-4" />
+                        Bildir
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setDeleteConvTarget(selectedConv)} className="gap-2 text-destructive focus:text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                        Sohbeti Sil
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
 
@@ -682,6 +718,32 @@ export default function Mesajlar() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AlertDialog open={!!deleteConvTarget} onOpenChange={(open) => !open && setDeleteConvTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sohbeti silmek istediğinize emin misiniz?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu işlem geri alınamaz. Tüm mesajlar kalıcı olarak silinecektir.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConversation} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {selectedConv && (
+        <BildirDialog
+          open={bildirOpen}
+          onOpenChange={setBildirOpen}
+          tur="mesaj"
+          referansId={selectedConv.id}
+        />
+      )}
     </DashboardLayout>
   );
 }

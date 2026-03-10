@@ -62,6 +62,7 @@ import {
   Send,
   Upload,
   Trash2,
+  Flag,
 } from "lucide-react";
 import {
   SiInstagram,
@@ -72,6 +73,7 @@ import { FaLinkedinIn } from "react-icons/fa";
 import { RiTwitterXFill } from "react-icons/ri";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import BildirDialog from "@/components/BildirDialog";
 
 // Check if a value looks like a UUID
 const isUUID = (val: string): boolean =>
@@ -196,6 +198,7 @@ export default function IhaleDetay() {
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [bildirOpen, setBildirOpen] = useState(false);
 
   // DB dropdown options
   const [dbOdemeSecenekleri, setDbOdemeSecenekleri] = useState<string[]>([]);
@@ -1010,6 +1013,14 @@ export default function IhaleDetay() {
               )}
             </Card>
 
+            {/* Bildir button */}
+            {!isOwner && (
+              <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
+                <Flag className="w-4 h-4" />
+                İhaleyi Bildir
+              </Button>
+            )}
+
             {/* Teklifler Card */}
             <Card className="p-6">
               <div className="flex items-center justify-between mb-4">
@@ -1250,6 +1261,14 @@ export default function IhaleDetay() {
           </div>
         </DialogContent>
       </Dialog>
+      {ihale && (
+        <BildirDialog
+          open={bildirOpen}
+          onOpenChange={setBildirOpen}
+          tur="ihale"
+          referansId={ihale.id}
+        />
+      )}
       <Footer />
     </div>
   );

@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import BildirDialog from "@/components/BildirDialog";
 import {
   Heart,
   MessageSquare,
@@ -25,6 +26,7 @@ import {
   Pencil,
   XCircle,
   CheckCircle,
+  Flag,
 } from "lucide-react";
 import {
   
@@ -133,6 +135,7 @@ export default function UrunDetay() {
   const [varyasyonlar, setVaryasyonlar] = useState<VaryasyonData[]>([]);
   const [firma, setFirma] = useState<FirmaData | null>(null);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [bildirOpen, setBildirOpen] = useState(false);
   const [benzerUrunler, setBenzerUrunler] = useState<BenzerUrun[]>([]);
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
   const [resolvedTeknikDetaylar, setResolvedTeknikDetaylar] = useState<Record<string, string>>({});
@@ -598,8 +601,13 @@ export default function UrunDetay() {
                 <MessageSquare className="w-5 h-5" />
                 Satıcıya Soru Sor
               </Button>
+              {urun.user_id !== currentUserId && (
+                <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
+                  <Flag className="w-4 h-4" />
+                  Ürünü Bildir
+                </Button>
+              )}
             </Card>
-
             {/* Seller Info Card */}
             {firma && (
               <Card className="p-6">
@@ -824,6 +832,9 @@ export default function UrunDetay() {
           </div>
         )}
       </main>
+      {urun && (
+        <BildirDialog open={bildirOpen} onOpenChange={setBildirOpen} tur="urun" referansId={urun.id} />
+      )}
       <Footer />
     </div>
   );
