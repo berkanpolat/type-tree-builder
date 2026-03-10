@@ -148,8 +148,8 @@ export default function TekIhale() {
   // Name map for category display
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
 
-  const isHizmetMode = filterIhaleTuru.length === 1 && filterIhaleTuru[0] === "hizmet_alim";
-  const isUrunMode = filterIhaleTuru.length > 0 && !filterIhaleTuru.includes("hizmet_alim");
+  const isHizmetMode = filterIhaleTuru.length > 0 && filterIhaleTuru.every(v => v === "hizmet_alim");
+  const isUrunMode = filterIhaleTuru.length > 0 && filterIhaleTuru.every(v => v === "urun_alis" || v === "urun_satis");
 
   // Fetch user firm info
   useEffect(() => {
