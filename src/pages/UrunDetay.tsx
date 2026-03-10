@@ -20,6 +20,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ZoomIn,
+  Pencil,
+  XCircle,
+  CheckCircle,
 } from "lucide-react";
 import {
   SiLinkerd,
