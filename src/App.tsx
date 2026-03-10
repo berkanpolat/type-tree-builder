@@ -76,6 +76,7 @@ const App = () => (
           <Route path="/uretici-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
           <Route path="/tekihale-tanitim" element={<TekIhaleTanitim />} />
           <Route path="/tekpazar-tanitim" element={<TekPazarTanitim />} />
+          <Route path="/sss" element={<SSS />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

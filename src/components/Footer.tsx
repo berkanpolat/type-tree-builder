@@ -89,7 +89,7 @@ export default function Footer() {
           <div>
             <h4 className="text-secondary font-bold text-sm mb-4">Kurumsal Bilgi</h4>
             <ul className="space-y-2.5">
-              <li><FooterLink to="/">SSS</FooterLink></li>
+              <li><FooterLink to="/sss">SSS</FooterLink></li>
               <li><FooterLink to="/">KVKK Aydınlatma Metni</FooterLink></li>
               <li><FooterLink to="/">Gizlilik Koşulları</FooterLink></li>
               <li><FooterLink to="/">Kullanım Koşulları &amp; Üyelik Sözleşmesi</FooterLink></li>
