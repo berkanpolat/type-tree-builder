@@ -648,9 +648,9 @@ export default function FirmaDetay() {
       </div>
 
       {/* ===== STICKY TAB MENU ===== */}
-      <div className="sticky top-0 z-30 bg-background border-b border-border mt-6">
+      <div className="sticky top-14 z-30 bg-background border-b border-border mt-4">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-6 overflow-x-auto py-3">
+          <div className="flex items-center gap-6 overflow-x-auto py-2">
             {MENU_ITEMS.map((item) => (
               <button
                 key={item.id}
