@@ -8,11 +8,11 @@ import {
   HelpCircle,
   LogOut,
   Building2,
-  Bell,
 } from "lucide-react";
 import { useNotificationCount } from "@/hooks/use-notifications";
 import HeaderMessagePanel from "@/components/header/HeaderMessagePanel";
 import HeaderFavoritesPanel from "@/components/header/HeaderFavoritesPanel";
+import HeaderNotificationsPanel from "@/components/header/HeaderNotificationsPanel";
 
 interface PazarHeaderProps {
   firmaUnvani: string;
