@@ -359,7 +359,6 @@ export default function YeniIhale() {
             {currentStep === 3 && <IhaleBilgileriStep formData={formData} updateForm={updateForm} ihaleId={ihaleId} />}
             {currentStep === 4 && <TeknikDetaylarStep formData={formData} updateForm={updateForm} />}
             {currentStep === 5 && <StokStep formData={formData} updateForm={updateForm} />}
-            {currentStep === 6 && <OnayStep formData={formData} />}
 
             <div className="flex justify-between mt-8 pt-6 border-t">
               {currentStep > 0 ? (
