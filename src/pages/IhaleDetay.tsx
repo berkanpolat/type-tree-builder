@@ -528,6 +528,7 @@ export default function IhaleDetay() {
     }
   };
 
+  const handleMesajGonder = async () => {
     if (!currentUserId || !firma) return;
     const { data: convId } = await supabase.rpc("get_or_create_conversation", {
       p_user1: currentUserId,
