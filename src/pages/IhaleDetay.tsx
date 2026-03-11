@@ -536,6 +536,16 @@ export default function IhaleDetay() {
 
   // Submit teklif
   const handleTeklifSubmit = () => {
+    // Quota check - only if this is a NEW ihale (user hasn't bid on this one before)
+    if (!myTeklif) {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "teklif_verme");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Teklif verme hakkınız dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
+
     const tutar = parseFloat(teklifTutar);
     if (!tutar || tutar <= 0) {
       toast({ title: "Hata", description: "Geçerli bir miktar giriniz.", variant: "destructive" });
