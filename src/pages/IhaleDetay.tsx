@@ -1503,6 +1503,16 @@ export default function IhaleDetay() {
             )}
           </div>
         </div>
+
+        {/* Banner */}
+        {ihaleDetayBanner.url && (
+          <div
+            className="rounded-xl overflow-hidden mt-8 h-32 cursor-pointer"
+            onClick={() => ihaleDetayBanner.linkUrl && window.open(ihaleDetayBanner.linkUrl, "_blank")}
+          >
+            <img src={ihaleDetayBanner.url} alt="Reklam" className="w-full h-full object-cover" />
+          </div>
+        )}
       </main>
 
       {/* Teklif Onay Dialog */}
