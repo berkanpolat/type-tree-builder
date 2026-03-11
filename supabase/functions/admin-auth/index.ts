@@ -2567,6 +2567,51 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── BANNER UPDATE (gorsel_url, link_url, aktif) ───
+    if (action === "update-banner") {
+      const payload = verifyToken(body.token);
+      const { bannerId, gorsel_url, link_url, aktif } = body;
+      const updateData: Record<string, any> = { updated_at: new Date().toISOString() };
+      if (gorsel_url !== undefined) updateData.gorsel_url = gorsel_url;
+      if (link_url !== undefined) updateData.link_url = link_url;
+      if (aktif !== undefined) updateData.aktif = aktif;
+
+      const { error } = await supabase.from("banners").update(updateData).eq("id", bannerId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      await logActivity(supabase, payload, "Banner güncellendi", { target_type: "banner", target_id: String(bannerId) });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── BANNER UPLOAD (returns signed upload URL or direct upload) ───
+    if (action === "upload-banner") {
+      const payload = verifyToken(body.token);
+      const { bannerId, slug, fileName, fileBase64, contentType } = body;
+
+      const fileData = Uint8Array.from(atob(fileBase64), c => c.charCodeAt(0));
+      const ext = fileName.split(".").pop();
+      const filePath = `${slug}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("banners")
+        .upload(filePath, fileData, { upsert: true, contentType });
+
+      if (uploadError) return jsonResponse({ error: uploadError.message }, 400);
+
+      const { data: urlData } = supabase.storage.from("banners").getPublicUrl(filePath);
+      const publicUrl = urlData.publicUrl + "?t=" + Date.now();
+
+      const { error: updateError } = await supabase
+        .from("banners")
+        .update({ gorsel_url: publicUrl, updated_at: new Date().toISOString() })
+        .eq("id", bannerId);
+
+      if (updateError) return jsonResponse({ error: updateError.message }, 400);
+
+      await logActivity(supabase, payload, "Banner görseli yüklendi", { target_type: "banner", target_id: String(bannerId), target_label: slug });
+      return jsonResponse({ success: true, publicUrl });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
