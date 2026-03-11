@@ -280,7 +280,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
   };
 
   const renderHizmetFields = () => {
-    return <HizmetTeknikFields td={td} setTD={setTD} grupName={grupName || ""} />;
+    return <HizmetTeknikFields td={td} setTD={setTD} kategoriName={kategoriName || ""} />;
   };
 
   return (

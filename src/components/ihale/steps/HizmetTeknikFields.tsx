@@ -108,8 +108,8 @@ function MultiSelectUrunKategoriSecimi({ label, td, setTD, prefixKey }: { label:
   );
 }
 
-export default function HizmetTeknikFields({ td, setTD, grupName }: Props) {
-  const hizmetName = grupName?.toLowerCase() || "";
+export default function HizmetTeknikFields({ td, setTD, kategoriName }: Props) {
+  const hizmetName = kategoriName?.toLowerCase() || "";
 
   if (hizmetName.includes("ürün hizmeti") || hizmetName.includes("üretim hizmeti")) {
     return (
