@@ -516,8 +516,11 @@ export default function AnaSayfa() {
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* Search Header */}
         <HeroSearchSection
+          label="ÜRÜNLER"
+          placeholder="Ürün ara... (kumaş, iplik, aksesuar)"
           searchTerm={searchTerm}
           onSearchTermChange={(val) => { setSearchTerm(val); if (!val) setActiveFilter(null); }}
+          onSearch={() => {}}
           searchResults={searchResults}
           showDropdown={showDropdown}
           onShowDropdown={setShowDropdown}
