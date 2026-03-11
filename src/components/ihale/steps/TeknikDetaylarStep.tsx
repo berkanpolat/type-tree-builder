@@ -179,7 +179,6 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
     updateForm({ teknik_detaylar: { ...formData.teknik_detaylar, [key]: value } });
   };
 
-  const isHizmet = formData.ihale_turu === "hizmet_alim";
 
   // Helper: ensure value is always string[] for multi-select fields
   const toArr = (v: any): string[] => {
