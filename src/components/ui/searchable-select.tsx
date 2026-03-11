@@ -140,7 +140,7 @@ export default function SearchableSelect({
             className="flex h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
         </div>
-        <ScrollArea className="max-h-60">
+        <div className="max-h-60 overflow-y-auto">
           {filtered.length === 0 ? (
             <div className="py-6 text-center text-sm text-muted-foreground">Sonuç bulunamadı</div>
           ) : (
