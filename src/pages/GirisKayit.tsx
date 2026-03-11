@@ -4,6 +4,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
+import { VERGI_DAIRELERI } from "@/lib/vergi-daireleri";
+import SearchableSelect from "@/components/ui/searchable-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -475,13 +477,12 @@ const GirisKayit = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Vergi Dairesi</Label>
-                    <Input
-                      placeholder="Vergi Dairesi"
+                    <SearchableSelect
+                      options={VERGI_DAIRELERI.map((vd) => ({ value: vd, label: vd }))}
                       value={vergiDairesi}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ\s]/g, "");
-                        setVergiDairesi(val);
-                      }}
+                      onValueChange={setVergiDairesi}
+                      placeholder="Vergi Dairesi Seçiniz"
+                      searchPlaceholder="Vergi dairesi ara..."
                     />
                   </div>
                   <Button
