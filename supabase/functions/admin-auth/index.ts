@@ -650,13 +650,20 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true, ihale: data });
     }
 
-    // ─── REMOVE IHALE (set to iptal) ───
+    // ─── REMOVE IHALE (set to iptal + notify owner) ───
     if (action === "remove-ihale") {
       const { token, ihaleId } = body;
       const payload = verifyToken(token);
       if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
+
+      // Get ihale info before updating
+      const { data: ihaleInfo } = await supabase
+        .from("ihaleler")
+        .select("user_id, baslik, ihale_no")
+        .eq("id", ihaleId)
+        .single();
 
       const { data, error } = await supabase
         .from("ihaleler")
@@ -666,6 +673,18 @@ Deno.serve(async (req) => {
         .single();
 
       if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Notify ihale owner
+      if (ihaleInfo) {
+        const msg = `${ihaleInfo.ihale_no} numaralı "${ihaleInfo.baslik}" başlıklı ihaleniz yönetim tarafından kaldırılmıştır.`;
+        await supabase.from("notifications").insert({
+          user_id: ihaleInfo.user_id,
+          type: "ihale_admin_kaldirildi",
+          message: msg,
+          link: "/manuihale",
+        });
+      }
+
       return jsonResponse({ success: true });
     }
 
