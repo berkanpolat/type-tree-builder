@@ -218,7 +218,7 @@ export default function AdminFirmalar() {
   }, [token, callApi]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
-  useEffect(() => { fetchDropdowns(); }, []);
+  useEffect(() => { fetchDropdowns(); }, [fetchDropdowns]);
 
   const handleApprove = async (firmaId: string) => {
     try {
