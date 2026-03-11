@@ -153,6 +153,8 @@ const FirmaBilgilerim = () => {
         return <ReferanslarTab userId={userId} />;
       case "galeri":
         return <GaleriTab userId={userId} />;
+      case "belgelerim":
+        return <BelgelerimTab userId={userId} />;
       default:
         return <PlaceholderTab label={tabs.find(t => t.id === activeTab)?.label || activeTab} />;
     }
