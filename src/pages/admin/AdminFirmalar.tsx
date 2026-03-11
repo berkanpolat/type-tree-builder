@@ -786,7 +786,7 @@ export default function AdminFirmalar() {
                 <Label className="text-xs mb-2 block" style={s.muted}>Paket Değiştir</Label>
                 <Select value={selectedPaketId} onValueChange={setSelectedPaketId}>
                   <SelectTrigger style={s.input}><SelectValue placeholder="Paket seçin" /></SelectTrigger>
-                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
+                  <SelectContent style={{ ...s.card, padding: "0.25rem", zIndex: 250 }}>
                     {allPaketler.map((p: any) => (
                       <SelectItem key={p.id} value={p.id} className="text-xs">
                         {p.ad} {p.fiyat_aylik ? `(${p.fiyat_aylik} ${p.para_birimi}/ay)` : "(Ücretsiz)"}
