@@ -35,7 +35,7 @@ const sssData = [
     link: { text: "Daha detaylı bilgi için lütfen tıklayınız", href: "/hakkimizda" },
   },
   {
-    q: "Tekstil A.Ş.'da neler yapabilirim?",
+    q: "Tekstil A.Ş.'de neler yapabilirim?",
     a: "Tekstil A.Ş. ile;\n• Firma profilinizi oluşturabilir\n• Kapasite, uzmanlık ve sertifikalarınızı sergileyebilir\n• Teklif alabilir veya teklif verebilir\n• Satın alma ve satış süreçlerinizi yönetebilir\n• İş ilanı yayınlayabilir\n• Yeni iş ortaklarıyla doğrudan iletişime geçebilirsiniz",
   },
   {
