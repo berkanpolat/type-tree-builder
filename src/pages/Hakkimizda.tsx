@@ -71,7 +71,7 @@ export default function Hakkimizda() {
             <span className="text-secondary">Dijital Buluşma Noktası</span>
           </h1>
           <p className="mt-6 text-primary-foreground/70 text-lg max-w-2xl mx-auto leading-relaxed">
-            Üretimden tedarike, satın almadan satışa, insan kaynağından iş birliklerine kadar tüm süreçlerinizi tek bir platformda yönetin.
+            Üretimden tedariğe, satın almadan satışa kadar tüm süreçlerinizi tek bir platformdan yönetin.
           </p>
         </div>
       </section>
