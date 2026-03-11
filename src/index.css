@@ -130,3 +130,8 @@
     --admin-hover: 220 14% 93%;
   }
 }
+
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
