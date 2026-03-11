@@ -100,7 +100,7 @@ export default function Hakkimizda() {
             Her işletmeye kendini doğru şekilde anlatabileceği bir alan sunar, doğru tarafları bir araya getirir ve sektörün iş yapma biçimini modernleştirir.
           </p>
           <p>
-            Tekstil dünyasının üretimden tedariğe, insan kaynağından satışa kadar tüm kritik süreçlerini dijitalleştiren güçlü bir iş ağı kurar.
+            Tekstil dünyasının üretimden tedariğe, satışa kadar tüm kritik süreçlerini dijitalleştiren güçlü bir iş ağı kurar.
           </p>
         </div>
       </section>
