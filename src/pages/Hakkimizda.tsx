@@ -65,10 +65,7 @@ export default function Hakkimizda() {
           <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-secondary rounded-full translate-x-1/3 translate-y-1/3" />
         </div>
         <div className="relative max-w-5xl mx-auto px-6 py-20 md:py-28 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/20 text-secondary text-sm font-medium mb-6">
-            <Building2 className="w-4 h-4" />
-            Tekstil A.Ş.
-          </div>
+          <img src={logoImg} alt="Tekstil A.Ş." className="h-8 brightness-0 invert mb-6" />
           <h1 className="text-3xl md:text-5xl font-bold text-primary-foreground leading-tight">
             Tekstil Sektörünün<br />
             <span className="text-secondary">Dijital Buluşma Noktası</span>
