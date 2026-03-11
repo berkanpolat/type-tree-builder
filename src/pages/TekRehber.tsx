@@ -253,13 +253,25 @@ export default function TekRehber() {
     if (currentUserId && selectedFirmaTuru) fetchFirmalar();
   }, [fetchFirmalar, currentUserId, selectedFirmaTuru]);
 
-  // Trigger search on Enter or Ara button
-  const handleSearch = useCallback(() => {
-    setAppliedSearchTerm(searchTerm.trim());
+  // Trigger search on Enter or Ara button — detect firma türü match
+  const handleSearch = useCallback(async () => {
+    const term = searchTerm.trim();
+    if (!term) return;
     setShowDropdown(false);
-  }, [searchTerm]);
 
-  // Lightweight autocomplete - only suggest firma names
+    // Check if term matches a firma türü
+    const matchedTur = firmaTurleri.find((t) => t.name.toLowerCase().includes(term.toLowerCase()));
+    if (matchedTur) {
+      setSelectedFirmaTuru(matchedTur.id);
+      setSelectedFirmaTuruName(matchedTur.name);
+      setAppliedSearchTerm("");
+      return;
+    }
+
+    setAppliedSearchTerm(term);
+  }, [searchTerm, firmaTurleri]);
+
+  // Lightweight autocomplete - firma names + firma türleri
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setSearchResults([]);
@@ -267,26 +279,39 @@ export default function TekRehber() {
       return;
     }
     const timer = setTimeout(async () => {
+      const results: SearchResult[] = [];
+
+      // Check firma türü matches
+      firmaTurleri.forEach((t) => {
+        if (t.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+          results.push({ id: t.id, name: t.name, type: "Tür" });
+        }
+      });
+
       const { data } = await supabase
         .from("firmalar")
         .select("id, firma_unvani")
         .ilike("firma_unvani", `%${searchTerm}%`)
         .limit(6);
-      if (data && data.length > 0) {
-        setSearchResults(data.map((f) => ({ id: f.id, name: f.firma_unvani, type: "Firma" })));
-        setShowDropdown(true);
-      } else {
-        setSearchResults([]);
-        setShowDropdown(false);
-      }
+      if (data) data.forEach((f) => results.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
+
+      setSearchResults(results);
+      setShowDropdown(results.length > 0);
     }, 250);
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, firmaTurleri]);
 
   const handleSearchResultClick = (result: SearchResult) => {
     setSearchTerm(result.name);
-    setAppliedSearchTerm(result.name);
     setShowDropdown(false);
+    if (result.type === "Tür") {
+      // It's a firma türü — select it
+      setSelectedFirmaTuru(result.id);
+      setSelectedFirmaTuruName(result.name);
+      setAppliedSearchTerm("");
+    } else {
+      setAppliedSearchTerm(result.name);
+    }
   };
 
   const handleFirmaTuruChange = (value: string) => {
