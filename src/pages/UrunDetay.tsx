@@ -182,6 +182,9 @@ export default function UrunDetay() {
   const [isAdminViewing, setIsAdminViewing] = useState(false);
   const [adminActionLoading, setAdminActionLoading] = useState(false);
   const [redSebebi, setRedSebebi] = useState("");
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   useEffect(() => {
     const init = async () => {
