@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
+import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
 
 export default function Iletisim() {
