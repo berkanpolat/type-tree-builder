@@ -374,9 +374,27 @@ const GirisKayit = () => {
               <Button type="submit" className="w-full" disabled={loginLoading}>
                 {loginLoading ? "Giriş yapılıyor..." : "Giriş"}
               </Button>
-              <p className="text-center text-sm text-muted-foreground cursor-pointer hover:underline">
+              <button
+                type="button"
+                className="w-full text-center text-sm text-muted-foreground cursor-pointer hover:underline"
+                onClick={async () => {
+                  if (!loginEmail) {
+                    toast({ title: "Hata", description: "Lütfen e-posta adresinizi giriniz", variant: "destructive" });
+                    return;
+                  }
+                  try {
+                    const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
+                      redirectTo: `${window.location.origin}/sifre-sifirla`,
+                    });
+                    if (error) throw error;
+                    toast({ title: "Başarılı", description: "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi." });
+                  } catch (err: any) {
+                    toast({ title: "Hata", description: "Şifre sıfırlama isteği gönderilemedi. Lütfen tekrar deneyiniz.", variant: "destructive" });
+                  }
+                }}
+              >
                 Parolamı Unuttum?
-              </p>
+              </button>
             </form>
           ) : (
             <div className="space-y-5">
