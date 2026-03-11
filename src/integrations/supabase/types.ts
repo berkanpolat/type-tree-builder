@@ -94,6 +94,89 @@ export type Database = {
         }
         Relationships: []
       }
+      destek_mesajlar: {
+        Row: {
+          content: string
+          created_at: string
+          destek_id: string
+          ek_dosya_adi: string | null
+          ek_dosya_url: string | null
+          id: string
+          sender_id: string
+          sender_type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          destek_id: string
+          ek_dosya_adi?: string | null
+          ek_dosya_url?: string | null
+          id?: string
+          sender_id: string
+          sender_type?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          destek_id?: string
+          ek_dosya_adi?: string | null
+          ek_dosya_url?: string | null
+          id?: string
+          sender_id?: string
+          sender_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "destek_mesajlar_destek_id_fkey"
+            columns: ["destek_id"]
+            isOneToOne: false
+            referencedRelation: "destek_talepleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      destek_talepleri: {
+        Row: {
+          aciklama: string
+          created_at: string
+          departman: string
+          durum: string
+          ek_dosya_adi: string | null
+          ek_dosya_url: string | null
+          id: string
+          konu: string
+          talep_no: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aciklama: string
+          created_at?: string
+          departman: string
+          durum?: string
+          ek_dosya_adi?: string | null
+          ek_dosya_url?: string | null
+          id?: string
+          konu: string
+          talep_no?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aciklama?: string
+          created_at?: string
+          departman?: string
+          durum?: string
+          ek_dosya_adi?: string | null
+          ek_dosya_url?: string | null
+          id?: string
+          konu?: string
+          talep_no?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       firma_bilgi_kategorileri: {
         Row: {
           created_at: string
