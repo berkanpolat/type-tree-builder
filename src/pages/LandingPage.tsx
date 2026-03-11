@@ -75,17 +75,17 @@ const LandingPage = () => {
     {
       icon: <Zap className="h-6 w-6" />,
       title: "Hızlı ve Kolay İş Birliği",
-      desc: "Doğru firmaları filtreleyin, kısa sürede bağlantı kurun ve görüşmeleri tek yerden yönetin.",
+      desc: "Sıfır Maliyet!\nÜcretsiz üyelik ile hemen başlarsınız. Satışlarından ve anlaşmalarınızdan Komisyon ve Kesinti alınmaz",
     },
     {
       icon: <BarChart3 className="h-6 w-6" />,
       title: "Anlık Takip ve Kontrol",
-      desc: "Taleplerinizi, teklifleri ve mesajlaşmaları tek panelden izleyin; süreçler dağılmasın.",
+      desc: "İnternette Görünür olun!\nProfesyonel pazarlama ekibimiz ile sizin için SEO hizmeti sunarız ve reklam harcamaları yaparak sosyal medya hesaplarından iletişim sağlarız.",
     },
     {
       icon: <Settings className="h-6 w-6" />,
       title: "Verimli ve Ölçülebilir Süreç",
-      desc: "Teklifleri kriterlere göre karşılaştırın; daha hızlı karar alın ve operasyonu optimize edin.",
+      desc: "Toptan Pazar Yeri\nAtıl Stoklarınızı ve yeni ürünlerinizi nakite çevirirsiniz.",
     },
   ];
 
