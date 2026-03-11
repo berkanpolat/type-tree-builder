@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
 import Footer from "@/components/Footer";
+import { useBanner } from "@/hooks/use-banner";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
 import { Button } from "@/components/ui/button";
@@ -151,6 +152,7 @@ interface BenzerUrun {
 export default function UrunDetay() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const urunBanner = useBanner("urun-detay-alt-banner");
   const { toast } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [firmaUnvani, setFirmaUnvani] = useState("");
@@ -951,11 +953,19 @@ export default function UrunDetay() {
         </div>
 
         {/* Banner */}
-        <div className="rounded-xl overflow-hidden mb-12 h-32 bg-gradient-to-r from-primary to-primary/80 flex items-center px-8">
-          <div>
-            <p className="text-primary-foreground text-xl font-bold">Tekstil A.Ş. ile Güvenle Alışveriş Yapın</p>
-            <p className="text-primary-foreground/70 text-sm mt-1">Binlerce doğrulanmış tedarikçi, rekabetçi fiyatlar</p>
-          </div>
+        <div
+          className="rounded-xl overflow-hidden mb-12 h-32 flex items-center px-8 cursor-pointer"
+          style={urunBanner.url ? undefined : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }}
+          onClick={() => urunBanner.linkUrl && window.open(urunBanner.linkUrl, "_blank")}
+        >
+          {urunBanner.url ? (
+            <img src={urunBanner.url} alt="Banner" className="w-full h-full object-cover" />
+          ) : (
+            <div>
+              <p className="text-primary-foreground text-xl font-bold">Tekstil A.Ş. ile Güvenle Alışveriş Yapın</p>
+              <p className="text-primary-foreground/70 text-sm mt-1">Binlerce doğrulanmış tedarikçi, rekabetçi fiyatlar</p>
+            </div>
+          )}
         </div>
 
         {/* Similar Products */}

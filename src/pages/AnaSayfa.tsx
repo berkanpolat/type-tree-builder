@@ -28,10 +28,11 @@ import {
   ChevronRight,
   ArrowUpDown,
 } from "lucide-react";
-import bannerKomisyon from "@/assets/banner-komisyon.jpg";
-import bannerStoktan from "@/assets/banner-stoktan.jpg";
-import bannerSatis from "@/assets/banner-satis.jpg";
-import bannerIplik from "@/assets/banner-iplik.jpg";
+import bannerKomisyonFallback from "@/assets/banner-komisyon.jpg";
+import bannerStoktanFallback from "@/assets/banner-stoktan.jpg";
+import bannerSatisFallback from "@/assets/banner-satis.jpg";
+import bannerIplikFallback from "@/assets/banner-iplik.jpg";
+import { useBanner } from "@/hooks/use-banner";
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 const ITEMS_PER_PAGE = 24;
@@ -97,6 +98,10 @@ export default function AnaSayfa() {
   const navigate = useNavigate();
   const location = useLocation();
   const [firmaUnvani, setFirmaUnvani] = useState("");
+  const bannerAna = useBanner("anasayfa-ana-banner", bannerKomisyonFallback);
+  const bannerAlt1 = useBanner("anasayfa-alt-1", bannerStoktanFallback);
+  const bannerAlt2 = useBanner("anasayfa-alt-2", bannerSatisFallback);
+  const bannerAlt3 = useBanner("anasayfa-alt-3", bannerIplikFallback);
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -857,31 +862,33 @@ export default function AnaSayfa() {
             {/* Banners */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-3">
-                <div className="relative rounded-xl overflow-hidden h-48">
-                  <img src={bannerKomisyon} alt="Komisyon" className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 flex items-center px-8">
-                    <div>
-                      <p className="text-primary-foreground text-2xl lg:text-3xl font-bold">
-                        Kar Ortağınız <span className="font-extrabold">Değil,</span>
-                      </p>
-                      <p className="text-3xl lg:text-4xl font-extrabold mt-1">
-                        <span className="bg-secondary text-secondary-foreground px-2 py-0.5 rounded">Çözüm</span>{" "}
-                        <span className="text-primary-foreground">Ortağınız!</span>
-                      </p>
+                <div className="relative rounded-xl overflow-hidden h-48 cursor-pointer" onClick={() => bannerAna.linkUrl && window.open(bannerAna.linkUrl, "_blank")}>
+                  <img src={bannerAna.url || bannerKomisyonFallback} alt="Banner" className="w-full h-full object-cover" />
+                  {!bannerAna.url?.includes("banners/") && (
+                    <div className="absolute inset-0 flex items-center px-8">
+                      <div>
+                        <p className="text-primary-foreground text-2xl lg:text-3xl font-bold">
+                          Kar Ortağınız <span className="font-extrabold">Değil,</span>
+                        </p>
+                        <p className="text-3xl lg:text-4xl font-extrabold mt-1">
+                          <span className="bg-secondary text-secondary-foreground px-2 py-0.5 rounded">Çözüm</span>{" "}
+                          <span className="text-primary-foreground">Ortağınız!</span>
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="relative rounded-xl overflow-hidden h-36">
-                <img src={bannerStoktan} alt="Stoktan Hemen Teslim" className="w-full h-full object-cover" />
+              <div className="relative rounded-xl overflow-hidden h-36 cursor-pointer" onClick={() => bannerAlt1.linkUrl && window.open(bannerAlt1.linkUrl, "_blank")}>
+                <img src={bannerAlt1.url || bannerStoktanFallback} alt="Banner 1" className="w-full h-full object-cover" />
               </div>
-              <div className="relative rounded-xl overflow-hidden h-36">
-                <img src={bannerSatis} alt="Satış Sizin" className="w-full h-full object-cover" />
+              <div className="relative rounded-xl overflow-hidden h-36 cursor-pointer" onClick={() => bannerAlt2.linkUrl && window.open(bannerAlt2.linkUrl, "_blank")}>
+                <img src={bannerAlt2.url || bannerSatisFallback} alt="Banner 2" className="w-full h-full object-cover" />
               </div>
-              <div className="relative rounded-xl overflow-hidden h-36">
-                <img src={bannerIplik} alt="İplikler" className="w-full h-full object-cover" />
+              <div className="relative rounded-xl overflow-hidden h-36 cursor-pointer" onClick={() => bannerAlt3.linkUrl && window.open(bannerAlt3.linkUrl, "_blank")}>
+                <img src={bannerAlt3.url || bannerIplikFallback} alt="Banner 3" className="w-full h-full object-cover" />
               </div>
             </div>
 

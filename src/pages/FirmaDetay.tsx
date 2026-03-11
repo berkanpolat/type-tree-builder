@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import adBannerImg from "@/assets/ad-banner.jpg";
+import { useBanner } from "@/hooks/use-banner";
 import BildirDialog from "@/components/BildirDialog";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import {
@@ -192,6 +193,7 @@ function CollapsibleBlock({ title, children, maxHeight = 160 }: { title: string;
 export default function FirmaDetay() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const sidebarBanner = useBanner("firma-detay-sidebar", adBannerImg);
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -1075,8 +1077,8 @@ export default function FirmaDetay() {
             </div>
 
             {/* Reklam alanı */}
-            <div className="rounded-xl overflow-hidden border border-border">
-              <img src={adBannerImg} alt="Reklam" className="w-full h-auto object-cover" />
+            <div className="rounded-xl overflow-hidden border border-border cursor-pointer" onClick={() => sidebarBanner.linkUrl && window.open(sidebarBanner.linkUrl, "_blank")}>
+              <img src={sidebarBanner.url || adBannerImg} alt="Reklam" className="w-full h-auto object-cover" />
             </div>
           </div>
         </div>

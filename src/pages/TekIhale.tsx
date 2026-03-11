@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useSessionState } from "@/hooks/use-session-state";
+import { useBanner } from "@/hooks/use-banner";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
@@ -123,6 +124,7 @@ export default function TekIhale() {
   const location = useLocation();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
+  const ihaleSidebarBanner = useBanner("tekihale-sidebar");
   const [ihaleler, setIhaleler] = useState<IhaleWithExtra[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
@@ -434,6 +436,12 @@ export default function TekIhale() {
                 <CheckboxFilter key={o} label={o} checked={filterVade.includes(o)} onChange={() => toggleFilter(filterVade, o, setFilterVade)} />
               ))}
             </FilterSection>
+            {/* Sidebar banner */}
+            {ihaleSidebarBanner.url && (
+              <div className="rounded-xl overflow-hidden border border-border cursor-pointer" onClick={() => ihaleSidebarBanner.linkUrl && window.open(ihaleSidebarBanner.linkUrl, "_blank")}>
+                <img src={ihaleSidebarBanner.url} alt="Reklam" className="w-full h-auto object-cover" />
+              </div>
+            )}
           </aside>
 
           {/* Main content */}
