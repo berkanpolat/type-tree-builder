@@ -672,7 +672,10 @@ export default function AdminFirmalar() {
 
                 <div className="flex items-center gap-6 mb-3 text-xs" style={s.muted}>
                   <span>Kayıt: {formatDate(firma.created_at)}</span>
-                  <span>Son Hareket: {formatDate(firma.updated_at)}</span>
+                  <span>Son Hareket: {firma.profile?.last_seen ? formatDate(firma.profile.last_seen) : "—"}</span>
+                  {firma.profile?.last_seen && new Date(firma.profile.last_seen) >= new Date(Date.now() - 15 * 60 * 1000) && (
+                    <span className="flex items-center gap-1 text-emerald-400"><Wifi className="w-3 h-3" /> Çevrimiçi</span>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
