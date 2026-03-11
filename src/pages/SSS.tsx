@@ -51,7 +51,7 @@ const sssData = [
     a: "Platformda farklı ihtiyaçlara yönelik üyelik paketleri bulunmaktadır. Temel özelliklerden yararlanabileceğiniz ücretsiz başlangıç paketinin yanı sıra, daha geniş görünürlük ve gelişmiş araçlar sunan Premium paket seçeneklerimiz mevcuttur.",
   },
   {
-    q: "Paket almadan Tekstil A.Ş.'yu kullanabilir miyim?",
+    q: "Paket almadan Tekstil A.Ş.'yi kullanabilir miyim?",
     a: "Temel profil oluşturma mümkündür.\nAncak iş fırsatlarına erişim, teklif süreçleri ve görünürlük için paket gereklidir.",
   },
   {
