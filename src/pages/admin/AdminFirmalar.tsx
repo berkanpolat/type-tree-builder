@@ -939,7 +939,7 @@ export default function AdminFirmalar() {
 
       {/* Yeni Firma Dialog */}
       <Dialog open={yeniFirmaOpen} onOpenChange={setYeniFirmaOpen}>
-        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle style={s.text}>Yeni Firma Oluştur</DialogTitle>
             <DialogDescription style={s.muted}>
