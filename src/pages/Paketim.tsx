@@ -46,7 +46,26 @@ const Paketim = () => {
   const [portalLoading, setPortalLoading] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
+
+  // Sync subscription from Stripe after checkout or on page load
+  useEffect(() => {
+    const syncSubscription = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("check-subscription");
+        if (error) console.error("Subscription sync error:", error);
+        if (searchParams.get("checkout") === "success" && data?.subscribed) {
+          toast({ title: "Ödeme başarılı!", description: "PRO paketiniz aktif edildi." });
+          // Reload to reflect new package
+          setTimeout(() => window.location.replace("/paketim"), 1500);
+        }
+      } catch (e) {
+        console.error("Subscription sync failed:", e);
+      }
+    };
+    syncSubscription();
+  }, []);
 
   const handleUpgrade = async (periyot: "aylik" | "yillik") => {
     setUpgradeLoading(periyot);
