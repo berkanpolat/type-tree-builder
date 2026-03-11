@@ -1019,13 +1019,40 @@ Deno.serve(async (req) => {
       if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
+
+      // Get admin info
+      const { data: adminUser } = await supabase
+        .from("admin_users")
+        .select("ad, soyad, pozisyon")
+        .eq("id", payload.id)
+        .single();
+      const adminLabel = adminUser ? `${adminUser.ad} ${adminUser.soyad} (${adminUser.pozisyon})` : "Yönetici";
+
       const { data, error } = await supabase
         .from("ihaleler")
-        .update({ durum: "devam_ediyor", updated_at: new Date().toISOString() })
+        .update({
+          durum: "devam_ediyor",
+          admin_karar_veren: adminLabel,
+          admin_karar_sebebi: null,
+          admin_karar_tarihi: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", ihaleId)
         .select("id, baslik, ihale_no, user_id")
         .single();
       if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Notify owner
+      if (data) {
+        const msg = `${data.ihale_no} numaralı "${data.baslik}" başlıklı ihaleniz onaylanmış ve yayına alınmıştır. İşlemi yapan: ${adminLabel}`;
+        await supabase.from("notifications").insert({
+          user_id: data.user_id,
+          type: "ihale_yayinlandi",
+          message: msg,
+          link: "/manuihale/takip/" + data.id,
+        });
+      }
+
       return jsonResponse({ success: true, ihale: data });
     }
 
@@ -1037,6 +1064,14 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
+      // Get admin info
+      const { data: adminUser } = await supabase
+        .from("admin_users")
+        .select("ad, soyad, pozisyon")
+        .eq("id", payload.id)
+        .single();
+      const adminLabel = adminUser ? `${adminUser.ad} ${adminUser.soyad} (${adminUser.pozisyon})` : "Yönetici";
+
       // Get ihale info before updating
       const { data: ihaleInfo } = await supabase
         .from("ihaleler")
@@ -1046,18 +1081,24 @@ Deno.serve(async (req) => {
 
       const { error } = await supabase
         .from("ihaleler")
-        .update({ durum: "reddedildi", updated_at: new Date().toISOString() })
+        .update({
+          durum: "reddedildi",
+          admin_karar_sebebi: redSebebi,
+          admin_karar_veren: adminLabel,
+          admin_karar_tarihi: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", ihaleId);
       if (error) return jsonResponse({ error: error.message }, 400);
 
       // Notify user with rejection reason
       if (ihaleInfo) {
-        const msg = `${ihaleInfo.ihale_no} numaralı "${ihaleInfo.baslik}" başlıklı ihaleniz reddedilmiştir. Sebep: ${redSebebi}`;
+        const msg = `${ihaleInfo.ihale_no} numaralı "${ihaleInfo.baslik}" başlıklı ihaleniz reddedilmiştir. Sebep: ${redSebebi}. İşlemi yapan: ${adminLabel}`;
         await supabase.from("notifications").insert({
           user_id: ihaleInfo.user_id,
           type: "ihale_reddedildi",
           message: msg,
-          link: "/manuihale",
+          link: "/ihale/" + ihaleId,
         });
       }
 
@@ -1070,13 +1111,40 @@ Deno.serve(async (req) => {
       if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
+
+      // Get admin info
+      const { data: adminUser } = await supabase
+        .from("admin_users")
+        .select("ad, soyad, pozisyon")
+        .eq("id", payload.id)
+        .single();
+      const adminLabel = adminUser ? `${adminUser.ad} ${adminUser.soyad} (${adminUser.pozisyon})` : "Yönetici";
+
       const { data, error } = await supabase
         .from("urunler")
-        .update({ durum: "aktif", updated_at: new Date().toISOString() })
+        .update({
+          durum: "aktif",
+          admin_karar_veren: adminLabel,
+          admin_karar_sebebi: null,
+          admin_karar_tarihi: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", urunId)
         .select("id, baslik, urun_no, user_id")
         .single();
       if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Notify owner
+      if (data) {
+        const msg = `${data.urun_no} numaralı "${data.baslik}" başlıklı ürününüz onaylanmış ve yayına alınmıştır. İşlemi yapan: ${adminLabel}`;
+        await supabase.from("notifications").insert({
+          user_id: data.user_id,
+          type: "urun_yayinlandi",
+          message: msg,
+          link: "/manupazar",
+        });
+      }
+
       return jsonResponse({ success: true, urun: data });
     }
 
@@ -1087,6 +1155,14 @@ Deno.serve(async (req) => {
       if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
+
+      // Get admin info
+      const { data: adminUser } = await supabase
+        .from("admin_users")
+        .select("ad, soyad, pozisyon")
+        .eq("id", payload.id)
+        .single();
+      const adminLabel = adminUser ? `${adminUser.ad} ${adminUser.soyad} (${adminUser.pozisyon})` : "Yönetici";
       
       // Get urun info before updating
       const { data: urunInfo } = await supabase
@@ -1097,18 +1173,24 @@ Deno.serve(async (req) => {
 
       const { error } = await supabase
         .from("urunler")
-        .update({ durum: "reddedildi", updated_at: new Date().toISOString() })
+        .update({
+          durum: "reddedildi",
+          admin_karar_sebebi: redSebebi,
+          admin_karar_veren: adminLabel,
+          admin_karar_tarihi: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", urunId);
       if (error) return jsonResponse({ error: error.message }, 400);
 
       // Notify user with rejection reason
       if (urunInfo) {
-        const msg = `${urunInfo.urun_no} numaralı "${urunInfo.baslik}" başlıklı ürününüz reddedilmiştir. Sebep: ${redSebebi}`;
+        const msg = `${urunInfo.urun_no} numaralı "${urunInfo.baslik}" başlıklı ürününüz reddedilmiştir. Sebep: ${redSebebi}. İşlemi yapan: ${adminLabel}`;
         await supabase.from("notifications").insert({
           user_id: urunInfo.user_id,
           type: "urun_reddedildi",
           message: msg,
-          link: "/manupazar",
+          link: "/urun/" + urunId,
         });
       }
 
