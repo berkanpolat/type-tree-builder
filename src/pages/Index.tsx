@@ -69,6 +69,12 @@ const Index = () => {
     },
   });
 
+  const getSecenekler = (kategoriId: string) =>
+    sortSecenekler(allSecenekler?.filter((s) => s.kategori_id === kategoriId && s.parent_id === null) || []);
+
+  const getAltSecenekler = (parentId: string) =>
+    sortSecenekler(allSecenekler?.filter((s) => s.parent_id === parentId) || []);
+
   const handleTurChange = (value: string) => {
     setSelectedTurId(value);
     setSelectedTipId("");

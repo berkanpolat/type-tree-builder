@@ -218,7 +218,7 @@ export default function AdminFirmalar() {
         supabase.from("firma_tipleri").select("id, name, firma_turu_id").order("name"),
         supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
       ]);
-      setTurler(t || []);
+      setTurler(sortFirmaTurleri(t || []));
       setTipler((tp || []) as any);
       setIller(il || []);
     }
