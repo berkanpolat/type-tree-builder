@@ -681,6 +681,59 @@ Deno.serve(async (req) => {
       return jsonResponse({ ihale: ihaleData });
     }
 
+    // ─── GET IHALE EDIT DATA (ihale + filtreler + stok for admin editing) ───
+    if (action === "get-ihale-edit-data") {
+      const { token, ihaleId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const [ihaleRes, filtreRes, stokRes] = await Promise.all([
+        supabase.from("ihaleler").select("*").eq("id", ihaleId).single(),
+        supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", ihaleId),
+        supabase.from("ihale_stok").select("varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value, miktar_tipi, stok_sayisi").eq("ihale_id", ihaleId),
+      ]);
+
+      if (ihaleRes.error || !ihaleRes.data) return jsonResponse({ error: "İhale bulunamadı" }, 404);
+      return jsonResponse({ ihale: ihaleRes.data, filtreler: filtreRes.data || [], stoklar: stokRes.data || [] });
+    }
+
+    // ─── ADMIN SAVE IHALE (full save bypassing RLS) ───
+    if (action === "admin-save-ihale") {
+      const { token, ihaleId, ihaleData, filtreler, stoklar } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      // Update ihale
+      const { error: updateError } = await supabase
+        .from("ihaleler")
+        .update({ ...ihaleData, updated_at: new Date().toISOString() })
+        .eq("id", ihaleId);
+
+      if (updateError) return jsonResponse({ error: updateError.message }, 400);
+
+      // Save filtreler
+      await supabase.from("ihale_filtreler").delete().eq("ihale_id", ihaleId);
+      if (filtreler && filtreler.length > 0) {
+        await supabase.from("ihale_filtreler").insert(
+          filtreler.map((f: any) => ({ ihale_id: ihaleId, ...f }))
+        );
+      }
+
+      // Save stoklar
+      await supabase.from("ihale_stok").delete().eq("ihale_id", ihaleId);
+      if (stoklar && stoklar.length > 0) {
+        await supabase.from("ihale_stok").insert(
+          stoklar.map((s: any) => ({ ihale_id: ihaleId, ...s }))
+        );
+      }
+
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
