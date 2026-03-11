@@ -560,6 +560,7 @@ export default function TekIhale() {
               </div>
             )}
           </div>
+        </div>
       </div>
       <Footer />
     </div>
