@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -190,6 +191,7 @@ export default function IhaleDetay() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const ihaleDetayBanner = useBanner("ihale-detay-alt-banner");
 
   const [currentUserId, setCurrentUserId] = useState("");
   const [headerFirmaUnvani, setHeaderFirmaUnvani] = useState("");
@@ -1502,6 +1504,16 @@ export default function IhaleDetay() {
             )}
           </div>
         </div>
+
+        {/* Banner */}
+        {ihaleDetayBanner.url && (
+          <div
+            className="rounded-xl overflow-hidden mt-8 h-32 cursor-pointer"
+            onClick={() => ihaleDetayBanner.linkUrl && window.open(ihaleDetayBanner.linkUrl, "_blank")}
+          >
+            <img src={ihaleDetayBanner.url} alt="Reklam" className="w-full h-full object-cover" />
+          </div>
+        )}
       </main>
 
       {/* Teklif Onay Dialog */}

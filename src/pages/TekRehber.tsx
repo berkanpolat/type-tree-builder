@@ -4,6 +4,7 @@ import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
+import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
 import Footer from "@/components/Footer";
@@ -66,6 +67,7 @@ export default function TekRehber() {
   const navigate = useNavigate();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
+  const rehberSidebarBanner = useBanner("tekrehber-sidebar");
   const [authLoading, setAuthLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
@@ -410,11 +412,19 @@ export default function TekRehber() {
 
         {/* Firma Content */}
         <div className="flex gap-6">
-          <FirmaFiltreler
-            firmaTuruId={selectedFirmaTuru}
-            firmaTuruName={selectedFirmaTuruName}
-            onFilterChange={setFirmaFilterState}
-          />
+          <div className="space-y-4">
+            <FirmaFiltreler
+              firmaTuruId={selectedFirmaTuru}
+              firmaTuruName={selectedFirmaTuruName}
+              onFilterChange={setFirmaFilterState}
+            />
+            {/* Sidebar banner */}
+            {rehberSidebarBanner.url && (
+              <div className="rounded-xl overflow-hidden border border-border cursor-pointer" onClick={() => rehberSidebarBanner.linkUrl && window.open(rehberSidebarBanner.linkUrl, "_blank")}>
+                <img src={rehberSidebarBanner.url} alt="Reklam" className="w-full h-auto object-cover" />
+              </div>
+            )}
+          </div>
 
           <div className="flex-1 space-y-4">
             <p className="text-sm text-muted-foreground">

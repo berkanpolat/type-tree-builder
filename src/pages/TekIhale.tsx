@@ -125,6 +125,7 @@ export default function TekIhale() {
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const ihaleSidebarBanner = useBanner("tekihale-sidebar");
+  const ihaleAltBanner = useBanner("tekihale-alt-banner");
   const [ihaleler, setIhaleler] = useState<IhaleWithExtra[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
@@ -547,6 +548,16 @@ export default function TekIhale() {
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Alt banner */}
+            {ihaleAltBanner.url && (
+              <div
+                className="rounded-xl overflow-hidden mt-4 h-32 cursor-pointer"
+                onClick={() => ihaleAltBanner.linkUrl && window.open(ihaleAltBanner.linkUrl, "_blank")}
+              >
+                <img src={ihaleAltBanner.url} alt="Reklam" className="w-full h-full object-cover" />
               </div>
             )}
           </div>
