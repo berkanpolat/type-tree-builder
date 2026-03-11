@@ -336,7 +336,8 @@ export default function Mesajlar() {
       // This is initiating a new conversation - check quota
       const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
       if (!check.allowed) {
-        toast({ title: "Mesaj hakkınız yetersiz", description: check.message, variant: "destructive" });
+        setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setUpgradeOpen(true);
         return;
       }
 
