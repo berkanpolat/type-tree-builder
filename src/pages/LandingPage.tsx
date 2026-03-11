@@ -341,7 +341,9 @@ const LandingPage = () => {
                   {a.icon}
                 </div>
                 <h3 className="font-semibold text-secondary text-lg mb-3">{a.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{a.desc}</p>
+                <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
+                  {a.desc.split('\n').map((line, li) => li === 0 ? <span key={li}><strong className="text-foreground">{line}</strong></span> : <span key={li}><br/>{line}</span>)}
+                </p>
               </div>
             ))}
           </div>
