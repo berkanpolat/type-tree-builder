@@ -387,9 +387,8 @@ export default function AnaSayfa() {
 
       if (!exact.parent_id) {
         // It's a kategori
-        const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === exact.name.toLowerCase());
-        if (katName) {
-          setSelectedKategori(katName);
+        if (!HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === exact.name.toLowerCase())) {
+          setSelectedKategori(exact.name);
           setSelectedGrupId(null);
           setSelectedTurId(null);
           setActiveFilter(null);
@@ -429,13 +428,10 @@ export default function AnaSayfa() {
       const topCatId = Object.entries(catCount).sort((a, b) => b[1] - a[1])[0]?.[0];
       if (topCatId) {
         const matchedSecenek = kategoriSecenekler.find((k) => k.id === topCatId);
-        if (matchedSecenek) {
-          const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === matchedSecenek.name.toLowerCase());
-          if (katName) {
-            setSelectedKategori(katName);
-            setSelectedGrupId(null);
-            setSelectedTurId(null);
-          }
+        if (matchedSecenek && !HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === matchedSecenek.name.toLowerCase())) {
+          setSelectedKategori(matchedSecenek.name);
+          setSelectedGrupId(null);
+          setSelectedTurId(null);
         }
       }
     }
