@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import adBannerImg from "@/assets/ad-banner.jpg";
+import { useBanner } from "@/hooks/use-banner";
 import BildirDialog from "@/components/BildirDialog";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import {
