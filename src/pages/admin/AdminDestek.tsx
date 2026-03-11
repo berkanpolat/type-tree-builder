@@ -13,6 +13,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Headphones,
   CheckCircle2,
   Clock,
@@ -24,8 +31,11 @@ import {
   AlertCircle,
   Download,
   Paperclip,
+  Upload,
   X,
+  Building2,
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -56,28 +66,31 @@ interface DeskMesaj {
   created_at: string;
 }
 
+// Admin-side labels: cevaplandi = user sent last (admin needs to respond)
+// cevap_bekliyor = admin sent last (waiting for user)
 const durumLabels: Record<string, string> = {
   inceleniyor: "İnceleniyor",
-  cevap_bekliyor: "Cevap Bekliyor",
   cevaplandi: "Cevaplandı",
+  cevap_bekliyor: "Cevap Bekliyor",
   cozuldu: "Çözüldü",
 };
 
 const durumColors: Record<string, string> = {
   inceleniyor: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  cevap_bekliyor: "bg-blue-100 text-blue-800 border-blue-200",
   cevaplandi: "bg-green-100 text-green-800 border-green-200",
+  cevap_bekliyor: "bg-blue-100 text-blue-800 border-blue-200",
   cozuldu: "bg-red-100 text-red-800 border-red-200",
 };
 
-type FilterKey = "all" | "inceleniyor" | "cozuldu" | "cevaplandi" | "cevap_bekliyor";
+type StatusFilter = "all" | "inceleniyor" | "cozuldu" | "cevaplandi" | "cevap_bekliyor";
 
 const AdminDestek = () => {
   const { token } = useAdminAuth();
   const { toast } = useToast();
   const [talepler, setTalepler] = useState<DeskTalep[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<FilterKey>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [departmanFilter, setDepartmanFilter] = useState<string>("all");
 
   // Detail dialog
   const [selectedTalep, setSelectedTalep] = useState<DeskTalep | null>(null);
@@ -85,6 +98,8 @@ const AdminDestek = () => {
   const [yeniMesaj, setYeniMesaj] = useState("");
   const [sending, setSending] = useState(false);
   const [mesajLoading, setMesajLoading] = useState(false);
+  const [ekDosya, setEkDosya] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const adminCall = useCallback(
@@ -109,7 +124,15 @@ const AdminDestek = () => {
     if (token) fetchTalepler();
   }, [token, fetchTalepler]);
 
-  const filtered = filter === "all" ? talepler : talepler.filter((t) => t.durum === filter);
+  // Get unique departments
+  const departments = [...new Set(talepler.map((t) => t.departman))].sort();
+
+  // Apply filters
+  const filtered = talepler.filter((t) => {
+    if (statusFilter !== "all" && t.durum !== statusFilter) return false;
+    if (departmanFilter !== "all" && t.departman !== departmanFilter) return false;
+    return true;
+  });
 
   const toplam = talepler.length;
   const incelenen = talepler.filter((t) => t.durum === "inceleniyor").length;
@@ -117,7 +140,13 @@ const AdminDestek = () => {
   const cevaplanan = talepler.filter((t) => t.durum === "cevaplandi").length;
   const cevapBekleyen = talepler.filter((t) => t.durum === "cevap_bekliyor").length;
 
-  const statsCards: { title: string; value: number; icon: any; color: string; bgColor: string; filterKey: FilterKey }[] = [
+  // Department stats
+  const departmanStats = departments.map((dep) => ({
+    name: dep,
+    count: talepler.filter((t) => t.departman === dep).length,
+  }));
+
+  const statsCards: { title: string; value: number; icon: any; color: string; bgColor: string; filterKey: StatusFilter }[] = [
     { title: "Toplam Talepler", value: toplam, icon: Headphones, color: "text-primary", bgColor: "bg-primary/10", filterKey: "all" },
     { title: "İnceleniyor", value: incelenen, icon: Search, color: "text-yellow-500", bgColor: "bg-yellow-50", filterKey: "inceleniyor" },
     { title: "Çözülen", value: cozulen, icon: CheckCircle2, color: "text-red-500", bgColor: "bg-red-50", filterKey: "cozuldu" },
@@ -131,6 +160,7 @@ const AdminDestek = () => {
     setMesajLoading(true);
     setMesajlar([]);
     setYeniMesaj("");
+    setEkDosya(null);
     const data = await adminCall("destek-mesajlar", { destekId: talep.id });
     if (data.mesajlar) setMesajlar(data.mesajlar);
     setMesajLoading(false);
@@ -145,13 +175,36 @@ const AdminDestek = () => {
     if (selectedTalep.durum === "cozuldu") return;
 
     setSending(true);
+    setUploading(!!ekDosya);
+
+    let ekDosyaUrl: string | null = null;
+    let ekDosyaAdi: string | null = null;
+
+    if (ekDosya) {
+      const filePath = `destek/admin/${Date.now()}_${ekDosya.name}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("sikayet-files")
+        .upload(filePath, ekDosya);
+      if (!uploadErr) {
+        const { data: urlData } = supabase.storage
+          .from("sikayet-files")
+          .getPublicUrl(filePath);
+        ekDosyaUrl = urlData.publicUrl;
+        ekDosyaAdi = ekDosya.name;
+      }
+      setUploading(false);
+    }
+
     const data = await adminCall("destek-mesaj-gonder", {
       destekId: selectedTalep.id,
       content: yeniMesaj.trim(),
+      ek_dosya_url: ekDosyaUrl,
+      ek_dosya_adi: ekDosyaAdi,
     });
 
     if (data.success) {
       setYeniMesaj("");
+      setEkDosya(null);
       // Refresh messages and talep list
       const msgData = await adminCall("destek-mesajlar", { destekId: selectedTalep.id });
       if (msgData.mesajlar) setMesajlar(msgData.mesajlar);
@@ -200,8 +253,8 @@ const AdminDestek = () => {
           {statsCards.map((stat) => (
             <Card
               key={stat.title}
-              className={`cursor-pointer transition-shadow hover:shadow-md ${filter === stat.filterKey ? "ring-2 ring-amber-500" : ""}`}
-              onClick={() => setFilter(stat.filterKey)}
+              className={`cursor-pointer transition-shadow hover:shadow-md ${statusFilter === stat.filterKey ? "ring-2 ring-amber-500" : ""}`}
+              onClick={() => setStatusFilter(stat.filterKey)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
@@ -217,6 +270,31 @@ const AdminDestek = () => {
                 </span>
               </CardContent>
             </Card>
+          ))}
+        </div>
+
+        {/* Department Stats + Filter */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-4 h-4" style={{ color: "hsl(var(--admin-muted))" }} />
+            <span className="text-sm font-medium" style={{ color: "hsl(var(--admin-text))" }}>Departman:</span>
+          </div>
+          <Badge
+            variant="outline"
+            className={`cursor-pointer text-xs ${departmanFilter === "all" ? "bg-primary text-primary-foreground" : ""}`}
+            onClick={() => setDepartmanFilter("all")}
+          >
+            Tümü ({toplam})
+          </Badge>
+          {departmanStats.map((dep) => (
+            <Badge
+              key={dep.name}
+              variant="outline"
+              className={`cursor-pointer text-xs ${departmanFilter === dep.name ? "bg-primary text-primary-foreground" : ""}`}
+              onClick={() => setDepartmanFilter(dep.name)}
+            >
+              {dep.name} ({dep.count})
+            </Badge>
           ))}
         </div>
 
@@ -412,23 +490,45 @@ const AdminDestek = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="border-t p-3 flex items-end gap-2">
-                    <Textarea
-                      placeholder="Yanıt yazın..."
-                      value={yeniMesaj}
-                      onChange={(e) => setYeniMesaj(e.target.value)}
-                      rows={2}
-                      className="resize-none flex-1"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          handleSendMessage();
-                        }
-                      }}
-                    />
-                    <Button size="icon" onClick={handleSendMessage} disabled={sending || !yeniMesaj.trim()}>
-                      <Send className="w-4 h-4" />
-                    </Button>
+                  <div className="border-t p-3 space-y-2">
+                    {ekDosya && (
+                      <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/30 text-sm">
+                        <Paperclip className="w-3 h-3 text-muted-foreground" />
+                        <span className="truncate flex-1 text-xs">{ekDosya.name}</span>
+                        <button
+                          onClick={() => setEkDosya(null)}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex items-end gap-2">
+                      <label className="p-2 rounded-md hover:bg-muted cursor-pointer transition-colors shrink-0">
+                        <Upload className="w-4 h-4 text-muted-foreground" />
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={(e) => setEkDosya(e.target.files?.[0] || null)}
+                        />
+                      </label>
+                      <Textarea
+                        placeholder="Yanıt yazın..."
+                        value={yeniMesaj}
+                        onChange={(e) => setYeniMesaj(e.target.value)}
+                        rows={2}
+                        className="resize-none flex-1"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                      />
+                      <Button size="icon" onClick={handleSendMessage} disabled={sending || !yeniMesaj.trim()}>
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 )}
               </div>

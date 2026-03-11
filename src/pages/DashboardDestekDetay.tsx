@@ -54,17 +54,19 @@ interface FirmaData {
   firma_unvani: string;
 }
 
+// User-side labels: cevaplandi means user sent last (waiting for admin)
+// cevap_bekliyor means admin replied (user can respond)
 const durumLabels: Record<string, string> = {
   inceleniyor: "İnceleniyor",
-  cevap_bekliyor: "Cevap Bekleniyor",
-  cevaplandi: "Cevaplandı",
+  cevaplandi: "Cevap Bekleniyor",
+  cevap_bekliyor: "Cevaplandı",
   cozuldu: "Çözüldü",
 };
 
 const durumColors: Record<string, string> = {
   inceleniyor: "bg-yellow-100 text-yellow-800",
-  cevap_bekliyor: "bg-blue-100 text-blue-800",
-  cevaplandi: "bg-green-100 text-green-800",
+  cevaplandi: "bg-blue-100 text-blue-800",
+  cevap_bekliyor: "bg-green-100 text-green-800",
   cozuldu: "bg-destructive/10 text-destructive",
 };
 
@@ -203,10 +205,11 @@ const DashboardDestekDetay = () => {
       });
       return;
     }
+    // User can send when admin replied (cevap_bekliyor = admin sent last)
     if (talep.durum !== "cevap_bekliyor") {
       toast({
         title: "Mesaj gönderemezsiniz",
-        description: "Yalnızca 'Cevap Bekleniyor' durumundayken mesaj gönderebilirsiniz.",
+        description: "Destek ekibinden yanıt bekleyiniz.",
         variant: "destructive",
       });
       return;
@@ -243,7 +246,7 @@ const DashboardDestekDetay = () => {
       } as any);
 
     if (!msgErr) {
-      // User replied → status becomes cevaplandi
+      // User replied → status becomes cevaplandi (user sent last, waiting for admin)
       await supabase
         .from("destek_talepleri" as any)
         .update({ durum: "cevaplandi" } as any)
@@ -271,6 +274,7 @@ const DashboardDestekDetay = () => {
   }
 
   const isClosed = talep.durum === "cozuldu";
+  // User can send when status is cevap_bekliyor (admin sent last, user's turn)
   const canSendMessage = talep.durum === "cevap_bekliyor";
 
   const infoRows = [
