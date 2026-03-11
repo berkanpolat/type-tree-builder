@@ -50,6 +50,7 @@ interface SearchResult {
   id: string;
   name: string;
   type: "Kategori" | "Grup" | "Tür" | "Ürün";
+  urunKategoriId?: string | null;
 }
 
 interface KategoriNode {
@@ -233,60 +234,65 @@ export default function AnaSayfa() {
     const { data } = await query;
     if (!data) { setUrunLoading(false); return; }
 
-    // Fetch firma info for all user_ids
     const userIds = [...new Set(data.map((u) => u.user_id))];
-    const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
-    if (userIds.length > 0) {
-      const { data: firmalarData } = await supabase.from("firmalar").select("user_id, firma_unvani, logo_url").in("user_id", userIds);
-      if (firmalarData) firmalarData.forEach((f) => { firmaMap[f.user_id] = f; });
-    }
-
-    // Fetch varyasyonlar for varyasyonlu products
     const varyasyonluIds = data.filter((u) => u.fiyat_tipi === "varyasyonlu").map((u) => u.id);
+    const nonVaryIds = data.filter((u) => u.fiyat_tipi !== "varyasyonlu").map((u) => u.id);
+    const shouldFetchExtraVariantDetails =
+      isFiltered &&
+      ((filterState?.renkFiltreler?.length ?? 0) > 0 || (filterState?.bedenFiltreler?.length ?? 0) > 0);
+
+    const [firmalarRes, varyasyonluRes, otherVaryantsRes, favsRes] = await Promise.all([
+      userIds.length > 0
+        ? supabase.from("firmalar").select("user_id, firma_unvani, logo_url").in("user_id", userIds)
+        : Promise.resolve({ data: null, error: null }),
+      varyasyonluIds.length > 0
+        ? supabase
+            .from("urun_varyasyonlar")
+            .select("urun_id, birim_fiyat, foto_url, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
+            .in("urun_id", varyasyonluIds)
+        : Promise.resolve({ data: null, error: null }),
+      shouldFetchExtraVariantDetails && nonVaryIds.length > 0
+        ? supabase
+            .from("urun_varyasyonlar")
+            .select("urun_id, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
+            .in("urun_id", nonVaryIds)
+        : Promise.resolve({ data: null, error: null }),
+      currentUserId
+        ? supabase.from("urun_favoriler").select("urun_id").eq("user_id", currentUserId)
+        : Promise.resolve({ data: null, error: null }),
+    ]);
+
+    const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
+    (firmalarRes.data || []).forEach((f) => {
+      firmaMap[f.user_id] = f;
+    });
+
     const varyantPriceMap: Record<string, { min: number; max: number }> = {};
     const varyantDataMap: Record<string, { renk: Set<string>; beden: Set<string> }> = {};
     const varyantFotoMap: Record<string, string> = {};
 
-    if (varyasyonluIds.length > 0) {
-      const { data: varyantlar } = await supabase
-        .from("urun_varyasyonlar")
-        .select("urun_id, birim_fiyat, foto_url, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
-        .in("urun_id", varyasyonluIds);
-      if (varyantlar) {
-        varyantlar.forEach((v) => {
-          if (!varyantFotoMap[v.urun_id] && v.foto_url) varyantFotoMap[v.urun_id] = v.foto_url;
-          if (!varyantPriceMap[v.urun_id]) {
-            varyantPriceMap[v.urun_id] = { min: v.birim_fiyat, max: v.birim_fiyat };
-          } else {
-            if (v.birim_fiyat < varyantPriceMap[v.urun_id].min) varyantPriceMap[v.urun_id].min = v.birim_fiyat;
-            if (v.birim_fiyat > varyantPriceMap[v.urun_id].max) varyantPriceMap[v.urun_id].max = v.birim_fiyat;
-          }
-          if (!varyantDataMap[v.urun_id]) varyantDataMap[v.urun_id] = { renk: new Set(), beden: new Set() };
-          if (v.varyant_2_label === "Renk" && v.varyant_2_value) varyantDataMap[v.urun_id].renk.add(v.varyant_2_value);
-          if (v.varyant_1_label === "Beden" && v.varyant_1_value) varyantDataMap[v.urun_id].beden.add(v.varyant_1_value);
-          if (v.varyant_1_label === "Renk" && v.varyant_1_value) varyantDataMap[v.urun_id].renk.add(v.varyant_1_value);
-          if (v.varyant_2_label === "Beden" && v.varyant_2_value) varyantDataMap[v.urun_id].beden.add(v.varyant_2_value);
-        });
+    (varyasyonluRes.data || []).forEach((v) => {
+      if (!varyantFotoMap[v.urun_id] && v.foto_url) varyantFotoMap[v.urun_id] = v.foto_url;
+      if (!varyantPriceMap[v.urun_id]) {
+        varyantPriceMap[v.urun_id] = { min: v.birim_fiyat, max: v.birim_fiyat };
+      } else {
+        if (v.birim_fiyat < varyantPriceMap[v.urun_id].min) varyantPriceMap[v.urun_id].min = v.birim_fiyat;
+        if (v.birim_fiyat > varyantPriceMap[v.urun_id].max) varyantPriceMap[v.urun_id].max = v.birim_fiyat;
       }
-    }
+      if (!varyantDataMap[v.urun_id]) varyantDataMap[v.urun_id] = { renk: new Set(), beden: new Set() };
+      if (v.varyant_2_label === "Renk" && v.varyant_2_value) varyantDataMap[v.urun_id].renk.add(v.varyant_2_value);
+      if (v.varyant_1_label === "Beden" && v.varyant_1_value) varyantDataMap[v.urun_id].beden.add(v.varyant_1_value);
+      if (v.varyant_1_label === "Renk" && v.varyant_1_value) varyantDataMap[v.urun_id].renk.add(v.varyant_1_value);
+      if (v.varyant_2_label === "Beden" && v.varyant_2_value) varyantDataMap[v.urun_id].beden.add(v.varyant_2_value);
+    });
 
-    // Also fetch varyasyonlar for non-varyasyonlu products for filtering
-    const nonVaryIds = data.filter((u) => u.fiyat_tipi !== "varyasyonlu").map((u) => u.id);
-    if (nonVaryIds.length > 0 && isFiltered) {
-      const { data: otherVaryants } = await supabase
-        .from("urun_varyasyonlar")
-        .select("urun_id, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
-        .in("urun_id", nonVaryIds);
-      if (otherVaryants) {
-        otherVaryants.forEach((v) => {
-          if (!varyantDataMap[v.urun_id]) varyantDataMap[v.urun_id] = { renk: new Set(), beden: new Set() };
-          if (v.varyant_2_label === "Renk" && v.varyant_2_value) varyantDataMap[v.urun_id].renk.add(v.varyant_2_value);
-          if (v.varyant_1_label === "Beden" && v.varyant_1_value) varyantDataMap[v.urun_id].beden.add(v.varyant_1_value);
-          if (v.varyant_1_label === "Renk" && v.varyant_1_value) varyantDataMap[v.urun_id].renk.add(v.varyant_1_value);
-          if (v.varyant_2_label === "Beden" && v.varyant_2_value) varyantDataMap[v.urun_id].beden.add(v.varyant_2_value);
-        });
-      }
-    }
+    (otherVaryantsRes.data || []).forEach((v) => {
+      if (!varyantDataMap[v.urun_id]) varyantDataMap[v.urun_id] = { renk: new Set(), beden: new Set() };
+      if (v.varyant_2_label === "Renk" && v.varyant_2_value) varyantDataMap[v.urun_id].renk.add(v.varyant_2_value);
+      if (v.varyant_1_label === "Beden" && v.varyant_1_value) varyantDataMap[v.urun_id].beden.add(v.varyant_1_value);
+      if (v.varyant_1_label === "Renk" && v.varyant_1_value) varyantDataMap[v.urun_id].renk.add(v.varyant_1_value);
+      if (v.varyant_2_label === "Beden" && v.varyant_2_value) varyantDataMap[v.urun_id].beden.add(v.varyant_2_value);
+    });
 
     const vMap: Record<string, { renk: string[]; beden: string[] }> = {};
     Object.entries(varyantDataMap).forEach(([id, d]) => {
@@ -294,12 +300,8 @@ export default function AnaSayfa() {
     });
     setVaryasyonMap(vMap);
 
-    // Fetch favorites
-    let favSet = new Set<string>();
-    if (currentUserId) {
-      const { data: favs } = await supabase.from("urun_favoriler").select("urun_id").eq("user_id", currentUserId);
-      if (favs) favs.forEach((f) => favSet.add(f.urun_id));
-    }
+    const favSet = new Set<string>();
+    (favsRes.data || []).forEach((f) => favSet.add(f.urun_id));
 
     const enriched: UrunWithExtra[] = data.map((u) => {
       const minV = varyantPriceMap[u.id]?.min ?? null;
@@ -320,7 +322,7 @@ export default function AnaSayfa() {
 
     setAllUrunler(enriched);
     setUrunLoading(false);
-  }, [activeFilter, appliedSearchTerm, selectedKategori, selectedGrupId, selectedTurId, kategoriSecenekler, currentUserId, isFiltered, filterState?.minFiyat, filterState?.maxFiyat]);
+  }, [activeFilter, appliedSearchTerm, selectedKategori, selectedGrupId, selectedTurId, kategoriSecenekler, currentUserId, isFiltered, filterState?.minFiyat, filterState?.maxFiyat, filterState?.renkFiltreler?.length, filterState?.bedenFiltreler?.length]);
 
   // Client-side filtering
   const filteredUrunler = useMemo(() => {
@@ -447,10 +449,7 @@ export default function AnaSayfa() {
   }, [urunKategoriById]);
 
   const findBestTaxonomyMatch = useCallback((term: string) => {
-    if (!term || urunKategoriNodes.length === 0) {
-      console.log("[SEARCH DEBUG] findBestTaxonomyMatch - no term or no nodes", { term, nodesCount: urunKategoriNodes.length });
-      return null;
-    }
+    if (!term || urunKategoriNodes.length === 0) return null;
 
     const scored = urunKategoriNodes
       .map((node) => {
@@ -465,12 +464,24 @@ export default function AnaSayfa() {
       .filter((item): item is { node: KategoriNode; rootCategoryName: string; score: number } => !!item)
       .sort((a, b) => b.score - a.score);
 
-    const top5 = scored.slice(0, 5).map(s => ({ name: s.node.name, rootCategory: s.rootCategoryName, score: s.score }));
-    console.log("[SEARCH DEBUG] findBestTaxonomyMatch top 5:", term, top5);
-
     if (scored.length === 0 || scored[0].score < 220) return null;
     return scored[0];
   }, [urunKategoriNodes, getRootCategoryName, getSimilarityScore]);
+
+  const localProductSearchResults = useMemo<SearchResult[]>(() => {
+    if (!searchTerm || searchTerm.length < 2) return [];
+    const normalizedTerm = normalizeText(searchTerm);
+
+    return allUrunler
+      .filter((u) => normalizeText(u.baslik).includes(normalizedTerm))
+      .slice(0, 5)
+      .map((u) => ({
+        id: u.id,
+        name: u.baslik,
+        type: "Ürün",
+        urunKategoriId: u.urun_kategori_id,
+      }));
+  }, [allUrunler, searchTerm, normalizeText]);
 
   // Trigger search on Enter or Ara button
   const handleSearch = useCallback(() => {
@@ -482,7 +493,6 @@ export default function AnaSayfa() {
     setAppliedSearchTerm(term);
 
     const bestMatch = findBestTaxonomyMatch(term);
-    console.log("[SEARCH DEBUG] handleSearch bestMatch:", { term, bestMatch: bestMatch ? { rootCategoryName: bestMatch.rootCategoryName, nodeName: bestMatch.node.name, score: bestMatch.score } : null });
     if (bestMatch) {
       setSelectedKategori(bestMatch.rootCategoryName);
       setSelectedGrupId(null);
@@ -494,7 +504,7 @@ export default function AnaSayfa() {
     }
   }, [searchTerm, findBestTaxonomyMatch]);
 
-  // Autocomplete — products + taxonomy similarity
+  // Autocomplete — only in-memory scoring (no network round-trip)
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setSearchResults([]);
@@ -502,14 +512,7 @@ export default function AnaSayfa() {
       return;
     }
 
-    const timer = setTimeout(async () => {
-      const { data: urunData } = await supabase
-        .from("urunler")
-        .select("id, baslik")
-        .eq("durum", "aktif")
-        .ilike("baslik", `%${searchTerm}%`)
-        .limit(5);
-
+    const timer = setTimeout(() => {
       const taxonomyResults: SearchResult[] = urunKategoriNodes
         .map((node) => {
           const rootCategoryName = getRootCategoryName(node.id);
@@ -528,35 +531,32 @@ export default function AnaSayfa() {
         .slice(0, 5)
         .map(({ id, name, type }) => ({ id, name, type }));
 
-      const urunResults: SearchResult[] = (urunData || []).map((u) => ({
-        id: u.id,
-        name: u.baslik,
-        type: "Ürün",
-      }));
+      const merged = [...taxonomyResults, ...localProductSearchResults];
+      const seen = new Set<string>();
+      const results = merged.filter((item) => {
+        const key = `${item.type}:${item.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 8);
 
-      const results = [...taxonomyResults, ...urunResults];
       setSearchResults(results);
       setShowDropdown(results.length > 0);
-    }, 250);
+    }, 120);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, urunKategoriNodes, getRootCategoryName, getSimilarityScore, getNodeType]);
+  }, [searchTerm, urunKategoriNodes, getRootCategoryName, getSimilarityScore, getNodeType, localProductSearchResults]);
 
-  const handleSearchResultClick = async (result: SearchResult) => {
+  const handleSearchResultClick = (result: SearchResult) => {
     setSearchTerm(result.name);
     setShowDropdown(false);
     setActiveFilter(null);
     setAppliedSearchTerm(result.name);
 
     if (result.type === "Ürün") {
-      const { data: urun } = await supabase
-        .from("urunler")
-        .select("urun_kategori_id")
-        .eq("id", result.id)
-        .maybeSingle();
-
-      if (urun?.urun_kategori_id) {
-        const categoryName = getRootCategoryName(urun.urun_kategori_id);
+      const productCategoryId = result.urunKategoriId ?? allUrunler.find((u) => u.id === result.id)?.urun_kategori_id ?? null;
+      if (productCategoryId) {
+        const categoryName = getRootCategoryName(productCategoryId);
         if (categoryName) {
           setSelectedKategori(categoryName);
           setSelectedGrupId(null);
