@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import authBg from "@/assets/auth-bg.jpg";
 import {
@@ -23,6 +23,15 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import CountryCodeSelect from "@/components/CountryCodeSelect";
+
+// Phone formatting helper: 5XX XXX XX XX
+const formatPhoneDisplay = (value: string) => {
+  const digits = value.replace(/\D/g, "").replace(/^0+/, "");
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+  if (digits.length <= 8) return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+  return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
+};
 
 const GirisKayit = () => {
   const [activeTab, setActiveTab] = useState<"giris" | "kayit">("giris");
@@ -46,7 +55,6 @@ const GirisKayit = () => {
   const [email, setEmail] = useState("");
   const [telefon, setTelefon] = useState("");
   const [countryCode, setCountryCode] = useState("+90");
-  const [password, setPassword] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
 
   // Phone verification state
@@ -59,8 +67,15 @@ const GirisKayit = () => {
 
   // Build full phone number (strip leading 0)
   const getFullPhone = () => {
-    const cleaned = telefon.replace(/\s/g, "").replace(/^0+/, "");
+    const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
     return `${countryCode}${cleaned}`;
+  };
+
+  // Format phone for display with spaces
+  const getFormattedPhone = () => {
+    const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
+    const full = `${countryCode} ${formatPhoneDisplay(cleaned)}`;
+    return full;
   };
 
   // Countdown timer for resend
@@ -70,9 +85,13 @@ const GirisKayit = () => {
     return () => clearInterval(timer);
   }, [otpCountdown]);
 
+  // Email validation
+  const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+
   const handleSendOtp = async () => {
     const fullPhone = getFullPhone();
-    if (!telefon || telefon.replace(/\s/g, "").replace(/^0+/, "").length < 7) {
+    const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
+    if (!cleaned || cleaned.length < 7) {
       toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
       return;
     }
@@ -178,6 +197,10 @@ const GirisKayit = () => {
       toast({ title: "Hata", description: "Lütfen telefon numaranızı doğrulayın", variant: "destructive" });
       return;
     }
+    if (!isValidEmail(email)) {
+      toast({ title: "Hata", description: "Geçerli bir e-posta adresi giriniz", variant: "destructive" });
+      return;
+    }
     setRegisterLoading(true);
     try {
       // Check duplicate email in profiles
@@ -195,9 +218,12 @@ const GirisKayit = () => {
 
       const fullPhone = getFullPhone();
 
+      // No password signup - use a random password since admin will send password creation email
+      const randomPassword = crypto.randomUUID() + "Aa1!";
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
-        password,
+        password: randomPassword,
         options: { emailRedirectTo: window.location.origin },
       });
       if (authError) throw authError;
@@ -219,8 +245,18 @@ const GirisKayit = () => {
       });
       if (rpcError) throw rpcError;
 
-      toast({ title: "Kayıt başarılı", description: "Lütfen e-posta adresinizi doğrulayın." });
+      // Sign out immediately since user can't login until admin approves
+      await supabase.auth.signOut();
+
+      toast({
+        title: "Başvurunuz alındı!",
+        description: "Başvurunuz değerlendirilecektir. Onaylandığında şifre oluşturma bağlantısı e-posta adresinize gönderilecektir.",
+      });
       setActiveTab("giris");
+      // Reset form
+      setRegisterStep(1);
+      setSelectedTurId(""); setSelectedTipId(""); setFirmaUnvani(""); setVergiNumarasi(""); setVergiDairesi("");
+      setAd(""); setSoyad(""); setEmail(""); setTelefon(""); setPhoneVerified(false); setOtpSent(false); setOtpCode("");
     } catch (error: any) {
       toast({ title: "Hata", description: error.message, variant: "destructive" });
     } finally {
@@ -235,6 +271,93 @@ const GirisKayit = () => {
     "İletişim sürecinin daha hızlı ve net ilerlemesi",
     "Teklif toplama / karşılaştırma / karar alma akışının düzenlenmesi",
   ];
+
+  // OTP full-screen verification view
+  if (otpSent && !phoneVerified && registerStep === 2) {
+    const minutes = Math.floor(otpCountdown / 60);
+    const seconds = otpCountdown % 60;
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-card rounded-2xl shadow-lg border border-border p-8 space-y-6">
+            {/* Icon */}
+            <div className="flex justify-center">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <ShieldCheck className="w-8 h-8 text-primary" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-bold text-foreground">Telefonunuzu doğrulayın</h2>
+              <p className="text-sm text-muted-foreground">
+                {getFormattedPhone()} numaranıza 6 haneli bir kod gönderdik.
+              </p>
+            </div>
+
+            {/* Countdown */}
+            {otpCountdown > 0 && (
+              <p className="text-center text-sm text-muted-foreground">
+                Kalan Süre: {minutes} dakika {String(seconds).padStart(2, "0")} saniye
+              </p>
+            )}
+
+            {/* OTP Input */}
+            <div className="flex justify-center">
+              <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                <InputOTPGroup className="gap-2">
+                  {[0, 1, 2, 3, 4, 5].map((i) => (
+                    <InputOTPSlot
+                      key={i}
+                      index={i}
+                      className="w-12 h-14 text-lg font-semibold rounded-xl border-2 border-border first:rounded-l-xl last:rounded-r-xl"
+                    />
+                  ))}
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+
+            {/* Verify button */}
+            <Button
+              className="w-full h-12 text-base font-medium rounded-xl"
+              onClick={handleVerifyOtp}
+              disabled={verifyingOtp || otpCode.length !== 6}
+            >
+              {verifyingOtp ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
+              Telefonu Doğrulayın
+            </Button>
+
+            {/* Resend */}
+            {otpCountdown <= 0 && (
+              <Button
+                variant="ghost"
+                className="w-full text-sm text-primary"
+                onClick={handleSendOtp}
+                disabled={sendingOtp}
+              >
+                {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                Kodu Tekrar Gönder
+              </Button>
+            )}
+
+            {/* Back button */}
+            <Button
+              variant="outline"
+              className="w-full h-12 rounded-xl"
+              onClick={() => {
+                setOtpSent(false);
+                setOtpCode("");
+              }}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Geri
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -313,7 +436,7 @@ const GirisKayit = () => {
             <div className="space-y-5">
               {/* Step indicators */}
               <div className="flex items-center gap-2">
-                {[1, 2, 3].map((step) => (
+                {[1, 2].map((step) => (
                   <div key={step} className="flex-1 flex flex-col items-center gap-1.5">
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                       registerStep === step
@@ -325,12 +448,12 @@ const GirisKayit = () => {
                       {registerStep > step ? <CheckCircle2 className="w-4 h-4" /> : step}
                     </div>
                     <span className="text-xs text-muted-foreground text-center">
-                      {step === 1 ? "Firma" : step === 2 ? "Kişisel" : "Şifre"}
+                      {step === 1 ? "Firma" : "Kişisel & Başvuru"}
                     </span>
                   </div>
                 ))}
               </div>
-              <Progress value={(registerStep / 3) * 100} className="h-1.5" />
+              <Progress value={(registerStep / 2) * 100} className="h-1.5" />
 
               {/* Step 1: Firma Bilgileri */}
               {registerStep === 1 && (
@@ -360,11 +483,27 @@ const GirisKayit = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Vergi Numarası</Label>
-                    <Input placeholder="Vergi Numarası" value={vergiNumarasi} onChange={(e) => setVergiNumarasi(e.target.value)} />
+                    <Input
+                      placeholder="Vergi Numarası (maks. 11 hane)"
+                      value={vergiNumarasi}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "").slice(0, 11);
+                        setVergiNumarasi(val);
+                      }}
+                      maxLength={11}
+                      inputMode="numeric"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label>Vergi Dairesi</Label>
-                    <Input placeholder="Vergi Dairesi" value={vergiDairesi} onChange={(e) => setVergiDairesi(e.target.value)} />
+                    <Input
+                      placeholder="Vergi Dairesi"
+                      value={vergiDairesi}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ\s]/g, "");
+                        setVergiDairesi(val);
+                      }}
+                    />
                   </div>
                   <Button
                     type="button"
@@ -382,9 +521,9 @@ const GirisKayit = () => {
                 </div>
               )}
 
-              {/* Step 2: Kişisel Bilgiler & Telefon Doğrulama */}
+              {/* Step 2: Kişisel Bilgiler & Başvuru */}
               {registerStep === 2 && (
-                <div className="space-y-4">
+                <form onSubmit={handleRegister} className="space-y-4">
                   <h3 className="text-base font-semibold text-foreground">Kişisel Bilgiler</h3>
                   <div className="space-y-2">
                     <Label>Ad</Label>
@@ -396,7 +535,15 @@ const GirisKayit = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>İletişim E-Posta Adresi</Label>
-                    <Input type="email" placeholder="İletişim E-Posta Adresi" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <Input
+                      type="email"
+                      placeholder="ornek@firma.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                    {email && !isValidEmail(email) && (
+                      <p className="text-xs text-destructive">Geçerli bir e-posta adresi giriniz</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>İletişim Numarası</Label>
@@ -409,13 +556,24 @@ const GirisKayit = () => {
                       <Input
                         placeholder="532 XXX XX XX"
                         value={telefon}
-                        onChange={(e) => { setTelefon(e.target.value); if (phoneVerified) { setPhoneVerified(false); setOtpSent(false); setOtpCode(""); } }}
+                        onChange={(e) => {
+                          const formatted = formatPhoneDisplay(e.target.value);
+                          setTelefon(formatted);
+                          if (phoneVerified) { setPhoneVerified(false); setOtpSent(false); setOtpCode(""); }
+                        }}
                         disabled={phoneVerified}
                         className="flex-1"
+                        inputMode="tel"
                       />
                       {!phoneVerified && (
-                        <Button type="button" variant="outline" onClick={handleSendOtp} disabled={sendingOtp || otpCountdown > 0 || !telefon || telefon.replace(/\s/g, "").replace(/^0+/, "").length < 7} className="shrink-0">
-                          {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : otpCountdown > 0 ? `${Math.floor(otpCountdown / 60)}:${String(otpCountdown % 60).padStart(2, "0")}` : otpSent ? "Tekrar Gönder" : "Kod Gönder"}
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleSendOtp}
+                          disabled={sendingOtp || otpCountdown > 0 || !telefon || telefon.replace(/\D/g, "").length < 7}
+                          className="shrink-0"
+                        >
+                          {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Kod Gönder"}
                         </Button>
                       )}
                       {phoneVerified && (
@@ -424,66 +582,31 @@ const GirisKayit = () => {
                         </div>
                       )}
                     </div>
-                    {otpSent && !phoneVerified && (
-                      <div className="space-y-3 pt-2">
-                        <p className="text-sm text-muted-foreground">{getFullPhone()} numarasına gönderilen 6 haneli kodu giriniz:</p>
-                        <div className="flex items-center gap-3">
-                          <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
-                            <InputOTPGroup>
-                              {[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}
-                            </InputOTPGroup>
-                          </InputOTP>
-                          <Button type="button" size="sm" onClick={handleVerifyOtp} disabled={verifyingOtp || otpCode.length !== 6}>
-                            {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Doğrula"}
-                          </Button>
-                        </div>
-                      </div>
-                    )}
                   </div>
-                  <div className="flex gap-3">
-                    <Button type="button" variant="outline" className="flex-1" onClick={() => setRegisterStep(1)}>Geri</Button>
-                    <Button
-                      type="button"
-                      className="flex-1"
-                      onClick={() => {
-                        if (!ad || !soyad || !email || !telefon) {
-                          toast({ title: "Hata", description: "Lütfen tüm kişisel bilgileri doldurunuz", variant: "destructive" });
-                          return;
-                        }
-                        if (!phoneVerified) {
-                          toast({ title: "Hata", description: "Lütfen telefon numaranızı doğrulayın", variant: "destructive" });
-                          return;
-                        }
-                        setRegisterStep(3);
-                      }}
-                    >
-                      Devam Et
-                    </Button>
-                  </div>
-                </div>
-              )}
 
-              {/* Step 3: Şifre & Kayıt */}
-              {registerStep === 3 && (
-                <form onSubmit={handleRegister} className="space-y-4">
-                  <h3 className="text-base font-semibold text-foreground">Şifre Oluştur</h3>
+                  {/* Summary */}
                   <div className="rounded-lg border border-border p-4 space-y-2 text-sm">
-                    <p className="font-medium text-foreground">Kayıt Özeti</p>
+                    <p className="font-medium text-foreground">Başvuru Özeti</p>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
                       <span>Firma:</span><span className="text-foreground">{firmaUnvani}</span>
                       <span>Ad Soyad:</span><span className="text-foreground">{ad} {soyad}</span>
                       <span>E-posta:</span><span className="text-foreground">{email}</span>
-                      <span>Telefon:</span><span className="text-foreground">{getFullPhone()}</span>
+                      <span>Telefon:</span><span className="text-foreground">{getFormattedPhone()}</span>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label>Şifre</Label>
-                    <Input type="password" placeholder="Şifre (min 6 karakter)" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-                  </div>
+
+                  <p className="text-xs text-muted-foreground text-center">
+                    Başvurunuz onaylandığında şifre oluşturma bağlantısı e-posta adresinize gönderilecektir.
+                  </p>
+
                   <div className="flex gap-3">
-                    <Button type="button" variant="outline" className="flex-1" onClick={() => setRegisterStep(2)}>Geri</Button>
-                    <Button type="submit" className="flex-1" disabled={registerLoading}>
-                      {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setRegisterStep(1)}>Geri</Button>
+                    <Button
+                      type="submit"
+                      className="flex-1"
+                      disabled={registerLoading || !ad || !soyad || !email || !isValidEmail(email) || !phoneVerified}
+                    >
+                      {registerLoading ? "Gönderiliyor..." : "Başvuru Yap"}
                     </Button>
                   </div>
                 </form>
