@@ -607,6 +607,23 @@ export default function FirmaDetay() {
     );
   }
 
+  if (quotaBlocked) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <PazarHeader firmaUnvani="" />
+        <div className="flex flex-col items-center justify-center h-96 gap-4 px-4">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+            <Flag className="w-8 h-8 text-destructive" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground text-center">Profil Görüntüleme Hakkınız Doldu</h2>
+          <p className="text-muted-foreground text-center max-w-md">{quotaMessage}</p>
+          <Button onClick={() => navigate("/dashboard")} variant="default">Dashboard'a Dön</Button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
   if (!firma) return null;
 
   return (
