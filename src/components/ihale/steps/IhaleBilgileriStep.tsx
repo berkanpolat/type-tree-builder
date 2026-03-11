@@ -313,21 +313,28 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Fotoğraf Yükleme {formData.ihale_turu === "urun_satis" && "*"}</Label>
-            <div className="border rounded-lg p-4 text-center">
-              {formData.foto_url ? (
-                <div className="relative">
-                  <img src={formData.foto_url} alt="" className="w-full h-32 object-cover rounded" />
-                  <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => updateForm({ foto_url: null })}>
-                    <X className="w-4 h-4" />
-                  </Button>
+            <div className="border rounded-lg p-4 space-y-3">
+              {formData.fotograflar.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {formData.fotograflar.map((url, i) => (
+                    <div key={i} className="relative group">
+                      <img src={url} alt="" className="w-full h-24 object-cover rounded border" />
+                      <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removePhoto(i)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                      {i === 0 && (
+                        <span className="absolute bottom-1 left-1 text-[10px] bg-primary text-primary-foreground px-1 rounded">Kapak</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground">
-                  <Upload className="w-8 h-8" />
-                  <span className="text-sm">Fotoğraf yükle</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "foto")} disabled={uploading} />
-                </label>
               )}
+              <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground border-2 border-dashed rounded-lg p-3">
+                <Upload className="w-6 h-6" />
+                <span className="text-sm">{formData.fotograflar.length > 0 ? "Daha fazla fotoğraf ekle" : "Fotoğraf yükle"}</span>
+                <span className="text-xs">Birden fazla seçebilirsiniz</span>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFileUpload(e, "foto")} disabled={uploading} />
+              </label>
             </div>
           </div>
           <div className="space-y-2">
