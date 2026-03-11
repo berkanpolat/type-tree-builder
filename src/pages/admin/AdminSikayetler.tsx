@@ -289,6 +289,11 @@ export default function AdminSikayetler() {
                             <Button variant="ghost" size="sm" onClick={() => setViewItem(item)} className="h-7 w-7 p-0" title="Görüntüle">
                               <Eye className="w-3.5 h-3.5" style={s.muted} />
                             </Button>
+                            {item.sikayet_edilen_user_id && (
+                              <Button variant="ghost" size="sm" onClick={() => setActionItem(item)} className="h-7 w-7 p-0" title="İşlem Yap">
+                                <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
