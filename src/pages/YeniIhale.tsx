@@ -346,7 +346,7 @@ export default function YeniIhale() {
       baslangic_tarihi: formData.baslangic_tarihi || null,
       bitis_tarihi: formData.bitis_tarihi || null,
       foto_url: formData.fotograflar[0] || formData.foto_url,
-      ek_dosya_url: formData.ek_dosya_url,
+      ek_dosya_url: formData.ek_dosyalar[0]?.url || formData.ek_dosya_url,
       ozel_filtreleme: formData.ozel_filtreleme,
       firma_adi_gizle: formData.firma_adi_gizle,
       min_teklif_degisim: formData.min_teklif_degisim,
