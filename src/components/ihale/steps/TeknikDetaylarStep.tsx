@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Settings } from "lucide-react";
 import type { IhaleFormData } from "@/pages/YeniIhale";
+import HizmetTeknikFields from "./HizmetTeknikFields";
 
 interface Props {
   formData: IhaleFormData;
