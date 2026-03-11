@@ -255,6 +255,32 @@ export default function FirmaDetay() {
         return;
       }
 
+      // Kendi firması ise kota kontrolü yapma
+      if (user && firmaData.user_id !== user.id && !packageInfo.loading) {
+        // Daha önce görüntülenmiş mi kontrol et
+        const { data: existingView } = await supabase
+          .from("profil_goruntulemeler" as any)
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("firma_id", id)
+          .maybeSingle();
+
+        if (!existingView) {
+          // Yeni profil görüntülemesi - kota kontrolü
+          const check = canPerformAction(packageInfo.limits, packageInfo.usage, "profil_goruntuleme");
+          if (!check.allowed) {
+            setQuotaBlocked(true);
+            setQuotaMessage(check.message || "Profil görüntüleme hakkınız dolmuştur.");
+            setLoading(false);
+            return;
+          }
+          // Görüntüleme kaydı oluştur
+          await supabase
+            .from("profil_goruntulemeler" as any)
+            .insert({ user_id: user.id, firma_id: id });
+        }
+      }
+
       setFirma(firmaData as FirmaData);
 
       const [
