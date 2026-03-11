@@ -270,7 +270,7 @@ const LandingPage = () => {
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
-                to="/giris-kayit"
+                 to="/giris-kayit?tab=kayit"
                 className="px-10 py-3.5 rounded-lg bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-colors"
               >
                 Ücretsiz Kayıt Ol
