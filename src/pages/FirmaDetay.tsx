@@ -1077,8 +1077,8 @@ export default function FirmaDetay() {
             </div>
 
             {/* Reklam alanı */}
-            <div className="rounded-xl overflow-hidden border border-border">
-              <img src={adBannerImg} alt="Reklam" className="w-full h-auto object-cover" />
+            <div className="rounded-xl overflow-hidden border border-border cursor-pointer" onClick={() => sidebarBanner.linkUrl && window.open(sidebarBanner.linkUrl, "_blank")}>
+              <img src={sidebarBanner.url || adBannerImg} alt="Reklam" className="w-full h-auto object-cover" />
             </div>
           </div>
         </div>
