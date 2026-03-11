@@ -290,10 +290,12 @@ export default function AdminSikayetler() {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="sm" onClick={() => setViewItem(item)} className="h-7 w-7 p-0" title="Görüntüle">
-                              <Eye className="w-3.5 h-3.5" style={s.muted} />
-                            </Button>
-                            {item.sikayet_edilen_user_id && item.durum !== "cozuldu" && (
+                            {hasPermission("sikayet_detay_goruntule") && (
+                              <Button variant="ghost" size="sm" onClick={() => setViewItem(item)} className="h-7 w-7 p-0" title="Görüntüle">
+                                <Eye className="w-3.5 h-3.5" style={s.muted} />
+                              </Button>
+                            )}
+                            {item.sikayet_edilen_user_id && item.durum !== "cozuldu" && hasPermission("sikayet_islem_yapabilir") && (
                               <Button variant="ghost" size="sm" onClick={() => setActionItem(item)} className="h-7 w-7 p-0" title="İşlem Yap">
                                 <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
                               </Button>

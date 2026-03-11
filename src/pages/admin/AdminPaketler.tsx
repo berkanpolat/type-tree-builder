@@ -76,7 +76,7 @@ const emptyPaket: Omit<Paket, "id" | "created_at"> = {
 };
 
 export default function AdminPaketler() {
-  const { token } = useAdminAuth();
+  const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [paketler, setPaketler] = useState<Paket[]>([]);
   const [stats, setStats] = useState<Record<string, number>>({});
