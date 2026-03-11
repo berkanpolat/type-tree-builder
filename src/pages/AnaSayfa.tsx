@@ -372,12 +372,24 @@ export default function AnaSayfa() {
     }
     const timer = setTimeout(async () => {
       const results: SearchResult[] = [];
-      const { data: secenekler } = await supabase
-        .from("firma_bilgi_secenekleri")
-        .select("id, name, parent_id")
-        .eq("kategori_id", KATEGORI_ID)
-        .ilike("name", `%${searchTerm}%`)
-        .limit(10);
+
+      // Run both queries in parallel
+      const [seceneklerRes, urunRes] = await Promise.all([
+        supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name, parent_id")
+          .eq("kategori_id", KATEGORI_ID)
+          .ilike("name", `%${searchTerm}%`)
+          .limit(10),
+        supabase
+          .from("urunler")
+          .select("id, baslik")
+          .eq("durum", "aktif")
+          .ilike("baslik", `%${searchTerm}%`)
+          .limit(5),
+      ]);
+
+      const secenekler = seceneklerRes.data;
       if (secenekler) {
         const unknownParentIds = secenekler
           .filter((s) => s.parent_id && !secenekler.find((p) => p.id === s.parent_id))
@@ -405,12 +417,11 @@ export default function AnaSayfa() {
           results.push({ id: s.id, name: s.name, type });
         });
       }
-      const { data: urunResults } = await supabase
-        .from("urunler").select("id, baslik").eq("durum", "aktif").ilike("baslik", `%${searchTerm}%`).limit(5);
-      if (urunResults) urunResults.forEach((u) => results.push({ id: u.id, name: u.baslik, type: "Ürün" }));
+
+      if (urunRes.data) urunRes.data.forEach((u) => results.push({ id: u.id, name: u.baslik, type: "Ürün" }));
       setSearchResults(results);
       setShowDropdown(results.length > 0);
-    }, 300);
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
