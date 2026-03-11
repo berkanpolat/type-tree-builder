@@ -759,6 +759,22 @@ export default function AdminFirmalar() {
             )}
           </div>
 
+          {/* Active stat card filter indicator */}
+          {activeStatCard && (
+            <div className="flex items-center gap-2">
+              <Badge className="bg-amber-500/20 text-amber-600 border-amber-500/30 text-xs px-3 py-1 gap-1.5">
+                {activeStatCard === "total" && "Tüm Firmalar"}
+                {activeStatCard === "pending" && "Onay Bekleyenler"}
+                {activeStatCard === "recent" && (statsDays === 1 ? "Son 24 Saat" : `Son ${statsDays} Gün`)}
+                {activeStatCard === "online" && "Çevrimiçi"}
+                {activeStatCard === "yeniAbone" && "Yeni Aboneler"}
+                <button onClick={() => setActiveStatCard(null)} className="ml-1 hover:text-red-500">✕</button>
+              </Badge>
+              <span className="text-xs" style={s.muted}>{filtered.length} firma listeleniyor</span>
+            </div>
+          )}
+          </div>
+
           {showFilters && (
             <div style={s.card} className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
               <FilterSelect label="Durum" value={filterDurum} onChange={setFilterDurum}
