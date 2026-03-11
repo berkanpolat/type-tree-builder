@@ -247,7 +247,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
-              Tekstilin Akıllı Şirketlerinin Platformu
+              İşiniz Tekstilse, Yeriniz <span className="text-secondary">Tekstil A.Ş.</span>
             </h1>
             <p className="text-lg text-muted-foreground mb-10 leading-relaxed">
               Markalar, üreticiler, tedarikçiler, mümessil ofisler ve fason atölyeler tek panelde
