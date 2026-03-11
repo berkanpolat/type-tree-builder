@@ -577,8 +577,63 @@ export default function UrunDetay() {
 
           {/* Right: Product Info + Seller */}
           <div className="lg:col-span-2 space-y-4">
+            {/* Admin Onay/Red Bloğu */}
+            {isAdminViewing && urun.durum === "onay_bekliyor" && (
+              <Card className="p-5 border-2 border-blue-400 bg-blue-50 dark:bg-blue-950/20">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-blue-500" /> Admin İnceleme
+                  </h3>
+                  <Badge className="bg-amber-500 text-white">Onay Bekliyor</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">Bu ürün yayına alınmak için onay bekliyor. İnceleyin ve karar verin.</p>
+                <div className="space-y-3">
+                  <Button
+                    className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    disabled={adminActionLoading}
+                    onClick={async () => {
+                      setAdminActionLoading(true);
+                      try {
+                        const adminToken = localStorage.getItem("admin_token");
+                        await supabase.functions.invoke("admin-auth/approve-urun", { body: { token: adminToken, urunId: urun.id } });
+                        toast({ title: "Ürün onaylandı!" });
+                        setUrun({ ...urun, durum: "aktif" });
+                      } catch { toast({ title: "Hata", variant: "destructive" }); }
+                      setAdminActionLoading(false);
+                    }}
+                  >
+                    <CheckCircle className="w-4 h-4" /> Onayla
+                  </Button>
+                  <div className="space-y-2">
+                    <Select value={redSebebi} onValueChange={setRedSebebi}>
+                      <SelectTrigger className="text-xs"><SelectValue placeholder="Red sebebi seçin..." /></SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {RED_SEBEPLERI.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="destructive"
+                      className="w-full gap-2"
+                      disabled={!redSebebi || adminActionLoading}
+                      onClick={async () => {
+                        setAdminActionLoading(true);
+                        try {
+                          const adminToken = localStorage.getItem("admin_token");
+                          await supabase.functions.invoke("admin-auth/reject-urun", { body: { token: adminToken, urunId: urun.id, redSebebi } });
+                          toast({ title: "Ürün reddedildi" });
+                          setUrun({ ...urun, durum: "reddedildi" });
+                        } catch { toast({ title: "Hata", variant: "destructive" }); }
+                        setAdminActionLoading(false);
+                      }}
+                    >
+                      <ShieldX className="w-4 h-4" /> Reddet
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
             {/* Onay Bloğu - sadece sahip ve duzenleniyor/onay_bekliyor durumunda */}
-            {urun.user_id === currentUserId && (urun.durum === "duzenleniyor" || urun.durum === "onay_bekliyor") && (
+            {!isAdminViewing && urun.user_id === currentUserId && (urun.durum === "duzenleniyor" || urun.durum === "onay_bekliyor") && (
               <Card className="p-5 border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-foreground">
