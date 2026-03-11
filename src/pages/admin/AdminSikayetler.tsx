@@ -12,10 +12,11 @@ import {
 import {
   MessageSquareWarning, Eye, Filter, RotateCcw, Search,
   ChevronLeft, ChevronRight, MessageSquare, Gavel, Package, User,
-  FileText, Calendar, Building2, AlertTriangle
+  FileText, Calendar, Building2, AlertTriangle, ShieldAlert
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
+import SikayetAksiyonDialog from "@/components/admin/SikayetAksiyonDialog";
 
 const s = {
   card: {
@@ -68,6 +69,7 @@ interface SikayetItem {
   bildiren_user_id: string;
   bildiren_firma: string;
   sikayet_edilen_firma: string;
+  sikayet_edilen_user_id: string | null;
   tur: string;
   sebep: string;
   aciklama: string | null;
@@ -87,7 +89,7 @@ export default function AdminSikayetler() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [viewItem, setViewItem] = useState<SikayetItem | null>(null);
-
+  const [actionItem, setActionItem] = useState<SikayetItem | null>(null);
   // Filters
   const [filterTur, setFilterTur] = useState("all");
   const [filterFirma, setFilterFirma] = useState("");
@@ -287,6 +289,11 @@ export default function AdminSikayetler() {
                             <Button variant="ghost" size="sm" onClick={() => setViewItem(item)} className="h-7 w-7 p-0" title="Görüntüle">
                               <Eye className="w-3.5 h-3.5" style={s.muted} />
                             </Button>
+                            {item.sikayet_edilen_user_id && (
+                              <Button variant="ghost" size="sm" onClick={() => setActionItem(item)} className="h-7 w-7 p-0" title="İşlem Yap">
+                                <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -397,6 +404,14 @@ export default function AdminSikayetler() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Action Dialog */}
+      <SikayetAksiyonDialog
+        open={!!actionItem}
+        onClose={() => setActionItem(null)}
+        item={actionItem}
+        onSuccess={fetchData}
+      />
     </AdminLayout>
   );
 }
