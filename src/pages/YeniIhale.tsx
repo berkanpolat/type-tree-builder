@@ -42,6 +42,7 @@ export interface IhaleFormData {
   foto_url: string | null;
   fotograflar: string[];
   ek_dosya_url: string | null;
+  ek_dosyalar: { url: string; adi: string }[];
   ozel_filtreleme: boolean;
   firma_adi_gizle: boolean;
   min_teklif_degisim: number | null;
