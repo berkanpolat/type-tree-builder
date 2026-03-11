@@ -229,7 +229,7 @@ export default function FirmaDetay() {
   };
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || packageInfo.loading) return;
 
     const fetchAll = async () => {
       setLoading(true);
