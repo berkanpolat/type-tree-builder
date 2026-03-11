@@ -442,7 +442,7 @@ const GirisKayit = () => {
                 <Input type="password" placeholder="Şifre (min 6 karakter)" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
               </div>
 
-              <Button type="submit" className="w-full" disabled={registerLoading}>
+              <Button type="submit" className="w-full" disabled={registerLoading || !phoneVerified}>
                 {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
               </Button>
             </form>
