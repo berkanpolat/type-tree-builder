@@ -8,6 +8,14 @@ import tekrehberImg from "@/assets/landing-tekrehber.png";
 import tekpazarImg from "@/assets/landing-tekpazar.png";
 import fabricImg from "@/assets/landing-fabric.jpg";
 import warehouseImg from "@/assets/landing-warehouse.jpg";
+import iso27001Img from "@/assets/iso-27001.png";
+import iso20000Img from "@/assets/iso-20000.png";
+import iso27017Img from "@/assets/iso-27017.png";
+import iso27018Img from "@/assets/iso-27018.png";
+import iso27701Img from "@/assets/iso-27701.png";
+import iso9001Img from "@/assets/iso-9001.jpg";
+import iso22301Img from "@/assets/iso-22301.png";
+import kosgebImg from "@/assets/kosgeb.jpg";
 import Footer from "@/components/Footer";
 import {
   Zap,
@@ -51,7 +59,16 @@ const LandingPage = () => {
     );
   }
 
-  const isoNumbers = ["27001", "20000-1", "27017", "27018", "27701", "9001", "22301"];
+  const isoBadges = [
+    { label: "27001", img: iso27001Img },
+    { label: "20000-1", img: iso20000Img },
+    { label: "27017", img: iso27017Img },
+    { label: "27018", img: iso27018Img },
+    { label: "27701", img: iso27701Img },
+    { label: "9001", img: iso9001Img },
+    { label: "22301", img: iso22301Img },
+    { label: "KOSGEB", img: kosgebImg },
+  ];
 
   const advantages = [
     {
@@ -257,13 +274,14 @@ const LandingPage = () => {
 
       {/* ISO Banner */}
       <section className="bg-background py-10 border-y border-border overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between gap-8 flex-wrap">
-          {isoNumbers.map((num) => (
-            <div key={num} className="flex flex-col items-center gap-1 opacity-60">
-              <div className="w-16 h-16 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center">
-                <span className="text-xs font-bold text-foreground">ISO</span>
-              </div>
-              <span className="text-xs text-muted-foreground">{num}</span>
+        <div className="max-w-7xl mx-auto px-6 flex items-center justify-center gap-10 flex-wrap">
+          {isoBadges.map((badge) => (
+            <div key={badge.label} className="flex items-center justify-center w-20 h-20">
+              <img
+                src={badge.img}
+                alt={badge.label}
+                className="max-w-full max-h-full object-contain"
+              />
             </div>
           ))}
         </div>
