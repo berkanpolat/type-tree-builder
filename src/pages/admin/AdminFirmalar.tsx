@@ -342,6 +342,23 @@ export default function AdminFirmalar() {
     setSearchTerm(""); setSortField(null);
   };
 
+  const handleDeleteFirma = async () => {
+    if (!deleteFirma || deleteConfirmText !== deleteFirma.firma_unvani) return;
+    setDeleteLoading(true);
+    try {
+      await callApi("delete-firma", { token, firmaId: deleteFirma.id });
+      toast({ title: "Başarılı", description: `${deleteFirma.firma_unvani} silindi.` });
+      setDeleteDialogOpen(false);
+      setDeleteFirma(null);
+      setDeleteConfirmText("");
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "Silme işlemi başarısız", variant: "destructive" });
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
   const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" ||
     filterMinIhale || filterMaxIhale || filterMinTeklif || filterMaxTeklif ||
     filterMinUrun || filterMaxUrun || filterMinProfil || filterMaxProfil || searchTerm;
