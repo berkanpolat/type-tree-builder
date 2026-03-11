@@ -526,9 +526,9 @@ const LandingPage = () => {
             <span className={`text-sm font-medium ${!billingYearly ? "text-foreground" : "text-muted-foreground"}`}>Aylık</span>
             <button
               onClick={() => setBillingYearly(!billingYearly)}
-              className={`relative w-14 h-7 rounded-full transition-colors ${billingYearly ? "bg-secondary" : "bg-border"}`}
+              className={`relative inline-flex h-7 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors ${billingYearly ? "bg-secondary" : "bg-border"}`}
             >
-              <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${billingYearly ? "translate-x-7" : "translate-x-0.5"}`} />
+              <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ${billingYearly ? "translate-x-8" : "translate-x-1"}`} />
             </button>
             <span className={`text-sm font-medium ${billingYearly ? "text-foreground" : "text-muted-foreground"}`}>Yıllık</span>
             {billingYearly && <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">%45+ İndirim</span>}
