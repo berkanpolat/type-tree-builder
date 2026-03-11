@@ -17,6 +17,7 @@ import iso9001Img from "@/assets/iso-9001.png";
 import iso22301Img from "@/assets/iso-22301.png";
 import kosgebImg from "@/assets/kosgeb.png";
 import Footer from "@/components/Footer";
+import { Mail, Phone, MapPin } from "lucide-react";
 import {
   Zap,
   BarChart3,
