@@ -105,6 +105,7 @@ export default function AnaSayfa() {
   }, [navigate]);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeFilter, setActiveFilter] = useState<SearchResult | null>(null);
@@ -144,7 +145,7 @@ export default function AnaSayfa() {
   const [kategoriSecenekler, setKategoriSecenekler] = useState<{ id: string; name: string }[]>([]);
 
   // Determine if we're in "filtered" mode (category selected)
-  const isFiltered = !!selectedKategori || !!activeFilter;
+  const isFiltered = !!selectedKategori || !!activeFilter || !!appliedSearchTerm;
 
   // Click outside
   useEffect(() => {
@@ -183,6 +184,8 @@ export default function AnaSayfa() {
       } else if (activeFilter.type === "Tür") {
         query = query.eq("urun_tur_id", activeFilter.id);
       }
+    } else if (appliedSearchTerm) {
+      query = query.ilike("baslik", `%${appliedSearchTerm}%`);
     }
 
     // Apply mega-menu / sidebar category filters
@@ -295,7 +298,7 @@ export default function AnaSayfa() {
 
     setAllUrunler(enriched);
     setUrunLoading(false);
-  }, [activeFilter, selectedKategori, selectedGrupId, selectedTurId, kategoriSecenekler, currentUserId, isFiltered, filterState?.minFiyat, filterState?.maxFiyat]);
+  }, [activeFilter, appliedSearchTerm, selectedKategori, selectedGrupId, selectedTurId, kategoriSecenekler, currentUserId, isFiltered, filterState?.minFiyat, filterState?.maxFiyat]);
 
   // Client-side filtering
   const filteredUrunler = useMemo(() => {
@@ -358,85 +361,51 @@ export default function AnaSayfa() {
     return filteredUrunler.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredUrunler, currentPage]);
 
-  useEffect(() => { setCurrentPage(1); }, [filterState, sortBy, selectedKategori, selectedGrupId, selectedTurId, activeFilter]);
+  useEffect(() => { setCurrentPage(1); }, [filterState, sortBy, selectedKategori, selectedGrupId, selectedTurId, activeFilter, appliedSearchTerm]);
 
   useEffect(() => {
     fetchUrunler();
   }, [fetchUrunler]);
 
-  // Search autocomplete
+  // Trigger search on Enter or Ara button
+  const handleSearch = useCallback(() => {
+    setActiveFilter(null);
+    setAppliedSearchTerm(searchTerm.trim());
+    setShowDropdown(false);
+  }, [searchTerm]);
+
+  // Lightweight autocomplete
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setSearchResults([]);
+      setShowDropdown(false);
       return;
     }
     const timer = setTimeout(async () => {
       const results: SearchResult[] = [];
-
-      // Run both queries in parallel
-      const [seceneklerRes, urunRes] = await Promise.all([
-        supabase
-          .from("firma_bilgi_secenekleri")
-          .select("id, name, parent_id")
-          .eq("kategori_id", KATEGORI_ID)
-          .ilike("name", `%${searchTerm}%`)
-          .limit(10),
-        supabase
-          .from("urunler")
-          .select("id, baslik")
-          .eq("durum", "aktif")
-          .ilike("baslik", `%${searchTerm}%`)
-          .limit(5),
-      ]);
-
-      const secenekler = seceneklerRes.data;
-      if (secenekler) {
-        const unknownParentIds = secenekler
-          .filter((s) => s.parent_id && !secenekler.find((p) => p.id === s.parent_id))
-          .map((s) => s.parent_id!);
-        let parentMap: Record<string, { parent_id: string | null }> = {};
-        if (unknownParentIds.length > 0) {
-          const { data: parents } = await supabase
-            .from("firma_bilgi_secenekleri")
-            .select("id, parent_id")
-            .in("id", unknownParentIds);
-          if (parents) parents.forEach((p) => { parentMap[p.id] = p; });
-        }
-        secenekler.forEach((s) => {
-          if (HIDDEN_KATEGORILER.some((h) => s.name.toLowerCase() === h.toLowerCase())) return;
-          let type: SearchResult["type"] = "Tür";
-          if (!s.parent_id) type = "Kategori";
-          else {
-            const inResults = secenekler.find((p) => p.id === s.parent_id);
-            if (inResults && !inResults.parent_id) type = "Grup";
-            else if (!inResults) {
-              const parent = parentMap[s.parent_id!];
-              if (parent) type = parent.parent_id ? "Tür" : "Grup";
-            }
-          }
-          results.push({ id: s.id, name: s.name, type });
-        });
-      }
-
-      if (urunRes.data) urunRes.data.forEach((u) => results.push({ id: u.id, name: u.baslik, type: "Ürün" }));
+      const { data } = await supabase
+        .from("urunler")
+        .select("id, baslik")
+        .eq("durum", "aktif")
+        .ilike("baslik", `%${searchTerm}%`)
+        .limit(8);
+      if (data) data.forEach((u) => results.push({ id: u.id, name: u.baslik, type: "Ürün" }));
       setSearchResults(results);
       setShowDropdown(results.length > 0);
-    }, 500);
+    }, 250);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   const handleSearchResultClick = (result: SearchResult) => {
-    setActiveFilter(result);
     setSearchTerm(result.name);
+    setAppliedSearchTerm(result.name);
+    setActiveFilter(null);
     setShowDropdown(false);
-    if (result.type === "Kategori") {
-      const match = URUN_KATEGORILERI.find((k) => k.toLowerCase() === result.name.toLowerCase());
-      if (match) { setSelectedKategori(match); setSelectedGrupId(null); setSelectedTurId(null); }
-    }
   };
 
   const clearFilter = () => {
     setActiveFilter(null);
+    setAppliedSearchTerm("");
     setSearchTerm("");
     setSelectedKategori(null);
     setSelectedGrupId(null);
@@ -530,8 +499,8 @@ export default function AnaSayfa() {
           label="ÜRÜNLER"
           placeholder="Ürün ara... (kumaş, iplik, aksesuar)"
           searchTerm={searchTerm}
-          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) setActiveFilter(null); }}
-          onSearch={() => {}}
+          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) { setActiveFilter(null); setAppliedSearchTerm(""); } }}
+          onSearch={handleSearch}
           searchResults={searchResults}
           showDropdown={showDropdown}
           onShowDropdown={setShowDropdown}
@@ -549,7 +518,7 @@ export default function AnaSayfa() {
         </div>
 
         {/* Active filter badge */}
-        {(activeFilter || selectedKategori) && (
+        {(appliedSearchTerm || selectedKategori) && (
           <div className="flex items-center gap-2 flex-wrap">
             {selectedKategori && (
               <Badge variant="secondary" className="gap-1 px-3 py-1.5">
@@ -557,9 +526,9 @@ export default function AnaSayfa() {
                 <button onClick={clearFilter} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
               </Badge>
             )}
-            {activeFilter && activeFilter.type !== "Kategori" && (
+            {appliedSearchTerm && (
               <Badge variant="secondary" className="gap-1 px-3 py-1.5">
-                {activeFilter.type}: {activeFilter.name}
+                Arama: {appliedSearchTerm}
                 <button onClick={clearFilter} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
               </Badge>
             )}
