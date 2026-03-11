@@ -2012,6 +2012,77 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ─── PANEL STATS (dashboard overview) ───
+    if (action === "panel-stats") {
+      const { token } = body;
+      const payload = verifyToken(token);
+      const now = new Date();
+      const onlineThreshold = new Date(now.getTime() - 15 * 60 * 1000);
+
+      // ── Firma Stats ──
+      const { data: allFirmalar } = await supabase.from("firmalar").select("id, firma_turu_id, firma_tipi_id, onay_durumu, created_at");
+      const { data: turler } = await supabase.from("firma_turleri").select("id, name");
+      const { data: tipler } = await supabase.from("firma_tipleri").select("id, name, firma_turu_id");
+      const { count: onlineCount } = await supabase.from("profiles").select("*", { count: "exact", head: true }).gte("last_seen", onlineThreshold.toISOString());
+
+      const firmaStats = {
+        toplam: (allFirmalar || []).length,
+        onay_bekleyen: (allFirmalar || []).filter((f: any) => f.onay_durumu === "onay_bekliyor").length,
+        online: onlineCount || 0,
+        items: allFirmalar || [],
+        turler: turler || [],
+        tipler: tipler || [],
+      };
+
+      // ── İhale Stats ──
+      const { data: allIhaleler } = await supabase.from("ihaleler").select("id, durum, ihale_turu, urun_kategori_id, hizmet_kategori_id, user_id, created_at");
+      const ihaleStats = { items: allIhaleler || [] };
+
+      // ── Ürün Stats ──
+      const { data: allUrunler } = await supabase.from("urunler").select("id, durum, urun_kategori_id, urun_tur_id, created_at");
+      const urunStats = { items: allUrunler || [] };
+
+      // ── Paket Stats ──
+      const { data: allAbonelikler } = await supabase.from("kullanici_abonelikler").select("id, paket_id, user_id, durum, created_at");
+      const { data: allPaketler } = await supabase.from("paketler").select("id, ad, slug");
+      // Get firma info for subscribers
+      const subUserIds = [...new Set((allAbonelikler || []).map((a: any) => a.user_id))];
+      let subFirmalar: any[] = [];
+      if (subUserIds.length > 0) {
+        const { data } = await supabase.from("firmalar").select("user_id, firma_turu_id, firma_tipi_id").in("user_id", subUserIds);
+        subFirmalar = data || [];
+      }
+      const paketStats = { abonelikler: allAbonelikler || [], paketler: allPaketler || [], subFirmalar };
+
+      // ── Destek Stats ──
+      const { data: allDestek } = await supabase.from("destek_talepleri").select("id, durum, created_at");
+      const destekStats = { items: allDestek || [] };
+
+      // ── Şikayet Stats ──
+      const { data: allSikayetler } = await supabase.from("sikayetler").select("id, tur, durum, created_at");
+      const sikayetStats = { items: allSikayetler || [] };
+
+      // ── Kategori names for ihale/ürün ──
+      const katIds = new Set<string>();
+      for (const i of (allIhaleler || [])) { if (i.urun_kategori_id) katIds.add(i.urun_kategori_id); if (i.hizmet_kategori_id) katIds.add(i.hizmet_kategori_id); }
+      for (const u of (allUrunler || [])) { if (u.urun_kategori_id) katIds.add(u.urun_kategori_id); if (u.urun_tur_id) katIds.add(u.urun_tur_id); }
+      let kategoriMap: Record<string, string> = {};
+      if (katIds.size > 0) {
+        const { data: kats } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...katIds]);
+        if (kats) kategoriMap = Object.fromEntries(kats.map((k: any) => [k.id, k.name]));
+      }
+
+      return jsonResponse({
+        firma: firmaStats,
+        ihale: ihaleStats,
+        urun: urunStats,
+        paket: paketStats,
+        destek: destekStats,
+        sikayet: sikayetStats,
+        kategoriMap,
+      });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
