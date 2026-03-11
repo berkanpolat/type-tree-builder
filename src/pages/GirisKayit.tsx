@@ -142,7 +142,8 @@ const GirisKayit = () => {
       if (!data?.verified) throw new Error("Doğrulama başarısız");
 
       setPhoneVerified(true);
-      toast({ title: "Doğrulandı", description: "Telefon numaranız başarıyla doğrulandı." });
+      // Auto-submit registration after phone verification
+      await submitRegistration();
     } catch (err: any) {
       toast({ title: "Hata", description: err.message, variant: "destructive" });
     } finally {
