@@ -804,6 +804,11 @@ export default function AdminFirmalar() {
                         <AlertCircle className="w-3.5 h-3.5 mr-1.5" /> Başvuruyu Değerlendir
                       </Button>
                     )}
+                    <Button onClick={(e) => { e.stopPropagation(); openBelgeDialog(firma); }}
+                      variant="outline" size="sm" className="text-xs"
+                      style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}>
+                      <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> Doğrulama
+                    </Button>
                     <Button onClick={(e) => { e.stopPropagation(); handleImpersonate(firma.user_id); }}
                       variant="outline" size="sm" className="text-xs"
                       style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
