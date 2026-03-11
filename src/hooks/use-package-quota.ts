@@ -93,7 +93,7 @@ export function usePackageQuota(): PackageInfo {
         const [profilRes, teklifRes, urunRes, mesajRes] = await Promise.all([
           supabase
             .from("profil_goruntulemeler" as any)
-            .select("id", { count: "exact", head: true })
+            .select("firma_id")
             .eq("user_id", user.id)
             .gte("created_at", donemBaslangic),
           supabase
