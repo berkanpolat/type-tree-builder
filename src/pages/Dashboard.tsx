@@ -342,7 +342,7 @@ const Dashboard = () => {
                   <img src={dashboardBanner.url} alt="Dashboard Banner" className="w-full h-40 object-cover" style={{ imageRendering: "auto" }} />
               </a>
             ) : (
-              <img src={dashboardBanner.url} alt="Dashboard Banner" className="w-full h-40 object-contain bg-muted" style={{ imageRendering: "auto" }} />
+              <img src={dashboardBanner.url} alt="Dashboard Banner" className="w-full h-40 object-cover" style={{ imageRendering: "auto" }} />
             )}
           </Card>
         )}

@@ -539,7 +539,7 @@ export default function TekIhale() {
                         onClick={() => ihaleAltBanner.linkUrl && window.open(ihaleAltBanner.linkUrl, "_blank")}
                       >
                         {ihaleAltBanner.url ? (
-                          <img src={ihaleAltBanner.url} alt="Reklam" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
+                          <img src={ihaleAltBanner.url} alt="Reklam" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
                         ) : (
                           <div className="flex items-center px-8 h-full">
                             <div>
