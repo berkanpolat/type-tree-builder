@@ -209,7 +209,7 @@ export default function UrunDetay() {
 
     const { data: directData } = await supabase
       .from("urunler")
-      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum")
+      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum, admin_karar_sebebi, admin_karar_veren, admin_karar_tarihi")
       .eq("id", id)
       .single();
 
@@ -647,13 +647,30 @@ export default function UrunDetay() {
                     {urun.durum === "onay_bekliyor" ? "İnceleniyor" : urun.durum === "reddedildi" ? "Reddedildi" : "Taslak"}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {urun.durum === "onay_bekliyor"
-                    ? "Ürününüz şu anda incelenmektedir. Onay sürecinde düzenleme yapamazsınız."
-                    : urun.durum === "reddedildi"
-                    ? "Ürününüz reddedilmiştir. Düzenleyerek yeniden onaya gönderebilirsiniz."
-                    : "Ürününüzün önizlemesini kontrol edin. Bilgiler doğruysa onaya gönderin veya düzenlemeye devam edin."}
-                </p>
+                {/* Admin karar bilgisi */}
+                {(urun as any).admin_karar_veren && (urun.durum === "reddedildi") && (
+                  <div className="mb-4 p-3 rounded-lg bg-background border border-border space-y-1.5">
+                    <p className="text-sm font-medium text-foreground">
+                      Verilen Karar: <span className="text-destructive">Reddedildi</span>
+                    </p>
+                    {(urun as any).admin_karar_sebebi && (
+                      <p className="text-sm text-destructive">Sebep: {(urun as any).admin_karar_sebebi}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">İşlemi yapan: {(urun as any).admin_karar_veren}</p>
+                    {(urun as any).admin_karar_tarihi && (
+                      <p className="text-xs text-muted-foreground">Tarih: {new Date((urun as any).admin_karar_tarihi).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
+                    )}
+                  </div>
+                )}
+                {!(urun as any).admin_karar_veren && (
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {urun.durum === "onay_bekliyor"
+                      ? "Ürününüz şu anda incelenmektedir. Onay sürecinde düzenleme yapamazsınız."
+                      : urun.durum === "reddedildi"
+                      ? "Ürününüz reddedilmiştir. Düzenleyerek yeniden onaya gönderebilirsiniz."
+                      : "Ürününüzün önizlemesini kontrol edin. Bilgiler doğruysa onaya gönderin veya düzenlemeye devam edin."}
+                  </p>
+                )}
                 <div className="flex gap-3">
                   {(urun.durum === "duzenleniyor" || urun.durum === "reddedildi") && (
                     <Button
@@ -677,6 +694,26 @@ export default function UrunDetay() {
                       <CheckCircle className="w-4 h-4" />
                       {urun.durum === "reddedildi" ? "Yeniden Onaya Gönder" : "Onayla"}
                     </Button>
+                  )}
+                </div>
+              </Card>
+            )}
+            {/* Onaylandıktan sonra karar bilgisi gösterimi */}
+            {!isAdminViewing && urun.user_id === currentUserId && urun.durum === "aktif" && (urun as any).admin_karar_veren && (
+              <Card className="p-5 border-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-emerald-500" /> Onaylandı
+                  </h3>
+                  <Badge className="bg-emerald-500 text-white">Yayında</Badge>
+                </div>
+                <div className="p-3 rounded-lg bg-background border border-border space-y-1.5">
+                  <p className="text-sm font-medium text-foreground">
+                    Verilen Karar: <span className="text-emerald-600">Onaylandı</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">İşlemi yapan: {(urun as any).admin_karar_veren}</p>
+                  {(urun as any).admin_karar_tarihi && (
+                    <p className="text-xs text-muted-foreground">Tarih: {new Date((urun as any).admin_karar_tarihi).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
                   )}
                 </div>
               </Card>
