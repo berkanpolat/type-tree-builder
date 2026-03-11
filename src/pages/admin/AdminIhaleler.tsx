@@ -378,7 +378,6 @@ export default function AdminIhaleler() {
       iptal: "bg-red-500/15 text-red-500 border-red-500/25",
       reddedildi: "bg-red-500/15 text-red-500 border-red-500/25",
       duzenleniyor: "bg-slate-500/15 text-slate-500 border-slate-500/25",
-      taslak: "bg-slate-500/15 text-slate-500 border-slate-500/25",
     };
     return <Badge variant="outline" className={`${colors[durum] || ""} text-[11px] px-2 py-0.5 font-medium`}>{DURUM_LABELS[durum] || durum}</Badge>;
   };
