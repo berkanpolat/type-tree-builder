@@ -145,7 +145,7 @@ export default function AnaSayfa() {
   const [kategoriSecenekler, setKategoriSecenekler] = useState<{ id: string; name: string }[]>([]);
 
   // Determine if we're in "filtered" mode (category selected)
-  const isFiltered = !!selectedKategori || !!activeFilter;
+  const isFiltered = !!selectedKategori || !!activeFilter || !!appliedSearchTerm;
 
   // Click outside
   useEffect(() => {
