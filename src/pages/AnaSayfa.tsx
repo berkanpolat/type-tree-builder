@@ -8,6 +8,7 @@ import KategoriMegaMenu from "@/components/anasayfa/KategoriMegaMenu";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
 import UrunFiltreler, { type FilterState } from "@/components/anasayfa/UrunFiltreler";
 import Footer from "@/components/Footer";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
