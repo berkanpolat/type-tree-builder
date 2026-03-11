@@ -499,8 +499,8 @@ export default function AnaSayfa() {
           label="ÜRÜNLER"
           placeholder="Ürün ara... (kumaş, iplik, aksesuar)"
           searchTerm={searchTerm}
-          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) setActiveFilter(null); }}
-          onSearch={() => {}}
+          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) { setActiveFilter(null); setAppliedSearchTerm(""); } }}
+          onSearch={handleSearch}
           searchResults={searchResults}
           showDropdown={showDropdown}
           onShowDropdown={setShowDropdown}
