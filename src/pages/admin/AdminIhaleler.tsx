@@ -106,10 +106,8 @@ const DURUM_LABELS: Record<string, string> = {
 type SortField = "created_at" | "teklif_sayisi" | "goruntuleme_sayisi" | "bitis_tarihi";
 type SortDir = "asc" | "desc";
 
-const CHART_COLORS = [
-  "#f59e0b", "#3b82f6", "#10b981", "#8b5cf6", "#ef4444",
-  "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#6366f1",
-  "#14b8a6", "#e11d48",
+// Active stat filter state type
+type StatFilter = "all" | "active" | "completed" | "cancelled" | "pending" | "draft" | "urun_kat" | "hizmet_kat";
 ];
 
 export default function AdminIhaleler() {
