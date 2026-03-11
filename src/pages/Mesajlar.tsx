@@ -170,16 +170,34 @@ export default function Mesajlar() {
       return;
     }
 
-    // Filter: only show conversations that have at least one message
     const convIds = convs.map((c) => c.id);
-    const { data: msgCheck } = await supabase
-      .from("messages")
-      .select("conversation_id")
-      .in("conversation_id", convIds)
-      .limit(1000);
 
-    const convsWithMessages = new Set(msgCheck?.map((m) => m.conversation_id) || []);
-    const filteredConvs = convs.filter((c) => convsWithMessages.has(c.id));
+    // Batch: get last message per conversation + unread count in fewer queries
+    // Get only the latest message per conversation (limit to one per conv using a single query)
+    const { data: allLastMsgs } = await supabase
+      .from("messages")
+      .select("conversation_id, content, sender_id, is_read, created_at")
+      .in("conversation_id", convIds)
+      .order("created_at", { ascending: false });
+
+    // Build maps efficiently
+    const lastMsgMap: Record<string, { content: string; senderId: string }> = {};
+    const unreadMap: Record<string, number> = {};
+    const hasMessages = new Set<string>();
+
+    if (allLastMsgs) {
+      for (const m of allLastMsgs) {
+        hasMessages.add(m.conversation_id);
+        if (!lastMsgMap[m.conversation_id]) {
+          lastMsgMap[m.conversation_id] = { content: m.content, senderId: m.sender_id };
+        }
+        if (!m.is_read && m.sender_id !== userId) {
+          unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] || 0) + 1;
+        }
+      }
+    }
+
+    const filteredConvs = convs.filter((c) => hasMessages.has(c.id));
 
     const otherUserIds = filteredConvs.map((c) =>
       c.user1_id === userId ? c.user2_id : c.user1_id
@@ -193,21 +211,6 @@ export default function Mesajlar() {
     const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
     firmalar?.forEach((f) => { firmaMap[f.user_id] = f; });
 
-    const filteredConvIds = filteredConvs.map((c) => c.id);
-    const { data: lastMessages } = await supabase
-      .from("messages")
-      .select("conversation_id, content, is_read, sender_id")
-      .in("conversation_id", filteredConvIds)
-      .order("created_at", { ascending: false });
-
-    const lastMsgMap: Record<string, { content: string; unread: number; senderId: string }> = {};
-    filteredConvIds.forEach((cid) => {
-      const msgs = lastMessages?.filter((m) => m.conversation_id === cid) || [];
-      const lastMsg = msgs[0];
-      const unread = msgs.filter((m) => !m.is_read && m.sender_id !== userId).length;
-      lastMsgMap[cid] = { content: lastMsg?.content || "", unread, senderId: lastMsg?.sender_id || "" };
-    });
-
     const mapped: Conversation[] = filteredConvs.map((c) => {
       const otherId = c.user1_id === userId ? c.user2_id : c.user1_id;
       const firma = firmaMap[otherId];
@@ -218,7 +221,7 @@ export default function Mesajlar() {
         logo_url: firma?.logo_url || null,
         last_message: lastMsgMap[c.id]?.content || "",
         last_message_sender_id: lastMsgMap[c.id]?.senderId || "",
-        unread_count: lastMsgMap[c.id]?.unread || 0,
+        unread_count: unreadMap[c.id] || 0,
       };
     });
 
