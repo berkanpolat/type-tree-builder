@@ -93,6 +93,9 @@ export default function TekRehber() {
   const [firmaFavSet, setFirmaFavSet] = useState<Set<string>>(new Set());
 
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   // Click outside
   useEffect(() => {
