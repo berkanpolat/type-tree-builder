@@ -15,8 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Building2, Users, Clock, AlertCircle, CheckCircle, XCircle,
   Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp,
-  CreditCard, Wifi, ArrowUpDown, ArrowUp, ArrowDown, Infinity, Eye, MessageSquare, Loader2, Trash2
+  CreditCard, Wifi, ArrowUpDown, ArrowUp, ArrowDown, Infinity, Eye, MessageSquare, Loader2, Trash2, ShieldCheck, Download
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 // Shared style helpers
 const s = {
@@ -175,6 +176,14 @@ export default function AdminFirmalar() {
   const [deleteFirma, setDeleteFirma] = useState<FirmaItem | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
+  // Belge doğrulama dialog state
+  const [belgeDialogOpen, setBelgeDialogOpen] = useState(false);
+  const [belgeDialogFirma, setBelgeDialogFirma] = useState<FirmaItem | null>(null);
+  const [belgeDialogLoading, setBelgeDialogLoading] = useState(false);
+  const [belgeler, setBelgeler] = useState<any[]>([]);
+  const [belgeActionLoading, setBelgeActionLoading] = useState<string | null>(null);
+  const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({});
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
@@ -358,6 +367,61 @@ export default function AdminFirmalar() {
     } finally {
       setDeleteLoading(false);
     }
+  };
+
+  // Belge doğrulama handlers
+  const openBelgeDialog = async (firma: FirmaItem) => {
+    setBelgeDialogFirma(firma);
+    setBelgeDialogOpen(true);
+    setBelgeDialogLoading(true);
+    setRejectReasons({});
+    try {
+      const result = await callApi("get-firma-belgeler", { token, firmaId: firma.id });
+      setBelgeler(result.belgeler || []);
+    } catch {
+      toast({ title: "Hata", description: "Belgeler yüklenemedi", variant: "destructive" });
+    } finally {
+      setBelgeDialogLoading(false);
+    }
+  };
+
+  const handleBelgeAction = async (belgeId: string, durum: string) => {
+    setBelgeActionLoading(belgeId);
+    try {
+      await callApi("update-belge-status", {
+        token,
+        belgeId,
+        durum,
+        karar_sebebi: durum === "reddedildi" ? (rejectReasons[belgeId] || "Belge uygun değil") : null,
+      });
+      toast({ title: "Başarılı", description: durum === "onaylandi" ? "Belge onaylandı" : "Belge reddedildi" });
+      // Refresh
+      const result = await callApi("get-firma-belgeler", { token, firmaId: belgeDialogFirma!.id });
+      setBelgeler(result.belgeler || []);
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setBelgeActionLoading(null);
+    }
+  };
+
+  const handleDownloadBelge = async (dosyaUrl: string, dosyaAdi: string) => {
+    try {
+      const result = await callApi("get-belge-url", { token, dosyaUrl });
+      const a = document.createElement("a");
+      a.href = result.url;
+      a.download = dosyaAdi;
+      a.target = "_blank";
+      a.click();
+    } catch {
+      toast({ title: "Hata", description: "Dosya indirilemedi", variant: "destructive" });
+    }
+  };
+
+  const BELGE_LABELS: Record<string, string> = {
+    vergi_levhasi: "Vergi Levhası",
+    ticaret_sicil: "Ticaret Sicil Gazetesi",
+    imza_sirkusu: "İmza Sirküsü",
   };
 
   const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" ||
@@ -740,6 +804,11 @@ export default function AdminFirmalar() {
                         <AlertCircle className="w-3.5 h-3.5 mr-1.5" /> Başvuruyu Değerlendir
                       </Button>
                     )}
+                    <Button onClick={(e) => { e.stopPropagation(); openBelgeDialog(firma); }}
+                      variant="outline" size="sm" className="text-xs"
+                      style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}>
+                      <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> Doğrulama
+                    </Button>
                     <Button onClick={(e) => { e.stopPropagation(); handleImpersonate(firma.user_id); }}
                       variant="outline" size="sm" className="text-xs"
                       style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
@@ -1099,6 +1168,125 @@ export default function AdminFirmalar() {
               Kalıcı Olarak Sil
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Belge Doğrulama Dialog */}
+      <Dialog open={belgeDialogOpen} onOpenChange={setBelgeDialogOpen}>
+        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle style={s.text}>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-amber-500" />
+                Belge Doğrulama
+              </div>
+            </DialogTitle>
+            <DialogDescription style={s.muted}>
+              {belgeDialogFirma?.firma_unvani} — yüklenen belgeleri inceleyin
+            </DialogDescription>
+          </DialogHeader>
+
+          {belgeDialogLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+            </div>
+          ) : belgeler.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm" style={s.muted}>Henüz belge yüklenmemiş.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {belgeler.map((belge: any) => {
+                const isActionLoading = belgeActionLoading === belge.id;
+                return (
+                  <div key={belge.id} className="p-4 rounded-lg" style={{ background: "hsl(var(--admin-hover))" }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4" style={s.muted} />
+                        <span className="text-sm font-medium" style={s.text}>
+                          {BELGE_LABELS[belge.belge_turu] || belge.belge_turu}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {belge.durum === "inceleniyor" && (
+                          <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-[10px] px-1.5 py-0">İnceleniyor</Badge>
+                        )}
+                        {belge.durum === "onaylandi" && (
+                          <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[10px] px-1.5 py-0">Onaylandı</Badge>
+                        )}
+                        {belge.durum === "reddedildi" && (
+                          <Badge className="bg-red-500/20 text-red-500 border-red-500/30 text-[10px] px-1.5 py-0">Reddedildi</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-xs mb-3" style={s.muted}>{belge.dosya_adi}</p>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline" size="sm" className="text-xs"
+                        style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+                        onClick={() => handleDownloadBelge(belge.dosya_url, belge.dosya_adi)}
+                      >
+                        <Download className="w-3.5 h-3.5 mr-1" /> İndir
+                      </Button>
+
+                      {belge.durum === "inceleniyor" && (
+                        <>
+                          <Button
+                            size="sm" className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                            disabled={isActionLoading}
+                            onClick={() => handleBelgeAction(belge.id, "onaylandi")}
+                          >
+                            {isActionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5 mr-1" />}
+                            Onayla
+                          </Button>
+                          <Button
+                            size="sm" className="text-xs" variant="ghost"
+                            style={{ color: "#ef4444" }}
+                            disabled={isActionLoading}
+                            onClick={() => {
+                              if (!rejectReasons[belge.id] && rejectReasons[belge.id] !== "") {
+                                setRejectReasons(prev => ({ ...prev, [belge.id]: "" }));
+                              } else {
+                                handleBelgeAction(belge.id, "reddedildi");
+                              }
+                            }}
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1" /> Reddet
+                          </Button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Reject reason input */}
+                    {rejectReasons[belge.id] !== undefined && belge.durum === "inceleniyor" && (
+                      <div className="mt-2 space-y-2">
+                        <Textarea
+                          placeholder="Reddetme sebebi..."
+                          value={rejectReasons[belge.id]}
+                          onChange={(e) => setRejectReasons(prev => ({ ...prev, [belge.id]: e.target.value }))}
+                          className="text-xs h-16"
+                          style={s.input}
+                        />
+                        <Button
+                          size="sm" className="text-xs bg-red-600 hover:bg-red-700 text-white"
+                          disabled={isActionLoading || !rejectReasons[belge.id]}
+                          onClick={() => handleBelgeAction(belge.id, "reddedildi")}
+                        >
+                          Reddet ve Gönder
+                        </Button>
+                      </div>
+                    )}
+
+                    {belge.karar_sebebi && belge.durum === "reddedildi" && (
+                      <p className="text-xs mt-2" style={{ color: "#ef4444" }}>Sebep: {belge.karar_sebebi}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AdminLayout>

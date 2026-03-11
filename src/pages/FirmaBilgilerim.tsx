@@ -11,6 +11,7 @@ import MakineParkuruTab from "@/components/firma-bilgileri/MakineParkuruTab";
 import SertifikalarTab from "@/components/firma-bilgileri/SertifikalarTab";
 import ReferanslarTab from "@/components/firma-bilgileri/ReferanslarTab";
 import GaleriTab from "@/components/firma-bilgileri/GaleriTab";
+import BelgelerimTab from "@/components/firma-bilgileri/BelgelerimTab";
 import PlaceholderTab from "@/components/firma-bilgileri/PlaceholderTab";
 import {
   ClipboardList,
@@ -21,6 +22,7 @@ import {
   Users,
   Award,
   Image,
+  FolderCheck,
 } from "lucide-react";
 
 export interface TabItem {
@@ -28,6 +30,8 @@ export interface TabItem {
   label: string;
   icon: React.ElementType;
 }
+
+const belgelerimTab: TabItem = { id: "belgelerim", label: "Belgelerim", icon: FolderCheck };
 
 const tabsByFirmaTuru: Record<string, TabItem[]> = {
   "Hazır Giyim Üreticisi": [
@@ -39,6 +43,7 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },
     { id: "galeri", label: "Galeri", icon: Image },
+    belgelerimTab,
   ],
   "Marka": [
     { id: "genel", label: "Genel Firma\nBilgileri", icon: ClipboardList },
@@ -48,6 +53,7 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },
     { id: "galeri", label: "Galeri", icon: Image },
+    belgelerimTab,
   ],
   "Fason Atölye": [
     { id: "genel", label: "Genel Firma\nBilgileri", icon: ClipboardList },
@@ -58,6 +64,7 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },
     { id: "galeri", label: "Galeri", icon: Image },
+    belgelerimTab,
   ],
   "Tedarikçi": [
     { id: "genel", label: "Genel Firma\nBilgileri", icon: ClipboardList },
@@ -67,6 +74,7 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },
     { id: "galeri", label: "Galeri", icon: Image },
+    belgelerimTab,
   ],
   "Mümessil Ofis": [
     { id: "genel", label: "Genel Firma\nBilgileri", icon: ClipboardList },
@@ -76,6 +84,7 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },
     { id: "galeri", label: "Galeri", icon: Image },
+    belgelerimTab,
   ],
 };
 
@@ -144,6 +153,8 @@ const FirmaBilgilerim = () => {
         return <ReferanslarTab userId={userId} />;
       case "galeri":
         return <GaleriTab userId={userId} />;
+      case "belgelerim":
+        return <BelgelerimTab userId={userId} />;
       default:
         return <PlaceholderTab label={tabs.find(t => t.id === activeTab)?.label || activeTab} />;
     }
