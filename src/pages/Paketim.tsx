@@ -93,10 +93,16 @@ const Paketim = () => {
                 <CardTitle className="text-xl">Aktif Paketiniz</CardTitle>
               </div>
               {isPro && (
-                <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
-                  {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Aboneliği Yönet
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
+                    {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Aboneliği Yönet
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
+                    {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Paketi İptal Et
+                  </Button>
+                </div>
               )}
             </div>
           </CardHeader>
