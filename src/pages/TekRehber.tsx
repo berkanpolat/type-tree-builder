@@ -247,7 +247,7 @@ export default function TekRehber() {
       setFirmalar(enriched);
     }
     setFirmaLoading(false);
-  }, [selectedFirmaTuru, firmaFilterState, activeFilter, firmaTurleri, currentUserId]);
+  }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, firmaTurleri, currentUserId]);
 
   useEffect(() => {
     if (currentUserId && selectedFirmaTuru) fetchFirmalar();
