@@ -138,17 +138,18 @@ export default function AdminPaketler() {
   };
 
   const handleSave = async () => {
-    if (!form.ad || !form.slug) {
-      toast({ title: "Hata", description: "Paket adı ve slug zorunludur.", variant: "destructive" });
-      return;
-    }
+    const payload = {
+      ...form,
+      ad: form.ad || "Yeni Paket",
+      slug: form.slug || "yeni-paket-" + Date.now(),
+    };
     setSaving(true);
     try {
       if (editingPaket) {
-        await callAdmin("paketler-update", { token, id: editingPaket.id, updates: form });
+        await callAdmin("paketler-update", { token, id: editingPaket.id, updates: payload });
         toast({ title: "Başarılı", description: "Paket güncellendi." });
       } else {
-        await callAdmin("paketler-create", { token, paket: form });
+        await callAdmin("paketler-create", { token, paket: payload });
         toast({ title: "Başarılı", description: "Yeni paket oluşturuldu." });
       }
       setDialogOpen(false);
