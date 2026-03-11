@@ -52,6 +52,12 @@ interface SearchResult {
   type: "Kategori" | "Grup" | "Tür" | "Ürün";
 }
 
+interface KategoriNode {
+  id: string;
+  name: string;
+  parent_id: string | null;
+}
+
 interface UrunListItem {
   id: string;
   baslik: string;
@@ -143,6 +149,11 @@ export default function AnaSayfa() {
 
   // Name maps
   const [kategoriSecenekler, setKategoriSecenekler] = useState<{ id: string; name: string }[]>([]);
+  const [urunKategoriNodes, setUrunKategoriNodes] = useState<KategoriNode[]>([]);
+  const urunKategoriById = useMemo(
+    () => Object.fromEntries(urunKategoriNodes.map((node) => [node.id, node])),
+    [urunKategoriNodes]
+  );
 
   // Determine if we're in "filtered" mode (category selected)
   const isFiltered = !!selectedKategori || !!activeFilter || !!appliedSearchTerm;
@@ -156,11 +167,22 @@ export default function AnaSayfa() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Fetch kategori seçenekleri
+  // Fetch ürün kategori/grup/tür tree
   useEffect(() => {
-    supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KATEGORI_ID).is("parent_id", null).order("name").then(({ data }) => {
-      if (data) setKategoriSecenekler(data);
-    });
+    supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("kategori_id", KATEGORI_ID)
+      .order("name")
+      .then(({ data }) => {
+        const allNodes = (data || []) as KategoriNode[];
+        setUrunKategoriNodes(allNodes);
+        setKategoriSecenekler(
+          allNodes
+            .filter((n) => !n.parent_id)
+            .map((n) => ({ id: n.id, name: n.name }))
+        );
+      });
   }, []);
 
   // Fetch products
@@ -367,195 +389,182 @@ export default function AnaSayfa() {
     fetchUrunler();
   }, [fetchUrunler]);
 
-  // If text search is active and category still not selected, infer category from results
-  useEffect(() => {
-    if (!appliedSearchTerm || selectedKategori || allUrunler.length === 0) return;
+  const normalizeText = useCallback((text: string) => {
+    return text
+      .toLocaleLowerCase("tr-TR")
+      .replace(/ı/g, "i")
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c")
+      .replace(/\s+/g, " ")
+      .trim();
+  }, []);
 
-    const countByCategory: Record<string, number> = {};
-    allUrunler.forEach((u) => {
-      if (u.urun_kategori_id) {
-        countByCategory[u.urun_kategori_id] = (countByCategory[u.urun_kategori_id] || 0) + 1;
-      }
-    });
+  const getSimilarityScore = useCallback((queryRaw: string, candidateRaw: string) => {
+    const query = normalizeText(queryRaw);
+    const candidate = normalizeText(candidateRaw);
 
-    const dominantCategoryId = Object.entries(countByCategory).sort((a, b) => b[1] - a[1])[0]?.[0];
-    if (!dominantCategoryId) return;
+    if (!query || !candidate) return 0;
+    if (query === candidate) return 1000;
 
-    const categoryOption = kategoriSecenekler.find((k) => k.id === dominantCategoryId);
-    if (!categoryOption) return;
-    if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === categoryOption.name.toLowerCase())) return;
+    let score = 0;
+    if (candidate.startsWith(query)) score += 700;
+    if (candidate.includes(query)) score += 500;
 
-    setSelectedKategori(categoryOption.name);
-    setSelectedGrupId(null);
-    setSelectedTurId(null);
-  }, [appliedSearchTerm, selectedKategori, allUrunler, kategoriSecenekler]);
+    const queryWords = query.split(" ").filter(Boolean);
+    const candidateWords = candidate.split(" ").filter(Boolean);
+    const matchedWordCount = queryWords.filter((q) => candidateWords.some((c) => c.startsWith(q) || c.includes(q))).length;
 
-  // Trigger search on Enter or Ara button — detect kategori/grup/tür match and auto-apply filters
-  const handleSearch = useCallback(async () => {
+    if (matchedWordCount > 0) score += matchedWordCount * 150;
+
+    const lengthRatio = Math.min(query.length, candidate.length) / Math.max(query.length, candidate.length);
+    score += Math.round(lengthRatio * 100);
+
+    return score;
+  }, [normalizeText]);
+
+  const getRootCategoryName = useCallback((nodeId: string): string | null => {
+    let current = urunKategoriById[nodeId];
+    let guard = 0;
+
+    while (current?.parent_id && guard < 10) {
+      current = urunKategoriById[current.parent_id];
+      guard += 1;
+    }
+
+    if (!current) return null;
+    if (HIDDEN_KATEGORILER.some((h) => normalizeText(h) === normalizeText(current.name))) return null;
+    return current.name;
+  }, [urunKategoriById, normalizeText]);
+
+  const getNodeType = useCallback((node: KategoriNode): SearchResult["type"] => {
+    if (!node.parent_id) return "Kategori";
+    const parent = urunKategoriById[node.parent_id];
+    if (parent && !parent.parent_id) return "Grup";
+    return "Tür";
+  }, [urunKategoriById]);
+
+  const findBestTaxonomyMatch = useCallback((term: string) => {
+    if (!term || urunKategoriNodes.length === 0) return null;
+
+    const scored = urunKategoriNodes
+      .map((node) => {
+        const rootCategoryName = getRootCategoryName(node.id);
+        if (!rootCategoryName) return null;
+        return {
+          node,
+          rootCategoryName,
+          score: getSimilarityScore(term, node.name),
+        };
+      })
+      .filter((item): item is { node: KategoriNode; rootCategoryName: string; score: number } => !!item)
+      .sort((a, b) => b.score - a.score);
+
+    if (scored.length === 0 || scored[0].score < 220) return null;
+    return scored[0];
+  }, [urunKategoriNodes, getRootCategoryName, getSimilarityScore]);
+
+  // Trigger search on Enter or Ara button
+  const handleSearch = useCallback(() => {
     const term = searchTerm.trim();
     if (!term) return;
+
     setShowDropdown(false);
-
-    // 1. Check if term directly matches a kategori/grup/tür name
-    const { data: matches } = await supabase
-      .from("firma_bilgi_secenekleri")
-      .select("id, name, parent_id")
-      .eq("kategori_id", KATEGORI_ID)
-      .ilike("name", `%${term}%`)
-      .limit(5);
-
-    if (matches && matches.length > 0) {
-      // Find exact or best match
-      const exact = matches.find((m) => m.name.toLowerCase() === term.toLowerCase()) || matches[0];
-
-      if (!exact.parent_id) {
-        // It's a kategori
-        if (!HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === exact.name.toLowerCase())) {
-          setSelectedKategori(exact.name);
-          setSelectedGrupId(null);
-          setSelectedTurId(null);
-          setActiveFilter(null);
-          setAppliedSearchTerm("");
-          return;
-        }
-      } else {
-        // Resolve hierarchy to find parent kategori
-        const resolved = await resolveHierarchy(exact.id, exact.parent_id);
-        if (resolved) {
-          setSelectedKategori(resolved.kategori);
-          setSelectedGrupId(resolved.grupId);
-          setSelectedTurId(resolved.turId);
-          setActiveFilter(null);
-          setAppliedSearchTerm("");
-          return;
-        }
-      }
-    }
-
-    // 2. No direct match — do text search on products and detect dominant category
-    const { data: productMatches } = await supabase
-      .from("urunler")
-      .select("urun_kategori_id")
-      .eq("durum", "aktif")
-      .ilike("baslik", `%${term}%`)
-      .limit(50);
-
-    if (productMatches && productMatches.length > 0) {
-      // Find most common category
-      const catCount: Record<string, number> = {};
-      productMatches.forEach((p) => {
-        if (p.urun_kategori_id) {
-          catCount[p.urun_kategori_id] = (catCount[p.urun_kategori_id] || 0) + 1;
-        }
-      });
-      const topCatId = Object.entries(catCount).sort((a, b) => b[1] - a[1])[0]?.[0];
-      if (topCatId) {
-        const matchedSecenek = kategoriSecenekler.find((k) => k.id === topCatId);
-        if (matchedSecenek && !HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === matchedSecenek.name.toLowerCase())) {
-          setSelectedKategori(matchedSecenek.name);
-          setSelectedGrupId(null);
-          setSelectedTurId(null);
-        }
-      }
-    }
-
     setActiveFilter(null);
     setAppliedSearchTerm(term);
-  }, [searchTerm, kategoriSecenekler]);
 
-  // Helper to resolve kategori hierarchy from a grup/tür id
-  const resolveHierarchy = async (id: string, parentId: string): Promise<{ kategori: string; grupId: string | null; turId: string | null } | null> => {
-    const { data: parent } = await supabase
-      .from("firma_bilgi_secenekleri")
-      .select("id, name, parent_id")
-      .eq("id", parentId)
-      .single();
-    if (!parent) return null;
-
-    if (!parent.parent_id) {
-      // parent is Kategori, id is Grup
-      if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === parent.name.toLowerCase())) return null;
-      return { kategori: parent.name, grupId: id, turId: null };
+    const bestMatch = findBestTaxonomyMatch(term);
+    if (bestMatch) {
+      setSelectedKategori(bestMatch.rootCategoryName);
+      setSelectedGrupId(null);
+      setSelectedTurId(null);
+    } else {
+      setSelectedKategori(null);
+      setSelectedGrupId(null);
+      setSelectedTurId(null);
     }
-    // parent is Grup, id is Tür — get grandparent (Kategori)
-    const { data: grandparent } = await supabase
-      .from("firma_bilgi_secenekleri")
-      .select("id, name")
-      .eq("id", parent.parent_id)
-      .single();
-    if (!grandparent) return null;
-    if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === grandparent.name.toLowerCase())) return null;
-    return { kategori: grandparent.name, grupId: parent.id, turId: id };
-  };
+  }, [searchTerm, findBestTaxonomyMatch]);
 
-  // Lightweight autocomplete — products + kategori/grup/tür
+  // Autocomplete — products + taxonomy similarity
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setSearchResults([]);
       setShowDropdown(false);
       return;
     }
-    const timer = setTimeout(async () => {
-      const results: SearchResult[] = [];
-      const [urunRes, secRes] = await Promise.all([
-        supabase.from("urunler").select("id, baslik").eq("durum", "aktif").ilike("baslik", `%${searchTerm}%`).limit(5),
-        supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", KATEGORI_ID).ilike("name", `%${searchTerm}%`).limit(5),
-      ]);
 
-      if (secRes.data) {
-        for (const s of secRes.data) {
-          if (HIDDEN_KATEGORILER.some((h) => s.name.toLowerCase() === h.toLowerCase())) continue;
-          let type: SearchResult["type"] = "Tür";
-          if (!s.parent_id) type = "Kategori";
-          else {
-            const parentInList = secRes.data.find((p) => p.id === s.parent_id);
-            if (parentInList && !parentInList.parent_id) type = "Grup";
-          }
-          results.push({ id: s.id, name: s.name, type });
-        }
-      }
-      if (urunRes.data) urunRes.data.forEach((u) => results.push({ id: u.id, name: u.baslik, type: "Ürün" }));
+    const timer = setTimeout(async () => {
+      const { data: urunData } = await supabase
+        .from("urunler")
+        .select("id, baslik")
+        .eq("durum", "aktif")
+        .ilike("baslik", `%${searchTerm}%`)
+        .limit(5);
+
+      const taxonomyResults: SearchResult[] = urunKategoriNodes
+        .map((node) => {
+          const rootCategoryName = getRootCategoryName(node.id);
+          if (!rootCategoryName) return null;
+          const score = getSimilarityScore(searchTerm, node.name);
+          if (score < 220) return null;
+          return {
+            id: node.id,
+            name: node.name,
+            type: getNodeType(node),
+            score,
+          };
+        })
+        .filter((item): item is SearchResult & { score: number } => !!item)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
+        .map(({ id, name, type }) => ({ id, name, type }));
+
+      const urunResults: SearchResult[] = (urunData || []).map((u) => ({
+        id: u.id,
+        name: u.baslik,
+        type: "Ürün",
+      }));
+
+      const results = [...taxonomyResults, ...urunResults];
       setSearchResults(results);
       setShowDropdown(results.length > 0);
     }, 250);
+
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, urunKategoriNodes, getRootCategoryName, getSimilarityScore, getNodeType]);
 
   const handleSearchResultClick = async (result: SearchResult) => {
     setSearchTerm(result.name);
     setShowDropdown(false);
     setActiveFilter(null);
+    setAppliedSearchTerm(result.name);
 
-    if (result.type === "Kategori") {
-      if (!HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === result.name.toLowerCase())) {
-        setSelectedKategori(result.name);
-        setSelectedGrupId(null);
-        setSelectedTurId(null);
-        setAppliedSearchTerm("");
-        return;
-      }
-    }
-
-    if (result.type === "Grup" || result.type === "Tür") {
-      const { data: match } = await supabase
-        .from("firma_bilgi_secenekleri")
-        .select("id, name, parent_id")
+    if (result.type === "Ürün") {
+      const { data: urun } = await supabase
+        .from("urunler")
+        .select("urun_kategori_id")
         .eq("id", result.id)
-        .single();
-      if (match?.parent_id) {
-        const resolved = await resolveHierarchy(match.id, match.parent_id);
-        if (resolved) {
-          setSelectedKategori(resolved.kategori);
-          setSelectedGrupId(resolved.grupId);
-          setSelectedTurId(resolved.turId);
-          setAppliedSearchTerm("");
-          return;
+        .maybeSingle();
+
+      if (urun?.urun_kategori_id) {
+        const categoryName = getRootCategoryName(urun.urun_kategori_id);
+        if (categoryName) {
+          setSelectedKategori(categoryName);
+          setSelectedGrupId(null);
+          setSelectedTurId(null);
         }
       }
+      return;
     }
 
-    // Ürün or fallback — text search + detect category
-    setAppliedSearchTerm(result.name);
+    const categoryName = getRootCategoryName(result.id);
+    if (categoryName) {
+      setSelectedKategori(categoryName);
+      setSelectedGrupId(null);
+      setSelectedTurId(null);
+    }
   };
 
   const clearFilter = () => {
@@ -654,7 +663,7 @@ export default function AnaSayfa() {
           label="ÜRÜNLER"
           placeholder="Ürün ara... (kumaş, iplik, aksesuar)"
           searchTerm={searchTerm}
-          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) { setActiveFilter(null); setAppliedSearchTerm(""); } }}
+          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) { setActiveFilter(null); setAppliedSearchTerm(""); setSelectedGrupId(null); setSelectedTurId(null); } }}
           onSearch={handleSearch}
           searchResults={searchResults}
           showDropdown={showDropdown}
