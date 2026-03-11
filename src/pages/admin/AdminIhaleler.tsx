@@ -328,6 +328,12 @@ export default function AdminIhaleler() {
         case "teklif_sayisi": aVal = a.teklif_sayisi; bVal = b.teklif_sayisi; break;
         case "goruntuleme_sayisi": aVal = a.goruntuleme_sayisi; bVal = b.goruntuleme_sayisi; break;
         case "bitis_tarihi": aVal = a.bitis_tarihi || ""; bVal = b.bitis_tarihi || ""; break;
+        case "kalan_sure": {
+          const now = Date.now();
+          const aRemaining = a.bitis_tarihi ? new Date(a.bitis_tarihi).getTime() - now : Infinity;
+          const bRemaining = b.bitis_tarihi ? new Date(b.bitis_tarihi).getTime() - now : Infinity;
+          aVal = aRemaining; bVal = bRemaining; break;
+        }
         default: aVal = a.created_at; bVal = b.created_at;
       }
       if (sortDir === "asc") return aVal > bVal ? 1 : -1;
