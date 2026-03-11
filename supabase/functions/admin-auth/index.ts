@@ -1437,9 +1437,15 @@ Deno.serve(async (req) => {
         link: null,
       });
 
-      // Update sikayet status if provided
+      // Update sikayet status and log action details
       if (sikayetId) {
-        await supabase.from("sikayetler").update({ durum: "cozuldu" }).eq("id", sikayetId);
+        await supabase.from("sikayetler").update({
+          durum: "cozuldu",
+          islem_tipi: "kisitlama",
+          islem_yapan: createdBy,
+          islem_tarihi: new Date().toISOString(),
+          islem_detay: `Kısıtlama Alanları: ${activeAreas}. Süre: ${bitisStr}. Sebep: ${sebep}`,
+        }).eq("id", sikayetId);
       }
 
       return jsonResponse({ success: true });
