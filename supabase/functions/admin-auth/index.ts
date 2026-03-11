@@ -355,24 +355,8 @@ Deno.serve(async (req) => {
       
       if (authUser?.email) {
         if (action === "approve-firma") {
-          // Send password creation link (recovery link) so user can set their password
-          const siteUrl = Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '') || '';
-          const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-            type: 'recovery',
-            email: authUser.email,
-            options: {
-              redirectTo: `${req.headers.get('origin') || 'https://tekstilas.lovable.app'}/giris-kayit?tab=sifre-olustur`,
-            },
-          });
-
-          if (!linkError && linkData?.properties?.action_link) {
-            // Send the recovery email via Supabase Auth (inviteUserByEmail won't work since user exists)
-            // Use the built-in recovery email by calling resetPasswordForEmail via admin
-            await supabase.auth.admin.updateUser(firma.user_id, {
-              // Clear any auto-confirmed email to force password reset flow
-            });
-            
-            // Trigger password reset email
+          // Trigger password reset email so user can create their password
+          try {
             const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
             const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
             await fetch(`${supabaseUrl}/auth/v1/recover`, {
@@ -385,6 +369,8 @@ Deno.serve(async (req) => {
                 email: authUser.email,
               }),
             });
+          } catch (e) {
+            // Recovery email send failed, but approval still succeeds
           }
 
           const message = `${firma.firma_unvani} firmanızın başvurusu onaylanmıştır. Şifre oluşturma bağlantısı e-posta adresinize gönderilmiştir.`;
