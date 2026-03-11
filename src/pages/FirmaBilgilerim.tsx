@@ -21,6 +21,7 @@ import {
   Users,
   Award,
   Image,
+  FolderCheck,
 } from "lucide-react";
 
 export interface TabItem {
