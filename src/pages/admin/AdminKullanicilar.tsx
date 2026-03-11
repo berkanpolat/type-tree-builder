@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, CSSProperties } from "react";
+import { useState, useEffect, useCallback, type CSSProperties } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -304,11 +304,11 @@ export default function AdminKullanicilar() {
               id={item.key}
               checked={isChecked}
               onCheckedChange={(checked) => togglePermission(item.key, !!checked)}
-              className="border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+              className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+              style={{ borderColor: "hsl(var(--admin-border))" }}
             />
-            <Label htmlFor={item.key} className="text-slate-300 text-sm cursor-pointer">{item.label}</Label>
+            <Label htmlFor={item.key} className="text-sm cursor-pointer" style={{ color: "hsl(var(--admin-text))" }}>{item.label}</Label>
           </div>
-          {/* Show children only if parent is checked */}
           {item.children && isChecked && (
             <div className="mt-2 space-y-2">
               {renderPermissionItems(item.children, depth + 1)}
@@ -319,104 +319,103 @@ export default function AdminKullanicilar() {
     });
   };
 
+  const sCard = {
+    background: "hsl(var(--admin-card-bg))",
+    border: "1px solid hsl(var(--admin-border))",
+    borderRadius: "0.75rem",
+  } as CSSProperties;
+  const sText = { color: "hsl(var(--admin-text))" } as CSSProperties;
+  const sMuted = { color: "hsl(var(--admin-muted))" } as CSSProperties;
+  const sInput = {
+    background: "hsl(var(--admin-input-bg))",
+    borderColor: "hsl(var(--admin-border))",
+    color: "hsl(var(--admin-text))",
+  } as CSSProperties;
+
   return (
     <AdminLayout title="Panel Kullanıcıları">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <p className="text-slate-400 text-sm">Yönetim paneline erişimi olan kullanıcıları yönetin.</p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="text-sm" style={sMuted}>Yönetim paneline erişimi olan kullanıcıları yönetin.</p>
           {canManage && (
-            <Button onClick={openCreate} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
+            <Button onClick={openCreate} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shrink-0">
               <Plus className="w-4 h-4 mr-2" />
               Yeni Kullanıcı
             </Button>
           )}
         </div>
 
-        <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div className="rounded-xl overflow-hidden" style={sCard}>
           {loading ? (
             <div className="flex items-center justify-center p-12">
               <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-slate-700 hover:bg-transparent">
-                  <TableHead className="text-slate-400">Kullanıcı</TableHead>
-                  <TableHead className="text-slate-400">Kullanıcı No</TableHead>
-                  <TableHead className="text-slate-400">Pozisyon</TableHead>
-                  <TableHead className="text-slate-400">E-posta</TableHead>
-                  <TableHead className="text-slate-400">Telefon</TableHead>
-                  <TableHead className="text-slate-400">Rol</TableHead>
-                  {canManage && <TableHead className="text-slate-400 text-right">İşlemler</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedUsers.map((u) => (
-                  <TableRow key={u.id} className="border-slate-700 hover:bg-slate-700/30">
-                    <TableCell className="text-white font-medium">
-                      <div className="flex items-center gap-2">
-                        {u.is_primary ? (
-                          <Shield className="w-4 h-4 text-amber-400" />
-                        ) : (
-                          <UserCircle className="w-4 h-4 text-slate-500" />
-                        )}
-                        {u.ad} {u.soyad}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-slate-300 font-mono">{u.username}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="border-slate-600 text-slate-300">{u.pozisyon}</Badge>
-                    </TableCell>
-                    <TableCell className="text-slate-400">{u.email || "—"}</TableCell>
-                    <TableCell className="text-slate-400">{u.telefon || "—"}</TableCell>
-                    <TableCell>
-                      {u.is_primary ? (
-                        <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Ana Yönetici</Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-slate-700 text-slate-300">Alt Kullanıcı</Badge>
-                      )}
-                    </TableCell>
-                    {canManage && (
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEdit(u)}
-                            className="text-slate-400 hover:text-white hover:bg-slate-700"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          {!u.is_primary && currentUser?.is_primary && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(u)}
-                              className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow style={{ borderColor: "hsl(var(--admin-border))" }} className="hover:bg-transparent">
+                    <TableHead style={sMuted}>Kullanıcı</TableHead>
+                    <TableHead style={sMuted} className="hidden md:table-cell">Kullanıcı No</TableHead>
+                    <TableHead style={sMuted}>Pozisyon</TableHead>
+                    <TableHead style={sMuted} className="hidden lg:table-cell">E-posta</TableHead>
+                    <TableHead style={sMuted} className="hidden lg:table-cell">Telefon</TableHead>
+                    <TableHead style={sMuted}>Rol</TableHead>
+                    {canManage && <TableHead style={sMuted} className="text-right">İşlemler</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedUsers.map((u) => (
+                    <TableRow key={u.id} style={{ borderColor: "hsl(var(--admin-border))" }} className="hover:opacity-80">
+                      <TableCell style={sText} className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {u.is_primary ? (
+                            <Shield className="w-4 h-4 text-amber-400 shrink-0" />
+                          ) : (
+                            <UserCircle className="w-4 h-4 shrink-0" style={sMuted} />
                           )}
+                          <span className="truncate">{u.ad} {u.soyad}</span>
                         </div>
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      <TableCell className="font-mono hidden md:table-cell" style={sMuted}>{u.username}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>{u.pozisyon}</Badge>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell" style={sMuted}>{u.email || "—"}</TableCell>
+                      <TableCell className="hidden lg:table-cell" style={sMuted}>{u.telefon || "—"}</TableCell>
+                      <TableCell>
+                        {u.is_primary ? (
+                          <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Ana Yönetici</Badge>
+                        ) : (
+                          <Badge variant="secondary" style={{ background: "hsl(var(--admin-hover))", color: "hsl(var(--admin-text))" }}>Alt Kullanıcı</Badge>
+                        )}
+                      </TableCell>
+                      {canManage && (
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(u)} style={sMuted} className="hover:opacity-80">
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            {!u.is_primary && currentUser?.is_primary && (
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(u)} className="text-red-400 hover:text-red-500 hover:bg-red-500/10">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 pt-2">
-            <Button
-              variant="outline" size="sm" disabled={safePage <= 1}
-              onClick={() => setCurrentPage(safePage - 1)}
-              className="text-xs border-slate-700 text-slate-300"
-            >
-              ← Önceki
-            </Button>
+            <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setCurrentPage(safePage - 1)}
+              className="text-xs" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>← Önceki</Button>
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
               .reduce<(number | string)[]>((acc, p, idx, arr) => {
@@ -426,34 +425,28 @@ export default function AdminKullanicilar() {
               }, [])
               .map((p, idx) =>
                 typeof p === "string" ? (
-                  <span key={`ellipsis-${idx}`} className="px-1 text-xs text-slate-500">…</span>
+                  <span key={`ellipsis-${idx}`} className="px-1 text-xs" style={sMuted}>…</span>
                 ) : (
-                  <Button
-                    key={p} size="sm" variant={p === safePage ? "default" : "outline"}
+                  <Button key={p} size="sm" variant={p === safePage ? "default" : "outline"}
                     onClick={() => setCurrentPage(p as number)}
-                    className={p === safePage ? "bg-amber-500 hover:bg-amber-600 text-white text-xs w-8 h-8 p-0" : "text-xs w-8 h-8 p-0 border-slate-700 text-slate-300"}
-                  >
+                    className={p === safePage ? "bg-amber-500 hover:bg-amber-600 text-white text-xs w-8 h-8 p-0" : "text-xs w-8 h-8 p-0"}
+                    style={p !== safePage ? { borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" } : undefined}>
                     {p}
                   </Button>
                 )
               )}
-            <Button
-              variant="outline" size="sm" disabled={safePage >= totalPages}
-              onClick={() => setCurrentPage(safePage + 1)}
-              className="text-xs border-slate-700 text-slate-300"
-            >
-              Sonraki →
-            </Button>
+            <Button variant="outline" size="sm" disabled={safePage >= totalPages} onClick={() => setCurrentPage(safePage + 1)}
+              className="text-xs" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>Sonraki →</Button>
           </div>
         )}
       </div>
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>
           <DialogHeader>
-            <DialogTitle>{editingUser ? "Kullanıcıyı Düzenle" : "Yeni Kullanıcı Ekle"}</DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogTitle style={sText}>{editingUser ? "Kullanıcıyı Düzenle" : "Yeni Kullanıcı Ekle"}</DialogTitle>
+            <DialogDescription style={sMuted}>
               {editingUser ? "Kullanıcı bilgilerini güncelleyin." : "Panele erişim sağlayacak yeni bir kullanıcı oluşturun."}
             </DialogDescription>
           </DialogHeader>
@@ -462,96 +455,60 @@ export default function AdminKullanicilar() {
             {!editingUser && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Kullanıcı Numarası *</Label>
-                  <Input
-                    value={form.username}
-                    onChange={(e) => setForm({ ...form, username: e.target.value })}
-                    className="bg-slate-700/50 border-slate-600 text-white"
-                    placeholder="Kullanıcı no"
-                  />
+                  <Label style={sMuted}>Kullanıcı Adı *</Label>
+                  <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={sInput} placeholder="Kullanıcı no" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Şifre *</Label>
-                  <Input
-                    type="password"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="bg-slate-700/50 border-slate-600 text-white"
-                    placeholder="Şifre"
-                  />
+                  <Label style={sMuted}>Şifre *</Label>
+                  <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={sInput} placeholder="Şifre" />
                 </div>
               </div>
             )}
 
             {editingUser && (
               <div className="space-y-2">
-                <Label className="text-slate-300">Yeni Şifre (opsiyonel)</Label>
-                <Input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                  placeholder="Değiştirmek için yeni şifre girin"
-                />
+                <Label style={sMuted}>Yeni Şifre (opsiyonel)</Label>
+                <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={sInput} placeholder="Değiştirmek için yeni şifre girin" />
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">Ad *</Label>
-                <Input
-                  value={form.ad}
-                  onChange={(e) => setForm({ ...form, ad: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Label style={sMuted}>Ad *</Label>
+                <Input value={form.ad} onChange={(e) => setForm({ ...form, ad: e.target.value })} style={sInput} />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-300">Soyad *</Label>
-                <Input
-                  value={form.soyad}
-                  onChange={(e) => setForm({ ...form, soyad: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Label style={sMuted}>Soyad *</Label>
+                <Input value={form.soyad} onChange={(e) => setForm({ ...form, soyad: e.target.value })} style={sInput} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">E-posta</Label>
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Label style={sMuted}>E-posta</Label>
+                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={sInput} />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-300">Telefon Numarası</Label>
-                <Input
-                  value={form.telefon}
-                  onChange={(e) => setForm({ ...form, telefon: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Label style={sMuted}>Telefon Numarası</Label>
+                <Input value={form.telefon} onChange={(e) => setForm({ ...form, telefon: e.target.value })} style={sInput} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">Pozisyon *</Label>
+              <Label style={sMuted}>Pozisyon *</Label>
               <Select value={form.pozisyon} onValueChange={(v) => setForm({ ...form, pozisyon: v })}>
-                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 z-[300]">
+                <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
+                <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
                   {POZISYONLAR.map((p) => (
-                    <SelectItem key={p} value={p} className="text-white hover:bg-slate-700">{p}</SelectItem>
+                    <SelectItem key={p} value={p} style={sText}>{p}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-3">
-              <Label className="text-slate-300 text-base font-semibold">Erişilebilirlik Ayarları</Label>
-              <div className="space-y-4 bg-slate-700/30 rounded-lg p-4 border border-slate-700">
+              <Label className="text-base font-semibold" style={sText}>Erişilebilirlik Ayarları</Label>
+              <div className="space-y-4 rounded-lg p-4" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
                 {PERMISSION_GROUPS.map((group) => (
                   <div key={group.label}>
                     <p className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">{group.label}</p>
@@ -565,9 +522,7 @@ export default function AdminKullanicilar() {
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="text-slate-400 hover:text-white">
-              İptal
-            </Button>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)} style={sMuted}>İptal</Button>
             <Button onClick={handleSave} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
               {editingUser ? "Güncelle" : "Oluştur"}
             </Button>

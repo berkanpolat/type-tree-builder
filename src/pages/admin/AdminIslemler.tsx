@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Search, Activity, ChevronLeft, ChevronRight, Filter, X, Clock, User, Target, FileText
+  Search, Activity, ChevronLeft, ChevronRight, X, Clock, Target, FileText
 } from "lucide-react";
 
 const s = {
@@ -123,19 +123,18 @@ export default function AdminIslemler() {
       .finally(() => setLoading(false));
   }, [token, callApi, toast]);
 
-  // Get unique admins and actions for filters
   const uniqueAdmins = [...new Map(logs.map(l => [l.admin_id, { id: l.admin_id, name: `${l.admin_ad} ${l.admin_soyad}` }])).values()];
   const uniqueActions = [...new Set(logs.map(l => l.action))];
 
   const filtered = logs.filter(l => {
     if (searchTerm) {
-      const s = searchTerm.toLowerCase();
+      const q = searchTerm.toLowerCase();
       if (
-        !l.admin_ad.toLowerCase().includes(s) &&
-        !l.admin_soyad.toLowerCase().includes(s) &&
-        !l.admin_username.toLowerCase().includes(s) &&
-        !(l.target_label || "").toLowerCase().includes(s) &&
-        !(ACTION_LABELS[l.action] || l.action).toLowerCase().includes(s)
+        !l.admin_ad.toLowerCase().includes(q) &&
+        !l.admin_soyad.toLowerCase().includes(q) &&
+        !l.admin_username.toLowerCase().includes(q) &&
+        !(l.target_label || "").toLowerCase().includes(q) &&
+        !(ACTION_LABELS[l.action] || l.action).toLowerCase().includes(q)
       ) return false;
     }
     if (filterAction !== "all" && l.action !== filterAction) return false;
@@ -174,61 +173,61 @@ export default function AdminIslemler() {
     <AdminLayout title="İşlem Geçmişi">
       <div className="space-y-4">
         {/* Filters */}
-        <div style={s.card} className="p-4">
-          <div className="flex flex-wrap gap-3 items-end">
-            <div className="flex-1 min-w-[200px]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
-                <Input
-                  placeholder="Ara..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                  style={s.input}
-                />
-              </div>
+        <div style={s.card} className="p-3 md:p-4">
+          <div className="flex flex-col gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
+              <Input
+                placeholder="Ara..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+                style={s.input}
+              />
             </div>
-            <Select value={filterAction} onValueChange={setFilterAction}>
-              <SelectTrigger className="w-[180px]" style={s.input}>
-                <SelectValue placeholder="İşlem Türü" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tüm İşlemler</SelectItem>
-                {uniqueActions.map(a => (
-                  <SelectItem key={a} value={a}>{ACTION_LABELS[a] || a}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterAdmin} onValueChange={setFilterAdmin}>
-              <SelectTrigger className="w-[180px]" style={s.input}>
-                <SelectValue placeholder="Kullanıcı" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tüm Kullanıcılar</SelectItem>
-                {uniqueAdmins.map(a => (
-                  <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={filterTarget} onValueChange={setFilterTarget}>
-              <SelectTrigger className="w-[150px]" style={s.input}>
-                <SelectValue placeholder="Hedef Türü" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                {Object.entries(TARGET_TYPE_LABELS).map(([k, v]) => (
-                  <SelectItem key={k} value={k}>{v}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {hasFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-red-400 hover:text-red-300">
-                <X className="w-4 h-4 mr-1" /> Temizle
-              </Button>
-            )}
-          </div>
-          <div className="mt-2 text-xs" style={s.muted}>
-            {filtered.length} işlem gösteriliyor
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <Select value={filterAction} onValueChange={setFilterAction}>
+                <SelectTrigger className="text-xs h-9" style={s.input}>
+                  <SelectValue placeholder="İşlem Türü" />
+                </SelectTrigger>
+                <SelectContent style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+                  <SelectItem value="all">Tüm İşlemler</SelectItem>
+                  {uniqueActions.map(a => (
+                    <SelectItem key={a} value={a}>{ACTION_LABELS[a] || a}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterAdmin} onValueChange={setFilterAdmin}>
+                <SelectTrigger className="text-xs h-9" style={s.input}>
+                  <SelectValue placeholder="Kullanıcı" />
+                </SelectTrigger>
+                <SelectContent style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+                  <SelectItem value="all">Tüm Kullanıcılar</SelectItem>
+                  {uniqueAdmins.map(a => (
+                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={filterTarget} onValueChange={setFilterTarget}>
+                <SelectTrigger className="text-xs h-9 col-span-2 md:col-span-1" style={s.input}>
+                  <SelectValue placeholder="Hedef Türü" />
+                </SelectTrigger>
+                <SelectContent style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {Object.entries(TARGET_TYPE_LABELS).map(([k, v]) => (
+                    <SelectItem key={k} value={k}>{v}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs" style={s.muted}>{filtered.length} işlem</span>
+              {hasFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-red-400 hover:text-red-300 h-7 text-xs">
+                  <X className="w-3 h-3 mr-1" /> Temizle
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -254,54 +253,48 @@ export default function AdminIslemler() {
                   className="p-3 cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={() => setExpandedId(isExpanded ? null : log.id)}
                 >
-                  <div className="flex items-start gap-3">
-                    {/* Color indicator */}
+                  <div className="flex items-start gap-2 md:gap-3">
                     <div className="w-1 h-10 rounded-full mt-0.5 shrink-0" style={{ background: color }} />
-
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Badge className="text-[10px] px-1.5 py-0" style={{ background: `${color}20`, color, borderColor: `${color}40` }}>
+                      <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+                        <Badge className="text-[10px] px-1.5 py-0 shrink-0" style={{ background: `${color}20`, color, borderColor: `${color}40` }}>
                           {ACTION_LABELS[log.action] || log.action}
                         </Badge>
-                        <span className="text-xs font-medium" style={s.text}>
+                        <span className="text-xs font-medium truncate" style={s.text}>
                           {log.admin_ad} {log.admin_soyad}
                         </span>
-                        <span className="text-[10px]" style={s.muted}>({log.admin_pozisyon})</span>
                       </div>
-
-                      <div className="flex items-center gap-3 mt-1 text-xs" style={s.muted}>
+                      <div className="flex flex-col md:flex-row md:items-center gap-1 md:gap-3 mt-1 text-xs" style={s.muted}>
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
+                          <Clock className="w-3 h-3 shrink-0" />
                           {formatDate(log.created_at)}
                         </span>
                         {log.target_type && (
-                          <span className="flex items-center gap-1">
-                            <Target className="w-3 h-3" />
+                          <span className="flex items-center gap-1 truncate">
+                            <Target className="w-3 h-3 shrink-0" />
                             {TARGET_TYPE_LABELS[log.target_type] || log.target_type}
                             {log.target_label && `: ${log.target_label}`}
                           </span>
                         )}
                       </div>
-
-                      {/* Expanded details */}
                       {isExpanded && log.details && Object.keys(log.details).length > 0 && (
-                        <div className="mt-3 p-3 rounded-lg text-xs space-y-1" style={{ background: "hsl(var(--admin-hover))" }}>
+                        <div className="mt-3 p-3 rounded-lg text-xs space-y-1 overflow-x-auto" style={{ background: "hsl(var(--admin-hover))" }}>
                           <div className="flex items-center gap-1 mb-2 font-medium" style={s.secondary}>
                             <FileText className="w-3 h-3" />
                             İşlem Detayları
                           </div>
                           {Object.entries(log.details).map(([key, val]) => (
                             <div key={key} className="flex gap-2">
-                              <span className="font-medium min-w-[120px]" style={s.secondary}>{key}:</span>
-                              <span style={s.text}>
+                              <span className="font-medium min-w-[80px] md:min-w-[120px] shrink-0" style={s.secondary}>{key}:</span>
+                              <span className="break-all" style={s.text}>
                                 {typeof val === "object" ? JSON.stringify(val, null, 2) : String(val)}
                               </span>
                             </div>
                           ))}
                           {log.target_id && (
                             <div className="flex gap-2">
-                              <span className="font-medium min-w-[120px]" style={s.secondary}>Hedef ID:</span>
-                              <span className="font-mono text-[10px]" style={s.text}>{log.target_id}</span>
+                              <span className="font-medium min-w-[80px] md:min-w-[120px] shrink-0" style={s.secondary}>Hedef ID:</span>
+                              <span className="font-mono text-[10px] break-all" style={s.text}>{log.target_id}</span>
                             </div>
                           )}
                         </div>

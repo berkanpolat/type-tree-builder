@@ -71,13 +71,13 @@ function TimeFilterSelect({ value, onChange }: { value: TimeFilter; onChange: (v
 
 function DateRangeFilter({ value, onChange }: { value: DateRange; onChange: (v: DateRange) => void }) {
   return (
-    <div className="flex items-center gap-2">
-      <CalendarDays className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--admin-muted))" }} />
+    <div className="flex flex-wrap items-center gap-2">
+      <CalendarDays className="w-4 h-4 shrink-0 hidden sm:block" style={{ color: "hsl(var(--admin-muted))" }} />
       <Input
         type="date"
         value={value.from}
         onChange={e => onChange({ ...value, from: e.target.value })}
-        className="h-8 text-xs w-[130px]"
+        className="h-8 text-xs w-[120px] sm:w-[130px]"
         style={inputStyle}
       />
       <span className="text-xs" style={{ color: "hsl(var(--admin-muted))" }}>—</span>
@@ -85,7 +85,7 @@ function DateRangeFilter({ value, onChange }: { value: DateRange; onChange: (v: 
         type="date"
         value={value.to}
         onChange={e => onChange({ ...value, to: e.target.value })}
-        className="h-8 text-xs w-[130px]"
+        className="h-8 text-xs w-[120px] sm:w-[130px]"
         style={inputStyle}
       />
       {(value.from || value.to) && (
@@ -137,7 +137,7 @@ function SectionFilters({ timeFilter, onTimeChange, dateRange, onDateChange }: {
   dateRange: DateRange; onDateChange: (v: DateRange) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       <TimeFilterSelect value={timeFilter} onChange={onTimeChange} />
       <DateRangeFilter value={dateRange} onChange={onDateChange} />
     </div>
@@ -308,10 +308,10 @@ export default function AdminPanel() {
 
   return (
     <AdminLayout title="Panel Özeti">
-      <div className="space-y-8">
+      <div className="space-y-6 md:space-y-8">
         {/* Welcome */}
-        <div className="rounded-xl p-6" style={{ background: "linear-gradient(to right, hsla(30,90%,55%,0.1), hsla(25,90%,55%,0.1))", border: "1px solid hsla(30,90%,55%,0.2)" }}>
-          <h2 className="text-xl font-bold" style={{ color: "hsl(var(--admin-text))" }}>
+        <div className="rounded-xl p-4 md:p-6" style={{ background: "linear-gradient(to right, hsla(30,90%,55%,0.1), hsla(25,90%,55%,0.1))", border: "1px solid hsla(30,90%,55%,0.2)" }}>
+          <h2 className="text-lg md:text-xl font-bold" style={{ color: "hsl(var(--admin-text))" }}>
             Hoş geldiniz, {user?.ad} {user?.soyad}
           </h2>
           <p className="mt-1" style={{ color: "hsl(var(--admin-text-secondary))" }}>
