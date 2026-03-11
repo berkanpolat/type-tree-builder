@@ -1308,6 +1308,13 @@ export default function IhaleDetay() {
                       value={teklifTutar}
                       onChange={(e) => setTeklifTutar(e.target.value)}
                     />
+                    {ihale.min_teklif_degisim != null && Number(ihale.min_teklif_degisim) > 0 && (ihale.teklif_usulu === "acik_indirme" || ihale.teklif_usulu === "acik_arttirma") && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {ihale.teklif_usulu === "acik_indirme"
+                          ? `Minimum indirme bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}`
+                          : `Minimum arttırma bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}`}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
