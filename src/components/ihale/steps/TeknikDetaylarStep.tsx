@@ -186,7 +186,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("ambalaj")) {
+    if (catNorm.includes("ambalaj")) {
       return (
         <>
           <MultiDropdownField label="Ambalaj Kullanım Alanı" kategoriName="Ambalaj Kullanım Alanı" value={toArr(td.ambalaj_kullanim_alani)} onChange={(v) => setTD("ambalaj_kullanim_alani", v)} />
