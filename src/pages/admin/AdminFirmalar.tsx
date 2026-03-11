@@ -363,7 +363,7 @@ export default function AdminFirmalar() {
     setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all"); setFilterPaket("all");
     setFilterMinIhale(""); setFilterMaxIhale(""); setFilterMinTeklif(""); setFilterMaxTeklif("");
     setFilterMinUrun(""); setFilterMaxUrun(""); setFilterMinProfil(""); setFilterMaxProfil("");
-    setSearchTerm(""); setSortField(null);
+    setSearchTerm(""); setSortField(null); setActiveStatCard(null);
   };
 
   const handleDeleteFirma = async () => {
