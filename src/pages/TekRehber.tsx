@@ -355,7 +355,17 @@ export default function TekRehber() {
         return;
       }
     }
-    navigate("/mesajlar", { state: { targetUserId: firmaUserId } });
+    // Create or get conversation via RPC
+    const { data: convId } = await supabase.rpc("get_or_create_conversation", {
+      p_user1: currentUserId,
+      p_user2: firmaUserId,
+    });
+    navigate("/mesajlar", {
+      state: {
+        openConversationId: convId,
+        otherUserId: firmaUserId,
+      },
+    });
   };
 
   if (authLoading) {
