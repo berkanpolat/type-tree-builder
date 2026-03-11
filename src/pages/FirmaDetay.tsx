@@ -193,6 +193,7 @@ function CollapsibleBlock({ title, children, maxHeight = 160 }: { title: string;
 export default function FirmaDetay() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const sidebarBanner = useBanner("firma-detay-sidebar", adBannerImg);
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
