@@ -177,6 +177,14 @@ export default function AdminFirmalar() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
 
+  // Belge doğrulama dialog state
+  const [belgeDialogOpen, setBelgeDialogOpen] = useState(false);
+  const [belgeDialogFirma, setBelgeDialogFirma] = useState<FirmaItem | null>(null);
+  const [belgeDialogLoading, setBelgeDialogLoading] = useState(false);
+  const [belgeler, setBelgeler] = useState<any[]>([]);
+  const [belgeActionLoading, setBelgeActionLoading] = useState<string | null>(null);
+  const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({});
+
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
     if (error) throw error;
