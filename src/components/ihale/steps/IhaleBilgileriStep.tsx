@@ -349,21 +349,28 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
           </div>
           <div className="space-y-2">
             <Label>Ek Dosya Yükleme</Label>
-            <div className="border rounded-lg p-4 text-center">
-              {formData.ek_dosya_url ? (
-                <div className="flex items-center gap-2 justify-center">
-                  <span className="text-sm text-foreground">Dosya yüklendi</span>
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateForm({ ek_dosya_url: null })}>
-                    <X className="w-4 h-4" />
-                  </Button>
+            <div className="border rounded-lg p-4 space-y-3">
+              {formData.ek_dosyalar.length > 0 && (
+                <div className="space-y-2">
+                  {formData.ek_dosyalar.map((dosya, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 bg-muted/50 rounded px-3 py-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm text-foreground truncate">{dosya.adi}</span>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeEkDosya(i)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground">
-                  <Upload className="w-8 h-8" />
-                  <span className="text-sm">Ek dosya yükle</span>
-                  <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, "ek")} disabled={uploading} />
-                </label>
               )}
+              <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground border-2 border-dashed rounded-lg p-3">
+                <Upload className="w-6 h-6" />
+                <span className="text-sm">{formData.ek_dosyalar.length > 0 ? "Daha fazla dosya ekle" : "Ek dosya yükle"}</span>
+                <span className="text-xs">Birden fazla seçebilirsiniz</span>
+                <input type="file" multiple className="hidden" onChange={(e) => handleFileUpload(e, "ek")} disabled={uploading} />
+              </label>
             </div>
           </div>
         </div>
