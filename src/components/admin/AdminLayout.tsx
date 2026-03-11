@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard
+  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
