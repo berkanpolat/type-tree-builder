@@ -972,27 +972,27 @@ export default function FirmaDetay() {
               <div className="flex items-center justify-center gap-3 flex-wrap">
                 {firma.linkedin && (
                   <a href={firma.linkedin.startsWith("http") ? firma.linkedin : `https://${firma.linkedin}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <FaLinkedinIn className="w-4 h-4" />
+                    <Linkedin className="w-4 h-4" />
                   </a>
                 )}
                 {firma.instagram && (
                   <a href={firma.instagram.startsWith("http") ? firma.instagram : `https://${firma.instagram}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <SiInstagram className="w-4 h-4" />
+                    <Instagram className="w-4 h-4" />
                   </a>
                 )}
                 {firma.facebook && (
                   <a href={firma.facebook.startsWith("http") ? firma.facebook : `https://${firma.facebook}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <SiFacebook className="w-4 h-4" />
+                    <Facebook className="w-4 h-4" />
                   </a>
                 )}
                 {firma.x_twitter && (
                   <a href={firma.x_twitter.startsWith("http") ? firma.x_twitter : `https://${firma.x_twitter}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <RiTwitterXFill className="w-4 h-4" />
+                    <Twitter className="w-4 h-4" />
                   </a>
                 )}
                 {firma.tiktok && (
                   <a href={firma.tiktok.startsWith("http") ? firma.tiktok : `https://${firma.tiktok}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <SiTiktok className="w-4 h-4" />
+                    <TikTokIcon className="w-4 h-4" />
                   </a>
                 )}
                 {!firma.linkedin && !firma.instagram && !firma.facebook && !firma.x_twitter && !firma.tiktok && (
