@@ -339,7 +339,7 @@ export default function AdminIhaleler() {
   const safePage = Math.min(currentPage, totalPages);
   const paginated = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterUsulu, filterDurum, filterFirma, filterMinTeklif, filterMaxTeklif, filterMinGoruntuleme, filterMaxGoruntuleme, filterStartDate, filterEndDate, sortField, sortDir, selectedUrunKategorileri, selectedUrunGruplari, selectedUrunTurleri, selectedHizmetKategorileri, selectedHizmetTurleri]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterUsulu, filterDurum, filterFirma, filterMinTeklif, filterMaxTeklif, filterMinGoruntuleme, filterMaxGoruntuleme, filterStartDate, filterEndDate, sortField, sortDir, selectedUrunKategorileri, selectedUrunGruplari, selectedUrunTurleri, selectedHizmetKategorileri, selectedHizmetTurleri, statFilter]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) setSortDir(sortDir === "asc" ? "desc" : "asc");
