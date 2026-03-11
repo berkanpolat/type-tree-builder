@@ -625,6 +625,7 @@ export default function AdminIhaleler() {
             <SortButton field="teklif_sayisi" label="Teklif" />
             <SortButton field="goruntuleme_sayisi" label="Görüntülenme" />
             <SortButton field="bitis_tarihi" label="Bitiş" />
+            <SortButton field="kalan_sure" label="Kalan Süre" />
           </div>
 
           {/* Filters panel */}
