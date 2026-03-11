@@ -109,9 +109,11 @@ type SortDir = "asc" | "desc";
 
 
 export default function AdminIhaleler() {
-  const { token } = useAdminAuth();
+  const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const noPermission = () => toast({ title: "Yetkisiz", description: "Buna yetkiniz yok", variant: "destructive" });
 
   const [ihaleler, setIhaleler] = useState<IhaleItem[]>([]);
   const [stats, setStats] = useState<IhaleStats | null>(null);
