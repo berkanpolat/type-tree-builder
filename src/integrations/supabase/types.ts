@@ -1464,6 +1464,7 @@ export type Database = {
           id: string
           iletisim_email: string
           iletisim_numarasi: string | null
+          last_seen: string | null
           soyad: string
           updated_at: string
           user_id: string
@@ -1474,6 +1475,7 @@ export type Database = {
           id?: string
           iletisim_email: string
           iletisim_numarasi?: string | null
+          last_seen?: string | null
           soyad: string
           updated_at?: string
           user_id: string
@@ -1484,6 +1486,7 @@ export type Database = {
           id?: string
           iletisim_email?: string
           iletisim_numarasi?: string | null
+          last_seen?: string | null
           soyad?: string
           updated_at?: string
           user_id?: string
