@@ -779,6 +779,13 @@ export default function Mesajlar() {
           referansId={selectedConv.id}
         />
       )}
+
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Mesaj Gönderme Hakkınız Doldu"
+        message={upgradeMessage}
+      />
     </DashboardLayout>
   );
 }

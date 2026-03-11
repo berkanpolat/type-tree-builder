@@ -227,6 +227,9 @@ export default function IhaleDetay() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [bildirOpen, setBildirOpen] = useState(false);
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   // Admin state
   const [isAdminViewing, setIsAdminViewing] = useState(false);
