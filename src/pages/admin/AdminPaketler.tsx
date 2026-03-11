@@ -395,7 +395,7 @@ function PaketContent({
             <div className="flex items-end gap-3 pb-1">
               <div className="flex items-center gap-2">
                 <Switch checked={form.aktif} onCheckedChange={(v) => setForm({ ...form, aktif: v })}
-                  className="data-[state=checked]:bg-green-500" />
+                  className="data-[state=checked]:bg-green-500 data-[state=unchecked]:bg-slate-400" />
                 <Label style={{ color: `hsl(var(--admin-text))` }}>Aktif</Label>
               </div>
             </div>
