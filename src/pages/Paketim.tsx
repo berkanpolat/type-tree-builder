@@ -46,6 +46,7 @@ const Paketim = () => {
   const [portalLoading, setPortalLoading] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
@@ -55,10 +56,8 @@ const Paketim = () => {
       try {
         const { data, error } = await supabase.functions.invoke("check-subscription");
         if (error) console.error("Subscription sync error:", error);
-        if (searchParams.get("checkout") === "success" && data?.subscribed) {
-          toast({ title: "Ödeme başarılı!", description: "PRO paketiniz aktif edildi." });
-          // Reload to reflect new package
-          setTimeout(() => window.location.replace("/paketim"), 1500);
+        if (searchParams.get("checkout") === "success") {
+          setSuccessDialogOpen(true);
         }
       } catch (e) {
         console.error("Subscription sync failed:", e);
@@ -325,6 +324,34 @@ const Paketim = () => {
           </Card>
         </div>
       </div>
+
+      {/* Ödeme Başarılı Dialogu */}
+      <AlertDialog open={successDialogOpen} onOpenChange={(open) => {
+        setSuccessDialogOpen(open);
+        if (!open) window.location.replace("/paketim");
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex flex-col items-center gap-3 py-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Check className="w-8 h-8 text-primary" />
+              </div>
+              <AlertDialogTitle className="text-xl">Ödeme Başarılı!</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-center text-sm">
+              PRO paketiniz başarıyla aktif edildi. Tüm PRO özelliklerini hemen kullanmaya başlayabilirsiniz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="justify-center sm:justify-center">
+            <AlertDialogAction onClick={() => {
+              setSuccessDialogOpen(false);
+              window.location.replace("/paketim");
+            }}>
+              Tamam
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* İptal Onay Dialogu */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
