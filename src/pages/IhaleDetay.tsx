@@ -1458,6 +1458,12 @@ export default function IhaleDetay() {
         />
       )}
       <Footer />
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Teklif Verme Hakkınız Doldu"
+        message={upgradeMessage}
+      />
     </div>
   );
 }
