@@ -858,7 +858,8 @@ Deno.serve(async (req) => {
         })).sort((a: any, b: any) => b.count - a.count);
 
         // Ürün Türü dağılımı - 3rd level items (parent is a group, grandparent is a category)
-        const groupIds = new Set(allOpts.filter((o: any) => o.parent_id && roots.some((r: any) => r.id === o.parent_id)).map((o: any) => o.id));
+        const groups = allOpts.filter((o: any) => o.parent_id && roots.some((r: any) => r.id === o.parent_id));
+        const groupIds = new Set(groups.map((o: any) => o.id));
         const turItems = allOpts.filter((o: any) => o.parent_id && groupIds.has(o.parent_id));
         
         const turCountMap: Record<string, number> = {};
@@ -867,11 +868,18 @@ Deno.serve(async (req) => {
             turCountMap[item.urun_tur_id] = (turCountMap[item.urun_tur_id] || 0) + 1;
           }
         }
-        urunTurDagilimi = turItems.map((t: any) => ({
-          id: t.id,
-          name: t.name,
-          count: turCountMap[t.id] || 0,
-        })).filter((t: any) => t.count > 0).sort((a: any, b: any) => b.count - a.count);
+        // Include ALL types (even 0 count) + add parent info for filtering
+        urunTurDagilimi = turItems.map((t: any) => {
+          const parentGroup = groups.find((g: any) => g.id === t.parent_id);
+          const parentCategory = parentGroup ? roots.find((r: any) => r.id === parentGroup.parent_id) : null;
+          return {
+            id: t.id,
+            name: t.name,
+            count: turCountMap[t.id] || 0,
+            grup_id: t.parent_id,
+            kategori_id: parentCategory?.id || null,
+          };
+        }).sort((a: any, b: any) => b.count - a.count);
       }
 
       // Firma Türü distribution
