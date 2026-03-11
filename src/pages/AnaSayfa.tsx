@@ -863,7 +863,7 @@ export default function AnaSayfa() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-3">
                 <div className="relative rounded-xl overflow-hidden h-48 cursor-pointer" onClick={() => bannerAna.linkUrl && window.open(bannerAna.linkUrl, "_blank")}>
-                  <img src={bannerAna.url || bannerKomisyonFallback} alt="Banner" className="w-full h-full object-cover" />
+                  <img src={bannerAna.url || bannerKomisyonFallback} alt="Banner" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
                   {!bannerAna.url?.includes("banners/") && (
                     <div className="absolute inset-0 flex items-center px-8">
                       <div>
