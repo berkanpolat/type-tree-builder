@@ -63,6 +63,8 @@ import {
   Upload,
   Trash2,
   Flag,
+  ShieldCheck,
+  ShieldX,
 } from "lucide-react";
 import {
   SiInstagram,
