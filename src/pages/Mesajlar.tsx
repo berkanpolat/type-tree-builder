@@ -327,7 +327,34 @@ export default function Mesajlar() {
   const handleSend = async () => {
     if ((!newMessage.trim() && !pendingFile && !quote) || !selectedConv || !currentUserId) return;
 
-    setUploading(true);
+    // Check if this is a new conversation (no messages from current user yet)
+    const existingMessages = messages.filter(m => m.sender_id === currentUserId);
+    if (existingMessages.length === 0) {
+      // This is initiating a new conversation - check quota
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      if (!check.allowed) {
+        toast({ title: "Mesaj hakkınız yetersiz", description: check.message, variant: "destructive" });
+        return;
+      }
+
+      // Also check: if user hasn't received any reply yet, block second message
+      const otherMessages = messages.filter(m => m.sender_id !== currentUserId);
+      if (messages.length > 0 && otherMessages.length === 0) {
+        toast({ title: "Yanıt bekleniyor", description: "Karşı taraf yanıt verene kadar ikinci mesaj gönderemezsiniz.", variant: "destructive" });
+        return;
+      }
+    } else {
+      // User already sent messages in this conversation
+      // Check if they sent the first message and other party hasn't replied yet
+      const firstMessage = messages[0];
+      if (firstMessage?.sender_id === currentUserId) {
+        const otherMessages = messages.filter(m => m.sender_id !== currentUserId);
+        if (otherMessages.length === 0) {
+          toast({ title: "Yanıt bekleniyor", description: "Karşı taraf yanıt verene kadar ikinci mesaj gönderemezsiniz.", variant: "destructive" });
+          return;
+        }
+      }
+    }
     let fileUrl: string | null = null;
     let fileName: string | null = null;
 
