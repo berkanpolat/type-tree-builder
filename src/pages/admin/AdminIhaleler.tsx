@@ -104,7 +104,7 @@ const DURUM_LABELS: Record<string, string> = {
   reddedildi: "Reddedildi",
 };
 
-type SortField = "created_at" | "teklif_sayisi" | "goruntuleme_sayisi" | "bitis_tarihi";
+type SortField = "created_at" | "teklif_sayisi" | "goruntuleme_sayisi" | "bitis_tarihi" | "kalan_sure";
 type SortDir = "asc" | "desc";
 
 
@@ -328,6 +328,12 @@ export default function AdminIhaleler() {
         case "teklif_sayisi": aVal = a.teklif_sayisi; bVal = b.teklif_sayisi; break;
         case "goruntuleme_sayisi": aVal = a.goruntuleme_sayisi; bVal = b.goruntuleme_sayisi; break;
         case "bitis_tarihi": aVal = a.bitis_tarihi || ""; bVal = b.bitis_tarihi || ""; break;
+        case "kalan_sure": {
+          const now = Date.now();
+          const aRemaining = a.bitis_tarihi ? new Date(a.bitis_tarihi).getTime() - now : Infinity;
+          const bRemaining = b.bitis_tarihi ? new Date(b.bitis_tarihi).getTime() - now : Infinity;
+          aVal = aRemaining; bVal = bRemaining; break;
+        }
         default: aVal = a.created_at; bVal = b.created_at;
       }
       if (sortDir === "asc") return aVal > bVal ? 1 : -1;
@@ -619,6 +625,7 @@ export default function AdminIhaleler() {
             <SortButton field="teklif_sayisi" label="Teklif" />
             <SortButton field="goruntuleme_sayisi" label="Görüntülenme" />
             <SortButton field="bitis_tarihi" label="Bitiş" />
+            <SortButton field="kalan_sure" label="Kalan Süre" />
           </div>
 
           {/* Filters panel */}
@@ -867,7 +874,7 @@ export default function AdminIhaleler() {
 
       {/* Confirm Dialog */}
       <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
-        <AlertDialogContent style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+        <AlertDialogContent className="z-[200]" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
           <AlertDialogHeader>
             <AlertDialogTitle style={s.text}>{confirmDialog.title}</AlertDialogTitle>
             <AlertDialogDescription style={s.muted}>{confirmDialog.desc}</AlertDialogDescription>
