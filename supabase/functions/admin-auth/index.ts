@@ -2135,13 +2135,17 @@ Deno.serve(async (req) => {
       const payload = verifyToken(token);
 
       // Create auth user with auto-confirm
+      console.log("Creating auth user for email:", email);
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
       });
 
-      if (authError) return jsonResponse({ error: authError.message }, 400);
+      if (authError) {
+        console.error("Auth user creation error:", authError.message);
+        return jsonResponse({ error: authError.message }, 400);
+      }
       const userId = authData.user.id;
 
       // Create profile
