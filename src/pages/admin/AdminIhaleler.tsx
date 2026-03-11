@@ -291,6 +291,16 @@ export default function AdminIhaleler() {
 
   const filtered = ihaleler
     .filter((i) => {
+      // Stat filter (from clicking stat cards)
+      if (statFilter.type !== "all") {
+        if (statFilter.type === "active" && i.durum !== "devam_ediyor") return false;
+        if (statFilter.type === "completed" && i.durum !== "tamamlandi") return false;
+        if (statFilter.type === "cancelled" && i.durum !== "iptal") return false;
+        if (statFilter.type === "pending" && i.durum !== "onay_bekliyor") return false;
+        if (statFilter.type === "draft" && i.durum !== "duzenleniyor" && i.durum !== "taslak") return false;
+        if (statFilter.type === "urun_kat" && i.urun_kategori_id !== statFilter.value) return false;
+        if (statFilter.type === "hizmet_kat" && i.hizmet_kategori_id !== statFilter.value) return false;
+      }
       if (searchTerm) {
         const q = searchTerm.toLowerCase();
         if (!i.baslik.toLowerCase().includes(q) && !i.ihale_no.toLowerCase().includes(q) && !i.kategori_label.toLowerCase().includes(q) && !i.firma_unvani.toLowerCase().includes(q)) return false;
