@@ -13,10 +13,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   Building2, Users, Clock, AlertCircle, CheckCircle, XCircle,
-  Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp
+  Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp,
+  CreditCard, Wifi, ArrowUpDown, ArrowUp, ArrowDown, Infinity, Eye, MessageSquare, Loader2
 } from "lucide-react";
 
-// Shared style helpers using CSS variables from admin-light / admin-dark
+// Shared style helpers
 const s = {
   card: {
     background: "hsl(var(--admin-card-bg))",
@@ -38,6 +39,19 @@ const s = {
     textAlign: "center" as const,
   } as CSSProperties,
 };
+
+// Color-coded value helper: <5 red, 6-20 yellow, 20+ green
+function getValueColor(value: number): string {
+  if (value < 5) return "#ef4444";
+  if (value <= 20) return "#eab308";
+  return "#22c55e";
+}
+
+function getValueBgColor(value: number): string {
+  if (value < 5) return "rgba(239,68,68,0.1)";
+  if (value <= 20) return "rgba(234,179,8,0.1)";
+  return "rgba(34,197,94,0.1)";
+}
 
 interface FirmaItem {
   id: string;
@@ -61,13 +75,27 @@ interface FirmaItem {
   sikayet_sayisi: number;
   profil_doluluk: number;
   profile: { ad: string; soyad: string; iletisim_email: string; iletisim_numarasi: string | null } | null;
+  abonelik: {
+    paket_id: string;
+    paket_ad: string;
+    paket_slug: string;
+    periyot: string;
+    donem_baslangic: string;
+    donem_bitis: string;
+    durum: string;
+    limits: any;
+  } | null;
 }
 
 interface FirmaStats {
   total: number;
-  turDagilimi: { name: string; count: number }[];
+  turDagilimi: { name: string; id: string; count: number }[];
+  tipDagilimi: { name: string; id: string; firma_turu_id: string; count: number }[];
   recent: number;
   pending: number;
+  paketDagilimi: { id: string; ad: string; slug: string; count: number }[];
+  yeniAboneler: { son24saat: number; sonBirHafta: number; sonBirAy: number };
+  onlineCount: number;
 }
 
 interface FirmaDetail {
@@ -75,6 +103,9 @@ interface FirmaDetail {
   profile: any;
   email: string | null;
 }
+
+type SortField = "ihale_sayisi" | "teklif_sayisi" | "urun_sayisi" | "profil_doluluk";
+type SortDir = "asc" | "desc";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -102,6 +133,14 @@ export default function AdminFirmalar() {
   const [filterMinProfil, setFilterMinProfil] = useState("");
   const [filterMaxProfil, setFilterMaxProfil] = useState("");
 
+  // Sorting
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  // Stat card filter for tip dağılımı
+  const [statTurFilter, setStatTurFilter] = useState<string>("all");
+  const [abonePeriod, setAbonePeriod] = useState<"son24saat" | "sonBirHafta" | "sonBirAy">("sonBirHafta");
+
   const [turler, setTurler] = useState<{ id: string; name: string }[]>([]);
   const [tipler, setTipler] = useState<{ id: string; name: string; firma_turu_id: string }[]>([]);
   const [iller, setIller] = useState<{ id: string; name: string }[]>([]);
@@ -109,6 +148,15 @@ export default function AdminFirmalar() {
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reviewDetail, setReviewDetail] = useState<FirmaDetail | null>(null);
   const [reviewLoading, setReviewLoading] = useState(false);
+
+  // Package management dialog
+  const [paketDialogOpen, setPaketDialogOpen] = useState(false);
+  const [paketDialogFirma, setPaketDialogFirma] = useState<FirmaItem | null>(null);
+  const [paketDialogLoading, setPaketDialogLoading] = useState(false);
+  const [paketDialogQuota, setPaketDialogQuota] = useState<any>(null);
+  const [allPaketler, setAllPaketler] = useState<any[]>([]);
+  const [selectedPaketId, setSelectedPaketId] = useState<string>("");
+  const [paketSaving, setPaketSaving] = useState(false);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
@@ -197,20 +245,47 @@ export default function AdminFirmalar() {
     }
   };
 
+  // Package dialog
+  const openPaketDialog = async (firma: FirmaItem) => {
+    setPaketDialogFirma(firma);
+    setPaketDialogOpen(true);
+    setPaketDialogLoading(true);
+    setSelectedPaketId(firma.abonelik?.paket_id || "");
+    try {
+      const [quotaRes, paketlerRes] = await Promise.all([
+        callApi("get-firma-quota", { token, userId: firma.user_id }),
+        callApi("paketler-list", {}),
+      ]);
+      setPaketDialogQuota(quotaRes);
+      setAllPaketler(paketlerRes.paketler || []);
+    } catch {
+      toast({ title: "Hata", description: "Paket bilgisi yüklenemedi", variant: "destructive" });
+    } finally {
+      setPaketDialogLoading(false);
+    }
+  };
+
+  const handleChangePaket = async () => {
+    if (!paketDialogFirma || !selectedPaketId) return;
+    setPaketSaving(true);
+    try {
+      const res = await callApi("update-firma-paket", { token, userId: paketDialogFirma.user_id, paketId: selectedPaketId });
+      if (res.error) throw new Error(res.error);
+      toast({ title: "Başarılı", description: "Paket güncellendi." });
+      setPaketDialogOpen(false);
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message, variant: "destructive" });
+    } finally {
+      setPaketSaving(false);
+    }
+  };
+
   const clearFilters = () => {
-    setFilterTuru("all");
-    setFilterTipi("all");
-    setFilterIl("all");
-    setFilterDurum("all");
-    setFilterMinIhale("");
-    setFilterMaxIhale("");
-    setFilterMinTeklif("");
-    setFilterMaxTeklif("");
-    setFilterMinUrun("");
-    setFilterMaxUrun("");
-    setFilterMinProfil("");
-    setFilterMaxProfil("");
-    setSearchTerm("");
+    setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all");
+    setFilterMinIhale(""); setFilterMaxIhale(""); setFilterMinTeklif(""); setFilterMaxTeklif("");
+    setFilterMinUrun(""); setFilterMaxUrun(""); setFilterMinProfil(""); setFilterMaxProfil("");
+    setSearchTerm(""); setSortField(null);
   };
 
   const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" ||
@@ -234,12 +309,36 @@ export default function AdminFirmalar() {
     return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
-  const safePage = Math.min(currentPage, totalPages);
-  const paginatedFirmalar = filtered.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+  // Sorting
+  const sorted = [...filtered];
+  if (sortField) {
+    sorted.sort((a, b) => {
+      const av = a[sortField];
+      const bv = b[sortField];
+      return sortDir === "asc" ? av - bv : bv - av;
+    });
+  }
 
-  // Reset page when filters change
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterMinIhale, filterMaxIhale, filterMinTeklif, filterMaxTeklif, filterMinUrun, filterMaxUrun, filterMinProfil, filterMaxProfil]);
+  const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedFirmalar = sorted.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterMinIhale, filterMaxIhale, filterMinTeklif, filterMaxTeklif, filterMinUrun, filterMaxUrun, filterMinProfil, filterMaxProfil, sortField, sortDir]);
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      if (sortDir === "desc") setSortDir("asc");
+      else { setSortField(null); setSortDir("desc"); }
+    } else {
+      setSortField(field);
+      setSortDir("desc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3" />;
+    return sortDir === "desc" ? <ArrowDown className="w-3 h-3 text-amber-500" /> : <ArrowUp className="w-3 h-3 text-amber-500" />;
+  };
 
   const durumBadge = (durum: string) => {
     switch (durum) {
@@ -250,77 +349,170 @@ export default function AdminFirmalar() {
     }
   };
 
-  const formatDate = (d: string) => {
-    return new Date(d).toLocaleDateString("tr-TR", {
-      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
-    });
+  const formatDate = (d: string) => new Date(d).toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+  const renderLimit = (val: number | null) => {
+    if (val === null) return <span className="flex items-center gap-1 text-xs"><Infinity className="w-3 h-3" /> Sınırsız</span>;
+    if (val === 0) return <span className="text-xs text-red-400">Kapalı</span>;
+    return <span className="text-xs">{val}</span>;
   };
+
+  // Tip dağılımı filtered by selected tur
+  const filteredTipDagilimi = stats?.tipDagilimi?.filter(
+    (tp) => statTurFilter === "all" || tp.firma_turu_id === statTurFilter
+  ) || [];
 
   return (
     <AdminLayout title="Firmalar">
       <div className="space-y-6">
         {/* Summary Cards */}
         {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            <div style={s.card} className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <Building2 className="w-5 h-5 text-blue-400" />
-                <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Toplam</span>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+              {/* Total */}
+              <div style={s.card} className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Building2 className="w-5 h-5 text-blue-400" />
+                  <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Toplam</span>
+                </div>
+                <div className="text-3xl font-bold" style={{ color: getValueColor(stats.total) }}>{stats.total}</div>
+                <p className="text-xs mt-1" style={s.muted}>Kayıtlı firma</p>
               </div>
-              <div className="text-3xl font-bold" style={s.text}>{stats.total}</div>
-              <p className="text-xs mt-1" style={s.muted}>Kayıtlı firma</p>
+
+              {/* Pending */}
+              <div style={s.card} className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <AlertCircle className="w-5 h-5 text-amber-400" />
+                  <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Bekleyen</span>
+                </div>
+                <div className="text-3xl font-bold" style={{ color: getValueColor(stats.pending) }}>{stats.pending}</div>
+                <p className="text-xs mt-1" style={s.muted}>Onay bekliyor</p>
+              </div>
+
+              {/* Recent */}
+              <div style={s.card} className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Clock className="w-5 h-5 text-purple-400" />
+                  <Select value={String(statsDays)} onValueChange={(v) => setStatsDays(Number(v))}>
+                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
+                      <SelectItem value="1" className="text-xs">24 Saat</SelectItem>
+                      <SelectItem value="7" className="text-xs">7 Gün</SelectItem>
+                      <SelectItem value="15" className="text-xs">15 Gün</SelectItem>
+                      <SelectItem value="30" className="text-xs">30 Gün</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="text-3xl font-bold" style={{ color: getValueColor(stats.recent) }}>{stats.recent}</div>
+                <p className="text-xs mt-1" style={s.muted}>
+                  {statsDays === 1 ? "Son 24 saat" : `Son ${statsDays} gün`}
+                </p>
+              </div>
+
+              {/* Online count */}
+              <div style={s.card} className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Wifi className="w-5 h-5 text-green-400" />
+                  <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Çevrimiçi</span>
+                </div>
+                <div className="text-3xl font-bold" style={{ color: getValueColor(stats.onlineCount) }}>{stats.onlineCount}</div>
+                <p className="text-xs mt-1" style={s.muted}>Son 15 dk aktif</p>
+              </div>
+
+              {/* New subscribers */}
+              <div style={s.card} className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <CreditCard className="w-5 h-5 text-amber-400" />
+                  <Select value={abonePeriod} onValueChange={(v: any) => setAbonePeriod(v)}>
+                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
+                      <SelectItem value="son24saat" className="text-xs">24 Saat</SelectItem>
+                      <SelectItem value="sonBirHafta" className="text-xs">1 Hafta</SelectItem>
+                      <SelectItem value="sonBirAy" className="text-xs">1 Ay</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="text-3xl font-bold" style={{ color: getValueColor(stats.yeniAboneler[abonePeriod]) }}>{stats.yeniAboneler[abonePeriod]}</div>
+                <p className="text-xs mt-1" style={s.muted}>Yeni abone</p>
+              </div>
             </div>
 
-            <div style={s.card} className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <AlertCircle className="w-5 h-5 text-amber-400" />
-                <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Bekleyen</span>
-              </div>
-              <div className="text-3xl font-bold text-amber-500">{stats.pending}</div>
-              <p className="text-xs mt-1" style={s.muted}>Onay bekliyor</p>
-            </div>
-
-            <div style={s.card} className="p-4">
-              <div className="flex items-center justify-between mb-2">
-                <Clock className="w-5 h-5 text-purple-400" />
-                <Select value={String(statsDays)} onValueChange={(v) => setStatsDays(Number(v))}>
-                  <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
-                    <SelectItem value="1" className="text-xs">24 Saat</SelectItem>
-                    <SelectItem value="7" className="text-xs">7 Gün</SelectItem>
-                    <SelectItem value="15" className="text-xs">15 Gün</SelectItem>
-                    <SelectItem value="30" className="text-xs">30 Gün</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="text-3xl font-bold" style={s.text}>{stats.recent}</div>
-              <p className="text-xs mt-1" style={s.muted}>
-                {statsDays === 1 ? "Son 24 saat" : `Son ${statsDays} gün`}
-              </p>
-            </div>
-
-            <div style={s.card} className="p-4 col-span-2">
-              <div className="flex items-center gap-2 mb-3">
-                <TrendingUp className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-medium" style={s.muted}>Tür Dağılımı</span>
-              </div>
-              <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
-                {stats.turDagilimi.map((t) => (
-                  <div key={t.name} className="flex items-center justify-between text-xs gap-2">
-                    <span className="truncate" style={s.muted}>{t.name}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(var(--admin-hover))" }}>
-                        <div
-                          className="h-full rounded-full bg-blue-500"
-                          style={{ width: `${stats.total > 0 ? (t.count / stats.total) * 100 : 0}%` }}
-                        />
+            {/* Second row: Package distribution + Tür/Tip dağılımı */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+              {/* Package distribution */}
+              <div style={s.card} className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <CreditCard className="w-4 h-4 text-amber-400" />
+                  <span className="text-xs font-medium" style={s.muted}>Paket Dağılımı</span>
+                </div>
+                <div className="space-y-2">
+                  {stats.paketDagilimi.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between text-xs gap-2">
+                      <span className="truncate" style={s.muted}>{p.ad}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-20 h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(var(--admin-hover))" }}>
+                          <div className="h-full rounded-full bg-amber-500" style={{ width: `${stats.total > 0 ? (p.count / stats.total) * 100 : 0}%` }} />
+                        </div>
+                        <span className="font-semibold w-6 text-right" style={{ color: getValueColor(p.count) }}>{p.count}</span>
                       </div>
-                      <span className="font-semibold w-4 text-right" style={s.text}>{t.count}</span>
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tür dağılımı */}
+              <div style={s.card} className="p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs font-medium" style={s.muted}>Tür Dağılımı</span>
+                </div>
+                <div className="space-y-1.5">
+                  {stats.turDagilimi.map((t) => (
+                    <div key={t.name} className="flex items-center justify-between text-xs gap-2">
+                      <span className="truncate" style={s.muted}>{t.name}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: "hsl(var(--admin-hover))" }}>
+                          <div className="h-full rounded-full bg-blue-500" style={{ width: `${stats.total > 0 ? (t.count / stats.total) * 100 : 0}%` }} />
+                        </div>
+                        <span className="font-semibold w-4 text-right" style={{ color: getValueColor(t.count) }}>{t.count}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tip dağılımı */}
+              <div style={s.card} className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-blue-400" />
+                    <span className="text-xs font-medium" style={s.muted}>Tip Dağılımı</span>
                   </div>
-                ))}
+                  <Select value={statTurFilter} onValueChange={setStatTurFilter}>
+                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text}>
+                      <SelectValue placeholder="Tür Filtre" />
+                    </SelectTrigger>
+                    <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
+                      <SelectItem value="all" className="text-xs">Tümü</SelectItem>
+                      {stats.turDagilimi.map(t => (
+                        <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1 max-h-32 overflow-y-auto">
+                  {filteredTipDagilimi.length === 0 && <p className="text-xs" style={s.muted}>Veri yok</p>}
+                  {filteredTipDagilimi.slice(0, 10).map((tp) => (
+                    <div key={tp.id} className="flex items-center justify-between text-xs gap-2">
+                      <span className="truncate" style={s.muted}>{tp.name}</span>
+                      <span className="font-semibold" style={{ color: getValueColor(tp.count) }}>{tp.count}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -331,27 +523,15 @@ export default function AdminFirmalar() {
           <div className="flex items-center gap-3">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
-              <Input
-                placeholder="Firma adı ile ara..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-                style={s.input}
-              />
+              <Input placeholder="Firma adı ile ara..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" style={s.input} />
             </div>
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filtreler
+            <Button variant="outline" onClick={() => setShowFilters(!showFilters)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
+              <Filter className="w-4 h-4 mr-2" /> Filtreler
               {hasActiveFilters && <span className="ml-2 w-2 h-2 rounded-full bg-amber-500" />}
             </Button>
             {hasActiveFilters && (
               <Button variant="ghost" onClick={clearFilters} className="text-red-500 hover:text-red-600 text-xs px-3">
-                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-                Temizle
+                <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Temizle
               </Button>
             )}
           </div>
@@ -366,26 +546,34 @@ export default function AdminFirmalar() {
                 options={[{ value: "all", label: "Tümü" }, ...tipler.filter(tp => filterTuru === "all" || tp.firma_turu_id === filterTuru).map(tp => ({ value: tp.id, label: tp.name }))]} />
               <FilterSelect label="İl" value={filterIl} onChange={setFilterIl}
                 options={[{ value: "all", label: "Tümü" }, ...iller.map(il => ({ value: il.id, label: il.name }))]} />
-
               <FilterRange label="İhale Sayısı" min={filterMinIhale} max={filterMaxIhale} onMinChange={setFilterMinIhale} onMaxChange={setFilterMaxIhale} />
               <FilterRange label="Teklif Sayısı" min={filterMinTeklif} max={filterMaxTeklif} onMinChange={setFilterMinTeklif} onMaxChange={setFilterMaxTeklif} />
               <FilterRange label="Ürün Sayısı" min={filterMinUrun} max={filterMaxUrun} onMinChange={setFilterMinUrun} onMaxChange={setFilterMaxUrun} />
               <FilterRange label="Profil Doluluk %" min={filterMinProfil} max={filterMaxProfil} onMinChange={setFilterMinProfil} onMaxChange={setFilterMaxProfil} />
-
               <div className="col-span-2 md:col-span-4 flex justify-end">
                 <Button variant="ghost" onClick={clearFilters} className="text-xs text-red-500 hover:text-red-600">
-                  <RotateCcw className="w-3 h-3 mr-1.5" />
-                  Tüm Filtreleri Temizle
+                  <RotateCcw className="w-3 h-3 mr-1.5" /> Tüm Filtreleri Temizle
                 </Button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Result count */}
+        {/* Sorting + result count */}
         <div className="flex items-center justify-between text-xs" style={s.muted}>
-          <span>{filtered.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}</span>
-          <span>Sayfa {safePage} / {totalPages}</span>
+          <span>{sorted.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}</span>
+          <div className="flex items-center gap-2">
+            <span>Sırala:</span>
+            {(["ihale_sayisi", "teklif_sayisi", "urun_sayisi", "profil_doluluk"] as SortField[]).map(field => (
+              <Button key={field} variant="ghost" size="sm" onClick={() => toggleSort(field)}
+                className={`text-xs h-7 px-2 gap-1 ${sortField === field ? "text-amber-500" : ""}`}
+                style={sortField !== field ? s.muted : undefined}>
+                {field === "ihale_sayisi" ? "İhale" : field === "teklif_sayisi" ? "Teklif" : field === "urun_sayisi" ? "Ürün" : "Profil"}
+                <SortIcon field={field} />
+              </Button>
+            ))}
+            <span className="ml-4">Sayfa {safePage} / {totalPages}</span>
+          </div>
         </div>
 
         {/* Firma List */}
@@ -395,7 +583,7 @@ export default function AdminFirmalar() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filtered.length === 0 && (
+            {sorted.length === 0 && (
               <div className="text-center py-12" style={s.muted}>Firma bulunamadı.</div>
             )}
             {paginatedFirmalar.map((firma) => (
@@ -410,9 +598,22 @@ export default function AdminFirmalar() {
                       )}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <h3 className="font-semibold text-base" style={s.text}>{firma.firma_unvani}</h3>
                         {durumBadge(firma.onay_durumu)}
+                        {/* Package badge */}
+                        <Badge
+                          className="text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80 transition-opacity"
+                          style={{
+                            background: firma.abonelik?.paket_slug === "pro" ? "rgba(234,179,8,0.15)" : "rgba(100,116,139,0.15)",
+                            color: firma.abonelik?.paket_slug === "pro" ? "#eab308" : "#94a3b8",
+                            borderColor: firma.abonelik?.paket_slug === "pro" ? "rgba(234,179,8,0.3)" : "rgba(100,116,139,0.3)",
+                          }}
+                          onClick={(e) => { e.stopPropagation(); openPaketDialog(firma); }}
+                        >
+                          <CreditCard className="w-3 h-3 mr-1" />
+                          {firma.abonelik?.paket_ad || "Paket Yok"}
+                        </Badge>
                       </div>
                       <p className="text-sm" style={s.secondary}>
                         {firma.firma_turu_name || "—"} · {firma.firma_tipi_name || "—"}
@@ -426,17 +627,13 @@ export default function AdminFirmalar() {
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {firma.onay_durumu === "onay_bekliyor" && (
                       <Button onClick={(e) => { e.stopPropagation(); openReview(firma); }} className="bg-amber-500 hover:bg-amber-600 text-white text-xs" size="sm">
-                        <AlertCircle className="w-3.5 h-3.5 mr-1.5" />
-                        Başvuruyu Değerlendir
+                        <AlertCircle className="w-3.5 h-3.5 mr-1.5" /> Başvuruyu Değerlendir
                       </Button>
                     )}
-                    <Button
-                      onClick={(e) => { e.stopPropagation(); handleImpersonate(firma.user_id); }}
+                    <Button onClick={(e) => { e.stopPropagation(); handleImpersonate(firma.user_id); }}
                       variant="outline" size="sm" className="text-xs"
-                      style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}
-                    >
-                      <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-                      Kullanıcıyı Yönet
+                      style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
+                      <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Kullanıcıyı Yönet
                     </Button>
                   </div>
                 </div>
@@ -447,12 +644,12 @@ export default function AdminFirmalar() {
                 </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-                  <StatBox icon={Gavel} label="İhale" value={firma.ihale_sayisi} />
-                  <StatBox icon={FileText} label="Teklif" value={firma.teklif_sayisi} />
-                  <StatBox icon={Package} label="Ürün" value={firma.urun_sayisi} />
-                  <StatBox icon={Users} label="Profil" value={`%${firma.profil_doluluk}`} />
-                  <StatBox icon={ShieldAlert} label="Şikayet" value={firma.sikayet_sayisi} />
-                  <StatBox icon={HeadphonesIcon} label="Destek" value={0} />
+                  <ColoredStatBox icon={Gavel} label="İhale" value={firma.ihale_sayisi} />
+                  <ColoredStatBox icon={FileText} label="Teklif" value={firma.teklif_sayisi} />
+                  <ColoredStatBox icon={Package} label="Ürün" value={firma.urun_sayisi} />
+                  <ColoredStatBox icon={Users} label="Profil" value={firma.profil_doluluk} suffix="%" />
+                  <ColoredStatBox icon={ShieldAlert} label="Şikayet" value={firma.sikayet_sayisi} />
+                  <ColoredStatBox icon={HeadphonesIcon} label="Destek" value={0} />
                 </div>
               </div>
             ))}
@@ -462,14 +659,8 @@ export default function AdminFirmalar() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 pt-2">
-            <Button
-              variant="outline" size="sm" disabled={safePage <= 1}
-              onClick={() => setCurrentPage(safePage - 1)}
-              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
-              className="text-xs"
-            >
-              ← Önceki
-            </Button>
+            <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setCurrentPage(safePage - 1)}
+              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }} className="text-xs">← Önceki</Button>
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
               .reduce<(number | string)[]>((acc, p, idx, arr) => {
@@ -481,24 +672,16 @@ export default function AdminFirmalar() {
                 typeof p === "string" ? (
                   <span key={`ellipsis-${idx}`} className="px-1 text-xs" style={s.muted}>…</span>
                 ) : (
-                  <Button
-                    key={p} size="sm" variant={p === safePage ? "default" : "outline"}
+                  <Button key={p} size="sm" variant={p === safePage ? "default" : "outline"}
                     onClick={() => setCurrentPage(p)}
                     className={p === safePage ? "bg-amber-500 hover:bg-amber-600 text-white text-xs w-8 h-8 p-0" : "text-xs w-8 h-8 p-0"}
-                    style={p !== safePage ? { borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" } : undefined}
-                  >
+                    style={p !== safePage ? { borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" } : undefined}>
                     {p}
                   </Button>
                 )
               )}
-            <Button
-              variant="outline" size="sm" disabled={safePage >= totalPages}
-              onClick={() => setCurrentPage(safePage + 1)}
-              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
-              className="text-xs"
-            >
-              Sonraki →
-            </Button>
+            <Button variant="outline" size="sm" disabled={safePage >= totalPages} onClick={() => setCurrentPage(safePage + 1)}
+              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }} className="text-xs">Sonraki →</Button>
           </div>
         )}
       </div>
@@ -510,7 +693,6 @@ export default function AdminFirmalar() {
             <DialogTitle style={s.text}>Başvuruyu Değerlendir</DialogTitle>
             <DialogDescription style={s.muted}>Firma kayıt bilgilerini inceleyin ve onaylayın veya reddedin.</DialogDescription>
           </DialogHeader>
-
           {reviewLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
@@ -529,31 +711,140 @@ export default function AdminFirmalar() {
               <InfoRow label="Vergi Dairesi" value={reviewDetail.firma?.vergi_dairesi} />
             </div>
           ) : null}
-
           {reviewDetail && (
             <DialogFooter className="gap-2 mt-4">
               <Button variant="ghost" onClick={() => handleReject(reviewDetail.firma.id)} className="text-red-500 hover:text-red-600 hover:bg-red-500/10">
-                <XCircle className="w-4 h-4 mr-2" />
-                Reddet
+                <XCircle className="w-4 h-4 mr-2" /> Reddet
               </Button>
               <Button onClick={() => handleApprove(reviewDetail.firma.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Onayla
+                <CheckCircle className="w-4 h-4 mr-2" /> Onayla
               </Button>
             </DialogFooter>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Package Management Dialog */}
+      <Dialog open={paketDialogOpen} onOpenChange={setPaketDialogOpen}>
+        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle style={s.text}>
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-amber-500" />
+                Paket Yönetimi
+              </div>
+            </DialogTitle>
+            <DialogDescription style={s.muted}>
+              {paketDialogFirma?.firma_unvani} — paket değişikliği ve kota görüntüleme
+            </DialogDescription>
+          </DialogHeader>
+
+          {paketDialogLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {/* Current package */}
+              <div>
+                <Label className="text-xs mb-2 block" style={s.muted}>Mevcut Paket</Label>
+                <div className="p-3 rounded-lg" style={{ background: "hsl(var(--admin-hover))" }}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm" style={s.text}>{paketDialogQuota?.abonelik?.paket_ad || "Paket Yok"}</span>
+                    {paketDialogQuota?.abonelik?.donem_bitis && (
+                      <span className="text-xs" style={s.muted}>
+                        Bitiş: {new Date(paketDialogQuota.abonelik.donem_bitis).toLocaleDateString("tr-TR")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quota usage */}
+              {paketDialogQuota?.usage && paketDialogQuota?.abonelik?.limits && (
+                <div>
+                  <Label className="text-xs mb-2 block" style={s.muted}>Kalan Haklar</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <QuotaItem icon={Eye} label="Profil Görüntüleme"
+                      used={paketDialogQuota.usage.profil_goruntuleme}
+                      limit={paketDialogQuota.abonelik.limits.profil_goruntuleme_limiti} />
+                    <QuotaItem icon={Gavel} label="Teklif Verme"
+                      used={paketDialogQuota.usage.teklif_verme}
+                      limit={paketDialogQuota.abonelik.limits.teklif_verme_limiti} />
+                    <QuotaItem icon={Package} label="Aktif Ürün"
+                      used={paketDialogQuota.usage.aktif_urun}
+                      limit={paketDialogQuota.abonelik.limits.aktif_urun_limiti} />
+                    <QuotaItem icon={MessageSquare} label="Mesaj"
+                      used={paketDialogQuota.usage.mesaj}
+                      limit={paketDialogQuota.abonelik.limits.mesaj_limiti} />
+                  </div>
+                </div>
+              )}
+
+              {/* Change package */}
+              <div>
+                <Label className="text-xs mb-2 block" style={s.muted}>Paket Değiştir</Label>
+                <Select value={selectedPaketId} onValueChange={setSelectedPaketId}>
+                  <SelectTrigger style={s.input}><SelectValue placeholder="Paket seçin" /></SelectTrigger>
+                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
+                    {allPaketler.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id} className="text-xs">
+                        {p.ad} {p.fiyat_aylik ? `(${p.fiyat_aylik} ${p.para_birimi}/ay)` : "(Ücretsiz)"}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setPaketDialogOpen(false)}
+              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
+            <Button onClick={handleChangePaket} disabled={paketSaving || !selectedPaketId}
+              className="bg-amber-500 hover:bg-amber-600 text-white">
+              {paketSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Paketi Güncelle
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </AdminLayout>
   );
 }
 
-function StatBox({ icon: Icon, label, value }: { icon: any; label: string; value: string | number }) {
+// Color-coded stat box
+function ColoredStatBox({ icon: Icon, label, value, suffix }: { icon: any; label: string; value: number; suffix?: string }) {
+  const numVal = typeof value === "number" ? value : 0;
   return (
-    <div style={s.statBox}>
-      <Icon className="w-3.5 h-3.5 mx-auto mb-1" style={s.muted} />
-      <div className="font-semibold text-sm" style={s.text}>{value}</div>
+    <div style={{ ...s.statBox, background: getValueBgColor(numVal) }}>
+      <Icon className="w-3.5 h-3.5 mx-auto mb-1" style={{ color: getValueColor(numVal) }} />
+      <div className="font-semibold text-sm" style={{ color: getValueColor(numVal) }}>{suffix ? `${value}${suffix}` : value}</div>
       <div className="text-[10px]" style={s.muted}>{label}</div>
+    </div>
+  );
+}
+
+function QuotaItem({ icon: Icon, label, used, limit }: { icon: any; label: string; used: number; limit: number | null }) {
+  const remaining = limit === null ? "∞" : Math.max(0, limit - used);
+  const percentage = limit === null ? 0 : limit > 0 ? (used / limit) * 100 : 100;
+  const barColor = limit === null ? "#22c55e" : percentage >= 90 ? "#ef4444" : percentage >= 60 ? "#eab308" : "#22c55e";
+
+  return (
+    <div className="p-2.5 rounded-lg" style={{ background: "hsl(var(--admin-hover))" }}>
+      <div className="flex items-center gap-1.5 mb-1">
+        <Icon className="w-3 h-3" style={s.muted} />
+        <span className="text-[10px]" style={s.muted}>{label}</span>
+      </div>
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span style={s.text}>{used} / {limit === null ? "∞" : limit}</span>
+        <span className="font-semibold" style={{ color: barColor }}>Kalan: {remaining}</span>
+      </div>
+      {limit !== null && (
+        <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: "hsl(var(--admin-border))" }}>
+          <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(100, percentage)}%`, background: barColor }} />
+        </div>
+      )}
     </div>
   );
 }
