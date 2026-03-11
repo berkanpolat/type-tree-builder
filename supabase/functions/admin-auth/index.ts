@@ -1903,10 +1903,27 @@ Deno.serve(async (req) => {
         .eq("user_id", userId);
       if (error) return jsonResponse({ error: error.message }, 500);
 
+      // Build detailed notification message
+      const detailParts: string[] = [];
+      const labels: Record<string, string> = {
+        profil_goruntuleme: "Profil Görüntüleme",
+        teklif_verme: "Teklif Verme",
+        aktif_urun: "Aktif Ürün",
+        mesaj: "Mesaj",
+        ihale_acma: "İhale Açma",
+      };
+      const hak = ekstraHaklar || {};
+      for (const [key, val] of Object.entries(hak)) {
+        if (typeof val === "number" && val > 0) {
+          detailParts.push(`${labels[key] || key}: +${val}`);
+        }
+      }
+      const detailStr = detailParts.length > 0 ? ` (${detailParts.join(", ")})` : "";
+
       await supabase.from("notifications").insert({
         user_id: userId,
         type: "ekstra_hak",
-        message: "Hesabınıza ekstra hak tanımlanmıştır.",
+        message: `Hesabınıza ekstra hak tanımlanmıştır.${detailStr}`,
         link: "/dashboard",
       });
 

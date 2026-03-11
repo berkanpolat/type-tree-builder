@@ -74,7 +74,7 @@ interface FirmaItem {
   urun_sayisi: number;
   sikayet_sayisi: number;
   profil_doluluk: number;
-  profile: { ad: string; soyad: string; iletisim_email: string; iletisim_numarasi: string | null } | null;
+  profile: { ad: string; soyad: string; iletisim_email: string; iletisim_numarasi: string | null; last_seen: string | null } | null;
   abonelik: {
     paket_id: string;
     paket_ad: string;
