@@ -301,7 +301,8 @@ export default function YeniIhale() {
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
+    if (ihaleId) await handleSave();
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
