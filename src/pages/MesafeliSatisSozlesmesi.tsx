@@ -27,7 +27,7 @@ export default function MesafeliSatisSozlesmesi() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {isLoggedIn && <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />}
+      {isLoggedIn ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
       <div className="max-w-4xl mx-auto px-6 py-12 md:py-16 flex-1 w-full">
         <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-10">MANUFIXO MESAFELİ SATIŞ SÖZLEŞMESİ</h1>
 
