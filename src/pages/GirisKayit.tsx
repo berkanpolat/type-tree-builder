@@ -56,6 +56,7 @@ const GirisKayit = () => {
   const [telefon, setTelefon] = useState("");
   const [countryCode, setCountryCode] = useState("+90");
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
 
   // Phone verification state
   const [otpSent, setOtpSent] = useState(false);
