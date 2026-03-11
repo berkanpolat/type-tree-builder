@@ -171,6 +171,10 @@ const AdminDestek = () => {
   }, [mesajlar]);
 
   const handleSendMessage = async () => {
+    if (!hasPermission("destek_cevap")) {
+      toast({ title: "Yetkisiz", description: "Buna yetkiniz yok", variant: "destructive" });
+      return;
+    }
     if (!yeniMesaj.trim() || !selectedTalep) return;
     if (selectedTalep.durum === "cozuldu") return;
 

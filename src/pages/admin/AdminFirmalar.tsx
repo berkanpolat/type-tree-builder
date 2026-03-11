@@ -110,7 +110,7 @@ type SortDir = "asc" | "desc";
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminFirmalar() {
-  const { token } = useAdminAuth();
+  const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [firmalar, setFirmalar] = useState<FirmaItem[]>([]);
   const [stats, setStats] = useState<FirmaStats | null>(null);
