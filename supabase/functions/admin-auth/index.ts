@@ -2402,6 +2402,88 @@ Deno.serve(async (req) => {
       return jsonResponse({ url: data.signedUrl });
     }
 
+    // ─── LIST KISITLAMALAR ───
+    if (action === "list-kisitlamalar") {
+      const payload = verifyToken(body.token);
+
+      const { data, error } = await supabase
+        .from("firma_kisitlamalar")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) return jsonResponse({ error: error.message }, 500);
+
+      // Enrich with firma & profile info
+      const enriched = [];
+      for (const k of (data || [])) {
+        const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", k.user_id).single();
+        const { data: profile } = await supabase.from("profiles").select("ad, soyad, iletisim_email").eq("user_id", k.user_id).single();
+        enriched.push({
+          ...k,
+          firma_unvani: firma?.firma_unvani || "—",
+          kullanici_ad: profile ? `${profile.ad} ${profile.soyad}` : "—",
+          kullanici_email: profile?.iletisim_email || "—",
+        });
+      }
+
+      return jsonResponse({ kisitlamalar: enriched });
+    }
+
+    // ─── UPDATE KISITLAMA ───
+    if (action === "update-kisitlama") {
+      const { token, kisitlamaId, sebep, kisitlamaAlanlari, bitisTarihi, aktif } = body;
+      const payload = verifyToken(token);
+
+      const updateData: any = {};
+      if (sebep !== undefined) updateData.sebep = sebep;
+      if (kisitlamaAlanlari !== undefined) updateData.kisitlama_alanlari = kisitlamaAlanlari;
+      if (bitisTarihi !== undefined) updateData.bitis_tarihi = bitisTarihi;
+      if (aktif !== undefined) updateData.aktif = aktif;
+
+      const { error } = await supabase.from("firma_kisitlamalar").update(updateData).eq("id", kisitlamaId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      await logActivity(supabase, payload, "Kısıtlama güncellendi", { target_type: "kisitlama", target_id: kisitlamaId });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── DELETE KISITLAMA ───
+    if (action === "delete-kisitlama") {
+      const { token, kisitlamaId } = body;
+      const payload = verifyToken(token);
+
+      const { error } = await supabase.from("firma_kisitlamalar").delete().eq("id", kisitlamaId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      await logActivity(supabase, payload, "Kısıtlama kaldırıldı", { target_type: "kisitlama", target_id: kisitlamaId });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── SEARCH USERS FOR KISITLAMA ───
+    if (action === "search-users-for-kisitlama") {
+      const payload = verifyToken(body.token);
+      const { query } = body;
+
+      const { data: firmalar } = await supabase
+        .from("firmalar")
+        .select("user_id, firma_unvani")
+        .ilike("firma_unvani", `%${query}%`)
+        .limit(10);
+
+      const results = [];
+      for (const f of (firmalar || [])) {
+        const { data: profile } = await supabase.from("profiles").select("ad, soyad, iletisim_email").eq("user_id", f.user_id).single();
+        results.push({
+          user_id: f.user_id,
+          firma_unvani: f.firma_unvani,
+          kullanici_ad: profile ? `${profile.ad} ${profile.soyad}` : "—",
+          kullanici_email: profile?.iletisim_email || "—",
+        });
+      }
+
+      return jsonResponse({ users: results });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
