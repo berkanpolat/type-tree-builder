@@ -12,7 +12,7 @@ import {
 import {
   MessageSquareWarning, Eye, Filter, RotateCcw, Search,
   ChevronLeft, ChevronRight, MessageSquare, Gavel, Package, User,
-  FileText, Calendar, Building2, AlertTriangle, ShieldAlert
+  FileText, Calendar, Building2, AlertTriangle, ShieldAlert, ExternalLink
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
