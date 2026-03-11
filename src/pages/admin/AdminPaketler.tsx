@@ -361,7 +361,7 @@ function PaketContent({
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto"
-          style={{ background: `hsl(var(--admin-card))`, borderColor: `hsl(var(--admin-border))`, color: `hsl(var(--admin-text))` }}>
+          style={{ background: `hsl(var(--admin-card-bg))`, borderColor: `hsl(var(--admin-border))`, color: `hsl(var(--admin-text))` }}>
           <DialogHeader>
             <DialogTitle style={{ color: `hsl(var(--admin-text))` }}>
               {editingPaket ? "Paketi Düzenle" : "Yeni Paket Oluştur"}
