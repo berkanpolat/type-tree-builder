@@ -256,21 +256,16 @@ export default function FirmaDetay() {
 
       // Kendi firması ise kota kontrolü yapma
       if (user && firmaData.user_id !== user.id) {
-        // Daha önce bu dönemde görüntülenmiş mi kontrol et
-        const donemBaslangic = packageInfo.donemBitis
-          ? new Date(new Date(packageInfo.donemBitis).getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
-          : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-
+        // Daha önce HİÇ görüntülenmiş mi kontrol et (tüm zamanlar)
         const { data: existingView } = await supabase
           .from("profil_goruntulemeler" as any)
           .select("id")
           .eq("user_id", user.id)
           .eq("firma_id", id)
-          .gte("created_at", donemBaslangic)
           .maybeSingle();
 
         if (!existingView) {
-          // Yeni profil görüntülemesi - kota kontrolü
+          // İlk kez görüntüleme - kota kontrolü yap
           const check = canPerformAction(packageInfo.limits, packageInfo.usage, "profil_goruntuleme");
           if (!check.allowed) {
             setQuotaBlocked(true);
@@ -283,6 +278,7 @@ export default function FirmaDetay() {
             .from("profil_goruntulemeler" as any)
             .insert({ user_id: user.id, firma_id: id });
         }
+        // Daha önce görüntülenmişse → serbestçe devam et, hak düşmez
       }
 
       setFirma(firmaData as FirmaData);
