@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
 import Footer from "@/components/Footer";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
+import UpgradeDialog from "@/components/UpgradeDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
