@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -14,8 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Phone, Loader2 } from "lucide-react";
 import authBg from "@/assets/auth-bg.jpg";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 const GirisKayit = () => {
   const [activeTab, setActiveTab] = useState<"giris" | "kayit">("giris");
@@ -39,6 +44,67 @@ const GirisKayit = () => {
   const [telefon, setTelefon] = useState("");
   const [password, setPassword] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
+
+  // Phone verification state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpCountdown, setOtpCountdown] = useState(0);
+
+  // Countdown timer for resend
+  useEffect(() => {
+    if (otpCountdown <= 0) return;
+    const timer = setInterval(() => setOtpCountdown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [otpCountdown]);
+
+  const handleSendOtp = async () => {
+    if (!telefon || telefon.length < 10) {
+      toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
+      return;
+    }
+    setSendingOtp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-sms-otp", {
+        body: { telefon },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      setOtpSent(true);
+      setOtpCountdown(120); // 2 minute cooldown
+      toast({ title: "Kod gönderildi", description: `${telefon} numarasına doğrulama kodu gönderildi.` });
+    } catch (err: any) {
+      toast({ title: "Hata", description: err.message, variant: "destructive" });
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpCode.length !== 6) {
+      toast({ title: "Hata", description: "6 haneli kodu eksiksiz giriniz", variant: "destructive" });
+      return;
+    }
+    setVerifyingOtp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-sms-otp", {
+        body: { telefon, kod: otpCode },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.verified) throw new Error("Doğrulama başarısız");
+
+      setPhoneVerified(true);
+      toast({ title: "Doğrulandı", description: "Telefon numaranız başarıyla doğrulandı." });
+    } catch (err: any) {
+      toast({ title: "Hata", description: err.message, variant: "destructive" });
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
 
   // Firma Türü / Tipi queries
   const { data: firmaTurleri } = useQuery({
