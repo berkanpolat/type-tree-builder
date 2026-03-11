@@ -47,6 +47,30 @@ const paraBirimiSymbol: Record<string, string> = {
 const isUUID = (val: string): boolean =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
 
+const RED_SEBEPLERI = [
+  "Eksik veya yetersiz ürün bilgisi",
+  "Yanlış kategori seçimi",
+  "Yanlış ürün tipi seçimi",
+  "Düşük kaliteli görseller",
+  "Uygunsuz görseller",
+  "Platform kurallarına aykırı içerik",
+  "Platform dışı iletişim bilgisi paylaşımı",
+  "Reklam veya yönlendirme içerikleri",
+  "Tekstil kapsamı dışı ürün",
+  "Yasaklı ürün",
+  "Sahte veya marka ihlali içeren ürün",
+  "Telif hakkı ihlali",
+  "Gerçekçi olmayan fiyatlandırma",
+  "Fiyat bilgisinin eksik olması",
+  "Yinelenen (duplicate) ürün",
+  "Yanıltıcı ürün bilgisi",
+  "Doğrulanmamış veya şüpheli satıcı davranışı",
+  "Spam ürün yükleme",
+  "Eksik teknik özellik bilgileri",
+  "Platform standartlarına uygun olmayan ürün başlığı",
+  "Platform kalite standartlarına uymayan içerik",
+];
+
 const formatLabel = (key: string): string => {
   const turkishMap: Record<string, string> = {
     kumas_kompozisyonu: "Kumaş Kompozisyonu", kumas_grubu: "Kumaş Grubu", kumas_turu: "Kumaş Türü",
