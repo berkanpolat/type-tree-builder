@@ -71,6 +71,12 @@ interface UserResult {
 export default function AdminKisitlamalar() {
   const { token } = useAdminAuth();
   const { toast } = useToast();
+
+  const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
+    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body: { ...body, token } });
+    if (error) throw error;
+    return data;
+  }, [token]);
   const [kisitlamalar, setKisitlamalar] = useState<Kisitlama[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
