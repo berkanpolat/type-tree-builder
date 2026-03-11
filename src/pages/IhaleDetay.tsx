@@ -191,6 +191,7 @@ export default function IhaleDetay() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const ihaleDetayBanner = useBanner("ihale-detay-alt-banner");
 
   const [currentUserId, setCurrentUserId] = useState("");
   const [headerFirmaUnvani, setHeaderFirmaUnvani] = useState("");

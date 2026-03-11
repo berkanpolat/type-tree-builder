@@ -67,6 +67,7 @@ export default function TekRehber() {
   const navigate = useNavigate();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
+  const rehberSidebarBanner = useBanner("tekrehber-sidebar");
   const [authLoading, setAuthLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
