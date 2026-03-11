@@ -261,15 +261,15 @@ export default function TekRehber() {
     }
     const timer = setTimeout(async () => {
       const results: SearchResult[] = [];
-      const { data: firmaResults } = await supabase
-        .from("firmalar").select("id, firma_unvani").ilike("firma_unvani", `%${searchTerm}%`).limit(5);
-      if (firmaResults) firmaResults.forEach((f) => results.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
-      const { data: turMatches } = await supabase
-        .from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KATEGORI_ID).ilike("name", `%${searchTerm}%`).limit(5);
-      if (turMatches) turMatches.forEach((t) => results.push({ id: t.id, name: t.name, type: "Tür" }));
+      const [firmaRes, turRes] = await Promise.all([
+        supabase.from("firmalar").select("id, firma_unvani").ilike("firma_unvani", `%${searchTerm}%`).limit(5),
+        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KATEGORI_ID).ilike("name", `%${searchTerm}%`).limit(5),
+      ]);
+      if (firmaRes.data) firmaRes.data.forEach((f) => results.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
+      if (turRes.data) turRes.data.forEach((t) => results.push({ id: t.id, name: t.name, type: "Tür" }));
       setSearchResults(results);
       setShowDropdown(results.length > 0);
-    }, 300);
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
