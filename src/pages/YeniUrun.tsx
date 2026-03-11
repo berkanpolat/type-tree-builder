@@ -138,6 +138,9 @@ export default function YeniUrun() {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   // Step 0: Kategori
   const [kategoriler, setKategoriler] = useState<{ id: string; name: string }[]>([]);
