@@ -1738,7 +1738,7 @@ Deno.serve(async (req) => {
     // ─── UPDATE DESTEK STATUS (admin) ───
     if (action === "destek-durum-guncelle") {
       const payload = verifyToken(body.token);
-      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+      if (!payload.is_primary && !payload.permissions?.destek_cevap) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
