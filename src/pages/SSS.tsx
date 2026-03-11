@@ -55,7 +55,7 @@ const sssData = [
     a: "Temel profil oluşturma mümkündür.\nAncak iş fırsatlarına erişim, teklif süreçleri ve görünürlük için paket gereklidir.",
   },
   {
-    q: "Tekstil A.Ş.'da firmalar nasıl birbirini bulur?",
+    q: "Tekstil A.Ş.'de firmalar nasıl birbirini bulur?",
     a: "Gelişmiş arama ve filtreleme sistemi sayesinde; ürün grubu, kapasite, lokasyon, sertifikalar ve uzmanlık alanlarına göre doğru firmalar kolayca bulunur.",
   },
   {
