@@ -251,6 +251,42 @@ const GirisKayit = () => {
     "Teklif toplama / karşılaştırma / karar alma akışının düzenlenmesi",
   ];
 
+  // Registration complete full-screen
+  if (registrationComplete) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-card rounded-2xl shadow-lg border border-border p-8 space-y-6 text-center">
+            <div className="flex justify-center">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <CheckCircle2 className="w-10 h-10 text-primary" />
+              </div>
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Başvurunuz Alındı!</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Başvurunuz başarıyla alınmıştır. Ekibimiz başvurunuzu inceleyecek ve en kısa sürede sizinle iletişime geçecektir.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Başvurunuz onaylandığında, şifre oluşturma bağlantısı <span className="font-medium text-foreground">{email}</span> adresine gönderilecektir.
+            </p>
+            <Button
+              className="w-full h-12 rounded-xl"
+              onClick={() => {
+                setRegistrationComplete(false);
+                setActiveTab("giris");
+                setRegisterStep(1);
+                setSelectedTurId(""); setSelectedTipId(""); setFirmaUnvani(""); setVergiNumarasi(""); setVergiDairesi("");
+                setAd(""); setSoyad(""); setEmail(""); setTelefon(""); setPhoneVerified(false); setOtpSent(false); setOtpCode("");
+              }}
+            >
+              Giriş Sayfasına Dön
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // OTP full-screen verification view
   if (otpSent && !phoneVerified && registerStep === 2) {
     const minutes = Math.floor(otpCountdown / 60);
