@@ -280,6 +280,21 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
 
           {/* Düzenlenebilir alanlar */}
 
+          {/* Firma Ölçeği */}
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium text-foreground">Firma Ölçeği</Label>
+            <Select value={firmaOlcegiId} onValueChange={setFirmaOlcegiId}>
+              <SelectTrigger className="bg-muted/50">
+                <SelectValue placeholder="Firma Ölçeği Seçiniz" />
+              </SelectTrigger>
+              <SelectContent>
+                {firmaOlcekleri.map(t => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {/* Kuruluş Tarihi */}
           <div className="space-y-1.5">
             <Label className="text-sm font-medium text-foreground">Kuruluş Tarihi</Label>
