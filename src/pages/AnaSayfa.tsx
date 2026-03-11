@@ -112,11 +112,11 @@ export default function AnaSayfa() {
     check();
   }, [navigate]);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
+  const [appliedSearchTerm, setAppliedSearchTerm] = useSessionState("appliedSearchTerm", "");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<SearchResult | null>(null);
+  const [activeFilter, setActiveFilter] = useSessionState<SearchResult | null>("activeFilter", null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Product state
