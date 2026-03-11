@@ -310,11 +310,36 @@ export default function YeniIhale() {
       });
       return;
     }
+
+    // Date validations on İhale Bilgileri step
+    if (STEPS[currentStep] === "İhale Bilgileri") {
+      const now = new Date();
+      const minStart = new Date(now.getTime() + 30 * 60 * 1000);
+      const maxEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const start = formData.baslangic_tarihi ? new Date(formData.baslangic_tarihi) : null;
+      const end = formData.bitis_tarihi ? new Date(formData.bitis_tarihi) : null;
+
+      if (start && start < minStart) {
+        toast({ title: "Tarih Hatası", description: "Başlangıç tarihi en erken 30 dakika sonrası olabilir.", variant: "destructive" });
+        return;
+      }
+      if (end && end > maxEnd) {
+        toast({ title: "Tarih Hatası", description: "Bitiş tarihi en geç 30 gün sonrası olabilir.", variant: "destructive" });
+        return;
+      }
+      if (start && end && end <= start) {
+        toast({ title: "Tarih Hatası", description: "Bitiş tarihi başlangıç tarihinden sonra olmalıdır.", variant: "destructive" });
+        return;
+      }
+    }
+
     if (STEPS[currentStep] === "Teklif Usulü" && !ihaleId) {
       await createIhale();
     } else if (ihaleId) {
-      // Auto-save on each step transition
-      await handleSave();
+      // Auto-save on each step transition (only save after İhale Bilgileri step where data is entered)
+      if (currentStep >= 3) {
+        await handleSave();
+      }
     }
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
   };
