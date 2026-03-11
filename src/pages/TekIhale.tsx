@@ -438,11 +438,19 @@ export default function TekIhale() {
               ))}
             </FilterSection>
             {/* Sidebar banner */}
-            {ihaleSidebarBanner.url && (
-              <div className="rounded-xl overflow-hidden border border-border cursor-pointer" onClick={() => ihaleSidebarBanner.linkUrl && window.open(ihaleSidebarBanner.linkUrl, "_blank")}>
+            <div
+              className="rounded-xl overflow-hidden border border-border cursor-pointer"
+              onClick={() => ihaleSidebarBanner.linkUrl && window.open(ihaleSidebarBanner.linkUrl, "_blank")}
+            >
+              {ihaleSidebarBanner.url ? (
                 <img src={ihaleSidebarBanner.url} alt="Reklam" className="w-full h-auto object-cover" />
-              </div>
-            )}
+              ) : (
+                <div className="p-6 flex flex-col items-center justify-center text-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.75))" }}>
+                  <p className="text-primary-foreground font-bold text-sm">Tekstil A.Ş.</p>
+                  <p className="text-primary-foreground/70 text-xs mt-1">Reklam alanı</p>
+                </div>
+              )}
+            </div>
           </aside>
 
           {/* Main content */}
