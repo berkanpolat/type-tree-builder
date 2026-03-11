@@ -445,8 +445,8 @@ export default function AdminKullanicilar() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>
           <DialogHeader>
-            <DialogTitle>{editingUser ? "Kullanıcıyı Düzenle" : "Yeni Kullanıcı Ekle"}</DialogTitle>
-            <DialogDescription className="text-slate-400">
+            <DialogTitle style={sText}>{editingUser ? "Kullanıcıyı Düzenle" : "Yeni Kullanıcı Ekle"}</DialogTitle>
+            <DialogDescription style={sMuted}>
               {editingUser ? "Kullanıcı bilgilerini güncelleyin." : "Panele erişim sağlayacak yeni bir kullanıcı oluşturun."}
             </DialogDescription>
           </DialogHeader>
