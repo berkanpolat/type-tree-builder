@@ -124,6 +124,32 @@ const teklifUsuluLabel: Record<string, string> = {
   kapali_teklif: "Kapalı Teklif",
 };
 
+const IHALE_RED_SEBEPLERI = [
+  "Eksik ihale bilgisi",
+  "Yetersiz veya belirsiz ihale açıklaması",
+  "Yanlış kategori seçimi",
+  "Yanlış ihale türü seçimi",
+  "Teknik şartnamenin eksik olması",
+  "Teslimat veya termin bilgilerinin eksik olması",
+  "Miktar bilgisinin belirtilmemesi",
+  "Platform kurallarına aykırı içerik",
+  "Platform dışı iletişim bilgisi paylaşımı",
+  "Reklam veya yönlendirme içerikleri",
+  "Tekstil kapsamı dışı ihale",
+  "Yasaklı ürün veya hizmet talebi",
+  "Sahte veya yanıltıcı ihale",
+  "Gerçekçi olmayan fiyat veya bütçe bilgisi",
+  "Yinelenen (duplicate) ihale",
+  "Yanıltıcı veya yanlış bilgi içeren ihale",
+  "Spam amaçlı ihale açılması",
+  "Telif veya marka ihlali içeren ihale talebi",
+  "Platform standartlarına uygun olmayan ihale başlığı",
+  "Eksik teknik detaylar",
+  "İhale başlangıç veya bitiş tarihinin kurallara uygun olmaması",
+  "Platform güvenliği açısından riskli ihale",
+  "Doğrulanmamış veya şüpheli kullanıcı tarafından açılan ihale",
+];
+
 function useCountdown(targetDate: string | null) {
   const [remaining, setRemaining] = useState("");
   useEffect(() => {
