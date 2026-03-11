@@ -558,7 +558,7 @@ const LandingPage = () => {
                 ))}
               </div>
               <Link
-                to="/giris-kayit"
+                 to="/giris-kayit?tab=kayit"
                 className="mt-6 block text-center px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
               >
                 Hemen Kayıt Ol
