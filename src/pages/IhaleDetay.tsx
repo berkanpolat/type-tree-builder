@@ -375,6 +375,14 @@ export default function IhaleDetay() {
     if (imgs.length === 0 && ihaleData.foto_url) imgs.push(ihaleData.foto_url);
     setAllImages(imgs);
 
+    // Load ek dosyalar
+    const { data: ekRows } = await supabase
+      .from("ihale_ek_dosyalar" as any)
+      .select("dosya_url, dosya_adi, sira")
+      .eq("ihale_id", id)
+      .order("sira");
+    setEkDosyalar(ekRows || []);
+
     // Resolve all secenek IDs
     const idsToResolve: string[] = [];
     if (ihaleData.urun_kategori_id) idsToResolve.push(ihaleData.urun_kategori_id);
