@@ -1535,7 +1535,13 @@ Deno.serve(async (req) => {
       await supabase.auth.admin.deleteUser(userId);
 
       if (sikayetId) {
-        await supabase.from("sikayetler").update({ durum: "cozuldu" }).eq("id", sikayetId);
+        await supabase.from("sikayetler").update({
+          durum: "cozuldu",
+          islem_tipi: "yasaklama",
+          islem_yapan: createdBy,
+          islem_tarihi: new Date().toISOString(),
+          islem_detay: `Kalıcı yasaklama. ${sebep ? 'Sebep: ' + sebep : ''}. Firma: ${firma?.firma_unvani || '-'}`,
+        }).eq("id", sikayetId);
       }
 
       return jsonResponse({ success: true });
