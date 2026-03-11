@@ -298,8 +298,6 @@ export default function YeniIhale() {
         if (!formData.kdv_durumu) missing.push("KDV Durumu");
         if (formData.odeme_secenekleri.length === 0) missing.push("Ödeme Seçenekleri");
         if (formData.odeme_vadesi.length === 0) missing.push("Ödeme Vadesi");
-        if (!formData.kargo_masrafi) missing.push("Kargo Masrafı Ödemesi");
-        if (!formData.kargo_sirketi_anlasmasi) missing.push("Kargo Şirketi Anlaşması");
         if (!formData.baslangic_tarihi) missing.push("Başlangıç Tarihi");
         if (!formData.bitis_tarihi) missing.push("Bitiş Tarihi");
         break;
