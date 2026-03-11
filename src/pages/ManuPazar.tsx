@@ -393,7 +393,7 @@ export default function ManuPazar() {
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(urun.id)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(urun.id)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>

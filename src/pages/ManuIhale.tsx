@@ -343,7 +343,7 @@ export default function ManuIhale() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => handleDelete(ihale.id)}
+                              onClick={() => setDeleteId(ihale.id)}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
