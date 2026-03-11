@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
       const userIds = (firmalar || []).map((f: any) => f.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, ad, soyad, iletisim_email, iletisim_numarasi")
+        .select("user_id, ad, soyad, iletisim_email, iletisim_numarasi, last_seen")
         .in("user_id", userIds);
 
       // Get counts per firma
