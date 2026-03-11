@@ -757,7 +757,7 @@ Deno.serve(async (req) => {
       const completed = allItems.filter((i: any) => i.durum === "tamamlandi").length;
       const cancelled = allItems.filter((i: any) => i.durum === "iptal").length;
       const pendingApproval = allItems.filter((i: any) => i.durum === "onay_bekliyor").length;
-      const draft = allItems.filter((i: any) => i.durum === "duzenleniyor" || i.durum === "taslak").length;
+      const draft = allItems.filter((i: any) => i.durum === "duzenleniyor").length;
 
       // Total teklifler count
       const { count: totalTeklifler } = await supabase
