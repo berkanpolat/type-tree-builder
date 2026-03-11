@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import DashboardDestek from "./pages/DashboardDestek";
+import DashboardDestekDetay from "./pages/DashboardDestekDetay";
 import AnaSayfa from "./pages/AnaSayfa";
 import HizmetBilgileri from "./pages/HizmetBilgileri";
 import UrunBilgileri from "./pages/UrunBilgileri";
