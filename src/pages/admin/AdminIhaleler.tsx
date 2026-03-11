@@ -106,8 +106,6 @@ const DURUM_LABELS: Record<string, string> = {
 type SortField = "created_at" | "teklif_sayisi" | "goruntuleme_sayisi" | "bitis_tarihi";
 type SortDir = "asc" | "desc";
 
-// Active stat filter state type
-type StatFilter = "all" | "active" | "completed" | "cancelled" | "pending" | "draft" | "urun_kat" | "hizmet_kat";
 
 export default function AdminIhaleler() {
   const { token } = useAdminAuth();
