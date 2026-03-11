@@ -135,6 +135,7 @@ export default function YeniIhale() {
             filtreData = data.filtreler || [];
             stokData = data.stoklar || [];
             fotoData = (data.fotograflar || []).map((f: any) => f.foto_url || f);
+            ekDosyaData = (data.ek_dosyalar || []).map((f: any) => ({ url: f.dosya_url || f.url, adi: f.dosya_adi || f.adi }));
             setIsAdminMode(true);
           }
         } catch {}
