@@ -1350,7 +1350,8 @@ Deno.serve(async (req) => {
         let sikayet_edilen_firma = "-";
         try {
           if (s.tur === "profil") {
-            const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", s.referans_id).single();
+            // referans_id is firma.id
+            const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("id", s.referans_id).single();
             if (f) sikayet_edilen_firma = f.firma_unvani;
           } else if (s.tur === "ihale") {
             const { data: i } = await supabase.from("ihaleler").select("user_id").eq("id", s.referans_id).single();
