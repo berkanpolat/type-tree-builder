@@ -503,7 +503,7 @@ export default function FirmaDetay() {
     };
 
     fetchAll();
-  }, [id, navigate, toast]);
+  }, [id, navigate, toast, packageInfo.loading]);
 
   const toggleFavorite = async () => {
     if (!currentUserId || !id) {
