@@ -248,7 +248,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <img src={logoImg} alt="Tekstil A.Ş." className="h-7 object-contain" />
           <Link
-            to="/giris-kayit"
+            to="/giris-kayit?tab=kayit"
             className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             Giriş Yap / Kayıt Ol
