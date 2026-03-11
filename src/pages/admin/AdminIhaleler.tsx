@@ -119,6 +119,7 @@ export default function AdminIhaleler() {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [statFilter, setStatFilter] = useState<{ type: string; value?: string }>({ type: "all" });
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
