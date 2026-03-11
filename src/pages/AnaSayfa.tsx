@@ -367,25 +367,27 @@ export default function AnaSayfa() {
     fetchUrunler();
   }, [fetchUrunler]);
 
-  // Trigger search on Enter or Ara button — detect kategori/grup/tür match
+  // Trigger search on Enter or Ara button — detect kategori/grup/tür match and auto-apply filters
   const handleSearch = useCallback(async () => {
     const term = searchTerm.trim();
     if (!term) return;
     setShowDropdown(false);
 
-    // Check if term matches a kategori/grup/tür
+    // 1. Check if term directly matches a kategori/grup/tür name
     const { data: matches } = await supabase
       .from("firma_bilgi_secenekleri")
       .select("id, name, parent_id")
       .eq("kategori_id", KATEGORI_ID)
       .ilike("name", `%${term}%`)
-      .limit(1);
+      .limit(5);
 
     if (matches && matches.length > 0) {
-      const match = matches[0];
-      if (!match.parent_id) {
+      // Find exact or best match
+      const exact = matches.find((m) => m.name.toLowerCase() === term.toLowerCase()) || matches[0];
+
+      if (!exact.parent_id) {
         // It's a kategori
-        const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === match.name.toLowerCase());
+        const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === exact.name.toLowerCase());
         if (katName) {
           setSelectedKategori(katName);
           setSelectedGrupId(null);
@@ -395,51 +397,79 @@ export default function AnaSayfa() {
           return;
         }
       } else {
-        // Check if parent is a kategori (then it's a grup) or a grup (then it's a tür)
-        const { data: parent } = await supabase
-          .from("firma_bilgi_secenekleri")
-          .select("id, name, parent_id")
-          .eq("id", match.parent_id)
-          .single();
-        if (parent) {
-          if (!parent.parent_id) {
-            // match is a Grup, parent is Kategori
-            const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === parent.name.toLowerCase());
-            if (katName) {
-              setSelectedKategori(katName);
-              setSelectedGrupId(match.id);
-              setSelectedTurId(null);
-              setActiveFilter(null);
-              setAppliedSearchTerm("");
-              return;
-            }
-          } else {
-            // match is a Tür, parent is Grup — find kategori
-            const { data: grandparent } = await supabase
-              .from("firma_bilgi_secenekleri")
-              .select("id, name")
-              .eq("id", parent.parent_id)
-              .single();
-            if (grandparent) {
-              const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === grandparent.name.toLowerCase());
-              if (katName) {
-                setSelectedKategori(katName);
-                setSelectedGrupId(parent.id);
-                setSelectedTurId(match.id);
-                setActiveFilter(null);
-                setAppliedSearchTerm("");
-                return;
-              }
-            }
+        // Resolve hierarchy to find parent kategori
+        const resolved = await resolveHierarchy(exact.id, exact.parent_id);
+        if (resolved) {
+          setSelectedKategori(resolved.kategori);
+          setSelectedGrupId(resolved.grupId);
+          setSelectedTurId(resolved.turId);
+          setActiveFilter(null);
+          setAppliedSearchTerm("");
+          return;
+        }
+      }
+    }
+
+    // 2. No direct match — do text search on products and detect dominant category
+    const { data: productMatches } = await supabase
+      .from("urunler")
+      .select("urun_kategori_id")
+      .eq("durum", "aktif")
+      .ilike("baslik", `%${term}%`)
+      .limit(50);
+
+    if (productMatches && productMatches.length > 0) {
+      // Find most common category
+      const catCount: Record<string, number> = {};
+      productMatches.forEach((p) => {
+        if (p.urun_kategori_id) {
+          catCount[p.urun_kategori_id] = (catCount[p.urun_kategori_id] || 0) + 1;
+        }
+      });
+      const topCatId = Object.entries(catCount).sort((a, b) => b[1] - a[1])[0]?.[0];
+      if (topCatId) {
+        const matchedSecenek = kategoriSecenekler.find((k) => k.id === topCatId);
+        if (matchedSecenek) {
+          const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === matchedSecenek.name.toLowerCase());
+          if (katName) {
+            setSelectedKategori(katName);
+            setSelectedGrupId(null);
+            setSelectedTurId(null);
           }
         }
       }
     }
 
-    // No category match — do text search
     setActiveFilter(null);
     setAppliedSearchTerm(term);
   }, [searchTerm, kategoriSecenekler]);
+
+  // Helper to resolve kategori hierarchy from a grup/tür id
+  const resolveHierarchy = async (id: string, parentId: string): Promise<{ kategori: string; grupId: string | null; turId: string | null } | null> => {
+    const { data: parent } = await supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("id", parentId)
+      .single();
+    if (!parent) return null;
+
+    if (!parent.parent_id) {
+      // parent is Kategori, id is Grup
+      const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === parent.name.toLowerCase());
+      if (katName) return { kategori: katName, grupId: id, turId: null };
+      return null;
+    }
+    // parent is Grup, id is Tür — get grandparent (Kategori)
+    const { data: grandparent } = await supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name")
+      .eq("id", parent.parent_id)
+      .single();
+    if (!grandparent) return null;
+    const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === grandparent.name.toLowerCase());
+    if (katName) return { kategori: katName, grupId: parent.id, turId: id };
+    return null;
+  };
 
   // Lightweight autocomplete — products + kategori/grup/tür
   useEffect(() => {
