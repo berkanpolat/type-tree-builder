@@ -113,7 +113,7 @@ const HeroSearchSection = ({
 
               {/* Dropdown */}
               {showDropdown && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 bg-background border border-border rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.15)] z-50 mt-2 max-h-80 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 bg-background border border-border rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.15)] z-[220] mt-2 max-h-80 overflow-y-auto">
                   {searchResults.map((result, i) => (
                     <button
                       key={`${result.id}-${i}`}
