@@ -47,7 +47,7 @@ serve(async (req) => {
       body: JSON.stringify({
         From: "info@manufixo.com",
         To: to,
-        TemplateAlias: "welcome",
+        TemplateId: 43889443,
         TemplateModel: {
           ad_soyad: adSoyad,
           firma_unvani: firmaUnvani || "",
