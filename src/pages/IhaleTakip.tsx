@@ -105,6 +105,9 @@ export default function IhaleTakip() {
 
   // Confirm dialogs
   const [confirmAction, setConfirmAction] = useState<{ type: "kabul" | "red" | "iptal" | "sil"; teklifId?: string } | null>(null);
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   const countdown = useCountdown(ihale?.bitis_tarihi);
   const sym = paraBirimiSymbol[ihale?.para_birimi || "TRY"] || "₺";
