@@ -13,6 +13,7 @@ import { useNotificationCount } from "@/hooks/use-notifications";
 import HeaderMessagePanel from "@/components/header/HeaderMessagePanel";
 import HeaderFavoritesPanel from "@/components/header/HeaderFavoritesPanel";
 import HeaderNotificationsPanel from "@/components/header/HeaderNotificationsPanel";
+import QuotaReminderBadge from "@/components/QuotaReminderBadge";
 
 interface PazarHeaderProps {
   firmaUnvani: string;
@@ -67,6 +68,9 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
           {/* Notifications */}
           {/* Notifications */}
           <HeaderNotificationsPanel />
+
+          {/* Quota */}
+          <QuotaReminderBadge />
 
           {/* Divider */}
           <div className="w-px h-6 bg-border mx-2" />
