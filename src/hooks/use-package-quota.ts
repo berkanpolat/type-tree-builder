@@ -93,7 +93,7 @@ export function usePackageQuota(): PackageInfo {
         const [profilRes, teklifRes, urunRes, mesajRes] = await Promise.all([
           supabase
             .from("profil_goruntulemeler" as any)
-            .select("id", { count: "exact", head: true })
+            .select("firma_id")
             .eq("user_id", user.id)
             .gte("created_at", donemBaslangic),
           supabase
@@ -113,6 +113,7 @@ export function usePackageQuota(): PackageInfo {
             .gte("created_at", donemBaslangic),
         ]);
 
+        const uniqueFirmaIds = new Set((profilRes.data || []).map((p: any) => p.firma_id));
         const uniqueIhaleIds = new Set((teklifRes.data || []).map((t: any) => t.ihale_id));
 
         let initiatedConversations = 0;
@@ -132,7 +133,7 @@ export function usePackageQuota(): PackageInfo {
         }
 
         setUsage({
-          profil_goruntuleme: profilRes.count || 0,
+          profil_goruntuleme: uniqueFirmaIds.size,
           teklif_verme: uniqueIhaleIds.size,
           aktif_urun: urunRes.count || 0,
           mesaj: initiatedConversations,

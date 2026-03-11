@@ -256,12 +256,17 @@ export default function FirmaDetay() {
 
       // Kendi firması ise kota kontrolü yapma
       if (user && firmaData.user_id !== user.id) {
-        // Daha önce görüntülenmiş mi kontrol et
+        // Daha önce bu dönemde görüntülenmiş mi kontrol et
+        const donemBaslangic = packageInfo.donemBitis
+          ? new Date(new Date(packageInfo.donemBitis).getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+          : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
         const { data: existingView } = await supabase
           .from("profil_goruntulemeler" as any)
           .select("id")
           .eq("user_id", user.id)
           .eq("firma_id", id)
+          .gte("created_at", donemBaslangic)
           .maybeSingle();
 
         if (!existingView) {
