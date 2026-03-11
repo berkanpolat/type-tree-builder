@@ -184,6 +184,8 @@ export default function AnaSayfa() {
       } else if (activeFilter.type === "Tür") {
         query = query.eq("urun_tur_id", activeFilter.id);
       }
+    } else if (appliedSearchTerm) {
+      query = query.ilike("baslik", `%${appliedSearchTerm}%`);
     }
 
     // Apply mega-menu / sidebar category filters
