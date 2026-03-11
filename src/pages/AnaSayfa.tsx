@@ -263,7 +263,7 @@ export default function AnaSayfa() {
         : Promise.resolve({ data: null, error: null }),
     ]);
 
-    const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
+    const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null; belge_onayli?: boolean }> = {};
     (firmalarRes.data || []).forEach((f) => {
       firmaMap[f.user_id] = f;
     });
