@@ -455,96 +455,60 @@ export default function AdminKullanicilar() {
             {!editingUser && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Kullanıcı Numarası *</Label>
-                  <Input
-                    value={form.username}
-                    onChange={(e) => setForm({ ...form, username: e.target.value })}
-                    className="bg-slate-700/50 border-slate-600 text-white"
-                    placeholder="Kullanıcı no"
-                  />
+                  <Label style={sMuted}>Kullanıcı Adı *</Label>
+                  <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} style={sInput} placeholder="Kullanıcı no" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Şifre *</Label>
-                  <Input
-                    type="password"
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="bg-slate-700/50 border-slate-600 text-white"
-                    placeholder="Şifre"
-                  />
+                  <Label style={sMuted}>Şifre *</Label>
+                  <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={sInput} placeholder="Şifre" />
                 </div>
               </div>
             )}
 
             {editingUser && (
               <div className="space-y-2">
-                <Label className="text-slate-300">Yeni Şifre (opsiyonel)</Label>
-                <Input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                  placeholder="Değiştirmek için yeni şifre girin"
-                />
+                <Label style={sMuted}>Yeni Şifre (opsiyonel)</Label>
+                <Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} style={sInput} placeholder="Değiştirmek için yeni şifre girin" />
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">Ad *</Label>
-                <Input
-                  value={form.ad}
-                  onChange={(e) => setForm({ ...form, ad: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Label style={sMuted}>Ad *</Label>
+                <Input value={form.ad} onChange={(e) => setForm({ ...form, ad: e.target.value })} style={sInput} />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-300">Soyad *</Label>
-                <Input
-                  value={form.soyad}
-                  onChange={(e) => setForm({ ...form, soyad: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Label style={sMuted}>Soyad *</Label>
+                <Input value={form.soyad} onChange={(e) => setForm({ ...form, soyad: e.target.value })} style={sInput} />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">E-posta</Label>
-                <Input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Label style={sMuted}>E-posta</Label>
+                <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} style={sInput} />
               </div>
               <div className="space-y-2">
-                <Label className="text-slate-300">Telefon Numarası</Label>
-                <Input
-                  value={form.telefon}
-                  onChange={(e) => setForm({ ...form, telefon: e.target.value })}
-                  className="bg-slate-700/50 border-slate-600 text-white"
-                />
+                <Label style={sMuted}>Telefon Numarası</Label>
+                <Input value={form.telefon} onChange={(e) => setForm({ ...form, telefon: e.target.value })} style={sInput} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label className="text-slate-300">Pozisyon *</Label>
+              <Label style={sMuted}>Pozisyon *</Label>
               <Select value={form.pozisyon} onValueChange={(v) => setForm({ ...form, pozisyon: v })}>
-                <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700 z-[300]">
+                <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
+                <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
                   {POZISYONLAR.map((p) => (
-                    <SelectItem key={p} value={p} className="text-white hover:bg-slate-700">{p}</SelectItem>
+                    <SelectItem key={p} value={p} style={sText}>{p}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-3">
-              <Label className="text-slate-300 text-base font-semibold">Erişilebilirlik Ayarları</Label>
-              <div className="space-y-4 bg-slate-700/30 rounded-lg p-4 border border-slate-700">
+              <Label className="text-base font-semibold" style={sText}>Erişilebilirlik Ayarları</Label>
+              <div className="space-y-4 rounded-lg p-4" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
                 {PERMISSION_GROUPS.map((group) => (
                   <div key={group.label}>
                     <p className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">{group.label}</p>
@@ -558,9 +522,7 @@ export default function AdminKullanicilar() {
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="ghost" onClick={() => setDialogOpen(false)} className="text-slate-400 hover:text-white">
-              İptal
-            </Button>
+            <Button variant="ghost" onClick={() => setDialogOpen(false)} style={sMuted}>İptal</Button>
             <Button onClick={handleSave} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
               {editingUser ? "Güncelle" : "Oluştur"}
             </Button>
