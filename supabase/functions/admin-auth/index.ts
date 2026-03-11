@@ -1681,7 +1681,7 @@ Deno.serve(async (req) => {
     // ─── SEND DESTEK MESSAGE (admin) ───
     if (action === "destek-mesaj-gonder") {
       const payload = verifyToken(body.token);
-      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+      if (!payload.is_primary && !payload.permissions?.destek_cevap) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
