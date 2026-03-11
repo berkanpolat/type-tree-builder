@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
 import Footer from "@/components/Footer";
+import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
+import UpgradeDialog from "@/components/UpgradeDialog";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -91,6 +93,9 @@ export default function TekRehber() {
   const [firmaFavSet, setFirmaFavSet] = useState<Set<string>>(new Set());
 
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   // Click outside
   useEffect(() => {
@@ -296,6 +301,20 @@ export default function TekRehber() {
 
   const handleMessageFirma = async (firmaUserId: string) => {
     if (!currentUserId || firmaUserId === currentUserId) return;
+    // Check if conversation already exists
+    const { data: existingConv } = await supabase
+      .from("conversations")
+      .select("id")
+      .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${firmaUserId}),and(user1_id.eq.${firmaUserId},user2_id.eq.${currentUserId})`)
+      .maybeSingle();
+    if (!existingConv) {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
     navigate("/mesajlar", { state: { targetUserId: firmaUserId } });
   };
 
@@ -463,6 +482,12 @@ export default function TekRehber() {
         </div>
       </main>
       <Footer />
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Mesaj Hakkınız Doldu"
+        message={upgradeMessage}
+      />
     </div>
   );
 }

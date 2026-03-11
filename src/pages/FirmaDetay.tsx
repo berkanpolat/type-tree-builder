@@ -198,6 +198,8 @@ export default function FirmaDetay() {
   const [quotaBlocked, setQuotaBlocked] = useState(false);
   const [quotaMessage, setQuotaMessage] = useState("");
   const packageInfo = usePackageQuota();
+  const [msgUpgradeOpen, setMsgUpgradeOpen] = useState(false);
+  const [msgUpgradeMessage, setMsgUpgradeMessage] = useState("");
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
   const [kategoriMap, setKategoriMap] = useState<Record<string, string>>({});
   const [firmaTuruName, setFirmaTuruName] = useState("");
@@ -526,6 +528,21 @@ export default function FirmaDetay() {
     if (!currentUserId || !firma) {
       navigate("/giris-kayit");
       return;
+    }
+    // Check if conversation already exists
+    const { data: existingConv } = await supabase
+      .from("conversations")
+      .select("id")
+      .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${firma.user_id}),and(user1_id.eq.${firma.user_id},user2_id.eq.${currentUserId})`)
+      .maybeSingle();
+    if (!existingConv) {
+      // New conversation - check quota
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      if (!check.allowed) {
+        setMsgUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setMsgUpgradeOpen(true);
+        return;
+      }
     }
     navigate(`/mesajlar?userId=${firma.user_id}`);
   };
@@ -1065,6 +1082,12 @@ export default function FirmaDetay() {
         <BildirDialog open={bildirOpen} onOpenChange={setBildirOpen} tur="profil" referansId={firma.id} />
       )}
       <Footer />
+      <UpgradeDialog
+        open={msgUpgradeOpen}
+        onOpenChange={setMsgUpgradeOpen}
+        title="Mesaj Hakkınız Doldu"
+        message={msgUpgradeMessage}
+      />
     </div>
   );
 }

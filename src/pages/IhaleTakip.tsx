@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
+import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
+import UpgradeDialog from "@/components/UpgradeDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -103,6 +105,9 @@ export default function IhaleTakip() {
 
   // Confirm dialogs
   const [confirmAction, setConfirmAction] = useState<{ type: "kabul" | "red" | "iptal" | "sil"; teklifId?: string } | null>(null);
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   const countdown = useCountdown(ihale?.bitis_tarihi);
   const sym = paraBirimiSymbol[ihale?.para_birimi || "TRY"] || "₺";
@@ -347,6 +352,20 @@ export default function IhaleTakip() {
   // Handle mesaj gönder
   const handleMesajGonder = async (userId: string) => {
     if (!currentUserId) return;
+    // Check if conversation already exists
+    const { data: existingConv } = await supabase
+      .from("conversations")
+      .select("id")
+      .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${userId}),and(user1_id.eq.${userId},user2_id.eq.${currentUserId})`)
+      .maybeSingle();
+    if (!existingConv) {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
     const { data: convId } = await supabase.rpc("get_or_create_conversation", {
       p_user1: currentUserId,
       p_user2: userId,
@@ -699,6 +718,12 @@ export default function IhaleTakip() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        <UpgradeDialog
+          open={upgradeOpen}
+          onOpenChange={setUpgradeOpen}
+          title="Mesaj Hakkınız Doldu"
+          message={upgradeMessage}
+        />
       </div>
     </DashboardLayout>
   );

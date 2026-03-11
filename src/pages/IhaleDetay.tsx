@@ -658,6 +658,20 @@ export default function IhaleDetay() {
 
   const handleMesajGonder = async () => {
     if (!currentUserId || !firma || !ihale) return;
+    // Check if conversation already exists
+    const { data: existingConv } = await supabase
+      .from("conversations")
+      .select("id")
+      .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${firma.user_id}),and(user1_id.eq.${firma.user_id},user2_id.eq.${currentUserId})`)
+      .maybeSingle();
+    if (!existingConv) {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
     const { data: convId } = await supabase.rpc("get_or_create_conversation", {
       p_user1: currentUserId,
       p_user2: firma.user_id,
