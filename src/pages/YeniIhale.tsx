@@ -287,7 +287,7 @@ export default function YeniIhale() {
         if (!formData.baslik) missing.push("İhale Başlığı");
         if (!formData.aciklama) missing.push("Açıklama");
         if (!formData.baslangic_fiyati) missing.push("Başlangıç Fiyatı");
-        if (!formData.birim) missing.push("Birim");
+        if (!skipStokStep && !formData.birim) missing.push("Birim");
         if (!formData.kdv_durumu) missing.push("KDV Durumu");
         if (formData.odeme_secenekleri.length === 0) missing.push("Ödeme Seçenekleri");
         if (formData.odeme_vadesi.length === 0) missing.push("Ödeme Vadesi");
