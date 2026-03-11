@@ -436,6 +436,12 @@ export default function TekIhale() {
                 <CheckboxFilter key={o} label={o} checked={filterVade.includes(o)} onChange={() => toggleFilter(filterVade, o, setFilterVade)} />
               ))}
             </FilterSection>
+            {/* Sidebar banner */}
+            {ihaleSidebarBanner.url && (
+              <div className="rounded-xl overflow-hidden border border-border cursor-pointer" onClick={() => ihaleSidebarBanner.linkUrl && window.open(ihaleSidebarBanner.linkUrl, "_blank")}>
+                <img src={ihaleSidebarBanner.url} alt="Reklam" className="w-full h-auto object-cover" />
+              </div>
+            )}
           </aside>
 
           {/* Main content */}
