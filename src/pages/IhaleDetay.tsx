@@ -246,6 +246,7 @@ export default function IhaleDetay() {
 
   // Filtreler
   const [ihaleFiltreler, setIhaleFiltreler] = useState<{ filtre_tipi: string; secenek_id: string }[]>([]);
+  const [filterBlockMessage, setFilterBlockMessage] = useState<string | null>(null);
 
   // Benzer ihaleler
   const [benzerIhaleler, setBenzerIhaleler] = useState<any[]>([]);
