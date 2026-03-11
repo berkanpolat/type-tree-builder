@@ -200,7 +200,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("iplik")) {
+    if (catNorm.includes("iplik")) {
       return (
         <>
           <MultiDropdownField label="İplik Kullanım Alanı" kategoriName="İplik Kullanım Alanı" value={toArr(td.iplik_kullanim_alani)} onChange={(v) => setTD("iplik_kullanim_alani", v)} />
