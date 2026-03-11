@@ -196,7 +196,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
-          <MultiDropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={toArr(td.kumas_grubu)} onChange={(v) => { setTD("kumas_grubu", v); setTD("kumas_turu", []); }} />
+          <MultiDropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={toArr(td.kumas_grubu)} onChange={(v) => updateForm({ teknik_detaylar: { ...formData.teknik_detaylar, kumas_grubu: v, kumas_turu: [] } })} />
           <MultiDependentMultiParentField label="Kumaş Türü" parentIds={toArr(td.kumas_grubu)} value={toArr(td.kumas_turu)} onChange={(v) => setTD("kumas_turu", v)} disabled={!toArr(td.kumas_grubu).length} />
           <MultiDropdownField label="Sezon" kategoriName="Sezon" value={toArr(td.sezon)} onChange={(v) => setTD("sezon", v)} />
           <MultiDropdownField label="Cinsiyet" kategoriName="Cinsiyet" value={toArr(td.cinsiyet)} onChange={(v) => setTD("cinsiyet", v)} />
