@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import { Mail, Phone, MapPin } from "lucide-react";
-import { Linkedin, Instagram, Facebook, Twitter } from "lucide-react";
+import { Linkedin, Instagram, Facebook } from "lucide-react";
 
 function FooterLink({ to, children }: { to: string; children: React.ReactNode }) {
   const navigate = useNavigate();
