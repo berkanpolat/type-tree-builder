@@ -52,6 +52,7 @@ import AdminDestek from "./pages/admin/AdminDestek";
 import AdminPaketler from "./pages/admin/AdminPaketler";
 import Paketim from "./pages/Paketim";
 import AdminIslemler from "./pages/admin/AdminIslemler";
+import AdminKisitlamalar from "./pages/admin/AdminKisitlamalar";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import RouteStateManager from "./components/RouteStateManager";
 
