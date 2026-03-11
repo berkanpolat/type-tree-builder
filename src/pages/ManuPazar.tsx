@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSessionState } from "@/hooks/use-session-state";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,10 +49,10 @@ export default function ManuPazar() {
   const { toast } = useToast();
   const [urunler, setUrunler] = useState<Urun[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterKategori, setFilterKategori] = useState("all");
-  const [filterGrup, setFilterGrup] = useState("all");
-  const [filterTur, setFilterTur] = useState("all");
+  const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
+  const [filterKategori, setFilterKategori] = useSessionState("filterKategori", "all");
+  const [filterGrup, setFilterGrup] = useSessionState("filterGrup", "all");
+  const [filterTur, setFilterTur] = useSessionState("filterTur", "all");
 
   // Category options for filters
   const [kategoriler, setKategoriler] = useState<{ id: string; name: string }[]>([]);

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useSessionState } from "@/hooks/use-session-state";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
@@ -111,19 +112,19 @@ export default function AnaSayfa() {
     check();
   }, [navigate]);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
+  const [appliedSearchTerm, setAppliedSearchTerm] = useSessionState("appliedSearchTerm", "");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<SearchResult | null>(null);
+  const [activeFilter, setActiveFilter] = useSessionState<SearchResult | null>("activeFilter", null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Product state
   const [allUrunler, setAllUrunler] = useState<UrunWithExtra[]>([]);
   const [urunLoading, setUrunLoading] = useState(true);
-  const [selectedKategori, setSelectedKategori] = useState<string | null>(null);
-  const [selectedGrupId, setSelectedGrupId] = useState<string | null>(null);
-  const [selectedTurId, setSelectedTurId] = useState<string | null>(null);
+  const [selectedKategori, setSelectedKategori] = useSessionState<string | null>("selectedKategori", null);
+  const [selectedGrupId, setSelectedGrupId] = useSessionState<string | null>("selectedGrupId", null);
+  const [selectedTurId, setSelectedTurId] = useSessionState<string | null>("selectedTurId", null);
 
   // Read location.state for breadcrumb navigation from detail pages
   useEffect(() => {
@@ -137,16 +138,16 @@ export default function AnaSayfa() {
   }, [location.state]);
 
   // Filter state from sidebar
-  const [filterState, setFilterState] = useState<FilterState | null>(null);
+  const [filterState, setFilterState] = useSessionState<FilterState | null>("filterState", null);
 
   // Varyasyon data for client-side filtering
   const [varyasyonMap, setVaryasyonMap] = useState<Record<string, { renk: string[]; beden: string[] }>>({});
 
   // Sorting
-  const [sortBy, setSortBy] = useState<string>("newest");
+  const [sortBy, setSortBy] = useSessionState<string>("sortBy", "newest");
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useSessionState("currentPage", 1);
 
   // Name maps
   const [kategoriSecenekler, setKategoriSecenekler] = useState<{ id: string; name: string }[]>([]);

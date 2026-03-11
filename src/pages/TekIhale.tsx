@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useSessionState } from "@/hooks/use-session-state";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
@@ -124,28 +125,28 @@ export default function TekIhale() {
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [ihaleler, setIhaleler] = useState<IhaleWithExtra[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
+  const [page, setPage] = useSessionState("page", 1);
 
   // Filters
-  const [filterIhaleTuru, setFilterIhaleTuru] = useState<string[]>([]);
-  const [filterTeklifUsulu, setFilterTeklifUsulu] = useState<string[]>([]);
-  const [filterOdeme, setFilterOdeme] = useState<string[]>([]);
-  const [filterVade, setFilterVade] = useState<string[]>([]);
+  const [filterIhaleTuru, setFilterIhaleTuru] = useSessionState<string[]>("filterIhaleTuru", []);
+  const [filterTeklifUsulu, setFilterTeklifUsulu] = useSessionState<string[]>("filterTeklifUsulu", []);
+  const [filterOdeme, setFilterOdeme] = useSessionState<string[]>("filterOdeme", []);
+  const [filterVade, setFilterVade] = useSessionState<string[]>("filterVade", []);
 
   // Category hierarchy filters
   const [kategoriler, setKategoriler] = useState<{ id: string; name: string }[]>([]);
   const [gruplar, setGruplar] = useState<{ id: string; name: string }[]>([]);
   const [turler, setTurler] = useState<{ id: string; name: string }[]>([]);
-  const [filterKategori, setFilterKategori] = useState<string[]>([]);
-  const [filterGrup, setFilterGrup] = useState<string[]>([]);
-  const [filterTur, setFilterTur] = useState<string[]>([]);
+  const [filterKategori, setFilterKategori] = useSessionState<string[]>("filterKategori", []);
+  const [filterGrup, setFilterGrup] = useSessionState<string[]>("filterGrup", []);
+  const [filterTur, setFilterTur] = useSessionState<string[]>("filterTur", []);
 
   // Hizmet category filters
   const [hizmetKategoriler, setHizmetKategoriler] = useState<{ id: string; name: string }[]>([]);
   const [hizmetTurler, setHizmetTurler] = useState<{ id: string; name: string }[]>([]);
-  const [filterHizmetKategori, setFilterHizmetKategori] = useState<string[]>([]);
-  const [filterHizmetTur, setFilterHizmetTur] = useState<string[]>([]);
+  const [filterHizmetKategori, setFilterHizmetKategori] = useSessionState<string[]>("filterHizmetKategori", []);
+  const [filterHizmetTur, setFilterHizmetTur] = useSessionState<string[]>("filterHizmetTur", []);
 
   // Name map for category display
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});

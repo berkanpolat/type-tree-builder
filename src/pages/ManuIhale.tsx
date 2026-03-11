@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSessionState } from "@/hooks/use-session-state";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -83,8 +84,8 @@ export default function ManuIhale() {
   const [ihaleler, setIhaleler] = useState<Ihale[]>([]);
   const [teklifler, setTeklifler] = useState<IhaleTeklif[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterDurum, setFilterDurum] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
+  const [filterDurum, setFilterDurum] = useSessionState("filterDurum", "all");
 
   useEffect(() => {
     fetchData();
