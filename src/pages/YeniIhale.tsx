@@ -336,16 +336,14 @@ export default function YeniIhale() {
     if (STEPS[currentStep] === "Teklif Usulü" && !ihaleId) {
       await createIhale();
     } else if (ihaleId) {
-      // Auto-save on each step transition (only save after İhale Bilgileri step where data is entered)
-      if (currentStep >= 3) {
-        await handleSave();
-      }
+      // Auto-save on every step transition for draft persistence
+      await handleSave();
     }
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
   };
 
   const handleBack = async () => {
-    if (ihaleId && currentStep >= 4) await handleSave();
+    if (ihaleId) await handleSave();
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
