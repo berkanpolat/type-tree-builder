@@ -2107,16 +2107,26 @@ Deno.serve(async (req) => {
     // ─── LIST ACTIVITY LOG ───
     if (action === "list-activity-log") {
       const payload = verifyToken(body.token);
-      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 403);
 
       const { data, error } = await supabase
         .from("admin_activity_log")
         .select("*")
         .order("created_at", { ascending: false })
-        .limit(500);
+        .limit(1000);
 
       if (error) return jsonResponse({ error: error.message }, 500);
-      return jsonResponse({ logs: data });
+      return jsonResponse({ logs: data || [] });
+    }
+
+    // ─── GET DROPDOWN OPTIONS (firma türleri, tipleri) ───
+    if (action === "get-dropdown-options") {
+      verifyToken(body.token);
+      const [{ data: turler }, { data: tipler }] = await Promise.all([
+        supabase.from("firma_turleri").select("id, name").order("name"),
+        supabase.from("firma_tipleri").select("id, name, firma_turu_id").order("name"),
+      ]);
+      return jsonResponse({ turler: turler || [], tipler: tipler || [] });
     }
 
     // ─── CREATE FIRMA (admin creates user+firma without email confirmation) ───
