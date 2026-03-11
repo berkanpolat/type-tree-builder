@@ -435,8 +435,11 @@ export default function TekRehber() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <h3 className="font-semibold text-foreground text-lg leading-tight">{firma.firma_unvani}</h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-foreground text-lg leading-tight flex items-center gap-1.5">
+                            {firma.firma_unvani}
+                            {(firma as any).belge_onayli && <VerifiedBadge />}
+                          </h3>
                           {(firma.firma_turu_name || firma.firma_tipi_name) && (
                             <Badge className="bg-primary/10 text-primary border border-primary/20 text-xs font-medium">
                               {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
