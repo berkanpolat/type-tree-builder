@@ -555,7 +555,7 @@ export default function Mesajlar() {
       <div className="flex h-[calc(100vh-8rem)] border border-border rounded-lg overflow-hidden bg-background">
         {/* Left: Conversation list */}
         <div className="w-80 border-r border-border flex flex-col shrink-0">
-          <div className="p-3 border-b border-border">
+          <div className="p-4 border-b border-border">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
@@ -568,20 +568,22 @@ export default function Mesajlar() {
           </div>
 
           <ScrollArea className="flex-1">
+            <div className="px-2.5 py-2">
             {loading ? (
               <p className="text-center py-8 text-muted-foreground text-sm">Yükleniyor...</p>
             ) : filteredConvs.length === 0 ? (
               <p className="text-center py-8 text-muted-foreground text-sm">Henüz konuşma yok.</p>
             ) : (
-              filteredConvs.map((conv) => (
+              <div className="space-y-0.5">
+              {filteredConvs.map((conv) => (
                 <button
                   key={conv.id}
                   onClick={() => selectConversation(conv)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors text-left ${
-                    selectedConv?.id === conv.id ? "bg-muted" : ""
+                  className={`w-full flex items-center gap-3 px-3 py-3.5 rounded-lg hover:bg-muted/60 transition-colors text-left border border-transparent ${
+                    selectedConv?.id === conv.id ? "bg-muted border-border" : ""
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                  <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
                     {conv.logo_url ? (
                       <img src={conv.logo_url} alt="" className="w-full h-full object-contain" />
                     ) : (
@@ -589,14 +591,14 @@ export default function Mesajlar() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <p className={`text-sm truncate ${conv.unread_count > 0 ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{conv.firma_unvani}</p>
-                      <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className={`text-sm truncate max-w-[130px] ${conv.unread_count > 0 ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{conv.firma_unvani}</p>
+                      <span className="text-xs text-muted-foreground shrink-0">
                         {formatTime(conv.last_message_at)}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between mt-0.5">
-                      <p className={`text-xs truncate max-w-[160px] ${
+                    <div className="flex items-center justify-between mt-1">
+                      <p className={`text-xs truncate max-w-[150px] ${
                         conv.unread_count > 0 && conv.last_message_sender_id !== currentUserId
                           ? "text-foreground font-semibold"
                           : "text-muted-foreground"
@@ -609,8 +611,10 @@ export default function Mesajlar() {
                     </div>
                   </div>
                 </button>
-              ))
+              ))}
+              </div>
             )}
+            </div>
           </ScrollArea>
         </div>
 
