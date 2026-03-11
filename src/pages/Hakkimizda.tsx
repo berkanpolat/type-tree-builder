@@ -60,7 +60,7 @@ export default function Hakkimizda() {
           <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-secondary rounded-full translate-x-1/3 translate-y-1/3" />
         </div>
         <div className="relative max-w-5xl mx-auto px-6 py-20 md:py-28 text-center">
-          <img src={logoImg} alt="Tekstil A.Ş." className="h-8 brightness-0 invert mb-6" />
+          <img src={logoImg} alt="Tekstil A.Ş." className="h-8 brightness-0 invert mb-6 mx-auto" />
           <h1 className="text-3xl md:text-5xl font-bold text-primary-foreground leading-tight">
             Tekstil Sektörünün<br />
             <span className="text-secondary">Dijital Buluşma Noktası</span>

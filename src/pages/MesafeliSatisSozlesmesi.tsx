@@ -37,8 +37,8 @@ export default function MesafeliSatisSozlesmesi() {
             <h3 className="text-base font-bold text-foreground mb-2">1.1. SATICI:</h3>
             <ul className="list-none pl-0 space-y-1 text-muted-foreground">
               <li><strong className="text-foreground">Unvan:</strong> Manufixo Teknoloji A.Ş.</li>
-              <li><strong className="text-foreground">Adres:</strong> Çobançeşme mah. Bilge 1 sk. No:9/11 K:2 Bahçelievler / İstanbul</li>
-              <li><strong className="text-foreground">E-posta:</strong>{" "}<a href="mailto:info@manufixo.com" className="text-primary underline hover:text-primary/80">info@manufixo.com</a></li>
+              <li><strong className="text-foreground">Adres:</strong> Çobançeşme mah. Bilge 1 sk. No:9/11K:2 Bahçelievler / İstanbul</li>
+              <li><strong className="text-foreground">E-posta:</strong>{" "}<a href="mailto:info@tekstilas.com" className="text-primary underline hover:text-primary/80">info@tekstilas.com</a></li>
               <li><strong className="text-foreground">Mersis No:</strong> 0612181102800001</li>
             </ul>
 
@@ -49,7 +49,7 @@ export default function MesafeliSatisSozlesmesi() {
           <section>
             <h2 className="text-lg font-bold text-foreground mb-3">2. SÖZLEŞMENİN KONUSU</h2>
             <p className="text-muted-foreground">
-              İşbu Sözleşme'nin konusu, Alıcı'nın Satıcı'ya ait www.manufixo.com web sitesi ("Platform") üzerinden elektronik ortamda siparişini verdiği, aşağıda nitelikleri ve satış fiyatı belirtilen hizmetin ("Üyelik Paketleri", "Öne Çıkarma Hizmetleri", "İlan Yayınlama Hakları") satışı ve teslimi ile ilgili olarak 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği hükümleri uyarınca tarafların hak ve yükümlülüklerinin saptanmasıdır.
+              İşbu Sözleşme'nin konusu, Alıcı'nın Satıcı'ya ait www.tekstilas.com web sitesi ("Platform") üzerinden elektronik ortamda siparişini verdiği, aşağıda nitelikleri ve satış fiyatı belirtilen hizmetin ("Üyelik Paketleri", "Öne Çıkarma Hizmetleri", "İlan Yayınlama Hakları") satışı ve teslimi ile ilgili olarak 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği hükümleri uyarınca tarafların hak ve yükümlülüklerinin saptanmasıdır.
             </p>
           </section>
 
@@ -57,7 +57,7 @@ export default function MesafeliSatisSozlesmesi() {
             <h2 className="text-lg font-bold text-foreground mb-3">3. SÖZLEŞME KONUSU HİZMET VE ÖDEME BİLGİLERİ</h2>
             <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
               <li><strong className="text-foreground">Hizmetin Adı:</strong> [Seçilen Üyelik Paketi / Öne Çıkarma Bedeli]</li>
-              <li><strong className="text-foreground">Hizmet İçeriği:</strong> [Paket Detayları - Örn: 1 Yıllık Elite Üyelik, 5 Adet İhale Öne Çıkarma vb.]</li>
+              <li><strong className="text-foreground">Hizmet İçeriği:</strong> [Paket Detayları - Örn: 1 Yıllık Pro Üyelik, 5 Adet İhale Öne Çıkarma vb.]</li>
               <li><strong className="text-foreground">Satış Bedeli:</strong> [KDV Dahil Toplam Tutar]</li>
               <li><strong className="text-foreground">Ödeme Şekli:</strong> Kredi Kartı / Banka Kartı / Havale-EFT</li>
             </ul>
@@ -77,10 +77,9 @@ export default function MesafeliSatisSozlesmesi() {
                 Önemli Bilgilendirme: Mesafeli Sözleşmeler Yönetmeliği'nin 15. maddesinin (ğ) bendi uyarınca; "Elektronik ortamda anında ifa edilen hizmetler veya tüketiciye anında teslim edilen gayrimaddi mallara ilişkin sözleşmelerde" tüketici cayma hakkını kullanamaz.
               </p>
             </div>
-            <ul className="list-disc pl-5 space-y-2 text-muted-foreground">
-              <li>Alıcı, satın aldığı hizmetin (Üyelik, Öne Çıkarma vb.) ödeme onayı ile birlikte dijital ortamda anında ifa edildiğini kabul eder.</li>
-              <li>Bu kapsamda, hizmetin Alıcı'nın hesabına tanımlanması ve kullanımına sunulması ile birlikte cayma hakkı sona ermektedir. Hizmetin kullanılmamış olması cayma hakkını doğurmaz.</li>
-            </ul>
+            <p className="text-muted-foreground">
+              Alıcı, satın aldığı hizmetin (Üyelik, Öne Çıkarma vb.) ödeme onayı ile birlikte dijital ortamda anında ifa edildiğini kabul eder. Bu kapsamda, hizmetin Alıcı'nın hesabına tanımlanması ve kullanımına sunulması ile birlikte cayma hakkı sona ermektedir. Hizmetin kullanılmamış olması cayma hakkını doğurmaz.
+            </p>
           </section>
 
           <section>
@@ -89,7 +88,7 @@ export default function MesafeliSatisSozlesmesi() {
               <li><strong className="text-foreground">6.1.</strong> Alıcı, Platform üzerinde sözleşme konusu hizmetin temel nitelikleri, satış fiyatı ve ödeme şekli ile teslimata ilişkin ön bilgileri okuyup bilgi sahibi olduğunu ve elektronik ortamda gerekli teyidi verdiğini beyan eder.</li>
               <li><strong className="text-foreground">6.2.</strong> Satıcı, sözleşme konusu hizmetin ayıpsız, eksiksiz ve siparişte belirtilen niteliklere uygun olarak Alıcı'nın hesabına tanımlanmasından sorumludur.</li>
               <li><strong className="text-foreground">6.3.</strong> Hizmetin sunulabilmesi için Alıcı'nın "Kurumsal Üyelik Ön Onay" sürecinden başarıyla geçmiş olması şarttır. Ön onayı iptal edilen veya askıya alınan hesaplar için yapılan ödemeler, hizmet ifa edilmemişse iade edilir.</li>
-              <li><strong className="text-foreground">6.4.</strong> ManuPazar üzerinden yapılan üçüncü taraf ürün satışlarında Manufixo sadece bir aracı olup, ürünün ayıplı çıkması veya teslim edilmemesi durumunda asıl muhatap satıcı kullanıcıdır.</li>
+              <li><strong className="text-foreground">6.4.</strong> TekPazar üzerinden yapılan üçüncü taraf ürün satışlarında Manufixo sadece bir aracı olup, ürünün ayıplı çıkması veya teslim edilmemesi durumunda asıl muhatap satıcı kullanıcıdır.</li>
             </ul>
           </section>
 
