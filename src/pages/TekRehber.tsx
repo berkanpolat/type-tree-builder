@@ -79,9 +79,9 @@ export default function TekRehber() {
   }, [navigate]);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<SearchResult | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Firma state
@@ -167,7 +167,7 @@ export default function TekRehber() {
       .order("firma_unvani").limit(100);
 
     if (selectedFirmaTuru) query = query.eq("firma_turu_id", selectedFirmaTuru);
-    if (activeFilter) query = query.ilike("firma_unvani", `%${activeFilter.name}%`);
+    if (appliedSearchTerm) query = query.ilike("firma_unvani", `%${appliedSearchTerm}%`);
 
     if (fs) {
       if (fs.firmaTipleri.length > 0) query = query.in("firma_tipi_id", fs.firmaTipleri);
@@ -247,35 +247,45 @@ export default function TekRehber() {
       setFirmalar(enriched);
     }
     setFirmaLoading(false);
-  }, [selectedFirmaTuru, firmaFilterState, activeFilter, firmaTurleri, currentUserId]);
+  }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, firmaTurleri, currentUserId]);
 
   useEffect(() => {
     if (currentUserId && selectedFirmaTuru) fetchFirmalar();
   }, [fetchFirmalar, currentUserId, selectedFirmaTuru]);
 
-  // Search autocomplete
+  // Trigger search on Enter or Ara button
+  const handleSearch = useCallback(() => {
+    setAppliedSearchTerm(searchTerm.trim());
+    setShowDropdown(false);
+  }, [searchTerm]);
+
+  // Lightweight autocomplete - only suggest firma names
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setSearchResults([]);
+      setShowDropdown(false);
       return;
     }
     const timer = setTimeout(async () => {
-      const results: SearchResult[] = [];
-      const [firmaRes, turRes] = await Promise.all([
-        supabase.from("firmalar").select("id, firma_unvani").ilike("firma_unvani", `%${searchTerm}%`).limit(5),
-        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KATEGORI_ID).ilike("name", `%${searchTerm}%`).limit(5),
-      ]);
-      if (firmaRes.data) firmaRes.data.forEach((f) => results.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
-      if (turRes.data) turRes.data.forEach((t) => results.push({ id: t.id, name: t.name, type: "Tür" }));
-      setSearchResults(results);
-      setShowDropdown(results.length > 0);
-    }, 500);
+      const { data } = await supabase
+        .from("firmalar")
+        .select("id, firma_unvani")
+        .ilike("firma_unvani", `%${searchTerm}%`)
+        .limit(6);
+      if (data && data.length > 0) {
+        setSearchResults(data.map((f) => ({ id: f.id, name: f.firma_unvani, type: "Firma" })));
+        setShowDropdown(true);
+      } else {
+        setSearchResults([]);
+        setShowDropdown(false);
+      }
+    }, 250);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   const handleSearchResultClick = (result: SearchResult) => {
-    setActiveFilter(result);
     setSearchTerm(result.name);
+    setAppliedSearchTerm(result.name);
     setShowDropdown(false);
   };
 
@@ -337,8 +347,8 @@ export default function TekRehber() {
           label="ÜRETİCİ / TEDARİKÇİ"
           placeholder="Üretici veya tedarikçi ara..."
           searchTerm={searchTerm}
-          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) setActiveFilter(null); }}
-          onSearch={() => {}}
+          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) setAppliedSearchTerm(""); }}
+          onSearch={handleSearch}
           searchResults={searchResults}
           showDropdown={showDropdown}
           onShowDropdown={setShowDropdown}
@@ -349,12 +359,12 @@ export default function TekRehber() {
           onFirmaTuruChange={handleFirmaTuruChange}
         />
 
-        {/* Active filter badge */}
-        {activeFilter && (
+        {/* Active search badge */}
+        {appliedSearchTerm && (
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="secondary" className="gap-1 px-3 py-1.5">
-              {activeFilter.type}: {activeFilter.name}
-              <button onClick={() => { setActiveFilter(null); setSearchTerm(""); }} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
+              Arama: {appliedSearchTerm}
+              <button onClick={() => { setAppliedSearchTerm(""); setSearchTerm(""); }} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
             </Badge>
           </div>
         )}
