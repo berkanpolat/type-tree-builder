@@ -745,10 +745,29 @@ export default function YeniUrun() {
                         <Label>{alan.label}*</Label>
                         {alan.type === "dropdown" ? (
                           <Select value={teknikDetaylar[alan.label] || ""}
-                            onValueChange={(v) => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: v }))}>
+                            onValueChange={(v) => {
+                              setTeknikDetaylar(prev => ({ ...prev, [alan.label]: v }));
+                              // If a dependent field depends on this, load its children
+                              const dependentField = teknikAlanlar.find(a => a.type === "dependent_dropdown" && a.dependsOn === alan.label);
+                              if (dependentField) {
+                                setTeknikDetaylar(prev => ({ ...prev, [dependentField.label]: "" }));
+                                loadDependentOptions(alan.label, v);
+                              }
+                            }}>
                             <SelectTrigger><SelectValue placeholder={`${alan.label} seçiniz`} /></SelectTrigger>
                             <SelectContent className="bg-popover z-50">
                               {(dropdownOptions[alan.kategoriName!] || []).map(opt => (
+                                <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : alan.type === "dependent_dropdown" ? (
+                          <Select value={teknikDetaylar[alan.label] || ""}
+                            onValueChange={(v) => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: v }))}
+                            disabled={!teknikDetaylar[alan.dependsOn!]}>
+                            <SelectTrigger><SelectValue placeholder={teknikDetaylar[alan.dependsOn!] ? `${alan.label} seçiniz` : `Önce ${alan.dependsOn} seçiniz`} /></SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              {(dependentOptions[alan.dependsOn!] || []).map(opt => (
                                 <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
                               ))}
                             </SelectContent>
