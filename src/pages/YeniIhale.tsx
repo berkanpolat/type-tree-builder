@@ -40,6 +40,7 @@ export interface IhaleFormData {
   baslangic_tarihi: string;
   bitis_tarihi: string;
   foto_url: string | null;
+  fotograflar: string[];
   ek_dosya_url: string | null;
   ozel_filtreleme: boolean;
   firma_adi_gizle: boolean;
