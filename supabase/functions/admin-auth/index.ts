@@ -1846,6 +1846,124 @@ Deno.serve(async (req) => {
       return jsonResponse({ stats });
     }
 
+    // ─── UPDATE FIRMA PACKAGE ───
+    if (action === "update-firma-paket") {
+      const { token, userId, paketId } = body;
+      verifyToken(token);
+
+      // Check if user has existing subscription
+      const { data: existing } = await supabase
+        .from("kullanici_abonelikler")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("kullanici_abonelikler")
+          .update({
+            paket_id: paketId,
+            donem_baslangic: new Date().toISOString(),
+            donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            durum: "aktif",
+          })
+          .eq("user_id", userId);
+        if (error) return jsonResponse({ error: error.message }, 500);
+      } else {
+        const { error } = await supabase
+          .from("kullanici_abonelikler")
+          .insert({
+            user_id: userId,
+            paket_id: paketId,
+            periyot: "aylik",
+            donem_baslangic: new Date().toISOString(),
+            donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            durum: "aktif",
+          });
+        if (error) return jsonResponse({ error: error.message }, 500);
+      }
+
+      // Notify user
+      const { data: paket } = await supabase.from("paketler").select("ad").eq("id", paketId).single();
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "paket_degisikligi",
+        message: `Paketiniz ${paket?.ad || ""} olarak güncellenmiştir.`,
+        link: "/dashboard",
+      });
+
+      return jsonResponse({ success: true });
+    }
+
+    // ─── GET FIRMA QUOTA USAGE ───
+    if (action === "get-firma-quota") {
+      const { token, userId } = body;
+      verifyToken(token);
+
+      const { data: abonelik } = await supabase
+        .from("kullanici_abonelikler")
+        .select("*, paketler(*)")
+        .eq("user_id", userId)
+        .single();
+
+      if (!abonelik) return jsonResponse({ usage: null, abonelik: null });
+
+      const donemBaslangic = abonelik.donem_baslangic;
+
+      const [profilRes, teklifRes, urunRes, mesajRes] = await Promise.all([
+        supabase.from("profil_goruntulemeler").select("id", { count: "exact", head: true })
+          .eq("user_id", userId).gte("created_at", donemBaslangic),
+        supabase.from("ihale_teklifler").select("ihale_id")
+          .eq("teklif_veren_user_id", userId).gte("created_at", donemBaslangic),
+        supabase.from("urunler").select("id", { count: "exact", head: true })
+          .eq("user_id", userId).eq("durum", "aktif"),
+        supabase.from("conversations").select("id, user1_id, user2_id, created_at")
+          .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+          .gte("created_at", donemBaslangic),
+      ]);
+
+      const uniqueIhaleIds = new Set((teklifRes.data || []).map((t: any) => t.ihale_id));
+
+      // Count initiated conversations
+      let initiatedConversations = 0;
+      if (mesajRes.data) {
+        for (const conv of mesajRes.data) {
+          const { data: firstMsg } = await supabase
+            .from("messages")
+            .select("sender_id")
+            .eq("conversation_id", conv.id)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .single();
+          if (firstMsg && firstMsg.sender_id === userId) {
+            initiatedConversations++;
+          }
+        }
+      }
+
+      return jsonResponse({
+        abonelik: {
+          paket_ad: abonelik.paketler?.ad,
+          paket_slug: abonelik.paketler?.slug,
+          donem_baslangic: abonelik.donem_baslangic,
+          donem_bitis: abonelik.donem_bitis,
+          limits: {
+            profil_goruntuleme_limiti: abonelik.paketler?.profil_goruntuleme_limiti,
+            ihale_acma_limiti: abonelik.paketler?.ihale_acma_limiti,
+            teklif_verme_limiti: abonelik.paketler?.teklif_verme_limiti,
+            aktif_urun_limiti: abonelik.paketler?.aktif_urun_limiti,
+            mesaj_limiti: abonelik.paketler?.mesaj_limiti,
+          },
+        },
+        usage: {
+          profil_goruntuleme: profilRes.count || 0,
+          teklif_verme: uniqueIhaleIds.size,
+          aktif_urun: urunRes.count || 0,
+          mesaj: initiatedConversations,
+        },
+      });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
