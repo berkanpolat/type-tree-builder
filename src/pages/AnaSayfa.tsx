@@ -367,6 +367,29 @@ export default function AnaSayfa() {
     fetchUrunler();
   }, [fetchUrunler]);
 
+  // If text search is active and category still not selected, infer category from results
+  useEffect(() => {
+    if (!appliedSearchTerm || selectedKategori || allUrunler.length === 0) return;
+
+    const countByCategory: Record<string, number> = {};
+    allUrunler.forEach((u) => {
+      if (u.urun_kategori_id) {
+        countByCategory[u.urun_kategori_id] = (countByCategory[u.urun_kategori_id] || 0) + 1;
+      }
+    });
+
+    const dominantCategoryId = Object.entries(countByCategory).sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (!dominantCategoryId) return;
+
+    const categoryOption = kategoriSecenekler.find((k) => k.id === dominantCategoryId);
+    if (!categoryOption) return;
+    if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === categoryOption.name.toLowerCase())) return;
+
+    setSelectedKategori(categoryOption.name);
+    setSelectedGrupId(null);
+    setSelectedTurId(null);
+  }, [appliedSearchTerm, selectedKategori, allUrunler, kategoriSecenekler]);
+
   // Trigger search on Enter or Ara button — detect kategori/grup/tür match and auto-apply filters
   const handleSearch = useCallback(async () => {
     const term = searchTerm.trim();
@@ -387,9 +410,8 @@ export default function AnaSayfa() {
 
       if (!exact.parent_id) {
         // It's a kategori
-        const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === exact.name.toLowerCase());
-        if (katName) {
-          setSelectedKategori(katName);
+        if (!HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === exact.name.toLowerCase())) {
+          setSelectedKategori(exact.name);
           setSelectedGrupId(null);
           setSelectedTurId(null);
           setActiveFilter(null);
@@ -429,13 +451,10 @@ export default function AnaSayfa() {
       const topCatId = Object.entries(catCount).sort((a, b) => b[1] - a[1])[0]?.[0];
       if (topCatId) {
         const matchedSecenek = kategoriSecenekler.find((k) => k.id === topCatId);
-        if (matchedSecenek) {
-          const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === matchedSecenek.name.toLowerCase());
-          if (katName) {
-            setSelectedKategori(katName);
-            setSelectedGrupId(null);
-            setSelectedTurId(null);
-          }
+        if (matchedSecenek && !HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === matchedSecenek.name.toLowerCase())) {
+          setSelectedKategori(matchedSecenek.name);
+          setSelectedGrupId(null);
+          setSelectedTurId(null);
         }
       }
     }
@@ -455,9 +474,8 @@ export default function AnaSayfa() {
 
     if (!parent.parent_id) {
       // parent is Kategori, id is Grup
-      const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === parent.name.toLowerCase());
-      if (katName) return { kategori: katName, grupId: id, turId: null };
-      return null;
+      if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === parent.name.toLowerCase())) return null;
+      return { kategori: parent.name, grupId: id, turId: null };
     }
     // parent is Grup, id is Tür — get grandparent (Kategori)
     const { data: grandparent } = await supabase
@@ -466,9 +484,8 @@ export default function AnaSayfa() {
       .eq("id", parent.parent_id)
       .single();
     if (!grandparent) return null;
-    const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === grandparent.name.toLowerCase());
-    if (katName) return { kategori: katName, grupId: parent.id, turId: id };
-    return null;
+    if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === grandparent.name.toLowerCase())) return null;
+    return { kategori: grandparent.name, grupId: parent.id, turId: id };
   };
 
   // Lightweight autocomplete — products + kategori/grup/tür
@@ -510,9 +527,8 @@ export default function AnaSayfa() {
     setActiveFilter(null);
 
     if (result.type === "Kategori") {
-      const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === result.name.toLowerCase());
-      if (katName) {
-        setSelectedKategori(katName);
+      if (!HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === result.name.toLowerCase())) {
+        setSelectedKategori(result.name);
         setSelectedGrupId(null);
         setSelectedTurId(null);
         setAppliedSearchTerm("");
