@@ -234,6 +234,19 @@ const GirisKayit = () => {
       });
       if (rpcError) throw rpcError;
 
+      // Send welcome email via Postmark
+      try {
+        await supabase.functions.invoke("send-welcome-email", {
+          body: {
+            to: email,
+            adSoyad: `${ad} ${soyad}`,
+            firmaUnvani,
+          },
+        });
+      } catch (emailErr) {
+        console.error("Welcome email failed:", emailErr);
+      }
+
       await supabase.auth.signOut();
       setRegistrationComplete(true);
     } catch (error: any) {
