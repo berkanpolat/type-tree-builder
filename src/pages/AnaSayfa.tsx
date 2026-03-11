@@ -515,46 +515,23 @@ export default function AnaSayfa() {
 
       <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
         {/* Search Header */}
-        <div className="bg-primary rounded-xl p-6 pb-0">
-          <h1 className="text-center text-lg font-semibold tracking-wide text-primary-foreground mb-6">
-            ÜRÜN ARA
-          </h1>
+        <HeroSearchSection
+          searchTerm={searchTerm}
+          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) setActiveFilter(null); }}
+          searchResults={searchResults}
+          showDropdown={showDropdown}
+          onShowDropdown={setShowDropdown}
+          onSearchResultClick={handleSearchResultClick}
+          searchRef={searchRef as React.RefObject<HTMLDivElement>}
+        />
 
-          <div className="relative max-w-2xl mx-auto mb-6" ref={searchRef}>
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                placeholder="Ürün ara..."
-                value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); if (!e.target.value) setActiveFilter(null); }}
-                onFocus={() => { if (searchResults.length > 0) setShowDropdown(true); }}
-                className="pl-12 h-12 bg-background text-foreground border-0 text-base"
-              />
-            </div>
-
-            {showDropdown && searchResults.length > 0 && (
-              <div className="absolute top-full left-0 right-0 bg-background border border-border rounded-lg shadow-lg z-50 mt-1 max-h-80 overflow-y-auto">
-                {searchResults.map((result, i) => (
-                  <button
-                    key={`${result.id}-${i}`}
-                    onClick={() => handleSearchResultClick(result)}
-                    className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted transition-colors text-left border-b border-border last:border-b-0"
-                  >
-                    <span className="text-sm text-foreground">{result.name}</span>
-                    <span className="text-xs text-muted-foreground">{result.type}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="bg-background rounded-t-xl -mx-6 px-6">
-            <KategoriMegaMenu
-              kategoriler={URUN_KATEGORILERI}
-              selectedKategori={selectedKategori}
-              onSelect={handleMegaMenuSelect}
-            />
-          </div>
+        {/* Category Tabs */}
+        <div className="bg-background rounded-xl px-6 border border-border">
+          <KategoriMegaMenu
+            kategoriler={URUN_KATEGORILERI}
+            selectedKategori={selectedKategori}
+            onSelect={handleMegaMenuSelect}
+          />
         </div>
 
         {/* Active filter badge */}
