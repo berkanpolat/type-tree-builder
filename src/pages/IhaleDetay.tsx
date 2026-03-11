@@ -207,6 +207,7 @@ export default function IhaleDetay() {
 
   // Images
   const [allImages, setAllImages] = useState<string[]>([]);
+  const [ekDosyalar, setEkDosyalar] = useState<any[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
