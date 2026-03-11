@@ -29,6 +29,7 @@ import {
   MessageSquare,
   Loader2,
   AlertTriangle,
+  Clock,
 } from "lucide-react";
 
 const FEATURES = [
@@ -43,7 +44,6 @@ const Paketim = () => {
   const pkg = usePackageQuota();
   const isPro = pkg.paketSlug === "pro";
   const [upgradeLoading, setUpgradeLoading] = useState<"aylik" | "yillik" | null>(null);
-  const [portalLoading, setPortalLoading] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
@@ -82,19 +82,6 @@ const Paketim = () => {
     }
   };
 
-  const handleManageSubscription = async () => {
-    setPortalLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-    } catch (err) {
-      console.error("Portal error:", err);
-    } finally {
-      setPortalLoading(false);
-    }
-  };
-
   const handleCancelSubscription = async () => {
     setCancelLoading(true);
     try {
@@ -102,20 +89,28 @@ const Paketim = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.success) {
+        // Update local DB status to iptal_bekliyor
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase
+            .from("kullanici_abonelikler")
+            .update({ durum: "iptal_bekliyor" } as any)
+            .eq("user_id", user.id);
+        }
+
         const cancelDate = data.cancel_at
           ? new Date(data.cancel_at).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })
           : "";
         toast({
           title: "Abonelik iptal edildi",
-          description: `PRO paketiniz ${cancelDate} tarihine kadar aktif kalacaktır. Bu tarihten sonra Ücretsiz pakete geçirilecektir.`,
+          description: `PRO paketiniz ${cancelDate} tarihine kadar aktif kalacaktır.`,
         });
         setCancelDialogOpen(false);
-        // Reload to reflect changes
         setTimeout(() => window.location.reload(), 1500);
       }
     } catch (err: any) {
       console.error("Cancel error:", err);
-      toast({ title: "Hata", description: "Abonelik iptal edilemedi. Lütfen tekrar deneyin.", variant: "destructive" });
+      toast({ title: "Hata", description: err?.message || "Abonelik iptal edilemedi. Lütfen tekrar deneyin.", variant: "destructive" });
     } finally {
       setCancelLoading(false);
     }
@@ -138,9 +133,33 @@ const Paketim = () => {
     mesaj: { used: pkg.usage.mesaj, limit: pkg.limits.mesaj_limiti },
   };
 
+  const cancelDateFormatted = pkg.donemBitis
+    ? new Date(pkg.donemBitis).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })
+    : "";
+
   return (
     <DashboardLayout title="Paketim">
       <div className="max-w-5xl mx-auto space-y-6">
+
+        {/* İptal Bekliyor Bilgi Bannerı */}
+        {isPro && pkg.cancelAtPeriodEnd && (
+          <Card className="border-destructive/50 bg-destructive/5">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <Clock className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <p className="font-semibold text-foreground">Aboneliğiniz iptal edilmiştir</p>
+                  <p className="text-sm text-muted-foreground">
+                    PRO paketiniz <strong className="text-foreground">{cancelDateFormatted}</strong> tarihine kadar aktif kalacaktır. 
+                    Bu tarihten sonra hesabınız otomatik olarak <strong className="text-foreground">Ücretsiz pakete</strong> geçirilecek 
+                    ve gelecek dönemde herhangi bir ücret tahsil edilmeyecektir.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Aktif Paket */}
         <Card>
           <CardHeader className="pb-4">
@@ -151,17 +170,16 @@ const Paketim = () => {
                   {pkg.paketAd}
                 </Badge>
                 <CardTitle className="text-xl">Aktif Paketiniz</CardTitle>
+                {isPro && pkg.cancelAtPeriodEnd && (
+                  <Badge variant="outline" className="text-xs border-destructive/50 text-destructive">
+                    İptal Edildi
+                  </Badge>
+                )}
               </div>
-              {isPro && (
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
-                    {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                    Aboneliği Yönet
-                  </Button>
-                  <Button variant="destructive" size="sm" onClick={() => setCancelDialogOpen(true)}>
-                    Paketi İptal Et
-                  </Button>
-                </div>
+              {isPro && !pkg.cancelAtPeriodEnd && (
+                <Button variant="destructive" size="sm" onClick={() => setCancelDialogOpen(true)}>
+                  Paketi İptal Et
+                </Button>
               )}
             </div>
           </CardHeader>
@@ -174,19 +192,12 @@ const Paketim = () => {
                     / {pkg.periyot === "yillik" ? "yıl" : "ay"}
                   </span>
                 </p>
-                {pkg.donemBitis && (
+                {pkg.donemBitis && !pkg.cancelAtPeriodEnd && (
                   <p className="text-sm text-muted-foreground">
                     Sonraki yenileme:{" "}
-                    {new Date(pkg.donemBitis).toLocaleDateString("tr-TR", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    })}
+                    {cancelDateFormatted}
                   </p>
                 )}
-                <p className="text-xs text-muted-foreground mt-2 bg-muted/50 rounded-md p-2">
-                  İptal etmeniz durumunda dönem bitiş tarihine kadar PRO özelliklerini kullanmaya devam edersiniz. Süre dolduğunda hesabınız otomatik olarak Ücretsiz pakete geçirilir.
-                </p>
               </div>
             )}
 
@@ -305,7 +316,7 @@ const Paketim = () => {
                 </div>
               )}
 
-              {isPro && pkg.periyot === "aylik" && (
+              {isPro && pkg.periyot === "aylik" && !pkg.cancelAtPeriodEnd && (
                 <div className="pt-2 border-t border-border space-y-2">
                   <p className="text-sm text-muted-foreground">
                     Yıllık plana geçerek tasarruf edin. Mevcut dönem bitiş tarihinizden itibaren 1 yıl geçerli olur.
@@ -368,9 +379,7 @@ const Paketim = () => {
                 <p className="font-medium text-foreground">İptal sonrası neler olacak:</p>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                   <li>
-                    Mevcut dönem bitiş tarihinize ({pkg.donemBitis
-                      ? new Date(pkg.donemBitis).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })
-                      : "—"}) kadar PRO özelliklerini kullanmaya devam edeceksiniz.
+                    Mevcut dönem bitiş tarihinize ({cancelDateFormatted || "—"}) kadar PRO özelliklerini kullanmaya devam edeceksiniz.
                   </li>
                   <li>Dönem sona erdikten sonra hesabınız otomatik olarak <strong>Ücretsiz pakete</strong> geçirilecektir.</li>
                   <li>Ücretsiz pakette profil görüntüleme, teklif verme ve mesaj hakları sınırlıdır.</li>
