@@ -69,6 +69,9 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
           {/* Notifications */}
           <HeaderNotificationsPanel />
 
+          {/* Quota */}
+          <QuotaReminderBadge />
+
           {/* Divider */}
           <div className="w-px h-6 bg-border mx-2" />
 

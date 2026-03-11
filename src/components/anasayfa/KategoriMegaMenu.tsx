@@ -141,7 +141,7 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
                   : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {kat}
+            {kat === "Hazır Giyim (Satış)" ? "Hazır Giyim" : kat}
           </button>
         ))}
       </div>
