@@ -151,6 +151,15 @@ export default function ManuPazar() {
 
   const handleToggleDurum = async (urun: Urun) => {
     const newDurum = urun.durum === "aktif" ? "pasif" : "aktif";
+    // If activating, check quota
+    if (newDurum === "aktif") {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "aktif_urun");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Aktif ürün limitiniz dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
     const { error } = await supabase.from("urunler").update({ durum: newDurum }).eq("id", urun.id);
     if (error) {
       toast({ title: "Hata", description: "Durum güncellenemedi.", variant: "destructive" });
