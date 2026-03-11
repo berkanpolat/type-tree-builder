@@ -25,11 +25,11 @@ const STEPS = ["Kategori", "Ürün Bilgileri", "Teknik Detaylar", "Varyasyon"];
 const STEP_ICONS = [Pencil, FileText, Settings, Package];
 
 // Map ana kategori names to their technical spec fields
-const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" | "number" | "date"; kategoriName?: string }[]> = {
+const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" | "number" | "date" | "dependent_dropdown"; kategoriName?: string; dependsOn?: string }[]> = {
   "Hazır Giyim": [
     { label: "Kumaş Kompozisyonu", type: "text" },
     { label: "Kumaş Grubu", type: "dropdown", kategoriName: "Kumaş Grubu" },
-    { label: "Kumaş Türü", type: "dropdown", kategoriName: "Kumaş Türü" },
+    { label: "Kumaş Türü", type: "dependent_dropdown", dependsOn: "Kumaş Grubu" },
     { label: "Sezon", type: "dropdown", kategoriName: "Sezon" },
     { label: "Cinsiyet", type: "dropdown", kategoriName: "Cinsiyet" },
     { label: "Yaş Grubu", type: "dropdown", kategoriName: "Yaş Grubu" },
@@ -39,7 +39,7 @@ const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" 
   "Hazır Giyim Üretim": [
     { label: "Kumaş Kompozisyonu", type: "text" },
     { label: "Kumaş Grubu", type: "dropdown", kategoriName: "Kumaş Grubu" },
-    { label: "Kumaş Türü", type: "dropdown", kategoriName: "Kumaş Türü" },
+    { label: "Kumaş Türü", type: "dependent_dropdown", dependsOn: "Kumaş Grubu" },
     { label: "Sezon", type: "dropdown", kategoriName: "Sezon" },
     { label: "Cinsiyet", type: "dropdown", kategoriName: "Cinsiyet" },
     { label: "Yaş Grubu", type: "dropdown", kategoriName: "Yaş Grubu" },
