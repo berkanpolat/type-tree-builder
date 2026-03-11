@@ -47,6 +47,7 @@ import AdminFirmalar from "./pages/admin/AdminFirmalar";
 import AdminIhaleler from "./pages/admin/AdminIhaleler";
 import AdminUrunler from "./pages/admin/AdminUrunler";
 import AdminSikayetler from "./pages/admin/AdminSikayetler";
+import AdminDestek from "./pages/admin/AdminDestek";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 
 const queryClient = new QueryClient();
