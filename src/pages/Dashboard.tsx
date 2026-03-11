@@ -43,6 +43,7 @@ interface FirmaData {
 }
 
 const Dashboard = () => {
+  const dashboardBanner = useBanner("dashboard-pro-banner");
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [firma, setFirma] = useState<FirmaData | null>(null);
