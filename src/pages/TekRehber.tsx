@@ -7,6 +7,7 @@ import { sortFirmaTurleri } from "@/lib/sort-utils";
 import PazarHeader from "@/components/PazarHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
 import Footer from "@/components/Footer";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
 import { Input } from "@/components/ui/input";
@@ -166,7 +167,7 @@ export default function TekRehber() {
     }
 
     let query = supabase.from("firmalar")
-      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id")
+      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id, belge_onayli")
       .order("firma_unvani").limit(100);
 
     if (selectedFirmaTuru) query = query.eq("firma_turu_id", selectedFirmaTuru);
@@ -435,8 +436,11 @@ export default function TekRehber() {
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <h3 className="font-semibold text-foreground text-lg leading-tight">{firma.firma_unvani}</h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-foreground text-lg leading-tight flex items-center gap-1.5">
+                            {firma.firma_unvani}
+                            {(firma as any).belge_onayli && <VerifiedBadge />}
+                          </h3>
                           {(firma.firma_turu_name || firma.firma_tipi_name) && (
                             <Badge className="bg-primary/10 text-primary border border-primary/20 text-xs font-medium">
                               {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}

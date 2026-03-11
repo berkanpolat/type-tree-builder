@@ -2361,7 +2361,9 @@ Deno.serve(async (req) => {
         const { data: allBelgeler } = await supabase.from("firma_belgeler").select("durum").eq("firma_id", belge.firma_id);
         const allApproved = allBelgeler && allBelgeler.length >= 3 && allBelgeler.every(b => b.durum === "onaylandi");
         
+        // Update belge_onayli flag on firmalar
         if (allApproved) {
+          await supabase.from("firmalar").update({ belge_onayli: true }).eq("id", belge.firma_id);
           // Get user_id for notification
           const { data: firma } = await supabase.from("firmalar").select("user_id, firma_unvani").eq("id", belge.firma_id).single();
           if (firma) {
@@ -2372,6 +2374,9 @@ Deno.serve(async (req) => {
               link: "/firma-bilgilerim",
             });
           }
+        } else {
+          // If not all approved anymore (e.g. a doc was rejected), remove the flag
+          await supabase.from("firmalar").update({ belge_onayli: false }).eq("id", belge.firma_id);
         }
       }
 

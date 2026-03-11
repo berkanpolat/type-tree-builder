@@ -947,6 +947,7 @@ export type Database = {
           aylik_tedarik_sayisi: number | null
           aylik_uretim_kapasitesi: number | null
           bagimsiz_denetim_id: string | null
+          belge_onayli: boolean
           created_at: string
           facebook: string | null
           firma_hakkinda: string | null
@@ -983,6 +984,7 @@ export type Database = {
           aylik_tedarik_sayisi?: number | null
           aylik_uretim_kapasitesi?: number | null
           bagimsiz_denetim_id?: string | null
+          belge_onayli?: boolean
           created_at?: string
           facebook?: string | null
           firma_hakkinda?: string | null
@@ -1019,6 +1021,7 @@ export type Database = {
           aylik_tedarik_sayisi?: number | null
           aylik_uretim_kapasitesi?: number | null
           bagimsiz_denetim_id?: string | null
+          belge_onayli?: boolean
           created_at?: string
           facebook?: string | null
           firma_hakkinda?: string | null

@@ -8,6 +8,7 @@ import KategoriMegaMenu from "@/components/anasayfa/KategoriMegaMenu";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
 import UrunFiltreler, { type FilterState } from "@/components/anasayfa/UrunFiltreler";
 import Footer from "@/components/Footer";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -244,7 +245,7 @@ export default function AnaSayfa() {
 
     const [firmalarRes, varyasyonluRes, otherVaryantsRes, favsRes] = await Promise.all([
       userIds.length > 0
-        ? supabase.from("firmalar").select("user_id, firma_unvani, logo_url").in("user_id", userIds)
+        ? supabase.from("firmalar").select("user_id, firma_unvani, logo_url, belge_onayli").in("user_id", userIds)
         : Promise.resolve({ data: null, error: null }),
       varyasyonluIds.length > 0
         ? supabase
@@ -263,7 +264,7 @@ export default function AnaSayfa() {
         : Promise.resolve({ data: null, error: null }),
     ]);
 
-    const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
+    const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null; belge_onayli?: boolean }> = {};
     (firmalarRes.data || []).forEach((f) => {
       firmaMap[f.user_id] = f;
     });
@@ -314,6 +315,7 @@ export default function AnaSayfa() {
         teknik_detaylar: (u.teknik_detaylar as Record<string, string>) || null,
         firma_unvani: firmaMap[u.user_id]?.firma_unvani,
         firma_logo_url: firmaMap[u.user_id]?.logo_url,
+        belge_onayli: firmaMap[u.user_id]?.belge_onayli || false,
         min_varyant_fiyat: minV,
         max_varyant_fiyat: maxV,
         is_favorited: favSet.has(u.id),
@@ -721,6 +723,7 @@ export default function AnaSayfa() {
               )}
             </div>
             <span className="text-xs text-muted-foreground truncate">{urun.firma_unvani || ""}</span>
+            {(urun as any).belge_onayli && <VerifiedBadge />}
           </div>
           <div className="mb-3">{priceDisplay}</div>
           <Button size="sm" className="w-full mt-auto bg-primary text-primary-foreground hover:bg-primary/90">Ürünü Göster</Button>

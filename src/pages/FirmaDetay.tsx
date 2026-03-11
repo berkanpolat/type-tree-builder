@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import adBannerImg from "@/assets/ad-banner.jpg";
 import BildirDialog from "@/components/BildirDialog";
+import VerifiedBadge from "@/components/VerifiedBadge";
 import {
   MessageSquare,
   Phone,
@@ -677,7 +678,10 @@ export default function FirmaDetay() {
             </div>
 
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold text-foreground">{firma.firma_unvani}</h1>
+              <h1 className="text-xl font-bold text-foreground flex items-center gap-1.5">
+                {firma.firma_unvani}
+                {(firma as any).belge_onayli && <VerifiedBadge size="md" />}
+              </h1>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <Badge className="bg-secondary text-secondary-foreground text-xs">{firmaTuruName}</Badge>
                 <Badge variant="outline" className="text-xs border-secondary text-secondary">{firmaTipiName}</Badge>

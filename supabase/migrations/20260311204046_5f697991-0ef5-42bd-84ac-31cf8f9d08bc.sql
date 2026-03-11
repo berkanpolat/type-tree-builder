@@ -1,0 +1,1 @@
+ALTER TABLE public.firmalar ADD COLUMN IF NOT EXISTS belge_onayli boolean NOT NULL DEFAULT false;
