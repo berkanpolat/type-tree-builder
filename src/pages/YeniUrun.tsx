@@ -347,6 +347,16 @@ export default function YeniUrun() {
   };
 
   const handleSubmit = async () => {
+    // Check aktif ürün quota (only for new products, not edits)
+    if (!editId && !isAdminMode) {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "aktif_urun");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Aktif ürün limitiniz dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
+
     if (varyasyonlar.length === 0) {
       toast({ title: "En az bir ürün varyasyonu ekleyiniz.", variant: "destructive" }); return;
     }
