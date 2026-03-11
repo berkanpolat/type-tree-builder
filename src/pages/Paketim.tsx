@@ -93,10 +93,16 @@ const Paketim = () => {
                 <CardTitle className="text-xl">Aktif Paketiniz</CardTitle>
               </div>
               {isPro && (
-                <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
-                  {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Aboneliği Yönet
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
+                    {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Aboneliği Yönet
+                  </Button>
+                  <Button variant="destructive" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
+                    {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                    Paketi İptal Et
+                  </Button>
+                </div>
               )}
             </div>
           </CardHeader>
@@ -119,6 +125,9 @@ const Paketim = () => {
                     })}
                   </p>
                 )}
+                <p className="text-xs text-muted-foreground mt-2 bg-muted/50 rounded-md p-2">
+                  İptal etmeniz durumunda dönem bitiş tarihine kadar PRO özelliklerini kullanmaya devam edersiniz. Süre dolduğunda hesabınız otomatik olarak Ücretsiz pakete geçirilir.
+                </p>
               </div>
             )}
 
