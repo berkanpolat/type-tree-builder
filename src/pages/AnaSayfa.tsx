@@ -28,10 +28,11 @@ import {
   ChevronRight,
   ArrowUpDown,
 } from "lucide-react";
-import bannerKomisyon from "@/assets/banner-komisyon.jpg";
-import bannerStoktan from "@/assets/banner-stoktan.jpg";
-import bannerSatis from "@/assets/banner-satis.jpg";
-import bannerIplik from "@/assets/banner-iplik.jpg";
+import bannerKomisyonFallback from "@/assets/banner-komisyon.jpg";
+import bannerStoktanFallback from "@/assets/banner-stoktan.jpg";
+import bannerSatisFallback from "@/assets/banner-satis.jpg";
+import bannerIplikFallback from "@/assets/banner-iplik.jpg";
+import { useBanner } from "@/hooks/use-banner";
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 const ITEMS_PER_PAGE = 24;
