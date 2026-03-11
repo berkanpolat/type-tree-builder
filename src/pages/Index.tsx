@@ -90,11 +90,7 @@ const Index = () => {
     });
   };
 
-  const getSecenekler = (kategoriId: string) =>
-    allSecenekler?.filter((s) => s.kategori_id === kategoriId && s.parent_id === null) || [];
-
-  const getAltSecenekler = (parentId: string) =>
-    allSecenekler?.filter((s) => s.parent_id === parentId) || [];
+  // getSecenekler and getAltSecenekler defined above after allSecenekler query
 
   const hasAltSecenekler = (secenekId: string) =>
     allSecenekler?.some((s) => s.parent_id === secenekId) || false;
