@@ -150,6 +150,10 @@ const GirisKayit = () => {
       toast({ title: "Hata", description: "Firma türü ve tipi seçiniz", variant: "destructive" });
       return;
     }
+    if (!phoneVerified) {
+      toast({ title: "Hata", description: "Lütfen telefon numaranızı doğrulayın", variant: "destructive" });
+      return;
+    }
     setRegisterLoading(true);
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -162,7 +166,6 @@ const GirisKayit = () => {
       const userId = authData.user?.id;
       if (!userId) throw new Error("Kullanıcı oluşturulamadı");
 
-      // Insert profile + firma via SECURITY DEFINER function
       const { error: rpcError } = await supabase.rpc("register_user", {
         p_user_id: userId,
         p_ad: ad,
