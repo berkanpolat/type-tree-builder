@@ -421,16 +421,29 @@ Deno.serve(async (req) => {
       // Count by firma_turu
       const { data: firmalar } = await supabase
         .from("firmalar")
-        .select("firma_turu_id");
+        .select("firma_turu_id, firma_tipi_id");
 
       const { data: turler } = await supabase
         .from("firma_turleri")
         .select("id, name");
 
+      const { data: tipler } = await supabase
+        .from("firma_tipleri")
+        .select("id, name, firma_turu_id");
+
       const turDagilimi = (turler || []).map((t: any) => ({
         name: t.name,
+        id: t.id,
         count: (firmalar || []).filter((f: any) => f.firma_turu_id === t.id).length,
       }));
+
+      // Firma tipi breakdown
+      const tipDagilimi = (tipler || []).map((tp: any) => ({
+        name: tp.name,
+        id: tp.id,
+        firma_turu_id: tp.firma_turu_id,
+        count: (firmalar || []).filter((f: any) => f.firma_tipi_id === tp.id).length,
+      })).filter((tp: any) => tp.count > 0);
 
       // Recent registrations
       const daysAgo = new Date();
@@ -445,11 +458,51 @@ Deno.serve(async (req) => {
         .select("*", { count: "exact", head: true })
         .eq("onay_durumu", "onay_bekliyor");
 
+      // Package subscriber counts
+      const { data: abonelikler } = await supabase
+        .from("kullanici_abonelikler")
+        .select("paket_id, user_id, donem_baslangic, durum");
+
+      const { data: paketler } = await supabase
+        .from("paketler")
+        .select("id, ad, slug");
+
+      const paketDagilimi = (paketler || []).map((p: any) => ({
+        id: p.id,
+        ad: p.ad,
+        slug: p.slug,
+        count: (abonelikler || []).filter((a: any) => a.paket_id === p.id && a.durum === "aktif").length,
+      }));
+
+      // New subscribers by period (24h, 1w, 1m)
+      const now = new Date();
+      const h24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const w1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const m1 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      const yeniAboneler = {
+        son24saat: (abonelikler || []).filter((a: any) => a.durum === "aktif" && new Date(a.donem_baslangic) >= h24).length,
+        sonBirHafta: (abonelikler || []).filter((a: any) => a.durum === "aktif" && new Date(a.donem_baslangic) >= w1).length,
+        sonBirAy: (abonelikler || []).filter((a: any) => a.durum === "aktif" && new Date(a.donem_baslangic) >= m1).length,
+      };
+
+      // Online user count (active in last 5 minutes - approximate via profiles updated_at)
+      // We'll use a simpler metric: users active in last 15 minutes
+      const onlineThreshold = new Date(now.getTime() - 15 * 60 * 1000);
+      const { count: onlineCount } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .gte("updated_at", onlineThreshold.toISOString());
+
       return jsonResponse({
         total: totalCount || 0,
         turDagilimi,
+        tipDagilimi,
         recent: recentCount || 0,
         pending: pendingCount || 0,
+        paketDagilimi,
+        yeniAboneler,
+        onlineCount: onlineCount || 0,
       });
     }
 
