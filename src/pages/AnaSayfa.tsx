@@ -504,9 +504,8 @@ export default function AnaSayfa() {
     setActiveFilter(null);
 
     if (result.type === "Kategori") {
-      const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === result.name.toLowerCase());
-      if (katName) {
-        setSelectedKategori(katName);
+      if (!HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === result.name.toLowerCase())) {
+        setSelectedKategori(result.name);
         setSelectedGrupId(null);
         setSelectedTurId(null);
         setAppliedSearchTerm("");
