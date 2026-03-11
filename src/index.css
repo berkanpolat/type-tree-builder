@@ -102,6 +102,8 @@
 }
 
 /* Admin Panel Theme - CSS Variables on parent wrapper */
+/* Also applied to :root via AdminLayout useEffect for portal-rendered elements */
+
 @layer components {
   .admin-dark {
     --admin-bg: 217 33% 12%;

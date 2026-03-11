@@ -44,6 +44,13 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   useEffect(() => {
     localStorage.setItem("admin-theme", lightMode ? "light" : "dark");
+    // Sync admin theme class to document root for portal-rendered elements (dialogs)
+    const root = document.documentElement;
+    root.classList.remove("admin-dark", "admin-light");
+    root.classList.add(lightMode ? "admin-light" : "admin-dark");
+    return () => {
+      root.classList.remove("admin-dark", "admin-light");
+    };
   }, [lightMode]);
 
   if (loading) {
