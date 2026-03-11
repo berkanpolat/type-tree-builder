@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { invalidateBannerCache } from "@/hooks/use-banner";
 import {
   Image, Upload, Trash2, ExternalLink, Monitor, MapPin, Maximize,
   CheckCircle2, XCircle, Pencil, X, Save,
@@ -39,6 +40,15 @@ interface Banner {
   link_url: string | null;
   aktif: boolean;
   updated_at: string;
+}
+
+async function adminCall(action: string, body: Record<string, any>) {
+  const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, {
+    body: { token: localStorage.getItem("admin_token"), ...body },
+  });
+  if (error) throw new Error(error.message);
+  if (data?.error) throw new Error(data.error);
+  return data;
 }
 
 export default function AdminReklam() {
@@ -79,90 +89,68 @@ export default function AdminReklam() {
     if (!banner) return;
 
     setUploadingId(selectedBannerId);
-    const ext = file.name.split(".").pop();
-    const filePath = `${banner.slug}.${ext}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from("banners")
-      .upload(filePath, file, { upsert: true });
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const fileBase64 = btoa(binary);
 
-    if (uploadError) {
-      toast({ title: "Yükleme Hatası", description: uploadError.message, variant: "destructive" });
-      setUploadingId(null);
-      return;
-    }
+      const result = await adminCall("upload-banner", {
+        bannerId: selectedBannerId,
+        slug: banner.slug,
+        fileName: file.name,
+        fileBase64,
+        contentType: file.type,
+      });
 
-    const { data: urlData } = supabase.storage.from("banners").getPublicUrl(filePath);
-    const publicUrl = urlData.publicUrl + "?t=" + Date.now();
-
-    const { error: updateError } = await supabase
-      .from("banners")
-      .update({ gorsel_url: publicUrl, updated_at: new Date().toISOString() })
-      .eq("id", selectedBannerId);
-
-    if (updateError) {
-      toast({ title: "Güncelleme Hatası", description: updateError.message, variant: "destructive" });
-    } else {
       toast({ title: "Başarılı", description: `${banner.baslik} görseli güncellendi.` });
-      try {
-        await supabase.functions.invoke("admin-auth/log-banner", {
-          body: {
-            token: localStorage.getItem("admin_token"),
-            action: "Banner görseli güncellendi",
-            bannerSlug: banner.slug,
-            bannerBaslik: banner.baslik,
-          },
-        });
-      } catch {}
+      invalidateBannerCache(banner.slug);
       fetchBanners();
+    } catch (err: any) {
+      toast({ title: "Yükleme Hatası", description: err.message, variant: "destructive" });
     }
+
     setUploadingId(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const handleRemoveImage = async (banner: Banner) => {
-    const { error } = await supabase
-      .from("banners")
-      .update({ gorsel_url: null, updated_at: new Date().toISOString() })
-      .eq("id", banner.id);
-
-    if (error) {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Görsel kaldırıldı", description: `${banner.baslik} görseli kaldırıldı. Varsayılan görsel kullanılacak.` });
+    try {
+      await adminCall("update-banner", { bannerId: banner.id, gorsel_url: null });
+      toast({ title: "Görsel kaldırıldı", description: `${banner.baslik} görseli kaldırıldı.` });
+      invalidateBannerCache(banner.slug);
       fetchBanners();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err.message, variant: "destructive" });
     }
   };
 
   const handleToggleAktif = async (banner: Banner) => {
-    const { error } = await supabase
-      .from("banners")
-      .update({ aktif: !banner.aktif, updated_at: new Date().toISOString() })
-      .eq("id", banner.id);
-
-    if (error) {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      await adminCall("update-banner", { bannerId: banner.id, aktif: !banner.aktif });
+      invalidateBannerCache(banner.slug);
       fetchBanners();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err.message, variant: "destructive" });
     }
   };
 
   const handleSaveLink = async (banner: Banner) => {
-    const { error } = await supabase
-      .from("banners")
-      .update({ link_url: editLinkUrl || null, updated_at: new Date().toISOString() })
-      .eq("id", banner.id);
-
-    if (error) {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      await adminCall("update-banner", { bannerId: banner.id, link_url: editLinkUrl || null });
       toast({ title: "Link güncellendi" });
       setEditingId(null);
+      invalidateBannerCache(banner.slug);
       fetchBanners();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err.message, variant: "destructive" });
     }
   };
 
-  // Group banners by page
   const grouped = banners.reduce<Record<string, Banner[]>>((acc, b) => {
     if (!acc[b.sayfa]) acc[b.sayfa] = [];
     acc[b.sayfa].push(b);
@@ -233,7 +221,6 @@ export default function AdminReklam() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {items.map((banner) => (
                   <div key={banner.id} className="rounded-xl overflow-hidden" style={s.card}>
-                    {/* Preview area */}
                     <div className="relative h-40 flex items-center justify-center overflow-hidden" style={{ background: "hsl(var(--admin-input-bg))" }}>
                       {banner.gorsel_url ? (
                         <img
@@ -254,7 +241,6 @@ export default function AdminReklam() {
                       )}
                     </div>
 
-                    {/* Info */}
                     <div className="p-4 space-y-3">
                       <div className="flex items-start justify-between">
                         <div>
@@ -279,7 +265,6 @@ export default function AdminReklam() {
                         </div>
                       </div>
 
-                      {/* Link */}
                       {editingId === banner.id ? (
                         <div className="flex gap-2">
                           <Input
@@ -314,7 +299,6 @@ export default function AdminReklam() {
                         </div>
                       )}
 
-                      {/* Actions */}
                       <div className="flex gap-2 pt-1">
                         <Button
                           size="sm"
