@@ -42,8 +42,8 @@ serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/dashboard?checkout=success`,
-      cancel_url: `${req.headers.get("origin")}/dashboard?checkout=cancel`,
+      success_url: `${req.headers.get("origin")}/paketim?checkout=success`,
+      cancel_url: `${req.headers.get("origin")}/paketim?checkout=cancel`,
       metadata: { user_id: user.id },
     });
 
