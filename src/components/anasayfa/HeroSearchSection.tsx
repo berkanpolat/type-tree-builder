@@ -1,16 +1,19 @@
-import { useState, useRef, forwardRef } from "react";
+import { useState } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface SearchResult {
   id: string;
   name: string;
-  type: "Kategori" | "Grup" | "Tür" | "Ürün";
+  type: string;
 }
 
 interface HeroSearchSectionProps {
+  label: string;
+  placeholder: string;
   searchTerm: string;
   onSearchTermChange: (value: string) => void;
+  onSearch: () => void;
   searchResults: SearchResult[];
   showDropdown: boolean;
   onShowDropdown: (show: boolean) => void;
@@ -18,24 +21,19 @@ interface HeroSearchSectionProps {
   searchRef: React.RefObject<HTMLDivElement>;
 }
 
-type SearchTab = "urunler" | "firma";
-
 const HeroSearchSection = ({
+  label,
+  placeholder,
   searchTerm,
   onSearchTermChange,
+  onSearch,
   searchResults,
   showDropdown,
   onShowDropdown,
   onSearchResultClick,
   searchRef,
 }: HeroSearchSectionProps) => {
-  const [activeTab, setActiveTab] = useState<SearchTab>("urunler");
   const [focused, setFocused] = useState(false);
-
-  const placeholder =
-    activeTab === "urunler"
-      ? "Ürün ara... (kumaş, iplik, aksesuar)"
-      : "Üretici veya tedarikçi ara...";
 
   return (
     <div className="relative overflow-hidden rounded-xl">
@@ -59,29 +57,12 @@ const HeroSearchSection = ({
 
           {/* CENTER: Search */}
           <div ref={searchRef}>
-            {/* Tabs */}
+            {/* Label badge */}
             <div className="flex justify-center mb-2">
               <div className="inline-flex items-center bg-white/[0.08] rounded-full p-0.5 border border-white/[0.12]">
-                <button
-                  onClick={() => setActiveTab("urunler")}
-                  className={`px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all ${
-                    activeTab === "urunler"
-                      ? "bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground shadow-[0_2px_8px_rgba(245,154,35,0.4)]"
-                      : "text-white/50 hover:text-white/80"
-                  }`}
-                >
-                  ÜRÜNLER
-                </button>
-                <button
-                  onClick={() => setActiveTab("firma")}
-                  className={`px-4 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all ${
-                    activeTab === "firma"
-                      ? "bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground shadow-[0_2px_8px_rgba(245,154,35,0.4)]"
-                      : "text-white/50 hover:text-white/80"
-                  }`}
-                >
-                  ÜRETİCİ / TEDARİKÇİ
-                </button>
+                <span className="px-4 py-1.5 rounded-full text-xs font-medium tracking-wide bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground shadow-[0_2px_8px_rgba(245,154,35,0.4)]">
+                  {label}
+                </span>
               </div>
             </div>
 
@@ -95,18 +76,23 @@ const HeroSearchSection = ({
                 }`}
               >
                 <Search className="w-4 h-4 text-foreground/35 flex-shrink-0" />
-                <Input
+                <input
+                  type="text"
                   placeholder={placeholder}
                   value={searchTerm}
-                  onChange={(e) => {
-                    onSearchTermChange(e.target.value);
-                  }}
+                  onChange={(e) => onSearchTermChange(e.target.value)}
                   onFocus={() => {
                     setFocused(true);
                     if (searchResults.length > 0) onShowDropdown(true);
                   }}
-                  onBlur={() => setFocused(false)}
-                  className="border-0 bg-transparent text-foreground text-sm h-10 focus-visible:ring-0 shadow-none"
+                  onBlur={() => {
+                    setFocused(false);
+                    setTimeout(() => onShowDropdown(false), 200);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") onSearch();
+                  }}
+                  className="flex-1 bg-transparent text-foreground text-sm h-10 px-2 outline-none placeholder:text-muted-foreground/50"
                 />
                 {searchTerm && (
                   <button
@@ -116,7 +102,10 @@ const HeroSearchSection = ({
                     ✕
                   </button>
                 )}
-                <button className="flex items-center gap-1.5 bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground rounded-lg px-4 py-2 text-xs font-semibold shadow-[0_3px_10px_rgba(245,154,35,0.5)] hover:brightness-110 active:scale-95 transition-all whitespace-nowrap">
+                <button
+                  onClick={onSearch}
+                  className="flex items-center gap-1.5 bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground rounded-lg px-4 py-2 text-xs font-semibold shadow-[0_3px_10px_rgba(245,154,35,0.5)] hover:brightness-110 active:scale-95 transition-all whitespace-nowrap"
+                >
                   <Search className="w-3 h-3" />
                   Ara
                 </button>
@@ -124,7 +113,7 @@ const HeroSearchSection = ({
 
               {/* Dropdown */}
               {showDropdown && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 bg-background border border-border rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.15)] z-50 mt-2 max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute top-full left-0 right-0 bg-background border border-border rounded-xl shadow-[0_16px_40px_rgba(0,0,0,0.15)] z-50 mt-2 max-h-80 overflow-y-auto">
                   {searchResults.map((result, i) => (
                     <button
                       key={`${result.id}-${i}`}
@@ -146,7 +135,6 @@ const HeroSearchSection = ({
           {/* RIGHT: %0 Badge */}
           <div className="hidden lg:flex items-center justify-end gap-3.5">
             <div className="animate-[floatBadge_4s_ease-in-out_infinite] flex items-center gap-3.5">
-              {/* Orbiting rings */}
               <div className="relative w-[90px] h-[90px] flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full border-[1.5px] border-dashed border-secondary/35 animate-[spin_8s_linear_infinite]">
                   <div className="absolute w-[7px] h-[7px] bg-secondary rounded-full -top-[3.5px] left-1/2 -translate-x-1/2" />
