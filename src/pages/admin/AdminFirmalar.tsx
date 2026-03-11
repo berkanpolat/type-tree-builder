@@ -573,7 +573,11 @@ export default function AdminFirmalar() {
           <div className="space-y-3">
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
               {/* Total */}
-              <div style={s.card} className="p-4">
+              <div
+                style={{ ...s.card, ...(activeStatCard === "total" ? { borderColor: "hsl(210 100% 60%)", boxShadow: "0 0 0 1px hsl(210 100% 60%)" } : {}) }}
+                className="p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                onClick={() => handleStatCardClick("total")}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <Building2 className="w-5 h-5 text-blue-400" />
                   <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Toplam</span>
@@ -583,7 +587,11 @@ export default function AdminFirmalar() {
               </div>
 
               {/* Pending */}
-              <div style={s.card} className="p-4">
+              <div
+                style={{ ...s.card, ...(activeStatCard === "pending" ? { borderColor: "hsl(38 92% 50%)", boxShadow: "0 0 0 1px hsl(38 92% 50%)" } : {}) }}
+                className="p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                onClick={() => handleStatCardClick("pending")}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <AlertCircle className="w-5 h-5 text-amber-400" />
                   <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Bekleyen</span>
@@ -593,11 +601,15 @@ export default function AdminFirmalar() {
               </div>
 
               {/* Recent */}
-              <div style={s.card} className="p-4">
+              <div
+                style={{ ...s.card, ...(activeStatCard === "recent" ? { borderColor: "hsl(270 60% 60%)", boxShadow: "0 0 0 1px hsl(270 60% 60%)" } : {}) }}
+                className="p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                onClick={() => handleStatCardClick("recent")}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <Clock className="w-5 h-5 text-purple-400" />
-                  <Select value={String(statsDays)} onValueChange={(v) => setStatsDays(Number(v))}>
-                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text}>
+                  <Select value={String(statsDays)} onValueChange={(v) => { setStatsDays(Number(v)); }}>
+                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text} onClick={(e) => e.stopPropagation()}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
@@ -615,7 +627,11 @@ export default function AdminFirmalar() {
               </div>
 
               {/* Online count */}
-              <div style={s.card} className="p-4">
+              <div
+                style={{ ...s.card, ...(activeStatCard === "online" ? { borderColor: "hsl(142 71% 45%)", boxShadow: "0 0 0 1px hsl(142 71% 45%)" } : {}) }}
+                className="p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                onClick={() => handleStatCardClick("online")}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <Wifi className="w-5 h-5 text-green-400" />
                   <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Çevrimiçi</span>
@@ -625,11 +641,15 @@ export default function AdminFirmalar() {
               </div>
 
               {/* New subscribers */}
-              <div style={s.card} className="p-4">
+              <div
+                style={{ ...s.card, ...(activeStatCard === "yeniAbone" ? { borderColor: "hsl(38 92% 50%)", boxShadow: "0 0 0 1px hsl(38 92% 50%)" } : {}) }}
+                className="p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                onClick={() => handleStatCardClick("yeniAbone")}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <CreditCard className="w-5 h-5 text-amber-400" />
                   <Select value={abonePeriod} onValueChange={(v: any) => setAbonePeriod(v)}>
-                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text}>
+                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text} onClick={(e) => e.stopPropagation()}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
