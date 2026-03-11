@@ -332,14 +332,18 @@ function PaketContent({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)}
-                        className="hover:bg-amber-500/10 hover:text-amber-500" style={{ color: `hsl(var(--admin-muted))` }}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" onClick={() => { setDeletingId(p.id); setDeleteDialogOpen(true); }}
-                        className="hover:bg-red-500/10 hover:text-red-500" style={{ color: `hsl(var(--admin-muted))` }}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {hasPermission("paket_duzenleyebilir") && (
+                        <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)}
+                          className="hover:bg-amber-500/10 hover:text-amber-500" style={{ color: `hsl(var(--admin-muted))` }}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {hasPermission("paket_olusturabilir") && (
+                        <Button size="icon" variant="ghost" onClick={() => { setDeletingId(p.id); setDeleteDialogOpen(true); }}
+                          className="hover:bg-red-500/10 hover:text-red-500" style={{ color: `hsl(var(--admin-muted))` }}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
