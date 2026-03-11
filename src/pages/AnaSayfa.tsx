@@ -389,28 +389,82 @@ export default function AnaSayfa() {
     fetchUrunler();
   }, [fetchUrunler]);
 
-  // If text search is active and category still not selected, infer category from results
-  useEffect(() => {
-    if (!appliedSearchTerm || selectedKategori || allUrunler.length === 0) return;
+  const normalizeText = useCallback((text: string) => {
+    return text
+      .toLocaleLowerCase("tr-TR")
+      .replace(/ı/g, "i")
+      .replace(/ğ/g, "g")
+      .replace(/ü/g, "u")
+      .replace(/ş/g, "s")
+      .replace(/ö/g, "o")
+      .replace(/ç/g, "c")
+      .replace(/\s+/g, " ")
+      .trim();
+  }, []);
 
-    const countByCategory: Record<string, number> = {};
-    allUrunler.forEach((u) => {
-      if (u.urun_kategori_id) {
-        countByCategory[u.urun_kategori_id] = (countByCategory[u.urun_kategori_id] || 0) + 1;
-      }
-    });
+  const getSimilarityScore = useCallback((queryRaw: string, candidateRaw: string) => {
+    const query = normalizeText(queryRaw);
+    const candidate = normalizeText(candidateRaw);
 
-    const dominantCategoryId = Object.entries(countByCategory).sort((a, b) => b[1] - a[1])[0]?.[0];
-    if (!dominantCategoryId) return;
+    if (!query || !candidate) return 0;
+    if (query === candidate) return 1000;
 
-    const categoryOption = kategoriSecenekler.find((k) => k.id === dominantCategoryId);
-    if (!categoryOption) return;
-    if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === categoryOption.name.toLowerCase())) return;
+    let score = 0;
+    if (candidate.startsWith(query)) score += 700;
+    if (candidate.includes(query)) score += 500;
 
-    setSelectedKategori(categoryOption.name);
-    setSelectedGrupId(null);
-    setSelectedTurId(null);
-  }, [appliedSearchTerm, selectedKategori, allUrunler, kategoriSecenekler]);
+    const queryWords = query.split(" ").filter(Boolean);
+    const candidateWords = candidate.split(" ").filter(Boolean);
+    const matchedWordCount = queryWords.filter((q) => candidateWords.some((c) => c.startsWith(q) || c.includes(q))).length;
+
+    if (matchedWordCount > 0) score += matchedWordCount * 150;
+
+    const lengthRatio = Math.min(query.length, candidate.length) / Math.max(query.length, candidate.length);
+    score += Math.round(lengthRatio * 100);
+
+    return score;
+  }, [normalizeText]);
+
+  const getRootCategoryName = useCallback((nodeId: string): string | null => {
+    let current = urunKategoriById[nodeId];
+    let guard = 0;
+
+    while (current?.parent_id && guard < 10) {
+      current = urunKategoriById[current.parent_id];
+      guard += 1;
+    }
+
+    if (!current) return null;
+    if (HIDDEN_KATEGORILER.some((h) => normalizeText(h) === normalizeText(current.name))) return null;
+    return current.name;
+  }, [urunKategoriById, normalizeText]);
+
+  const getNodeType = useCallback((node: KategoriNode): SearchResult["type"] => {
+    if (!node.parent_id) return "Kategori";
+    const parent = urunKategoriById[node.parent_id];
+    if (parent && !parent.parent_id) return "Grup";
+    return "Tür";
+  }, [urunKategoriById]);
+
+  const findBestTaxonomyMatch = useCallback((term: string) => {
+    if (!term || urunKategoriNodes.length === 0) return null;
+
+    const scored = urunKategoriNodes
+      .map((node) => {
+        const rootCategoryName = getRootCategoryName(node.id);
+        if (!rootCategoryName) return null;
+        return {
+          node,
+          rootCategoryName,
+          score: getSimilarityScore(term, node.name),
+        };
+      })
+      .filter((item): item is { node: KategoriNode; rootCategoryName: string; score: number } => !!item)
+      .sort((a, b) => b.score - a.score);
+
+    if (scored.length === 0 || scored[0].score < 220) return null;
+    return scored[0];
+  }, [urunKategoriNodes, getRootCategoryName, getSimilarityScore]);
 
   // Trigger search on Enter or Ara button — detect kategori/grup/tür match and auto-apply filters
   const handleSearch = useCallback(async () => {
