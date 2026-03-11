@@ -1489,7 +1489,13 @@ Deno.serve(async (req) => {
       });
 
       if (sikayetId) {
-        await supabase.from("sikayetler").update({ durum: "cozuldu" }).eq("id", sikayetId);
+        await supabase.from("sikayetler").update({
+          durum: "cozuldu",
+          islem_tipi: "uzaklastirma",
+          islem_yapan: createdBy,
+          islem_tarihi: new Date().toISOString(),
+          islem_detay: `Uzaklaştırma süresi: ${bitisStr}. ${sebep ? 'Sebep: ' + sebep : ''}`,
+        }).eq("id", sikayetId);
       }
 
       return jsonResponse({ success: true });
