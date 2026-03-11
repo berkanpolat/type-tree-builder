@@ -154,11 +154,18 @@ export default function ManuPazar() {
 
   const handleToggleDurum = async (urun: Urun) => {
     const newDurum = urun.durum === "aktif" ? "pasif" : "aktif";
-    // If activating, check quota
+    // If activating, check live active product count
     if (newDurum === "aktif") {
-      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "aktif_urun");
-      if (!check.allowed) {
-        setUpgradeMessage(check.message || "Aktif ürün limitiniz dolmuştur.");
+      if (packageInfo.loading) {
+        toast({ title: "Paket bilgisi yükleniyor", description: "Lütfen birkaç saniye sonra tekrar deneyin.", variant: "destructive" });
+        return;
+      }
+
+      const aktifLimit = packageInfo.limits.aktif_urun_limiti;
+      const aktifSayisi = urunler.filter((u) => u.durum === "aktif").length;
+
+      if (aktifLimit !== null && aktifSayisi >= aktifLimit) {
+        setUpgradeMessage(`Aktif ürün limitiniz dolmuştur (${aktifSayisi}/${aktifLimit}). PRO pakete yükselterek daha fazla aktif ürün yayınlayabilirsiniz.`);
         setUpgradeOpen(true);
         return;
       }
