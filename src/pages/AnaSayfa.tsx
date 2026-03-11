@@ -367,6 +367,29 @@ export default function AnaSayfa() {
     fetchUrunler();
   }, [fetchUrunler]);
 
+  // If text search is active and category still not selected, infer category from results
+  useEffect(() => {
+    if (!appliedSearchTerm || selectedKategori || allUrunler.length === 0) return;
+
+    const countByCategory: Record<string, number> = {};
+    allUrunler.forEach((u) => {
+      if (u.urun_kategori_id) {
+        countByCategory[u.urun_kategori_id] = (countByCategory[u.urun_kategori_id] || 0) + 1;
+      }
+    });
+
+    const dominantCategoryId = Object.entries(countByCategory).sort((a, b) => b[1] - a[1])[0]?.[0];
+    if (!dominantCategoryId) return;
+
+    const categoryOption = kategoriSecenekler.find((k) => k.id === dominantCategoryId);
+    if (!categoryOption) return;
+    if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === categoryOption.name.toLowerCase())) return;
+
+    setSelectedKategori(categoryOption.name);
+    setSelectedGrupId(null);
+    setSelectedTurId(null);
+  }, [appliedSearchTerm, selectedKategori, allUrunler, kategoriSecenekler]);
+
   // Trigger search on Enter or Ara button — detect kategori/grup/tür match and auto-apply filters
   const handleSearch = useCallback(async () => {
     const term = searchTerm.trim();
