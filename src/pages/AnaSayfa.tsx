@@ -404,27 +404,77 @@ export default function AnaSayfa() {
       .trim();
   }, []);
 
+  const getLevenshteinDistance = useCallback((aRaw: string, bRaw: string) => {
+    const a = normalizeText(aRaw);
+    const b = normalizeText(bRaw);
+    if (a === b) return 0;
+    if (!a.length) return b.length;
+    if (!b.length) return a.length;
+
+    const dp = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    for (let j = 1; j <= b.length; j += 1) dp[0][j] = j;
+
+    for (let i = 1; i <= a.length; i += 1) {
+      for (let j = 1; j <= b.length; j += 1) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(
+          dp[i - 1][j] + 1,
+          dp[i][j - 1] + 1,
+          dp[i - 1][j - 1] + cost
+        );
+      }
+    }
+
+    return dp[a.length][b.length];
+  }, [normalizeText]);
+
   const getSimilarityScore = useCallback((queryRaw: string, candidateRaw: string) => {
     const query = normalizeText(queryRaw);
     const candidate = normalizeText(candidateRaw);
 
     if (!query || !candidate) return 0;
-    if (query === candidate) return 1000;
+    if (query === candidate) return 1200;
 
     let score = 0;
-    if (candidate.startsWith(query)) score += 700;
-    if (candidate.includes(query)) score += 500;
+    if (candidate.startsWith(query)) score += 800;
+    if (candidate.includes(query)) score += 550;
 
     const queryWords = query.split(" ").filter(Boolean);
     const candidateWords = candidate.split(" ").filter(Boolean);
-    const matchedWordCount = queryWords.filter((q) => candidateWords.some((c) => c.startsWith(q) || c.includes(q))).length;
 
-    if (matchedWordCount > 0) score += matchedWordCount * 150;
+    const matchedWordCount = queryWords.filter((q) =>
+      candidateWords.some((c) => c.startsWith(q) || c.includes(q))
+    ).length;
+    if (matchedWordCount > 0) score += matchedWordCount * 160;
 
-    const lengthRatio = Math.min(query.length, candidate.length) / Math.max(query.length, candidate.length);
-    score += Math.round(lengthRatio * 100);
+    const maxLen = Math.max(query.length, candidate.length);
+    const editDistance = getLevenshteinDistance(query, candidate);
+    const fuzzyRatio = maxLen > 0 ? 1 - editDistance / maxLen : 0;
+    score += Math.round(fuzzyRatio * 260);
+
+    const wordFuzzyBoost = queryWords.reduce((acc, q) => {
+      const bestForWord = candidateWords.reduce((best, c) => {
+        const wordMaxLen = Math.max(q.length, c.length);
+        const wordDist = getLevenshteinDistance(q, c);
+        const wordRatio = wordMaxLen > 0 ? 1 - wordDist / wordMaxLen : 0;
+        return Math.max(best, wordRatio);
+      }, 0);
+      return acc + bestForWord;
+    }, 0);
+
+    if (queryWords.length > 0) {
+      score += Math.round((wordFuzzyBoost / queryWords.length) * 200);
+    }
 
     return score;
+  }, [normalizeText, getLevenshteinDistance]);
+
+  const getMinMatchScore = useCallback((termRaw: string) => {
+    const len = normalizeText(termRaw).length;
+    if (len <= 2) return 90;
+    if (len <= 4) return 130;
+    if (len <= 7) return 160;
+    return 185;
   }, [normalizeText]);
 
   const getRootCategoryName = useCallback((nodeId: string): string | null => {
@@ -450,6 +500,7 @@ export default function AnaSayfa() {
 
   const findBestTaxonomyMatch = useCallback((term: string) => {
     if (!term || urunKategoriNodes.length === 0) return null;
+    const minScore = getMinMatchScore(term);
 
     const scored = urunKategoriNodes
       .map((node) => {
@@ -464,24 +515,28 @@ export default function AnaSayfa() {
       .filter((item): item is { node: KategoriNode; rootCategoryName: string; score: number } => !!item)
       .sort((a, b) => b.score - a.score);
 
-    if (scored.length === 0 || scored[0].score < 220) return null;
+    if (scored.length === 0 || scored[0].score < minScore) return null;
     return scored[0];
-  }, [urunKategoriNodes, getRootCategoryName, getSimilarityScore]);
+  }, [urunKategoriNodes, getRootCategoryName, getSimilarityScore, getMinMatchScore]);
 
   const localProductSearchResults = useMemo<SearchResult[]>(() => {
-    if (!searchTerm || searchTerm.length < 2) return [];
-    const normalizedTerm = normalizeText(searchTerm);
+    const term = searchTerm.trim();
+    if (!term) return [];
+    const minScore = getMinMatchScore(term);
 
     return allUrunler
-      .filter((u) => normalizeText(u.baslik).includes(normalizedTerm))
-      .slice(0, 5)
       .map((u) => ({
         id: u.id,
         name: u.baslik,
-        type: "Ürün",
+        type: "Ürün" as const,
         urunKategoriId: u.urun_kategori_id,
-      }));
-  }, [allUrunler, searchTerm, normalizeText]);
+        score: getSimilarityScore(term, u.baslik),
+      }))
+      .filter((u) => u.score >= minScore)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map(({ id, name, type, urunKategoriId }) => ({ id, name, type, urunKategoriId }));
+  }, [allUrunler, searchTerm, getSimilarityScore, getMinMatchScore]);
 
   // Trigger search on Enter or Ara button
   const handleSearch = useCallback(() => {
@@ -504,21 +559,34 @@ export default function AnaSayfa() {
     }
   }, [searchTerm, findBestTaxonomyMatch]);
 
+  // Kategori listesi geç yüklenirse Enter aramasını otomatik tamamla
+  useEffect(() => {
+    if (!appliedSearchTerm || selectedKategori || urunKategoriNodes.length === 0) return;
+    const bestMatch = findBestTaxonomyMatch(appliedSearchTerm);
+    if (!bestMatch) return;
+    setSelectedKategori(bestMatch.rootCategoryName);
+    setSelectedGrupId(null);
+    setSelectedTurId(null);
+  }, [appliedSearchTerm, selectedKategori, urunKategoriNodes.length, findBestTaxonomyMatch]);
+
   // Autocomplete — only in-memory scoring (no network round-trip)
   useEffect(() => {
-    if (!searchTerm || searchTerm.length < 2) {
+    const term = searchTerm.trim();
+    if (!term) {
       setSearchResults([]);
       setShowDropdown(false);
       return;
     }
 
     const timer = setTimeout(() => {
+      const minScore = getMinMatchScore(term);
+
       const taxonomyResults: SearchResult[] = urunKategoriNodes
         .map((node) => {
           const rootCategoryName = getRootCategoryName(node.id);
           if (!rootCategoryName) return null;
-          const score = getSimilarityScore(searchTerm, node.name);
-          if (score < 220) return null;
+          const score = getSimilarityScore(term, node.name);
+          if (score < minScore) return null;
           return {
             id: node.id,
             name: node.name,
@@ -542,10 +610,10 @@ export default function AnaSayfa() {
 
       setSearchResults(results);
       setShowDropdown(results.length > 0);
-    }, 120);
+    }, 100);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, urunKategoriNodes, getRootCategoryName, getSimilarityScore, getNodeType, localProductSearchResults]);
+  }, [searchTerm, urunKategoriNodes, getRootCategoryName, getSimilarityScore, getNodeType, localProductSearchResults, getMinMatchScore]);
 
   const handleSearchResultClick = (result: SearchResult) => {
     setSearchTerm(result.name);
