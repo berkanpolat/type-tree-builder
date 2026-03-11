@@ -460,7 +460,10 @@ const GirisKayit = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Firma Ünvanı</Label>
-                    <Input placeholder="Firma Ünvanı" value={firmaUnvani} onChange={(e) => setFirmaUnvani(e.target.value)} />
+                    <Input placeholder="Firma Ünvanı" value={firmaUnvani} onChange={(e) => {
+                      const val = e.target.value.replace(/\b\w/g, (c) => c.toLocaleUpperCase('tr-TR'));
+                      setFirmaUnvani(val);
+                    }} />
                   </div>
                   <div className="space-y-2">
                     <Label>Vergi Numarası</Label>
