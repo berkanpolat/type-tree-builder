@@ -1437,9 +1437,15 @@ Deno.serve(async (req) => {
         link: null,
       });
 
-      // Update sikayet status if provided
+      // Update sikayet status and log action details
       if (sikayetId) {
-        await supabase.from("sikayetler").update({ durum: "cozuldu" }).eq("id", sikayetId);
+        await supabase.from("sikayetler").update({
+          durum: "cozuldu",
+          islem_tipi: "kisitlama",
+          islem_yapan: createdBy,
+          islem_tarihi: new Date().toISOString(),
+          islem_detay: `Kısıtlama Alanları: ${activeAreas}. Süre: ${bitisStr}. Sebep: ${sebep}`,
+        }).eq("id", sikayetId);
       }
 
       return jsonResponse({ success: true });
@@ -1483,7 +1489,13 @@ Deno.serve(async (req) => {
       });
 
       if (sikayetId) {
-        await supabase.from("sikayetler").update({ durum: "cozuldu" }).eq("id", sikayetId);
+        await supabase.from("sikayetler").update({
+          durum: "cozuldu",
+          islem_tipi: "uzaklastirma",
+          islem_yapan: createdBy,
+          islem_tarihi: new Date().toISOString(),
+          islem_detay: `Uzaklaştırma süresi: ${bitisStr}. ${sebep ? 'Sebep: ' + sebep : ''}`,
+        }).eq("id", sikayetId);
       }
 
       return jsonResponse({ success: true });
@@ -1523,7 +1535,13 @@ Deno.serve(async (req) => {
       await supabase.auth.admin.deleteUser(userId);
 
       if (sikayetId) {
-        await supabase.from("sikayetler").update({ durum: "cozuldu" }).eq("id", sikayetId);
+        await supabase.from("sikayetler").update({
+          durum: "cozuldu",
+          islem_tipi: "yasaklama",
+          islem_yapan: createdBy,
+          islem_tarihi: new Date().toISOString(),
+          islem_detay: `Kalıcı yasaklama. ${sebep ? 'Sebep: ' + sebep : ''}. Firma: ${firma?.firma_unvani || '-'}`,
+        }).eq("id", sikayetId);
       }
 
       return jsonResponse({ success: true });

@@ -78,6 +78,10 @@ interface SikayetItem {
   referans_id: string;
   ek_dosya_url: string | null;
   ek_dosya_adi: string | null;
+  islem_tipi: string | null;
+  islem_yapan: string | null;
+  islem_tarihi: string | null;
+  islem_detay: string | null;
 }
 
 const ITEMS_PER_PAGE = 10;
@@ -289,7 +293,7 @@ export default function AdminSikayetler() {
                             <Button variant="ghost" size="sm" onClick={() => setViewItem(item)} className="h-7 w-7 p-0" title="Görüntüle">
                               <Eye className="w-3.5 h-3.5" style={s.muted} />
                             </Button>
-                            {item.sikayet_edilen_user_id && (
+                            {item.sikayet_edilen_user_id && item.durum !== "cozuldu" && (
                               <Button variant="ghost" size="sm" onClick={() => setActionItem(item)} className="h-7 w-7 p-0" title="İşlem Yap">
                                 <ShieldAlert className="w-3.5 h-3.5 text-amber-500" />
                               </Button>
@@ -419,6 +423,45 @@ export default function AdminSikayetler() {
                     <FileText className="w-3.5 h-3.5" />
                     {viewItem.ek_dosya_adi || "Dosyayı Görüntüle"}
                   </a>
+                </div>
+              )}
+
+              {/* Action Log Section */}
+              {viewItem.islem_tipi && (
+                <div className="p-3 rounded-lg" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <p className="text-xs font-medium mb-2" style={s.text}>
+                    ✅ Yapılan İşlem
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs" style={s.muted}>İşlem Tipi</p>
+                      <Badge variant="outline" className={
+                        viewItem.islem_tipi === "kisitlama" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
+                        viewItem.islem_tipi === "uzaklastirma" ? "bg-orange-500/10 text-orange-600 border-orange-500/20" :
+                        "bg-red-500/10 text-red-600 border-red-500/20"
+                      }>
+                        {viewItem.islem_tipi === "kisitlama" ? "Kısıtlama" :
+                         viewItem.islem_tipi === "uzaklastirma" ? "Uzaklaştırma" :
+                         viewItem.islem_tipi === "yasaklama" ? "Yasaklama" : viewItem.islem_tipi}
+                      </Badge>
+                    </div>
+                    <div>
+                      <p className="text-xs" style={s.muted}>İşlem Yapan</p>
+                      <p className="text-xs font-medium" style={s.text}>{viewItem.islem_yapan}</p>
+                    </div>
+                    {viewItem.islem_tarihi && (
+                      <div className="col-span-2">
+                        <p className="text-xs" style={s.muted}>İşlem Tarihi</p>
+                        <p className="text-xs" style={s.text}>{format(new Date(viewItem.islem_tarihi), "dd MMM yyyy HH:mm", { locale: tr })}</p>
+                      </div>
+                    )}
+                    {viewItem.islem_detay && (
+                      <div className="col-span-2">
+                        <p className="text-xs" style={s.muted}>İşlem Detayı</p>
+                        <p className="text-xs whitespace-pre-wrap" style={s.text}>{viewItem.islem_detay}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
