@@ -17,8 +17,6 @@ import {
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import SikayetAksiyonDialog from "@/components/admin/SikayetAksiyonDialog";
-import { format } from "date-fns";
-import { tr } from "date-fns/locale";
 
 const s = {
   card: {
