@@ -49,6 +49,35 @@ export default function SearchableSelect({
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
+  const persistKey = React.useMemo(
+    () => `searchable-select:${location.pathname}${location.search}:${persistId}`,
+    [location.pathname, location.search, persistId]
+  );
+
+  React.useEffect(() => {
+    if (!value) return;
+    try {
+      sessionStorage.setItem(persistKey, value);
+    } catch {
+      // no-op
+    }
+  }, [persistKey, value]);
+
+  React.useEffect(() => {
+    if (navigationType !== "POP" || value) return;
+
+    let savedValue: string | null = null;
+    try {
+      savedValue = sessionStorage.getItem(persistKey);
+    } catch {
+      savedValue = null;
+    }
+
+    if (!savedValue) return;
+    const exists = options.some((option) => option.value === savedValue);
+    if (exists) onValueChange(savedValue);
+  }, [navigationType, onValueChange, options, persistKey, value]);
+
   const normalizedOptions = React.useMemo(() => {
     const belirtmek: SearchableSelectOption[] = [];
     const diger: SearchableSelectOption[] = [];
