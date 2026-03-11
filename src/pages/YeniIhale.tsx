@@ -157,14 +157,16 @@ export default function YeniIhale() {
           return;
         }
 
-        const [filtreRes, stokRes, fotoRes] = await Promise.all([
+        const [filtreRes, stokRes, fotoRes, ekDosyaRes] = await Promise.all([
           supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", editId),
           supabase.from("ihale_stok").select("varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value, miktar_tipi, stok_sayisi").eq("ihale_id", editId),
           supabase.from("ihale_fotograflar" as any).select("foto_url, sira").eq("ihale_id", editId).order("sira"),
+          supabase.from("ihale_ek_dosyalar" as any).select("dosya_url, dosya_adi, sira").eq("ihale_id", editId).order("sira"),
         ]);
         filtreData = filtreRes.data || [];
         stokData = stokRes.data || [];
         fotoData = (fotoRes.data || []).map((f: any) => f.foto_url);
+        ekDosyaData = (ekDosyaRes.data || []).map((f: any) => ({ url: f.dosya_url, adi: f.dosya_adi }));
       }
 
       const formatDatetime = (val: string | null) => {
