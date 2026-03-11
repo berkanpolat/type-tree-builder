@@ -304,13 +304,13 @@ export default function AdminFirmalar() {
   };
 
   const clearFilters = () => {
-    setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all");
+    setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all"); setFilterPaket("all");
     setFilterMinIhale(""); setFilterMaxIhale(""); setFilterMinTeklif(""); setFilterMaxTeklif("");
     setFilterMinUrun(""); setFilterMaxUrun(""); setFilterMinProfil(""); setFilterMaxProfil("");
     setSearchTerm(""); setSortField(null);
   };
 
-  const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" ||
+  const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" ||
     filterMinIhale || filterMaxIhale || filterMinTeklif || filterMaxTeklif ||
     filterMinUrun || filterMaxUrun || filterMinProfil || filterMaxProfil || searchTerm;
 
@@ -320,6 +320,10 @@ export default function AdminFirmalar() {
     if (filterTipi !== "all" && f.firma_tipi_id !== filterTipi) return false;
     if (filterIl !== "all" && f.kurulus_il_id !== filterIl) return false;
     if (filterDurum !== "all" && f.onay_durumu !== filterDurum) return false;
+    if (filterPaket !== "all") {
+      if (filterPaket === "none" && f.abonelik) return false;
+      if (filterPaket !== "none" && f.abonelik?.paket_id !== filterPaket) return false;
+    }
     if (filterMinIhale && f.ihale_sayisi < Number(filterMinIhale)) return false;
     if (filterMaxIhale && f.ihale_sayisi > Number(filterMaxIhale)) return false;
     if (filterMinTeklif && f.teklif_sayisi < Number(filterMinTeklif)) return false;
