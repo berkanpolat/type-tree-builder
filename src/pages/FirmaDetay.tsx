@@ -539,8 +539,8 @@ export default function FirmaDetay() {
       // New conversation - check quota
       const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
       if (!check.allowed) {
-        setQuotaMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
-        setQuotaBlocked(true);
+        setMsgUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setMsgUpgradeOpen(true);
         return;
       }
     }
