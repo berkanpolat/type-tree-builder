@@ -74,13 +74,13 @@ export default function Footer() {
             <h4 className="text-secondary font-bold text-sm mb-4">Modüller</h4>
             <ul className="space-y-2.5">
               <li>
-                <FooterLink to="/uretici-tedarikci-kesfi">Üretici &amp; tedarikçi keşfi</FooterLink>
+                <FooterLink to="/tekrehber">TekRehber</FooterLink>
               </li>
               <li>
-                <FooterLink to="/tekihale-tanitim">TekIhale – Teklif alma &amp; verme sistemi</FooterLink>
+                <FooterLink to="/tekpazar-tanitim">TekPazar</FooterLink>
               </li>
               <li>
-                <FooterLink to="/tekpazar-tanitim">TekPazar – B2B ürün listeleme</FooterLink>
+                <FooterLink to="/tekihale-tanitim">Tekİhale</FooterLink>
               </li>
             </ul>
           </div>
