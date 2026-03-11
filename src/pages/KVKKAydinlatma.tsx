@@ -37,18 +37,9 @@ export default function KVKKAydinlatma() {
 
             <h3 className="text-lg font-bold text-foreground mb-3">1.1. Amaç ve Kapsam</h3>
             <p className="text-muted-foreground mb-3">
-              Bu Politika, Manufixo Teknoloji A.Ş. ("Manufixo") tarafından işletilen www.manufixo.com platformu üzerinden elde edilen kişisel verilerin; 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") ve ilgili mevzuata uygun olarak işlenmesi, korunması ve yönetilmesi amacıyla hazırlanmıştır.
+              Bu Politika, Manufixo Teknoloji A.Ş. ("Manufixo") tarafından işletilen www.tekstilas.com platformu (Tekstil A.Ş.) üzerinden elde edilen kişisel verilerin; 6698 sayılı Kişisel Verilerin Korunması Kanunu ("KVKK") ve ilgili mevzuata uygun olarak işlenmesi, korunması ve yönetilmesi amacıyla hazırlanmıştır.
             </p>
-            <p className="text-muted-foreground mb-1">Politika;</p>
-            <ul className="list-disc pl-5 space-y-1 text-muted-foreground mb-4">
-              <li>Kullanıcılar</li>
-              <li>Üyeler</li>
-              <li>Ziyaretçiler</li>
-              <li>İş ortakları</li>
-              <li>Tedarikçiler</li>
-              <li>Çalışan adayları</li>
-            </ul>
-            <p className="text-muted-foreground">tarafından paylaşılan tüm kişisel verileri kapsar.</p>
+            <p className="text-muted-foreground mb-1">Politika; Kullanıcılar, Üyeler, Ziyaretçiler, İş ortakları, Tedarikçiler, Çalışan adayları tarafından paylaşılan tüm kişisel verileri kapsar.</p>
           </section>
 
           <section>
@@ -68,19 +59,16 @@ export default function KVKKAydinlatma() {
             <p className="text-muted-foreground mb-2">Kişisel veriler aşağıdaki amaçlarla işlenmektedir:</p>
             <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
               <li>Üyelik ve kullanıcı kayıt süreçlerinin yürütülmesi</li>
-              <li>Platform modüllerinin (ManuConnect, Manuİhale, ManuPazar, ManuKariyer) çalıştırılması</li>
+              <li>Platform modüllerinin (TekRehber, Tekİhale, TekPazar, TekKariyer) çalıştırılması</li>
               <li>Teklif, ihale, ticaret ve iletişim süreçlerinin yönetimi</li>
               <li>Hukuki yükümlülüklerin yerine getirilmesi</li>
               <li>Finansal ve muhasebesel işlemler</li>
-              <li>Destek ve müşteri hizmetleri</li>
-              <li>Sistem güvenliğinin sağlanması</li>
-              <li>Yetkili kurumlara karşı yükümlülüklerin yerine getirilmesi</li>
             </ul>
           </section>
 
           {/* Saklama ve İmha */}
           <section>
-            <h2 className="text-xl font-bold text-foreground mb-4">MANUFIXO KİŞİSEL VERİ SAKLAMA VE İMHA POLİTİKASI</h2>
+            <h2 className="text-xl font-bold text-foreground mb-4">2. MANUFIXO KİŞİSEL VERİ SAKLAMA VE İMHA POLİTİKASI</h2>
 
             <h3 className="text-lg font-bold text-foreground mb-3">2.1. Amaç</h3>
             <p className="text-muted-foreground">Bu Politika, Manufixo tarafından işlenen kişisel verilerin; saklama sürelerinin belirlenmesi ve süresi dolan verilerin imhasına ilişkin usul ve esasları düzenler.</p>
@@ -168,7 +156,7 @@ export default function KVKKAydinlatma() {
             </ul>
             <p className="text-muted-foreground mt-2">
               haklarına sahipsiniz. Başvurular:{" "}
-              <a href="mailto:info@manufixo.com" className="text-primary underline hover:text-primary/80">info@manufixo.com</a>{" "}
+              <a href="mailto:info@tekstilas.com" className="text-primary underline hover:text-primary/80">info@tekstilas.com</a>{" "}
               üzerinden yapılabilir.
             </p>
           </section>
