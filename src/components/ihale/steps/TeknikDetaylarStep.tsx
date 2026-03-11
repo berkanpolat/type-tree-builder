@@ -40,23 +40,25 @@ function useKategoriSecenekler(kategoriName: string | string[]) {
     queryKey: ["teknik_secenekler", ...(Array.isArray(kategoriName) ? kategoriName : [kategoriName])],
     queryFn: async () => {
       const names = Array.isArray(kategoriName) ? kategoriName : [kategoriName];
+      const normalizedNames = names.map((name) => normalizeText(name));
 
-      const { data: kategoriler } = await supabase
+      const { data: tumKategoriler } = await supabase
         .from("firma_bilgi_kategorileri")
-        .select("id, name")
-        .in("name", names);
+        .select("id, name");
 
-      if (!kategoriler?.length) return [];
+      if (!tumKategoriler?.length) return [];
 
       const seciliKategori = names
-        .map((name) => kategoriler.find((k) => k.name === name))
-        .find(Boolean);
+        .map((name) =>
+          tumKategoriler.find((k) => normalizeText(k.name) === normalizeText(name))
+        )
+        .find(Boolean) || tumKategoriler.find((k) => normalizedNames.includes(normalizeText(k.name)));
 
       if (!seciliKategori) return [];
 
       const { data } = await supabase
         .from("firma_bilgi_secenekleri")
-        .select("*")
+        .select("id, name")
         .eq("kategori_id", seciliKategori.id)
         .is("parent_id", null)
         .order("name");
@@ -71,19 +73,45 @@ function useChildOptions(parentId: string | null) {
     queryKey: ["dependent_options", parentId],
     queryFn: async () => {
       if (!parentId) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", parentId).order("name");
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("parent_id", parentId).order("name");
       return sortSecenekler(data || []);
     },
     enabled: !!parentId,
   });
 }
 
-function useMultiChildOptions(parentIds: string[]) {
+function useMultiChildOptions(parentIds: string[], kategoriName?: string | string[]) {
   return useQuery({
-    queryKey: ["multi_dependent_options", parentIds],
+    queryKey: ["multi_dependent_options", parentIds, ...(Array.isArray(kategoriName) ? kategoriName : kategoriName ? [kategoriName] : [])],
     queryFn: async () => {
       if (!parentIds.length) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").in("parent_id", parentIds).order("name");
+
+      let kategoriIds: string[] | null = null;
+      if (kategoriName) {
+        const names = Array.isArray(kategoriName) ? kategoriName : [kategoriName];
+        const normalizedNames = names.map((name) => normalizeText(name));
+
+        const { data: tumKategoriler } = await supabase
+          .from("firma_bilgi_kategorileri")
+          .select("id, name");
+
+        kategoriIds = (tumKategoriler || [])
+          .filter((k) => normalizedNames.includes(normalizeText(k.name)))
+          .map((k) => k.id);
+
+        if (!kategoriIds.length) return [];
+      }
+
+      let query = supabase
+        .from("firma_bilgi_secenekleri")
+        .select("id, name, parent_id, kategori_id")
+        .in("parent_id", parentIds);
+
+      if (kategoriIds?.length) {
+        query = query.in("kategori_id", kategoriIds);
+      }
+
+      const { data } = await query.order("name");
       return sortSecenekler(data || []);
     },
     enabled: parentIds.length > 0,
@@ -91,8 +119,8 @@ function useMultiChildOptions(parentIds: string[]) {
 }
 
 // Multi-select dependent dropdown supporting multiple parents
-function MultiDependentMultiParentField({ label, parentIds, value, onChange, disabled }: { label: string; parentIds: string[]; value: string[]; onChange: (v: string[]) => void; disabled?: boolean }) {
-  const { data: options } = useMultiChildOptions(parentIds);
+function MultiDependentMultiParentField({ label, parentIds, value, onChange, disabled, kategoriName }: { label: string; parentIds: string[]; value: string[]; onChange: (v: string[]) => void; disabled?: boolean; kategoriName?: string | string[] }) {
+  const { data: options } = useMultiChildOptions(parentIds, kategoriName);
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
