@@ -484,38 +484,53 @@ export default function AnaSayfa() {
   }, [searchTerm, findBestTaxonomyMatch]);
 
 
-  // Lightweight autocomplete — products + kategori/grup/tür
+  // Autocomplete — products + taxonomy similarity
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setSearchResults([]);
       setShowDropdown(false);
       return;
     }
-    const timer = setTimeout(async () => {
-      const results: SearchResult[] = [];
-      const [urunRes, secRes] = await Promise.all([
-        supabase.from("urunler").select("id, baslik").eq("durum", "aktif").ilike("baslik", `%${searchTerm}%`).limit(5),
-        supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", KATEGORI_ID).ilike("name", `%${searchTerm}%`).limit(5),
-      ]);
 
-      if (secRes.data) {
-        for (const s of secRes.data) {
-          if (HIDDEN_KATEGORILER.some((h) => s.name.toLowerCase() === h.toLowerCase())) continue;
-          let type: SearchResult["type"] = "Tür";
-          if (!s.parent_id) type = "Kategori";
-          else {
-            const parentInList = secRes.data.find((p) => p.id === s.parent_id);
-            if (parentInList && !parentInList.parent_id) type = "Grup";
-          }
-          results.push({ id: s.id, name: s.name, type });
-        }
-      }
-      if (urunRes.data) urunRes.data.forEach((u) => results.push({ id: u.id, name: u.baslik, type: "Ürün" }));
+    const timer = setTimeout(async () => {
+      const { data: urunData } = await supabase
+        .from("urunler")
+        .select("id, baslik")
+        .eq("durum", "aktif")
+        .ilike("baslik", `%${searchTerm}%`)
+        .limit(5);
+
+      const taxonomyResults: SearchResult[] = urunKategoriNodes
+        .map((node) => {
+          const rootCategoryName = getRootCategoryName(node.id);
+          if (!rootCategoryName) return null;
+          const score = getSimilarityScore(searchTerm, node.name);
+          if (score < 220) return null;
+          return {
+            id: node.id,
+            name: node.name,
+            type: getNodeType(node),
+            score,
+          };
+        })
+        .filter((item): item is SearchResult & { score: number } => !!item)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5)
+        .map(({ id, name, type }) => ({ id, name, type }));
+
+      const urunResults: SearchResult[] = (urunData || []).map((u) => ({
+        id: u.id,
+        name: u.baslik,
+        type: "Ürün",
+      }));
+
+      const results = [...taxonomyResults, ...urunResults];
       setSearchResults(results);
       setShowDropdown(results.length > 0);
     }, 250);
+
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, urunKategoriNodes, getRootCategoryName, getSimilarityScore, getNodeType]);
 
   const handleSearchResultClick = async (result: SearchResult) => {
     setSearchTerm(result.name);
