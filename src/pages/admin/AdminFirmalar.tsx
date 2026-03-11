@@ -996,9 +996,9 @@ export default function AdminFirmalar() {
                 <Label className="text-xs" style={s.muted}>Firma Tipi *</Label>
                 <Select value={yeniFirma.firma_tipi_id} onValueChange={v => setYeniFirma(p => ({ ...p, firma_tipi_id: v }))}>
                   <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue placeholder="Seçin" /></SelectTrigger>
-                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
-                    {filteredTipler.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
-                  </SelectContent>
+                   <SelectContent style={{ ...s.card, padding: "0.25rem", zIndex: 9999 }} position="popper" className="max-h-60">
+                      {filteredTipler.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
+                    </SelectContent>
                 </Select>
               </div>
             </div>
