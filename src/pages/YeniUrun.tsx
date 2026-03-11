@@ -95,6 +95,8 @@ const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" 
   ],
   "Kumaş": [
     { label: "Kumaş Kompozisyonu", type: "text" },
+    { label: "Kumaş Grubu", type: "dropdown", kategoriName: "Kumaş Grubu" },
+    { label: "Kumaş Türü", type: "dependent_dropdown", dependsOn: "Kumaş Grubu" },
     { label: "En Bilgisi (cm)", type: "text" },
     { label: "Boy Bilgisi (cm)", type: "text" },
     { label: "Gramaj (gram)", type: "text" },

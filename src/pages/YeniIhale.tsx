@@ -294,11 +294,15 @@ export default function YeniIhale() {
     }
     if (currentStep === 1 && !ihaleId) {
       await createIhale();
+    } else if (ihaleId) {
+      // Auto-save on each step transition
+      await handleSave();
     }
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
+    if (ihaleId) await handleSave();
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
