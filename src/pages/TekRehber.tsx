@@ -79,9 +79,9 @@ export default function TekRehber() {
   }, [navigate]);
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<SearchResult | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
 
   // Firma state
