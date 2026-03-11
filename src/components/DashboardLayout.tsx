@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useLastSeen } from "@/hooks/use-last-seen";
+import QuotaReminderBadge from "@/components/QuotaReminderBadge";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -19,11 +20,13 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
             {title && (
               <h1 className="text-lg font-bold text-foreground">{title}</h1>
             )}
+            <div className="ml-auto">
+              <QuotaReminderBadge />
+            </div>
           </header>
           <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
             {children}
           </main>
-          
         </div>
       </div>
     </SidebarProvider>

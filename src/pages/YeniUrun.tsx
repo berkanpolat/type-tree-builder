@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
+import UpgradeDialog from "@/components/UpgradeDialog";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -136,6 +138,9 @@ export default function YeniUrun() {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   // Step 0: Kategori
   const [kategoriler, setKategoriler] = useState<{ id: string; name: string }[]>([]);
@@ -342,6 +347,16 @@ export default function YeniUrun() {
   };
 
   const handleSubmit = async () => {
+    // Check aktif ürün quota (only for new products, not edits)
+    if (!editId && !isAdminMode) {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "aktif_urun");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Aktif ürün limitiniz dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
+
     if (varyasyonlar.length === 0) {
       toast({ title: "En az bir ürün varyasyonu ekleyiniz.", variant: "destructive" }); return;
     }
@@ -845,6 +860,12 @@ export default function YeniUrun() {
           )}
         </div>
       </div>
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Aktif Ürün Limitiniz Doldu"
+        message={upgradeMessage}
+      />
     </DashboardLayout>
   );
 }

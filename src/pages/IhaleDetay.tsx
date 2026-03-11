@@ -74,6 +74,8 @@ const TikTokIcon = ({ className }: { className?: string }) => (
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import BildirDialog from "@/components/BildirDialog";
+import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
+import UpgradeDialog from "@/components/UpgradeDialog";
 
 // Check if a value looks like a UUID
 const isUUID = (val: string): boolean =>
@@ -225,6 +227,9 @@ export default function IhaleDetay() {
   const [submitting, setSubmitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [bildirOpen, setBildirOpen] = useState(false);
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   // Admin state
   const [isAdminViewing, setIsAdminViewing] = useState(false);
@@ -531,6 +536,16 @@ export default function IhaleDetay() {
 
   // Submit teklif
   const handleTeklifSubmit = () => {
+    // Quota check - only if this is a NEW ihale (user hasn't bid on this one before)
+    if (!myTeklif) {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "teklif_verme");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Teklif verme hakkınız dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
+
     const tutar = parseFloat(teklifTutar);
     if (!tutar || tutar <= 0) {
       toast({ title: "Hata", description: "Geçerli bir miktar giriniz.", variant: "destructive" });
@@ -1443,6 +1458,12 @@ export default function IhaleDetay() {
         />
       )}
       <Footer />
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Teklif Verme Hakkınız Doldu"
+        message={upgradeMessage}
+      />
     </div>
   );
 }

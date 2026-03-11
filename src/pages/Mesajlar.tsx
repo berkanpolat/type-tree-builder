@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
+import UpgradeDialog from "@/components/UpgradeDialog";
 import { useLocation } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,6 +74,8 @@ export default function Mesajlar() {
   const [deleteConvTarget, setDeleteConvTarget] = useState<Conversation | null>(null);
   const [bildirOpen, setBildirOpen] = useState(false);
   const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -333,7 +336,8 @@ export default function Mesajlar() {
       // This is initiating a new conversation - check quota
       const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
       if (!check.allowed) {
-        toast({ title: "Mesaj hakkınız yetersiz", description: check.message, variant: "destructive" });
+        setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setUpgradeOpen(true);
         return;
       }
 
@@ -775,6 +779,13 @@ export default function Mesajlar() {
           referansId={selectedConv.id}
         />
       )}
+
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Mesaj Gönderme Hakkınız Doldu"
+        message={upgradeMessage}
+      />
     </DashboardLayout>
   );
 }
