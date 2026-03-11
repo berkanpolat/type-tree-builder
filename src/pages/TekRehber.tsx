@@ -166,7 +166,7 @@ export default function TekRehber() {
     }
 
     let query = supabase.from("firmalar")
-      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id")
+      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id, belge_onayli")
       .order("firma_unvani").limit(100);
 
     if (selectedFirmaTuru) query = query.eq("firma_turu_id", selectedFirmaTuru);
