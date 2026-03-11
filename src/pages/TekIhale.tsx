@@ -461,75 +461,96 @@ export default function TekIhale() {
             ) : paginated.length === 0 ? (
               <div className="text-center py-20 text-muted-foreground">İhale bulunamadı.</div>
             ) : (
-              paginated.map((ihale) => {
+              paginated.map((ihale, idx) => {
                 const kategoriName = ihale.urun_kategori_id ? secenekMap[ihale.urun_kategori_id] : ihale.hizmet_kategori_id ? secenekMap[ihale.hizmet_kategori_id] : null;
+                // Insert banner after 3rd card
+                const showBannerAfter = idx === 2 && paginated.length > 3;
                 return (
-                  <Card
-                    key={ihale.id}
-                    className="p-5 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => navigate(`/tekihale/${ihale.id}`)}
-                  >
-                    <div className="flex gap-5">
-                      {/* Image */}
-                      <div className="w-[140px] h-[140px] rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                        {ihale.foto_url ? (
-                          <img src={ihale.foto_url} alt="" className="w-full h-full object-contain" />
-                        ) : (
-                          <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                        )}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <div className="flex flex-wrap gap-1.5">
-                            <Badge variant="outline" className="text-xs">{ihaleTuruLabel[ihale.ihale_turu] || ihale.ihale_turu}</Badge>
-                            <Badge variant="outline" className="text-xs">{teklifUsuluLabel[ihale.teklif_usulu] || ihale.teklif_usulu}</Badge>
-                            {kategoriName && <Badge variant="outline" className="text-xs">{kategoriName}</Badge>}
-                          </div>
-                          <CountdownBadge date={ihale.bitis_tarihi} />
-                        </div>
-
-                        <h3 className="font-semibold text-foreground text-base mb-2 line-clamp-1">{ihale.baslik}</h3>
-
-                        {/* Firma */}
-                        <div className="flex items-center gap-2 mb-4">
-                          {ihale.firma_adi_gizle ? (
-                            <>
-                              <EyeOff className="w-4 h-4 text-muted-foreground" />
-                              <span className="text-sm text-muted-foreground italic">Gizli Firma</span>
-                            </>
+                  <div key={ihale.id}>
+                    <Card
+                      className="p-5 hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => navigate(`/tekihale/${ihale.id}`)}
+                    >
+                      <div className="flex gap-5">
+                        {/* Image */}
+                        <div className="w-[140px] h-[140px] rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                          {ihale.foto_url ? (
+                            <img src={ihale.foto_url} alt="" className="w-full h-full object-contain" />
                           ) : (
-                            <>
-                              <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
-                                {ihale.firma_logo_url ? (
-                                  <img src={ihale.firma_logo_url} alt="" className="w-full h-full object-contain p-0.5" />
-                                ) : (
-                                  <Building2 className="w-3 h-3 text-muted-foreground" />
-                                )}
-                              </div>
-                              <span className="text-sm text-muted-foreground">{ihale.firma_unvani}</span>
-                            </>
+                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
                           )}
                         </div>
 
-                        <div className="flex items-center gap-8">
-                          <div>
-                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Başlangıç Fiyatı</p>
-                            <p className="font-semibold text-foreground">
-                              {ihale.baslangic_fiyati != null
-                                ? `${paraBirimiSymbol[ihale.para_birimi || "TRY"] || "₺"}${ihale.baslangic_fiyati.toLocaleString("tr-TR")}`
-                                : "-"}
-                            </p>
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4 mb-2">
+                            <div className="flex flex-wrap gap-1.5">
+                              <Badge variant="outline" className="text-xs">{ihaleTuruLabel[ihale.ihale_turu] || ihale.ihale_turu}</Badge>
+                              <Badge variant="outline" className="text-xs">{teklifUsuluLabel[ihale.teklif_usulu] || ihale.teklif_usulu}</Badge>
+                              {kategoriName && <Badge variant="outline" className="text-xs">{kategoriName}</Badge>}
+                            </div>
+                            <CountdownBadge date={ihale.bitis_tarihi} />
                           </div>
-                          <div>
-                            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Teklif Sayısı</p>
-                            <p className="font-semibold text-foreground">{ihale.teklif_sayisi} Teklif</p>
+
+                          <h3 className="font-semibold text-foreground text-base mb-2 line-clamp-1">{ihale.baslik}</h3>
+
+                          {/* Firma */}
+                          <div className="flex items-center gap-2 mb-4">
+                            {ihale.firma_adi_gizle ? (
+                              <>
+                                <EyeOff className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground italic">Gizli Firma</span>
+                              </>
+                            ) : (
+                              <>
+                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
+                                  {ihale.firma_logo_url ? (
+                                    <img src={ihale.firma_logo_url} alt="" className="w-full h-full object-contain p-0.5" />
+                                  ) : (
+                                    <Building2 className="w-3 h-3 text-muted-foreground" />
+                                  )}
+                                </div>
+                                <span className="text-sm text-muted-foreground">{ihale.firma_unvani}</span>
+                              </>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-8">
+                            <div>
+                              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Başlangıç Fiyatı</p>
+                              <p className="font-semibold text-foreground">
+                                {ihale.baslangic_fiyati != null
+                                  ? `${paraBirimiSymbol[ihale.para_birimi || "TRY"] || "₺"}${ihale.baslangic_fiyati.toLocaleString("tr-TR")}`
+                                  : "-"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Teklif Sayısı</p>
+                              <p className="font-semibold text-foreground">{ihale.teklif_sayisi} Teklif</p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </Card>
+                    </Card>
+                    {showBannerAfter && (
+                      <div
+                        className="rounded-xl overflow-hidden h-28 cursor-pointer mt-4"
+                        style={ihaleAltBanner.url ? undefined : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }}
+                        onClick={() => ihaleAltBanner.linkUrl && window.open(ihaleAltBanner.linkUrl, "_blank")}
+                      >
+                        {ihaleAltBanner.url ? (
+                          <img src={ihaleAltBanner.url} alt="Reklam" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex items-center px-8 h-full">
+                            <div>
+                              <p className="text-primary-foreground text-lg font-bold">Tekstil A.Ş. ile Güvenle İhale Açın</p>
+                              <p className="text-primary-foreground/70 text-sm mt-1">Binlerce doğrulanmış tedarikçi, rekabetçi fiyatlar</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })
             )}
