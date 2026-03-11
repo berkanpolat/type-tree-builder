@@ -131,6 +131,7 @@ export default function YeniIhale() {
             ihale = data.ihale;
             filtreData = data.filtreler || [];
             stokData = data.stoklar || [];
+            fotoData = (data.fotograflar || []).map((f: any) => f.foto_url || f);
             setIsAdminMode(true);
           }
         } catch {}
