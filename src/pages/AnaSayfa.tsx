@@ -138,7 +138,7 @@ export default function AnaSayfa() {
   }, [location.state]);
 
   // Filter state from sidebar
-  const [filterState, setFilterState] = useState<FilterState | null>(null);
+  const [filterState, setFilterState] = useSessionState<FilterState | null>("filterState", null);
 
   // Varyasyon data for client-side filtering
   const [varyasyonMap, setVaryasyonMap] = useState<Record<string, { renk: string[]; beden: string[] }>>({});
