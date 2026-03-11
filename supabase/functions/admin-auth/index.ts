@@ -252,6 +252,19 @@ Deno.serve(async (req) => {
         "x_twitter", "tiktok", "logo_url", "kapak_fotografi_url", "firma_hakkinda",
       ];
 
+      // Get subscription/package info for each user
+      const { data: abonelikler } = await supabase
+        .from("kullanici_abonelikler")
+        .select("user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, stripe_subscription_id")
+        .in("user_id", userIds);
+
+      const { data: paketler } = await supabase
+        .from("paketler")
+        .select("id, ad, slug, profil_goruntuleme_limiti, ihale_acma_limiti, teklif_verme_limiti, aktif_urun_limiti, mesaj_limiti");
+
+      const paketMap: Record<string, any> = {};
+      for (const p of (paketler || [])) paketMap[p.id] = p;
+
       const enriched = (firmalar || []).map((f: any) => {
         const profile = (profiles || []).find((p: any) => p.user_id === f.user_id);
         const ihaleCount = (ihaleCounts || []).filter((i: any) => i.user_id === f.user_id).length;
@@ -266,6 +279,9 @@ Deno.serve(async (req) => {
         }
         const profilDoluluk = Math.round((filled / FIRMA_FIELDS.length) * 100);
 
+        const abonelik = (abonelikler || []).find((a: any) => a.user_id === f.user_id);
+        const paket = abonelik ? paketMap[abonelik.paket_id] || null : null;
+
         return {
           ...f,
           profile,
@@ -278,6 +294,22 @@ Deno.serve(async (req) => {
           urun_sayisi: urunCount,
           sikayet_sayisi: sikayetCount,
           profil_doluluk: profilDoluluk,
+          abonelik: abonelik ? {
+            paket_id: abonelik.paket_id,
+            paket_ad: paket?.ad || "—",
+            paket_slug: paket?.slug || "",
+            periyot: abonelik.periyot,
+            donem_baslangic: abonelik.donem_baslangic,
+            donem_bitis: abonelik.donem_bitis,
+            durum: abonelik.durum,
+            limits: paket ? {
+              profil_goruntuleme_limiti: paket.profil_goruntuleme_limiti,
+              ihale_acma_limiti: paket.ihale_acma_limiti,
+              teklif_verme_limiti: paket.teklif_verme_limiti,
+              aktif_urun_limiti: paket.aktif_urun_limiti,
+              mesaj_limiti: paket.mesaj_limiti,
+            } : null,
+          } : null,
         };
       });
 
