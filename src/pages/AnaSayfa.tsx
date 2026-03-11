@@ -149,6 +149,11 @@ export default function AnaSayfa() {
 
   // Name maps
   const [kategoriSecenekler, setKategoriSecenekler] = useState<{ id: string; name: string }[]>([]);
+  const [urunKategoriNodes, setUrunKategoriNodes] = useState<KategoriNode[]>([]);
+  const urunKategoriById = useMemo(
+    () => Object.fromEntries(urunKategoriNodes.map((node) => [node.id, node])),
+    [urunKategoriNodes]
+  );
 
   // Determine if we're in "filtered" mode (category selected)
   const isFiltered = !!selectedKategori || !!activeFilter || !!appliedSearchTerm;
