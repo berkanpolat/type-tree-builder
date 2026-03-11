@@ -85,11 +85,16 @@ export default function Mesajlar() {
     initUser();
   }, []);
 
-  // Handle navigation state (from "Satıcıya Sor")
+  // Handle navigation state (from "Satıcıya Sor") and query param (from notifications)
   const handledStateRef = useRef(false);
 
   useEffect(() => {
     if (handledStateRef.current) return;
+    if (!currentUserId || conversations.length === 0) return;
+
+    // Check URL query param ?conv=xxx (from notification click)
+    const searchParams = new URLSearchParams(location.search);
+    const convFromQuery = searchParams.get("conv");
 
     const state = location.state as {
       openConversationId?: string;
@@ -97,24 +102,26 @@ export default function Mesajlar() {
       quote?: QuoteData;
     } | null;
 
-    if (!state?.openConversationId || !currentUserId || conversations.length === 0) return;
+    const targetConvId = state?.openConversationId || convFromQuery;
+
+    if (!targetConvId) return;
 
     handledStateRef.current = true;
 
-    if (state.quote) {
+    if (state?.quote) {
       setQuote(state.quote);
     }
 
-    const conv = conversations.find((c) => c.id === state.openConversationId);
+    const conv = conversations.find((c) => c.id === targetConvId);
     if (conv) {
       selectConversation(conv);
-    } else if (state.otherUserId) {
-      fetchAndOpenConversation(state.openConversationId, state.otherUserId);
+    } else if (state?.otherUserId) {
+      fetchAndOpenConversation(targetConvId, state.otherUserId);
     }
 
-    // Clear the state so it doesn't re-trigger on refresh
-    window.history.replaceState({}, document.title);
-  }, [currentUserId, conversations, location.state]);
+    // Clear the state/query so it doesn't re-trigger
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }, [currentUserId, conversations, location.state, location.search]);
 
   const fetchAndOpenConversation = async (convId: string, otherUserId: string) => {
     const { data: firmaData } = await supabase
