@@ -298,7 +298,7 @@ export default function AnaSayfa() {
 
     setAllUrunler(enriched);
     setUrunLoading(false);
-  }, [activeFilter, selectedKategori, selectedGrupId, selectedTurId, kategoriSecenekler, currentUserId, isFiltered, filterState?.minFiyat, filterState?.maxFiyat]);
+  }, [activeFilter, appliedSearchTerm, selectedKategori, selectedGrupId, selectedTurId, kategoriSecenekler, currentUserId, isFiltered, filterState?.minFiyat, filterState?.maxFiyat]);
 
   // Client-side filtering
   const filteredUrunler = useMemo(() => {
