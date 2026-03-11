@@ -72,6 +72,7 @@ export default function Mesajlar() {
   const [deleteTarget, setDeleteTarget] = useState<Message | null>(null);
   const [deleteConvTarget, setDeleteConvTarget] = useState<Conversation | null>(null);
   const [bildirOpen, setBildirOpen] = useState(false);
+  const packageInfo = usePackageQuota();
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
