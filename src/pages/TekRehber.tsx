@@ -296,6 +296,20 @@ export default function TekRehber() {
 
   const handleMessageFirma = async (firmaUserId: string) => {
     if (!currentUserId || firmaUserId === currentUserId) return;
+    // Check if conversation already exists
+    const { data: existingConv } = await supabase
+      .from("conversations")
+      .select("id")
+      .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${firmaUserId}),and(user1_id.eq.${firmaUserId},user2_id.eq.${currentUserId})`)
+      .maybeSingle();
+    if (!existingConv) {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
     navigate("/mesajlar", { state: { targetUserId: firmaUserId } });
   };
 

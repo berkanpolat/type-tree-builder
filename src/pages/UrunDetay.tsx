@@ -367,6 +367,20 @@ export default function UrunDetay() {
 
   const handleSaticiyaSor = async () => {
     if (!currentUserId || !firma || !urun) return;
+    // Check if conversation already exists
+    const { data: existingConv } = await supabase
+      .from("conversations")
+      .select("id")
+      .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${firma.user_id}),and(user1_id.eq.${firma.user_id},user2_id.eq.${currentUserId})`)
+      .maybeSingle();
+    if (!existingConv) {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
     const { data: convId } = await supabase.rpc("get_or_create_conversation", {
       p_user1: currentUserId,
       p_user2: firma.user_id,
@@ -384,7 +398,6 @@ export default function UrunDetay() {
       priceText = `${sym}${urun.fiyat.toFixed(2)}`;
     }
 
-    // Navigate to mesajlar with quote data instead of sending directly
     navigate("/mesajlar", {
       state: {
         openConversationId: convId,

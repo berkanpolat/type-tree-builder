@@ -347,6 +347,20 @@ export default function IhaleTakip() {
   // Handle mesaj gönder
   const handleMesajGonder = async (userId: string) => {
     if (!currentUserId) return;
+    // Check if conversation already exists
+    const { data: existingConv } = await supabase
+      .from("conversations")
+      .select("id")
+      .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${userId}),and(user1_id.eq.${userId},user2_id.eq.${currentUserId})`)
+      .maybeSingle();
+    if (!existingConv) {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
     const { data: convId } = await supabase.rpc("get_or_create_conversation", {
       p_user1: currentUserId,
       p_user2: userId,

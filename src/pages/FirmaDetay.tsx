@@ -527,6 +527,21 @@ export default function FirmaDetay() {
       navigate("/giris-kayit");
       return;
     }
+    // Check if conversation already exists
+    const { data: existingConv } = await supabase
+      .from("conversations")
+      .select("id")
+      .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${firma.user_id}),and(user1_id.eq.${firma.user_id},user2_id.eq.${currentUserId})`)
+      .maybeSingle();
+    if (!existingConv) {
+      // New conversation - check quota
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      if (!check.allowed) {
+        setQuotaMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
+        setQuotaBlocked(true);
+        return;
+      }
+    }
     navigate(`/mesajlar?userId=${firma.user_id}`);
   };
 
