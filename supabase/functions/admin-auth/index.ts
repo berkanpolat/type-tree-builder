@@ -453,6 +453,8 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: verifyError?.message || "Token doğrulanamadı" }, 400);
       }
 
+      await logActivity(supabase, payload, "impersonate", { target_type: "firma", target_id: userId, target_label: targetUser.email });
+
       return jsonResponse({
         success: true,
         access_token: verifyData.session.access_token,
