@@ -203,29 +203,32 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
   const { data: turName } = useCategoryName(formData.urun_tur_id);
 
   const td = formData.teknik_detaylar;
-  const setTD = (key: string, value: any) => {
-    updateForm({ teknik_detaylar: { ...formData.teknik_detaylar, [key]: value } });
+  const patchTD = (changes: Record<string, any>) => {
+    updateForm({ teknik_detaylar: { ...td, ...changes } });
   };
-
+  const setTD = (key: string, value: any) => patchTD({ [key]: value });
 
   // Helper: ensure value is always string[] for multi-select fields
   const toArr = (v: any): string[] => {
-    if (Array.isArray(v)) return v;
-    if (typeof v === "string" && v) return [v];
+    if (Array.isArray(v)) return [...new Set(v.filter(Boolean).map(String))];
+    if (typeof v === "string") {
+      return [...new Set(v.split(",").map((item) => item.trim()).filter(Boolean))];
+    }
+    if (v && typeof v === "object") {
+      return [...new Set(Object.values(v).map(String).map((item) => item.trim()).filter(Boolean))];
+    }
     return [];
   };
 
   const renderUrunFields = () => {
     const catNorm = normalizeText(kategoriName || "");
-    const taxonomy = [kategoriName, grupName, turName].filter(Boolean).join(" ");
-    const cat = normalizeText(taxonomy);
 
     if (catNorm.includes("hazir giyim")) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
-          <MultiDropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={toArr(td.kumas_grubu)} onChange={(v) => updateForm({ teknik_detaylar: { ...formData.teknik_detaylar, kumas_grubu: v, kumas_turu: [] } })} />
-          <MultiDependentMultiParentField label="Kumaş Türü" parentIds={toArr(td.kumas_grubu)} value={toArr(td.kumas_turu)} onChange={(v) => setTD("kumas_turu", v)} disabled={!toArr(td.kumas_grubu).length} />
+          <MultiDropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={toArr(td.kumas_grubu)} onChange={(v) => patchTD({ kumas_grubu: v, kumas_turu: [] })} />
+          <MultiDependentMultiParentField label="Kumaş Türü" kategoriName="Kumaş Türü" parentIds={toArr(td.kumas_grubu)} value={toArr(td.kumas_turu)} onChange={(v) => setTD("kumas_turu", v)} disabled={!toArr(td.kumas_grubu).length} />
           <MultiDropdownField label="Sezon" kategoriName="Sezon" value={toArr(td.sezon)} onChange={(v) => setTD("sezon", v)} />
           <MultiDropdownField label="Cinsiyet" kategoriName="Cinsiyet" value={toArr(td.cinsiyet)} onChange={(v) => setTD("cinsiyet", v)} />
           <MultiDropdownField label="Yaş Grubu" kategoriName="Yaş Grubu" value={toArr(td.yas_grubu)} onChange={(v) => setTD("yas_grubu", v)} />
@@ -234,6 +237,10 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
         </>
       );
     }
+
+    const taxonomy = [kategoriName, grupName, turName].filter(Boolean).join(" ");
+    const cat = normalizeText(taxonomy);
+
 
     if (catNorm.includes("aksesuar")) {
       return (
