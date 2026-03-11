@@ -261,14 +261,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
               {/* Vergi Dairesi */}
               <div className="space-y-1.5 md:col-span-2">
                 <Label className="text-sm font-medium text-foreground">Vergi Dairesi</Label>
-                <SearchableSelect
-                  options={VERGI_DAIRELERI.map(vd => ({ value: vd, label: vd }))}
-                  value={vergiDairesi}
-                  onValueChange={() => {}}
-                  placeholder="Vergi Dairesi"
-                  disabled
-                  triggerClassName="bg-muted/50 opacity-70"
-                />
+                <Input value={vergiDairesi} disabled className="bg-muted/50 opacity-70" />
               </div>
             </div>
           </div>
