@@ -166,8 +166,12 @@ function SearchableDropdownField({ label, kategoriName, value, onChange }: { lab
 }
 
 export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
-  const { data: kategoriName } = useCategoryName(formData.urun_kategori_id || formData.hizmet_kategori_id);
-  const { data: grupName } = useCategoryName(formData.urun_grup_id || formData.hizmet_tur_id);
+  const isHizmet = formData.ihale_turu === "hizmet_alim";
+  const categoryId = isHizmet ? formData.hizmet_kategori_id : formData.urun_kategori_id;
+  const groupId = isHizmet ? formData.hizmet_tur_id : formData.urun_grup_id;
+
+  const { data: kategoriName } = useCategoryName(categoryId);
+  const { data: grupName } = useCategoryName(groupId);
   const { data: turName } = useCategoryName(formData.urun_tur_id);
 
   const td = formData.teknik_detaylar;
