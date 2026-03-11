@@ -59,7 +59,16 @@ const LandingPage = () => {
     );
   }
 
-  const isoNumbers = ["27001", "20000-1", "27017", "27018", "27701", "9001", "22301"];
+  const isoBadges = [
+    { label: "27001", img: iso27001Img },
+    { label: "20000-1", img: iso20000Img },
+    { label: "27017", img: iso27017Img },
+    { label: "27018", img: iso27018Img },
+    { label: "27701", img: iso27701Img },
+    { label: "9001", img: iso9001Img },
+    { label: "22301", img: iso22301Img },
+    { label: "KOSGEB", img: kosgebImg },
+  ];
 
   const advantages = [
     {
