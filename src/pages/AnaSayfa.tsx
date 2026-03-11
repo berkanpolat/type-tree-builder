@@ -167,11 +167,22 @@ export default function AnaSayfa() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Fetch kategori seçenekleri
+  // Fetch ürün kategori/grup/tür tree
   useEffect(() => {
-    supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KATEGORI_ID).is("parent_id", null).order("name").then(({ data }) => {
-      if (data) setKategoriSecenekler(data);
-    });
+    supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("kategori_id", KATEGORI_ID)
+      .order("name")
+      .then(({ data }) => {
+        const allNodes = (data || []) as KategoriNode[];
+        setUrunKategoriNodes(allNodes);
+        setKategoriSecenekler(
+          allNodes
+            .filter((n) => !n.parent_id)
+            .map((n) => ({ id: n.id, name: n.name }))
+        );
+      });
   }, []);
 
   // Fetch products
