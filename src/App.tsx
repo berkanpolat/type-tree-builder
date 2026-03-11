@@ -43,6 +43,7 @@ import AdminPanel from "./pages/admin/AdminPanel";
 import AdminKullanicilar from "./pages/admin/AdminKullanicilar";
 import AdminFirmalar from "./pages/admin/AdminFirmalar";
 import AdminIhaleler from "./pages/admin/AdminIhaleler";
+import AdminUrunler from "./pages/admin/AdminUrunler";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 
 const queryClient = new QueryClient();
