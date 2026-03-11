@@ -367,64 +367,32 @@ export default function AnaSayfa() {
     fetchUrunler();
   }, [fetchUrunler]);
 
-  // Search autocomplete
+  // Trigger search on Enter or Ara button
+  const handleSearch = useCallback(() => {
+    setActiveFilter(null);
+    setAppliedSearchTerm(searchTerm.trim());
+    setShowDropdown(false);
+  }, [searchTerm]);
+
+  // Lightweight autocomplete
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setSearchResults([]);
+      setShowDropdown(false);
       return;
     }
     const timer = setTimeout(async () => {
       const results: SearchResult[] = [];
-
-      // Run both queries in parallel
-      const [seceneklerRes, urunRes] = await Promise.all([
-        supabase
-          .from("firma_bilgi_secenekleri")
-          .select("id, name, parent_id")
-          .eq("kategori_id", KATEGORI_ID)
-          .ilike("name", `%${searchTerm}%`)
-          .limit(10),
-        supabase
-          .from("urunler")
-          .select("id, baslik")
-          .eq("durum", "aktif")
-          .ilike("baslik", `%${searchTerm}%`)
-          .limit(5),
-      ]);
-
-      const secenekler = seceneklerRes.data;
-      if (secenekler) {
-        const unknownParentIds = secenekler
-          .filter((s) => s.parent_id && !secenekler.find((p) => p.id === s.parent_id))
-          .map((s) => s.parent_id!);
-        let parentMap: Record<string, { parent_id: string | null }> = {};
-        if (unknownParentIds.length > 0) {
-          const { data: parents } = await supabase
-            .from("firma_bilgi_secenekleri")
-            .select("id, parent_id")
-            .in("id", unknownParentIds);
-          if (parents) parents.forEach((p) => { parentMap[p.id] = p; });
-        }
-        secenekler.forEach((s) => {
-          if (HIDDEN_KATEGORILER.some((h) => s.name.toLowerCase() === h.toLowerCase())) return;
-          let type: SearchResult["type"] = "Tür";
-          if (!s.parent_id) type = "Kategori";
-          else {
-            const inResults = secenekler.find((p) => p.id === s.parent_id);
-            if (inResults && !inResults.parent_id) type = "Grup";
-            else if (!inResults) {
-              const parent = parentMap[s.parent_id!];
-              if (parent) type = parent.parent_id ? "Tür" : "Grup";
-            }
-          }
-          results.push({ id: s.id, name: s.name, type });
-        });
-      }
-
-      if (urunRes.data) urunRes.data.forEach((u) => results.push({ id: u.id, name: u.baslik, type: "Ürün" }));
+      const { data } = await supabase
+        .from("urunler")
+        .select("id, baslik")
+        .eq("durum", "aktif")
+        .ilike("baslik", `%${searchTerm}%`)
+        .limit(8);
+      if (data) data.forEach((u) => results.push({ id: u.id, name: u.baslik, type: "Ürün" }));
       setSearchResults(results);
       setShowDropdown(results.length > 0);
-    }, 500);
+    }, 250);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
