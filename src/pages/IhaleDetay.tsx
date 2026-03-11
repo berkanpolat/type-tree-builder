@@ -1239,8 +1239,16 @@ export default function IhaleDetay() {
                 </div>
               )}
 
-              {/* Teklif Formu - sadece ihale sahibi değilse ve ihale devam ediyorsa */}
-              {!isOwner && ihale.durum === "devam_ediyor" && (
+              {/* Filter block message */}
+              {!isOwner && ihale.durum === "devam_ediyor" && filterBlockMessage && (
+                <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                  <p className="text-sm text-destructive font-medium mb-1">Teklif Veremezsiniz</p>
+                  <p className="text-xs text-destructive/80">{filterBlockMessage}</p>
+                </div>
+              )}
+
+              {/* Teklif Formu - sadece ihale sahibi değilse ve ihale devam ediyorsa ve filtre geçiyorsa */}
+              {!isOwner && ihale.durum === "devam_ediyor" && !filterBlockMessage && (
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Teklif Tutarı ({sym})</label>
