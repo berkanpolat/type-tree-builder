@@ -1147,6 +1147,41 @@ export type Database = {
           },
         ]
       }
+      ihale_ek_dosyalar: {
+        Row: {
+          created_at: string
+          dosya_adi: string
+          dosya_url: string
+          id: string
+          ihale_id: string
+          sira: number
+        }
+        Insert: {
+          created_at?: string
+          dosya_adi: string
+          dosya_url: string
+          id?: string
+          ihale_id: string
+          sira?: number
+        }
+        Update: {
+          created_at?: string
+          dosya_adi?: string
+          dosya_url?: string
+          id?: string
+          ihale_id?: string
+          sira?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ihale_ek_dosyalar_ihale_id_fkey"
+            columns: ["ihale_id"]
+            isOneToOne: false
+            referencedRelation: "ihaleler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ihale_filtreler: {
         Row: {
           created_at: string
