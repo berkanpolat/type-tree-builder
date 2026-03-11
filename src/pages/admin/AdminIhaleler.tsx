@@ -874,7 +874,7 @@ export default function AdminIhaleler() {
 
       {/* Confirm Dialog */}
       <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog(prev => ({ ...prev, open }))}>
-        <AlertDialogContent style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+        <AlertDialogContent className="z-[200]" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
           <AlertDialogHeader>
             <AlertDialogTitle style={s.text}>{confirmDialog.title}</AlertDialogTitle>
             <AlertDialogDescription style={s.muted}>{confirmDialog.desc}</AlertDialogDescription>
