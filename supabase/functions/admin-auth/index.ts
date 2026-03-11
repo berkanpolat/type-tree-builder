@@ -1634,7 +1634,7 @@ Deno.serve(async (req) => {
     // ─── LIST DESTEK TALEPLERI (admin) ───
     if (action === "list-destek") {
       const payload = verifyToken(body.token);
-      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+      if (!payload.is_primary && !payload.permissions?.destek_goruntule) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
