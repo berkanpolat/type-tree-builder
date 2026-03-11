@@ -333,8 +333,8 @@ const Paketim = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <div className="flex flex-col items-center gap-3 py-4">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
-                <Check className="w-8 h-8 text-green-600" />
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Check className="w-8 h-8 text-primary" />
               </div>
               <AlertDialogTitle className="text-xl">Ödeme Başarılı!</AlertDialogTitle>
             </div>
