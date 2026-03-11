@@ -2315,6 +2315,88 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── GET FIRMA BELGELER ───
+    if (action === "get-firma-belgeler") {
+      const payload = verifyToken(body.token);
+      const { firmaId } = body;
+
+      const { data, error } = await supabase
+        .from("firma_belgeler")
+        .select("*")
+        .eq("firma_id", firmaId);
+
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ belgeler: data || [] });
+    }
+
+    // ─── UPDATE BELGE STATUS ───
+    if (action === "update-belge-status") {
+      const payload = verifyToken(body.token);
+      const { belgeId, durum, karar_sebebi } = body;
+
+      const { data: adminUser } = await supabase
+        .from("admin_users")
+        .select("ad, soyad, pozisyon")
+        .eq("id", payload.id)
+        .single();
+
+      const karar_veren = adminUser ? `${adminUser.ad} ${adminUser.soyad} (${adminUser.pozisyon})` : payload.username;
+
+      const { error } = await supabase
+        .from("firma_belgeler")
+        .update({
+          durum,
+          karar_sebebi: karar_sebebi || null,
+          karar_veren,
+          karar_tarihi: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", belgeId);
+
+      if (error) return jsonResponse({ error: error.message }, 500);
+
+      // Check if all belgeler for this firma are now approved
+      const { data: belge } = await supabase.from("firma_belgeler").select("firma_id").eq("id", belgeId).single();
+      if (belge) {
+        const { data: allBelgeler } = await supabase.from("firma_belgeler").select("durum").eq("firma_id", belge.firma_id);
+        const allApproved = allBelgeler && allBelgeler.length >= 3 && allBelgeler.every(b => b.durum === "onaylandi");
+        
+        if (allApproved) {
+          // Get user_id for notification
+          const { data: firma } = await supabase.from("firmalar").select("user_id, firma_unvani").eq("id", belge.firma_id).single();
+          if (firma) {
+            await supabase.from("notifications").insert({
+              user_id: firma.user_id,
+              type: "belge_dogrulama_tamamlandi",
+              message: "Tebrikler! Tüm belgeleriniz onaylanmıştır. Artık 'Onaylı Kullanıcı' rozetine sahipsiniz.",
+              link: "/firma-bilgilerim",
+            });
+          }
+        }
+      }
+
+      await logActivity(supabase, payload, `belge-${durum}`, {
+        target_type: "belge",
+        target_id: belgeId,
+        details: { durum, karar_sebebi },
+      });
+
+      return jsonResponse({ success: true });
+    }
+
+    // ─── GET SIGNED URL FOR BELGE ───
+    if (action === "get-belge-url") {
+      const payload = verifyToken(body.token);
+      const { dosyaUrl } = body;
+
+      const { data, error } = await supabase.storage
+        .from("firma-belgeler")
+        .createSignedUrl(dosyaUrl, 300); // 5 min expiry
+
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ url: data.signedUrl });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
