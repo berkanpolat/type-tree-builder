@@ -71,13 +71,13 @@ function TimeFilterSelect({ value, onChange }: { value: TimeFilter; onChange: (v
 
 function DateRangeFilter({ value, onChange }: { value: DateRange; onChange: (v: DateRange) => void }) {
   return (
-    <div className="flex items-center gap-2">
-      <CalendarDays className="w-4 h-4 shrink-0" style={{ color: "hsl(var(--admin-muted))" }} />
+    <div className="flex flex-wrap items-center gap-2">
+      <CalendarDays className="w-4 h-4 shrink-0 hidden sm:block" style={{ color: "hsl(var(--admin-muted))" }} />
       <Input
         type="date"
         value={value.from}
         onChange={e => onChange({ ...value, from: e.target.value })}
-        className="h-8 text-xs w-[130px]"
+        className="h-8 text-xs w-[120px] sm:w-[130px]"
         style={inputStyle}
       />
       <span className="text-xs" style={{ color: "hsl(var(--admin-muted))" }}>—</span>
@@ -85,7 +85,7 @@ function DateRangeFilter({ value, onChange }: { value: DateRange; onChange: (v: 
         type="date"
         value={value.to}
         onChange={e => onChange({ ...value, to: e.target.value })}
-        className="h-8 text-xs w-[130px]"
+        className="h-8 text-xs w-[120px] sm:w-[130px]"
         style={inputStyle}
       />
       {(value.from || value.to) && (
