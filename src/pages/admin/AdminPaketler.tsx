@@ -204,6 +204,7 @@ export default function AdminPaketler() {
         handleDelete={handleDelete}
         renderLimit={renderLimit}
         setDeletingId={setDeletingId}
+        hasPermission={hasPermission}
       />
     </AdminLayout>
   );
