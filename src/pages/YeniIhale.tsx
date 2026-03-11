@@ -119,6 +119,7 @@ export default function YeniIhale() {
       let ihale: any = null;
       let filtreData: any[] = [];
       let stokData: any[] = [];
+      let fotoData: string[] = [];
 
       if (adminToken) {
         // Admin mode: fetch via edge function (bypasses RLS)
