@@ -369,6 +369,61 @@ export default function AdminFirmalar() {
     }
   };
 
+  // Belge doğrulama handlers
+  const openBelgeDialog = async (firma: FirmaItem) => {
+    setBelgeDialogFirma(firma);
+    setBelgeDialogOpen(true);
+    setBelgeDialogLoading(true);
+    setRejectReasons({});
+    try {
+      const result = await callApi("get-firma-belgeler", { token, firmaId: firma.id });
+      setBelgeler(result.belgeler || []);
+    } catch {
+      toast({ title: "Hata", description: "Belgeler yüklenemedi", variant: "destructive" });
+    } finally {
+      setBelgeDialogLoading(false);
+    }
+  };
+
+  const handleBelgeAction = async (belgeId: string, durum: string) => {
+    setBelgeActionLoading(belgeId);
+    try {
+      await callApi("update-belge-status", {
+        token,
+        belgeId,
+        durum,
+        karar_sebebi: durum === "reddedildi" ? (rejectReasons[belgeId] || "Belge uygun değil") : null,
+      });
+      toast({ title: "Başarılı", description: durum === "onaylandi" ? "Belge onaylandı" : "Belge reddedildi" });
+      // Refresh
+      const result = await callApi("get-firma-belgeler", { token, firmaId: belgeDialogFirma!.id });
+      setBelgeler(result.belgeler || []);
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setBelgeActionLoading(null);
+    }
+  };
+
+  const handleDownloadBelge = async (dosyaUrl: string, dosyaAdi: string) => {
+    try {
+      const result = await callApi("get-belge-url", { token, dosyaUrl });
+      const a = document.createElement("a");
+      a.href = result.url;
+      a.download = dosyaAdi;
+      a.target = "_blank";
+      a.click();
+    } catch {
+      toast({ title: "Hata", description: "Dosya indirilemedi", variant: "destructive" });
+    }
+  };
+
+  const BELGE_LABELS: Record<string, string> = {
+    vergi_levhasi: "Vergi Levhası",
+    ticaret_sicil: "Ticaret Sicil Gazetesi",
+    imza_sirkusu: "İmza Sirküsü",
+  };
+
   const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" ||
     filterMinIhale || filterMaxIhale || filterMinTeklif || filterMaxTeklif ||
     filterMinUrun || filterMaxUrun || filterMinProfil || filterMaxProfil || searchTerm;
