@@ -6,16 +6,17 @@ interface Props {
   steps: string[];
   currentStep: number;
   onStepClick?: (step: number) => void;
+  freeNavigation?: boolean;
 }
 
-export default function IhaleWizardStepper({ steps, currentStep, onStepClick }: Props) {
+export default function IhaleWizardStepper({ steps, currentStep, onStepClick, freeNavigation }: Props) {
   return (
     <div className="flex items-center justify-center gap-0">
       {steps.map((label, i) => {
         const Icon = STEP_ICONS[i];
         const isActive = i === currentStep;
         const isDone = i < currentStep;
-        const isClickable = !!onStepClick && (isDone || isActive);
+        const isClickable = !!onStepClick && (freeNavigation || isDone || isActive);
 
         return (
           <div key={label} className="flex items-center">
