@@ -8,6 +8,14 @@ import tekrehberImg from "@/assets/landing-tekrehber.png";
 import tekpazarImg from "@/assets/landing-tekpazar.png";
 import fabricImg from "@/assets/landing-fabric.jpg";
 import warehouseImg from "@/assets/landing-warehouse.jpg";
+import iso27001Img from "@/assets/iso-27001.png";
+import iso20000Img from "@/assets/iso-20000.png";
+import iso27017Img from "@/assets/iso-27017.png";
+import iso27018Img from "@/assets/iso-27018.png";
+import iso27701Img from "@/assets/iso-27701.png";
+import iso9001Img from "@/assets/iso-9001.jpg";
+import iso22301Img from "@/assets/iso-22301.png";
+import kosgebImg from "@/assets/kosgeb.jpg";
 import Footer from "@/components/Footer";
 import {
   Zap,
