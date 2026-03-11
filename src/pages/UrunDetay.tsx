@@ -179,10 +179,21 @@ export default function UrunDetay() {
   const [breadcrumbGrup, setBreadcrumbGrup] = useState("");
   const [breadcrumbTur, setBreadcrumbTur] = useState("");
 
+  // Admin state
+  const [isAdminViewing, setIsAdminViewing] = useState(false);
+  const [adminActionLoading, setAdminActionLoading] = useState(false);
+  const [redSebebi, setRedSebebi] = useState("");
+
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/giris-kayit"); return; }
+      if (!user) {
+        const adminToken = localStorage.getItem("admin_token");
+        if (!adminToken) { navigate("/giris-kayit"); return; }
+        setIsAdminViewing(true);
+        setCurrentUserId("admin");
+        return;
+      }
       setCurrentUserId(user.id);
       const { data: f } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).single();
       if (f) { setFirmaUnvani(f.firma_unvani); setFirmaLogoUrl(f.logo_url); }
