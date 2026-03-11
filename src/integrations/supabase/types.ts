@@ -918,6 +918,9 @@ export type Database = {
       ihaleler: {
         Row: {
           aciklama: string | null
+          admin_karar_sebebi: string | null
+          admin_karar_tarihi: string | null
+          admin_karar_veren: string | null
           baslangic_fiyati: number | null
           baslangic_tarihi: string | null
           baslik: string
@@ -954,6 +957,9 @@ export type Database = {
         }
         Insert: {
           aciklama?: string | null
+          admin_karar_sebebi?: string | null
+          admin_karar_tarihi?: string | null
+          admin_karar_veren?: string | null
           baslangic_fiyati?: number | null
           baslangic_tarihi?: string | null
           baslik: string
@@ -990,6 +996,9 @@ export type Database = {
         }
         Update: {
           aciklama?: string | null
+          admin_karar_sebebi?: string | null
+          admin_karar_tarihi?: string | null
+          admin_karar_veren?: string | null
           baslangic_fiyati?: number | null
           baslangic_tarihi?: string | null
           baslik?: string
@@ -1257,6 +1266,9 @@ export type Database = {
       urunler: {
         Row: {
           aciklama: string | null
+          admin_karar_sebebi: string | null
+          admin_karar_tarihi: string | null
+          admin_karar_veren: string | null
           baslik: string
           created_at: string
           durum: string
@@ -1277,6 +1289,9 @@ export type Database = {
         }
         Insert: {
           aciklama?: string | null
+          admin_karar_sebebi?: string | null
+          admin_karar_tarihi?: string | null
+          admin_karar_veren?: string | null
           baslik: string
           created_at?: string
           durum?: string
@@ -1297,6 +1312,9 @@ export type Database = {
         }
         Update: {
           aciklama?: string | null
+          admin_karar_sebebi?: string | null
+          admin_karar_tarihi?: string | null
+          admin_karar_veren?: string | null
           baslik?: string
           created_at?: string
           durum?: string
