@@ -12,8 +12,11 @@ import {
 import {
   MessageSquareWarning, Eye, Filter, RotateCcw, Search,
   ChevronLeft, ChevronRight, MessageSquare, Gavel, Package, User,
-  FileText, Calendar, Building2, AlertTriangle
+  FileText, Calendar, Building2, AlertTriangle, ShieldAlert
 } from "lucide-react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import SikayetAksiyonDialog from "@/components/admin/SikayetAksiyonDialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
