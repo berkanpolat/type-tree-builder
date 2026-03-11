@@ -922,6 +922,93 @@ export default function AdminFirmalar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Yeni Firma Dialog */}
+      <Dialog open={yeniFirmaOpen} onOpenChange={setYeniFirmaOpen}>
+        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle style={s.text}>Yeni Firma Oluştur</DialogTitle>
+            <DialogDescription style={s.muted}>
+              E-posta onayı olmadan yeni firma hesabı oluşturun
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>E-posta *</Label>
+                <Input value={yeniFirma.email} onChange={e => setYeniFirma(p => ({ ...p, email: e.target.value }))} style={s.input} className="text-xs h-8" placeholder="ornek@email.com" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Şifre *</Label>
+                <Input type="password" value={yeniFirma.password} onChange={e => setYeniFirma(p => ({ ...p, password: e.target.value }))} style={s.input} className="text-xs h-8" placeholder="Min 6 karakter" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Ad *</Label>
+                <Input value={yeniFirma.ad} onChange={e => setYeniFirma(p => ({ ...p, ad: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Soyad *</Label>
+                <Input value={yeniFirma.soyad} onChange={e => setYeniFirma(p => ({ ...p, soyad: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs" style={s.muted}>Firma Ünvanı *</Label>
+              <Input value={yeniFirma.firma_unvani} onChange={e => setYeniFirma(p => ({ ...p, firma_unvani: e.target.value }))} style={s.input} className="text-xs h-8" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Vergi Numarası *</Label>
+                <Input value={yeniFirma.vergi_numarasi} onChange={e => setYeniFirma(p => ({ ...p, vergi_numarasi: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Vergi Dairesi *</Label>
+                <Input value={yeniFirma.vergi_dairesi} onChange={e => setYeniFirma(p => ({ ...p, vergi_dairesi: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Firma Türü *</Label>
+                <Select value={yeniFirma.firma_turu_id} onValueChange={v => setYeniFirma(p => ({ ...p, firma_turu_id: v, firma_tipi_id: "" }))}>
+                  <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue placeholder="Seçin" /></SelectTrigger>
+                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
+                    {turler.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Firma Tipi *</Label>
+                <Select value={yeniFirma.firma_tipi_id} onValueChange={v => setYeniFirma(p => ({ ...p, firma_tipi_id: v }))}>
+                  <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue placeholder="Seçin" /></SelectTrigger>
+                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
+                    {filteredTipler.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>İletişim E-posta</Label>
+                <Input value={yeniFirma.iletisim_email} onChange={e => setYeniFirma(p => ({ ...p, iletisim_email: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>İletişim Numarası</Label>
+                <Input value={yeniFirma.iletisim_numarasi} onChange={e => setYeniFirma(p => ({ ...p, iletisim_numarasi: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setYeniFirmaOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
+            <Button onClick={handleCreateFirma} disabled={yeniFirmaSaving} className="bg-amber-500 hover:bg-amber-600 text-white">
+              {yeniFirmaSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Firma Oluştur
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
