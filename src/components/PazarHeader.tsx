@@ -8,6 +8,8 @@ import {
   HelpCircle,
   LogOut,
   Building2,
+  Linkedin,
+  Instagram,
 } from "lucide-react";
 import { useNotificationCount } from "@/hooks/use-notifications";
 import HeaderMessagePanel from "@/components/header/HeaderMessagePanel";
@@ -51,14 +53,29 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
             <img src={logoImg} alt="Tekstil A.Ş." className="h-7 object-contain" />
           </Link>
           <nav className="hidden md:flex items-center gap-6">
+            <Link to="/tekrehber" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekRehber</Link>
             <Link to="/anasayfa" className="text-sm font-medium text-foreground hover:text-secondary transition-colors">TekPazar</Link>
             <Link to="/tekihale" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Tekİhale</Link>
-            <Link to="/tekrehber" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekRehber</Link>
           </nav>
         </div>
 
         {/* Right side: icons + user menu */}
         <div className="flex items-center gap-1">
+          {/* Social media icons */}
+          <div className="hidden md:flex items-center gap-1 mr-1">
+            <a href="https://www.linkedin.com/company/tekstilas/" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+              <Linkedin className="w-4 h-4" />
+            </a>
+            <a href="https://www.instagram.com/tekstilascom/" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+              <Instagram className="w-4 h-4" />
+            </a>
+            <a href="https://www.facebook.com/tekstilas" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </a>
+          </div>
+
+          <div className="hidden md:block w-px h-6 bg-border mr-1" />
+
           {/* Favorites */}
           <HeaderFavoritesPanel />
 
