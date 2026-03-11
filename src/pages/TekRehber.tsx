@@ -508,12 +508,16 @@ export default function TekRehber() {
 
         {/* Full-width banner */}
         <div
-          className="rounded-xl overflow-hidden h-32 cursor-pointer"
-          style={rehberSidebarBanner.url ? undefined : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }}
+          className="rounded-xl overflow-hidden cursor-pointer mx-auto"
+          style={{
+            maxWidth: 1200,
+            height: 128,
+            ...(rehberSidebarBanner.url ? {} : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }),
+          }}
           onClick={() => rehberSidebarBanner.linkUrl && window.open(rehberSidebarBanner.linkUrl, "_blank")}
         >
           {rehberSidebarBanner.url ? (
-            <img src={rehberSidebarBanner.url} alt="Reklam" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
+            <img src={rehberSidebarBanner.url} alt="Reklam" className="w-full h-full object-contain" style={{ imageRendering: "auto" }} />
           ) : (
             <div className="flex items-center px-8 h-full">
               <div>
