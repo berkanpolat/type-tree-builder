@@ -443,7 +443,7 @@ export default function AdminKullanicilar() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-slate-800 border-slate-700 text-white max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>
           <DialogHeader>
             <DialogTitle>{editingUser ? "Kullanıcıyı Düzenle" : "Yeni Kullanıcı Ekle"}</DialogTitle>
             <DialogDescription className="text-slate-400">
