@@ -8,6 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import {
   Crown,
   Check,
   Eye,
@@ -16,6 +27,7 @@ import {
   ShoppingBag,
   MessageSquare,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 
 const FEATURES = [
@@ -31,6 +43,9 @@ const Paketim = () => {
   const isPro = pkg.paketSlug === "pro";
   const [upgradeLoading, setUpgradeLoading] = useState<"aylik" | "yillik" | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleUpgrade = async (periyot: "aylik" | "yillik") => {
     setUpgradeLoading(periyot);
@@ -58,6 +73,31 @@ const Paketim = () => {
       console.error("Portal error:", err);
     } finally {
       setPortalLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setCancelLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-subscription");
+      if (error) throw error;
+      if (data?.success) {
+        const cancelDate = data.cancel_at
+          ? new Date(data.cancel_at).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })
+          : "";
+        toast({
+          title: "Abonelik iptal edildi",
+          description: `PRO paketiniz ${cancelDate} tarihine kadar aktif kalacaktır. Bu tarihten sonra Ücretsiz pakete geçirilecektir.`,
+        });
+        setCancelDialogOpen(false);
+        // Reload to reflect changes
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    } catch (err: any) {
+      console.error("Cancel error:", err);
+      toast({ title: "Hata", description: "Abonelik iptal edilemedi. Lütfen tekrar deneyin.", variant: "destructive" });
+    } finally {
+      setCancelLoading(false);
     }
   };
 
