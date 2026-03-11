@@ -152,6 +152,20 @@ export default function AdminFirmalar() {
   const [statTurFilter, setStatTurFilter] = useState<string>("all");
   const [abonePeriod, setAbonePeriod] = useState<"son24saat" | "sonBirHafta" | "sonBirAy">("sonBirHafta");
 
+  // Active stat card filter
+  type StatCardFilter = "total" | "pending" | "recent" | "online" | "yeniAbone" | null;
+  const [activeStatCard, setActiveStatCard] = useState<StatCardFilter>(null);
+
+  const handleStatCardClick = (card: StatCardFilter) => {
+    if (activeStatCard === card) {
+      setActiveStatCard(null);
+    } else {
+      setActiveStatCard(card);
+    }
+    // Clear other manual filters when stat card is clicked
+    clearFilters();
+  };
+
   const [turler, setTurler] = useState<{ id: string; name: string }[]>([]);
   const [tipler, setTipler] = useState<{ id: string; name: string; firma_turu_id: string }[]>([]);
   const [iller, setIller] = useState<{ id: string; name: string }[]>([]);
@@ -349,7 +363,7 @@ export default function AdminFirmalar() {
     setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all"); setFilterPaket("all");
     setFilterMinIhale(""); setFilterMaxIhale(""); setFilterMinTeklif(""); setFilterMaxTeklif("");
     setFilterMinUrun(""); setFilterMaxUrun(""); setFilterMinProfil(""); setFilterMaxProfil("");
-    setSearchTerm(""); setSortField(null);
+    setSearchTerm(""); setSortField(null); setActiveStatCard(null);
   };
 
   const handleDeleteFirma = async () => {
@@ -426,9 +440,30 @@ export default function AdminFirmalar() {
 
   const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" ||
     filterMinIhale || filterMaxIhale || filterMinTeklif || filterMaxTeklif ||
-    filterMinUrun || filterMaxUrun || filterMinProfil || filterMaxProfil || searchTerm;
+    filterMinUrun || filterMaxUrun || filterMinProfil || filterMaxProfil || searchTerm || activeStatCard;
 
   const filtered = firmalar.filter((f) => {
+    // Stat card filters
+    if (activeStatCard === "pending" && f.onay_durumu !== "onay_bekliyor") return false;
+    if (activeStatCard === "recent") {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - statsDays);
+      if (new Date(f.created_at) < cutoff) return false;
+    }
+    if (activeStatCard === "online") {
+      if (!f.profile?.last_seen) return false;
+      const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
+      if (new Date(f.profile.last_seen) < fifteenMinAgo) return false;
+    }
+    if (activeStatCard === "yeniAbone") {
+      if (!f.abonelik) return false;
+      const cutoff = new Date();
+      if (abonePeriod === "son24saat") cutoff.setDate(cutoff.getDate() - 1);
+      else if (abonePeriod === "sonBirHafta") cutoff.setDate(cutoff.getDate() - 7);
+      else cutoff.setMonth(cutoff.getMonth() - 1);
+      if (new Date(f.abonelik.donem_baslangic) < cutoff) return false;
+    }
+
     if (searchTerm && !f.firma_unvani.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (filterTuru !== "all" && f.firma_turu_id !== filterTuru) return false;
     if (filterTipi !== "all" && f.firma_tipi_id !== filterTipi) return false;
@@ -463,7 +498,7 @@ export default function AdminFirmalar() {
   const safePage = Math.min(currentPage, totalPages);
   const paginatedFirmalar = sorted.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, filterMinIhale, filterMaxIhale, filterMinTeklif, filterMaxTeklif, filterMinUrun, filterMaxUrun, filterMinProfil, filterMaxProfil, sortField, sortDir]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, filterMinIhale, filterMaxIhale, filterMinTeklif, filterMaxTeklif, filterMinUrun, filterMaxUrun, filterMinProfil, filterMaxProfil, sortField, sortDir, activeStatCard]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -538,7 +573,11 @@ export default function AdminFirmalar() {
           <div className="space-y-3">
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
               {/* Total */}
-              <div style={s.card} className="p-4">
+              <div
+                style={{ ...s.card, ...(activeStatCard === "total" ? { borderColor: "hsl(210 100% 60%)", boxShadow: "0 0 0 1px hsl(210 100% 60%)" } : {}) }}
+                className="p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                onClick={() => handleStatCardClick("total")}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <Building2 className="w-5 h-5 text-blue-400" />
                   <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Toplam</span>
@@ -548,7 +587,11 @@ export default function AdminFirmalar() {
               </div>
 
               {/* Pending */}
-              <div style={s.card} className="p-4">
+              <div
+                style={{ ...s.card, ...(activeStatCard === "pending" ? { borderColor: "hsl(38 92% 50%)", boxShadow: "0 0 0 1px hsl(38 92% 50%)" } : {}) }}
+                className="p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                onClick={() => handleStatCardClick("pending")}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <AlertCircle className="w-5 h-5 text-amber-400" />
                   <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Bekleyen</span>
@@ -558,11 +601,15 @@ export default function AdminFirmalar() {
               </div>
 
               {/* Recent */}
-              <div style={s.card} className="p-4">
+              <div
+                style={{ ...s.card, ...(activeStatCard === "recent" ? { borderColor: "hsl(270 60% 60%)", boxShadow: "0 0 0 1px hsl(270 60% 60%)" } : {}) }}
+                className="p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                onClick={() => handleStatCardClick("recent")}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <Clock className="w-5 h-5 text-purple-400" />
-                  <Select value={String(statsDays)} onValueChange={(v) => setStatsDays(Number(v))}>
-                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text}>
+                  <Select value={String(statsDays)} onValueChange={(v) => { setStatsDays(Number(v)); }}>
+                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text} onClick={(e) => e.stopPropagation()}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
@@ -580,7 +627,11 @@ export default function AdminFirmalar() {
               </div>
 
               {/* Online count */}
-              <div style={s.card} className="p-4">
+              <div
+                style={{ ...s.card, ...(activeStatCard === "online" ? { borderColor: "hsl(142 71% 45%)", boxShadow: "0 0 0 1px hsl(142 71% 45%)" } : {}) }}
+                className="p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                onClick={() => handleStatCardClick("online")}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <Wifi className="w-5 h-5 text-green-400" />
                   <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Çevrimiçi</span>
@@ -590,11 +641,15 @@ export default function AdminFirmalar() {
               </div>
 
               {/* New subscribers */}
-              <div style={s.card} className="p-4">
+              <div
+                style={{ ...s.card, ...(activeStatCard === "yeniAbone" ? { borderColor: "hsl(38 92% 50%)", boxShadow: "0 0 0 1px hsl(38 92% 50%)" } : {}) }}
+                className="p-4 cursor-pointer transition-all hover:scale-[1.02]"
+                onClick={() => handleStatCardClick("yeniAbone")}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <CreditCard className="w-5 h-5 text-amber-400" />
                   <Select value={abonePeriod} onValueChange={(v: any) => setAbonePeriod(v)}>
-                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text}>
+                    <SelectTrigger className="w-auto h-5 text-[10px] border-0 bg-transparent px-1 gap-1" style={s.text} onClick={(e) => e.stopPropagation()}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
@@ -703,6 +758,21 @@ export default function AdminFirmalar() {
               </Button>
             )}
           </div>
+
+          {/* Active stat card filter indicator */}
+          {activeStatCard && (
+            <div className="flex items-center gap-2">
+              <Badge className="bg-amber-500/20 text-amber-600 border-amber-500/30 text-xs px-3 py-1 gap-1.5">
+                {activeStatCard === "total" && "Tüm Firmalar"}
+                {activeStatCard === "pending" && "Onay Bekleyenler"}
+                {activeStatCard === "recent" && (statsDays === 1 ? "Son 24 Saat" : `Son ${statsDays} Gün`)}
+                {activeStatCard === "online" && "Çevrimiçi"}
+                {activeStatCard === "yeniAbone" && "Yeni Aboneler"}
+                <button onClick={() => setActiveStatCard(null)} className="ml-1 hover:text-red-500">✕</button>
+              </Badge>
+              <span className="text-xs" style={s.muted}>{filtered.length} firma listeleniyor</span>
+            </div>
+          )}
 
           {showFilters && (
             <div style={s.card} className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
