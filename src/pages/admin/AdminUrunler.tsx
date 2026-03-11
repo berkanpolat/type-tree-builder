@@ -117,8 +117,10 @@ type SortDir = "asc" | "desc";
 type StatFilterType = "all" | "aktif" | "pasif" | "onay_bekliyor" | "reddedildi" | "taslak" | "kategori" | "tur";
 
 export default function AdminUrunler() {
-  const { token } = useAdminAuth();
+  const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
+
+  const noPermission = () => toast({ title: "Yetkisiz", description: "Buna yetkiniz yok", variant: "destructive" });
 
   const [urunler, setUrunler] = useState<UrunItem[]>([]);
   const [stats, setStats] = useState<UrunStats | null>(null);
@@ -747,41 +749,47 @@ export default function AdminUrunler() {
 
                     {/* Actions */}
                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <Button
-                        onClick={() => window.open(`/urun/${urun.id}`, "_blank")}
-                        variant="outline" size="sm"
-                        className="text-xs h-8 px-3 gap-1.5"
-                        style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" /> İncele
-                      </Button>
+                      {hasPermission("urun_inceleyebilir") && (
+                        <Button
+                          onClick={() => window.open(`/urun/${urun.id}`, "_blank")}
+                          variant="outline" size="sm"
+                          className="text-xs h-8 px-3 gap-1.5"
+                          style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" /> İncele
+                        </Button>
+                      )}
 
                       <div className="flex items-center gap-1.5">
                         {/* Toggle aktif/pasif */}
-                        {(urun.durum === "aktif" || urun.durum === "pasif") && (
+                        {(urun.durum === "aktif" || urun.durum === "pasif") && hasPermission("urun_onaylayabilir") && (
                           <Switch
                             checked={urun.durum === "aktif"}
                             onCheckedChange={() => handleToggle(urun.id, urun.durum)}
                             className="scale-[0.85]"
                           />
                         )}
-                        <Button
-                          onClick={() => window.open(`/manupazar/duzenle/${urun.id}?admin=1`, "_blank")}
-                          variant="ghost" size="sm"
-                          className="h-7 w-7 p-0"
-                          style={s.muted}
-                          title="Düzenle"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          onClick={() => setRemoveDialog({ open: true, urunId: urun.id, baslik: urun.baslik })}
-                          variant="ghost" size="sm"
-                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                          title="Kaldır"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        {hasPermission("urun_duzenleyebilir") && (
+                          <Button
+                            onClick={() => window.open(`/manupazar/duzenle/${urun.id}?admin=1`, "_blank")}
+                            variant="ghost" size="sm"
+                            className="h-7 w-7 p-0"
+                            style={s.muted}
+                            title="Düzenle"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                        {hasPermission("urun_kaldirabilir") && (
+                          <Button
+                            onClick={() => setRemoveDialog({ open: true, urunId: urun.id, baslik: urun.baslik })}
+                            variant="ghost" size="sm"
+                            className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                            title="Kaldır"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>

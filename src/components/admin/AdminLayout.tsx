@@ -19,14 +19,14 @@ interface AdminLayoutProps {
 }
 
 const menuItems = [
-  { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null },
-  { label: "Firmalar", path: "/yonetim/firmalar", icon: Building2, permission: null },
-  { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: "kullanici_yonet" as const },
+  { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null, primaryOnly: false },
+  { label: "Firmalar", path: "/yonetim/firmalar", icon: Building2, permission: null, primaryOnly: false },
+  { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: null, primaryOnly: true },
   { label: "Şikayetler", path: "/yonetim/sikayetler", icon: MessageSquareWarning, permission: "sikayet_goruntule" as const },
   { label: "İhaleler", path: "/yonetim/ihaleler", icon: Gavel, permission: "ihale_goruntule" as const },
   { label: "Ürünler", path: "/yonetim/urunler", icon: Package, permission: "urun_goruntule" as const },
-  { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: null },
-  { label: "Destek Talepleri", path: "/yonetim/destek", icon: HeadphonesIcon, permission: "destek_talepleri" as const },
+  { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: "paket_detay_goruntule" as const },
+  { label: "Destek Talepleri", path: "/yonetim/destek", icon: HeadphonesIcon, permission: "destek_goruntule" as const },
 ];
 
 export default function AdminLayout({ children, title }: AdminLayoutProps) {
@@ -45,7 +45,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   useEffect(() => {
     localStorage.setItem("admin-theme", lightMode ? "light" : "dark");
-    // Sync admin theme class to document root for portal-rendered elements (dialogs)
     const root = document.documentElement;
     root.classList.remove("admin-dark", "admin-light");
     root.classList.add(lightMode ? "admin-light" : "admin-dark");
@@ -64,11 +63,15 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   if (!user) return null;
 
-  const visibleMenuItems = menuItems.filter(
-    (item) => !item.permission || hasPermission(item.permission)
-  );
+  const visibleMenuItems = menuItems.filter((item) => {
+    // Primary-only items
+    if (item.primaryOnly) return user.is_primary;
+    // Permission-gated items
+    if (item.permission) return hasPermission(item.permission);
+    return true;
+  });
 
-  const t = lightMode; // shorthand
+  const t = lightMode;
 
   return (
     <AdminThemeContext.Provider value={lightMode}>

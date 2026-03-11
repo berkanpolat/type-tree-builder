@@ -76,7 +76,7 @@ const emptyPaket: Omit<Paket, "id" | "created_at"> = {
 };
 
 export default function AdminPaketler() {
-  const { token } = useAdminAuth();
+  const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [paketler, setPaketler] = useState<Paket[]>([]);
   const [stats, setStats] = useState<Record<string, number>>({});
@@ -204,6 +204,7 @@ export default function AdminPaketler() {
         handleDelete={handleDelete}
         renderLimit={renderLimit}
         setDeletingId={setDeletingId}
+        hasPermission={hasPermission}
       />
     </AdminLayout>
   );
@@ -214,7 +215,7 @@ function PaketContent({
   paketler, stats, loading, saving, dialogOpen, setDialogOpen,
   deleteDialogOpen, setDeleteDialogOpen, editingPaket, form, setForm,
   openCreateDialog, openEditDialog, handleSave, handleDelete, renderLimit,
-  setDeletingId,
+  setDeletingId, hasPermission,
 }: any) {
   const lightMode = useAdminTheme();
 
@@ -275,9 +276,11 @@ function PaketContent({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold" style={{ color: `hsl(var(--admin-text))` }}>Paketler</h2>
-        <Button onClick={openCreateDialog} className="bg-amber-500 hover:bg-amber-600 text-white">
-          <Plus className="w-4 h-4 mr-2" /> Yeni Paket
-        </Button>
+        {hasPermission("paket_olusturabilir") && (
+          <Button onClick={openCreateDialog} className="bg-amber-500 hover:bg-amber-600 text-white">
+            <Plus className="w-4 h-4 mr-2" /> Yeni Paket
+          </Button>
+        )}
       </div>
 
       {/* Table */}
@@ -329,14 +332,18 @@ function PaketContent({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)}
-                        className="hover:bg-amber-500/10 hover:text-amber-500" style={{ color: `hsl(var(--admin-muted))` }}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" onClick={() => { setDeletingId(p.id); setDeleteDialogOpen(true); }}
-                        className="hover:bg-red-500/10 hover:text-red-500" style={{ color: `hsl(var(--admin-muted))` }}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      {hasPermission("paket_duzenleyebilir") && (
+                        <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)}
+                          className="hover:bg-amber-500/10 hover:text-amber-500" style={{ color: `hsl(var(--admin-muted))` }}>
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                      )}
+                      {hasPermission("paket_olusturabilir") && (
+                        <Button size="icon" variant="ghost" onClick={() => { setDeletingId(p.id); setDeleteDialogOpen(true); }}
+                          className="hover:bg-red-500/10 hover:text-red-500" style={{ color: `hsl(var(--admin-muted))` }}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

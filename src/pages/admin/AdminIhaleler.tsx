@@ -109,9 +109,11 @@ type SortDir = "asc" | "desc";
 
 
 export default function AdminIhaleler() {
-  const { token } = useAdminAuth();
+  const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const noPermission = () => toast({ title: "Yetkisiz", description: "Buna yetkiniz yok", variant: "destructive" });
 
   const [ihaleler, setIhaleler] = useState<IhaleItem[]>([]);
   const [stats, setStats] = useState<IhaleStats | null>(null);
@@ -791,25 +793,29 @@ export default function AdminIhaleler() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <Button
-                          onClick={() => window.open(`/manuihale/duzenle/${ihale.id}`, "_blank")}
-                          variant="outline" size="sm"
-                          className="text-[11px] h-7 px-2.5 gap-1"
-                          style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
-                        >
-                          <Pencil className="w-3 h-3" /> Düzenle
-                        </Button>
+                        {hasPermission("ihale_duzenleyebilir") && (
+                          <Button
+                            onClick={() => window.open(`/manuihale/duzenle/${ihale.id}`, "_blank")}
+                            variant="outline" size="sm"
+                            className="text-[11px] h-7 px-2.5 gap-1"
+                            style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                          >
+                            <Pencil className="w-3 h-3" /> Düzenle
+                          </Button>
+                        )}
 
-                        <Button
-                          onClick={() => window.open(`/tekihale/${ihale.id}`, "_blank")}
-                          variant="outline" size="sm"
-                          className="text-[11px] h-7 px-2.5 gap-1"
-                          style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
-                        >
-                          <ExternalLink className="w-3 h-3" /> İncele
-                        </Button>
+                        {hasPermission("ihale_inceleyebilir") && (
+                          <Button
+                            onClick={() => window.open(`/tekihale/${ihale.id}`, "_blank")}
+                            variant="outline" size="sm"
+                            className="text-[11px] h-7 px-2.5 gap-1"
+                            style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                          >
+                            <ExternalLink className="w-3 h-3" /> İncele
+                          </Button>
+                        )}
 
-                        {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
+                        {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && hasPermission("ihale_inceleyebilir") && (
                           <Button
                             onClick={() => window.open(`/manuihale/takip/${ihale.id}`, "_blank")}
                             variant="outline" size="sm"
@@ -820,7 +826,7 @@ export default function AdminIhaleler() {
                           </Button>
                         )}
 
-                        {ihale.durum !== "iptal" && ihale.durum !== "tamamlandi" && (
+                        {ihale.durum !== "iptal" && ihale.durum !== "tamamlandi" && hasPermission("ihale_kaldirabilir") && (
                           <Button
                             onClick={() => handleRemove(ihale)}
                             variant="ghost" size="sm"

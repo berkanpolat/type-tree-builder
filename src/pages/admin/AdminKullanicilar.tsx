@@ -32,23 +32,106 @@ interface AdminUser {
 
 const POZISYONLAR = ["Call Center", "Satış Sorumlusu", "Yönetici", "Destek Personel"];
 
-const PERMISSION_LABELS: Record<string, string> = {
-  kullanici_ekle: "Kullanıcı ekleyebilir / onaylayabilir",
-  kullanici_yonet: "Kullanıcıları yönetebilir",
-  destek_talepleri: "Destek talepleri üzerinden işlem yapabilir",
-  sikayet_goruntule: "Şikayet talepleri görüntüleyebilir",
-  ihale_goruntule: "İhaleleri görüntüleyebilir",
-  urun_goruntule: "Ürünleri görüntüleyebilir",
-};
+/* ── Hierarchical Permission Structure ── */
+interface PermissionGroup {
+  label: string;
+  items: PermissionItem[];
+}
 
-const DEFAULT_PERMISSIONS = Object.fromEntries(
-  Object.keys(PERMISSION_LABELS).map((k) => [k, false])
-);
+interface PermissionItem {
+  key: string;
+  label: string;
+  parent?: boolean; // if true, toggling off hides children
+  children?: PermissionItem[];
+  parentKey?: string; // show only when this parent is checked
+}
+
+const PERMISSION_GROUPS: PermissionGroup[] = [
+  {
+    label: "İhale",
+    items: [
+      {
+        key: "ihale_goruntule", label: "İhale menüsünü görüntüleyebilir", parent: true,
+        children: [
+          { key: "ihale_inceleyebilir", label: "İhale inceleyebilir" },
+          { key: "ihale_onaylayabilir", label: "İhale onaylayabilir" },
+          { key: "ihale_duzenleyebilir", label: "İhale düzenleyebilir" },
+          { key: "ihale_kaldirabilir", label: "İhale kaldırabilir" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Ürünler",
+    items: [
+      {
+        key: "urun_goruntule", label: "Ürünler menüsünü görüntüleyebilir", parent: true,
+        children: [
+          { key: "urun_inceleyebilir", label: "Ürün inceleyebilir" },
+          { key: "urun_onaylayabilir", label: "Ürün onaylayabilir" },
+          { key: "urun_duzenleyebilir", label: "Ürün düzenleyebilir" },
+          { key: "urun_kaldirabilir", label: "Ürün kaldırabilir" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Şikayetler",
+    items: [
+      {
+        key: "sikayet_goruntule", label: "Şikayet menüsünü görüntüleyebilir", parent: true,
+        children: [
+          { key: "sikayet_detay_goruntule", label: "Şikayet detaylarını görüntüleyebilir" },
+          {
+            key: "sikayet_islem_yapabilir", label: "Şikayet işlemi yapabilir", parent: true,
+            children: [
+              { key: "sikayet_kisitlama", label: "Kısıtlama işlemi yapabilir" },
+              { key: "sikayet_uzaklastirma", label: "Uzaklaştırma işlemi yapabilir" },
+              { key: "sikayet_yasaklama", label: "Yasaklama işlemi yapabilir" },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Paket Yönetimi",
+    items: [
+      { key: "paket_detay_goruntule", label: "Kullanıcıların paket detaylarını görüntüleyebilir" },
+      { key: "paket_olusturabilir", label: "Yeni paket oluşturabilir" },
+      { key: "paket_duzenleyebilir", label: "Mevcut paketlerin içeriklerini düzenleyebilir" },
+      { key: "paket_ekstra_hak", label: "Kullanıcılara ekstra hak tanımlaması yapabilir" },
+    ],
+  },
+  {
+    label: "Destek",
+    items: [
+      { key: "destek_goruntule", label: "Destek taleplerini görüntüleyebilir" },
+      { key: "destek_cevap", label: "Destek taleplerine cevap verebilir" },
+    ],
+  },
+];
+
+// Collect all permission keys for defaults
+function getAllPermissionKeys(): string[] {
+  const keys: string[] = [];
+  function collect(items: PermissionItem[]) {
+    for (const item of items) {
+      keys.push(item.key);
+      if (item.children) collect(item.children);
+    }
+  }
+  PERMISSION_GROUPS.forEach(g => collect(g.items));
+  return keys;
+}
+
+const ALL_PERMISSION_KEYS = getAllPermissionKeys();
+const DEFAULT_PERMISSIONS = Object.fromEntries(ALL_PERMISSION_KEYS.map(k => [k, false]));
 
 const USERS_PER_PAGE = 10;
 
 export default function AdminKullanicilar() {
-  const { token, hasPermission, user: currentUser } = useAdminAuth();
+  const { token, user: currentUser } = useAdminAuth();
   const { toast } = useToast();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -180,19 +263,68 @@ export default function AdminKullanicilar() {
     }
   };
 
-  const canManage = hasPermission("kullanici_yonet") || currentUser?.is_primary;
-  const canAdd = hasPermission("kullanici_ekle") || currentUser?.is_primary;
+  const canManage = currentUser?.is_primary;
 
   const totalPages = Math.max(1, Math.ceil(users.length / USERS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
   const paginatedUsers = users.slice((safePage - 1) * USERS_PER_PAGE, safePage * USERS_PER_PAGE);
+
+  // Toggle permission with cascade: turning off parent turns off children
+  const togglePermission = (key: string, checked: boolean) => {
+    const newPerms = { ...form.permissions, [key]: checked };
+    if (!checked) {
+      // Find and disable all children recursively
+      function disableChildren(items: PermissionItem[]) {
+        for (const item of items) {
+          if (item.key === key && item.children) {
+            function disableAll(children: PermissionItem[]) {
+              for (const child of children) {
+                newPerms[child.key] = false;
+                if (child.children) disableAll(child.children);
+              }
+            }
+            disableAll(item.children);
+          }
+          if (item.children) disableChildren(item.children);
+        }
+      }
+      PERMISSION_GROUPS.forEach(g => disableChildren(g.items));
+    }
+    setForm({ ...form, permissions: newPerms });
+  };
+
+  // Render permission items recursively
+  const renderPermissionItems = (items: PermissionItem[], depth = 0) => {
+    return items.map((item) => {
+      const isChecked = form.permissions[item.key];
+      return (
+        <div key={item.key}>
+          <div className={`flex items-center gap-3 ${depth > 0 ? 'ml-6' : ''}`}>
+            <Checkbox
+              id={item.key}
+              checked={isChecked}
+              onCheckedChange={(checked) => togglePermission(item.key, !!checked)}
+              className="border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+            />
+            <Label htmlFor={item.key} className="text-slate-300 text-sm cursor-pointer">{item.label}</Label>
+          </div>
+          {/* Show children only if parent is checked */}
+          {item.children && isChecked && (
+            <div className="mt-2 space-y-2">
+              {renderPermissionItems(item.children, depth + 1)}
+            </div>
+          )}
+        </div>
+      );
+    });
+  };
 
   return (
     <AdminLayout title="Panel Kullanıcıları">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <p className="text-slate-400 text-sm">Yönetim paneline erişimi olan kullanıcıları yönetin.</p>
-          {canAdd && (
+          {canManage && (
             <Button onClick={openCreate} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
               <Plus className="w-4 h-4 mr-2" />
               Yeni Kullanıcı
@@ -409,7 +541,7 @@ export default function AdminKullanicilar() {
                 <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectContent className="bg-slate-800 border-slate-700 z-[300]">
                   {POZISYONLAR.map((p) => (
                     <SelectItem key={p} value={p} className="text-white hover:bg-slate-700">{p}</SelectItem>
                   ))}
@@ -419,21 +551,13 @@ export default function AdminKullanicilar() {
 
             <div className="space-y-3">
               <Label className="text-slate-300 text-base font-semibold">Erişilebilirlik Ayarları</Label>
-              <div className="space-y-3 bg-slate-700/30 rounded-lg p-4 border border-slate-700">
-                {Object.entries(PERMISSION_LABELS).map(([key, label]) => (
-                  <div key={key} className="flex items-center gap-3">
-                    <Checkbox
-                      id={key}
-                      checked={form.permissions[key]}
-                      onCheckedChange={(checked) =>
-                        setForm({
-                          ...form,
-                          permissions: { ...form.permissions, [key]: !!checked },
-                        })
-                      }
-                      className="border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
-                    />
-                    <Label htmlFor={key} className="text-slate-300 text-sm cursor-pointer">{label}</Label>
+              <div className="space-y-4 bg-slate-700/30 rounded-lg p-4 border border-slate-700">
+                {PERMISSION_GROUPS.map((group) => (
+                  <div key={group.label}>
+                    <p className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">{group.label}</p>
+                    <div className="space-y-2">
+                      {renderPermissionItems(group.items)}
+                    </div>
                   </div>
                 ))}
               </div>
