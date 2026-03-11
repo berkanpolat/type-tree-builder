@@ -18,6 +18,7 @@ interface Props {
   formData: IhaleFormData;
   updateForm: (u: Partial<IhaleFormData>) => void;
   ihaleId: string | null;
+  skipBirim?: boolean;
 }
 
 const PARA_BIRIMLERI = ["TRY", "USD", "EUR", "GBP"];
