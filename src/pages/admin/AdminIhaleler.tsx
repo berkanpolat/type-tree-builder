@@ -96,7 +96,6 @@ const TEKLIF_USULU_LABELS: Record<string, string> = {
 
 const DURUM_LABELS: Record<string, string> = {
   duzenleniyor: "Düzenleniyor",
-  taslak: "Taslak",
   onay_bekliyor: "Onay Bekliyor",
   devam_ediyor: "Devam Ediyor",
   tamamlandi: "Tamamlandı",
@@ -298,7 +297,7 @@ export default function AdminIhaleler() {
         if (statFilter.type === "completed" && i.durum !== "tamamlandi") return false;
         if (statFilter.type === "cancelled" && i.durum !== "iptal") return false;
         if (statFilter.type === "pending" && i.durum !== "onay_bekliyor") return false;
-        if (statFilter.type === "draft" && i.durum !== "duzenleniyor" && i.durum !== "taslak") return false;
+        if (statFilter.type === "draft" && i.durum !== "duzenleniyor") return false;
         if (statFilter.type === "urun_kat" && i.urun_kategori_id !== statFilter.value) return false;
         if (statFilter.type === "hizmet_kat" && i.hizmet_kategori_id !== statFilter.value) return false;
       }
@@ -379,7 +378,6 @@ export default function AdminIhaleler() {
       iptal: "bg-red-500/15 text-red-500 border-red-500/25",
       reddedildi: "bg-red-500/15 text-red-500 border-red-500/25",
       duzenleniyor: "bg-slate-500/15 text-slate-500 border-slate-500/25",
-      taslak: "bg-slate-500/15 text-slate-500 border-slate-500/25",
     };
     return <Badge variant="outline" className={`${colors[durum] || ""} text-[11px] px-2 py-0.5 font-medium`}>{DURUM_LABELS[durum] || durum}</Badge>;
   };
