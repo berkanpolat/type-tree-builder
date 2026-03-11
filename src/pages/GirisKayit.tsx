@@ -14,13 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Phone, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import authBg from "@/assets/auth-bg.jpg";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import CountryCodeSelect from "@/components/CountryCodeSelect";
 
 const GirisKayit = () => {
   const [activeTab, setActiveTab] = useState<"giris" | "kayit">("giris");
@@ -42,6 +43,7 @@ const GirisKayit = () => {
   const [soyad, setSoyad] = useState("");
   const [email, setEmail] = useState("");
   const [telefon, setTelefon] = useState("");
+  const [countryCode, setCountryCode] = useState("+90");
   const [password, setPassword] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
 
@@ -53,6 +55,12 @@ const GirisKayit = () => {
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(0);
 
+  // Build full phone number (strip leading 0)
+  const getFullPhone = () => {
+    const cleaned = telefon.replace(/\s/g, "").replace(/^0+/, "");
+    return `${countryCode}${cleaned}`;
+  };
+
   // Countdown timer for resend
   useEffect(() => {
     if (otpCountdown <= 0) return;
@@ -61,21 +69,35 @@ const GirisKayit = () => {
   }, [otpCountdown]);
 
   const handleSendOtp = async () => {
-    if (!telefon || telefon.length < 10) {
+    const fullPhone = getFullPhone();
+    if (!telefon || telefon.replace(/\s/g, "").replace(/^0+/, "").length < 7) {
       toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
       return;
     }
+
+    // Check duplicate phone
+    const { data: existingPhone } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("iletisim_numarasi", fullPhone)
+      .limit(1);
+
+    if (existingPhone && existingPhone.length > 0) {
+      toast({ title: "Hata", description: "Bu telefon numarası ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
+      return;
+    }
+
     setSendingOtp(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-sms-otp", {
-        body: { telefon },
+        body: { telefon: fullPhone },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
 
       setOtpSent(true);
-      setOtpCountdown(120); // 2 minute cooldown
-      toast({ title: "Kod gönderildi", description: `${telefon} numarasına doğrulama kodu gönderildi.` });
+      setOtpCountdown(120);
+      toast({ title: "Kod gönderildi", description: `${fullPhone} numarasına doğrulama kodu gönderildi.` });
     } catch (err: any) {
       toast({ title: "Hata", description: err.message, variant: "destructive" });
     } finally {
@@ -91,7 +113,7 @@ const GirisKayit = () => {
     setVerifyingOtp(true);
     try {
       const { data, error } = await supabase.functions.invoke("verify-sms-otp", {
-        body: { telefon, kod: otpCode },
+        body: { telefon: getFullPhone(), kod: otpCode },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
@@ -156,6 +178,21 @@ const GirisKayit = () => {
     }
     setRegisterLoading(true);
     try {
+      // Check duplicate email in profiles
+      const { data: existingEmail } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("iletisim_email", email)
+        .limit(1);
+
+      if (existingEmail && existingEmail.length > 0) {
+        toast({ title: "Hata", description: "Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
+        setRegisterLoading(false);
+        return;
+      }
+
+      const fullPhone = getFullPhone();
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -171,7 +208,7 @@ const GirisKayit = () => {
         p_ad: ad,
         p_soyad: soyad,
         p_iletisim_email: email,
-        p_iletisim_numarasi: telefon,
+        p_iletisim_numarasi: fullPhone,
         p_firma_turu_id: selectedTurId,
         p_firma_tipi_id: selectedTipId,
         p_firma_unvani: firmaUnvani,
@@ -364,8 +401,20 @@ const GirisKayit = () => {
               <div className="space-y-2">
                 <Label>İletişim Numarası</Label>
                 <div className="flex gap-2">
+                  <CountryCodeSelect
+                    value={countryCode}
+                    onChange={(code) => {
+                      setCountryCode(code);
+                      if (phoneVerified) {
+                        setPhoneVerified(false);
+                        setOtpSent(false);
+                        setOtpCode("");
+                      }
+                    }}
+                    disabled={phoneVerified}
+                  />
                   <Input
-                    placeholder="05XX XXX XX XX"
+                    placeholder="532 XXX XX XX"
                     value={telefon}
                     onChange={(e) => {
                       setTelefon(e.target.value);
@@ -384,7 +433,7 @@ const GirisKayit = () => {
                       type="button"
                       variant="outline"
                       onClick={handleSendOtp}
-                      disabled={sendingOtp || otpCountdown > 0 || !telefon || telefon.length < 10}
+                      disabled={sendingOtp || otpCountdown > 0 || !telefon || telefon.replace(/\s/g, "").replace(/^0+/, "").length < 7}
                       className="shrink-0"
                     >
                       {sendingOtp ? (
@@ -399,7 +448,7 @@ const GirisKayit = () => {
                     </Button>
                   )}
                   {phoneVerified && (
-                    <div className="flex items-center gap-1 text-sm text-green-600 shrink-0 px-2">
+                    <div className="flex items-center gap-1 text-sm shrink-0 px-2 text-primary">
                       <CheckCircle2 className="w-4 h-4" />
                       Doğrulandı
                     </div>
@@ -410,7 +459,7 @@ const GirisKayit = () => {
                 {otpSent && !phoneVerified && (
                   <div className="space-y-3 pt-2">
                     <p className="text-sm text-muted-foreground">
-                      {telefon} numarasına gönderilen 6 haneli kodu giriniz:
+                      {getFullPhone()} numarasına gönderilen 6 haneli kodu giriniz:
                     </p>
                     <div className="flex items-center gap-3">
                       <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
