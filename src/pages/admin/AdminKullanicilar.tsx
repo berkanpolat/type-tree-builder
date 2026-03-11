@@ -319,104 +319,103 @@ export default function AdminKullanicilar() {
     });
   };
 
+  const sCard = {
+    background: "hsl(var(--admin-card-bg))",
+    border: "1px solid hsl(var(--admin-border))",
+    borderRadius: "0.75rem",
+  } as CSSProperties;
+  const sText = { color: "hsl(var(--admin-text))" } as CSSProperties;
+  const sMuted = { color: "hsl(var(--admin-muted))" } as CSSProperties;
+  const sInput = {
+    background: "hsl(var(--admin-input-bg))",
+    borderColor: "hsl(var(--admin-border))",
+    color: "hsl(var(--admin-text))",
+  } as CSSProperties;
+
   return (
     <AdminLayout title="Panel Kullanıcıları">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <p className="text-slate-400 text-sm">Yönetim paneline erişimi olan kullanıcıları yönetin.</p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="text-sm" style={sMuted}>Yönetim paneline erişimi olan kullanıcıları yönetin.</p>
           {canManage && (
-            <Button onClick={openCreate} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white">
+            <Button onClick={openCreate} className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white shrink-0">
               <Plus className="w-4 h-4 mr-2" />
               Yeni Kullanıcı
             </Button>
           )}
         </div>
 
-        <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
+        <div className="rounded-xl overflow-hidden" style={sCard}>
           {loading ? (
             <div className="flex items-center justify-center p-12">
               <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-slate-700 hover:bg-transparent">
-                  <TableHead className="text-slate-400">Kullanıcı</TableHead>
-                  <TableHead className="text-slate-400">Kullanıcı No</TableHead>
-                  <TableHead className="text-slate-400">Pozisyon</TableHead>
-                  <TableHead className="text-slate-400">E-posta</TableHead>
-                  <TableHead className="text-slate-400">Telefon</TableHead>
-                  <TableHead className="text-slate-400">Rol</TableHead>
-                  {canManage && <TableHead className="text-slate-400 text-right">İşlemler</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedUsers.map((u) => (
-                  <TableRow key={u.id} className="border-slate-700 hover:bg-slate-700/30">
-                    <TableCell className="text-white font-medium">
-                      <div className="flex items-center gap-2">
-                        {u.is_primary ? (
-                          <Shield className="w-4 h-4 text-amber-400" />
-                        ) : (
-                          <UserCircle className="w-4 h-4 text-slate-500" />
-                        )}
-                        {u.ad} {u.soyad}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-slate-300 font-mono">{u.username}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="border-slate-600 text-slate-300">{u.pozisyon}</Badge>
-                    </TableCell>
-                    <TableCell className="text-slate-400">{u.email || "—"}</TableCell>
-                    <TableCell className="text-slate-400">{u.telefon || "—"}</TableCell>
-                    <TableCell>
-                      {u.is_primary ? (
-                        <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Ana Yönetici</Badge>
-                      ) : (
-                        <Badge variant="secondary" className="bg-slate-700 text-slate-300">Alt Kullanıcı</Badge>
-                      )}
-                    </TableCell>
-                    {canManage && (
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => openEdit(u)}
-                            className="text-slate-400 hover:text-white hover:bg-slate-700"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          {!u.is_primary && currentUser?.is_primary && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(u)}
-                              className="text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow style={{ borderColor: "hsl(var(--admin-border))" }} className="hover:bg-transparent">
+                    <TableHead style={sMuted}>Kullanıcı</TableHead>
+                    <TableHead style={sMuted} className="hidden md:table-cell">Kullanıcı No</TableHead>
+                    <TableHead style={sMuted}>Pozisyon</TableHead>
+                    <TableHead style={sMuted} className="hidden lg:table-cell">E-posta</TableHead>
+                    <TableHead style={sMuted} className="hidden lg:table-cell">Telefon</TableHead>
+                    <TableHead style={sMuted}>Rol</TableHead>
+                    {canManage && <TableHead style={sMuted} className="text-right">İşlemler</TableHead>}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedUsers.map((u) => (
+                    <TableRow key={u.id} style={{ borderColor: "hsl(var(--admin-border))" }} className="hover:opacity-80">
+                      <TableCell style={sText} className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {u.is_primary ? (
+                            <Shield className="w-4 h-4 text-amber-400 shrink-0" />
+                          ) : (
+                            <UserCircle className="w-4 h-4 shrink-0" style={sMuted} />
                           )}
+                          <span className="truncate">{u.ad} {u.soyad}</span>
                         </div>
                       </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      <TableCell className="font-mono hidden md:table-cell" style={sMuted}>{u.username}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>{u.pozisyon}</Badge>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell" style={sMuted}>{u.email || "—"}</TableCell>
+                      <TableCell className="hidden lg:table-cell" style={sMuted}>{u.telefon || "—"}</TableCell>
+                      <TableCell>
+                        {u.is_primary ? (
+                          <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">Ana Yönetici</Badge>
+                        ) : (
+                          <Badge variant="secondary" style={{ background: "hsl(var(--admin-hover))", color: "hsl(var(--admin-text))" }}>Alt Kullanıcı</Badge>
+                        )}
+                      </TableCell>
+                      {canManage && (
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => openEdit(u)} style={sMuted} className="hover:opacity-80">
+                              <Pencil className="w-4 h-4" />
+                            </Button>
+                            {!u.is_primary && currentUser?.is_primary && (
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(u)} className="text-red-400 hover:text-red-500 hover:bg-red-500/10">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-center gap-2 pt-2">
-            <Button
-              variant="outline" size="sm" disabled={safePage <= 1}
-              onClick={() => setCurrentPage(safePage - 1)}
-              className="text-xs border-slate-700 text-slate-300"
-            >
-              ← Önceki
-            </Button>
+            <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setCurrentPage(safePage - 1)}
+              className="text-xs" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>← Önceki</Button>
             {Array.from({ length: totalPages }, (_, i) => i + 1)
               .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 2)
               .reduce<(number | string)[]>((acc, p, idx, arr) => {
@@ -426,24 +425,18 @@ export default function AdminKullanicilar() {
               }, [])
               .map((p, idx) =>
                 typeof p === "string" ? (
-                  <span key={`ellipsis-${idx}`} className="px-1 text-xs text-slate-500">…</span>
+                  <span key={`ellipsis-${idx}`} className="px-1 text-xs" style={sMuted}>…</span>
                 ) : (
-                  <Button
-                    key={p} size="sm" variant={p === safePage ? "default" : "outline"}
+                  <Button key={p} size="sm" variant={p === safePage ? "default" : "outline"}
                     onClick={() => setCurrentPage(p as number)}
-                    className={p === safePage ? "bg-amber-500 hover:bg-amber-600 text-white text-xs w-8 h-8 p-0" : "text-xs w-8 h-8 p-0 border-slate-700 text-slate-300"}
-                  >
+                    className={p === safePage ? "bg-amber-500 hover:bg-amber-600 text-white text-xs w-8 h-8 p-0" : "text-xs w-8 h-8 p-0"}
+                    style={p !== safePage ? { borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" } : undefined}>
                     {p}
                   </Button>
                 )
               )}
-            <Button
-              variant="outline" size="sm" disabled={safePage >= totalPages}
-              onClick={() => setCurrentPage(safePage + 1)}
-              className="text-xs border-slate-700 text-slate-300"
-            >
-              Sonraki →
-            </Button>
+            <Button variant="outline" size="sm" disabled={safePage >= totalPages} onClick={() => setCurrentPage(safePage + 1)}
+              className="text-xs" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>Sonraki →</Button>
           </div>
         )}
       </div>
