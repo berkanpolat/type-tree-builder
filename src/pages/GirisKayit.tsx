@@ -477,13 +477,12 @@ const GirisKayit = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Vergi Dairesi</Label>
-                    <Input
-                      placeholder="Vergi Dairesi"
+                    <SearchableSelect
+                      options={VERGI_DAIRELERI.map((vd) => ({ value: vd, label: vd }))}
                       value={vergiDairesi}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ\s]/g, "");
-                        setVergiDairesi(val);
-                      }}
+                      onValueChange={setVergiDairesi}
+                      placeholder="Vergi Dairesi Seçiniz"
+                      searchPlaceholder="Vergi dairesi ara..."
                     />
                   </div>
                   <Button
