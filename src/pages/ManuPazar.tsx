@@ -59,6 +59,9 @@ export default function ManuPazar() {
   const [turler, setTurler] = useState<{ id: string; name: string }[]>([]);
   // Name maps
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   useEffect(() => {
     fetchData();
