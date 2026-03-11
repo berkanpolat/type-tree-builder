@@ -40,6 +40,7 @@ export interface IhaleFormData {
   baslangic_tarihi: string;
   bitis_tarihi: string;
   foto_url: string | null;
+  fotograflar: string[];
   ek_dosya_url: string | null;
   ozel_filtreleme: boolean;
   firma_adi_gizle: boolean;
@@ -72,6 +73,7 @@ const INITIAL_FORM: IhaleFormData = {
   baslangic_tarihi: "",
   bitis_tarihi: "",
   foto_url: null,
+  fotograflar: [],
   ek_dosya_url: null,
   ozel_filtreleme: false,
   firma_adi_gizle: false,
@@ -117,6 +119,7 @@ export default function YeniIhale() {
       let ihale: any = null;
       let filtreData: any[] = [];
       let stokData: any[] = [];
+      let fotoData: string[] = [];
 
       if (adminToken) {
         // Admin mode: fetch via edge function (bypasses RLS)
@@ -128,6 +131,7 @@ export default function YeniIhale() {
             ihale = data.ihale;
             filtreData = data.filtreler || [];
             stokData = data.stoklar || [];
+            fotoData = (data.fotograflar || []).map((f: any) => f.foto_url || f);
             setIsAdminMode(true);
           }
         } catch {}
@@ -150,12 +154,14 @@ export default function YeniIhale() {
           return;
         }
 
-        const [filtreRes, stokRes] = await Promise.all([
+        const [filtreRes, stokRes, fotoRes] = await Promise.all([
           supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", editId),
           supabase.from("ihale_stok").select("varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value, miktar_tipi, stok_sayisi").eq("ihale_id", editId),
+          supabase.from("ihale_fotograflar" as any).select("foto_url, sira").eq("ihale_id", editId).order("sira"),
         ]);
         filtreData = filtreRes.data || [];
         stokData = stokRes.data || [];
+        fotoData = (fotoRes.data || []).map((f: any) => f.foto_url);
       }
 
       const formatDatetime = (val: string | null) => {
@@ -190,6 +196,7 @@ export default function YeniIhale() {
         baslangic_tarihi: formatDatetime(ihale.baslangic_tarihi),
         bitis_tarihi: formatDatetime(ihale.bitis_tarihi),
         foto_url: ihale.foto_url,
+        fotograflar: fotoData.length > 0 ? fotoData : (ihale.foto_url ? [ihale.foto_url] : []),
         ek_dosya_url: ihale.ek_dosya_url,
         ozel_filtreleme: ihale.ozel_filtreleme || false,
         firma_adi_gizle: ihale.firma_adi_gizle || false,
@@ -332,7 +339,7 @@ export default function YeniIhale() {
       teslimat_yeri: formData.teslimat_yeri,
       baslangic_tarihi: formData.baslangic_tarihi || null,
       bitis_tarihi: formData.bitis_tarihi || null,
-      foto_url: formData.foto_url,
+      foto_url: formData.fotograflar[0] || formData.foto_url,
       ek_dosya_url: formData.ek_dosya_url,
       ozel_filtreleme: formData.ozel_filtreleme,
       firma_adi_gizle: formData.firma_adi_gizle,
@@ -355,6 +362,7 @@ export default function YeniIhale() {
           ihaleData: ihaleUpdateData,
           filtreler: formData.ozel_filtreleme ? formData.filtreler : [],
           stoklar: formData.stoklar,
+          fotograflar: formData.fotograflar,
         },
       });
       if (error || !data?.success) {
@@ -384,6 +392,14 @@ export default function YeniIhale() {
         await supabase.from("ihale_stok" as any).delete().eq("ihale_id", ihaleId);
         await supabase.from("ihale_stok" as any).insert(
           formData.stoklar.map((s) => ({ ihale_id: ihaleId, ...s }))
+        );
+      }
+
+      // Save fotograflar
+      await supabase.from("ihale_fotograflar" as any).delete().eq("ihale_id", ihaleId);
+      if (formData.fotograflar.length > 0) {
+        await supabase.from("ihale_fotograflar" as any).insert(
+          formData.fotograflar.map((url, i) => ({ ihale_id: ihaleId, foto_url: url, sira: i }))
         );
       }
     }

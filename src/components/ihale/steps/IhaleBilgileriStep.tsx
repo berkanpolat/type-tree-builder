@@ -111,25 +111,55 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "foto" | "ek") => {
-    const file = e.target.files?.[0];
-    if (!file || !ihaleId) return;
-    setUploading(true);
+    if (!ihaleId) return;
+    
+    if (type === "foto") {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      setUploading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setUploading(false); return; }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setUploading(false); return; }
 
-    const ext = file.name.split(".").pop();
-    const path = `${user.id}/${ihaleId}/${type}_${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("ihale-files").upload(path, file);
-
-    if (error) {
-      toast({ title: "Hata", description: "Dosya yüklenemedi.", variant: "destructive" });
+      const newUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const ext = file.name.split(".").pop();
+        const path = `${user.id}/${ihaleId}/foto_${Date.now()}_${i}.${ext}`;
+        const { error } = await supabase.storage.from("ihale-files").upload(path, file);
+        if (error) {
+          toast({ title: "Hata", description: `${file.name} yüklenemedi.`, variant: "destructive" });
+          continue;
+        }
+        const { data: urlData } = supabase.storage.from("ihale-files").getPublicUrl(path);
+        newUrls.push(urlData.publicUrl);
+      }
+      updateForm({ fotograflar: [...formData.fotograflar, ...newUrls], foto_url: formData.fotograflar[0] || newUrls[0] || null });
+      setUploading(false);
     } else {
-      const { data: urlData } = supabase.storage.from("ihale-files").getPublicUrl(path);
-      if (type === "foto") updateForm({ foto_url: urlData.publicUrl });
-      else updateForm({ ek_dosya_url: urlData.publicUrl });
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setUploading(true);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setUploading(false); return; }
+
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${ihaleId}/ek_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("ihale-files").upload(path, file);
+      if (error) {
+        toast({ title: "Hata", description: "Dosya yüklenemedi.", variant: "destructive" });
+      } else {
+        const { data: urlData } = supabase.storage.from("ihale-files").getPublicUrl(path);
+        updateForm({ ek_dosya_url: urlData.publicUrl });
+      }
+      setUploading(false);
     }
-    setUploading(false);
+  };
+
+  const removePhoto = (index: number) => {
+    const updated = formData.fotograflar.filter((_, i) => i !== index);
+    updateForm({ fotograflar: updated, foto_url: updated[0] || null });
   };
 
   const showMinTeklifDegisim = formData.teklif_usulu === "acik_indirme" || formData.teklif_usulu === "acik_arttirma";
@@ -283,21 +313,28 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Fotoğraf Yükleme {formData.ihale_turu === "urun_satis" && "*"}</Label>
-            <div className="border rounded-lg p-4 text-center">
-              {formData.foto_url ? (
-                <div className="relative">
-                  <img src={formData.foto_url} alt="" className="w-full h-32 object-cover rounded" />
-                  <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6" onClick={() => updateForm({ foto_url: null })}>
-                    <X className="w-4 h-4" />
-                  </Button>
+            <div className="border rounded-lg p-4 space-y-3">
+              {formData.fotograflar.length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {formData.fotograflar.map((url, i) => (
+                    <div key={i} className="relative group">
+                      <img src={url} alt="" className="w-full h-24 object-cover rounded border" />
+                      <Button variant="destructive" size="icon" className="absolute top-1 right-1 h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removePhoto(i)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                      {i === 0 && (
+                        <span className="absolute bottom-1 left-1 text-[10px] bg-primary text-primary-foreground px-1 rounded">Kapak</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground">
-                  <Upload className="w-8 h-8" />
-                  <span className="text-sm">Fotoğraf yükle</span>
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileUpload(e, "foto")} disabled={uploading} />
-                </label>
               )}
+              <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground border-2 border-dashed rounded-lg p-3">
+                <Upload className="w-6 h-6" />
+                <span className="text-sm">{formData.fotograflar.length > 0 ? "Daha fazla fotoğraf ekle" : "Fotoğraf yükle"}</span>
+                <span className="text-xs">Birden fazla seçebilirsiniz</span>
+                <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFileUpload(e, "foto")} disabled={uploading} />
+              </label>
             </div>
           </div>
           <div className="space-y-2">

@@ -363,9 +363,15 @@ export default function IhaleDetay() {
     if (!ihaleData) { setLoading(false); return; }
     setIhale(ihaleData);
 
-    // Images
-    const imgs: string[] = [];
-    if (ihaleData.foto_url) imgs.push(ihaleData.foto_url);
+    // Images - load from ihale_fotograflar table, fallback to foto_url
+    const { data: fotoRows } = await supabase
+      .from("ihale_fotograflar" as any)
+      .select("foto_url, sira")
+      .eq("ihale_id", id)
+      .order("sira");
+    
+    const imgs: string[] = (fotoRows || []).map((f: any) => f.foto_url);
+    if (imgs.length === 0 && ihaleData.foto_url) imgs.push(ihaleData.foto_url);
     setAllImages(imgs);
 
     // Resolve all secenek IDs

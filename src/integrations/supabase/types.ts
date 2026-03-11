@@ -1179,6 +1179,38 @@ export type Database = {
           },
         ]
       }
+      ihale_fotograflar: {
+        Row: {
+          created_at: string
+          foto_url: string
+          id: string
+          ihale_id: string
+          sira: number
+        }
+        Insert: {
+          created_at?: string
+          foto_url: string
+          id?: string
+          ihale_id: string
+          sira?: number
+        }
+        Update: {
+          created_at?: string
+          foto_url?: string
+          id?: string
+          ihale_id?: string
+          sira?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ihale_fotograflar_ihale_id_fkey"
+            columns: ["ihale_id"]
+            isOneToOne: false
+            referencedRelation: "ihaleler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ihale_stok: {
         Row: {
           created_at: string
