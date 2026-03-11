@@ -547,7 +547,21 @@ export default function FirmaDetay() {
         return;
       }
     }
-    navigate(`/mesajlar?userId=${firma.user_id}`);
+    // Create or get conversation via RPC
+    const { data: convId, error: rpcError } = await supabase.rpc("get_or_create_conversation", {
+      p_user1: currentUserId,
+      p_user2: firma.user_id,
+    });
+    if (rpcError || !convId) {
+      console.error("[FirmaDetay] RPC error:", rpcError);
+      return;
+    }
+    navigate("/mesajlar", {
+      state: {
+        openConversationId: convId,
+        otherUserId: firma.user_id,
+      },
+    });
   };
 
   const resolve = (idVal: string | null) => {
