@@ -220,7 +220,7 @@ function PaketContent({
   const lightMode = useAdminTheme();
 
   const cardStyle = {
-    background: `hsl(var(--admin-card))`,
+    background: `hsl(var(--admin-card-bg))`,
     borderColor: `hsl(var(--admin-border))`,
     color: `hsl(var(--admin-text))`,
   };
