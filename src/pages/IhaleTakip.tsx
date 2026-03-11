@@ -200,14 +200,23 @@ export default function IhaleTakip() {
       if (katData) setKategoriName(katData.name);
     }
 
-    // Fetch teklifler
-    const { data: teklifData } = await supabase
-      .from("ihale_teklifler")
-      .select("id, tutar, created_at, teklif_veren_user_id, durum, odeme_secenekleri, kargo_masrafi, odeme_vadesi, ek_dosya_url, ek_dosya_adi")
-      .eq("ihale_id", id)
-      .order("created_at", { ascending: false });
-
-    if (!teklifData || teklifData.length === 0) {
+    // Fetch teklifler - admin uses service role via edge function, normal user uses direct query
+    let teklifData: any[] = [];
+    if (adminToken) {
+      try {
+        const { data: adminRes } = await supabase.functions.invoke("admin-auth/get-ihale-teklifler", {
+          body: { token: adminToken, ihaleId: id },
+        });
+        teklifData = adminRes?.teklifler || [];
+      } catch {}
+    } else {
+      const { data } = await supabase
+        .from("ihale_teklifler")
+        .select("id, tutar, created_at, teklif_veren_user_id, durum, odeme_secenekleri, kargo_masrafi, odeme_vadesi, ek_dosya_url, ek_dosya_adi")
+        .eq("ihale_id", id)
+        .order("created_at", { ascending: false });
+      teklifData = data || [];
+    }
       setTeklifler([]);
       setLoading(false);
       return;
