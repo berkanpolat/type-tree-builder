@@ -102,19 +102,7 @@
 }
 
 /* Admin Panel Theme - CSS Variables on parent wrapper */
-/* Default admin vars on :root for portal-rendered elements (dialogs) */
-:root {
-  --admin-bg: 217 33% 12%;
-  --admin-sidebar: 217 33% 17%;
-  --admin-card-bg: 217 33% 17%;
-  --admin-header: 217 33% 15%;
-  --admin-text: 0 0% 100%;
-  --admin-text-secondary: 215 16% 65%;
-  --admin-muted: 215 16% 47%;
-  --admin-border: 217 33% 25%;
-  --admin-input-bg: 217 33% 22%;
-  --admin-hover: 217 33% 22%;
-}
+/* Also applied to :root via AdminLayout useEffect for portal-rendered elements */
 
 @layer components {
   .admin-dark {
