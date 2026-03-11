@@ -1,7 +1,6 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, CSSProperties } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,13 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Headphones,
   CheckCircle2,
@@ -38,6 +30,21 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+const s = {
+  card: {
+    background: "hsl(var(--admin-card-bg))",
+    border: "1px solid hsl(var(--admin-border))",
+    borderRadius: "0.75rem",
+  } as CSSProperties,
+  text: { color: "hsl(var(--admin-text))" } as CSSProperties,
+  muted: { color: "hsl(var(--admin-muted))" } as CSSProperties,
+  input: {
+    background: "hsl(var(--admin-input-bg))",
+    borderColor: "hsl(var(--admin-border))",
+    color: "hsl(var(--admin-text))",
+  } as CSSProperties,
+};
 
 interface DeskTalep {
   id: string;
@@ -66,8 +73,6 @@ interface DeskMesaj {
   created_at: string;
 }
 
-// Admin-side labels: cevaplandi = user sent last (admin needs to respond)
-// cevap_bekliyor = admin sent last (waiting for user)
 const durumLabels: Record<string, string> = {
   inceleniyor: "İnceleniyor",
   cevaplandi: "Cevaplandı",
@@ -75,11 +80,11 @@ const durumLabels: Record<string, string> = {
   cozuldu: "Çözüldü",
 };
 
-const durumColors: Record<string, string> = {
-  inceleniyor: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  cevaplandi: "bg-green-100 text-green-800 border-green-200",
-  cevap_bekliyor: "bg-blue-100 text-blue-800 border-blue-200",
-  cozuldu: "bg-red-100 text-red-800 border-red-200",
+const durumBadgeStyle: Record<string, { bg: string; text: string; border: string }> = {
+  inceleniyor: { bg: "rgba(234,179,8,0.1)", text: "#eab308", border: "rgba(234,179,8,0.25)" },
+  cevaplandi: { bg: "rgba(34,197,94,0.1)", text: "#22c55e", border: "rgba(34,197,94,0.25)" },
+  cevap_bekliyor: { bg: "rgba(59,130,246,0.1)", text: "#3b82f6", border: "rgba(59,130,246,0.25)" },
+  cozuldu: { bg: "rgba(239,68,68,0.1)", text: "#ef4444", border: "rgba(239,68,68,0.25)" },
 };
 
 type StatusFilter = "all" | "inceleniyor" | "cozuldu" | "cevaplandi" | "cevap_bekliyor";
@@ -92,7 +97,6 @@ const AdminDestek = () => {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [departmanFilter, setDepartmanFilter] = useState<string>("all");
 
-  // Detail dialog
   const [selectedTalep, setSelectedTalep] = useState<DeskTalep | null>(null);
   const [mesajlar, setMesajlar] = useState<DeskMesaj[]>([]);
   const [yeniMesaj, setYeniMesaj] = useState("");
@@ -124,10 +128,8 @@ const AdminDestek = () => {
     if (token) fetchTalepler();
   }, [token, fetchTalepler]);
 
-  // Get unique departments
   const departments = [...new Set(talepler.map((t) => t.departman))].sort();
 
-  // Apply filters
   const filtered = talepler.filter((t) => {
     if (statusFilter !== "all" && t.durum !== statusFilter) return false;
     if (departmanFilter !== "all" && t.departman !== departmanFilter) return false;
@@ -140,21 +142,19 @@ const AdminDestek = () => {
   const cevaplanan = talepler.filter((t) => t.durum === "cevaplandi").length;
   const cevapBekleyen = talepler.filter((t) => t.durum === "cevap_bekliyor").length;
 
-  // Department stats
   const departmanStats = departments.map((dep) => ({
     name: dep,
     count: talepler.filter((t) => t.departman === dep).length,
   }));
 
-  const statsCards: { title: string; value: number; icon: any; color: string; bgColor: string; filterKey: StatusFilter }[] = [
-    { title: "Toplam Talepler", value: toplam, icon: Headphones, color: "text-primary", bgColor: "bg-primary/10", filterKey: "all" },
-    { title: "İnceleniyor", value: incelenen, icon: Search, color: "text-yellow-500", bgColor: "bg-yellow-50", filterKey: "inceleniyor" },
-    { title: "Çözülen", value: cozulen, icon: CheckCircle2, color: "text-red-500", bgColor: "bg-red-50", filterKey: "cozuldu" },
-    { title: "Cevaplanan", value: cevaplanan, icon: MessageSquare, color: "text-green-500", bgColor: "bg-green-50", filterKey: "cevaplandi" },
-    { title: "Cevap Bekliyor", value: cevapBekleyen, icon: Clock, color: "text-blue-500", bgColor: "bg-blue-50", filterKey: "cevap_bekliyor" },
+  const statsCards: { title: string; value: number; icon: any; color: string; filterKey: StatusFilter }[] = [
+    { title: "Toplam Talepler", value: toplam, icon: Headphones, color: "text-amber-500", filterKey: "all" },
+    { title: "İnceleniyor", value: incelenen, icon: Search, color: "text-yellow-500", filterKey: "inceleniyor" },
+    { title: "Çözülen", value: cozulen, icon: CheckCircle2, color: "text-red-500", filterKey: "cozuldu" },
+    { title: "Cevaplanan", value: cevaplanan, icon: MessageSquare, color: "text-green-500", filterKey: "cevaplandi" },
+    { title: "Cevap Bekliyor", value: cevapBekleyen, icon: Clock, color: "text-blue-500", filterKey: "cevap_bekliyor" },
   ];
 
-  // Open detail
   const openDetail = async (talep: DeskTalep) => {
     setSelectedTalep(talep);
     setMesajLoading(true);
@@ -209,7 +209,6 @@ const AdminDestek = () => {
     if (data.success) {
       setYeniMesaj("");
       setEkDosya(null);
-      // Refresh messages and talep list
       const msgData = await adminCall("destek-mesajlar", { destekId: selectedTalep.id });
       if (msgData.mesajlar) setMesajlar(msgData.mesajlar);
       setSelectedTalep((prev) => prev ? { ...prev, durum: "cevap_bekliyor" } : null);
@@ -236,9 +235,9 @@ const AdminDestek = () => {
   };
 
   const calcDuration = (start: string, end?: string) => {
-    const s = new Date(start);
-    const e = end ? new Date(end) : new Date();
-    const mins = Math.floor((e.getTime() - s.getTime()) / 60000);
+    const startDate = new Date(start);
+    const endDate = end ? new Date(end) : new Date();
+    const mins = Math.floor((endDate.getTime() - startDate.getTime()) / 60000);
     const d = Math.floor(mins / 1440);
     const h = Math.floor((mins % 1440) / 60);
     const m = mins % 60;
@@ -249,44 +248,54 @@ const AdminDestek = () => {
     return parts.join(" ");
   };
 
+  const renderDurumBadge = (durum: string) => {
+    const ds = durumBadgeStyle[durum];
+    if (!ds) return <Badge variant="outline" className="text-[10px]">{durum}</Badge>;
+    return (
+      <Badge variant="outline" className="text-[10px]" style={{ background: ds.bg, color: ds.text, borderColor: ds.border }}>
+        {durumLabels[durum] || durum}
+      </Badge>
+    );
+  };
+
   return (
     <AdminLayout title="Destek Talepleri">
       <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {statsCards.map((stat) => (
-            <Card
+            <div
               key={stat.title}
-              className={`cursor-pointer transition-shadow hover:shadow-md ${statusFilter === stat.filterKey ? "ring-2 ring-amber-500" : ""}`}
+              className="cursor-pointer transition-shadow hover:shadow-md p-4 rounded-xl"
+              style={{
+                ...s.card,
+                ...(statusFilter === stat.filterKey ? { boxShadow: "0 0 0 2px #f59e0b" } : {}),
+              }}
               onClick={() => setStatusFilter(stat.filterKey)}
             >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium" style={{ color: "hsl(var(--admin-muted))" }}>
-                    {stat.title}
-                  </span>
-                  <div className={`p-1.5 rounded-full ${stat.bgColor}`}>
-                    <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
-                  </div>
-                </div>
-                <span className="text-2xl font-bold" style={{ color: "hsl(var(--admin-text))" }}>
-                  {stat.value}
-                </span>
-              </CardContent>
-            </Card>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium" style={s.muted}>{stat.title}</span>
+                <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
+              </div>
+              <span className="text-2xl font-bold" style={s.text}>{stat.value}</span>
+            </div>
           ))}
         </div>
 
         {/* Department Stats + Filter */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
-            <Building2 className="w-4 h-4" style={{ color: "hsl(var(--admin-muted))" }} />
-            <span className="text-sm font-medium" style={{ color: "hsl(var(--admin-text))" }}>Departman:</span>
+            <Building2 className="w-4 h-4" style={s.muted} />
+            <span className="text-sm font-medium" style={s.text}>Departman:</span>
           </div>
           <Badge
             variant="outline"
-            className={`cursor-pointer text-xs ${departmanFilter === "all" ? "bg-primary text-primary-foreground" : ""}`}
+            className="cursor-pointer text-xs"
             onClick={() => setDepartmanFilter("all")}
+            style={departmanFilter === "all"
+              ? { background: "rgba(245,158,11,0.15)", color: "#f59e0b", borderColor: "rgba(245,158,11,0.3)" }
+              : { borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }
+            }
           >
             Tümü ({toplam})
           </Badge>
@@ -294,8 +303,12 @@ const AdminDestek = () => {
             <Badge
               key={dep.name}
               variant="outline"
-              className={`cursor-pointer text-xs ${departmanFilter === dep.name ? "bg-primary text-primary-foreground" : ""}`}
+              className="cursor-pointer text-xs"
               onClick={() => setDepartmanFilter(dep.name)}
+              style={departmanFilter === dep.name
+                ? { background: "rgba(245,158,11,0.15)", color: "#f59e0b", borderColor: "rgba(245,158,11,0.3)" }
+                : { borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }
+              }
             >
               {dep.name} ({dep.count})
             </Badge>
@@ -305,23 +318,21 @@ const AdminDestek = () => {
         {/* Table */}
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <p style={{ color: "hsl(var(--admin-muted))" }}>Yükleniyor...</p>
+            <p style={s.muted}>Yükleniyor...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <Headphones className="w-12 h-12 mx-auto mb-4" style={{ color: "hsl(var(--admin-muted))" }} />
-              <p style={{ color: "hsl(var(--admin-muted))" }}>Bu filtrede destek talebi bulunamadı.</p>
-            </CardContent>
-          </Card>
+          <div className="p-12 text-center rounded-xl" style={s.card}>
+            <Headphones className="w-12 h-12 mx-auto mb-4" style={s.muted} />
+            <p style={s.muted}>Bu filtrede destek talebi bulunamadı.</p>
+          </div>
         ) : (
-          <Card>
+          <div className="rounded-xl overflow-hidden" style={s.card}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b" style={{ borderColor: "hsl(var(--admin-border))" }}>
                     {["Talep No", "Tarih", "Departman", "Konu", "Firma", "İlgili Kişi", "Durum", "İşlem"].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 font-medium text-xs" style={{ color: "hsl(var(--admin-muted))" }}>
+                      <th key={h} className="text-left px-4 py-3 font-medium text-xs" style={s.muted}>
                         {h}
                       </th>
                     ))}
@@ -334,31 +345,21 @@ const AdminDestek = () => {
                       className="border-b last:border-0 hover:opacity-80 transition-opacity"
                       style={{ borderColor: "hsl(var(--admin-border))" }}
                     >
-                      <td className="px-4 py-3 font-mono text-xs" style={{ color: "hsl(var(--admin-text))" }}>
-                        {talep.talep_no}
-                      </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: "hsl(var(--admin-muted))" }}>
+                      <td className="px-4 py-3 font-mono text-xs" style={s.text}>{talep.talep_no}</td>
+                      <td className="px-4 py-3 text-xs" style={s.muted}>
                         {new Date(talep.created_at).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" })}
                       </td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline" className="text-[10px]">{talep.departman}</Badge>
+                        <Badge variant="outline" className="text-[10px]" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>{talep.departman}</Badge>
                       </td>
-                      <td className="px-4 py-3 max-w-[180px] truncate" style={{ color: "hsl(var(--admin-text))" }}>
-                        {talep.konu}
-                      </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: "hsl(var(--admin-muted))" }}>
-                        {talep.firma_unvani || "—"}
-                      </td>
-                      <td className="px-4 py-3 text-xs" style={{ color: "hsl(var(--admin-muted))" }}>
+                      <td className="px-4 py-3 max-w-[180px] truncate" style={s.text}>{talep.konu}</td>
+                      <td className="px-4 py-3 text-xs" style={s.muted}>{talep.firma_unvani || "—"}</td>
+                      <td className="px-4 py-3 text-xs" style={s.muted}>
                         {talep.profile ? `${talep.profile.ad} ${talep.profile.soyad}` : "—"}
                       </td>
+                      <td className="px-4 py-3">{renderDurumBadge(talep.durum)}</td>
                       <td className="px-4 py-3">
-                        <Badge variant="outline" className={`text-[10px] ${durumColors[talep.durum] || ""}`}>
-                          {durumLabels[talep.durum] || talep.durum}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Button size="sm" variant="outline" onClick={() => openDetail(talep)}>
+                        <Button size="sm" variant="outline" onClick={() => openDetail(talep)} style={s.input}>
                           <Eye className="w-3 h-3 mr-1" /> Görüntüle
                         </Button>
                       </td>
@@ -367,30 +368,29 @@ const AdminDestek = () => {
                 </tbody>
               </table>
             </div>
-          </Card>
+          </div>
         )}
       </div>
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedTalep} onOpenChange={(open) => !open && setSelectedTalep(null)}>
-        <DialogContent className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent
+          className="max-w-5xl max-h-[85vh] overflow-hidden flex flex-col"
+          style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+        >
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex items-center gap-2" style={s.text}>
               Destek Kaydı — {selectedTalep?.talep_no}
-              {selectedTalep && (
-                <Badge variant="outline" className={`text-[10px] ${durumColors[selectedTalep.durum] || ""}`}>
-                  {durumLabels[selectedTalep.durum] || selectedTalep.durum}
-                </Badge>
-              )}
+              {selectedTalep && renderDurumBadge(selectedTalep.durum)}
             </DialogTitle>
           </DialogHeader>
 
           {selectedTalep && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1 overflow-hidden">
               {/* Left: Info */}
-              <div className="overflow-y-auto border rounded-lg">
-                <div className="px-4 py-3 border-b font-semibold text-sm">Kayıt Bilgileri</div>
-                <div className="divide-y text-sm">
+              <div className="overflow-y-auto rounded-lg" style={{ border: "1px solid hsl(var(--admin-border))" }}>
+                <div className="px-4 py-3 font-semibold text-sm" style={{ borderBottom: "1px solid hsl(var(--admin-border))", ...s.text }}>Kayıt Bilgileri</div>
+                <div className="text-sm">
                   {[
                     { label: "Kayıt No", value: selectedTalep.talep_no },
                     {
@@ -416,30 +416,28 @@ const AdminDestek = () => {
                       ),
                     },
                   ].map((row) => (
-                    <div key={row.label} className="flex px-4 py-2.5">
-                      <span className="w-36 shrink-0 text-muted-foreground font-medium">{row.label}</span>
-                      <span>{row.value}</span>
+                    <div key={row.label} className="flex px-4 py-2.5" style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
+                      <span className="w-36 shrink-0 font-medium" style={s.muted}>{row.label}</span>
+                      <span style={s.text}>{row.value}</span>
                     </div>
                   ))}
                 </div>
 
-                {/* Açıklama */}
-                <div className="px-4 py-3 border-t">
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Açıklama</p>
-                  <p className="text-sm whitespace-pre-wrap">{selectedTalep.aciklama}</p>
+                <div className="px-4 py-3" style={{ borderTop: "1px solid hsl(var(--admin-border))" }}>
+                  <p className="text-xs font-medium mb-1" style={s.muted}>Açıklama</p>
+                  <p className="text-sm whitespace-pre-wrap" style={s.text}>{selectedTalep.aciklama}</p>
                 </div>
 
                 {selectedTalep.ek_dosya_url && (
-                  <div className="px-4 py-2 border-t">
-                    <a href={selectedTalep.ek_dosya_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                  <div className="px-4 py-2" style={{ borderTop: "1px solid hsl(var(--admin-border))" }}>
+                    <a href={selectedTalep.ek_dosya_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-amber-500 hover:underline">
                       <Download className="w-3 h-3" /> {selectedTalep.ek_dosya_adi || "Ek dosya"}
                     </a>
                   </div>
                 )}
 
-                {/* Resolve button */}
                 {selectedTalep.durum !== "cozuldu" && (
-                  <div className="px-4 py-3 border-t">
+                  <div className="px-4 py-3" style={{ borderTop: "1px solid hsl(var(--admin-border))" }}>
                     <Button size="sm" variant="destructive" onClick={handleResolve} className="w-full">
                       <CheckCircle2 className="w-4 h-4 mr-2" /> Çözüldü Olarak İşaretle
                     </Button>
@@ -448,20 +446,26 @@ const AdminDestek = () => {
               </div>
 
               {/* Right: Messages */}
-              <div className="flex flex-col border rounded-lg overflow-hidden">
-                <div className="px-4 py-3 border-b font-semibold text-sm">Mesajlar</div>
+              <div className="flex flex-col rounded-lg overflow-hidden" style={{ border: "1px solid hsl(var(--admin-border))" }}>
+                <div className="px-4 py-3 font-semibold text-sm" style={{ borderBottom: "1px solid hsl(var(--admin-border))", ...s.text }}>Mesajlar</div>
 
                 <div ref={scrollRef} className="flex-1 overflow-y-auto p-3 space-y-2" style={{ maxHeight: "350px" }}>
                   {mesajLoading ? (
-                    <p className="text-sm text-center text-muted-foreground py-8">Yükleniyor...</p>
+                    <p className="text-sm text-center py-8" style={s.muted}>Yükleniyor...</p>
                   ) : mesajlar.length === 0 ? (
-                    <p className="text-sm text-center text-muted-foreground py-8">Henüz mesaj yok.</p>
+                    <p className="text-sm text-center py-8" style={s.muted}>Henüz mesaj yok.</p>
                   ) : (
                     mesajlar.map((m) => {
                       const isAdmin = m.sender_type === "admin";
                       return (
                         <div key={m.id} className={`flex ${isAdmin ? "justify-end" : "justify-start"}`}>
-                          <div className={`max-w-[80%] rounded-lg p-2.5 ${isAdmin ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
+                          <div
+                            className="max-w-[80%] rounded-lg p-2.5"
+                            style={isAdmin
+                              ? { background: "#f59e0b", color: "#fff" }
+                              : { background: "hsl(var(--admin-input-bg))", color: "hsl(var(--admin-text))" }
+                            }
+                          >
                             <div className="flex items-center gap-1 mb-0.5">
                               {isAdmin ? <Headphones className="w-3 h-3" /> : <User className="w-3 h-3" />}
                               <span className="text-[10px] font-medium opacity-70">
@@ -487,29 +491,26 @@ const AdminDestek = () => {
 
                 {/* Input */}
                 {selectedTalep.durum === "cozuldu" ? (
-                  <div className="border-t p-3">
-                    <div className="flex items-center gap-2 p-2 rounded-md bg-yellow-50 border border-yellow-200">
-                      <AlertCircle className="w-4 h-4 text-yellow-600 shrink-0" />
-                      <p className="text-xs text-yellow-700">Destek talebi çözüldü. Mesaj gönderilemez.</p>
+                  <div className="p-3" style={{ borderTop: "1px solid hsl(var(--admin-border))" }}>
+                    <div className="flex items-center gap-2 p-2 rounded-md" style={{ background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.25)" }}>
+                      <AlertCircle className="w-4 h-4 text-yellow-500 shrink-0" />
+                      <p className="text-xs" style={{ color: "#eab308" }}>Destek talebi çözüldü. Mesaj gönderilemez.</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="border-t p-3 space-y-2">
+                  <div className="p-3 space-y-2" style={{ borderTop: "1px solid hsl(var(--admin-border))" }}>
                     {ekDosya && (
-                      <div className="flex items-center gap-2 p-2 border rounded-md bg-muted/30 text-sm">
-                        <Paperclip className="w-3 h-3 text-muted-foreground" />
-                        <span className="truncate flex-1 text-xs">{ekDosya.name}</span>
-                        <button
-                          onClick={() => setEkDosya(null)}
-                          className="text-muted-foreground hover:text-destructive"
-                        >
+                      <div className="flex items-center gap-2 p-2 rounded-md text-sm" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                        <Paperclip className="w-3 h-3" style={s.muted} />
+                        <span className="truncate flex-1 text-xs" style={s.text}>{ekDosya.name}</span>
+                        <button onClick={() => setEkDosya(null)} className="hover:opacity-70" style={s.muted}>
                           <X className="w-3 h-3" />
                         </button>
                       </div>
                     )}
                     <div className="flex items-end gap-2">
-                      <label className="p-2 rounded-md hover:bg-muted cursor-pointer transition-colors shrink-0">
-                        <Upload className="w-4 h-4 text-muted-foreground" />
+                      <label className="p-2 rounded-md cursor-pointer transition-colors shrink-0 hover:opacity-70" style={s.muted}>
+                        <Upload className="w-4 h-4" />
                         <input
                           type="file"
                           className="hidden"
@@ -522,6 +523,7 @@ const AdminDestek = () => {
                         onChange={(e) => setYeniMesaj(e.target.value)}
                         rows={2}
                         className="resize-none flex-1"
+                        style={s.input}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
@@ -529,7 +531,7 @@ const AdminDestek = () => {
                           }
                         }}
                       />
-                      <Button size="icon" onClick={handleSendMessage} disabled={sending || !yeniMesaj.trim()}>
+                      <Button size="icon" onClick={handleSendMessage} disabled={sending || !yeniMesaj.trim()} className="bg-amber-500 hover:bg-amber-600 text-white">
                         <Send className="w-4 h-4" />
                       </Button>
                     </div>
