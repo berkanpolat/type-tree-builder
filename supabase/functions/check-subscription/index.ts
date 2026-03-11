@@ -213,7 +213,7 @@ function jsonResponse(data: any) {
 async function ensureFreePackage(supabase: any, userId: string) {
   const { data: freePaket } = await supabase
     .from("paketler")
-    .select("id")
+    .select("id, aktif_urun_limiti")
     .eq("slug", "ucretsiz")
     .single();
 
@@ -229,8 +229,9 @@ async function ensureFreePackage(supabase: any, userId: string) {
     .eq("user_id", userId)
     .single();
 
+  const wasDowngraded = existing && existing.paket_id !== freePaket.id;
+
   if (existing) {
-    // Update to free if not already
     const { error } = await supabase
       .from("kullanici_abonelikler")
       .update({
@@ -259,12 +260,17 @@ async function ensureFreePackage(supabase: any, userId: string) {
     if (error) logStep("ensureFreePackage insert error", { error });
     else logStep("ensureFreePackage: inserted free");
   }
+
+  // Deactivate excess products if downgraded from a higher package
+  if (wasDowngraded) {
+    await deactivateExcessProducts(supabase, userId, freePaket.aktif_urun_limiti);
+  }
 }
 
 async function downgradeToFree(supabase: any, userId: string) {
   const { data: freePaket } = await supabase
     .from("paketler")
-    .select("id")
+    .select("id, aktif_urun_limiti")
     .eq("slug", "ucretsiz")
     .single();
 
@@ -285,5 +291,39 @@ async function downgradeToFree(supabase: any, userId: string) {
 
     if (error) logStep("downgradeToFree error", { error });
     else logStep("downgradeToFree: success");
+
+    // Deactivate excess active products beyond free limit
+    await deactivateExcessProducts(supabase, userId, freePaket.aktif_urun_limiti);
   }
+}
+
+async function deactivateExcessProducts(supabase: any, userId: string, limit: number) {
+  const { data: activeProducts, error: fetchError } = await supabase
+    .from("urunler")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("durum", "aktif")
+    .order("created_at", { ascending: true });
+
+  if (fetchError || !activeProducts) {
+    logStep("deactivateExcessProducts fetch error", { error: fetchError });
+    return;
+  }
+
+  if (activeProducts.length <= limit) {
+    logStep("deactivateExcessProducts: no excess", { active: activeProducts.length, limit });
+    return;
+  }
+
+  // Keep the oldest products, deactivate the rest
+  const toDeactivate = activeProducts.slice(limit).map((p: any) => p.id);
+  logStep("deactivateExcessProducts: deactivating", { count: toDeactivate.length, limit });
+
+  const { error: updateError } = await supabase
+    .from("urunler")
+    .update({ durum: "pasif", updated_at: new Date().toISOString() })
+    .in("id", toDeactivate);
+
+  if (updateError) logStep("deactivateExcessProducts update error", { error: updateError });
+  else logStep("deactivateExcessProducts: success", { deactivated: toDeactivate.length });
 }
