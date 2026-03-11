@@ -117,8 +117,10 @@ type SortDir = "asc" | "desc";
 type StatFilterType = "all" | "aktif" | "pasif" | "onay_bekliyor" | "reddedildi" | "taslak" | "kategori" | "tur";
 
 export default function AdminUrunler() {
-  const { token } = useAdminAuth();
+  const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
+
+  const noPermission = () => toast({ title: "Yetkisiz", description: "Buna yetkiniz yok", variant: "destructive" });
 
   const [urunler, setUrunler] = useState<UrunItem[]>([]);
   const [stats, setStats] = useState<UrunStats | null>(null);
