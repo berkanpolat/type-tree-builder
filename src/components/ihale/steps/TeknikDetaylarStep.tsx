@@ -14,6 +14,13 @@ interface Props {
   updateForm: (u: Partial<IhaleFormData>) => void;
 }
 
+const normalizeText = (value: string) =>
+  value
+    .toLocaleLowerCase("tr")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
 function useCategoryName(id: string) {
   return useQuery({
     queryKey: ["secenek_name", id],
@@ -26,13 +33,32 @@ function useCategoryName(id: string) {
   });
 }
 
-function useKategoriSecenekler(kategoriName: string) {
+function useKategoriSecenekler(kategoriName: string | string[]) {
   return useQuery({
-    queryKey: ["teknik_secenekler", kategoriName],
+    queryKey: ["teknik_secenekler", ...(Array.isArray(kategoriName) ? kategoriName : [kategoriName])],
     queryFn: async () => {
-      const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", kategoriName).single();
-      if (!kat) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("kategori_id", kat.id).is("parent_id", null).order("name");
+      const names = Array.isArray(kategoriName) ? kategoriName : [kategoriName];
+
+      const { data: kategoriler } = await supabase
+        .from("firma_bilgi_kategorileri")
+        .select("id, name")
+        .in("name", names);
+
+      if (!kategoriler?.length) return [];
+
+      const seciliKategori = names
+        .map((name) => kategoriler.find((k) => k.name === name))
+        .find(Boolean);
+
+      if (!seciliKategori) return [];
+
+      const { data } = await supabase
+        .from("firma_bilgi_secenekleri")
+        .select("*")
+        .eq("kategori_id", seciliKategori.id)
+        .is("parent_id", null)
+        .order("name");
+
       return sortSecenekler(data || []);
     },
   });
@@ -51,7 +77,7 @@ function useChildOptions(parentId: string | null) {
 }
 
 // Multi-select dropdown field that fetches from DB category
-function MultiDropdownField({ label, kategoriName, value, onChange }: { label: string; kategoriName: string; value: string[]; onChange: (v: string[]) => void }) {
+function MultiDropdownField({ label, kategoriName, value, onChange }: { label: string; kategoriName: string | string[]; value: string[]; onChange: (v: string[]) => void }) {
   const { data: options } = useKategoriSecenekler(kategoriName);
   return (
     <div className="space-y-2">
@@ -92,7 +118,7 @@ function TextField({ label, value, onChange, placeholder }: { label: string; val
   );
 }
 
-function SearchableDropdownField({ label, kategoriName, value, onChange }: { label: string; kategoriName: string; value: string; onChange: (v: string) => void }) {
+function SearchableDropdownField({ label, kategoriName, value, onChange }: { label: string; kategoriName: string | string[]; value: string; onChange: (v: string) => void }) {
   const { data: options } = useKategoriSecenekler(kategoriName);
   return (
     <div className="space-y-2">
@@ -111,6 +137,7 @@ function SearchableDropdownField({ label, kategoriName, value, onChange }: { lab
 export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
   const { data: kategoriName } = useCategoryName(formData.urun_kategori_id || formData.hizmet_kategori_id);
   const { data: grupName } = useCategoryName(formData.urun_grup_id || formData.hizmet_tur_id);
+  const { data: turName } = useCategoryName(formData.urun_tur_id);
 
   const td = formData.teknik_detaylar;
   const setTD = (key: string, value: any) => {
@@ -127,9 +154,10 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
   };
 
   const renderUrunFields = () => {
-    const cat = kategoriName?.toLowerCase() || "";
+    const taxonomy = [kategoriName, grupName, turName].filter(Boolean).join(" ");
+    const cat = normalizeText(taxonomy);
 
-    if (cat.includes("hazır giyim")) {
+    if (cat.includes("hazir giyim")) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
@@ -176,7 +204,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
           <TextField label="İplik Kompozisyonu" value={td.iplik_kompozisyonu} onChange={(v) => setTD("iplik_kompozisyonu", v)} />
           <MultiDropdownField label="Büküm Tipi" kategoriName="Büküm Tipi" value={toArr(td.bukum_tipi)} onChange={(v) => setTD("bukum_tipi", v)} />
           <MultiDropdownField label="Mukavemet" kategoriName="Mukavemet" value={toArr(td.mukavemet)} onChange={(v) => setTD("mukavemet", v)} />
-          <MultiDropdownField label="İplik Numara Bilgisi" kategoriName="İplik Numarası" value={toArr(td.iplik_numarasi)} onChange={(v) => setTD("iplik_numarasi", v)} />
+          <MultiDropdownField label="İplik Numara Bilgisi" kategoriName={["İplik Numara Bilgisi", "İplik Numarası"]} value={toArr(td.iplik_numarasi)} onChange={(v) => setTD("iplik_numarasi", v)} />
           <MultiDropdownField label="Paket Tipi" kategoriName="Paket Tipi" value={toArr(td.paket_tipi)} onChange={(v) => setTD("paket_tipi", v)} />
         </>
       );
@@ -201,7 +229,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("kumaş")) {
+    if (cat.includes("kumas")) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
@@ -217,7 +245,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("makine") || cat.includes("yedek parça")) {
+    if (cat.includes("makine") || cat.includes("yedek parca")) {
       const years = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
       return (
         <>
@@ -259,6 +287,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       <p className="text-sm text-muted-foreground mb-6">
         {kategoriName && <span>Kategori: <strong>{kategoriName}</strong></span>}
         {grupName && <span> / {grupName}</span>}
+        {turName && <span> / {turName}</span>}
       </p>
 
       <div className="space-y-4 max-w-2xl">

@@ -16,6 +16,13 @@ interface Props {
   updateForm: (u: Partial<IhaleFormData>) => void;
 }
 
+const normalizeText = (value: string) =>
+  value
+    .toLocaleLowerCase("tr")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
 function useCategoryName(id: string) {
   return useQuery({
     queryKey: ["secenek_name", id],
@@ -42,16 +49,21 @@ function useKategoriSecenekler(kategoriName: string) {
 
 export default function StokStep({ formData, updateForm }: Props) {
   const { data: kategoriName } = useCategoryName(formData.urun_kategori_id || formData.hizmet_kategori_id);
-  const isHazirGiyim = kategoriName?.toLowerCase().includes("hazır giyim");
+  const { data: grupName } = useCategoryName(formData.urun_grup_id || formData.hizmet_tur_id);
 
-  const varyant1Label = isHazirGiyim ? "Beden" : "Varyant";
-  const varyant1KategoriName = isHazirGiyim ? "Beden" : "Beden";
+  const normalizedCategoryText = normalizeText([kategoriName || "", grupName || ""].join(" "));
+  const isHazirGiyim =
+    normalizedCategoryText.includes("hazir giyim (satis)") ||
+    normalizedCategoryText.includes("hazir giyim (uretim)") ||
+    normalizedCategoryText === "hazir giyim";
+
+  const varyant1Label = "Beden";
   const varyant2Label = "Renk";
 
   // Birim comes from İhale Bilgileri step - no separate birim selection here
   const birimFromForm = formData.birim || "Adet";
 
-  const { data: varyant1Options } = useKategoriSecenekler(varyant1KategoriName);
+  const { data: varyant1Options } = useKategoriSecenekler("Beden");
   const { data: renkOptions } = useKategoriSecenekler("Renk");
 
   const [selectedV1, setSelectedV1] = useState<string[]>([]);
@@ -60,6 +72,23 @@ export default function StokStep({ formData, updateForm }: Props) {
   const getOptionName = (options: any[] | undefined, id: string) => options?.find((o) => o.id === id)?.name || id;
 
   const handleGenerate = () => {
+    if (!isHazirGiyim) {
+      if (formData.stoklar.length > 0) return;
+      updateForm({
+        stoklar: [
+          {
+            varyant_1_label: "Stok",
+            varyant_1_value: "Genel",
+            varyant_2_label: undefined,
+            varyant_2_value: undefined,
+            miktar_tipi: birimFromForm,
+            stok_sayisi: 0,
+          },
+        ],
+      });
+      return;
+    }
+
     const newStoklar: IhaleFormData["stoklar"] = [];
     for (const v1 of selectedV1) {
       for (const v2 of selectedV2) {
@@ -104,60 +133,71 @@ export default function StokStep({ formData, updateForm }: Props) {
       </p>
 
       <div className="border rounded-lg p-4 space-y-4">
-        <div className="flex items-center gap-4 flex-wrap">
-          {/* Varyant 1 selection */}
-          <div className="flex-1 min-w-[200px]">
-            <Label className="text-sm mb-2 block">{varyant1Label}</Label>
-            <div className="flex flex-wrap gap-1 border rounded-lg p-2 min-h-[40px]">
-              {selectedV1.map((id) => (
-                <Badge key={id} variant="secondary" className="gap-1">
-                  {getOptionName(varyant1Options, id)}
-                  <button onClick={() => toggleSelection(selectedV1, setSelectedV1, id)}><X className="w-3 h-3" /></button>
-                </Badge>
-              ))}
-              <SearchableSelect
-                options={(varyant1Options || []).filter((o) => !selectedV1.includes(o.id)).map(o => ({ value: o.id, label: o.name }))}
-                value=""
-                onValueChange={(v) => { if (v) toggleSelection(selectedV1, setSelectedV1, v); }}
-                placeholder="Ekle..."
-                searchPlaceholder="Ara..."
-                triggerClassName="border-0 shadow-none h-8 min-w-[100px]"
-              />
+        {isHazirGiyim ? (
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* Varyant 1 selection */}
+            <div className="flex-1 min-w-[200px]">
+              <Label className="text-sm mb-2 block">{varyant1Label}</Label>
+              <div className="flex flex-wrap gap-1 border rounded-lg p-2 min-h-[40px]">
+                {selectedV1.map((id) => (
+                  <Badge key={id} variant="secondary" className="gap-1">
+                    {getOptionName(varyant1Options, id)}
+                    <button type="button" onClick={() => toggleSelection(selectedV1, setSelectedV1, id)}><X className="w-3 h-3" /></button>
+                  </Badge>
+                ))}
+                <SearchableSelect
+                  options={(varyant1Options || []).filter((o) => !selectedV1.includes(o.id)).map(o => ({ value: o.id, label: o.name }))}
+                  value=""
+                  onValueChange={(v) => { if (v) toggleSelection(selectedV1, setSelectedV1, v); }}
+                  placeholder="Ekle..."
+                  searchPlaceholder="Ara..."
+                  triggerClassName="border-0 shadow-none h-8 min-w-[100px]"
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Varyant 2 (Renk) selection */}
-          <div className="flex-1 min-w-[200px]">
-            <Label className="text-sm mb-2 block">{varyant2Label}</Label>
-            <div className="flex flex-wrap gap-1 border rounded-lg p-2 min-h-[40px]">
-              {selectedV2.map((id) => (
-                <Badge key={id} variant="secondary" className="gap-1">
-                  {getOptionName(renkOptions, id)}
-                  <button onClick={() => toggleSelection(selectedV2, setSelectedV2, id)}><X className="w-3 h-3" /></button>
-                </Badge>
-              ))}
-              <SearchableSelect
-                options={(renkOptions || []).filter((o) => !selectedV2.includes(o.id)).map(o => ({ value: o.id, label: o.name }))}
-                value=""
-                onValueChange={(v) => { if (v) toggleSelection(selectedV2, setSelectedV2, v); }}
-                placeholder="Ekle..."
-                searchPlaceholder="Ara..."
-                triggerClassName="border-0 shadow-none h-8 min-w-[100px]"
-              />
+            {/* Varyant 2 (Renk) selection */}
+            <div className="flex-1 min-w-[200px]">
+              <Label className="text-sm mb-2 block">{varyant2Label}</Label>
+              <div className="flex flex-wrap gap-1 border rounded-lg p-2 min-h-[40px]">
+                {selectedV2.map((id) => (
+                  <Badge key={id} variant="secondary" className="gap-1">
+                    {getOptionName(renkOptions, id)}
+                    <button type="button" onClick={() => toggleSelection(selectedV2, setSelectedV2, id)}><X className="w-3 h-3" /></button>
+                  </Badge>
+                ))}
+                <SearchableSelect
+                  options={(renkOptions || []).filter((o) => !selectedV2.includes(o.id)).map(o => ({ value: o.id, label: o.name }))}
+                  value=""
+                  onValueChange={(v) => { if (v) toggleSelection(selectedV2, setSelectedV2, v); }}
+                  placeholder="Ekle..."
+                  searchPlaceholder="Ara..."
+                  triggerClassName="border-0 shadow-none h-8 min-w-[100px]"
+                />
+              </div>
             </div>
-          </div>
 
-          <Button onClick={handleGenerate} disabled={selectedV1.length === 0 || selectedV2.length === 0} className="mt-6">
-            <Plus className="w-4 h-4 mr-1" /> Ekle
-          </Button>
-        </div>
+            <Button onClick={handleGenerate} disabled={selectedV1.length === 0 || selectedV2.length === 0} className="mt-6">
+              <Plus className="w-4 h-4 mr-1" /> Ekle
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-end justify-between gap-4 flex-wrap">
+            <p className="text-sm text-muted-foreground">
+              Bu kategoride varyant seçimi yok. Tek stok satırı üzerinden devam edilir.
+            </p>
+            <Button onClick={handleGenerate} disabled={formData.stoklar.length > 0}>
+              <Plus className="w-4 h-4 mr-1" /> Stok satırı ekle
+            </Button>
+          </div>
+        )}
 
         {formData.stoklar.length > 0 && (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{varyant1Label}</TableHead>
-                <TableHead>{varyant2Label}</TableHead>
+                {isHazirGiyim && <TableHead>{varyant1Label}</TableHead>}
+                {isHazirGiyim && <TableHead>{varyant2Label}</TableHead>}
                 <TableHead>Birim</TableHead>
                 <TableHead>Stok</TableHead>
                 <TableHead>Sil</TableHead>
@@ -166,8 +206,8 @@ export default function StokStep({ formData, updateForm }: Props) {
             <TableBody>
               {formData.stoklar.map((stok, i) => (
                 <TableRow key={i}>
-                  <TableCell>{stok.varyant_1_value}</TableCell>
-                  <TableCell>{stok.varyant_2_value}</TableCell>
+                  {isHazirGiyim && <TableCell>{stok.varyant_1_value}</TableCell>}
+                  {isHazirGiyim && <TableCell>{stok.varyant_2_value}</TableCell>}
                   <TableCell>{birimFromForm}</TableCell>
                   <TableCell>
                     <Input
