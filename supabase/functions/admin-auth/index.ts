@@ -368,6 +368,7 @@ Deno.serve(async (req) => {
         });
       }
 
+      await logActivity(supabase, payload, action, { target_type: "firma", target_id: firmaId, target_label: firma.firma_unvani, details: { new_status: newStatus } });
       return jsonResponse({ success: true, status: newStatus });
     }
 
