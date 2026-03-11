@@ -1,11 +1,15 @@
-import { useState } from "react";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { useState, useRef, useEffect } from "react";
+import { Search, ChevronDown } from "lucide-react";
 
 interface SearchResult {
   id: string;
   name: string;
   type: string;
+}
+
+interface FirmaTuruOption {
+  id: string;
+  name: string;
 }
 
 interface HeroSearchSectionProps {
@@ -19,6 +23,10 @@ interface HeroSearchSectionProps {
   onShowDropdown: (show: boolean) => void;
   onSearchResultClick: (result: SearchResult) => void;
   searchRef: React.RefObject<HTMLDivElement>;
+  // Optional: firma türü dropdown (used in TekRehber)
+  firmaTuruOptions?: FirmaTuruOption[];
+  selectedFirmaTuru?: string;
+  onFirmaTuruChange?: (id: string) => void;
 }
 
 const HeroSearchSection = ({
@@ -32,8 +40,26 @@ const HeroSearchSection = ({
   onShowDropdown,
   onSearchResultClick,
   searchRef,
+  firmaTuruOptions,
+  selectedFirmaTuru,
+  onFirmaTuruChange,
 }: HeroSearchSectionProps) => {
   const [focused, setFocused] = useState(false);
+  const [turDropdownOpen, setTurDropdownOpen] = useState(false);
+  const turDropdownRef = useRef<HTMLDivElement>(null);
+
+  const selectedTurName = firmaTuruOptions?.find((t) => t.id === selectedFirmaTuru)?.name || "Firma Türü";
+
+  // Close firma türü dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (turDropdownRef.current && !turDropdownRef.current.contains(e.target as Node)) {
+        setTurDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   return (
     <div className="relative rounded-xl z-30">
@@ -75,6 +101,40 @@ const HeroSearchSection = ({
                     : "border-transparent"
                 }`}
               >
+                {/* Firma Türü Dropdown (optional) */}
+                {firmaTuruOptions && firmaTuruOptions.length > 0 && (
+                  <div className="relative" ref={turDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => setTurDropdownOpen(!turDropdownOpen)}
+                      className="flex items-center gap-1 text-sm font-medium text-foreground/70 hover:text-foreground border-r border-border pr-3 mr-2 py-1.5 whitespace-nowrap transition-colors"
+                    >
+                      {selectedTurName}
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${turDropdownOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {turDropdownOpen && (
+                      <div className="absolute top-full left-0 mt-2 bg-background border border-border rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.15)] z-[230] min-w-[180px] py-1 overflow-hidden">
+                        {firmaTuruOptions.map((tur) => (
+                          <button
+                            key={tur.id}
+                            onMouseDown={() => {
+                              onFirmaTuruChange?.(tur.id);
+                              setTurDropdownOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                              selectedFirmaTuru === tur.id
+                                ? "bg-secondary/10 text-secondary font-semibold"
+                                : "text-foreground hover:bg-muted"
+                            }`}
+                          >
+                            {tur.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <Search className="w-4 h-4 text-foreground/35 flex-shrink-0" />
                 <input
                   type="text"
