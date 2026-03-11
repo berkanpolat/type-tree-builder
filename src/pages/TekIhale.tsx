@@ -560,14 +560,22 @@ export default function TekIhale() {
             )}
 
             {/* Alt banner */}
-            {ihaleAltBanner.url && (
-              <div
-                className="rounded-xl overflow-hidden mt-4 h-32 cursor-pointer"
-                onClick={() => ihaleAltBanner.linkUrl && window.open(ihaleAltBanner.linkUrl, "_blank")}
-              >
+            <div
+              className="rounded-xl overflow-hidden mt-4 h-32 cursor-pointer"
+              style={ihaleAltBanner.url ? undefined : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }}
+              onClick={() => ihaleAltBanner.linkUrl && window.open(ihaleAltBanner.linkUrl, "_blank")}
+            >
+              {ihaleAltBanner.url ? (
                 <img src={ihaleAltBanner.url} alt="Reklam" className="w-full h-full object-cover" />
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center px-8 h-full">
+                  <div>
+                    <p className="text-primary-foreground text-lg font-bold">Tekstil A.Ş. ile Güvenle İhale Açın</p>
+                    <p className="text-primary-foreground/70 text-sm mt-1">Binlerce doğrulanmış tedarikçi, rekabetçi fiyatlar</p>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -1506,14 +1506,22 @@ export default function IhaleDetay() {
         </div>
 
         {/* Banner */}
-        {ihaleDetayBanner.url && (
-          <div
-            className="rounded-xl overflow-hidden mt-8 h-32 cursor-pointer"
-            onClick={() => ihaleDetayBanner.linkUrl && window.open(ihaleDetayBanner.linkUrl, "_blank")}
-          >
+        <div
+          className="rounded-xl overflow-hidden mt-8 h-32 cursor-pointer"
+          style={ihaleDetayBanner.url ? undefined : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }}
+          onClick={() => ihaleDetayBanner.linkUrl && window.open(ihaleDetayBanner.linkUrl, "_blank")}
+        >
+          {ihaleDetayBanner.url ? (
             <img src={ihaleDetayBanner.url} alt="Reklam" className="w-full h-full object-cover" />
-          </div>
-        )}
+          ) : (
+            <div className="flex items-center px-8 h-full">
+              <div>
+                <p className="text-primary-foreground text-lg font-bold">Tekstil A.Ş. ile Güvenle Alışveriş Yapın</p>
+                <p className="text-primary-foreground/70 text-sm mt-1">Binlerce doğrulanmış tedarikçi, rekabetçi fiyatlar</p>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
 
       {/* Teklif Onay Dialog */}
