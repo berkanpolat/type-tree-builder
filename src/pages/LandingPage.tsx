@@ -44,6 +44,7 @@ const LandingPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tedarikci");
   const [productSlide, setProductSlide] = useState(0);
+  const [billingYearly, setBillingYearly] = useState(true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
