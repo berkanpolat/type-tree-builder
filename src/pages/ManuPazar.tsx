@@ -63,6 +63,7 @@ export default function ManuPazar() {
   const [filterKategori, setFilterKategori] = useSessionState("filterKategori", "all");
   const [filterGrup, setFilterGrup] = useSessionState("filterGrup", "all");
   const [filterTur, setFilterTur] = useSessionState("filterTur", "all");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Category options for filters
   const [kategoriler, setKategoriler] = useState<{ id: string; name: string }[]>([]);
