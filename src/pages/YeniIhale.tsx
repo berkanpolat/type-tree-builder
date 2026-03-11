@@ -310,7 +310,7 @@ export default function YeniIhale() {
       });
       return;
     }
-    if (currentStep === 1 && !ihaleId) {
+    if (STEPS[currentStep] === "Teklif Usulü" && !ihaleId) {
       await createIhale();
     } else if (ihaleId) {
       // Auto-save on each step transition
