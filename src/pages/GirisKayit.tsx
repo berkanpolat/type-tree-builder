@@ -43,6 +43,7 @@ const GirisKayit = () => {
   const [soyad, setSoyad] = useState("");
   const [email, setEmail] = useState("");
   const [telefon, setTelefon] = useState("");
+  const [countryCode, setCountryCode] = useState("+90");
   const [password, setPassword] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
 
@@ -53,6 +54,12 @@ const GirisKayit = () => {
   const [sendingOtp, setSendingOtp] = useState(false);
   const [verifyingOtp, setVerifyingOtp] = useState(false);
   const [otpCountdown, setOtpCountdown] = useState(0);
+
+  // Build full phone number (strip leading 0)
+  const getFullPhone = () => {
+    const cleaned = telefon.replace(/\s/g, "").replace(/^0+/, "");
+    return `${countryCode}${cleaned}`;
+  };
 
   // Countdown timer for resend
   useEffect(() => {
