@@ -178,6 +178,21 @@ const GirisKayit = () => {
     }
     setRegisterLoading(true);
     try {
+      // Check duplicate email in profiles
+      const { data: existingEmail } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("iletisim_email", email)
+        .limit(1);
+
+      if (existingEmail && existingEmail.length > 0) {
+        toast({ title: "Hata", description: "Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
+        setRegisterLoading(false);
+        return;
+      }
+
+      const fullPhone = getFullPhone();
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -193,7 +208,7 @@ const GirisKayit = () => {
         p_ad: ad,
         p_soyad: soyad,
         p_iletisim_email: email,
-        p_iletisim_numarasi: telefon,
+        p_iletisim_numarasi: fullPhone,
         p_firma_turu_id: selectedTurId,
         p_firma_tipi_id: selectedTipId,
         p_firma_unvani: firmaUnvani,
