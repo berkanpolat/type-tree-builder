@@ -313,12 +313,12 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
           <div className="space-y-2">
             <Label>İhale Başlangıç Tarihi ve Saati *</Label>
             <Input type="datetime-local" value={formData.baslangic_tarihi} onChange={(e) => updateForm({ baslangic_tarihi: e.target.value })} />
-            <p className="text-xs text-muted-foreground">Min. 3 saat sonrası</p>
+            <p className="text-xs text-muted-foreground">Min. 30 dakika sonrası</p>
           </div>
           <div className="space-y-2">
             <Label>İhale Bitiş Tarihi ve Saati *</Label>
             <Input type="datetime-local" value={formData.bitis_tarihi} onChange={(e) => updateForm({ bitis_tarihi: e.target.value })} />
-            <p className="text-xs text-muted-foreground">Maks. 30 gün</p>
+            <p className="text-xs text-muted-foreground">Maks. 30 gün sonrası</p>
           </div>
         </div>
 

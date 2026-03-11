@@ -198,7 +198,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
           <MultiDropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={toArr(td.kumas_grubu)} onChange={(v) => { setTD("kumas_grubu", v); setTD("kumas_turu", []); }} />
-          <MultiDependentDropdownField label="Kumaş Türü" parentId={toArr(td.kumas_grubu).length === 1 ? toArr(td.kumas_grubu)[0] : null} value={toArr(td.kumas_turu)} onChange={(v) => setTD("kumas_turu", v)} disabled={toArr(td.kumas_grubu).length !== 1} />
+          <MultiDependentMultiParentField label="Kumaş Türü" parentIds={toArr(td.kumas_grubu)} value={toArr(td.kumas_turu)} onChange={(v) => setTD("kumas_turu", v)} disabled={!toArr(td.kumas_grubu).length} />
           <MultiDropdownField label="Sezon" kategoriName="Sezon" value={toArr(td.sezon)} onChange={(v) => setTD("sezon", v)} />
           <MultiDropdownField label="Cinsiyet" kategoriName="Cinsiyet" value={toArr(td.cinsiyet)} onChange={(v) => setTD("cinsiyet", v)} />
           <MultiDropdownField label="Yaş Grubu" kategoriName="Yaş Grubu" value={toArr(td.yas_grubu)} onChange={(v) => setTD("yas_grubu", v)} />
