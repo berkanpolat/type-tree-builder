@@ -78,6 +78,35 @@ function useChildOptions(parentId: string | null) {
   });
 }
 
+function useMultiChildOptions(parentIds: string[]) {
+  return useQuery({
+    queryKey: ["multi_dependent_options", parentIds],
+    queryFn: async () => {
+      if (!parentIds.length) return [];
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").in("parent_id", parentIds).order("name");
+      return sortSecenekler(data || []);
+    },
+    enabled: parentIds.length > 0,
+  });
+}
+
+// Multi-select dependent dropdown supporting multiple parents
+function MultiDependentMultiParentField({ label, parentIds, value, onChange, disabled }: { label: string; parentIds: string[]; value: string[]; onChange: (v: string[]) => void; disabled?: boolean }) {
+  const { data: options } = useMultiChildOptions(parentIds);
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <MultiSelectDropdown
+        options={(options || []).map(o => ({ id: o.id, name: o.name }))}
+        selected={value || []}
+        onChange={onChange}
+        disabled={disabled || !parentIds.length}
+        placeholder={parentIds.length ? `${label} seçiniz` : "Önce üst seçimi yapınız"}
+      />
+    </div>
+  );
+}
+
 // Multi-select dropdown field that fetches from DB category
 function MultiDropdownField({ label, kategoriName, value, onChange }: { label: string; kategoriName: string | string[]; value: string[]; onChange: (v: string[]) => void }) {
   const { data: options } = useKategoriSecenekler(kategoriName);
@@ -137,8 +166,12 @@ function SearchableDropdownField({ label, kategoriName, value, onChange }: { lab
 }
 
 export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
-  const { data: kategoriName } = useCategoryName(formData.urun_kategori_id || formData.hizmet_kategori_id);
-  const { data: grupName } = useCategoryName(formData.urun_grup_id || formData.hizmet_tur_id);
+  const isHizmet = formData.ihale_turu === "hizmet_alim";
+  const categoryId = isHizmet ? formData.hizmet_kategori_id : formData.urun_kategori_id;
+  const groupId = isHizmet ? formData.hizmet_tur_id : formData.urun_grup_id;
+
+  const { data: kategoriName } = useCategoryName(categoryId);
+  const { data: grupName } = useCategoryName(groupId);
   const { data: turName } = useCategoryName(formData.urun_tur_id);
 
   const td = formData.teknik_detaylar;
@@ -146,7 +179,6 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
     updateForm({ teknik_detaylar: { ...formData.teknik_detaylar, [key]: value } });
   };
 
-  const isHizmet = formData.ihale_turu === "hizmet_alim";
 
   // Helper: ensure value is always string[] for multi-select fields
   const toArr = (v: any): string[] => {
@@ -165,7 +197,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
           <MultiDropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={toArr(td.kumas_grubu)} onChange={(v) => { setTD("kumas_grubu", v); setTD("kumas_turu", []); }} />
-          <MultiDependentDropdownField label="Kumaş Türü" parentId={toArr(td.kumas_grubu).length === 1 ? toArr(td.kumas_grubu)[0] : null} value={toArr(td.kumas_turu)} onChange={(v) => setTD("kumas_turu", v)} disabled={toArr(td.kumas_grubu).length !== 1} />
+          <MultiDependentMultiParentField label="Kumaş Türü" parentIds={toArr(td.kumas_grubu)} value={toArr(td.kumas_turu)} onChange={(v) => setTD("kumas_turu", v)} disabled={!toArr(td.kumas_grubu).length} />
           <MultiDropdownField label="Sezon" kategoriName="Sezon" value={toArr(td.sezon)} onChange={(v) => setTD("sezon", v)} />
           <MultiDropdownField label="Cinsiyet" kategoriName="Cinsiyet" value={toArr(td.cinsiyet)} onChange={(v) => setTD("cinsiyet", v)} />
           <MultiDropdownField label="Yaş Grubu" kategoriName="Yaş Grubu" value={toArr(td.yas_grubu)} onChange={(v) => setTD("yas_grubu", v)} />

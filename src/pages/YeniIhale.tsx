@@ -167,8 +167,8 @@ export default function YeniIhale() {
         }
         ihale = data;
 
-        // Normal users can only edit duzenleniyor or onay_bekliyor
-        if (ihale.durum !== "duzenleniyor" && ihale.durum !== "onay_bekliyor") {
+        // Normal users can only edit duzenleniyor, taslak, or onay_bekliyor
+        if (ihale.durum !== "duzenleniyor" && ihale.durum !== "taslak" && ihale.durum !== "onay_bekliyor") {
           toast({ title: "Hata", description: "Bu ihale düzenlenemez.", variant: "destructive" });
           navigate("/manuihale");
           return;
@@ -310,17 +310,42 @@ export default function YeniIhale() {
       });
       return;
     }
+
+    // Date validations on İhale Bilgileri step
+    if (STEPS[currentStep] === "İhale Bilgileri") {
+      const now = new Date();
+      const minStart = new Date(now.getTime() + 30 * 60 * 1000);
+      const maxEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const start = formData.baslangic_tarihi ? new Date(formData.baslangic_tarihi) : null;
+      const end = formData.bitis_tarihi ? new Date(formData.bitis_tarihi) : null;
+
+      if (start && start < minStart) {
+        toast({ title: "Tarih Hatası", description: "Başlangıç tarihi en erken 30 dakika sonrası olabilir.", variant: "destructive" });
+        return;
+      }
+      if (end && end > maxEnd) {
+        toast({ title: "Tarih Hatası", description: "Bitiş tarihi en geç 30 gün sonrası olabilir.", variant: "destructive" });
+        return;
+      }
+      if (start && end && end <= start) {
+        toast({ title: "Tarih Hatası", description: "Bitiş tarihi başlangıç tarihinden sonra olmalıdır.", variant: "destructive" });
+        return;
+      }
+    }
+
     if (STEPS[currentStep] === "Teklif Usulü" && !ihaleId) {
       await createIhale();
     } else if (ihaleId) {
-      // Auto-save on each step transition
-      await handleSave();
+      // Auto-save on each step transition (only save after İhale Bilgileri step where data is entered)
+      if (currentStep >= 3) {
+        await handleSave();
+      }
     }
     setCurrentStep((prev) => Math.min(prev + 1, STEPS.length - 1));
   };
 
   const handleBack = async () => {
-    if (ihaleId) await handleSave();
+    if (ihaleId && currentStep >= 4) await handleSave();
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
@@ -354,14 +379,14 @@ export default function YeniIhale() {
     const ihaleUpdateData = {
       ihale_turu: formData.ihale_turu,
       teklif_usulu: formData.teklif_usulu,
-      baslik: formData.baslik,
-      aciklama: formData.aciklama,
+      baslik: formData.baslik || "Taslak İhale",
+      aciklama: formData.aciklama || null,
       baslangic_fiyati: formData.baslangic_fiyati,
       birim: formData.birim || null,
       para_birimi: formData.para_birimi,
-      kdv_durumu: formData.kdv_durumu,
-      odeme_secenekleri: formData.odeme_secenekleri.join(", "),
-      odeme_vadesi: formData.odeme_vadesi.join(", "),
+      kdv_durumu: formData.kdv_durumu || null,
+      odeme_secenekleri: formData.odeme_secenekleri.length > 0 ? formData.odeme_secenekleri.join(", ") : null,
+      odeme_vadesi: formData.odeme_vadesi.length > 0 ? formData.odeme_vadesi.join(", ") : null,
       kargo_masrafi: formData.kargo_masrafi,
       kargo_sirketi_anlasmasi: formData.kargo_sirketi_anlasmasi,
       teslimat_tarihi: formData.teslimat_tarihi || null,
