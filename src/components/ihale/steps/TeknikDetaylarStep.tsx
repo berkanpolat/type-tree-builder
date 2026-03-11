@@ -156,10 +156,11 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
   };
 
   const renderUrunFields = () => {
+    const catNorm = normalizeText(kategoriName || "");
     const taxonomy = [kategoriName, grupName, turName].filter(Boolean).join(" ");
     const cat = normalizeText(taxonomy);
 
-    if (cat.includes("hazir giyim")) {
+    if (catNorm.includes("hazir giyim")) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
