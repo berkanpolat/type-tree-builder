@@ -72,39 +72,39 @@ export default function StokStep({ formData, updateForm }: Props) {
   const getOptionName = (options: any[] | undefined, id: string) => options?.find((o) => o.id === id)?.name || id;
 
   const handleGenerate = () => {
-    if (!isHazirGiyim) {
-      if (formData.stoklar.length > 0) return;
-      updateForm({
-        stoklar: [
-          {
-            varyant_1_label: "Stok",
-            varyant_1_value: "Genel",
-            varyant_2_label: undefined,
-            varyant_2_value: undefined,
-            miktar_tipi: birimFromForm,
-            stok_sayisi: 0,
-          },
-        ],
-      });
-      return;
-    }
-
-    const newStoklar: IhaleFormData["stoklar"] = [];
-    for (const v1 of selectedV1) {
+    if (isHazirGiyim) {
+      const newStoklar: IhaleFormData["stoklar"] = [];
+      for (const v1 of selectedV1) {
+        for (const v2 of selectedV2) {
+          if (!formData.stoklar.some((s) => s.varyant_1_value === getOptionName(varyant1Options, v1) && s.varyant_2_value === getOptionName(renkOptions, v2))) {
+            newStoklar.push({
+              varyant_1_label: varyant1Label,
+              varyant_1_value: getOptionName(varyant1Options, v1),
+              varyant_2_label: varyant2Label,
+              varyant_2_value: getOptionName(renkOptions, v2),
+              miktar_tipi: birimFromForm,
+              stok_sayisi: 0,
+            });
+          }
+        }
+      }
+      updateForm({ stoklar: [...formData.stoklar, ...newStoklar] });
+    } else {
+      // Non-Hazır Giyim: only color variants
+      const newStoklar: IhaleFormData["stoklar"] = [];
       for (const v2 of selectedV2) {
-        if (!formData.stoklar.some((s) => s.varyant_1_value === getOptionName(varyant1Options, v1) && s.varyant_2_value === getOptionName(renkOptions, v2))) {
+        const colorName = getOptionName(renkOptions, v2);
+        if (!formData.stoklar.some((s) => s.varyant_1_value === colorName)) {
           newStoklar.push({
-            varyant_1_label: varyant1Label,
-            varyant_1_value: getOptionName(varyant1Options, v1),
-            varyant_2_label: varyant2Label,
-            varyant_2_value: getOptionName(renkOptions, v2),
+            varyant_1_label: varyant2Label,
+            varyant_1_value: colorName,
             miktar_tipi: birimFromForm,
             stok_sayisi: 0,
           });
         }
       }
+      updateForm({ stoklar: [...formData.stoklar, ...newStoklar] });
     }
-    updateForm({ stoklar: [...formData.stoklar, ...newStoklar] });
   };
 
   const removeStok = (index: number) => {
