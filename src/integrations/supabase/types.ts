@@ -225,6 +225,59 @@ export type Database = {
         }
         Relationships: []
       }
+      firma_belgeler: {
+        Row: {
+          belge_turu: string
+          created_at: string
+          dosya_adi: string
+          dosya_url: string
+          durum: string
+          firma_id: string
+          id: string
+          karar_sebebi: string | null
+          karar_tarihi: string | null
+          karar_veren: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          belge_turu: string
+          created_at?: string
+          dosya_adi: string
+          dosya_url: string
+          durum?: string
+          firma_id: string
+          id?: string
+          karar_sebebi?: string | null
+          karar_tarihi?: string | null
+          karar_veren?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          belge_turu?: string
+          created_at?: string
+          dosya_adi?: string
+          dosya_url?: string
+          durum?: string
+          firma_id?: string
+          id?: string
+          karar_sebebi?: string | null
+          karar_tarihi?: string | null
+          karar_veren?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_belgeler_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firma_bilgi_kategorileri: {
         Row: {
           created_at: string
