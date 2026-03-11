@@ -245,6 +245,23 @@ const Paketim = () => {
                   </Button>
                 </div>
               )}
+
+              {isPro && pkg.periyot === "aylik" && (
+                <div className="pt-2 border-t border-border space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Yıllık plana geçerek tasarruf edin. Mevcut dönem bitiş tarihinizden itibaren 1 yıl geçerli olur.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => handleUpgrade("yillik")}
+                    disabled={!!upgradeLoading}
+                  >
+                    {upgradeLoading === "yillik" && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    Yıllık Plana Geç (${STRIPE_CONFIG.pro.yillik.fiyat}/yıl)
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
