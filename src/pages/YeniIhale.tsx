@@ -370,6 +370,7 @@ export default function YeniIhale() {
           filtreler: formData.ozel_filtreleme ? formData.filtreler : [],
           stoklar: formData.stoklar,
           fotograflar: formData.fotograflar,
+          ek_dosyalar: formData.ek_dosyalar,
         },
       });
       if (error || !data?.success) {
