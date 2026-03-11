@@ -254,7 +254,10 @@ const GirisKayit = () => {
       await supabase.auth.signOut();
       setRegistrationComplete(true);
     } catch (error: any) {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      let msg = error.message;
+      if (msg?.includes("already been registered") || msg?.includes("already registered")) msg = "Bu e-posta adresi ile zaten bir hesap bulunmaktadır.";
+      else if (msg?.includes("rate limit")) msg = "Çok fazla istek gönderildi. Lütfen birkaç dakika bekleyiniz.";
+      toast({ title: "Hata", description: msg, variant: "destructive" });
     } finally {
       setRegisterLoading(false);
     }
