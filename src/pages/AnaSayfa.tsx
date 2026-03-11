@@ -244,7 +244,7 @@ export default function AnaSayfa() {
 
     const [firmalarRes, varyasyonluRes, otherVaryantsRes, favsRes] = await Promise.all([
       userIds.length > 0
-        ? supabase.from("firmalar").select("user_id, firma_unvani, logo_url").in("user_id", userIds)
+        ? supabase.from("firmalar").select("user_id, firma_unvani, logo_url, belge_onayli").in("user_id", userIds)
         : Promise.resolve({ data: null, error: null }),
       varyasyonluIds.length > 0
         ? supabase
