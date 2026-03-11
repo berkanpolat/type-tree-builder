@@ -64,7 +64,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
     queryKey: ["firma_turleri_filter"],
     queryFn: async () => {
       const { data } = await supabase.from("firma_turleri").select("*").order("name");
-      return data || [];
+      return sortFirmaTurleri(data || []);
     },
     enabled: formData.ozel_filtreleme,
   });

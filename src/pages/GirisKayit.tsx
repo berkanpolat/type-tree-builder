@@ -157,7 +157,7 @@ const GirisKayit = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("firma_turleri").select("*").order("name");
       if (error) throw error;
-      return data;
+      return sortFirmaTurleri(data);
     },
   });
 
