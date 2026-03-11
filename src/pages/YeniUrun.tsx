@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
+import { usePackageQuota } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -347,11 +347,25 @@ export default function YeniUrun() {
   };
 
   const handleSubmit = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
     // Check aktif ürün quota (only for new products, not edits)
     if (!editId && !isAdminMode) {
-      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "aktif_urun");
-      if (!check.allowed) {
-        setUpgradeMessage(check.message || "Aktif ürün limitiniz dolmuştur.");
+      if (packageInfo.loading) {
+        toast({ title: "Paket bilgisi yükleniyor", description: "Lütfen birkaç saniye sonra tekrar deneyin.", variant: "destructive" });
+        return;
+      }
+
+      const aktifLimit = packageInfo.limits.aktif_urun_limiti;
+      const { count: aktifSayisi = 0 } = await supabase
+        .from("urunler")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("durum", "aktif");
+
+      if (aktifLimit !== null && aktifSayisi >= aktifLimit) {
+        setUpgradeMessage(`Aktif ürün limitiniz dolmuştur (${aktifSayisi}/${aktifLimit}). PRO pakete yükselterek daha fazla aktif ürün yayınlayabilirsiniz.`);
         setUpgradeOpen(true);
         return;
       }
@@ -367,8 +381,6 @@ export default function YeniUrun() {
     }
 
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setSaving(false); return; }
 
     const payload = {
       user_id: user.id, baslik, aciklama,
