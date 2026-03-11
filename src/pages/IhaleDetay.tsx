@@ -207,6 +207,7 @@ export default function IhaleDetay() {
 
   // Images
   const [allImages, setAllImages] = useState<string[]>([]);
+  const [ekDosyalar, setEkDosyalar] = useState<any[]>([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
@@ -373,6 +374,14 @@ export default function IhaleDetay() {
     const imgs: string[] = (fotoRows || []).map((f: any) => f.foto_url);
     if (imgs.length === 0 && ihaleData.foto_url) imgs.push(ihaleData.foto_url);
     setAllImages(imgs);
+
+    // Load ek dosyalar
+    const { data: ekRows } = await supabase
+      .from("ihale_ek_dosyalar" as any)
+      .select("dosya_url, dosya_adi, sira")
+      .eq("ihale_id", id)
+      .order("sira");
+    setEkDosyalar(ekRows || []);
 
     // Resolve all secenek IDs
     const idsToResolve: string[] = [];
@@ -998,7 +1007,19 @@ export default function IhaleDetay() {
                     ))}
                   </>
                 )}
-                {ihale.ek_dosya_url && (
+                {ekDosyalar.length > 0 ? (
+                  <div className="py-3">
+                    <span className="text-sm text-muted-foreground block mb-2">İhale Ek Dosyaları</span>
+                    <div className="space-y-1.5">
+                      {ekDosyalar.map((d: any, i: number) => (
+                        <a key={i} href={d.dosya_url} target="_blank" rel="noopener noreferrer"
+                          className="flex items-center gap-1.5 text-sm text-primary hover:underline">
+                          <Download className="w-4 h-4" /> {d.dosya_adi}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ) : ihale.ek_dosya_url && (
                   <div className="flex justify-between items-center py-3">
                     <span className="text-sm text-muted-foreground">İhale Ek Dosyası</span>
                     <a href={ihale.ek_dosya_url} target="_blank" rel="noopener noreferrer"

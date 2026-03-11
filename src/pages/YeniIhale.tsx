@@ -42,6 +42,7 @@ export interface IhaleFormData {
   foto_url: string | null;
   fotograflar: string[];
   ek_dosya_url: string | null;
+  ek_dosyalar: { url: string; adi: string }[];
   ozel_filtreleme: boolean;
   firma_adi_gizle: boolean;
   min_teklif_degisim: number | null;
@@ -75,6 +76,7 @@ const INITIAL_FORM: IhaleFormData = {
   foto_url: null,
   fotograflar: [],
   ek_dosya_url: null,
+  ek_dosyalar: [],
   ozel_filtreleme: false,
   firma_adi_gizle: false,
   min_teklif_degisim: null,
@@ -120,6 +122,7 @@ export default function YeniIhale() {
       let filtreData: any[] = [];
       let stokData: any[] = [];
       let fotoData: string[] = [];
+      let ekDosyaData: { url: string; adi: string }[] = [];
 
       if (adminToken) {
         // Admin mode: fetch via edge function (bypasses RLS)
@@ -132,6 +135,7 @@ export default function YeniIhale() {
             filtreData = data.filtreler || [];
             stokData = data.stoklar || [];
             fotoData = (data.fotograflar || []).map((f: any) => f.foto_url || f);
+            ekDosyaData = (data.ek_dosyalar || []).map((f: any) => ({ url: f.dosya_url || f.url, adi: f.dosya_adi || f.adi }));
             setIsAdminMode(true);
           }
         } catch {}
@@ -154,14 +158,16 @@ export default function YeniIhale() {
           return;
         }
 
-        const [filtreRes, stokRes, fotoRes] = await Promise.all([
+        const [filtreRes, stokRes, fotoRes, ekDosyaRes] = await Promise.all([
           supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", editId),
           supabase.from("ihale_stok").select("varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value, miktar_tipi, stok_sayisi").eq("ihale_id", editId),
           supabase.from("ihale_fotograflar" as any).select("foto_url, sira").eq("ihale_id", editId).order("sira"),
+          supabase.from("ihale_ek_dosyalar" as any).select("dosya_url, dosya_adi, sira").eq("ihale_id", editId).order("sira"),
         ]);
         filtreData = filtreRes.data || [];
         stokData = stokRes.data || [];
         fotoData = (fotoRes.data || []).map((f: any) => f.foto_url);
+        ekDosyaData = (ekDosyaRes.data || []).map((f: any) => ({ url: f.dosya_url, adi: f.dosya_adi }));
       }
 
       const formatDatetime = (val: string | null) => {
@@ -198,6 +204,7 @@ export default function YeniIhale() {
         foto_url: ihale.foto_url,
         fotograflar: fotoData.length > 0 ? fotoData : (ihale.foto_url ? [ihale.foto_url] : []),
         ek_dosya_url: ihale.ek_dosya_url,
+        ek_dosyalar: ekDosyaData.length > 0 ? ekDosyaData : (ihale.ek_dosya_url ? [{ url: ihale.ek_dosya_url, adi: "Ek Dosya" }] : []),
         ozel_filtreleme: ihale.ozel_filtreleme || false,
         firma_adi_gizle: ihale.firma_adi_gizle || false,
         min_teklif_degisim: ihale.min_teklif_degisim ? Number(ihale.min_teklif_degisim) : null,
@@ -340,7 +347,7 @@ export default function YeniIhale() {
       baslangic_tarihi: formData.baslangic_tarihi || null,
       bitis_tarihi: formData.bitis_tarihi || null,
       foto_url: formData.fotograflar[0] || formData.foto_url,
-      ek_dosya_url: formData.ek_dosya_url,
+      ek_dosya_url: formData.ek_dosyalar[0]?.url || formData.ek_dosya_url,
       ozel_filtreleme: formData.ozel_filtreleme,
       firma_adi_gizle: formData.firma_adi_gizle,
       min_teklif_degisim: formData.min_teklif_degisim,
@@ -363,6 +370,7 @@ export default function YeniIhale() {
           filtreler: formData.ozel_filtreleme ? formData.filtreler : [],
           stoklar: formData.stoklar,
           fotograflar: formData.fotograflar,
+          ek_dosyalar: formData.ek_dosyalar,
         },
       });
       if (error || !data?.success) {
@@ -400,6 +408,14 @@ export default function YeniIhale() {
       if (formData.fotograflar.length > 0) {
         await supabase.from("ihale_fotograflar" as any).insert(
           formData.fotograflar.map((url, i) => ({ ihale_id: ihaleId, foto_url: url, sira: i }))
+        );
+      }
+
+      // Save ek dosyalar
+      await supabase.from("ihale_ek_dosyalar" as any).delete().eq("ihale_id", ihaleId);
+      if (formData.ek_dosyalar.length > 0) {
+        await supabase.from("ihale_ek_dosyalar" as any).insert(
+          formData.ek_dosyalar.map((d, i) => ({ ihale_id: ihaleId, dosya_url: d.url, dosya_adi: d.adi, sira: i }))
         );
       }
     }

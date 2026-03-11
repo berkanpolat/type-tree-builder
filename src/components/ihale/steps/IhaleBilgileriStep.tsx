@@ -137,22 +137,27 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
       updateForm({ fotograflar: [...formData.fotograflar, ...newUrls], foto_url: formData.fotograflar[0] || newUrls[0] || null });
       setUploading(false);
     } else {
-      const file = e.target.files?.[0];
-      if (!file) return;
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
       setUploading(true);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setUploading(false); return; }
 
-      const ext = file.name.split(".").pop();
-      const path = `${user.id}/${ihaleId}/ek_${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("ihale-files").upload(path, file);
-      if (error) {
-        toast({ title: "Hata", description: "Dosya yüklenemedi.", variant: "destructive" });
-      } else {
+      const newFiles: { url: string; adi: string }[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const ext = file.name.split(".").pop();
+        const path = `${user.id}/${ihaleId}/ek_${Date.now()}_${i}.${ext}`;
+        const { error } = await supabase.storage.from("ihale-files").upload(path, file);
+        if (error) {
+          toast({ title: "Hata", description: `${file.name} yüklenemedi.`, variant: "destructive" });
+          continue;
+        }
         const { data: urlData } = supabase.storage.from("ihale-files").getPublicUrl(path);
-        updateForm({ ek_dosya_url: urlData.publicUrl });
+        newFiles.push({ url: urlData.publicUrl, adi: file.name });
       }
+      updateForm({ ek_dosyalar: [...formData.ek_dosyalar, ...newFiles], ek_dosya_url: formData.ek_dosyalar[0]?.url || newFiles[0]?.url || null });
       setUploading(false);
     }
   };
@@ -160,6 +165,11 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
   const removePhoto = (index: number) => {
     const updated = formData.fotograflar.filter((_, i) => i !== index);
     updateForm({ fotograflar: updated, foto_url: updated[0] || null });
+  };
+
+  const removeEkDosya = (index: number) => {
+    const updated = formData.ek_dosyalar.filter((_, i) => i !== index);
+    updateForm({ ek_dosyalar: updated, ek_dosya_url: updated[0]?.url || null });
   };
 
   const showMinTeklifDegisim = formData.teklif_usulu === "acik_indirme" || formData.teklif_usulu === "acik_arttirma";
@@ -339,21 +349,28 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
           </div>
           <div className="space-y-2">
             <Label>Ek Dosya Yükleme</Label>
-            <div className="border rounded-lg p-4 text-center">
-              {formData.ek_dosya_url ? (
-                <div className="flex items-center gap-2 justify-center">
-                  <span className="text-sm text-foreground">Dosya yüklendi</span>
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => updateForm({ ek_dosya_url: null })}>
-                    <X className="w-4 h-4" />
-                  </Button>
+            <div className="border rounded-lg p-4 space-y-3">
+              {formData.ek_dosyalar.length > 0 && (
+                <div className="space-y-2">
+                  {formData.ek_dosyalar.map((dosya, i) => (
+                    <div key={i} className="flex items-center justify-between gap-2 bg-muted/50 rounded px-3 py-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="text-sm text-foreground truncate">{dosya.adi}</span>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => removeEkDosya(i)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground">
-                  <Upload className="w-8 h-8" />
-                  <span className="text-sm">Ek dosya yükle</span>
-                  <input type="file" className="hidden" onChange={(e) => handleFileUpload(e, "ek")} disabled={uploading} />
-                </label>
               )}
+              <label className="cursor-pointer flex flex-col items-center gap-2 text-muted-foreground border-2 border-dashed rounded-lg p-3">
+                <Upload className="w-6 h-6" />
+                <span className="text-sm">{formData.ek_dosyalar.length > 0 ? "Daha fazla dosya ekle" : "Ek dosya yükle"}</span>
+                <span className="text-xs">Birden fazla seçebilirsiniz</span>
+                <input type="file" multiple className="hidden" onChange={(e) => handleFileUpload(e, "ek")} disabled={uploading} />
+              </label>
             </div>
           </div>
         </div>
