@@ -1319,6 +1319,72 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── LIST SIKAYETLER ───
+    if (action === "list-sikayetler") {
+      verifyToken(body.token);
+
+      const { data: sikayetler, error: sErr } = await supabase
+        .from("sikayetler")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (sErr) return jsonResponse({ error: sErr.message }, 500);
+
+      // Get unique user ids from bildiren_user_id
+      const userIds = [...new Set((sikayetler || []).map((s: any) => s.bildiren_user_id))];
+
+      // Get firma info for bildiren users
+      let firmaMap: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: firmalar } = await supabase
+          .from("firmalar")
+          .select("user_id, firma_unvani")
+          .in("user_id", userIds);
+        if (firmalar) {
+          firmalar.forEach((f: any) => { firmaMap[f.user_id] = f.firma_unvani; });
+        }
+      }
+
+      // For each sikayet, try to resolve the referenced entity's owner firma
+      const enriched = await Promise.all((sikayetler || []).map(async (s: any) => {
+        let sikayet_edilen_firma = "-";
+        try {
+          if (s.tur === "profil") {
+            const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", s.referans_id).single();
+            if (f) sikayet_edilen_firma = f.firma_unvani;
+          } else if (s.tur === "ihale") {
+            const { data: i } = await supabase.from("ihaleler").select("user_id").eq("id", s.referans_id).single();
+            if (i) {
+              const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", i.user_id).single();
+              if (f) sikayet_edilen_firma = f.firma_unvani;
+            }
+          } else if (s.tur === "urun") {
+            const { data: u } = await supabase.from("urunler").select("user_id").eq("id", s.referans_id).single();
+            if (u) {
+              const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", u.user_id).single();
+              if (f) sikayet_edilen_firma = f.firma_unvani;
+            }
+          } else if (s.tur === "mesaj") {
+            // message referans_id is the message id - get the conversation's other user
+            const { data: m } = await supabase.from("messages").select("conversation_id, sender_id").eq("id", s.referans_id).single();
+            if (m) {
+              // The reported user is the sender of the reported message
+              const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", m.sender_id).single();
+              if (f) sikayet_edilen_firma = f.firma_unvani;
+            }
+          }
+        } catch {}
+
+        return {
+          ...s,
+          bildiren_firma: firmaMap[s.bildiren_user_id] || "-",
+          sikayet_edilen_firma,
+        };
+      }));
+
+      return jsonResponse({ sikayetler: enriched });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
