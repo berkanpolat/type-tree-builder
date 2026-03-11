@@ -217,11 +217,12 @@ export default function IhaleTakip() {
         .order("created_at", { ascending: false });
       teklifData = data || [];
     }
+
+    if (teklifData.length === 0) {
       setTeklifler([]);
       setLoading(false);
       return;
     }
-
     // Keep only latest per user
     const latestPerUser = new Map<string, any>();
     for (const t of teklifData) {
