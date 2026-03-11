@@ -518,13 +518,12 @@ Deno.serve(async (req) => {
         sonBirAy: (abonelikler || []).filter((a: any) => a.durum === "aktif" && new Date(a.donem_baslangic) >= m1).length,
       };
 
-      // Online user count (active in last 5 minutes - approximate via profiles updated_at)
-      // We'll use a simpler metric: users active in last 15 minutes
+      // Online user count (active in last 15 minutes via last_seen)
       const onlineThreshold = new Date(now.getTime() - 15 * 60 * 1000);
       const { count: onlineCount } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
-        .gte("updated_at", onlineThreshold.toISOString());
+        .gte("last_seen", onlineThreshold.toISOString());
 
       return jsonResponse({
         total: totalCount || 0,
