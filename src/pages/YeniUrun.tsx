@@ -131,6 +131,8 @@ interface UrunVaryasyon {
 export default function YeniUrun() {
   const navigate = useNavigate();
   const { id: editId } = useParams();
+  const [searchParams] = useSearchParams();
+  const isAdminMode = searchParams.get("admin") === "1" && !!localStorage.getItem("admin_token");
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
