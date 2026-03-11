@@ -103,7 +103,7 @@ export default function SSS() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {isLoggedIn && <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />}
+      {isLoggedIn ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       {/* Hero */}
       <section className="bg-primary">
