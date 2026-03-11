@@ -214,68 +214,71 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
 
         {/* Form grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-          {/* Firma Türü */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-foreground">Firma Türü</Label>
-            <Select value={firmaTuruId} onValueChange={(v) => { setFirmaTuruId(v); setFirmaTipiId(""); onFirmaTuruChange?.(v); }}>
-              <SelectTrigger className="bg-muted/50">
-                <SelectValue placeholder="Firma Türü Seçiniz" />
-              </SelectTrigger>
-              <SelectContent>
-                {firmaTurleri.map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Kayıt sırasında alınan alanlar – salt okunur */}
+          <div className="col-span-1 md:col-span-2 bg-muted/30 border border-border rounded-lg p-4 space-y-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Lock className="w-4 h-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">Bu alanlar yalnızca yönetici tarafından değiştirilebilir.</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+              {/* Firma Türü */}
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-foreground">Firma Türü</Label>
+                <Select value={firmaTuruId} disabled>
+                  <SelectTrigger className="bg-muted/50 opacity-70">
+                    <SelectValue placeholder="Firma Türü" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {firmaTurleri.map(t => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Firma Tipi */}
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-foreground">Firma Tipi</Label>
+                <Select value={firmaTipiId} disabled>
+                  <SelectTrigger className="bg-muted/50 opacity-70">
+                    <SelectValue placeholder="Firma Tipi" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredTipleri.map(t => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Firma Ünvanı */}
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-foreground">Firma Ünvanı</Label>
+                <Input value={firmaUnvani} disabled className="bg-muted/50 opacity-70" />
+              </div>
+
+              {/* Vergi Numarası */}
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium text-foreground">Vergi Numarası</Label>
+                <Input value={vergiNumarasi} disabled className="bg-muted/50 opacity-70" />
+              </div>
+
+              {/* Vergi Dairesi */}
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-sm font-medium text-foreground">Vergi Dairesi</Label>
+                <SearchableSelect
+                  options={VERGI_DAIRELERI.map(vd => ({ value: vd, label: vd }))}
+                  value={vergiDairesi}
+                  onValueChange={() => {}}
+                  placeholder="Vergi Dairesi"
+                  disabled
+                  triggerClassName="bg-muted/50 opacity-70"
+                />
+              </div>
+            </div>
           </div>
 
-          {/* Firma Tipi */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-foreground">Firma Tipi</Label>
-            <Select value={firmaTipiId} onValueChange={setFirmaTipiId} disabled={!firmaTuruId}>
-              <SelectTrigger className="bg-muted/50">
-                <SelectValue placeholder="Firma Tipi Seçiniz" />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredTipleri.map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Firma Ünvanı */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-foreground">Firma Ünvanı</Label>
-            <Input value={firmaUnvani} onChange={e => setFirmaUnvani(e.target.value)} className="bg-muted/50" />
-          </div>
-
-          {/* Firma Ölçeği */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-foreground">Firma Ölçeği</Label>
-            <Select value={firmaOlcegiId} onValueChange={setFirmaOlcegiId}>
-              <SelectTrigger className="bg-muted/50">
-                <SelectValue placeholder="Firma Ölçeği Seçiniz" />
-              </SelectTrigger>
-              <SelectContent>
-                {firmaOlcekleri.map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Vergi Numarası */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-foreground">Vergi Numarası</Label>
-            <Input value={vergiNumarasi} onChange={e => setVergiNumarasi(e.target.value)} className="bg-muted/50" />
-          </div>
-
-          {/* Vergi Dairesi */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium text-foreground">Vergi Dairesi</Label>
-            <Input value={vergiDairesi} onChange={e => setVergiDairesi(e.target.value)} className="bg-muted/50" />
-          </div>
+          {/* Düzenlenebilir alanlar */}
 
           {/* Kuruluş Tarihi */}
           <div className="space-y-1.5">
