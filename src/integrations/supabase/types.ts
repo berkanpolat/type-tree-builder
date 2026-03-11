@@ -215,6 +215,50 @@ export type Database = {
           },
         ]
       }
+      firma_kisitlamalar: {
+        Row: {
+          aktif: boolean
+          bitis_tarihi: string
+          created_at: string
+          created_by: string
+          id: string
+          kisitlama_alanlari: Json
+          sebep: string
+          sikayet_id: string | null
+          user_id: string
+        }
+        Insert: {
+          aktif?: boolean
+          bitis_tarihi: string
+          created_at?: string
+          created_by: string
+          id?: string
+          kisitlama_alanlari?: Json
+          sebep: string
+          sikayet_id?: string | null
+          user_id: string
+        }
+        Update: {
+          aktif?: boolean
+          bitis_tarihi?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          kisitlama_alanlari?: Json
+          sebep?: string
+          sikayet_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_kisitlamalar_sikayet_id_fkey"
+            columns: ["sikayet_id"]
+            isOneToOne: false
+            referencedRelation: "sikayetler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firma_makineler: {
         Row: {
           created_at: string
@@ -624,6 +668,91 @@ export type Database = {
             columns: ["secenek_id"]
             isOneToOne: false
             referencedRelation: "firma_bilgi_secenekleri"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      firma_uzaklastirmalar: {
+        Row: {
+          aktif: boolean
+          bitis_tarihi: string
+          created_at: string
+          created_by: string
+          id: string
+          sebep: string | null
+          sikayet_id: string | null
+          user_id: string
+        }
+        Insert: {
+          aktif?: boolean
+          bitis_tarihi: string
+          created_at?: string
+          created_by: string
+          id?: string
+          sebep?: string | null
+          sikayet_id?: string | null
+          user_id: string
+        }
+        Update: {
+          aktif?: boolean
+          bitis_tarihi?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          sebep?: string | null
+          sikayet_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_uzaklastirmalar_sikayet_id_fkey"
+            columns: ["sikayet_id"]
+            isOneToOne: false
+            referencedRelation: "sikayetler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      firma_yasaklar: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string | null
+          firma_unvani: string | null
+          id: string
+          sebep: string | null
+          sikayet_id: string | null
+          user_id: string
+          vergi_numarasi: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email?: string | null
+          firma_unvani?: string | null
+          id?: string
+          sebep?: string | null
+          sikayet_id?: string | null
+          user_id: string
+          vergi_numarasi?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          firma_unvani?: string | null
+          id?: string
+          sebep?: string | null
+          sikayet_id?: string | null
+          user_id?: string
+          vergi_numarasi?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_yasaklar_sikayet_id_fkey"
+            columns: ["sikayet_id"]
+            isOneToOne: false
+            referencedRelation: "sikayetler"
             referencedColumns: ["id"]
           },
         ]
