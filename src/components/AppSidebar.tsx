@@ -45,6 +45,7 @@ const mainItems = [
   { title: "Mesajlar", url: "/mesajlar", icon: MessageSquare, badgeKey: "mesajlar" },
   { title: "Bildirimler", url: "/bildirimler", icon: Bell, badge: true },
   { title: "Paketler", url: "/paketler", icon: Package },
+  { title: "Destek", url: "/destek", icon: Headphones },
 ];
 
 const bottomItems = [

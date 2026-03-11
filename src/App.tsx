@@ -81,6 +81,8 @@ const App = () => (
           <Route path="/favoriler" element={<Favoriler />} />
           <Route path="/mesajlar" element={<Mesajlar />} />
           <Route path="/bildirimler" element={<Bildirimler />} />
+          <Route path="/destek" element={<DashboardDestek />} />
+          <Route path="/destek/:id" element={<DashboardDestekDetay />} />
           <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
           <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
           <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
