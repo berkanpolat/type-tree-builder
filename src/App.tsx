@@ -47,6 +47,7 @@ import AdminFirmalar from "./pages/admin/AdminFirmalar";
 import AdminIhaleler from "./pages/admin/AdminIhaleler";
 import AdminUrunler from "./pages/admin/AdminUrunler";
 import AdminSikayetler from "./pages/admin/AdminSikayetler";
+import AdminDestek from "./pages/admin/AdminDestek";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 
 const queryClient = new QueryClient();
@@ -110,6 +111,7 @@ const App = () => (
           <Route path="/yonetim/ihaleler" element={<AdminRoute><AdminIhaleler /></AdminRoute>} />
           <Route path="/yonetim/urunler" element={<AdminRoute><AdminUrunler /></AdminRoute>} />
           <Route path="/yonetim/sikayetler" element={<AdminRoute><AdminSikayetler /></AdminRoute>} />
+          <Route path="/yonetim/destek" element={<AdminRoute><AdminDestek /></AdminRoute>} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

@@ -1547,6 +1547,148 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── LIST DESTEK TALEPLERI (admin) ───
+    if (action === "list-destek") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const { data: talepler, error } = await supabase
+        .from("destek_talepleri")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Get profiles and firmalar for all user_ids
+      const userIds = [...new Set((talepler || []).map((t: any) => t.user_id))];
+      const [profilesRes, firmalarRes] = await Promise.all([
+        supabase.from("profiles").select("user_id, ad, soyad, iletisim_email, iletisim_numarasi").in("user_id", userIds),
+        supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", userIds),
+      ]);
+
+      const enriched = (talepler || []).map((t: any) => {
+        const profile = (profilesRes.data || []).find((p: any) => p.user_id === t.user_id);
+        const firma = (firmalarRes.data || []).find((f: any) => f.user_id === t.user_id);
+        return { ...t, profile, firma_unvani: firma?.firma_unvani || null };
+      });
+
+      return jsonResponse({ talepler: enriched });
+    }
+
+    // ─── GET DESTEK MESSAGES (admin) ───
+    if (action === "destek-mesajlar") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const { data, error } = await supabase
+        .from("destek_mesajlar")
+        .select("*")
+        .eq("destek_id", body.destekId)
+        .order("created_at", { ascending: true });
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ mesajlar: data });
+    }
+
+    // ─── SEND DESTEK MESSAGE (admin) ───
+    if (action === "destek-mesaj-gonder") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const adminName = `${payload.username}`;
+      // Get admin full name
+      const { data: adminUser } = await supabase
+        .from("admin_users")
+        .select("ad, soyad, pozisyon")
+        .eq("id", payload.id)
+        .single();
+
+      const senderName = adminUser ? `${adminUser.ad} ${adminUser.soyad}` : adminName;
+
+      const { error: msgErr } = await supabase.from("destek_mesajlar").insert({
+        destek_id: body.destekId,
+        sender_type: "admin",
+        sender_id: payload.id,
+        content: body.content,
+        ek_dosya_url: body.ek_dosya_url || null,
+        ek_dosya_adi: body.ek_dosya_adi || null,
+      });
+
+      if (msgErr) return jsonResponse({ error: msgErr.message }, 400);
+
+      // Update talep status to cevap_bekliyor (admin replied, waiting for user)
+      // Also set ilgili_personel if not set
+      await supabase
+        .from("destek_talepleri")
+        .update({
+          durum: "cevap_bekliyor",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", body.destekId);
+
+      // Send notification to user
+      const { data: talep } = await supabase
+        .from("destek_talepleri")
+        .select("user_id, talep_no, konu")
+        .eq("id", body.destekId)
+        .single();
+
+      if (talep) {
+        await supabase.from("notifications").insert({
+          user_id: talep.user_id,
+          type: "destek_yanit",
+          message: `${talep.talep_no} numaralı "${talep.konu}" konulu destek talebinize yanıt verilmiştir.`,
+          link: `/destek/${body.destekId}`,
+        });
+      }
+
+      return jsonResponse({ success: true });
+    }
+
+    // ─── UPDATE DESTEK STATUS (admin) ───
+    if (action === "destek-durum-guncelle") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const { error } = await supabase
+        .from("destek_talepleri")
+        .update({
+          durum: body.durum,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", body.destekId);
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // If resolved, send notification
+      if (body.durum === "cozuldu") {
+        const { data: talep } = await supabase
+          .from("destek_talepleri")
+          .select("user_id, talep_no, konu")
+          .eq("id", body.destekId)
+          .single();
+
+        if (talep) {
+          await supabase.from("notifications").insert({
+            user_id: talep.user_id,
+            type: "destek_cozuldu",
+            message: `${talep.talep_no} numaralı "${talep.konu}" konulu destek talebiniz çözüldü olarak işaretlenmiştir.`,
+            link: `/destek/${body.destekId}`,
+          });
+        }
+      }
+
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
