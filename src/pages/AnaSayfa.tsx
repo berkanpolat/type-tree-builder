@@ -480,9 +480,12 @@ export default function AnaSayfa() {
       setSelectedKategori(bestMatch.rootCategoryName);
       setSelectedGrupId(null);
       setSelectedTurId(null);
+    } else {
+      setSelectedKategori(null);
+      setSelectedGrupId(null);
+      setSelectedTurId(null);
     }
   }, [searchTerm, findBestTaxonomyMatch]);
-
 
   // Autocomplete — products + taxonomy similarity
   useEffect(() => {
@@ -536,37 +539,32 @@ export default function AnaSayfa() {
     setSearchTerm(result.name);
     setShowDropdown(false);
     setActiveFilter(null);
+    setAppliedSearchTerm(result.name);
 
-    if (result.type === "Kategori") {
-      if (!HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === result.name.toLowerCase())) {
-        setSelectedKategori(result.name);
-        setSelectedGrupId(null);
-        setSelectedTurId(null);
-        setAppliedSearchTerm("");
-        return;
-      }
-    }
-
-    if (result.type === "Grup" || result.type === "Tür") {
-      const { data: match } = await supabase
-        .from("firma_bilgi_secenekleri")
-        .select("id, name, parent_id")
+    if (result.type === "Ürün") {
+      const { data: urun } = await supabase
+        .from("urunler")
+        .select("urun_kategori_id")
         .eq("id", result.id)
-        .single();
-      if (match?.parent_id) {
-        const resolved = await resolveHierarchy(match.id, match.parent_id);
-        if (resolved) {
-          setSelectedKategori(resolved.kategori);
-          setSelectedGrupId(resolved.grupId);
-          setSelectedTurId(resolved.turId);
-          setAppliedSearchTerm("");
-          return;
+        .maybeSingle();
+
+      if (urun?.urun_kategori_id) {
+        const categoryName = getRootCategoryName(urun.urun_kategori_id);
+        if (categoryName) {
+          setSelectedKategori(categoryName);
+          setSelectedGrupId(null);
+          setSelectedTurId(null);
         }
       }
+      return;
     }
 
-    // Ürün or fallback — text search + detect category
-    setAppliedSearchTerm(result.name);
+    const categoryName = getRootCategoryName(result.id);
+    if (categoryName) {
+      setSelectedKategori(categoryName);
+      setSelectedGrupId(null);
+      setSelectedTurId(null);
+    }
   };
 
   const clearFilter = () => {
