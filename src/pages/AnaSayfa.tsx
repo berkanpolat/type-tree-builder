@@ -466,78 +466,22 @@ export default function AnaSayfa() {
     return scored[0];
   }, [urunKategoriNodes, getRootCategoryName, getSimilarityScore]);
 
-  // Trigger search on Enter or Ara button — detect kategori/grup/tür match and auto-apply filters
-  const handleSearch = useCallback(async () => {
+  // Trigger search on Enter or Ara button
+  const handleSearch = useCallback(() => {
     const term = searchTerm.trim();
     if (!term) return;
+
     setShowDropdown(false);
-
-    // 1. Check if term directly matches a kategori/grup/tür name
-    const { data: matches } = await supabase
-      .from("firma_bilgi_secenekleri")
-      .select("id, name, parent_id")
-      .eq("kategori_id", KATEGORI_ID)
-      .ilike("name", `%${term}%`)
-      .limit(5);
-
-    if (matches && matches.length > 0) {
-      // Find exact or best match
-      const exact = matches.find((m) => m.name.toLowerCase() === term.toLowerCase()) || matches[0];
-
-      if (!exact.parent_id) {
-        // It's a kategori
-        if (!HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === exact.name.toLowerCase())) {
-          setSelectedKategori(exact.name);
-          setSelectedGrupId(null);
-          setSelectedTurId(null);
-          setActiveFilter(null);
-          setAppliedSearchTerm("");
-          return;
-        }
-      } else {
-        // Resolve hierarchy to find parent kategori
-        const resolved = await resolveHierarchy(exact.id, exact.parent_id);
-        if (resolved) {
-          setSelectedKategori(resolved.kategori);
-          setSelectedGrupId(resolved.grupId);
-          setSelectedTurId(resolved.turId);
-          setActiveFilter(null);
-          setAppliedSearchTerm("");
-          return;
-        }
-      }
-    }
-
-    // 2. No direct match — do text search on products and detect dominant category
-    const { data: productMatches } = await supabase
-      .from("urunler")
-      .select("urun_kategori_id")
-      .eq("durum", "aktif")
-      .ilike("baslik", `%${term}%`)
-      .limit(50);
-
-    if (productMatches && productMatches.length > 0) {
-      // Find most common category
-      const catCount: Record<string, number> = {};
-      productMatches.forEach((p) => {
-        if (p.urun_kategori_id) {
-          catCount[p.urun_kategori_id] = (catCount[p.urun_kategori_id] || 0) + 1;
-        }
-      });
-      const topCatId = Object.entries(catCount).sort((a, b) => b[1] - a[1])[0]?.[0];
-      if (topCatId) {
-        const matchedSecenek = kategoriSecenekler.find((k) => k.id === topCatId);
-        if (matchedSecenek && !HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === matchedSecenek.name.toLowerCase())) {
-          setSelectedKategori(matchedSecenek.name);
-          setSelectedGrupId(null);
-          setSelectedTurId(null);
-        }
-      }
-    }
-
     setActiveFilter(null);
     setAppliedSearchTerm(term);
-  }, [searchTerm, kategoriSecenekler]);
+
+    const bestMatch = findBestTaxonomyMatch(term);
+    if (bestMatch) {
+      setSelectedKategori(bestMatch.rootCategoryName);
+      setSelectedGrupId(null);
+      setSelectedTurId(null);
+    }
+  }, [searchTerm, findBestTaxonomyMatch]);
 
   // Helper to resolve kategori hierarchy from a grup/tür id
   const resolveHierarchy = async (id: string, parentId: string): Promise<{ kategori: string; grupId: string | null; turId: string | null } | null> => {
