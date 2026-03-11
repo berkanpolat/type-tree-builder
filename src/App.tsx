@@ -40,6 +40,7 @@ import KVKKAydinlatma from "./pages/KVKKAydinlatma";
 import KullanimKosullari from "./pages/KullanimKosullari";
 import MesafeliSatisSozlesmesi from "./pages/MesafeliSatisSozlesmesi";
 import NotFound from "./pages/NotFound";
+import SifreSifirla from "./pages/SifreSifirla";
 import AdminGiris from "./pages/admin/AdminGiris";
 import AdminPanel from "./pages/admin/AdminPanel";
 import AdminKullanicilar from "./pages/admin/AdminKullanicilar";
