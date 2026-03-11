@@ -133,7 +133,7 @@ export function usePackageQuota(): PackageInfo {
         }
 
         setUsage({
-          profil_goruntuleme: profilRes.count || 0,
+          profil_goruntuleme: uniqueFirmaIds.size,
           teklif_verme: uniqueIhaleIds.size,
           aktif_urun: urunRes.count || 0,
           mesaj: initiatedConversations,
