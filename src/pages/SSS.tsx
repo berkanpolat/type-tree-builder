@@ -30,7 +30,7 @@ const sssData = [
     a: "Kurumsal başvurular haftaiçi çalışma saatleri içinde (09:00-18:00) kontrol edilerek onaylanır.\nAmaç; platformda güvenilir ve gerçek firmaların yer almasını sağlamaktır.",
   },
   {
-    q: "Tekstil A.Ş.'yu diğer pazar yerlerinden ayıran fark nedir?",
+    q: "Tekstil A.Ş.'yi diğer pazar yerlerinden ayıran fark nedir?",
     a: "Tekstil A.Ş. sadece bir satış sitesi değil, sektöre özel bir iş ağıdır. En büyük farkı, B2B ve B2C satışlarda %0 komisyon uygulaması ve tekstil odaklı \"TekRehber\" gibi gelişmiş filtreleme ve eşleştirme araçlarına sahip olmasıdır.",
     link: { text: "Daha detaylı bilgi için lütfen tıklayınız", href: "/hakkimizda" },
   },
