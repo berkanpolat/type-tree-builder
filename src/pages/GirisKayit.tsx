@@ -4,8 +4,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
-import { VERGI_DAIRELERI } from "@/lib/vergi-daireleri";
-import SearchableSelect from "@/components/ui/searchable-select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -460,7 +458,10 @@ const GirisKayit = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Firma Ünvanı</Label>
-                    <Input placeholder="Firma Ünvanı" value={firmaUnvani} onChange={(e) => setFirmaUnvani(e.target.value)} />
+                    <Input placeholder="Firma Ünvanı" value={firmaUnvani} onChange={(e) => {
+                      const val = e.target.value.replace(/\b\w/g, (c) => c.toLocaleUpperCase('tr-TR'));
+                      setFirmaUnvani(val);
+                    }} />
                   </div>
                   <div className="space-y-2">
                     <Label>Vergi Numarası</Label>
@@ -477,12 +478,14 @@ const GirisKayit = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Vergi Dairesi</Label>
-                    <SearchableSelect
-                      options={VERGI_DAIRELERI.map((vd) => ({ value: vd, label: vd }))}
+                    <Input
+                      placeholder="Vergi Dairesi"
                       value={vergiDairesi}
-                      onValueChange={setVergiDairesi}
-                      placeholder="Vergi Dairesi Seçiniz"
-                      searchPlaceholder="Vergi dairesi ara..."
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const capitalized = val.charAt(0).toLocaleUpperCase('tr-TR') + val.slice(1);
+                        setVergiDairesi(capitalized);
+                      }}
                     />
                   </div>
                   <Button

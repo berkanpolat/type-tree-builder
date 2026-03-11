@@ -8,8 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { ClipboardList, Upload, X, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { VERGI_DAIRELERI } from "@/lib/vergi-daireleri";
-import SearchableSelect from "@/components/ui/searchable-select";
 
 interface Props {
   userId: string;
@@ -261,14 +259,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
               {/* Vergi Dairesi */}
               <div className="space-y-1.5 md:col-span-2">
                 <Label className="text-sm font-medium text-foreground">Vergi Dairesi</Label>
-                <SearchableSelect
-                  options={VERGI_DAIRELERI.map(vd => ({ value: vd, label: vd }))}
-                  value={vergiDairesi}
-                  onValueChange={() => {}}
-                  placeholder="Vergi Dairesi"
-                  disabled
-                  triggerClassName="bg-muted/50 opacity-70"
-                />
+                <Input value={vergiDairesi} disabled className="bg-muted/50 opacity-70" />
               </div>
             </div>
           </div>
@@ -295,9 +286,42 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
             <Label className="text-sm font-medium text-foreground">Kuruluş Tarihi</Label>
             <Input
               value={kurulusTarihi}
-              onChange={e => setKurulusTarihi(e.target.value)}
+              onChange={e => {
+                let raw = e.target.value.replace(/[^\d/]/g, "");
+                // Auto-insert slash after 2 digits
+                if (raw.length === 2 && !raw.includes("/") && kurulusTarihi.length < raw.length) {
+                  raw = raw + "/";
+                }
+                // Remove double slashes
+                raw = raw.replace(/\/+/g, "/");
+                // Limit to MM/YYYY format (7 chars)
+                if (raw.length > 7) raw = raw.slice(0, 7);
+
+                const parts = raw.split("/");
+                // Validate month (01-12)
+                if (parts[0] && parts[0].length === 2) {
+                  const month = parseInt(parts[0], 10);
+                  if (month < 1 || month > 12) return;
+                }
+                // Validate year
+                if (parts[1] && parts[1].length === 4) {
+                  const year = parseInt(parts[1], 10);
+                  const now = new Date();
+                  const currentYear = now.getFullYear();
+                  const currentMonth = now.getMonth() + 1;
+                  if (year < 1900 || year > currentYear) return;
+                  // If current year, month can't exceed current month
+                  if (year === currentYear && parts[0] && parts[0].length === 2) {
+                    const month = parseInt(parts[0], 10);
+                    if (month > currentMonth) return;
+                  }
+                }
+
+                setKurulusTarihi(raw);
+              }}
               placeholder="AA/YYYY"
               className="bg-muted/50"
+              maxLength={7}
             />
           </div>
 

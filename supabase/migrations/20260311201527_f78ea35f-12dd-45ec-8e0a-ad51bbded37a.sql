@@ -1,0 +1,2 @@
+UPDATE firma_bilgi_secenekleri SET name = 'Spor / Outdoor Tekstili' WHERE id = '00e416ea-480e-4ceb-9b54-237d8f8d9434';
+UPDATE firma_bilgi_secenekleri SET name = 'Otomotiv Tekstili' WHERE id = '6a70d583-754b-41a4-a1f3-8c6d5d54e51e';
