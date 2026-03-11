@@ -248,7 +248,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("makine") || cat.includes("yedek parca")) {
+    if (catNorm.includes("makine") || catNorm.includes("yedek parca")) {
       const years = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
       return (
         <>
