@@ -477,7 +477,7 @@ function PaketContent({
 
       {/* Delete confirmation */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent style={{ background: `hsl(var(--admin-card))`, borderColor: `hsl(var(--admin-border))`, color: `hsl(var(--admin-text))` }}>
+        <DialogContent style={{ background: `hsl(var(--admin-card-bg))`, borderColor: `hsl(var(--admin-border))`, color: `hsl(var(--admin-text))` }}>
           <DialogHeader>
             <DialogTitle style={{ color: `hsl(var(--admin-text))` }}>Paketi Sil</DialogTitle>
             <DialogDescription style={mutedStyle}>
