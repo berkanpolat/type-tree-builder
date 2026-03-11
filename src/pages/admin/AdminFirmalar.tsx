@@ -572,6 +572,12 @@ export default function AdminFirmalar() {
                 options={[{ value: "all", label: "Tümü" }, ...tipler.filter(tp => filterTuru === "all" || tp.firma_turu_id === filterTuru).map(tp => ({ value: tp.id, label: tp.name }))]} />
               <FilterSelect label="İl" value={filterIl} onChange={setFilterIl}
                 options={[{ value: "all", label: "Tümü" }, ...iller.map(il => ({ value: il.id, label: il.name }))]} />
+              <FilterSelect label="Paket" value={filterPaket} onChange={setFilterPaket}
+                options={[
+                  { value: "all", label: "Tümü" },
+                  { value: "none", label: "Paket Yok" },
+                  ...(stats?.paketDagilimi || []).map(p => ({ value: p.id, label: p.ad })),
+                ]} />
               <FilterRange label="İhale Sayısı" min={filterMinIhale} max={filterMaxIhale} onMinChange={setFilterMinIhale} onMaxChange={setFilterMaxIhale} />
               <FilterRange label="Teklif Sayısı" min={filterMinTeklif} max={filterMaxTeklif} onMinChange={setFilterMinTeklif} onMaxChange={setFilterMaxTeklif} />
               <FilterRange label="Ürün Sayısı" min={filterMinUrun} max={filterMaxUrun} onMinChange={setFilterMinUrun} onMaxChange={setFilterMaxUrun} />
