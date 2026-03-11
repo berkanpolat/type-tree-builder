@@ -1263,6 +1263,7 @@ export type Database = {
           fiyat: number | null
           fiyat_tipi: string
           foto_url: string | null
+          goruntuleme_sayisi: number
           id: string
           min_siparis_miktari: number | null
           para_birimi: string | null
@@ -1282,6 +1283,7 @@ export type Database = {
           fiyat?: number | null
           fiyat_tipi?: string
           foto_url?: string | null
+          goruntuleme_sayisi?: number
           id?: string
           min_siparis_miktari?: number | null
           para_birimi?: string | null
@@ -1301,6 +1303,7 @@ export type Database = {
           fiyat?: number | null
           fiyat_tipi?: string
           foto_url?: string | null
+          goruntuleme_sayisi?: number
           id?: string
           min_siparis_miktari?: number | null
           para_birimi?: string | null
