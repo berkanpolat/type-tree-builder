@@ -280,45 +280,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
   };
 
   const renderHizmetFields = () => {
-    const hizmetName = grupName?.toLowerCase() || "";
-
-    if (hizmetName.includes("ürün hizmeti") || hizmetName.includes("üretim hizmeti")) {
-      return (
-        <>
-          <UrunKategoriSecimi label="Ürün Kategorisi / Grubu / Türü" td={td} setTD={setTD} prefixKey="hizmet_urun" />
-          <DropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={td.kumas_grubu} onChange={(v) => { setTD("kumas_grubu", v); setTD("kumas_turu", ""); }} />
-          <DependentDropdownField label="Kumaş Türü" parentId={td.kumas_grubu || null} value={td.kumas_turu} onChange={(v) => setTD("kumas_turu", v)} />
-          <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
-          <DropdownField label="Desen" kategoriName="Desen" value={td.desen} onChange={(v) => setTD("desen", v)} />
-          <DropdownField label="Baskı" kategoriName="Baskı" value={td.baski} onChange={(v) => setTD("baski", v)} />
-        </>
-      );
-    }
-
-    if (hizmetName.includes("teknik") || hizmetName.includes("tasarım")) {
-      return (
-        <>
-          <UrunKategoriSecimi label="Hedef Ürün Grubu" td={td} setTD={setTD} prefixKey="hedef_urun" />
-          <DropdownField label="Tasarım Türü" kategoriName="Tasarım Türü" value={td.tasarim_turu} onChange={(v) => setTD("tasarim_turu", v)} />
-          <DropdownField label="Dosya Teslim Formatı" kategoriName="Dosya Teslim Formatı" value={td.dosya_format} onChange={(v) => setTD("dosya_format", v)} />
-          <DropdownField label="Revizyon Hakkı" kategoriName="Revizyon Hakkı" value={td.revizyon_hakki} onChange={(v) => setTD("revizyon_hakki", v)} />
-          <DropdownField label="Kalıp" kategoriName="Kalıp" value={td.kalip} onChange={(v) => setTD("kalip", v)} />
-        </>
-      );
-    }
-
-    if (hizmetName.includes("mümessil") || hizmetName.includes("sipariş")) {
-      return (
-        <>
-          <DropdownField label="Hedeflenen Pazar" kategoriName="Hedeflenen Pazarlar" value={td.hedeflenen_pazar} onChange={(v) => setTD("hedeflenen_pazar", v)} />
-          <DropdownField label="Sipariş Türü" kategoriName="Sipariş Türü" value={td.siparis_turu} onChange={(v) => setTD("siparis_turu", v)} />
-          <UrunKategoriSecimi label="Ürün Kategorisi / Grubu / Türü" td={td} setTD={setTD} prefixKey="mumessil_urun" />
-          <DropdownField label="Ürün Segmenti" kategoriName="Ürün Segmenti" value={td.urun_segmenti} onChange={(v) => setTD("urun_segmenti", v)} />
-        </>
-      );
-    }
-
-    return <p className="text-muted-foreground">Bu hizmet kategorisi için teknik detay alanı bulunmamaktadır.</p>;
+    return <HizmetTeknikFields td={td} setTD={setTD} grupName={grupName || ""} />;
   };
 
   return (
