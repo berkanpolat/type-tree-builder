@@ -194,10 +194,9 @@ Deno.serve(async (req) => {
         .eq("is_primary", false);
 
       if (error) return jsonResponse({ error: error.message }, 400);
+      await logActivity(supabase, payload, "delete-user", { target_type: "admin_user", target_id: userId });
       return jsonResponse({ success: true });
     }
-
-    // ─── LIST FIRMALAR (for admin panel) ───
     if (action === "list-firmalar") {
       const payload = verifyToken(body.token);
 
