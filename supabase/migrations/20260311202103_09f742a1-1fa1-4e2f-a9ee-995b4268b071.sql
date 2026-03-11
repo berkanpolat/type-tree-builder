@@ -1,0 +1,1 @@
+INSERT INTO firma_bilgi_secenekleri (kategori_id, name) VALUES ('ef259cd0-d622-46f9-8e58-ce5e0d846650', 'Metre');
