@@ -360,10 +360,80 @@ const GirisKayit = () => {
                 <Input type="email" placeholder="İletişim E-Posta Adresi" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
 
-              {/* İletişim Numarası */}
+              {/* İletişim Numarası + Doğrulama */}
               <div className="space-y-2">
                 <Label>İletişim Numarası</Label>
-                <Input placeholder="İletişim Numarası" value={telefon} onChange={(e) => setTelefon(e.target.value)} />
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="05XX XXX XX XX"
+                    value={telefon}
+                    onChange={(e) => {
+                      setTelefon(e.target.value);
+                      if (phoneVerified) {
+                        setPhoneVerified(false);
+                        setOtpSent(false);
+                        setOtpCode("");
+                      }
+                    }}
+                    disabled={phoneVerified}
+                    className="flex-1"
+                    required
+                  />
+                  {!phoneVerified && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleSendOtp}
+                      disabled={sendingOtp || otpCountdown > 0 || !telefon || telefon.length < 10}
+                      className="shrink-0"
+                    >
+                      {sendingOtp ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : otpCountdown > 0 ? (
+                        `${Math.floor(otpCountdown / 60)}:${String(otpCountdown % 60).padStart(2, "0")}`
+                      ) : otpSent ? (
+                        "Tekrar Gönder"
+                      ) : (
+                        "Kod Gönder"
+                      )}
+                    </Button>
+                  )}
+                  {phoneVerified && (
+                    <div className="flex items-center gap-1 text-sm text-green-600 shrink-0 px-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Doğrulandı
+                    </div>
+                  )}
+                </div>
+
+                {/* OTP Input */}
+                {otpSent && !phoneVerified && (
+                  <div className="space-y-3 pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      {telefon} numarasına gönderilen 6 haneli kodu giriniz:
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleVerifyOtp}
+                        disabled={verifyingOtp || otpCode.length !== 6}
+                      >
+                        {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Doğrula"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Şifre */}
