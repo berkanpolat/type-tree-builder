@@ -68,7 +68,7 @@ interface UserResult {
 }
 
 export default function AdminKisitlamalar() {
-  const { callApi } = useAdminAuth();
+  const { token } = useAdminAuth();
   const { toast } = useToast();
   const [kisitlamalar, setKisitlamalar] = useState<Kisitlama[]>([]);
   const [loading, setLoading] = useState(true);
