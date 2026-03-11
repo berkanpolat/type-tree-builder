@@ -361,7 +361,7 @@ export default function AnaSayfa() {
     return filteredUrunler.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredUrunler, currentPage]);
 
-  useEffect(() => { setCurrentPage(1); }, [filterState, sortBy, selectedKategori, selectedGrupId, selectedTurId, activeFilter]);
+  useEffect(() => { setCurrentPage(1); }, [filterState, sortBy, selectedKategori, selectedGrupId, selectedTurId, activeFilter, appliedSearchTerm]);
 
   useEffect(() => {
     fetchUrunler();
