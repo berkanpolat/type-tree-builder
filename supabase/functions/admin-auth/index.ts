@@ -813,10 +813,10 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
-      // Get all urunler
+      // Get all urunler with tur info
       const { data: urunler } = await supabase
         .from("urunler")
-        .select("id, durum, user_id, urun_kategori_id");
+        .select("id, durum, user_id, urun_kategori_id, urun_grup_id, urun_tur_id");
 
       const allItems = urunler || [];
       const total = allItems.length;
@@ -841,6 +841,7 @@ Deno.serve(async (req) => {
 
       const urunKatKat = (kategoriler || []).find((k: any) => k.name === "Ana Ürün Kategorileri");
       let kategoriDagilimi: any[] = [];
+      let urunTurDagilimi: any[] = [];
 
       if (urunKatKat) {
         const { data: urunKats } = await supabase
@@ -848,12 +849,29 @@ Deno.serve(async (req) => {
           .select("id, name, parent_id")
           .eq("kategori_id", urunKatKat.id);
 
-        const roots = (urunKats || []).filter((o: any) => !o.parent_id);
+        const allOpts = urunKats || [];
+        const roots = allOpts.filter((o: any) => !o.parent_id);
         kategoriDagilimi = roots.map((c: any) => ({
           id: c.id,
           name: c.name,
           count: allItems.filter((u: any) => u.urun_kategori_id === c.id).length,
         })).sort((a: any, b: any) => b.count - a.count);
+
+        // Ürün Türü dağılımı - 3rd level items (parent is a group, grandparent is a category)
+        const groupIds = new Set(allOpts.filter((o: any) => o.parent_id && roots.some((r: any) => r.id === o.parent_id)).map((o: any) => o.id));
+        const turItems = allOpts.filter((o: any) => o.parent_id && groupIds.has(o.parent_id));
+        
+        const turCountMap: Record<string, number> = {};
+        for (const item of allItems) {
+          if (item.urun_tur_id) {
+            turCountMap[item.urun_tur_id] = (turCountMap[item.urun_tur_id] || 0) + 1;
+          }
+        }
+        urunTurDagilimi = turItems.map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          count: turCountMap[t.id] || 0,
+        })).filter((t: any) => t.count > 0).sort((a: any, b: any) => b.count - a.count);
       }
 
       // Firma Türü distribution
@@ -869,7 +887,6 @@ Deno.serve(async (req) => {
         .from("firma_tipleri")
         .select("id, name");
 
-      // Map user_id to firma_turu_id and firma_tipi_id
       const firmaMap = Object.fromEntries((firmalar || []).map((f: any) => [f.user_id, f]));
 
       // Firma Türü dağılımı
@@ -886,7 +903,7 @@ Deno.serve(async (req) => {
         count: turCounts[t.id] || 0,
       })).sort((a: any, b: any) => b.count - a.count);
 
-      // Firma Tipi dağılımı
+      // Firma Tipi dağılımı - always show all
       const tipCounts: Record<string, number> = {};
       for (const item of allItems) {
         const firma = firmaMap[item.user_id];
@@ -898,7 +915,7 @@ Deno.serve(async (req) => {
         id: t.id,
         name: t.name,
         count: tipCounts[t.id] || 0,
-      })).filter((t: any) => t.count > 0).sort((a: any, b: any) => b.count - a.count);
+      })).sort((a: any, b: any) => b.count - a.count);
 
       return jsonResponse({
         total,
@@ -910,9 +927,64 @@ Deno.serve(async (req) => {
         totalUsers,
         usersWithProducts,
         kategoriDagilimi,
+        urunTurDagilimi,
         firmaTuruDagilimi,
         firmaTipiDagilimi,
       });
+    }
+
+    // ─── LIST ALL URUNLER (for admin panel) ───
+    if (action === "list-urunler") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const { data: urunler, error } = await supabase
+        .from("urunler")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Get firma names for all user_ids
+      const userIds = [...new Set((urunler || []).map((u: any) => u.user_id))];
+      const { data: firmalar } = await supabase
+        .from("firmalar")
+        .select("user_id, firma_unvani")
+        .in("user_id", userIds);
+
+      // Get category names
+      const catIds = [
+        ...(urunler || []).map((u: any) => u.urun_kategori_id).filter(Boolean),
+        ...(urunler || []).map((u: any) => u.urun_grup_id).filter(Boolean),
+        ...(urunler || []).map((u: any) => u.urun_tur_id).filter(Boolean),
+      ];
+      const uniqueCatIds = [...new Set(catIds)];
+      let catMap: Record<string, string> = {};
+      if (uniqueCatIds.length > 0) {
+        const { data: cats } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name")
+          .in("id", uniqueCatIds);
+        if (cats) catMap = Object.fromEntries(cats.map((c: any) => [c.id, c.name]));
+      }
+
+      const enriched = (urunler || []).map((u: any) => {
+        const firma = (firmalar || []).find((f: any) => f.user_id === u.user_id);
+        const uk = u.urun_kategori_id ? catMap[u.urun_kategori_id] : "";
+        const ug = u.urun_grup_id ? catMap[u.urun_grup_id] : "";
+        const ut = u.urun_tur_id ? catMap[u.urun_tur_id] : "";
+        const kategoriLabel = [uk, ug, ut].filter(Boolean).join(" > ");
+
+        return {
+          ...u,
+          firma_unvani: firma?.firma_unvani || "—",
+          kategori_label: kategoriLabel || "—",
+        };
+      });
+
+      return jsonResponse({ urunler: enriched });
     }
 
     return jsonResponse({ error: "Geçersiz istek" }, 400);
