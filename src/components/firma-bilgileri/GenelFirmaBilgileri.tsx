@@ -8,8 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { ClipboardList, Upload, X, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { VERGI_DAIRELERI } from "@/lib/vergi-daireleri";
-import SearchableSelect from "@/components/ui/searchable-select";
 
 interface Props {
   userId: string;
