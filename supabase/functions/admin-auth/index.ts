@@ -1979,11 +1979,16 @@ Deno.serve(async (req) => {
       const { token, userId, paketId, ekstraHaklar } = body;
       verifyToken(token);
 
+      // When admin assigns a package, set unlimited duration (100 years)
+      const unlimitedDate = new Date();
+      unlimitedDate.setFullYear(unlimitedDate.getFullYear() + 100);
+
       const updatePayload: any = {
         paket_id: paketId,
         donem_baslangic: new Date().toISOString(),
-        donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        donem_bitis: unlimitedDate.toISOString(),
         durum: "aktif",
+        periyot: "sinursiz",
       };
       if (ekstraHaklar !== undefined) {
         updatePayload.ekstra_haklar = ekstraHaklar;

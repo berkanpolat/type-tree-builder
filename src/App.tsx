@@ -107,6 +107,7 @@ const App = () => (
           <Route path="/kvkk-aydinlatma" element={<KVKKAydinlatma />} />
           <Route path="/kullanim-kosullari" element={<KullanimKosullari />} />
           <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
+          <Route path="/sifre-sifirla" element={<SifreSifirla />} />
           
           {/* Admin Panel Routes */}
           <Route path="/yonetim" element={<AdminRoute><AdminGiris /></AdminRoute>} />
