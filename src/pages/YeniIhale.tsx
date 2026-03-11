@@ -76,6 +76,7 @@ const INITIAL_FORM: IhaleFormData = {
   foto_url: null,
   fotograflar: [],
   ek_dosya_url: null,
+  ek_dosyalar: [],
   ozel_filtreleme: false,
   firma_adi_gizle: false,
   min_teklif_degisim: null,
