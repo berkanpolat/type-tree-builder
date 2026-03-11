@@ -44,6 +44,25 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
+    const existingDbSubscription = await getCurrentDbSubscription(supabaseAdmin, user.id);
+    if (isManualActivePaidSubscription(existingDbSubscription)) {
+      const paketSlug = existingDbSubscription?.paketler?.slug || "pro";
+      logStep("Manual paid subscription detected, skipping Stripe downgrade", {
+        paket: paketSlug,
+        periyot: existingDbSubscription?.periyot,
+        donem_bitis: existingDbSubscription?.donem_bitis,
+      });
+
+      return jsonResponse({
+        subscribed: paketSlug !== "ucretsiz",
+        paket: paketSlug,
+        periyot: existingDbSubscription?.periyot || "sinirsiz",
+        subscription_end: existingDbSubscription?.donem_bitis,
+        cancel_at_period_end: false,
+        manual_assignment: true,
+      });
+    }
+
     // Check Stripe for customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
@@ -208,6 +227,35 @@ function jsonResponse(data: any) {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
     status: 200,
   });
+}
+
+async function getCurrentDbSubscription(supabase: any, userId: string) {
+  const { data, error } = await supabase
+    .from("kullanici_abonelikler")
+    .select("paket_id, periyot, donem_baslangic, donem_bitis, durum, stripe_customer_id, stripe_subscription_id, paketler(slug)")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    logStep("getCurrentDbSubscription error", { error });
+    return null;
+  }
+
+  return data;
+}
+
+function isManualActivePaidSubscription(subscription: any) {
+  if (!subscription) return false;
+
+  const paketSlug = subscription?.paketler?.slug;
+  if (!paketSlug || paketSlug === "ucretsiz") return false;
+  if (subscription?.durum !== "aktif" && subscription?.durum !== "iptal_bekliyor") return false;
+  if (subscription?.stripe_subscription_id) return false;
+
+  const donemBitis = subscription?.donem_bitis ? new Date(subscription.donem_bitis).getTime() : null;
+  if (!donemBitis || Number.isNaN(donemBitis)) return false;
+
+  return donemBitis > Date.now();
 }
 
 async function ensureFreePackage(supabase: any, userId: string) {

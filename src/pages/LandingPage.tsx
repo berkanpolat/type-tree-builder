@@ -248,7 +248,7 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <img src={logoImg} alt="Tekstil A.Ş." className="h-7 object-contain" />
           <Link
-            to="/giris-kayit"
+            to="/giris-kayit?tab=kayit"
             className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             Giriş Yap / Kayıt Ol
@@ -270,7 +270,7 @@ const LandingPage = () => {
             </p>
             <div className="flex flex-wrap gap-4">
               <Link
-                to="/giris-kayit"
+                 to="/giris-kayit?tab=kayit"
                 className="px-10 py-3.5 rounded-lg bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-colors"
               >
                 Ücretsiz Kayıt Ol
@@ -435,7 +435,7 @@ const LandingPage = () => {
                   ))}
                 </div>
                 <Link
-                  to="/giris-kayit"
+                   to="/giris-kayit?tab=kayit"
                   className="inline-block px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
                 >
                   {currentProduct.cta}
@@ -499,7 +499,7 @@ const LandingPage = () => {
                 ))}
               </div>
               <Link
-                to="/giris-kayit"
+                 to="/giris-kayit?tab=kayit"
                 className="inline-block px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
               >
                 Hemen Kayıt Ol
@@ -558,7 +558,7 @@ const LandingPage = () => {
                 ))}
               </div>
               <Link
-                to="/giris-kayit"
+                 to="/giris-kayit?tab=kayit"
                 className="mt-6 block text-center px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
               >
                 Hemen Kayıt Ol
@@ -603,7 +603,7 @@ const LandingPage = () => {
                 ))}
               </div>
               <Link
-                to="/giris-kayit"
+                to="/giris-kayit?tab=kayit"
                 className="mt-6 block text-center px-6 py-3 rounded-full bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/90 transition-colors"
               >
                 Hemen Kayıt Ol
