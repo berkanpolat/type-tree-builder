@@ -138,10 +138,6 @@ export default function AdminPaketler() {
   };
 
   const handleSave = async () => {
-    if (!form.ad || !form.slug) {
-      toast({ title: "Hata", description: "Paket adı ve slug zorunludur.", variant: "destructive" });
-      return;
-    }
     setSaving(true);
     try {
       if (editingPaket) {
