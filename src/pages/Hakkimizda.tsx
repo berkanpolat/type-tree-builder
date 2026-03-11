@@ -34,13 +34,8 @@ export default function Hakkimizda() {
   const modules = [
     {
       icon: Users,
-      title: "TekConnect",
+      title: "TekRehber",
       description: "Tekstil endüstrisindeki markaları, üreticileri, tedarikçileri, atölyeleri ve mümessil ofisleri tek bir dijital rehberde toplayan arama modülüdür.",
-    },
-    {
-      icon: Gavel,
-      title: "Tekİhale",
-      description: "Satın alma süreçlerini şeffaf ve hızlı bir teklif toplama/verme sistemine dönüştüren bir modüldür.",
     },
     {
       icon: ShoppingBag,
@@ -48,9 +43,9 @@ export default function Hakkimizda() {
       description: "Tekstil sektöründe toptan alım ve satım yapan firmaları; güvenli, şeffaf ve profesyonel bir dijital ticaret ortamında buluşturan bir modüldür.",
     },
     {
-      icon: Briefcase,
-      title: "TekKariyer",
-      description: "Sektördeki nitelikli iş gücü ile işletmeleri doğru eşleştiren bir modüldür.",
+      icon: Gavel,
+      title: "Tekİhale",
+      description: "Satın alma süreçlerini şeffaf ve hızlı bir teklif toplama/verme sistemine dönüştüren bir modüldür.",
     },
   ];
 
@@ -71,7 +66,7 @@ export default function Hakkimizda() {
             <span className="text-secondary">Dijital Buluşma Noktası</span>
           </h1>
           <p className="mt-6 text-primary-foreground/70 text-lg max-w-2xl mx-auto leading-relaxed">
-            Üretimden tedarike, satın almadan satışa, insan kaynağından iş birliklerine kadar tüm süreçlerinizi tek bir platformda yönetin.
+            Üretimden tedariğe, satın almadan satışa kadar tüm süreçlerinizi tek bir platformdan yönetin.
           </p>
         </div>
       </section>
@@ -88,7 +83,7 @@ export default function Hakkimizda() {
             Tekstil A.Ş., tekstil endüstrisinin tamamını tek bir dijital platformda buluşturan yeni nesil bir iş platformudur.
           </p>
           <p>
-            Markalar, üreticiler, tedarikçiler, fason atölyeler, mümessil ofisler ve bireysel profesyoneller; üretimden tedarike, satın almadan satışa, insan kaynağından iş birliklerine kadar tüm süreçlerini Tekstil A.Ş. üzerinden yönetebilir.
+            Tekstil dünyasının üretimden tedariğe, satın almadan satışa kadar tüm kritik süreçlerini dijitalleştiren güçlü bir iş ağı kurar.
           </p>
           <p>
             Bugün tekstil sektörü hâlâ telefon rehberleri, kişisel ilişkiler, WhatsApp grupları ve dağınık kanallar üzerinden ilerliyor. Bu yapı; zamanı boşa harcıyor, verimliliği düşürüyor ve işletmeleri sınırlı network'lere mahkûm ediyor.
@@ -100,7 +95,7 @@ export default function Hakkimizda() {
             Her işletmeye kendini doğru şekilde anlatabileceği bir alan sunar, doğru tarafları bir araya getirir ve sektörün iş yapma biçimini modernleştirir.
           </p>
           <p>
-            Tekstil dünyasının üretimden tedariğe, insan kaynağından satışa kadar tüm kritik süreçlerini dijitalleştiren güçlü bir iş ağı kurar.
+            Tekstil dünyasının üretimden tedariğe, satışa kadar tüm kritik süreçlerini dijitalleştiren güçlü bir iş ağı kurar.
           </p>
         </div>
       </section>
