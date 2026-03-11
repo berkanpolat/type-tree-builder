@@ -1253,6 +1253,7 @@ export type Database = {
           donem_baslangic: string
           donem_bitis: string
           durum: string
+          ekstra_haklar: Json
           id: string
           paket_id: string
           periyot: string
@@ -1266,6 +1267,7 @@ export type Database = {
           donem_baslangic?: string
           donem_bitis?: string
           durum?: string
+          ekstra_haklar?: Json
           id?: string
           paket_id: string
           periyot?: string
@@ -1279,6 +1281,7 @@ export type Database = {
           donem_baslangic?: string
           donem_bitis?: string
           durum?: string
+          ekstra_haklar?: Json
           id?: string
           paket_id?: string
           periyot?: string
