@@ -49,6 +49,7 @@ import AdminUrunler from "./pages/admin/AdminUrunler";
 import AdminSikayetler from "./pages/admin/AdminSikayetler";
 import AdminDestek from "./pages/admin/AdminDestek";
 import AdminPaketler from "./pages/admin/AdminPaketler";
+import Paketim from "./pages/Paketim";
 import AdminIslemler from "./pages/admin/AdminIslemler";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 
@@ -84,6 +85,7 @@ const App = () => (
           <Route path="/favoriler" element={<Favoriler />} />
           <Route path="/mesajlar" element={<Mesajlar />} />
           <Route path="/bildirimler" element={<Bildirimler />} />
+          <Route path="/paketim" element={<Paketim />} />
           <Route path="/destek" element={<DashboardDestek />} />
           <Route path="/destek/:id" element={<DashboardDestekDetay />} />
           <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
