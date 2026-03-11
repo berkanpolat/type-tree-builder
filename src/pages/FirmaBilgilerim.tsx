@@ -11,6 +11,7 @@ import MakineParkuruTab from "@/components/firma-bilgileri/MakineParkuruTab";
 import SertifikalarTab from "@/components/firma-bilgileri/SertifikalarTab";
 import ReferanslarTab from "@/components/firma-bilgileri/ReferanslarTab";
 import GaleriTab from "@/components/firma-bilgileri/GaleriTab";
+import BelgelerimTab from "@/components/firma-bilgileri/BelgelerimTab";
 import PlaceholderTab from "@/components/firma-bilgileri/PlaceholderTab";
 import {
   ClipboardList,
