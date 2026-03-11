@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
 import Footer from "@/components/Footer";
+import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
+import UpgradeDialog from "@/components/UpgradeDialog";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
