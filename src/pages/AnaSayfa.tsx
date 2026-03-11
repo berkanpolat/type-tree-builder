@@ -449,10 +449,7 @@ export default function AnaSayfa() {
   }, [urunKategoriById]);
 
   const findBestTaxonomyMatch = useCallback((term: string) => {
-    if (!term || urunKategoriNodes.length === 0) {
-      console.log("[SEARCH DEBUG] findBestTaxonomyMatch - no term or no nodes", { term, nodesCount: urunKategoriNodes.length });
-      return null;
-    }
+    if (!term || urunKategoriNodes.length === 0) return null;
 
     const scored = urunKategoriNodes
       .map((node) => {
@@ -467,12 +464,24 @@ export default function AnaSayfa() {
       .filter((item): item is { node: KategoriNode; rootCategoryName: string; score: number } => !!item)
       .sort((a, b) => b.score - a.score);
 
-    const top5 = scored.slice(0, 5).map(s => ({ name: s.node.name, rootCategory: s.rootCategoryName, score: s.score }));
-    console.log("[SEARCH DEBUG] findBestTaxonomyMatch top 5:", term, top5);
-
     if (scored.length === 0 || scored[0].score < 220) return null;
     return scored[0];
   }, [urunKategoriNodes, getRootCategoryName, getSimilarityScore]);
+
+  const localProductSearchResults = useMemo<SearchResult[]>(() => {
+    if (!searchTerm || searchTerm.length < 2) return [];
+    const normalizedTerm = normalizeText(searchTerm);
+
+    return allUrunler
+      .filter((u) => normalizeText(u.baslik).includes(normalizedTerm))
+      .slice(0, 5)
+      .map((u) => ({
+        id: u.id,
+        name: u.baslik,
+        type: "Ürün",
+        urunKategoriId: u.urun_kategori_id,
+      }));
+  }, [allUrunler, searchTerm, normalizeText]);
 
   // Trigger search on Enter or Ara button
   const handleSearch = useCallback(() => {
@@ -484,7 +493,6 @@ export default function AnaSayfa() {
     setAppliedSearchTerm(term);
 
     const bestMatch = findBestTaxonomyMatch(term);
-    console.log("[SEARCH DEBUG] handleSearch bestMatch:", { term, bestMatch: bestMatch ? { rootCategoryName: bestMatch.rootCategoryName, nodeName: bestMatch.node.name, score: bestMatch.score } : null });
     if (bestMatch) {
       setSelectedKategori(bestMatch.rootCategoryName);
       setSelectedGrupId(null);
@@ -496,7 +504,7 @@ export default function AnaSayfa() {
     }
   }, [searchTerm, findBestTaxonomyMatch]);
 
-  // Autocomplete — products + taxonomy similarity
+  // Autocomplete — only in-memory scoring (no network round-trip)
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setSearchResults([]);
@@ -504,14 +512,7 @@ export default function AnaSayfa() {
       return;
     }
 
-    const timer = setTimeout(async () => {
-      const { data: urunData } = await supabase
-        .from("urunler")
-        .select("id, baslik")
-        .eq("durum", "aktif")
-        .ilike("baslik", `%${searchTerm}%`)
-        .limit(5);
-
+    const timer = setTimeout(() => {
       const taxonomyResults: SearchResult[] = urunKategoriNodes
         .map((node) => {
           const rootCategoryName = getRootCategoryName(node.id);
@@ -530,35 +531,32 @@ export default function AnaSayfa() {
         .slice(0, 5)
         .map(({ id, name, type }) => ({ id, name, type }));
 
-      const urunResults: SearchResult[] = (urunData || []).map((u) => ({
-        id: u.id,
-        name: u.baslik,
-        type: "Ürün",
-      }));
+      const merged = [...taxonomyResults, ...localProductSearchResults];
+      const seen = new Set<string>();
+      const results = merged.filter((item) => {
+        const key = `${item.type}:${item.id}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 8);
 
-      const results = [...taxonomyResults, ...urunResults];
       setSearchResults(results);
       setShowDropdown(results.length > 0);
-    }, 250);
+    }, 120);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, urunKategoriNodes, getRootCategoryName, getSimilarityScore, getNodeType]);
+  }, [searchTerm, urunKategoriNodes, getRootCategoryName, getSimilarityScore, getNodeType, localProductSearchResults]);
 
-  const handleSearchResultClick = async (result: SearchResult) => {
+  const handleSearchResultClick = (result: SearchResult) => {
     setSearchTerm(result.name);
     setShowDropdown(false);
     setActiveFilter(null);
     setAppliedSearchTerm(result.name);
 
     if (result.type === "Ürün") {
-      const { data: urun } = await supabase
-        .from("urunler")
-        .select("urun_kategori_id")
-        .eq("id", result.id)
-        .maybeSingle();
-
-      if (urun?.urun_kategori_id) {
-        const categoryName = getRootCategoryName(urun.urun_kategori_id);
+      const productCategoryId = result.urunKategoriId ?? allUrunler.find((u) => u.id === result.id)?.urun_kategori_id ?? null;
+      if (productCategoryId) {
+        const categoryName = getRootCategoryName(productCategoryId);
         if (categoryName) {
           setSelectedKategori(categoryName);
           setSelectedGrupId(null);
