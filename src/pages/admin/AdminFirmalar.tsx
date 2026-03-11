@@ -1051,6 +1051,55 @@ export default function AdminFirmalar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Firma Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) { setDeleteFirma(null); setDeleteConfirmText(""); } }}>
+        <DialogContent style={s.card} className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="text-red-500 flex items-center gap-2">
+              <Trash2 className="w-5 h-5" /> Firmayı Sil
+            </DialogTitle>
+            <DialogDescription style={s.muted}>
+              Bu işlem geri alınamaz. Firma ve tüm ilişkili veriler (ürünler, ihaleler, teklifler, mesajlar, hesap) kalıcı olarak silinecektir.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="p-3 rounded-lg border border-red-500/30" style={{ background: "rgba(239,68,68,0.05)" }}>
+              <p className="text-sm font-medium" style={s.text}>{deleteFirma?.firma_unvani}</p>
+              <p className="text-xs mt-1" style={s.muted}>
+                {deleteFirma?.profile?.ad} {deleteFirma?.profile?.soyad} · {deleteFirma?.profile?.iletisim_email}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs" style={s.muted}>
+                Onaylamak için firma adını yazın: <span className="font-semibold text-red-400">{deleteFirma?.firma_unvani}</span>
+              </Label>
+              <Input
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder="Firma adını yazın..."
+                style={s.input}
+                className="text-sm"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}
+              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
+            <Button
+              onClick={handleDeleteFirma}
+              disabled={deleteLoading || deleteConfirmText !== deleteFirma?.firma_unvani}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              {deleteLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Kalıcı Olarak Sil
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
