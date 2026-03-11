@@ -1595,6 +1595,33 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_otp_codes: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          kod: string
+          telefon: string
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kod: string
+          telefon: string
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          kod?: string
+          telefon?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
       urun_favoriler: {
         Row: {
           created_at: string

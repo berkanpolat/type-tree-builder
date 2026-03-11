@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -14,8 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Phone, Loader2 } from "lucide-react";
 import authBg from "@/assets/auth-bg.jpg";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 const GirisKayit = () => {
   const [activeTab, setActiveTab] = useState<"giris" | "kayit">("giris");
@@ -39,6 +44,67 @@ const GirisKayit = () => {
   const [telefon, setTelefon] = useState("");
   const [password, setPassword] = useState("");
   const [registerLoading, setRegisterLoading] = useState(false);
+
+  // Phone verification state
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState("");
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [otpCountdown, setOtpCountdown] = useState(0);
+
+  // Countdown timer for resend
+  useEffect(() => {
+    if (otpCountdown <= 0) return;
+    const timer = setInterval(() => setOtpCountdown((c) => c - 1), 1000);
+    return () => clearInterval(timer);
+  }, [otpCountdown]);
+
+  const handleSendOtp = async () => {
+    if (!telefon || telefon.length < 10) {
+      toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
+      return;
+    }
+    setSendingOtp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-sms-otp", {
+        body: { telefon },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+
+      setOtpSent(true);
+      setOtpCountdown(120); // 2 minute cooldown
+      toast({ title: "Kod gönderildi", description: `${telefon} numarasına doğrulama kodu gönderildi.` });
+    } catch (err: any) {
+      toast({ title: "Hata", description: err.message, variant: "destructive" });
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpCode.length !== 6) {
+      toast({ title: "Hata", description: "6 haneli kodu eksiksiz giriniz", variant: "destructive" });
+      return;
+    }
+    setVerifyingOtp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-sms-otp", {
+        body: { telefon, kod: otpCode },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (!data?.verified) throw new Error("Doğrulama başarısız");
+
+      setPhoneVerified(true);
+      toast({ title: "Doğrulandı", description: "Telefon numaranız başarıyla doğrulandı." });
+    } catch (err: any) {
+      toast({ title: "Hata", description: err.message, variant: "destructive" });
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
 
   // Firma Türü / Tipi queries
   const { data: firmaTurleri } = useQuery({
@@ -84,6 +150,10 @@ const GirisKayit = () => {
       toast({ title: "Hata", description: "Firma türü ve tipi seçiniz", variant: "destructive" });
       return;
     }
+    if (!phoneVerified) {
+      toast({ title: "Hata", description: "Lütfen telefon numaranızı doğrulayın", variant: "destructive" });
+      return;
+    }
     setRegisterLoading(true);
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -96,7 +166,6 @@ const GirisKayit = () => {
       const userId = authData.user?.id;
       if (!userId) throw new Error("Kullanıcı oluşturulamadı");
 
-      // Insert profile + firma via SECURITY DEFINER function
       const { error: rpcError } = await supabase.rpc("register_user", {
         p_user_id: userId,
         p_ad: ad,
@@ -291,10 +360,80 @@ const GirisKayit = () => {
                 <Input type="email" placeholder="İletişim E-Posta Adresi" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
 
-              {/* İletişim Numarası */}
+              {/* İletişim Numarası + Doğrulama */}
               <div className="space-y-2">
                 <Label>İletişim Numarası</Label>
-                <Input placeholder="İletişim Numarası" value={telefon} onChange={(e) => setTelefon(e.target.value)} />
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="05XX XXX XX XX"
+                    value={telefon}
+                    onChange={(e) => {
+                      setTelefon(e.target.value);
+                      if (phoneVerified) {
+                        setPhoneVerified(false);
+                        setOtpSent(false);
+                        setOtpCode("");
+                      }
+                    }}
+                    disabled={phoneVerified}
+                    className="flex-1"
+                    required
+                  />
+                  {!phoneVerified && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleSendOtp}
+                      disabled={sendingOtp || otpCountdown > 0 || !telefon || telefon.length < 10}
+                      className="shrink-0"
+                    >
+                      {sendingOtp ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : otpCountdown > 0 ? (
+                        `${Math.floor(otpCountdown / 60)}:${String(otpCountdown % 60).padStart(2, "0")}`
+                      ) : otpSent ? (
+                        "Tekrar Gönder"
+                      ) : (
+                        "Kod Gönder"
+                      )}
+                    </Button>
+                  )}
+                  {phoneVerified && (
+                    <div className="flex items-center gap-1 text-sm text-green-600 shrink-0 px-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Doğrulandı
+                    </div>
+                  )}
+                </div>
+
+                {/* OTP Input */}
+                {otpSent && !phoneVerified && (
+                  <div className="space-y-3 pt-2">
+                    <p className="text-sm text-muted-foreground">
+                      {telefon} numarasına gönderilen 6 haneli kodu giriniz:
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                        <InputOTPGroup>
+                          <InputOTPSlot index={0} />
+                          <InputOTPSlot index={1} />
+                          <InputOTPSlot index={2} />
+                          <InputOTPSlot index={3} />
+                          <InputOTPSlot index={4} />
+                          <InputOTPSlot index={5} />
+                        </InputOTPGroup>
+                      </InputOTP>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={handleVerifyOtp}
+                        disabled={verifyingOtp || otpCode.length !== 6}
+                      >
+                        {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Doğrula"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Şifre */}
@@ -303,7 +442,7 @@ const GirisKayit = () => {
                 <Input type="password" placeholder="Şifre (min 6 karakter)" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
               </div>
 
-              <Button type="submit" className="w-full" disabled={registerLoading}>
+              <Button type="submit" className="w-full" disabled={registerLoading || !phoneVerified}>
                 {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
               </Button>
             </form>
