@@ -205,11 +205,31 @@ export default function UrunDetay() {
     if (!id || !currentUserId) return;
     setLoading(true);
 
-    const { data: urunData } = await supabase
+    let urunData: any = null;
+
+    const { data: directData } = await supabase
       .from("urunler")
       .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum")
       .eq("id", id)
       .single();
+
+    if (directData) {
+      urunData = directData;
+    } else {
+      // Fallback: try admin edge function
+      const adminToken = localStorage.getItem("admin_token");
+      if (adminToken) {
+        try {
+          const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth/get-urun-detail", {
+            body: { token: adminToken, urunId: id },
+          });
+          if (!adminErr && adminRes?.urun) {
+            urunData = adminRes.urun;
+            setIsAdminViewing(true);
+          }
+        } catch {}
+      }
+    }
 
     if (!urunData) { setLoading(false); return; }
     setUrun({ ...urunData, teknik_detaylar: (urunData.teknik_detaylar as Record<string, string>) || null });
