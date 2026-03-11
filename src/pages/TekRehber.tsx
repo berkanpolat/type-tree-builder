@@ -80,8 +80,8 @@ export default function TekRehber() {
     check();
   }, [navigate]);
 
-  const [searchTerm, setSearchTerm] = useState("");
-  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
+  const [appliedSearchTerm, setAppliedSearchTerm] = useSessionState("appliedSearchTerm", "");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -90,9 +90,9 @@ export default function TekRehber() {
   const [firmalar, setFirmalar] = useState<FirmaWithExtra[]>([]);
   const [firmaLoading, setFirmaLoading] = useState(false);
   const [firmaTurleri, setFirmaTurleri] = useState<{ id: string; name: string }[]>([]);
-  const [selectedFirmaTuru, setSelectedFirmaTuru] = useState<string>("");
-  const [selectedFirmaTuruName, setSelectedFirmaTuruName] = useState<string>("");
-  const [firmaFilterState, setFirmaFilterState] = useState<FirmaFilterState | null>(null);
+  const [selectedFirmaTuru, setSelectedFirmaTuru] = useSessionState("selectedFirmaTuru", "");
+  const [selectedFirmaTuruName, setSelectedFirmaTuruName] = useSessionState("selectedFirmaTuruName", "");
+  const [firmaFilterState, setFirmaFilterState] = useSessionState<FirmaFilterState | null>("firmaFilterState", null);
   const [firmaFavSet, setFirmaFavSet] = useState<Set<string>>(new Set());
 
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});

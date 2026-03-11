@@ -84,8 +84,8 @@ export default function ManuIhale() {
   const [ihaleler, setIhaleler] = useState<Ihale[]>([]);
   const [teklifler, setTeklifler] = useState<IhaleTeklif[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterDurum, setFilterDurum] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
+  const [filterDurum, setFilterDurum] = useSessionState("filterDurum", "all");
 
   useEffect(() => {
     fetchData();
