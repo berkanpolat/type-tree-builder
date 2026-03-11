@@ -230,7 +230,7 @@ const DashboardDestek = () => {
       </div>
 
       {/* Yeni Talep Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen} modal={true}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Yeni Destek Talebi Oluştur</DialogTitle>
