@@ -25,11 +25,11 @@ const STEPS = ["Kategori", "Ürün Bilgileri", "Teknik Detaylar", "Varyasyon"];
 const STEP_ICONS = [Pencil, FileText, Settings, Package];
 
 // Map ana kategori names to their technical spec fields
-const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" | "number" | "date"; kategoriName?: string }[]> = {
+const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" | "number" | "date" | "dependent_dropdown"; kategoriName?: string; dependsOn?: string }[]> = {
   "Hazır Giyim": [
     { label: "Kumaş Kompozisyonu", type: "text" },
     { label: "Kumaş Grubu", type: "dropdown", kategoriName: "Kumaş Grubu" },
-    { label: "Kumaş Türü", type: "dropdown", kategoriName: "Kumaş Türü" },
+    { label: "Kumaş Türü", type: "dependent_dropdown", dependsOn: "Kumaş Grubu" },
     { label: "Sezon", type: "dropdown", kategoriName: "Sezon" },
     { label: "Cinsiyet", type: "dropdown", kategoriName: "Cinsiyet" },
     { label: "Yaş Grubu", type: "dropdown", kategoriName: "Yaş Grubu" },
@@ -39,7 +39,7 @@ const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" 
   "Hazır Giyim Üretim": [
     { label: "Kumaş Kompozisyonu", type: "text" },
     { label: "Kumaş Grubu", type: "dropdown", kategoriName: "Kumaş Grubu" },
-    { label: "Kumaş Türü", type: "dropdown", kategoriName: "Kumaş Türü" },
+    { label: "Kumaş Türü", type: "dependent_dropdown", dependsOn: "Kumaş Grubu" },
     { label: "Sezon", type: "dropdown", kategoriName: "Sezon" },
     { label: "Cinsiyet", type: "dropdown", kategoriName: "Cinsiyet" },
     { label: "Yaş Grubu", type: "dropdown", kategoriName: "Yaş Grubu" },
@@ -165,6 +165,7 @@ export default function YeniUrun() {
   // Step 2: Teknik Detaylar
   const [teknikDetaylar, setTeknikDetaylar] = useState<Record<string, string>>({});
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, { id: string; name: string }[]>>({});
+  const [dependentOptions, setDependentOptions] = useState<Record<string, { id: string; name: string }[]>>({});
 
   // Step 3: Ürün Varyasyonları (Renk + Beden/Birim + Fotoğraf)
   const [varyasyonlar, setVaryasyonlar] = useState<UrunVaryasyon[]>([]);
@@ -238,6 +239,15 @@ export default function YeniUrun() {
     setDropdownOptions(newOpts);
   };
 
+  const loadDependentOptions = async (parentLabel: string, parentId: string) => {
+    if (!parentId) {
+      setDependentOptions(prev => ({ ...prev, [parentLabel]: [] }));
+      return;
+    }
+    const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("parent_id", parentId).order("name");
+    setDependentOptions(prev => ({ ...prev, [parentLabel]: data || [] }));
+  };
+
   const loadUrun = async (urunId: string) => {
     const { data } = await supabase.from("urunler").select("*").eq("id", urunId).single();
     if (!data) return;
@@ -250,8 +260,17 @@ export default function YeniUrun() {
     setFiyatTipi(data.fiyat_tipi);
     setParaBirimi(data.para_birimi || "TRY");
     setFiyat(data.fiyat?.toString() || "");
-    setTeknikDetaylar(data.teknik_detaylar as Record<string, string> || {});
+    const td = data.teknik_detaylar as Record<string, string> || {};
+    setTeknikDetaylar(td);
     setDraftId(urunId);
+
+    // Load dependent options for edit mode (e.g., Kumaş Türü depends on Kumaş Grubu)
+    const alanlar = getTeknikAlanlar();
+    for (const alan of alanlar) {
+      if (alan.type === "dependent_dropdown" && alan.dependsOn && td[alan.dependsOn]) {
+        loadDependentOptions(alan.dependsOn, td[alan.dependsOn]);
+      }
+    }
 
     const { data: vars } = await supabase.from("urun_varyasyonlar").select("*").eq("urun_id", urunId).order("created_at");
     if (vars && vars.length > 0) {
@@ -328,6 +347,8 @@ export default function YeniUrun() {
     if (step === 2) {
       const alanlar = getTeknikAlanlar();
       for (const alan of alanlar) {
+        // Skip dependent_dropdown validation if parent not selected
+        if (alan.type === "dependent_dropdown" && !teknikDetaylar[alan.dependsOn!]) continue;
         if (!teknikDetaylar[alan.label]?.trim()) {
           toast({ title: `"${alan.label}" alanı zorunludur.`, variant: "destructive" }); return;
         }
@@ -735,10 +756,29 @@ export default function YeniUrun() {
                         <Label>{alan.label}*</Label>
                         {alan.type === "dropdown" ? (
                           <Select value={teknikDetaylar[alan.label] || ""}
-                            onValueChange={(v) => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: v }))}>
+                            onValueChange={(v) => {
+                              setTeknikDetaylar(prev => ({ ...prev, [alan.label]: v }));
+                              // If a dependent field depends on this, load its children
+                              const dependentField = teknikAlanlar.find(a => a.type === "dependent_dropdown" && a.dependsOn === alan.label);
+                              if (dependentField) {
+                                setTeknikDetaylar(prev => ({ ...prev, [dependentField.label]: "" }));
+                                loadDependentOptions(alan.label, v);
+                              }
+                            }}>
                             <SelectTrigger><SelectValue placeholder={`${alan.label} seçiniz`} /></SelectTrigger>
                             <SelectContent className="bg-popover z-50">
                               {(dropdownOptions[alan.kategoriName!] || []).map(opt => (
+                                <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : alan.type === "dependent_dropdown" ? (
+                          <Select value={teknikDetaylar[alan.label] || ""}
+                            onValueChange={(v) => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: v }))}
+                            disabled={!teknikDetaylar[alan.dependsOn!]}>
+                            <SelectTrigger><SelectValue placeholder={teknikDetaylar[alan.dependsOn!] ? `${alan.label} seçiniz` : `Önce ${alan.dependsOn} seçiniz`} /></SelectTrigger>
+                            <SelectContent className="bg-popover z-50">
+                              {(dependentOptions[alan.dependsOn!] || []).map(opt => (
                                 <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
                               ))}
                             </SelectContent>
