@@ -232,7 +232,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("kumas")) {
+    if (catNorm.includes("kumas")) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
