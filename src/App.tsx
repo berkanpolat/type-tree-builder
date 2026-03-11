@@ -67,6 +67,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <RouteStateManager />
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/test-index" element={<Index />} />

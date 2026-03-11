@@ -82,6 +82,13 @@ const GirisKayit = () => {
     return full;
   };
 
+  // URL tab param sync (landing CTA -> kayıt sekmesi)
+  useEffect(() => {
+    if (tabParam === "kayit" || tabParam === "giris") {
+      setActiveTab(tabParam);
+    }
+  }, [tabParam]);
+
   // Countdown timer for resend
   useEffect(() => {
     if (otpCountdown <= 0) return;

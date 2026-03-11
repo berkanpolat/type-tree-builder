@@ -229,6 +229,35 @@ function jsonResponse(data: any) {
   });
 }
 
+async function getCurrentDbSubscription(supabase: any, userId: string) {
+  const { data, error } = await supabase
+    .from("kullanici_abonelikler")
+    .select("paket_id, periyot, donem_baslangic, donem_bitis, durum, stripe_customer_id, stripe_subscription_id, paketler(slug)")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    logStep("getCurrentDbSubscription error", { error });
+    return null;
+  }
+
+  return data;
+}
+
+function isManualActivePaidSubscription(subscription: any) {
+  if (!subscription) return false;
+
+  const paketSlug = subscription?.paketler?.slug;
+  if (!paketSlug || paketSlug === "ucretsiz") return false;
+  if (subscription?.durum !== "aktif" && subscription?.durum !== "iptal_bekliyor") return false;
+  if (subscription?.stripe_subscription_id) return false;
+
+  const donemBitis = subscription?.donem_bitis ? new Date(subscription.donem_bitis).getTime() : null;
+  if (!donemBitis || Number.isNaN(donemBitis)) return false;
+
+  return donemBitis > Date.now();
+}
+
 async function ensureFreePackage(supabase: any, userId: string) {
   const { data: freePaket } = await supabase
     .from("paketler")
