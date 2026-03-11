@@ -480,12 +480,12 @@ export default function YeniIhale() {
 
         <Card>
           <CardContent className="p-6">
-            {currentStep === 0 && <IhaleTuruStep formData={formData} updateForm={updateForm} />}
-            {currentStep === 1 && <TeklifUsuluStep formData={formData} updateForm={updateForm} />}
-            {currentStep === 2 && <KategoriStep formData={formData} updateForm={updateForm} />}
-            {currentStep === 3 && <IhaleBilgileriStep formData={formData} updateForm={updateForm} ihaleId={ihaleId} />}
-            {currentStep === 4 && <TeknikDetaylarStep formData={formData} updateForm={updateForm} />}
-            {currentStep === 5 && <StokStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "İhale Türü" && <IhaleTuruStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "Teklif Usulü" && <TeklifUsuluStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "Kategori" && <KategoriStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "İhale Bilgileri" && <IhaleBilgileriStep formData={formData} updateForm={updateForm} ihaleId={ihaleId} skipBirim={skipStokStep} />}
+            {STEPS[currentStep] === "Teknik Detaylar" && <TeknikDetaylarStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "Stok" && <StokStep formData={formData} updateForm={updateForm} />}
 
             <div className="flex justify-between mt-8 pt-6 border-t">
               {currentStep > 0 ? (
