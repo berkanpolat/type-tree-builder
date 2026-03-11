@@ -408,6 +408,14 @@ export default function YeniIhale() {
           formData.fotograflar.map((url, i) => ({ ihale_id: ihaleId, foto_url: url, sira: i }))
         );
       }
+
+      // Save ek dosyalar
+      await supabase.from("ihale_ek_dosyalar" as any).delete().eq("ihale_id", ihaleId);
+      if (formData.ek_dosyalar.length > 0) {
+        await supabase.from("ihale_ek_dosyalar" as any).insert(
+          formData.ek_dosyalar.map((d, i) => ({ ihale_id: ihaleId, dosya_url: d.url, dosya_adi: d.adi, sira: i }))
+        );
+      }
     }
 
     setSaving(false);
