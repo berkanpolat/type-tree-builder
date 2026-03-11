@@ -46,6 +46,8 @@ const GirisKayit = () => {
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   // Register state
   const [selectedTurId, setSelectedTurId] = useState("");
@@ -389,27 +391,43 @@ const GirisKayit = () => {
               <Button type="submit" className="w-full" disabled={loginLoading}>
                 {loginLoading ? "Giriş yapılıyor..." : "Giriş"}
               </Button>
-              <button
-                type="button"
-                className="w-full text-center text-sm text-muted-foreground cursor-pointer hover:underline"
-                onClick={async () => {
-                  if (!loginEmail) {
-                    toast({ title: "Hata", description: "Lütfen e-posta adresinizi giriniz", variant: "destructive" });
-                    return;
-                  }
-                  try {
-                    const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
-                      redirectTo: `${window.location.origin}/sifre-sifirla`,
-                    });
-                    if (error) throw error;
-                    toast({ title: "Başarılı", description: "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi." });
-                  } catch (err: any) {
-                    toast({ title: "Hata", description: "Şifre sıfırlama isteği gönderilemedi. Lütfen tekrar deneyiniz.", variant: "destructive" });
-                  }
-                }}
-              >
-                Parolamı Unuttum?
-              </button>
+              {forgotSent ? (
+                <p className="text-center text-sm text-green-600 font-medium py-2">
+                  ✓ Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen gelen kutunuzu kontrol ediniz.
+                </p>
+              ) : (
+                <button
+                  type="button"
+                  disabled={forgotLoading}
+                  className="w-full text-center text-sm text-muted-foreground cursor-pointer hover:underline disabled:opacity-50"
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log("[ForgotPassword] clicked, email:", loginEmail);
+                    if (!loginEmail) {
+                      toast({ title: "Hata", description: "Lütfen e-posta adresinizi giriniz.", variant: "destructive" });
+                      return;
+                    }
+                    setForgotLoading(true);
+                    try {
+                      const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
+                        redirectTo: `${window.location.origin}/sifre-sifirla`,
+                      });
+                      console.log("[ForgotPassword] result:", error);
+                      if (error) throw error;
+                      setForgotSent(true);
+                      toast({ title: "Başarılı", description: "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi." });
+                    } catch (err: any) {
+                      console.error("[ForgotPassword] error:", err);
+                      toast({ title: "Hata", description: err?.message || "Şifre sıfırlama isteği gönderilemedi.", variant: "destructive" });
+                    } finally {
+                      setForgotLoading(false);
+                    }
+                  }}
+                >
+                  {forgotLoading ? "Gönderiliyor..." : "Parolamı Unuttum?"}
+                </button>
+              )}
             </form>
           ) : (
             <div className="space-y-5">
