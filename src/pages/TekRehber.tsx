@@ -513,7 +513,7 @@ export default function TekRehber() {
           onClick={() => rehberSidebarBanner.linkUrl && window.open(rehberSidebarBanner.linkUrl, "_blank")}
         >
           {rehberSidebarBanner.url ? (
-            <img src={rehberSidebarBanner.url} alt="Reklam" className="w-full h-full object-cover" />
+            <img src={rehberSidebarBanner.url} alt="Reklam" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
           ) : (
             <div className="flex items-center px-8 h-full">
               <div>
