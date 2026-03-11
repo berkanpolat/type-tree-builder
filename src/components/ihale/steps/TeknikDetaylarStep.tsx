@@ -40,23 +40,25 @@ function useKategoriSecenekler(kategoriName: string | string[]) {
     queryKey: ["teknik_secenekler", ...(Array.isArray(kategoriName) ? kategoriName : [kategoriName])],
     queryFn: async () => {
       const names = Array.isArray(kategoriName) ? kategoriName : [kategoriName];
+      const normalizedNames = names.map((name) => normalizeText(name));
 
-      const { data: kategoriler } = await supabase
+      const { data: tumKategoriler } = await supabase
         .from("firma_bilgi_kategorileri")
-        .select("id, name")
-        .in("name", names);
+        .select("id, name");
 
-      if (!kategoriler?.length) return [];
+      if (!tumKategoriler?.length) return [];
 
       const seciliKategori = names
-        .map((name) => kategoriler.find((k) => k.name === name))
-        .find(Boolean);
+        .map((name) =>
+          tumKategoriler.find((k) => normalizeText(k.name) === normalizeText(name))
+        )
+        .find(Boolean) || tumKategoriler.find((k) => normalizedNames.includes(normalizeText(k.name)));
 
       if (!seciliKategori) return [];
 
       const { data } = await supabase
         .from("firma_bilgi_secenekleri")
-        .select("*")
+        .select("id, name")
         .eq("kategori_id", seciliKategori.id)
         .is("parent_id", null)
         .order("name");
@@ -71,19 +73,45 @@ function useChildOptions(parentId: string | null) {
     queryKey: ["dependent_options", parentId],
     queryFn: async () => {
       if (!parentId) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", parentId).order("name");
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("parent_id", parentId).order("name");
       return sortSecenekler(data || []);
     },
     enabled: !!parentId,
   });
 }
 
-function useMultiChildOptions(parentIds: string[]) {
+function useMultiChildOptions(parentIds: string[], kategoriName?: string | string[]) {
   return useQuery({
-    queryKey: ["multi_dependent_options", parentIds],
+    queryKey: ["multi_dependent_options", parentIds, ...(Array.isArray(kategoriName) ? kategoriName : kategoriName ? [kategoriName] : [])],
     queryFn: async () => {
       if (!parentIds.length) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").in("parent_id", parentIds).order("name");
+
+      let kategoriIds: string[] | null = null;
+      if (kategoriName) {
+        const names = Array.isArray(kategoriName) ? kategoriName : [kategoriName];
+        const normalizedNames = names.map((name) => normalizeText(name));
+
+        const { data: tumKategoriler } = await supabase
+          .from("firma_bilgi_kategorileri")
+          .select("id, name");
+
+        kategoriIds = (tumKategoriler || [])
+          .filter((k) => normalizedNames.includes(normalizeText(k.name)))
+          .map((k) => k.id);
+
+        if (!kategoriIds.length) return [];
+      }
+
+      let query = supabase
+        .from("firma_bilgi_secenekleri")
+        .select("id, name, parent_id, kategori_id")
+        .in("parent_id", parentIds);
+
+      if (kategoriIds?.length) {
+        query = query.in("kategori_id", kategoriIds);
+      }
+
+      const { data } = await query.order("name");
       return sortSecenekler(data || []);
     },
     enabled: parentIds.length > 0,
@@ -91,8 +119,8 @@ function useMultiChildOptions(parentIds: string[]) {
 }
 
 // Multi-select dependent dropdown supporting multiple parents
-function MultiDependentMultiParentField({ label, parentIds, value, onChange, disabled }: { label: string; parentIds: string[]; value: string[]; onChange: (v: string[]) => void; disabled?: boolean }) {
-  const { data: options } = useMultiChildOptions(parentIds);
+function MultiDependentMultiParentField({ label, parentIds, value, onChange, disabled, kategoriName }: { label: string; parentIds: string[]; value: string[]; onChange: (v: string[]) => void; disabled?: boolean; kategoriName?: string | string[] }) {
+  const { data: options } = useMultiChildOptions(parentIds, kategoriName);
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
@@ -175,29 +203,32 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
   const { data: turName } = useCategoryName(formData.urun_tur_id);
 
   const td = formData.teknik_detaylar;
-  const setTD = (key: string, value: any) => {
-    updateForm({ teknik_detaylar: { ...formData.teknik_detaylar, [key]: value } });
+  const patchTD = (changes: Record<string, any>) => {
+    updateForm({ teknik_detaylar: { ...td, ...changes } });
   };
-
+  const setTD = (key: string, value: any) => patchTD({ [key]: value });
 
   // Helper: ensure value is always string[] for multi-select fields
   const toArr = (v: any): string[] => {
-    if (Array.isArray(v)) return v;
-    if (typeof v === "string" && v) return [v];
+    if (Array.isArray(v)) return [...new Set(v.filter(Boolean).map(String))];
+    if (typeof v === "string") {
+      return [...new Set(v.split(",").map((item) => item.trim()).filter(Boolean))];
+    }
+    if (v && typeof v === "object") {
+      return [...new Set(Object.values(v).map(String).map((item) => item.trim()).filter(Boolean))];
+    }
     return [];
   };
 
   const renderUrunFields = () => {
     const catNorm = normalizeText(kategoriName || "");
-    const taxonomy = [kategoriName, grupName, turName].filter(Boolean).join(" ");
-    const cat = normalizeText(taxonomy);
 
     if (catNorm.includes("hazir giyim")) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
-          <MultiDropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={toArr(td.kumas_grubu)} onChange={(v) => updateForm({ teknik_detaylar: { ...formData.teknik_detaylar, kumas_grubu: v, kumas_turu: [] } })} />
-          <MultiDependentMultiParentField label="Kumaş Türü" parentIds={toArr(td.kumas_grubu)} value={toArr(td.kumas_turu)} onChange={(v) => setTD("kumas_turu", v)} disabled={!toArr(td.kumas_grubu).length} />
+          <MultiDropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={toArr(td.kumas_grubu)} onChange={(v) => patchTD({ kumas_grubu: v, kumas_turu: [] })} />
+          <MultiDependentMultiParentField label="Kumaş Türü" kategoriName="Kumaş Türü" parentIds={toArr(td.kumas_grubu)} value={toArr(td.kumas_turu)} onChange={(v) => setTD("kumas_turu", v)} disabled={!toArr(td.kumas_grubu).length} />
           <MultiDropdownField label="Sezon" kategoriName="Sezon" value={toArr(td.sezon)} onChange={(v) => setTD("sezon", v)} />
           <MultiDropdownField label="Cinsiyet" kategoriName="Cinsiyet" value={toArr(td.cinsiyet)} onChange={(v) => setTD("cinsiyet", v)} />
           <MultiDropdownField label="Yaş Grubu" kategoriName="Yaş Grubu" value={toArr(td.yas_grubu)} onChange={(v) => setTD("yas_grubu", v)} />
@@ -206,6 +237,10 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
         </>
       );
     }
+
+    const taxonomy = [kategoriName, grupName, turName].filter(Boolean).join(" ");
+    const cat = normalizeText(taxonomy);
+
 
     if (catNorm.includes("aksesuar")) {
       return (
