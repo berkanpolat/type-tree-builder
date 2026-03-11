@@ -718,6 +718,12 @@ export default function IhaleTakip() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        <UpgradeDialog
+          open={upgradeOpen}
+          onOpenChange={setUpgradeOpen}
+          title="Mesaj Hakkınız Doldu"
+          message={upgradeMessage}
+        />
       </div>
     </DashboardLayout>
   );

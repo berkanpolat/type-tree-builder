@@ -1009,6 +1009,12 @@ export default function UrunDetay() {
         <BildirDialog open={bildirOpen} onOpenChange={setBildirOpen} tur="urun" referansId={urun.id} />
       )}
       <Footer />
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Mesaj Hakkınız Doldu"
+        message={upgradeMessage}
+      />
     </div>
   );
 }

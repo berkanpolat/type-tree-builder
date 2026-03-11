@@ -482,6 +482,12 @@ export default function TekRehber() {
         </div>
       </main>
       <Footer />
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Mesaj Hakkınız Doldu"
+        message={upgradeMessage}
+      />
     </div>
   );
 }
