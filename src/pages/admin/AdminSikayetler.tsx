@@ -78,6 +78,10 @@ interface SikayetItem {
   referans_id: string;
   ek_dosya_url: string | null;
   ek_dosya_adi: string | null;
+  islem_tipi: string | null;
+  islem_yapan: string | null;
+  islem_tarihi: string | null;
+  islem_detay: string | null;
 }
 
 const ITEMS_PER_PAGE = 10;
