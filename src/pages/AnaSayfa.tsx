@@ -52,6 +52,12 @@ interface SearchResult {
   type: "Kategori" | "Grup" | "Tür" | "Ürün";
 }
 
+interface KategoriNode {
+  id: string;
+  name: string;
+  parent_id: string | null;
+}
+
 interface UrunListItem {
   id: string;
   baslik: string;
