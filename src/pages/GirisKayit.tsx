@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import authBg from "@/assets/auth-bg.jpg";
 import {
   InputOTP,
@@ -25,6 +26,7 @@ import CountryCodeSelect from "@/components/CountryCodeSelect";
 
 const GirisKayit = () => {
   const [activeTab, setActiveTab] = useState<"giris" | "kayit">("giris");
+  const [registerStep, setRegisterStep] = useState(1);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -294,23 +296,11 @@ const GirisKayit = () => {
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label>E-posta</Label>
-                <Input
-                  type="email"
-                  placeholder="E-posta"
-                  value={loginEmail}
-                  onChange={(e) => setLoginEmail(e.target.value)}
-                  required
-                />
+                <Input type="email" placeholder="E-posta" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required />
               </div>
               <div className="space-y-2">
                 <Label>Şifre</Label>
-                <Input
-                  type="password"
-                  placeholder="Şifre"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  required
-                />
+                <Input type="password" placeholder="Şifre" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required />
               </div>
               <Button type="submit" className="w-full" disabled={loginLoading}>
                 {loginLoading ? "Giriş yapılıyor..." : "Giriş"}
@@ -320,181 +310,185 @@ const GirisKayit = () => {
               </p>
             </form>
           ) : (
-            <form onSubmit={handleRegister} className="space-y-4">
-              {/* Firma Türü */}
-              <div className="space-y-2">
-                <Label>Firma Türü</Label>
-                <Select
-                  value={selectedTurId}
-                  onValueChange={(v) => {
-                    setSelectedTurId(v);
-                    setSelectedTipId("");
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Firma Türü Seçiniz" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    {firmaTurleri?.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            <div className="space-y-5">
+              {/* Step indicators */}
+              <div className="flex items-center gap-2">
+                {[1, 2, 3].map((step) => (
+                  <div key={step} className="flex-1 flex flex-col items-center gap-1.5">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                      registerStep === step
+                        ? "bg-primary text-primary-foreground"
+                        : registerStep > step
+                        ? "bg-primary/20 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    }`}>
+                      {registerStep > step ? <CheckCircle2 className="w-4 h-4" /> : step}
+                    </div>
+                    <span className="text-xs text-muted-foreground text-center">
+                      {step === 1 ? "Firma" : step === 2 ? "Kişisel" : "Şifre"}
+                    </span>
+                  </div>
+                ))}
               </div>
+              <Progress value={(registerStep / 3) * 100} className="h-1.5" />
 
-              {/* Firma Tipi */}
-              <div className="space-y-2">
-                <Label>Firma Tipi</Label>
-                <Select
-                  value={selectedTipId}
-                  onValueChange={setSelectedTipId}
-                  disabled={!selectedTurId}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Firma Tipi Seçiniz" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    {firmaTipleri?.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Firma Ünvanı */}
-              <div className="space-y-2">
-                <Label>Firma Ünvanı</Label>
-                <Input placeholder="Firma Ünvanı" value={firmaUnvani} onChange={(e) => setFirmaUnvani(e.target.value)} required />
-              </div>
-
-              {/* Vergi Numarası */}
-              <div className="space-y-2">
-                <Label>Vergi Numarası</Label>
-                <Input placeholder="Vergi Numarası" value={vergiNumarasi} onChange={(e) => setVergiNumarasi(e.target.value)} required />
-              </div>
-
-              {/* Vergi Dairesi */}
-              <div className="space-y-2">
-                <Label>Vergi Dairesi</Label>
-                <Input placeholder="Vergi Dairesi" value={vergiDairesi} onChange={(e) => setVergiDairesi(e.target.value)} required />
-              </div>
-
-              {/* Ad */}
-              <div className="space-y-2">
-                <Label>Ad</Label>
-                <Input placeholder="Ad" value={ad} onChange={(e) => setAd(e.target.value)} required />
-              </div>
-
-              {/* Soyad */}
-              <div className="space-y-2">
-                <Label>Soyad</Label>
-                <Input placeholder="Soyad" value={soyad} onChange={(e) => setSoyad(e.target.value)} required />
-              </div>
-
-              {/* İletişim E-Posta */}
-              <div className="space-y-2">
-                <Label>İletişim E-Posta Adresi</Label>
-                <Input type="email" placeholder="İletişim E-Posta Adresi" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-
-              {/* İletişim Numarası + Doğrulama */}
-              <div className="space-y-2">
-                <Label>İletişim Numarası</Label>
-                <div className="flex gap-2">
-                  <CountryCodeSelect
-                    value={countryCode}
-                    onChange={(code) => {
-                      setCountryCode(code);
-                      if (phoneVerified) {
-                        setPhoneVerified(false);
-                        setOtpSent(false);
-                        setOtpCode("");
+              {/* Step 1: Firma Bilgileri */}
+              {registerStep === 1 && (
+                <div className="space-y-4">
+                  <h3 className="text-base font-semibold text-foreground">Firma Bilgileri</h3>
+                  <div className="space-y-2">
+                    <Label>Firma Türü</Label>
+                    <Select value={selectedTurId} onValueChange={(v) => { setSelectedTurId(v); setSelectedTipId(""); }}>
+                      <SelectTrigger><SelectValue placeholder="Firma Türü Seçiniz" /></SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {firmaTurleri?.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Firma Tipi</Label>
+                    <Select value={selectedTipId} onValueChange={setSelectedTipId} disabled={!selectedTurId}>
+                      <SelectTrigger><SelectValue placeholder="Firma Tipi Seçiniz" /></SelectTrigger>
+                      <SelectContent className="bg-popover z-50">
+                        {firmaTipleri?.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Firma Ünvanı</Label>
+                    <Input placeholder="Firma Ünvanı" value={firmaUnvani} onChange={(e) => setFirmaUnvani(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Vergi Numarası</Label>
+                    <Input placeholder="Vergi Numarası" value={vergiNumarasi} onChange={(e) => setVergiNumarasi(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Vergi Dairesi</Label>
+                    <Input placeholder="Vergi Dairesi" value={vergiDairesi} onChange={(e) => setVergiDairesi(e.target.value)} />
+                  </div>
+                  <Button
+                    type="button"
+                    className="w-full"
+                    onClick={() => {
+                      if (!selectedTurId || !selectedTipId || !firmaUnvani || !vergiNumarasi || !vergiDairesi) {
+                        toast({ title: "Hata", description: "Lütfen tüm firma bilgilerini doldurunuz", variant: "destructive" });
+                        return;
                       }
+                      setRegisterStep(2);
                     }}
-                    disabled={phoneVerified}
-                  />
-                  <Input
-                    placeholder="532 XXX XX XX"
-                    value={telefon}
-                    onChange={(e) => {
-                      setTelefon(e.target.value);
-                      if (phoneVerified) {
-                        setPhoneVerified(false);
-                        setOtpSent(false);
-                        setOtpCode("");
-                      }
-                    }}
-                    disabled={phoneVerified}
-                    className="flex-1"
-                    required
-                  />
-                  {!phoneVerified && (
+                  >
+                    Devam Et
+                  </Button>
+                </div>
+              )}
+
+              {/* Step 2: Kişisel Bilgiler & Telefon Doğrulama */}
+              {registerStep === 2 && (
+                <div className="space-y-4">
+                  <h3 className="text-base font-semibold text-foreground">Kişisel Bilgiler</h3>
+                  <div className="space-y-2">
+                    <Label>Ad</Label>
+                    <Input placeholder="Ad" value={ad} onChange={(e) => setAd(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Soyad</Label>
+                    <Input placeholder="Soyad" value={soyad} onChange={(e) => setSoyad(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>İletişim E-Posta Adresi</Label>
+                    <Input type="email" placeholder="İletişim E-Posta Adresi" value={email} onChange={(e) => setEmail(e.target.value)} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>İletişim Numarası</Label>
+                    <div className="flex gap-2">
+                      <CountryCodeSelect
+                        value={countryCode}
+                        onChange={(code) => { setCountryCode(code); if (phoneVerified) { setPhoneVerified(false); setOtpSent(false); setOtpCode(""); } }}
+                        disabled={phoneVerified}
+                      />
+                      <Input
+                        placeholder="532 XXX XX XX"
+                        value={telefon}
+                        onChange={(e) => { setTelefon(e.target.value); if (phoneVerified) { setPhoneVerified(false); setOtpSent(false); setOtpCode(""); } }}
+                        disabled={phoneVerified}
+                        className="flex-1"
+                      />
+                      {!phoneVerified && (
+                        <Button type="button" variant="outline" onClick={handleSendOtp} disabled={sendingOtp || otpCountdown > 0 || !telefon || telefon.replace(/\s/g, "").replace(/^0+/, "").length < 7} className="shrink-0">
+                          {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : otpCountdown > 0 ? `${Math.floor(otpCountdown / 60)}:${String(otpCountdown % 60).padStart(2, "0")}` : otpSent ? "Tekrar Gönder" : "Kod Gönder"}
+                        </Button>
+                      )}
+                      {phoneVerified && (
+                        <div className="flex items-center gap-1 text-sm shrink-0 px-2 text-primary">
+                          <CheckCircle2 className="w-4 h-4" /> Doğrulandı
+                        </div>
+                      )}
+                    </div>
+                    {otpSent && !phoneVerified && (
+                      <div className="space-y-3 pt-2">
+                        <p className="text-sm text-muted-foreground">{getFullPhone()} numarasına gönderilen 6 haneli kodu giriniz:</p>
+                        <div className="flex items-center gap-3">
+                          <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                            <InputOTPGroup>
+                              {[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}
+                            </InputOTPGroup>
+                          </InputOTP>
+                          <Button type="button" size="sm" onClick={handleVerifyOtp} disabled={verifyingOtp || otpCode.length !== 6}>
+                            {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Doğrula"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setRegisterStep(1)}>Geri</Button>
                     <Button
                       type="button"
-                      variant="outline"
-                      onClick={handleSendOtp}
-                      disabled={sendingOtp || otpCountdown > 0 || !telefon || telefon.replace(/\s/g, "").replace(/^0+/, "").length < 7}
-                      className="shrink-0"
+                      className="flex-1"
+                      onClick={() => {
+                        if (!ad || !soyad || !email || !telefon) {
+                          toast({ title: "Hata", description: "Lütfen tüm kişisel bilgileri doldurunuz", variant: "destructive" });
+                          return;
+                        }
+                        if (!phoneVerified) {
+                          toast({ title: "Hata", description: "Lütfen telefon numaranızı doğrulayın", variant: "destructive" });
+                          return;
+                        }
+                        setRegisterStep(3);
+                      }}
                     >
-                      {sendingOtp ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : otpCountdown > 0 ? (
-                        `${Math.floor(otpCountdown / 60)}:${String(otpCountdown % 60).padStart(2, "0")}`
-                      ) : otpSent ? (
-                        "Tekrar Gönder"
-                      ) : (
-                        "Kod Gönder"
-                      )}
+                      Devam Et
                     </Button>
-                  )}
-                  {phoneVerified && (
-                    <div className="flex items-center gap-1 text-sm shrink-0 px-2 text-primary">
-                      <CheckCircle2 className="w-4 h-4" />
-                      Doğrulandı
-                    </div>
-                  )}
+                  </div>
                 </div>
+              )}
 
-                {/* OTP Input */}
-                {otpSent && !phoneVerified && (
-                  <div className="space-y-3 pt-2">
-                    <p className="text-sm text-muted-foreground">
-                      {getFullPhone()} numarasına gönderilen 6 haneli kodu giriniz:
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={handleVerifyOtp}
-                        disabled={verifyingOtp || otpCode.length !== 6}
-                      >
-                        {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Doğrula"}
-                      </Button>
+              {/* Step 3: Şifre & Kayıt */}
+              {registerStep === 3 && (
+                <form onSubmit={handleRegister} className="space-y-4">
+                  <h3 className="text-base font-semibold text-foreground">Şifre Oluştur</h3>
+                  <div className="rounded-lg border border-border p-4 space-y-2 text-sm">
+                    <p className="font-medium text-foreground">Kayıt Özeti</p>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
+                      <span>Firma:</span><span className="text-foreground">{firmaUnvani}</span>
+                      <span>Ad Soyad:</span><span className="text-foreground">{ad} {soyad}</span>
+                      <span>E-posta:</span><span className="text-foreground">{email}</span>
+                      <span>Telefon:</span><span className="text-foreground">{getFullPhone()}</span>
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Şifre */}
-              <div className="space-y-2">
-                <Label>Şifre</Label>
-                <Input type="password" placeholder="Şifre (min 6 karakter)" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-              </div>
-
-              <Button type="submit" className="w-full" disabled={registerLoading || !phoneVerified}>
-                {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
-              </Button>
-            </form>
+                  <div className="space-y-2">
+                    <Label>Şifre</Label>
+                    <Input type="password" placeholder="Şifre (min 6 karakter)" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setRegisterStep(2)}>Geri</Button>
+                    <Button type="submit" className="flex-1" disabled={registerLoading}>
+                      {registerLoading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </div>
           )}
         </div>
       </div>
