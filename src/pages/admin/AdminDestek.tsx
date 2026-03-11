@@ -85,7 +85,7 @@ const durumColors: Record<string, string> = {
 type StatusFilter = "all" | "inceleniyor" | "cozuldu" | "cevaplandi" | "cevap_bekliyor";
 
 const AdminDestek = () => {
-  const { token } = useAdminAuth();
+  const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [talepler, setTalepler] = useState<DeskTalep[]>([]);
   const [loading, setLoading] = useState(true);
