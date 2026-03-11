@@ -887,21 +887,25 @@ export default function AdminIhaleler() {
 
 /* ── Reusable Components ── */
 
-function StatCard({ icon, iconBg, iconColor, label, value, valueColor }: {
-  icon: React.ReactNode; iconBg: string; iconColor: string; label: string; value: number; valueColor?: string;
+function MiniStatCard({ label, value, icon, color, active, onClick, clickable = true }: {
+  label: string; value: number; icon: React.ReactNode; color: string;
+  active: boolean; onClick: () => void; clickable?: boolean;
 }) {
   return (
-    <div style={s.card} className="p-4">
-      <div className="flex items-center gap-3">
-        <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center ${iconColor}`}>
-          {icon}
-        </div>
-        <div>
-          <p className="text-[11px] font-medium" style={s.muted}>{label}</p>
-          <p className={`text-2xl font-bold ${valueColor || ""}`} style={!valueColor ? s.text : undefined}>{value}</p>
-        </div>
+    <button
+      onClick={clickable ? onClick : undefined}
+      style={{
+        ...s.card,
+        ...(active ? { borderColor: "hsl(var(--admin-accent, 40 96% 53%))", boxShadow: "0 0 0 1px hsl(var(--admin-accent, 40 96% 53%) / 0.3)" } : {}),
+      }}
+      className={`p-2.5 text-left transition-all ${clickable ? "hover:opacity-80 cursor-pointer" : "cursor-default"}`}
+    >
+      <div className="flex items-center gap-1.5 mb-1">
+        <span className={color}>{icon}</span>
+        <span className="text-[10px] font-medium truncate" style={s.muted}>{label}</span>
       </div>
-    </div>
+      <p className={`text-xl font-bold ${color}`}>{value}</p>
+    </button>
   );
 }
 
