@@ -1634,7 +1634,7 @@ Deno.serve(async (req) => {
     // ─── LIST DESTEK TALEPLERI (admin) ───
     if (action === "list-destek") {
       const payload = verifyToken(body.token);
-      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+      if (!payload.is_primary && !payload.permissions?.destek_goruntule) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
@@ -1664,7 +1664,7 @@ Deno.serve(async (req) => {
     // ─── GET DESTEK MESSAGES (admin) ───
     if (action === "destek-mesajlar") {
       const payload = verifyToken(body.token);
-      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+      if (!payload.is_primary && !payload.permissions?.destek_goruntule) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
@@ -1681,7 +1681,7 @@ Deno.serve(async (req) => {
     // ─── SEND DESTEK MESSAGE (admin) ───
     if (action === "destek-mesaj-gonder") {
       const payload = verifyToken(body.token);
-      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+      if (!payload.is_primary && !payload.permissions?.destek_cevap) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
@@ -1738,7 +1738,7 @@ Deno.serve(async (req) => {
     // ─── UPDATE DESTEK STATUS (admin) ───
     if (action === "destek-durum-guncelle") {
       const payload = verifyToken(body.token);
-      if (!payload.is_primary && !payload.permissions?.destek_talepleri) {
+      if (!payload.is_primary && !payload.permissions?.destek_cevap) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
