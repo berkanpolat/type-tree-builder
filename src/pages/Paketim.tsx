@@ -46,6 +46,7 @@ const Paketim = () => {
   const [portalLoading, setPortalLoading] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
@@ -55,10 +56,8 @@ const Paketim = () => {
       try {
         const { data, error } = await supabase.functions.invoke("check-subscription");
         if (error) console.error("Subscription sync error:", error);
-        if (searchParams.get("checkout") === "success" && data?.subscribed) {
-          toast({ title: "Ödeme başarılı!", description: "PRO paketiniz aktif edildi." });
-          // Reload to reflect new package
-          setTimeout(() => window.location.replace("/paketim"), 1500);
+        if (searchParams.get("checkout") === "success") {
+          setSuccessDialogOpen(true);
         }
       } catch (e) {
         console.error("Subscription sync failed:", e);
