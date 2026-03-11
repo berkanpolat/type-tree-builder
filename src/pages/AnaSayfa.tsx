@@ -50,6 +50,7 @@ interface SearchResult {
   id: string;
   name: string;
   type: "Kategori" | "Grup" | "Tür" | "Ürün";
+  urunKategoriId?: string | null;
 }
 
 interface KategoriNode {
