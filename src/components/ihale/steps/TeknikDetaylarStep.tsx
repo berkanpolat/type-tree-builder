@@ -213,7 +213,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("boya") || cat.includes("kimyasal")) {
+    if (catNorm.includes("boya") || catNorm.includes("kimyasal")) {
       return (
         <>
           <MultiDropdownField label="Kimyasal Kullanım Alanı" kategoriName="Kimyasal Kullanım Alanı" value={toArr(td.kimyasal_kullanim_alani)} onChange={(v) => setTD("kimyasal_kullanim_alani", v)} />
