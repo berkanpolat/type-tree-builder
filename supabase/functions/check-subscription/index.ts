@@ -213,7 +213,7 @@ function jsonResponse(data: any) {
 async function ensureFreePackage(supabase: any, userId: string) {
   const { data: freePaket } = await supabase
     .from("paketler")
-    .select("id")
+    .select("id, aktif_urun_limiti")
     .eq("slug", "ucretsiz")
     .single();
 
@@ -229,8 +229,9 @@ async function ensureFreePackage(supabase: any, userId: string) {
     .eq("user_id", userId)
     .single();
 
+  const wasDowngraded = existing && existing.paket_id !== freePaket.id;
+
   if (existing) {
-    // Update to free if not already
     const { error } = await supabase
       .from("kullanici_abonelikler")
       .update({
@@ -258,6 +259,11 @@ async function ensureFreePackage(supabase: any, userId: string) {
 
     if (error) logStep("ensureFreePackage insert error", { error });
     else logStep("ensureFreePackage: inserted free");
+  }
+
+  // Deactivate excess products if downgraded from a higher package
+  if (wasDowngraded) {
+    await deactivateExcessProducts(supabase, userId, freePaket.aktif_urun_limiti);
   }
 }
 
