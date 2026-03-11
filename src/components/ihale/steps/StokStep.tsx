@@ -202,7 +202,7 @@ export default function StokStep({ formData, updateForm }: Props) {
               {formData.stoklar.map((stok, i) => (
                 <TableRow key={i}>
                   {isHazirGiyim && <TableCell>{stok.varyant_1_value}</TableCell>}
-                  <TableCell>{stok.varyant_2_value}</TableCell>
+                  <TableCell>{isHazirGiyim ? stok.varyant_2_value : stok.varyant_1_value}</TableCell>
                   <TableCell>{birimFromForm}</TableCell>
                   <TableCell>
                     <Input
