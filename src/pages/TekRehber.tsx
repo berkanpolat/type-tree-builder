@@ -259,29 +259,33 @@ export default function TekRehber() {
     setShowDropdown(false);
   }, [searchTerm]);
 
-  // Search autocomplete
+  // Lightweight autocomplete - only suggest firma names
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setSearchResults([]);
+      setShowDropdown(false);
       return;
     }
     const timer = setTimeout(async () => {
-      const results: SearchResult[] = [];
-      const [firmaRes, turRes] = await Promise.all([
-        supabase.from("firmalar").select("id, firma_unvani").ilike("firma_unvani", `%${searchTerm}%`).limit(5),
-        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", KATEGORI_ID).ilike("name", `%${searchTerm}%`).limit(5),
-      ]);
-      if (firmaRes.data) firmaRes.data.forEach((f) => results.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
-      if (turRes.data) turRes.data.forEach((t) => results.push({ id: t.id, name: t.name, type: "Tür" }));
-      setSearchResults(results);
-      setShowDropdown(results.length > 0);
-    }, 500);
+      const { data } = await supabase
+        .from("firmalar")
+        .select("id, firma_unvani")
+        .ilike("firma_unvani", `%${searchTerm}%`)
+        .limit(6);
+      if (data && data.length > 0) {
+        setSearchResults(data.map((f) => ({ id: f.id, name: f.firma_unvani, type: "Firma" })));
+        setShowDropdown(true);
+      } else {
+        setSearchResults([]);
+        setShowDropdown(false);
+      }
+    }, 250);
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
   const handleSearchResultClick = (result: SearchResult) => {
-    setActiveFilter(result);
     setSearchTerm(result.name);
+    setAppliedSearchTerm(result.name);
     setShowDropdown(false);
   };
 
