@@ -113,6 +113,7 @@ export function usePackageQuota(): PackageInfo {
             .gte("created_at", donemBaslangic),
         ]);
 
+        const uniqueFirmaIds = new Set((profilRes.data || []).map((p: any) => p.firma_id));
         const uniqueIhaleIds = new Set((teklifRes.data || []).map((t: any) => t.ihale_id));
 
         let initiatedConversations = 0;
