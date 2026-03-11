@@ -18,6 +18,24 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
+async function logActivity(supabase: any, payload: any, action: string, opts: { target_type?: string; target_id?: string; target_label?: string; details?: Record<string, any> } = {}) {
+  try {
+    const { data: adminUser } = await supabase.from("admin_users").select("ad, soyad, pozisyon").eq("id", payload.id).single();
+    await supabase.from("admin_activity_log").insert({
+      admin_id: payload.id,
+      admin_username: payload.username,
+      admin_ad: adminUser?.ad || "—",
+      admin_soyad: adminUser?.soyad || "—",
+      admin_pozisyon: adminUser?.pozisyon || "—",
+      action,
+      target_type: opts.target_type || null,
+      target_id: opts.target_id || null,
+      target_label: opts.target_label || null,
+      details: opts.details || {},
+    });
+  } catch {}
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
