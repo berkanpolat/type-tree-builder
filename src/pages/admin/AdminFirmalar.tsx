@@ -1170,6 +1170,125 @@ export default function AdminFirmalar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Belge Doğrulama Dialog */}
+      <Dialog open={belgeDialogOpen} onOpenChange={setBelgeDialogOpen}>
+        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle style={s.text}>
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-amber-500" />
+                Belge Doğrulama
+              </div>
+            </DialogTitle>
+            <DialogDescription style={s.muted}>
+              {belgeDialogFirma?.firma_unvani} — yüklenen belgeleri inceleyin
+            </DialogDescription>
+          </DialogHeader>
+
+          {belgeDialogLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+            </div>
+          ) : belgeler.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm" style={s.muted}>Henüz belge yüklenmemiş.</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {belgeler.map((belge: any) => {
+                const isActionLoading = belgeActionLoading === belge.id;
+                return (
+                  <div key={belge.id} className="p-4 rounded-lg" style={{ background: "hsl(var(--admin-hover))" }}>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4" style={s.muted} />
+                        <span className="text-sm font-medium" style={s.text}>
+                          {BELGE_LABELS[belge.belge_turu] || belge.belge_turu}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        {belge.durum === "inceleniyor" && (
+                          <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 text-[10px] px-1.5 py-0">İnceleniyor</Badge>
+                        )}
+                        {belge.durum === "onaylandi" && (
+                          <Badge className="bg-emerald-500/20 text-emerald-500 border-emerald-500/30 text-[10px] px-1.5 py-0">Onaylandı</Badge>
+                        )}
+                        {belge.durum === "reddedildi" && (
+                          <Badge className="bg-red-500/20 text-red-500 border-red-500/30 text-[10px] px-1.5 py-0">Reddedildi</Badge>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-xs mb-3" style={s.muted}>{belge.dosya_adi}</p>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline" size="sm" className="text-xs"
+                        style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+                        onClick={() => handleDownloadBelge(belge.dosya_url, belge.dosya_adi)}
+                      >
+                        <Download className="w-3.5 h-3.5 mr-1" /> İndir
+                      </Button>
+
+                      {belge.durum === "inceleniyor" && (
+                        <>
+                          <Button
+                            size="sm" className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+                            disabled={isActionLoading}
+                            onClick={() => handleBelgeAction(belge.id, "onaylandi")}
+                          >
+                            {isActionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle className="w-3.5 h-3.5 mr-1" />}
+                            Onayla
+                          </Button>
+                          <Button
+                            size="sm" className="text-xs" variant="ghost"
+                            style={{ color: "#ef4444" }}
+                            disabled={isActionLoading}
+                            onClick={() => {
+                              if (!rejectReasons[belge.id] && rejectReasons[belge.id] !== "") {
+                                setRejectReasons(prev => ({ ...prev, [belge.id]: "" }));
+                              } else {
+                                handleBelgeAction(belge.id, "reddedildi");
+                              }
+                            }}
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1" /> Reddet
+                          </Button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Reject reason input */}
+                    {rejectReasons[belge.id] !== undefined && belge.durum === "inceleniyor" && (
+                      <div className="mt-2 space-y-2">
+                        <Textarea
+                          placeholder="Reddetme sebebi..."
+                          value={rejectReasons[belge.id]}
+                          onChange={(e) => setRejectReasons(prev => ({ ...prev, [belge.id]: e.target.value }))}
+                          className="text-xs h-16"
+                          style={s.input}
+                        />
+                        <Button
+                          size="sm" className="text-xs bg-red-600 hover:bg-red-700 text-white"
+                          disabled={isActionLoading || !rejectReasons[belge.id]}
+                          onClick={() => handleBelgeAction(belge.id, "reddedildi")}
+                        >
+                          Reddet ve Gönder
+                        </Button>
+                      </div>
+                    )}
+
+                    {belge.karar_sebebi && belge.durum === "reddedildi" && (
+                      <p className="text-xs mt-2" style={{ color: "#ef4444" }}>Sebep: {belge.karar_sebebi}</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
