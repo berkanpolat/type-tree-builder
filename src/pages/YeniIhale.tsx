@@ -100,6 +100,21 @@ export default function YeniIhale() {
   const [isAdminMode, setIsAdminMode] = useState(false);
   const { isRestricted, getRestrictionMessage } = useRestrictions();
 
+  // Check if selected hizmet category is "Teknik & Tasarım" (no birim/stok needed)
+  const { data: hizmetKatName } = useQuery({
+    queryKey: ["hizmet_kat_name", formData.hizmet_kategori_id],
+    queryFn: async () => {
+      if (!formData.hizmet_kategori_id) return null;
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("name").eq("id", formData.hizmet_kategori_id).single();
+      return data?.name || null;
+    },
+    enabled: !!formData.hizmet_kategori_id,
+  });
+
+  const isTeknikTasarim = !!(hizmetKatName && hizmetKatName.toLowerCase().includes("teknik") && hizmetKatName.toLowerCase().includes("tasarım"));
+  const skipStokStep = formData.ihale_turu === "hizmet_alim" && isTeknikTasarim;
+  const STEPS = useMemo(() => skipStokStep ? ALL_STEPS.filter(s => s !== "Stok") : ALL_STEPS, [skipStokStep]);
+
   // Check restriction before allowing ihale creation
   useEffect(() => {
     if (!editId && !isAdminMode && isRestricted("ihale_acamaz")) {
