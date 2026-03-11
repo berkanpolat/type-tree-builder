@@ -939,7 +939,7 @@ export default function AdminFirmalar() {
 
       {/* Yeni Firma Dialog */}
       <Dialog open={yeniFirmaOpen} onOpenChange={setYeniFirmaOpen}>
-        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto">
+        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle style={s.text}>Yeni Firma Oluştur</DialogTitle>
             <DialogDescription style={s.muted}>
@@ -987,18 +987,18 @@ export default function AdminFirmalar() {
                 <Label className="text-xs" style={s.muted}>Firma Türü *</Label>
                 <Select value={yeniFirma.firma_turu_id} onValueChange={v => setYeniFirma(p => ({ ...p, firma_turu_id: v, firma_tipi_id: "" }))}>
                   <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue placeholder="Seçin" /></SelectTrigger>
-                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
-                    {turler.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
-                  </SelectContent>
+                   <SelectContent style={{ ...s.card, padding: "0.25rem", zIndex: 9999 }} position="popper" className="max-h-60">
+                      {turler.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
+                    </SelectContent>
                 </Select>
               </div>
               <div className="space-y-1">
                 <Label className="text-xs" style={s.muted}>Firma Tipi *</Label>
                 <Select value={yeniFirma.firma_tipi_id} onValueChange={v => setYeniFirma(p => ({ ...p, firma_tipi_id: v }))}>
                   <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue placeholder="Seçin" /></SelectTrigger>
-                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
-                    {filteredTipler.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
-                  </SelectContent>
+                   <SelectContent style={{ ...s.card, padding: "0.25rem", zIndex: 9999 }} position="popper" className="max-h-60">
+                      {filteredTipler.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
+                    </SelectContent>
                 </Select>
               </div>
             </div>
