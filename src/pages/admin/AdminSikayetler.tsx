@@ -71,6 +71,7 @@ interface SikayetItem {
   bildiren_user_id: string;
   bildiren_firma: string;
   sikayet_edilen_firma: string;
+  sikayet_edilen_user_id: string | null;
   tur: string;
   sebep: string;
   aciklama: string | null;
