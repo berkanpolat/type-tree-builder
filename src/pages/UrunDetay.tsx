@@ -837,31 +837,31 @@ export default function UrunDetay() {
                       {firma.linkedin && (
                         <a href={firma.linkedin.startsWith("http") ? firma.linkedin : `https://${firma.linkedin}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <FaLinkedinIn className="w-4 h-4" /> LinkedIn
+                          <Linkedin className="w-4 h-4" /> LinkedIn
                         </a>
                       )}
                       {firma.instagram && (
                         <a href={firma.instagram.startsWith("http") ? firma.instagram : `https://instagram.com/${firma.instagram}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <SiInstagram className="w-4 h-4" /> Instagram
+                          <Instagram className="w-4 h-4" /> Instagram
                         </a>
                       )}
                       {firma.facebook && (
                         <a href={firma.facebook.startsWith("http") ? firma.facebook : `https://${firma.facebook}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <SiFacebook className="w-4 h-4" /> Facebook
+                          <Facebook className="w-4 h-4" /> Facebook
                         </a>
                       )}
                       {firma.x_twitter && (
                         <a href={firma.x_twitter.startsWith("http") ? firma.x_twitter : `https://x.com/${firma.x_twitter}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <RiTwitterXFill className="w-4 h-4" /> X
+                          <Twitter className="w-4 h-4" /> X
                         </a>
                       )}
                       {firma.tiktok && (
                         <a href={firma.tiktok.startsWith("http") ? firma.tiktok : `https://tiktok.com/@${firma.tiktok}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <SiTiktok className="w-4 h-4" /> TikTok
+                          <TikTokIcon className="w-4 h-4" /> TikTok
                         </a>
                       )}
                     </div>
