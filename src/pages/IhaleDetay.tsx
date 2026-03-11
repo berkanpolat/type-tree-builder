@@ -284,7 +284,7 @@ export default function IhaleDetay() {
       if (!user) {
         const adminToken = localStorage.getItem("admin_token");
         if (!adminToken) { navigate("/giris-kayit"); return; }
-        // Admin viewing without main site login - continue without user context
+        setIsAdminViewing(true);
         return;
       }
       setCurrentUserId(user.id);
