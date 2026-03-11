@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,7 +86,7 @@ const INITIAL_FORM: IhaleFormData = {
   stoklar: [],
 };
 
-const STEPS = ["İhale Türü", "Teklif Usulü", "Kategori", "İhale Bilgileri", "Teknik Detaylar", "Stok"];
+const ALL_STEPS = ["İhale Türü", "Teklif Usulü", "Kategori", "İhale Bilgileri", "Teknik Detaylar", "Stok"];
 
 export default function YeniIhale() {
   const navigate = useNavigate();
@@ -98,6 +99,21 @@ export default function YeniIhale() {
   const [loadingEdit, setLoadingEdit] = useState(!!editId);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const { isRestricted, getRestrictionMessage } = useRestrictions();
+
+  // Check if selected hizmet category is "Teknik & Tasarım" (no birim/stok needed)
+  const { data: hizmetKatName } = useQuery({
+    queryKey: ["hizmet_kat_name", formData.hizmet_kategori_id],
+    queryFn: async () => {
+      if (!formData.hizmet_kategori_id) return null;
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("name").eq("id", formData.hizmet_kategori_id).single();
+      return data?.name || null;
+    },
+    enabled: !!formData.hizmet_kategori_id,
+  });
+
+  const isTeknikTasarim = !!(hizmetKatName && hizmetKatName.toLowerCase().includes("teknik") && hizmetKatName.toLowerCase().includes("tasarım"));
+  const skipStokStep = formData.ihale_turu === "hizmet_alim" && isTeknikTasarim;
+  const STEPS = useMemo(() => skipStokStep ? ALL_STEPS.filter(s => s !== "Stok") : ALL_STEPS, [skipStokStep]);
 
   // Check restriction before allowing ihale creation
   useEffect(() => {
@@ -240,8 +256,10 @@ export default function YeniIhale() {
           return !!formData.hizmet_kategori_id && !!formData.hizmet_tur_id;
         }
         return !!formData.urun_kategori_id && !!formData.urun_grup_id && !!formData.urun_tur_id;
-      case 3:
-        return !!(formData.baslik && formData.aciklama && formData.baslangic_fiyati && formData.birim && formData.kdv_durumu && formData.odeme_secenekleri.length > 0 && formData.odeme_vadesi.length > 0 && formData.kargo_masrafi && formData.kargo_sirketi_anlasmasi && formData.baslangic_tarihi && formData.bitis_tarihi);
+      case 3: {
+        const birimRequired = !skipStokStep;
+        return !!(formData.baslik && formData.aciklama && formData.baslangic_fiyati && (birimRequired ? formData.birim : true) && formData.kdv_durumu && formData.odeme_secenekleri.length > 0 && formData.odeme_vadesi.length > 0 && formData.kargo_masrafi && formData.kargo_sirketi_anlasmasi && formData.baslangic_tarihi && formData.bitis_tarihi);
+      }
       default: return true;
     }
   };
@@ -269,7 +287,7 @@ export default function YeniIhale() {
         if (!formData.baslik) missing.push("İhale Başlığı");
         if (!formData.aciklama) missing.push("Açıklama");
         if (!formData.baslangic_fiyati) missing.push("Başlangıç Fiyatı");
-        if (!formData.birim) missing.push("Birim");
+        if (!skipStokStep && !formData.birim) missing.push("Birim");
         if (!formData.kdv_durumu) missing.push("KDV Durumu");
         if (formData.odeme_secenekleri.length === 0) missing.push("Ödeme Seçenekleri");
         if (formData.odeme_vadesi.length === 0) missing.push("Ödeme Vadesi");
@@ -292,7 +310,7 @@ export default function YeniIhale() {
       });
       return;
     }
-    if (currentStep === 1 && !ihaleId) {
+    if (STEPS[currentStep] === "Teklif Usulü" && !ihaleId) {
       await createIhale();
     } else if (ihaleId) {
       // Auto-save on each step transition
@@ -462,12 +480,12 @@ export default function YeniIhale() {
 
         <Card>
           <CardContent className="p-6">
-            {currentStep === 0 && <IhaleTuruStep formData={formData} updateForm={updateForm} />}
-            {currentStep === 1 && <TeklifUsuluStep formData={formData} updateForm={updateForm} />}
-            {currentStep === 2 && <KategoriStep formData={formData} updateForm={updateForm} />}
-            {currentStep === 3 && <IhaleBilgileriStep formData={formData} updateForm={updateForm} ihaleId={ihaleId} />}
-            {currentStep === 4 && <TeknikDetaylarStep formData={formData} updateForm={updateForm} />}
-            {currentStep === 5 && <StokStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "İhale Türü" && <IhaleTuruStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "Teklif Usulü" && <TeklifUsuluStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "Kategori" && <KategoriStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "İhale Bilgileri" && <IhaleBilgileriStep formData={formData} updateForm={updateForm} ihaleId={ihaleId} skipBirim={skipStokStep} />}
+            {STEPS[currentStep] === "Teknik Detaylar" && <TeknikDetaylarStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "Stok" && <StokStep formData={formData} updateForm={updateForm} />}
 
             <div className="flex justify-between mt-8 pt-6 border-t">
               {currentStep > 0 ? (

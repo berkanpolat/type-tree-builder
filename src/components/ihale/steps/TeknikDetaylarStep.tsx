@@ -156,10 +156,11 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
   };
 
   const renderUrunFields = () => {
+    const catNorm = normalizeText(kategoriName || "");
     const taxonomy = [kategoriName, grupName, turName].filter(Boolean).join(" ");
     const cat = normalizeText(taxonomy);
 
-    if (cat.includes("hazir giyim")) {
+    if (catNorm.includes("hazir giyim")) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
@@ -174,7 +175,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("aksesuar")) {
+    if (catNorm.includes("aksesuar")) {
       return (
         <>
           <MultiDropdownField label="Aksesuar Kullanım Alanı" kategoriName="Aksesuar Kullanım Alanı" value={toArr(td.aksesuar_kullanim_alani)} onChange={(v) => setTD("aksesuar_kullanim_alani", v)} />
@@ -185,7 +186,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("ambalaj")) {
+    if (catNorm.includes("ambalaj")) {
       return (
         <>
           <MultiDropdownField label="Ambalaj Kullanım Alanı" kategoriName="Ambalaj Kullanım Alanı" value={toArr(td.ambalaj_kullanim_alani)} onChange={(v) => setTD("ambalaj_kullanim_alani", v)} />
@@ -199,7 +200,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("iplik")) {
+    if (catNorm.includes("iplik")) {
       return (
         <>
           <MultiDropdownField label="İplik Kullanım Alanı" kategoriName="İplik Kullanım Alanı" value={toArr(td.iplik_kullanim_alani)} onChange={(v) => setTD("iplik_kullanim_alani", v)} />
@@ -212,7 +213,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("boya") || cat.includes("kimyasal")) {
+    if (catNorm.includes("boya") || catNorm.includes("kimyasal")) {
       return (
         <>
           <MultiDropdownField label="Kimyasal Kullanım Alanı" kategoriName="Kimyasal Kullanım Alanı" value={toArr(td.kimyasal_kullanim_alani)} onChange={(v) => setTD("kimyasal_kullanim_alani", v)} />
@@ -231,7 +232,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("kumas")) {
+    if (catNorm.includes("kumas")) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
@@ -247,7 +248,7 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       );
     }
 
-    if (cat.includes("makine") || cat.includes("yedek parca")) {
+    if (catNorm.includes("makine") || catNorm.includes("yedek parca")) {
       const years = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
       return (
         <>

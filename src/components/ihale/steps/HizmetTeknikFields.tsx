@@ -111,7 +111,7 @@ function MultiSelectUrunKategoriSecimi({ label, td, setTD, prefixKey }: { label:
 export default function HizmetTeknikFields({ td, setTD, kategoriName }: Props) {
   const hizmetName = kategoriName?.toLowerCase() || "";
 
-  if (hizmetName.includes("ürün hizmeti") || hizmetName.includes("üretim hizmeti")) {
+  if (hizmetName.includes("ürün hizmet") || hizmetName.includes("üretim hizmet")) {
     return (
       <>
         <MultiSelectUrunKategoriSecimi label="Ürün Kategorisi / Grubu / Türü" td={td} setTD={setTD} prefixKey="hizmet_urun" />
