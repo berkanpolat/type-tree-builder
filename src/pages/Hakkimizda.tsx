@@ -34,13 +34,8 @@ export default function Hakkimizda() {
   const modules = [
     {
       icon: Users,
-      title: "TekConnect",
+      title: "TekRehber",
       description: "Tekstil endüstrisindeki markaları, üreticileri, tedarikçileri, atölyeleri ve mümessil ofisleri tek bir dijital rehberde toplayan arama modülüdür.",
-    },
-    {
-      icon: Gavel,
-      title: "Tekİhale",
-      description: "Satın alma süreçlerini şeffaf ve hızlı bir teklif toplama/verme sistemine dönüştüren bir modüldür.",
     },
     {
       icon: ShoppingBag,
@@ -48,9 +43,9 @@ export default function Hakkimizda() {
       description: "Tekstil sektöründe toptan alım ve satım yapan firmaları; güvenli, şeffaf ve profesyonel bir dijital ticaret ortamında buluşturan bir modüldür.",
     },
     {
-      icon: Briefcase,
-      title: "TekKariyer",
-      description: "Sektördeki nitelikli iş gücü ile işletmeleri doğru eşleştiren bir modüldür.",
+      icon: Gavel,
+      title: "Tekİhale",
+      description: "Satın alma süreçlerini şeffaf ve hızlı bir teklif toplama/verme sistemine dönüştüren bir modüldür.",
     },
   ];
 
