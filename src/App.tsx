@@ -49,6 +49,7 @@ import AdminUrunler from "./pages/admin/AdminUrunler";
 import AdminSikayetler from "./pages/admin/AdminSikayetler";
 import AdminDestek from "./pages/admin/AdminDestek";
 import AdminPaketler from "./pages/admin/AdminPaketler";
+import Paketim from "./pages/Paketim";
 import AdminIslemler from "./pages/admin/AdminIslemler";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 
