@@ -234,60 +234,65 @@ export default function AnaSayfa() {
     const { data } = await query;
     if (!data) { setUrunLoading(false); return; }
 
-    // Fetch firma info for all user_ids
     const userIds = [...new Set(data.map((u) => u.user_id))];
-    const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
-    if (userIds.length > 0) {
-      const { data: firmalarData } = await supabase.from("firmalar").select("user_id, firma_unvani, logo_url").in("user_id", userIds);
-      if (firmalarData) firmalarData.forEach((f) => { firmaMap[f.user_id] = f; });
-    }
-
-    // Fetch varyasyonlar for varyasyonlu products
     const varyasyonluIds = data.filter((u) => u.fiyat_tipi === "varyasyonlu").map((u) => u.id);
+    const nonVaryIds = data.filter((u) => u.fiyat_tipi !== "varyasyonlu").map((u) => u.id);
+    const shouldFetchExtraVariantDetails =
+      isFiltered &&
+      ((filterState?.renkFiltreler?.length ?? 0) > 0 || (filterState?.bedenFiltreler?.length ?? 0) > 0);
+
+    const [firmalarRes, varyasyonluRes, otherVaryantsRes, favsRes] = await Promise.all([
+      userIds.length > 0
+        ? supabase.from("firmalar").select("user_id, firma_unvani, logo_url").in("user_id", userIds)
+        : Promise.resolve({ data: null, error: null }),
+      varyasyonluIds.length > 0
+        ? supabase
+            .from("urun_varyasyonlar")
+            .select("urun_id, birim_fiyat, foto_url, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
+            .in("urun_id", varyasyonluIds)
+        : Promise.resolve({ data: null, error: null }),
+      shouldFetchExtraVariantDetails && nonVaryIds.length > 0
+        ? supabase
+            .from("urun_varyasyonlar")
+            .select("urun_id, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
+            .in("urun_id", nonVaryIds)
+        : Promise.resolve({ data: null, error: null }),
+      currentUserId
+        ? supabase.from("urun_favoriler").select("urun_id").eq("user_id", currentUserId)
+        : Promise.resolve({ data: null, error: null }),
+    ]);
+
+    const firmaMap: Record<string, { firma_unvani: string; logo_url: string | null }> = {};
+    (firmalarRes.data || []).forEach((f) => {
+      firmaMap[f.user_id] = f;
+    });
+
     const varyantPriceMap: Record<string, { min: number; max: number }> = {};
     const varyantDataMap: Record<string, { renk: Set<string>; beden: Set<string> }> = {};
     const varyantFotoMap: Record<string, string> = {};
 
-    if (varyasyonluIds.length > 0) {
-      const { data: varyantlar } = await supabase
-        .from("urun_varyasyonlar")
-        .select("urun_id, birim_fiyat, foto_url, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
-        .in("urun_id", varyasyonluIds);
-      if (varyantlar) {
-        varyantlar.forEach((v) => {
-          if (!varyantFotoMap[v.urun_id] && v.foto_url) varyantFotoMap[v.urun_id] = v.foto_url;
-          if (!varyantPriceMap[v.urun_id]) {
-            varyantPriceMap[v.urun_id] = { min: v.birim_fiyat, max: v.birim_fiyat };
-          } else {
-            if (v.birim_fiyat < varyantPriceMap[v.urun_id].min) varyantPriceMap[v.urun_id].min = v.birim_fiyat;
-            if (v.birim_fiyat > varyantPriceMap[v.urun_id].max) varyantPriceMap[v.urun_id].max = v.birim_fiyat;
-          }
-          if (!varyantDataMap[v.urun_id]) varyantDataMap[v.urun_id] = { renk: new Set(), beden: new Set() };
-          if (v.varyant_2_label === "Renk" && v.varyant_2_value) varyantDataMap[v.urun_id].renk.add(v.varyant_2_value);
-          if (v.varyant_1_label === "Beden" && v.varyant_1_value) varyantDataMap[v.urun_id].beden.add(v.varyant_1_value);
-          if (v.varyant_1_label === "Renk" && v.varyant_1_value) varyantDataMap[v.urun_id].renk.add(v.varyant_1_value);
-          if (v.varyant_2_label === "Beden" && v.varyant_2_value) varyantDataMap[v.urun_id].beden.add(v.varyant_2_value);
-        });
+    (varyasyonluRes.data || []).forEach((v) => {
+      if (!varyantFotoMap[v.urun_id] && v.foto_url) varyantFotoMap[v.urun_id] = v.foto_url;
+      if (!varyantPriceMap[v.urun_id]) {
+        varyantPriceMap[v.urun_id] = { min: v.birim_fiyat, max: v.birim_fiyat };
+      } else {
+        if (v.birim_fiyat < varyantPriceMap[v.urun_id].min) varyantPriceMap[v.urun_id].min = v.birim_fiyat;
+        if (v.birim_fiyat > varyantPriceMap[v.urun_id].max) varyantPriceMap[v.urun_id].max = v.birim_fiyat;
       }
-    }
+      if (!varyantDataMap[v.urun_id]) varyantDataMap[v.urun_id] = { renk: new Set(), beden: new Set() };
+      if (v.varyant_2_label === "Renk" && v.varyant_2_value) varyantDataMap[v.urun_id].renk.add(v.varyant_2_value);
+      if (v.varyant_1_label === "Beden" && v.varyant_1_value) varyantDataMap[v.urun_id].beden.add(v.varyant_1_value);
+      if (v.varyant_1_label === "Renk" && v.varyant_1_value) varyantDataMap[v.urun_id].renk.add(v.varyant_1_value);
+      if (v.varyant_2_label === "Beden" && v.varyant_2_value) varyantDataMap[v.urun_id].beden.add(v.varyant_2_value);
+    });
 
-    // Also fetch varyasyonlar for non-varyasyonlu products for filtering
-    const nonVaryIds = data.filter((u) => u.fiyat_tipi !== "varyasyonlu").map((u) => u.id);
-    if (nonVaryIds.length > 0 && isFiltered) {
-      const { data: otherVaryants } = await supabase
-        .from("urun_varyasyonlar")
-        .select("urun_id, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value")
-        .in("urun_id", nonVaryIds);
-      if (otherVaryants) {
-        otherVaryants.forEach((v) => {
-          if (!varyantDataMap[v.urun_id]) varyantDataMap[v.urun_id] = { renk: new Set(), beden: new Set() };
-          if (v.varyant_2_label === "Renk" && v.varyant_2_value) varyantDataMap[v.urun_id].renk.add(v.varyant_2_value);
-          if (v.varyant_1_label === "Beden" && v.varyant_1_value) varyantDataMap[v.urun_id].beden.add(v.varyant_1_value);
-          if (v.varyant_1_label === "Renk" && v.varyant_1_value) varyantDataMap[v.urun_id].renk.add(v.varyant_1_value);
-          if (v.varyant_2_label === "Beden" && v.varyant_2_value) varyantDataMap[v.urun_id].beden.add(v.varyant_2_value);
-        });
-      }
-    }
+    (otherVaryantsRes.data || []).forEach((v) => {
+      if (!varyantDataMap[v.urun_id]) varyantDataMap[v.urun_id] = { renk: new Set(), beden: new Set() };
+      if (v.varyant_2_label === "Renk" && v.varyant_2_value) varyantDataMap[v.urun_id].renk.add(v.varyant_2_value);
+      if (v.varyant_1_label === "Beden" && v.varyant_1_value) varyantDataMap[v.urun_id].beden.add(v.varyant_1_value);
+      if (v.varyant_1_label === "Renk" && v.varyant_1_value) varyantDataMap[v.urun_id].renk.add(v.varyant_1_value);
+      if (v.varyant_2_label === "Beden" && v.varyant_2_value) varyantDataMap[v.urun_id].beden.add(v.varyant_2_value);
+    });
 
     const vMap: Record<string, { renk: string[]; beden: string[] }> = {};
     Object.entries(varyantDataMap).forEach(([id, d]) => {
@@ -295,12 +300,8 @@ export default function AnaSayfa() {
     });
     setVaryasyonMap(vMap);
 
-    // Fetch favorites
-    let favSet = new Set<string>();
-    if (currentUserId) {
-      const { data: favs } = await supabase.from("urun_favoriler").select("urun_id").eq("user_id", currentUserId);
-      if (favs) favs.forEach((f) => favSet.add(f.urun_id));
-    }
+    const favSet = new Set<string>();
+    (favsRes.data || []).forEach((f) => favSet.add(f.urun_id));
 
     const enriched: UrunWithExtra[] = data.map((u) => {
       const minV = varyantPriceMap[u.id]?.min ?? null;
