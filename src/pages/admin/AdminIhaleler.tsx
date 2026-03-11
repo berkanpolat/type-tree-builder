@@ -41,6 +41,7 @@ const s = {
     borderRadius: "0.5rem",
     padding: "0.25rem",
     backdropFilter: "none",
+    WebkitBackdropFilter: "none",
   } as CSSProperties,
 };
 
