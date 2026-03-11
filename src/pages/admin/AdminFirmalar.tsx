@@ -169,6 +169,12 @@ export default function AdminFirmalar() {
   const [ekstraHaklar, setEkstraHaklar] = useState<Record<string, number>>({});
   const [ekstraSaving, setEkstraSaving] = useState(false);
 
+  // Delete firma dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteFirma, setDeleteFirma] = useState<FirmaItem | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
     if (error) throw error;
