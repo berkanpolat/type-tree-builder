@@ -536,9 +536,9 @@ const GirisKayit = () => {
                 </div>
               )}
 
-              {/* Step 2: Kişisel Bilgiler & Başvuru */}
+              {/* Step 2: Kişisel Bilgiler */}
               {registerStep === 2 && (
-                <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-4">
                   <h3 className="text-base font-semibold text-foreground">Kişisel Bilgiler</h3>
                   <div className="space-y-2">
                     <Label>Ad</Label>
@@ -580,51 +580,36 @@ const GirisKayit = () => {
                         className="flex-1"
                         inputMode="tel"
                       />
-                      {!phoneVerified && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleSendOtp}
-                          disabled={sendingOtp || otpCountdown > 0 || !telefon || telefon.replace(/\D/g, "").length < 7}
-                          className="shrink-0"
-                        >
-                          {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Kod Gönder"}
-                        </Button>
-                      )}
-                      {phoneVerified && (
-                        <div className="flex items-center gap-1 text-sm shrink-0 px-2 text-primary">
-                          <CheckCircle2 className="w-4 h-4" /> Doğrulandı
-                        </div>
-                      )}
                     </div>
                   </div>
-
-                  {/* Summary */}
-                  <div className="rounded-lg border border-border p-4 space-y-2 text-sm">
-                    <p className="font-medium text-foreground">Başvuru Özeti</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
-                      <span>Firma:</span><span className="text-foreground">{firmaUnvani}</span>
-                      <span>Ad Soyad:</span><span className="text-foreground">{ad} {soyad}</span>
-                      <span>E-posta:</span><span className="text-foreground">{email}</span>
-                      <span>Telefon:</span><span className="text-foreground">{getFormattedPhone()}</span>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground text-center">
-                    Başvurunuz onaylandığında şifre oluşturma bağlantısı e-posta adresinize gönderilecektir.
-                  </p>
 
                   <div className="flex gap-3">
                     <Button type="button" variant="outline" className="flex-1" onClick={() => setRegisterStep(1)}>Geri</Button>
                     <Button
-                      type="submit"
+                      type="button"
                       className="flex-1"
-                      disabled={registerLoading || !ad || !soyad || !email || !isValidEmail(email) || !phoneVerified}
+                      onClick={() => {
+                        if (!ad || !soyad || !email || !telefon) {
+                          toast({ title: "Hata", description: "Lütfen tüm kişisel bilgileri doldurunuz", variant: "destructive" });
+                          return;
+                        }
+                        if (!isValidEmail(email)) {
+                          toast({ title: "Hata", description: "Geçerli bir e-posta adresi giriniz", variant: "destructive" });
+                          return;
+                        }
+                        if (telefon.replace(/\D/g, "").length < 7) {
+                          toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
+                          return;
+                        }
+                        handleSendOtp();
+                      }}
+                      disabled={sendingOtp || !ad || !soyad || !email || !isValidEmail(email) || !telefon}
                     >
-                      {registerLoading ? "Gönderiliyor..." : "Başvuru Yap"}
+                      {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                      Başvuru Yap
                     </Button>
                   </div>
-                </form>
+                </div>
               )}
             </div>
           )}
