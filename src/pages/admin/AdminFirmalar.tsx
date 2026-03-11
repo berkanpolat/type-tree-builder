@@ -132,6 +132,7 @@ export default function AdminFirmalar() {
   const [filterMaxUrun, setFilterMaxUrun] = useState("");
   const [filterMinProfil, setFilterMinProfil] = useState("");
   const [filterMaxProfil, setFilterMaxProfil] = useState("");
+  const [filterPaket, setFilterPaket] = useState<string>("all");
 
   // Sorting
   const [sortField, setSortField] = useState<SortField | null>(null);
