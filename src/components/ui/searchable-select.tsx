@@ -7,7 +7,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export interface SearchableSelectOption {
@@ -26,6 +25,13 @@ interface SearchableSelectProps {
   triggerClassName?: string;
 }
 
+const normalizeOptionText = (value: string) =>
+  value
+    .toLocaleLowerCase("tr")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
 export default function SearchableSelect({
   options,
   value,
@@ -39,13 +45,39 @@ export default function SearchableSelect({
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
-  const filtered = React.useMemo(() => {
-    if (!search.trim()) return options;
-    const lower = search.toLowerCase();
-    return options.filter((o) => o.label.toLowerCase().includes(lower));
-  }, [options, search]);
+  const normalizedOptions = React.useMemo(() => {
+    const belirtmek: SearchableSelectOption[] = [];
+    const diger: SearchableSelectOption[] = [];
+    const rest: SearchableSelectOption[] = [];
 
-  const selectedLabel = options.find((o) => o.value === value)?.label;
+    for (const option of options) {
+      const normalized = normalizeOptionText(option.label);
+
+      if (normalized.includes("belirtmek istemiyorum")) {
+        belirtmek.push(option);
+      } else if (
+        normalized === "diger" ||
+        normalized.startsWith("diger ") ||
+        normalized.startsWith("diger-") ||
+        normalized.startsWith("diger/") ||
+        normalized.startsWith("diger(")
+      ) {
+        diger.push(option);
+      } else {
+        rest.push(option);
+      }
+    }
+
+    return [...belirtmek, ...rest, ...diger];
+  }, [options]);
+
+  const filtered = React.useMemo(() => {
+    if (!search.trim()) return normalizedOptions;
+    const normalizedSearch = normalizeOptionText(search);
+    return normalizedOptions.filter((o) => normalizeOptionText(o.label).includes(normalizedSearch));
+  }, [normalizedOptions, search]);
+
+  const selectedLabel = normalizedOptions.find((o) => o.value === value)?.label;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

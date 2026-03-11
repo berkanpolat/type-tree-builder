@@ -10,6 +10,13 @@ export const FIRMA_TURU_SIRASI = [
   "Fason Atölye",
 ];
 
+const normalizeOptionText = (value: string) =>
+  value
+    .toLocaleLowerCase("tr")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
 export function sortFirmaTurleri<T extends { name: string }>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     const ai = FIRMA_TURU_SIRASI.indexOf(a.name);
@@ -30,16 +37,23 @@ export function sortSecenekler<T extends { name: string }>(items: T[]): T[] {
   const rest: T[] = [];
 
   for (const item of items) {
-    const lower = item.name.toLowerCase();
-    if (lower.includes("belirtmek istemiyorum")) {
+    const normalized = normalizeOptionText(item.name);
+
+    if (normalized.includes("belirtmek istemiyorum")) {
       belirtmek.push(item);
-    } else if (lower === "diğer" || lower === "diger") {
+    } else if (
+      normalized === "diger" ||
+      normalized.startsWith("diger ") ||
+      normalized.startsWith("diger-") ||
+      normalized.startsWith("diger/") ||
+      normalized.startsWith("diger(")
+    ) {
       diger.push(item);
     } else {
       rest.push(item);
     }
   }
 
-  rest.sort((a, b) => a.name.localeCompare(b.name, "tr"));
+  rest.sort((a, b) => a.name.localeCompare(b.name, "tr", { sensitivity: "base" }));
   return [...belirtmek, ...rest, ...diger];
 }
