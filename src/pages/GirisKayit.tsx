@@ -25,6 +25,7 @@ import CountryCodeSelect from "@/components/CountryCodeSelect";
 
 const GirisKayit = () => {
   const [activeTab, setActiveTab] = useState<"giris" | "kayit">("giris");
+  const [registerStep, setRegisterStep] = useState(1);
   const { toast } = useToast();
   const navigate = useNavigate();
 
