@@ -721,6 +721,7 @@ export default function AnaSayfa() {
               )}
             </div>
             <span className="text-xs text-muted-foreground truncate">{urun.firma_unvani || ""}</span>
+            {(urun as any).belge_onayli && <VerifiedBadge />}
           </div>
           <div className="mb-3">{priceDisplay}</div>
           <Button size="sm" className="w-full mt-auto bg-primary text-primary-foreground hover:bg-primary/90">Ürünü Göster</Button>
