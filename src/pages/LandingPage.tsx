@@ -212,9 +212,9 @@ const LandingPage = () => {
               >
                 Ücretsiz Kayıt Ol
               </Link>
-              <button className="px-10 py-3.5 rounded-lg bg-secondary text-secondary-foreground font-semibold text-base hover:bg-secondary/90 transition-colors">
+              <a href="/Tekstil_AS_Kurumsal_Sunum_v2.pdf" download className="px-10 py-3.5 rounded-lg bg-secondary text-secondary-foreground font-semibold text-base hover:bg-secondary/90 transition-colors">
                 Tanıtım PDF İndir
-              </button>
+              </a>
             </div>
           </div>
           <div className="relative">
