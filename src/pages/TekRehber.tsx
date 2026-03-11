@@ -412,27 +412,11 @@ export default function TekRehber() {
 
         {/* Firma Content */}
         <div className="flex gap-6">
-          <div className="space-y-4">
-            <FirmaFiltreler
-              firmaTuruId={selectedFirmaTuru}
-              firmaTuruName={selectedFirmaTuruName}
-              onFilterChange={setFirmaFilterState}
-            />
-            {/* Sidebar banner */}
-            <div
-              className="rounded-xl overflow-hidden border border-border cursor-pointer"
-              onClick={() => rehberSidebarBanner.linkUrl && window.open(rehberSidebarBanner.linkUrl, "_blank")}
-            >
-              {rehberSidebarBanner.url ? (
-                <img src={rehberSidebarBanner.url} alt="Reklam" className="w-full h-auto object-cover" />
-              ) : (
-                <div className="p-6 flex flex-col items-center justify-center text-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.75))" }}>
-                  <p className="text-primary-foreground font-bold text-sm">Tekstil A.Ş.</p>
-                  <p className="text-primary-foreground/70 text-xs mt-1">Reklam alanı</p>
-                </div>
-              )}
-            </div>
-          </div>
+          <FirmaFiltreler
+            firmaTuruId={selectedFirmaTuru}
+            firmaTuruName={selectedFirmaTuruName}
+            onFilterChange={setFirmaFilterState}
+          />
 
           <div className="flex-1 space-y-4">
             <p className="text-sm text-muted-foreground">
