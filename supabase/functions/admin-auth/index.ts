@@ -724,13 +724,20 @@ Deno.serve(async (req) => {
       return jsonResponse({ ihale: ihaleRes.data, filtreler: filtreRes.data || [], stoklar: stokRes.data || [] });
     }
 
-    // ─── ADMIN SAVE IHALE (full save bypassing RLS) ───
+    // ─── ADMIN SAVE IHALE (full save bypassing RLS + notify owner) ───
     if (action === "admin-save-ihale") {
       const { token, ihaleId, ihaleData, filtreler, stoklar } = body;
       const payload = verifyToken(token);
       if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
+
+      // Get ihale info before updating for notification
+      const { data: ihaleInfo } = await supabase
+        .from("ihaleler")
+        .select("user_id, baslik, ihale_no")
+        .eq("id", ihaleId)
+        .single();
 
       // Update ihale
       const { error: updateError } = await supabase
@@ -756,7 +763,35 @@ Deno.serve(async (req) => {
         );
       }
 
+      // Notify ihale owner about edit
+      if (ihaleInfo) {
+        const msg = `${ihaleInfo.ihale_no} numaralı "${ihaleInfo.baslik}" başlıklı ihaleniz yönetim tarafından düzenlenmiştir.`;
+        await supabase.from("notifications").insert({
+          user_id: ihaleInfo.user_id,
+          type: "ihale_admin_duzenlendi",
+          message: msg,
+          link: "/manuihale",
+        });
+      }
+
       return jsonResponse({ success: true });
+    }
+
+    // ─── GET IHALE TEKLIFLER (for admin ihale takip) ───
+    if (action === "get-ihale-teklifler") {
+      const { token, ihaleId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const { data: teklifler } = await supabase
+        .from("ihale_teklifler")
+        .select("id, tutar, created_at, teklif_veren_user_id, durum, odeme_secenekleri, kargo_masrafi, odeme_vadesi, ek_dosya_url, ek_dosya_adi")
+        .eq("ihale_id", ihaleId)
+        .order("created_at", { ascending: false });
+
+      return jsonResponse({ teklifler: teklifler || [] });
     }
 
     return jsonResponse({ error: "Geçersiz istek" }, 400);
