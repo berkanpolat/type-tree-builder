@@ -615,8 +615,15 @@ export default function FirmaDetay() {
           </div>
           <h2 className="text-xl font-bold text-foreground text-center">Profil Görüntüleme Hakkınız Doldu</h2>
           <p className="text-muted-foreground text-center max-w-md">{quotaMessage}</p>
-          <Button onClick={() => navigate("/dashboard")} variant="default">Dashboard'a Dön</Button>
+          <Button onClick={() => navigate("/paketim")} variant="default">PRO Pakete Yükselt</Button>
+          <Button onClick={() => navigate("/dashboard")} variant="ghost">Dashboard'a Dön</Button>
         </div>
+        <UpgradeDialog
+          open={quotaBlocked}
+          onOpenChange={(open) => { if (!open) navigate("/anasayfa"); }}
+          title="Profil Görüntüleme Hakkınız Doldu"
+          message={quotaMessage}
+        />
         <Footer />
       </div>
     );
