@@ -36,9 +36,9 @@ const HeroSearchSection = ({
   const [focused, setFocused] = useState(false);
 
   return (
-    <div className="relative overflow-hidden rounded-xl">
+    <div className="relative rounded-xl z-30">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[hsl(224,60%,8%)] via-[hsl(224,55%,14%)] to-[hsl(224,50%,22%)]" />
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[hsl(224,60%,8%)] via-[hsl(224,55%,14%)] to-[hsl(224,50%,22%)]" />
       {/* Decorative circles */}
       <div className="absolute -top-36 right-[30%] w-72 h-72 rounded-full bg-[radial-gradient(circle,rgba(246,147,33,0.08)_0%,transparent_65%)] pointer-events-none" />
       <div className="absolute -bottom-24 -left-10 w-48 h-48 rounded-full bg-[radial-gradient(circle,rgba(60,100,255,0.08)_0%,transparent_65%)] pointer-events-none" />
