@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import authBg from "@/assets/auth-bg.jpg";
 import {
   InputOTP,
