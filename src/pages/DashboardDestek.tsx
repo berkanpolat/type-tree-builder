@@ -185,7 +185,8 @@ const DashboardDestek = () => {
           </Button>
         </div>
 
-        {/* Talepler Listesi */}
+        {/* Destek Kayıtlarım */}
+        <h2 className="text-lg font-semibold text-foreground">Destek Kayıtlarım</h2>
         {loading ? (
           <div className="flex items-center justify-center h-32">
             <p className="text-muted-foreground">Yükleniyor...</p>
@@ -198,34 +199,56 @@ const DashboardDestek = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {talepler.map((talep) => (
-              <Card
-                key={talep.id}
-                className="hover:shadow-md transition-shadow cursor-pointer"
-                onClick={() => navigate(`/destek/${talep.id}`)}
-              >
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-mono text-muted-foreground">{talep.talep_no}</span>
-                      <Badge variant="outline" className="text-[10px]">{talep.departman}</Badge>
-                      <Badge variant="outline" className={`text-[10px] ${durumColors[talep.durum] || ""}`}>
-                        {durumLabels[talep.durum] || talep.durum}
-                      </Badge>
-                    </div>
-                    <p className="text-sm font-medium text-foreground truncate">{talep.konu}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {new Date(talep.created_at).toLocaleDateString("tr-TR", {
-                        day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
-                      })}
-                    </p>
-                  </div>
-                  <Eye className="w-5 h-5 text-muted-foreground shrink-0" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <Card>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/40">
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Kayıt ID</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Kayıt Tarihi</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Departman</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Konu</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">İşlem Tarihi</th>
+                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Durumu</th>
+                    <th className="px-4 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {talepler.map((talep) => (
+                    <tr
+                      key={talep.id}
+                      className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors"
+                      onClick={() => navigate(`/destek/${talep.id}`)}
+                    >
+                      <td className="px-4 py-3 font-mono text-xs">{talep.talep_no}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {new Date(talep.created_at).toLocaleDateString("tr-TR", {
+                          day: "2-digit", month: "2-digit", year: "numeric"
+                        })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant="outline" className="text-[10px]">{talep.departman}</Badge>
+                      </td>
+                      <td className="px-4 py-3 max-w-[200px] truncate">{talep.konu}</td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {new Date(talep.updated_at).toLocaleDateString("tr-TR", {
+                          day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"
+                        })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant="outline" className={`text-[10px] ${durumColors[talep.durum] || ""}`}>
+                          {durumLabels[talep.durum] || talep.durum}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Eye className="w-4 h-4 text-muted-foreground" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         )}
       </div>
 
