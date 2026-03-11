@@ -124,6 +124,7 @@ export default function TekIhale() {
   const location = useLocation();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
+  const ihaleSidebarBanner = useBanner("tekihale-sidebar");
   const [ihaleler, setIhaleler] = useState<IhaleWithExtra[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
