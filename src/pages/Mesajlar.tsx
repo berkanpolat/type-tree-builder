@@ -105,6 +105,8 @@ export default function Mesajlar() {
 
     const targetConvId = state?.openConversationId || convFromQuery;
 
+    console.log("[Mesajlar] State handler:", { targetConvId, otherUserId: state?.otherUserId, conversationsCount: conversations.length });
+
     if (!targetConvId) return;
 
     handledStateRef.current = true;
@@ -115,9 +117,13 @@ export default function Mesajlar() {
 
     const conv = conversations.find((c) => c.id === targetConvId);
     if (conv) {
+      console.log("[Mesajlar] Found existing conversation, selecting it");
       selectConversation(conv);
     } else if (state?.otherUserId) {
+      console.log("[Mesajlar] Conversation not in list, fetching and opening");
       fetchAndOpenConversation(targetConvId, state.otherUserId);
+    } else {
+      console.log("[Mesajlar] Conversation not found and no otherUserId provided");
     }
 
     // Clear the state/query so it doesn't re-trigger
