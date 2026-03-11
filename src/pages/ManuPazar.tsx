@@ -387,6 +387,12 @@ export default function ManuPazar() {
           </CardContent>
         </Card>
       </div>
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Aktif Ürün Limitiniz Doldu"
+        message={upgradeMessage}
+      />
     </DashboardLayout>
   );
 }
