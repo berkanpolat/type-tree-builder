@@ -276,9 +276,11 @@ function PaketContent({
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold" style={{ color: `hsl(var(--admin-text))` }}>Paketler</h2>
-        <Button onClick={openCreateDialog} className="bg-amber-500 hover:bg-amber-600 text-white">
-          <Plus className="w-4 h-4 mr-2" /> Yeni Paket
-        </Button>
+        {hasPermission("paket_olusturabilir") && (
+          <Button onClick={openCreateDialog} className="bg-amber-500 hover:bg-amber-600 text-white">
+            <Plus className="w-4 h-4 mr-2" /> Yeni Paket
+          </Button>
+        )}
       </div>
 
       {/* Table */}
