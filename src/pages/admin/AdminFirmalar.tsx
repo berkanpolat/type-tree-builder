@@ -157,6 +157,8 @@ export default function AdminFirmalar() {
   const [allPaketler, setAllPaketler] = useState<any[]>([]);
   const [selectedPaketId, setSelectedPaketId] = useState<string>("");
   const [paketSaving, setPaketSaving] = useState(false);
+  const [ekstraHaklar, setEkstraHaklar] = useState<Record<string, number>>({});
+  const [ekstraSaving, setEkstraSaving] = useState(false);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
