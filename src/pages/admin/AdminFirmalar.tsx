@@ -440,9 +440,30 @@ export default function AdminFirmalar() {
 
   const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" ||
     filterMinIhale || filterMaxIhale || filterMinTeklif || filterMaxTeklif ||
-    filterMinUrun || filterMaxUrun || filterMinProfil || filterMaxProfil || searchTerm;
+    filterMinUrun || filterMaxUrun || filterMinProfil || filterMaxProfil || searchTerm || activeStatCard;
 
   const filtered = firmalar.filter((f) => {
+    // Stat card filters
+    if (activeStatCard === "pending" && f.onay_durumu !== "onay_bekliyor") return false;
+    if (activeStatCard === "recent") {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - statsDays);
+      if (new Date(f.created_at) < cutoff) return false;
+    }
+    if (activeStatCard === "online") {
+      if (!f.profile?.last_seen) return false;
+      const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
+      if (new Date(f.profile.last_seen) < fifteenMinAgo) return false;
+    }
+    if (activeStatCard === "yeniAbone") {
+      if (!f.abonelik) return false;
+      const cutoff = new Date();
+      if (abonePeriod === "son24saat") cutoff.setDate(cutoff.getDate() - 1);
+      else if (abonePeriod === "sonBirHafta") cutoff.setDate(cutoff.getDate() - 7);
+      else cutoff.setMonth(cutoff.getMonth() - 1);
+      if (new Date(f.abonelik.donem_baslangic) < cutoff) return false;
+    }
+
     if (searchTerm && !f.firma_unvani.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     if (filterTuru !== "all" && f.firma_turu_id !== filterTuru) return false;
     if (filterTipi !== "all" && f.firma_tipi_id !== filterTipi) return false;
