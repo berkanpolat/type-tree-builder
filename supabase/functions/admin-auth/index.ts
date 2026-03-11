@@ -252,6 +252,19 @@ Deno.serve(async (req) => {
         "x_twitter", "tiktok", "logo_url", "kapak_fotografi_url", "firma_hakkinda",
       ];
 
+      // Get subscription/package info for each user
+      const { data: abonelikler } = await supabase
+        .from("kullanici_abonelikler")
+        .select("user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, stripe_subscription_id")
+        .in("user_id", userIds);
+
+      const { data: paketler } = await supabase
+        .from("paketler")
+        .select("id, ad, slug, profil_goruntuleme_limiti, ihale_acma_limiti, teklif_verme_limiti, aktif_urun_limiti, mesaj_limiti");
+
+      const paketMap: Record<string, any> = {};
+      for (const p of (paketler || [])) paketMap[p.id] = p;
+
       const enriched = (firmalar || []).map((f: any) => {
         const profile = (profiles || []).find((p: any) => p.user_id === f.user_id);
         const ihaleCount = (ihaleCounts || []).filter((i: any) => i.user_id === f.user_id).length;
@@ -266,6 +279,9 @@ Deno.serve(async (req) => {
         }
         const profilDoluluk = Math.round((filled / FIRMA_FIELDS.length) * 100);
 
+        const abonelik = (abonelikler || []).find((a: any) => a.user_id === f.user_id);
+        const paket = abonelik ? paketMap[abonelik.paket_id] || null : null;
+
         return {
           ...f,
           profile,
@@ -278,6 +294,22 @@ Deno.serve(async (req) => {
           urun_sayisi: urunCount,
           sikayet_sayisi: sikayetCount,
           profil_doluluk: profilDoluluk,
+          abonelik: abonelik ? {
+            paket_id: abonelik.paket_id,
+            paket_ad: paket?.ad || "—",
+            paket_slug: paket?.slug || "",
+            periyot: abonelik.periyot,
+            donem_baslangic: abonelik.donem_baslangic,
+            donem_bitis: abonelik.donem_bitis,
+            durum: abonelik.durum,
+            limits: paket ? {
+              profil_goruntuleme_limiti: paket.profil_goruntuleme_limiti,
+              ihale_acma_limiti: paket.ihale_acma_limiti,
+              teklif_verme_limiti: paket.teklif_verme_limiti,
+              aktif_urun_limiti: paket.aktif_urun_limiti,
+              mesaj_limiti: paket.mesaj_limiti,
+            } : null,
+          } : null,
         };
       });
 
@@ -421,16 +453,29 @@ Deno.serve(async (req) => {
       // Count by firma_turu
       const { data: firmalar } = await supabase
         .from("firmalar")
-        .select("firma_turu_id");
+        .select("firma_turu_id, firma_tipi_id");
 
       const { data: turler } = await supabase
         .from("firma_turleri")
         .select("id, name");
 
+      const { data: tipler } = await supabase
+        .from("firma_tipleri")
+        .select("id, name, firma_turu_id");
+
       const turDagilimi = (turler || []).map((t: any) => ({
         name: t.name,
+        id: t.id,
         count: (firmalar || []).filter((f: any) => f.firma_turu_id === t.id).length,
       }));
+
+      // Firma tipi breakdown
+      const tipDagilimi = (tipler || []).map((tp: any) => ({
+        name: tp.name,
+        id: tp.id,
+        firma_turu_id: tp.firma_turu_id,
+        count: (firmalar || []).filter((f: any) => f.firma_tipi_id === tp.id).length,
+      })).filter((tp: any) => tp.count > 0);
 
       // Recent registrations
       const daysAgo = new Date();
@@ -445,11 +490,51 @@ Deno.serve(async (req) => {
         .select("*", { count: "exact", head: true })
         .eq("onay_durumu", "onay_bekliyor");
 
+      // Package subscriber counts
+      const { data: abonelikler } = await supabase
+        .from("kullanici_abonelikler")
+        .select("paket_id, user_id, donem_baslangic, durum");
+
+      const { data: paketler } = await supabase
+        .from("paketler")
+        .select("id, ad, slug");
+
+      const paketDagilimi = (paketler || []).map((p: any) => ({
+        id: p.id,
+        ad: p.ad,
+        slug: p.slug,
+        count: (abonelikler || []).filter((a: any) => a.paket_id === p.id && a.durum === "aktif").length,
+      }));
+
+      // New subscribers by period (24h, 1w, 1m)
+      const now = new Date();
+      const h24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const w1 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const m1 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      const yeniAboneler = {
+        son24saat: (abonelikler || []).filter((a: any) => a.durum === "aktif" && new Date(a.donem_baslangic) >= h24).length,
+        sonBirHafta: (abonelikler || []).filter((a: any) => a.durum === "aktif" && new Date(a.donem_baslangic) >= w1).length,
+        sonBirAy: (abonelikler || []).filter((a: any) => a.durum === "aktif" && new Date(a.donem_baslangic) >= m1).length,
+      };
+
+      // Online user count (active in last 5 minutes - approximate via profiles updated_at)
+      // We'll use a simpler metric: users active in last 15 minutes
+      const onlineThreshold = new Date(now.getTime() - 15 * 60 * 1000);
+      const { count: onlineCount } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .gte("updated_at", onlineThreshold.toISOString());
+
       return jsonResponse({
         total: totalCount || 0,
         turDagilimi,
+        tipDagilimi,
         recent: recentCount || 0,
         pending: pendingCount || 0,
+        paketDagilimi,
+        yeniAboneler,
+        onlineCount: onlineCount || 0,
       });
     }
 
@@ -1759,6 +1844,124 @@ Deno.serve(async (req) => {
         }
       }
       return jsonResponse({ stats });
+    }
+
+    // ─── UPDATE FIRMA PACKAGE ───
+    if (action === "update-firma-paket") {
+      const { token, userId, paketId } = body;
+      verifyToken(token);
+
+      // Check if user has existing subscription
+      const { data: existing } = await supabase
+        .from("kullanici_abonelikler")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+
+      if (existing) {
+        const { error } = await supabase
+          .from("kullanici_abonelikler")
+          .update({
+            paket_id: paketId,
+            donem_baslangic: new Date().toISOString(),
+            donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            durum: "aktif",
+          })
+          .eq("user_id", userId);
+        if (error) return jsonResponse({ error: error.message }, 500);
+      } else {
+        const { error } = await supabase
+          .from("kullanici_abonelikler")
+          .insert({
+            user_id: userId,
+            paket_id: paketId,
+            periyot: "aylik",
+            donem_baslangic: new Date().toISOString(),
+            donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            durum: "aktif",
+          });
+        if (error) return jsonResponse({ error: error.message }, 500);
+      }
+
+      // Notify user
+      const { data: paket } = await supabase.from("paketler").select("ad").eq("id", paketId).single();
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "paket_degisikligi",
+        message: `Paketiniz ${paket?.ad || ""} olarak güncellenmiştir.`,
+        link: "/dashboard",
+      });
+
+      return jsonResponse({ success: true });
+    }
+
+    // ─── GET FIRMA QUOTA USAGE ───
+    if (action === "get-firma-quota") {
+      const { token, userId } = body;
+      verifyToken(token);
+
+      const { data: abonelik } = await supabase
+        .from("kullanici_abonelikler")
+        .select("*, paketler(*)")
+        .eq("user_id", userId)
+        .single();
+
+      if (!abonelik) return jsonResponse({ usage: null, abonelik: null });
+
+      const donemBaslangic = abonelik.donem_baslangic;
+
+      const [profilRes, teklifRes, urunRes, mesajRes] = await Promise.all([
+        supabase.from("profil_goruntulemeler").select("id", { count: "exact", head: true })
+          .eq("user_id", userId).gte("created_at", donemBaslangic),
+        supabase.from("ihale_teklifler").select("ihale_id")
+          .eq("teklif_veren_user_id", userId).gte("created_at", donemBaslangic),
+        supabase.from("urunler").select("id", { count: "exact", head: true })
+          .eq("user_id", userId).eq("durum", "aktif"),
+        supabase.from("conversations").select("id, user1_id, user2_id, created_at")
+          .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+          .gte("created_at", donemBaslangic),
+      ]);
+
+      const uniqueIhaleIds = new Set((teklifRes.data || []).map((t: any) => t.ihale_id));
+
+      // Count initiated conversations
+      let initiatedConversations = 0;
+      if (mesajRes.data) {
+        for (const conv of mesajRes.data) {
+          const { data: firstMsg } = await supabase
+            .from("messages")
+            .select("sender_id")
+            .eq("conversation_id", conv.id)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .single();
+          if (firstMsg && firstMsg.sender_id === userId) {
+            initiatedConversations++;
+          }
+        }
+      }
+
+      return jsonResponse({
+        abonelik: {
+          paket_ad: abonelik.paketler?.ad,
+          paket_slug: abonelik.paketler?.slug,
+          donem_baslangic: abonelik.donem_baslangic,
+          donem_bitis: abonelik.donem_bitis,
+          limits: {
+            profil_goruntuleme_limiti: abonelik.paketler?.profil_goruntuleme_limiti,
+            ihale_acma_limiti: abonelik.paketler?.ihale_acma_limiti,
+            teklif_verme_limiti: abonelik.paketler?.teklif_verme_limiti,
+            aktif_urun_limiti: abonelik.paketler?.aktif_urun_limiti,
+            mesaj_limiti: abonelik.paketler?.mesaj_limiti,
+          },
+        },
+        usage: {
+          profil_goruntuleme: profilRes.count || 0,
+          teklif_verme: uniqueIhaleIds.size,
+          aktif_urun: urunRes.count || 0,
+          mesaj: initiatedConversations,
+        },
+      });
     }
 
     return jsonResponse({ error: "Geçersiz istek" }, 400);
