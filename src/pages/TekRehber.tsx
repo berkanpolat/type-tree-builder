@@ -505,6 +505,24 @@ export default function TekRehber() {
             )}
           </div>
         </div>
+
+        {/* Full-width banner */}
+        <div
+          className="rounded-xl overflow-hidden h-32 cursor-pointer"
+          style={rehberSidebarBanner.url ? undefined : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }}
+          onClick={() => rehberSidebarBanner.linkUrl && window.open(rehberSidebarBanner.linkUrl, "_blank")}
+        >
+          {rehberSidebarBanner.url ? (
+            <img src={rehberSidebarBanner.url} alt="Reklam" className="w-full h-full object-cover" />
+          ) : (
+            <div className="flex items-center px-8 h-full">
+              <div>
+                <p className="text-primary-foreground text-lg font-bold">Tekstil A.Ş. ile Doğru Tedarikçiyi Bulun</p>
+                <p className="text-primary-foreground/70 text-sm mt-1">Binlerce doğrulanmış üretici ve tedarikçi, tek platformda</p>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
       <Footer />
       <UpgradeDialog
