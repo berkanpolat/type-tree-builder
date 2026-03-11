@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Bell,
   Package,
+  Headphones,
   Settings,
   LogOut,
   ChevronDown,
