@@ -321,6 +321,7 @@ export default function IhaleDetay() {
           });
           if (!adminErr && adminRes?.ihale) {
             ihaleData = adminRes.ihale;
+            setIsAdminViewing(true);
           }
         } catch {}
       }
