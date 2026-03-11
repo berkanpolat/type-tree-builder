@@ -229,7 +229,7 @@ export default function FirmaDetay() {
   };
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || packageInfo.loading) return;
 
     const fetchAll = async () => {
       setLoading(true);
@@ -255,7 +255,7 @@ export default function FirmaDetay() {
       }
 
       // Kendi firması ise kota kontrolü yapma
-      if (user && firmaData.user_id !== user.id && !packageInfo.loading) {
+      if (user && firmaData.user_id !== user.id) {
         // Daha önce görüntülenmiş mi kontrol et
         const { data: existingView } = await supabase
           .from("profil_goruntulemeler" as any)
@@ -503,7 +503,7 @@ export default function FirmaDetay() {
     };
 
     fetchAll();
-  }, [id, navigate, toast]);
+  }, [id, navigate, toast, packageInfo.loading]);
 
   const toggleFavorite = async () => {
     if (!currentUserId || !id) {
