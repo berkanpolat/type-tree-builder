@@ -447,7 +447,10 @@ export default function AnaSayfa() {
   }, [urunKategoriById]);
 
   const findBestTaxonomyMatch = useCallback((term: string) => {
-    if (!term || urunKategoriNodes.length === 0) return null;
+    if (!term || urunKategoriNodes.length === 0) {
+      console.log("[SEARCH DEBUG] findBestTaxonomyMatch - no term or no nodes", { term, nodesCount: urunKategoriNodes.length });
+      return null;
+    }
 
     const scored = urunKategoriNodes
       .map((node) => {
@@ -461,6 +464,9 @@ export default function AnaSayfa() {
       })
       .filter((item): item is { node: KategoriNode; rootCategoryName: string; score: number } => !!item)
       .sort((a, b) => b.score - a.score);
+
+    const top5 = scored.slice(0, 5).map(s => ({ name: s.node.name, rootCategory: s.rootCategoryName, score: s.score }));
+    console.log("[SEARCH DEBUG] findBestTaxonomyMatch top 5:", term, top5);
 
     if (scored.length === 0 || scored[0].score < 220) return null;
     return scored[0];
@@ -476,6 +482,7 @@ export default function AnaSayfa() {
     setAppliedSearchTerm(term);
 
     const bestMatch = findBestTaxonomyMatch(term);
+    console.log("[SEARCH DEBUG] handleSearch bestMatch:", { term, bestMatch: bestMatch ? { rootCategoryName: bestMatch.rootCategoryName, nodeName: bestMatch.node.name, score: bestMatch.score } : null });
     if (bestMatch) {
       setSelectedKategori(bestMatch.rootCategoryName);
       setSelectedGrupId(null);
