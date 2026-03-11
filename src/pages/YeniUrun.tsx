@@ -165,6 +165,7 @@ export default function YeniUrun() {
   // Step 2: Teknik Detaylar
   const [teknikDetaylar, setTeknikDetaylar] = useState<Record<string, string>>({});
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, { id: string; name: string }[]>>({});
+  const [dependentOptions, setDependentOptions] = useState<Record<string, { id: string; name: string }[]>>({});
 
   // Step 3: Ürün Varyasyonları (Renk + Beden/Birim + Fotoğraf)
   const [varyasyonlar, setVaryasyonlar] = useState<UrunVaryasyon[]>([]);
