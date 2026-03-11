@@ -120,6 +120,14 @@ export default function AdminFirmalar() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
+  // Yeni Firma dialog state
+  const [yeniFirmaOpen, setYeniFirmaOpen] = useState(false);
+  const [yeniFirmaSaving, setYeniFirmaSaving] = useState(false);
+  const [yeniFirma, setYeniFirma] = useState({
+    email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "",
+    firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "",
+  });
+
   const [filterTuru, setFilterTuru] = useState<string>("all");
   const [filterTipi, setFilterTipi] = useState<string>("all");
   const [filterIl, setFilterIl] = useState<string>("all");
@@ -392,9 +400,37 @@ export default function AdminFirmalar() {
     (tp) => statTurFilter === "all" || tp.firma_turu_id === statTurFilter
   ) || [];
 
+  const handleCreateFirma = async () => {
+    if (!yeniFirma.email || !yeniFirma.password || !yeniFirma.ad || !yeniFirma.soyad || !yeniFirma.firma_unvani || !yeniFirma.vergi_numarasi || !yeniFirma.vergi_dairesi || !yeniFirma.firma_turu_id || !yeniFirma.firma_tipi_id) {
+      toast({ title: "Hata", description: "E-posta, şifre, ad, soyad, firma ünvanı, vergi numarası, vergi dairesi, firma türü ve firma tipi zorunludur", variant: "destructive" });
+      return;
+    }
+    setYeniFirmaSaving(true);
+    try {
+      await callApi("create-firma", { token, ...yeniFirma });
+      toast({ title: "Başarılı", description: "Firma oluşturuldu" });
+      setYeniFirmaOpen(false);
+      setYeniFirma({ email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "", firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "" });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setYeniFirmaSaving(false);
+    }
+  };
+
+  const filteredTipler = tipler.filter(t => yeniFirma.firma_turu_id === "" || t.firma_turu_id === yeniFirma.firma_turu_id);
+
   return (
     <AdminLayout title="Firmalar">
       <div className="space-y-6">
+        {/* Action Bar */}
+        <div className="flex justify-end">
+          <Button onClick={() => setYeniFirmaOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white">
+            <Building2 className="w-4 h-4 mr-2" /> Yeni Firma Oluştur
+          </Button>
+        </div>
+
         {/* Summary Cards */}
         {stats && (
           <div className="space-y-3">
@@ -882,6 +918,93 @@ export default function AdminFirmalar() {
               className="bg-amber-500 hover:bg-amber-600 text-white">
               {paketSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Paketi Güncelle
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Yeni Firma Dialog */}
+      <Dialog open={yeniFirmaOpen} onOpenChange={setYeniFirmaOpen}>
+        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle style={s.text}>Yeni Firma Oluştur</DialogTitle>
+            <DialogDescription style={s.muted}>
+              E-posta onayı olmadan yeni firma hesabı oluşturun
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>E-posta *</Label>
+                <Input value={yeniFirma.email} onChange={e => setYeniFirma(p => ({ ...p, email: e.target.value }))} style={s.input} className="text-xs h-8" placeholder="ornek@email.com" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Şifre *</Label>
+                <Input type="password" value={yeniFirma.password} onChange={e => setYeniFirma(p => ({ ...p, password: e.target.value }))} style={s.input} className="text-xs h-8" placeholder="Min 6 karakter" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Ad *</Label>
+                <Input value={yeniFirma.ad} onChange={e => setYeniFirma(p => ({ ...p, ad: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Soyad *</Label>
+                <Input value={yeniFirma.soyad} onChange={e => setYeniFirma(p => ({ ...p, soyad: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs" style={s.muted}>Firma Ünvanı *</Label>
+              <Input value={yeniFirma.firma_unvani} onChange={e => setYeniFirma(p => ({ ...p, firma_unvani: e.target.value }))} style={s.input} className="text-xs h-8" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Vergi Numarası *</Label>
+                <Input value={yeniFirma.vergi_numarasi} onChange={e => setYeniFirma(p => ({ ...p, vergi_numarasi: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Vergi Dairesi *</Label>
+                <Input value={yeniFirma.vergi_dairesi} onChange={e => setYeniFirma(p => ({ ...p, vergi_dairesi: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Firma Türü *</Label>
+                <Select value={yeniFirma.firma_turu_id} onValueChange={v => setYeniFirma(p => ({ ...p, firma_turu_id: v, firma_tipi_id: "" }))}>
+                  <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue placeholder="Seçin" /></SelectTrigger>
+                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
+                    {turler.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>Firma Tipi *</Label>
+                <Select value={yeniFirma.firma_tipi_id} onValueChange={v => setYeniFirma(p => ({ ...p, firma_tipi_id: v }))}>
+                  <SelectTrigger className="text-xs h-8" style={s.input}><SelectValue placeholder="Seçin" /></SelectTrigger>
+                  <SelectContent style={{ ...s.card, padding: "0.25rem" }}>
+                    {filteredTipler.map(t => <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>İletişim E-posta</Label>
+                <Input value={yeniFirma.iletisim_email} onChange={e => setYeniFirma(p => ({ ...p, iletisim_email: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs" style={s.muted}>İletişim Numarası</Label>
+                <Input value={yeniFirma.iletisim_numarasi} onChange={e => setYeniFirma(p => ({ ...p, iletisim_numarasi: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setYeniFirmaOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
+            <Button onClick={handleCreateFirma} disabled={yeniFirmaSaving} className="bg-amber-500 hover:bg-amber-600 text-white">
+              {yeniFirmaSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Firma Oluştur
             </Button>
           </DialogFooter>
         </DialogContent>

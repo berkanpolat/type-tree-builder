@@ -18,6 +18,24 @@ function jsonResponse(data: unknown, status = 200) {
   });
 }
 
+async function logActivity(supabase: any, payload: any, action: string, opts: { target_type?: string; target_id?: string; target_label?: string; details?: Record<string, any> } = {}) {
+  try {
+    const { data: adminUser } = await supabase.from("admin_users").select("ad, soyad, pozisyon").eq("id", payload.id).single();
+    await supabase.from("admin_activity_log").insert({
+      admin_id: payload.id,
+      admin_username: payload.username,
+      admin_ad: adminUser?.ad || "—",
+      admin_soyad: adminUser?.soyad || "—",
+      admin_pozisyon: adminUser?.pozisyon || "—",
+      action,
+      target_type: opts.target_type || null,
+      target_id: opts.target_id || null,
+      target_label: opts.target_label || null,
+      details: opts.details || {},
+    });
+  } catch {}
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -64,6 +82,9 @@ Deno.serve(async (req) => {
       };
       const token = btoa(JSON.stringify(tokenPayload));
       const { password_hash, ...user } = data;
+
+      await logActivity(supabase, tokenPayload, "login", { target_type: "admin_user", target_label: data.ad + " " + data.soyad });
+
       return jsonResponse({ user, token });
     }
 
@@ -123,10 +144,9 @@ Deno.serve(async (req) => {
         .single();
 
       if (error) return jsonResponse({ error: error.message }, 400);
+      await logActivity(supabase, payload, "create-user", { target_type: "admin_user", target_id: data.id, target_label: `${data.ad} ${data.soyad}`, details: { username: data.username, pozisyon: data.pozisyon } });
       return jsonResponse({ user: data });
     }
-
-    // ─── UPDATE ADMIN USER ───
     if (action === "update-user") {
       const { token, userId, updates } = body;
       const payload = verifyToken(token);
@@ -159,10 +179,9 @@ Deno.serve(async (req) => {
         .single();
 
       if (error) return jsonResponse({ error: error.message }, 400);
+      await logActivity(supabase, payload, "update-user", { target_type: "admin_user", target_id: userId, target_label: `${data.ad} ${data.soyad}`, details: { pozisyon: data.pozisyon } });
       return jsonResponse({ user: data });
     }
-
-    // ─── DELETE ADMIN USER ───
     if (action === "delete-user") {
       const { token, userId } = body;
       const payload = verifyToken(token);
@@ -175,10 +194,9 @@ Deno.serve(async (req) => {
         .eq("is_primary", false);
 
       if (error) return jsonResponse({ error: error.message }, 400);
+      await logActivity(supabase, payload, "delete-user", { target_type: "admin_user", target_id: userId });
       return jsonResponse({ success: true });
     }
-
-    // ─── LIST FIRMALAR (for admin panel) ───
     if (action === "list-firmalar") {
       const payload = verifyToken(body.token);
 
@@ -350,6 +368,7 @@ Deno.serve(async (req) => {
         });
       }
 
+      await logActivity(supabase, payload, action, { target_type: "firma", target_id: firmaId, target_label: firma.firma_unvani, details: { new_status: newStatus } });
       return jsonResponse({ success: true, status: newStatus });
     }
 
@@ -433,6 +452,8 @@ Deno.serve(async (req) => {
       if (verifyError || !verifyData.session) {
         return jsonResponse({ error: verifyError?.message || "Token doğrulanamadı" }, 400);
       }
+
+      await logActivity(supabase, payload, "impersonate", { target_type: "firma", target_id: userId, target_label: targetUser.email });
 
       return jsonResponse({
         success: true,
@@ -2081,6 +2102,90 @@ Deno.serve(async (req) => {
         sikayet: sikayetStats,
         kategoriMap,
       });
+    }
+
+    // ─── LIST ACTIVITY LOG ───
+    if (action === "list-activity-log") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+
+      const { data, error } = await supabase
+        .from("admin_activity_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(500);
+
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ logs: data });
+    }
+
+    // ─── CREATE FIRMA (admin creates user+firma without email confirmation) ───
+    if (action === "create-firma") {
+      const { token, email, password, ad, soyad, iletisim_email, iletisim_numarasi, firma_unvani, vergi_numarasi, vergi_dairesi, firma_turu_id, firma_tipi_id } = body;
+      const payload = verifyToken(token);
+
+      // Create auth user with auto-confirm
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+
+      if (authError) return jsonResponse({ error: authError.message }, 400);
+      const userId = authData.user.id;
+
+      // Create profile
+      const { error: profileError } = await supabase.from("profiles").insert({
+        user_id: userId,
+        ad,
+        soyad,
+        iletisim_email: iletisim_email || email,
+        iletisim_numarasi: iletisim_numarasi || null,
+      });
+
+      if (profileError) {
+        // Rollback: delete auth user
+        await supabase.auth.admin.deleteUser(userId);
+        return jsonResponse({ error: profileError.message }, 400);
+      }
+
+      // Create firma
+      const { error: firmaError } = await supabase.from("firmalar").insert({
+        user_id: userId,
+        firma_turu_id,
+        firma_tipi_id,
+        firma_unvani,
+        vergi_numarasi,
+        vergi_dairesi,
+        onay_durumu: "onaylandi",
+      });
+
+      if (firmaError) {
+        await supabase.from("profiles").delete().eq("user_id", userId);
+        await supabase.auth.admin.deleteUser(userId);
+        return jsonResponse({ error: firmaError.message }, 400);
+      }
+
+      // Auto-assign free package
+      const { data: freePaket } = await supabase.from("paketler").select("id").eq("slug", "ucretsiz").single();
+      if (freePaket) {
+        await supabase.from("kullanici_abonelikler").insert({
+          user_id: userId,
+          paket_id: freePaket.id,
+          periyot: "aylik",
+          donem_baslangic: new Date().toISOString(),
+          donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          durum: "aktif",
+        });
+      }
+
+      await logActivity(supabase, payload, "create-firma", {
+        target_type: "firma",
+        target_label: firma_unvani,
+        details: { email, ad, soyad, firma_unvani, vergi_numarasi },
+      });
+
+      return jsonResponse({ success: true });
     }
 
     return jsonResponse({ error: "Geçersiz istek" }, 400);
