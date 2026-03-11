@@ -19,9 +19,9 @@ import kosgebImg from "@/assets/kosgeb.png";
 import Footer from "@/components/Footer";
 import { Mail, Phone, MapPin } from "lucide-react";
 import {
-  Zap,
-  BarChart3,
-  Settings,
+  BadgeDollarSign,
+  Globe,
+  ShoppingBag,
   UserPlus,
   Megaphone,
   Users,
@@ -30,6 +30,7 @@ import {
   RefreshCw,
   CheckCircle2,
   ArrowRight,
+  ArrowLeft,
   Package,
   Briefcase,
   Pen,
@@ -41,6 +42,7 @@ const LandingPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tedarikci");
+  const [productSlide, setProductSlide] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -73,45 +75,32 @@ const LandingPage = () => {
 
   const advantages = [
     {
-      icon: <Zap className="h-6 w-6" />,
-      title: "Hızlı ve Kolay İş Birliği",
-      desc: "Sıfır Maliyet!\nÜcretsiz üyelik ile hemen başlarsınız. Satışlarından ve anlaşmalarınızdan Komisyon ve Kesinti alınmaz",
+      icon: <BadgeDollarSign className="h-6 w-6" />,
+      title: "Sıfır Maliyet!",
+      desc: "Ücretsiz üyelik ile hemen başlarsınız. Satışlarından ve anlaşmalarınızdan Komisyon ve Kesinti alınmaz",
     },
     {
-      icon: <BarChart3 className="h-6 w-6" />,
-      title: "Anlık Takip ve Kontrol",
-      desc: "İnternette Görünür olun!\nProfesyonel pazarlama ekibimiz ile sizin için SEO hizmeti sunarız ve reklam harcamaları yaparak sosyal medya hesaplarından iletişim sağlarız.",
+      icon: <Globe className="h-6 w-6" />,
+      title: "İnternette Görünür olun!",
+      desc: "Profesyonel pazarlama ekibimiz ile sizin için SEO hizmeti sunarız ve reklam harcamaları yaparak sosyal medya hesaplarından iletişim sağlarız.",
     },
     {
-      icon: <Settings className="h-6 w-6" />,
-      title: "Verimli ve Ölçülebilir Süreç",
-      desc: "Toptan Pazar Yeri\nAtıl Stoklarınızı ve yeni ürünlerinizi nakite çevirirsiniz.",
+      icon: <ShoppingBag className="h-6 w-6" />,
+      title: "Toptan Pazar Yeri",
+      desc: "Atıl Stoklarınızı ve yeni ürünlerinizi nakite çevirirsiniz.",
     },
   ];
 
   const howItWorks = [
     { icon: <UserPlus className="h-7 w-7" />, title: "Ücretsiz Kayıt Ol", desc: "Tekstil A.Ş.'ye saniyeler içinde kayıt ol. Firma türünü seç (Üretici, Marka, Tedarikçi...)", color: "border-t-blue-600" },
-    { icon: <Megaphone className="h-7 w-7" />, title: "İhtiyacını Yayınla", desc: "İhtiyacını Yayınla Talebini paylaş, doğru firmalar seni bulsun.", color: "border-t-cyan-500" },
+    { icon: <Megaphone className="h-7 w-7" />, title: "İhtiyacını Yayınla", desc: "Talebini paylaş, doğru firmalar seni bulsun, onlarca teklifi tek tıkla topla.", color: "border-t-cyan-500" },
     { icon: <Users className="h-7 w-7" />, title: "Doğru Firmalarla Eşleş", desc: "Gelişmiş filtreleme ile sana uygun firmalarla hızlıca eşleş. Zaman kaybı yok.", color: "border-t-purple-500" },
     { icon: <FileSearch className="h-7 w-7" />, title: "Teklifleri Karşılaştır, Karar Ver", desc: "Gelen teklifleri tek ekranda görüntüle. Fiyat, teslim süresi ve firma profillerini karşılaştır.", color: "border-t-pink-500" },
-    { icon: <MessageCircle className="h-7 w-7" />, title: "Güvenle İletişime Geç", desc: "Platform üzerinden doğrudan iletişim kur, süreci hızlandır. İster platform içinde kal...", color: "border-t-indigo-500" },
-    { icon: <RefreshCw className="h-7 w-7" />, title: "Sürekli Aktif Sürekli Güncel", desc: "Tekstil A.Ş. yaşayan bir platformdur. Her gün yeni firmalar, yeni talepler ve yeni fırsatlar.", color: "border-t-green-500" },
+    { icon: <MessageCircle className="h-7 w-7" />, title: "Güvenle İletişime Geç", desc: "Platform üzerinden doğrudan iletişim kur, süreci hızlandır.", color: "border-t-indigo-500" },
+    { icon: <RefreshCw className="h-7 w-7" />, title: "Sürekli Aktif, Sürekli Güncel", desc: "Tekstil A.Ş. yaşayan bir platformdur. Her gün yeni firmalar, yeni talepler ve yeni fırsatlar...", color: "border-t-green-500" },
   ];
 
   const products = [
-    {
-      name: "Tekİhale",
-      highlight: "İhale",
-      img: tekihaleImg,
-      title: "Teklif Toplamanın ve Vermenin En Verimli Yolu",
-      desc: "Tekİhale, talep sahipleri ile teklif verenleri şeffaf ve kontrollü bir ortamda buluşturur. İhalenizi kriterlere göre oluşturun, teklifleri karşılaştırın ve tüm süreci tek panelden canlı yönetin.",
-      bullets: [
-        "Gelen yüzlerce teklifi karşılaştırın, rekabetçi fiyatlarla maksimum kar elde edin.",
-        "Stok fazlası ürünlerinizi açık arttırma ile nakite çevirin ya da ihtiyacınız olan ürünlere en uygun fiyatlarla ulaşın",
-        "Üretim ihalesi açın; siz üreticilere değil, üreticiler size gelsin ya da boş kapasitenizi değerlendirmek için teklif verin.",
-      ],
-      cta: "Ücretsiz İhale Başlat",
-    },
     {
       name: "TekRehber",
       highlight: "Rehber",
@@ -137,6 +126,19 @@ const LandingPage = () => {
         "Talep–teklif akışı ve mesajlaşma ile süreci kontrollü ve şeffaf şekilde yönetin.",
       ],
       cta: "Ücretsiz Ürün Yükleyin",
+    },
+    {
+      name: "Tekİhale",
+      highlight: "İhale",
+      img: tekihaleImg,
+      title: "Teklif Toplamanın ve Vermenin En Verimli Yolu",
+      desc: "Tekİhale, talep sahipleri ile teklif verenleri şeffaf ve kontrollü bir ortamda buluşturur. İhalenizi kriterlere göre oluşturun, teklifleri karşılaştırın ve tüm süreci tek panelden canlı yönetin.",
+      bullets: [
+        "Gelen yüzlerce teklifi karşılaştırın, rekabetçi fiyatlarla maksimum kar elde edin.",
+        "Stok fazlası ürünlerinizi açık arttırma ile nakite çevirin ya da ihtiyacınız olan ürünlere en uygun fiyatlarla ulaşın",
+        "Üretim ihalesi açın; siz üreticilere değil, üreticiler size gelsin ya da boş kapasitenizi değerlendirmek için teklif verin.",
+      ],
+      cta: "Ücretsiz İhale Başlat",
     },
   ];
 
@@ -196,6 +198,16 @@ const LandingPage = () => {
     { key: "fason", label: "Fason Atölye", icon: <Scissors className="h-4 w-4" /> },
   ];
 
+  const handlePrevSlide = () => {
+    setProductSlide((prev) => (prev === 0 ? products.length - 1 : prev - 1));
+  };
+
+  const handleNextSlide = () => {
+    setProductSlide((prev) => (prev === products.length - 1 ? 0 : prev + 1));
+  };
+
+  const currentProduct = products[productSlide];
+
   return (
     <div className="min-h-screen bg-background font-sans">
       {/* Top Info Strip */}
@@ -213,15 +225,15 @@ const LandingPage = () => {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <a href="https://www.instagram.com/tekstilas" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+            <a href="https://www.instagram.com/tekstilascom/" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
             </a>
             <a href="https://www.linkedin.com/company/tekstilas" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
             </a>
-            <a href="https://x.com/tekstilas" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
+            <span className="opacity-40 cursor-default" title="Yakında">
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-            </a>
+            </span>
             <a href="https://www.facebook.com/tekstilas" target="_blank" rel="noopener noreferrer" className="hover:opacity-80 transition-opacity">
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
             </a>
@@ -267,7 +279,6 @@ const LandingPage = () => {
             </div>
           </div>
           <div className="relative">
-            {/* Chart overlay top-left */}
             <div className="absolute -top-6 -left-2 z-10 bg-background rounded-xl shadow-lg p-4 hidden lg:block">
               <div className="flex items-center gap-4 mb-2 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary inline-block" /> 2024</span>
@@ -287,7 +298,6 @@ const LandingPage = () => {
               alt="Tekstil sektörü profesyonelleri"
               className="rounded-2xl shadow-xl w-full object-cover aspect-[4/3]"
             />
-            {/* Chart overlay bottom-right */}
             <div className="absolute -bottom-6 -right-2 z-10 bg-background rounded-xl shadow-lg p-4 hidden lg:block">
               <div className="h-16 w-40 flex items-end">
                 <svg viewBox="0 0 160 60" className="w-full h-full">
@@ -340,10 +350,8 @@ const LandingPage = () => {
                 <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center text-secondary mb-4">
                   {a.icon}
                 </div>
-                <h3 className="font-semibold text-secondary text-lg mb-3">{a.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
-                  {a.desc.split('\n').map((line, li) => li === 0 ? <span key={li}><strong className="text-foreground">{line}</strong></span> : <span key={li}><br/>{line}</span>)}
-                </p>
+                <h3 className="font-bold text-secondary text-lg mb-3">{a.title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{a.desc}</p>
               </div>
             ))}
           </div>
@@ -372,50 +380,69 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Product Features */}
-      {products.map((product, idx) => (
-        <section key={idx} className="bg-muted py-8">
-          <div className="max-w-7xl mx-auto px-6">
-            <div className="bg-background rounded-2xl p-8 lg:p-12 shadow-sm">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-bold text-foreground">
-                  Tek<span className="text-secondary">{product.highlight}</span>
-                </h3>
-                <div className="w-10 h-10 rounded-full border-2 border-secondary flex items-center justify-center text-secondary">
+      {/* Product Features - Slider */}
+      <section className="bg-muted py-8">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="bg-background rounded-2xl p-8 lg:p-12 shadow-sm relative">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-bold text-foreground">
+                Tek<span className="text-secondary">{currentProduct.highlight}</span>
+              </h3>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handlePrevSlide}
+                  className="w-10 h-10 rounded-full border-2 border-border flex items-center justify-center text-muted-foreground hover:border-secondary hover:text-secondary transition-colors"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+                <div className="flex items-center gap-1.5">
+                  {products.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setProductSlide(i)}
+                      className={`w-2 h-2 rounded-full transition-colors ${i === productSlide ? "bg-secondary" : "bg-border"}`}
+                    />
+                  ))}
+                </div>
+                <button
+                  onClick={handleNextSlide}
+                  className="w-10 h-10 rounded-full border-2 border-secondary flex items-center justify-center text-secondary hover:bg-secondary hover:text-secondary-foreground transition-colors"
+                >
                   <ArrowRight className="h-5 w-5" />
-                </div>
+                </button>
               </div>
-              <div className="grid lg:grid-cols-2 gap-12 items-center">
-                <div className="flex justify-center">
-                  <img
-                    src={product.img}
-                    alt={product.name}
-                    className="max-h-80 object-contain"
-                  />
+            </div>
+            <div className="grid lg:grid-cols-2 gap-12 items-center transition-all duration-500">
+              <div className="flex justify-center">
+                <img
+                  key={productSlide}
+                  src={currentProduct.img}
+                  alt={currentProduct.name}
+                  className="max-h-80 object-contain animate-fade-in"
+                />
+              </div>
+              <div>
+                <h4 className="text-2xl font-bold text-foreground mb-4">{currentProduct.title}</h4>
+                <p className="text-muted-foreground mb-6 leading-relaxed">{currentProduct.desc}</p>
+                <div className="space-y-4 mb-8">
+                  {currentProduct.bullets.map((bullet, bi) => (
+                    <div key={bi} className="flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
+                      <span className="text-foreground font-medium text-sm">{bullet}</span>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <h4 className="text-2xl font-bold text-foreground mb-4">{product.title}</h4>
-                  <p className="text-muted-foreground mb-6 leading-relaxed">{product.desc}</p>
-                  <div className="space-y-4 mb-8">
-                    {product.bullets.map((bullet, bi) => (
-                      <div key={bi} className="flex items-start gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
-                        <span className="text-foreground font-medium text-sm">{bullet}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <Link
-                    to="/giris-kayit"
-                    className="inline-block px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
-                  >
-                    {product.cta}
-                  </Link>
-                </div>
+                <Link
+                  to="/giris-kayit"
+                  className="inline-block px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
+                >
+                  {currentProduct.cta}
+                </Link>
               </div>
             </div>
           </div>
-        </section>
-      ))}
+        </div>
+      </section>
 
       {/* For You Section */}
       <section className="bg-background py-20">
@@ -423,7 +450,6 @@ const LandingPage = () => {
           <h2 className="text-3xl lg:text-4xl font-bold text-foreground text-center mb-8">
             Sizin İçin Neler Var?
           </h2>
-          {/* Tabs */}
           <div className="flex justify-center mb-12">
             <div className="inline-flex items-center bg-muted rounded-full p-1 gap-1">
               {tabs.map((tab) => (
@@ -442,7 +468,6 @@ const LandingPage = () => {
               ))}
             </div>
           </div>
-          {/* Tab Content */}
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
               <img
