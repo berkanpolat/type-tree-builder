@@ -445,9 +445,10 @@ export default function TekIhale() {
               {ihaleSidebarBanner.url ? (
                 <img src={ihaleSidebarBanner.url} alt="Reklam" className="w-full h-auto object-cover" />
               ) : (
-                <div className="p-6 flex flex-col items-center justify-center text-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.75))" }}>
-                  <p className="text-primary-foreground font-bold text-sm">Tekstil A.Ş.</p>
-                  <p className="text-primary-foreground/70 text-xs mt-1">Reklam alanı</p>
+                <div className="py-10 px-6 flex flex-col items-center justify-center text-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.75))" }}>
+                  <p className="text-primary-foreground font-bold text-base">Tekstil A.Ş.</p>
+                  <p className="text-primary-foreground/70 text-xs mt-2">Reklam alanınız burada</p>
+                  <p className="text-primary-foreground/50 text-[10px] mt-1">300 × 250</p>
                 </div>
               )}
             </div>
