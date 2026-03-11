@@ -265,7 +265,7 @@ export default function YeniIhale() {
         return !!formData.urun_kategori_id && !!formData.urun_grup_id && !!formData.urun_tur_id;
       case 3: {
         const birimRequired = !skipStokStep;
-        return !!(formData.baslik && formData.aciklama && formData.baslangic_fiyati && (birimRequired ? formData.birim : true) && formData.kdv_durumu && formData.odeme_secenekleri.length > 0 && formData.odeme_vadesi.length > 0 && formData.kargo_masrafi && formData.kargo_sirketi_anlasmasi && formData.baslangic_tarihi && formData.bitis_tarihi);
+        return !!(formData.baslik && formData.aciklama && formData.baslangic_fiyati && (birimRequired ? formData.birim : true) && formData.kdv_durumu && formData.odeme_secenekleri.length > 0 && formData.odeme_vadesi.length > 0 && formData.baslangic_tarihi && formData.bitis_tarihi);
       }
       default: return true;
     }
@@ -298,8 +298,6 @@ export default function YeniIhale() {
         if (!formData.kdv_durumu) missing.push("KDV Durumu");
         if (formData.odeme_secenekleri.length === 0) missing.push("Ödeme Seçenekleri");
         if (formData.odeme_vadesi.length === 0) missing.push("Ödeme Vadesi");
-        if (!formData.kargo_masrafi) missing.push("Kargo Masrafı Ödemesi");
-        if (!formData.kargo_sirketi_anlasmasi) missing.push("Kargo Şirketi Anlaşması");
         if (!formData.baslangic_tarihi) missing.push("Başlangıç Tarihi");
         if (!formData.bitis_tarihi) missing.push("Bitiş Tarihi");
         break;

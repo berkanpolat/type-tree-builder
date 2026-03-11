@@ -277,7 +277,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
             />
           </div>
           <div className="space-y-2">
-            <Label>Kargo Masrafı Ödemesi *</Label>
+            <Label>Kargo Masrafı Ödemesi</Label>
             <SearchableSelect
               options={(kargoMasrafiOptions || []).map(o => ({ value: o.name, label: o.name }))}
               value={formData.kargo_masrafi}
@@ -290,7 +290,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Kargo Şirketi Anlaşması *</Label>
+            <Label>Kargo Şirketi Anlaşması</Label>
             <SearchableSelect
               options={(kargoSirketiOptions || []).map(o => ({ value: o.name, label: o.name }))}
               value={formData.kargo_sirketi_anlasmasi}
