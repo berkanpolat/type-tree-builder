@@ -347,8 +347,8 @@ export default function TekRehber() {
           label="ÜRETİCİ / TEDARİKÇİ"
           placeholder="Üretici veya tedarikçi ara..."
           searchTerm={searchTerm}
-          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) setActiveFilter(null); }}
-          onSearch={() => {}}
+          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) setAppliedSearchTerm(""); }}
+          onSearch={handleSearch}
           searchResults={searchResults}
           showDropdown={showDropdown}
           onShowDropdown={setShowDropdown}
