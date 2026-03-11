@@ -6,8 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { ClipboardList, Upload, X } from "lucide-react";
+import { ClipboardList, Upload, X, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { VERGI_DAIRELERI } from "@/lib/vergi-daireleri";
+import SearchableSelect from "@/components/ui/searchable-select";
 
 interface Props {
   userId: string;
