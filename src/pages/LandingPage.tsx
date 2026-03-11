@@ -13,9 +13,9 @@ import iso20000Img from "@/assets/iso-20000.png";
 import iso27017Img from "@/assets/iso-27017.png";
 import iso27018Img from "@/assets/iso-27018.png";
 import iso27701Img from "@/assets/iso-27701.png";
-import iso9001Img from "@/assets/iso-9001.jpg";
+import iso9001Img from "@/assets/iso-9001.png";
 import iso22301Img from "@/assets/iso-22301.png";
-import kosgebImg from "@/assets/kosgeb.jpg";
+import kosgebImg from "@/assets/kosgeb.png";
 import Footer from "@/components/Footer";
 import {
   Zap,
