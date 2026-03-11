@@ -264,7 +264,7 @@ function PaketContent({
               <Users className="w-5 h-5 text-blue-500" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{Object.values(stats).reduce((a: number, b: any) => a + b, 0)}</p>
+              <p className="text-2xl font-bold">{Object.values(stats as Record<string, number>).reduce((a: number, b: number) => a + b, 0)}</p>
               <p className="text-xs" style={mutedStyle}>Toplam Abone</p>
             </div>
           </CardContent>
