@@ -69,21 +69,35 @@ const GirisKayit = () => {
   }, [otpCountdown]);
 
   const handleSendOtp = async () => {
-    if (!telefon || telefon.length < 10) {
+    const fullPhone = getFullPhone();
+    if (!telefon || telefon.replace(/\s/g, "").replace(/^0+/, "").length < 7) {
       toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
       return;
     }
+
+    // Check duplicate phone
+    const { data: existingPhone } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("iletisim_numarasi", fullPhone)
+      .limit(1);
+
+    if (existingPhone && existingPhone.length > 0) {
+      toast({ title: "Hata", description: "Bu telefon numarası ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
+      return;
+    }
+
     setSendingOtp(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-sms-otp", {
-        body: { telefon },
+        body: { telefon: fullPhone },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
 
       setOtpSent(true);
-      setOtpCountdown(120); // 2 minute cooldown
-      toast({ title: "Kod gönderildi", description: `${telefon} numarasına doğrulama kodu gönderildi.` });
+      setOtpCountdown(120);
+      toast({ title: "Kod gönderildi", description: `${fullPhone} numarasına doğrulama kodu gönderildi.` });
     } catch (err: any) {
       toast({ title: "Hata", description: err.message, variant: "destructive" });
     } finally {
