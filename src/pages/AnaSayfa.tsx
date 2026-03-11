@@ -122,9 +122,9 @@ export default function AnaSayfa() {
   // Product state
   const [allUrunler, setAllUrunler] = useState<UrunWithExtra[]>([]);
   const [urunLoading, setUrunLoading] = useState(true);
-  const [selectedKategori, setSelectedKategori] = useState<string | null>(null);
-  const [selectedGrupId, setSelectedGrupId] = useState<string | null>(null);
-  const [selectedTurId, setSelectedTurId] = useState<string | null>(null);
+  const [selectedKategori, setSelectedKategori] = useSessionState<string | null>("selectedKategori", null);
+  const [selectedGrupId, setSelectedGrupId] = useSessionState<string | null>("selectedGrupId", null);
+  const [selectedTurId, setSelectedTurId] = useSessionState<string | null>("selectedTurId", null);
 
   // Read location.state for breadcrumb navigation from detail pages
   useEffect(() => {
