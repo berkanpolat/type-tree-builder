@@ -104,7 +104,7 @@ const DURUM_LABELS: Record<string, string> = {
   reddedildi: "Reddedildi",
 };
 
-type SortField = "created_at" | "teklif_sayisi" | "goruntuleme_sayisi" | "bitis_tarihi";
+type SortField = "created_at" | "teklif_sayisi" | "goruntuleme_sayisi" | "bitis_tarihi" | "kalan_sure";
 type SortDir = "asc" | "desc";
 
 
