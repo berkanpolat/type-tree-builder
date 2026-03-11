@@ -82,6 +82,9 @@ Deno.serve(async (req) => {
       };
       const token = btoa(JSON.stringify(tokenPayload));
       const { password_hash, ...user } = data;
+
+      await logActivity(supabase, tokenPayload, "login", { target_type: "admin_user", target_label: data.ad + " " + data.soyad });
+
       return jsonResponse({ user, token });
     }
 
