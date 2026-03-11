@@ -56,6 +56,7 @@ const GirisKayit = () => {
   const [telefon, setTelefon] = useState("");
   const [countryCode, setCountryCode] = useState("+90");
   const [registerLoading, setRegisterLoading] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
 
   // Phone verification state
   const [otpSent, setOtpSent] = useState(false);
@@ -141,7 +142,8 @@ const GirisKayit = () => {
       if (!data?.verified) throw new Error("Doğrulama başarısız");
 
       setPhoneVerified(true);
-      toast({ title: "Doğrulandı", description: "Telefon numaranız başarıyla doğrulandı." });
+      // Auto-submit registration after phone verification
+      await submitRegistration();
     } catch (err: any) {
       toast({ title: "Hata", description: err.message, variant: "destructive" });
     } finally {
@@ -187,20 +189,9 @@ const GirisKayit = () => {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedTurId || !selectedTipId) {
-      toast({ title: "Hata", description: "Firma türü ve tipi seçiniz", variant: "destructive" });
-      return;
-    }
-    if (!phoneVerified) {
-      toast({ title: "Hata", description: "Lütfen telefon numaranızı doğrulayın", variant: "destructive" });
-      return;
-    }
-    if (!isValidEmail(email)) {
-      toast({ title: "Hata", description: "Geçerli bir e-posta adresi giriniz", variant: "destructive" });
-      return;
-    }
+  const submitRegistration = async () => {
+    if (!selectedTurId || !selectedTipId) return;
+    if (!isValidEmail(email)) return;
     setRegisterLoading(true);
     try {
       // Check duplicate email in profiles
@@ -217,8 +208,6 @@ const GirisKayit = () => {
       }
 
       const fullPhone = getFullPhone();
-
-      // No password signup - use a random password since admin will send password creation email
       const randomPassword = crypto.randomUUID() + "Aa1!";
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -245,18 +234,8 @@ const GirisKayit = () => {
       });
       if (rpcError) throw rpcError;
 
-      // Sign out immediately since user can't login until admin approves
       await supabase.auth.signOut();
-
-      toast({
-        title: "Başvurunuz alındı!",
-        description: "Başvurunuz değerlendirilecektir. Onaylandığında şifre oluşturma bağlantısı e-posta adresinize gönderilecektir.",
-      });
-      setActiveTab("giris");
-      // Reset form
-      setRegisterStep(1);
-      setSelectedTurId(""); setSelectedTipId(""); setFirmaUnvani(""); setVergiNumarasi(""); setVergiDairesi("");
-      setAd(""); setSoyad(""); setEmail(""); setTelefon(""); setPhoneVerified(false); setOtpSent(false); setOtpCode("");
+      setRegistrationComplete(true);
     } catch (error: any) {
       toast({ title: "Hata", description: error.message, variant: "destructive" });
     } finally {
@@ -271,6 +250,42 @@ const GirisKayit = () => {
     "İletişim sürecinin daha hızlı ve net ilerlemesi",
     "Teklif toplama / karşılaştırma / karar alma akışının düzenlenmesi",
   ];
+
+  // Registration complete full-screen
+  if (registrationComplete) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-card rounded-2xl shadow-lg border border-border p-8 space-y-6 text-center">
+            <div className="flex justify-center">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center">
+                <CheckCircle2 className="w-10 h-10 text-primary" />
+              </div>
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Başvurunuz Alındı!</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Başvurunuz başarıyla alınmıştır. Ekibimiz başvurunuzu inceleyecek ve en kısa sürede sizinle iletişime geçecektir.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Başvurunuz onaylandığında, şifre oluşturma bağlantısı <span className="font-medium text-foreground">{email}</span> adresine gönderilecektir.
+            </p>
+            <Button
+              className="w-full h-12 rounded-xl"
+              onClick={() => {
+                setRegistrationComplete(false);
+                setActiveTab("giris");
+                setRegisterStep(1);
+                setSelectedTurId(""); setSelectedTipId(""); setFirmaUnvani(""); setVergiNumarasi(""); setVergiDairesi("");
+                setAd(""); setSoyad(""); setEmail(""); setTelefon(""); setPhoneVerified(false); setOtpSent(false); setOtpCode("");
+              }}
+            >
+              Giriş Sayfasına Dön
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // OTP full-screen verification view
   if (otpSent && !phoneVerified && registerStep === 2) {
@@ -521,9 +536,9 @@ const GirisKayit = () => {
                 </div>
               )}
 
-              {/* Step 2: Kişisel Bilgiler & Başvuru */}
+              {/* Step 2: Kişisel Bilgiler */}
               {registerStep === 2 && (
-                <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-4">
                   <h3 className="text-base font-semibold text-foreground">Kişisel Bilgiler</h3>
                   <div className="space-y-2">
                     <Label>Ad</Label>
@@ -565,51 +580,36 @@ const GirisKayit = () => {
                         className="flex-1"
                         inputMode="tel"
                       />
-                      {!phoneVerified && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={handleSendOtp}
-                          disabled={sendingOtp || otpCountdown > 0 || !telefon || telefon.replace(/\D/g, "").length < 7}
-                          className="shrink-0"
-                        >
-                          {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin" /> : "Kod Gönder"}
-                        </Button>
-                      )}
-                      {phoneVerified && (
-                        <div className="flex items-center gap-1 text-sm shrink-0 px-2 text-primary">
-                          <CheckCircle2 className="w-4 h-4" /> Doğrulandı
-                        </div>
-                      )}
                     </div>
                   </div>
-
-                  {/* Summary */}
-                  <div className="rounded-lg border border-border p-4 space-y-2 text-sm">
-                    <p className="font-medium text-foreground">Başvuru Özeti</p>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
-                      <span>Firma:</span><span className="text-foreground">{firmaUnvani}</span>
-                      <span>Ad Soyad:</span><span className="text-foreground">{ad} {soyad}</span>
-                      <span>E-posta:</span><span className="text-foreground">{email}</span>
-                      <span>Telefon:</span><span className="text-foreground">{getFormattedPhone()}</span>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-muted-foreground text-center">
-                    Başvurunuz onaylandığında şifre oluşturma bağlantısı e-posta adresinize gönderilecektir.
-                  </p>
 
                   <div className="flex gap-3">
                     <Button type="button" variant="outline" className="flex-1" onClick={() => setRegisterStep(1)}>Geri</Button>
                     <Button
-                      type="submit"
+                      type="button"
                       className="flex-1"
-                      disabled={registerLoading || !ad || !soyad || !email || !isValidEmail(email) || !phoneVerified}
+                      onClick={() => {
+                        if (!ad || !soyad || !email || !telefon) {
+                          toast({ title: "Hata", description: "Lütfen tüm kişisel bilgileri doldurunuz", variant: "destructive" });
+                          return;
+                        }
+                        if (!isValidEmail(email)) {
+                          toast({ title: "Hata", description: "Geçerli bir e-posta adresi giriniz", variant: "destructive" });
+                          return;
+                        }
+                        if (telefon.replace(/\D/g, "").length < 7) {
+                          toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
+                          return;
+                        }
+                        handleSendOtp();
+                      }}
+                      disabled={sendingOtp || !ad || !soyad || !email || !isValidEmail(email) || !telefon}
                     >
-                      {registerLoading ? "Gönderiliyor..." : "Başvuru Yap"}
+                      {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                      Başvuru Yap
                     </Button>
                   </div>
-                </form>
+                </div>
               )}
             </div>
           )}
