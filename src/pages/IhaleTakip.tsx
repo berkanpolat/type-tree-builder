@@ -144,24 +144,44 @@ export default function IhaleTakip() {
     loadOptions();
   }, []);
 
+  const isAdmin = !!localStorage.getItem("admin_token");
+
   const fetchData = useCallback(async () => {
     if (!id) return;
     setLoading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { navigate("/giris-kayit"); return; }
-    setCurrentUserId(user.id);
+    // Check if admin
+    const adminToken = localStorage.getItem("admin_token");
 
-    const { data: ihaleData, error } = await supabase
-      .from("ihaleler")
-      .select("*")
-      .eq("id", id)
-      .single();
+    if (!adminToken) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate("/giris-kayit"); return; }
+      setCurrentUserId(user.id);
+    }
 
-    if (error || !ihaleData) { setLoading(false); return; }
+    let ihaleData: any = null;
 
-    // Verify ownership
-    if (ihaleData.user_id !== user.id) {
+    if (adminToken) {
+      // Admin: fetch via edge function (bypasses RLS)
+      try {
+        const { data: adminRes } = await supabase.functions.invoke("admin-auth/get-ihale-detail", {
+          body: { token: adminToken, ihaleId: id },
+        });
+        if (adminRes?.ihale) ihaleData = adminRes.ihale;
+      } catch {}
+    } else {
+      const { data: directData } = await supabase
+        .from("ihaleler")
+        .select("*")
+        .eq("id", id)
+        .single();
+      ihaleData = directData;
+    }
+
+    if (!ihaleData) { setLoading(false); return; }
+
+    // Verify ownership only for non-admin users
+    if (!adminToken && currentUserId && ihaleData.user_id !== currentUserId) {
       toast({ title: "Yetki hatası", description: "Bu ihaleye erişim yetkiniz yok.", variant: "destructive" });
       navigate("/manuihale");
       return;
@@ -180,19 +200,29 @@ export default function IhaleTakip() {
       if (katData) setKategoriName(katData.name);
     }
 
-    // Fetch teklifler
-    const { data: teklifData } = await supabase
-      .from("ihale_teklifler")
-      .select("id, tutar, created_at, teklif_veren_user_id, durum, odeme_secenekleri, kargo_masrafi, odeme_vadesi, ek_dosya_url, ek_dosya_adi")
-      .eq("ihale_id", id)
-      .order("created_at", { ascending: false });
+    // Fetch teklifler - admin uses service role via edge function, normal user uses direct query
+    let teklifData: any[] = [];
+    if (adminToken) {
+      try {
+        const { data: adminRes } = await supabase.functions.invoke("admin-auth/get-ihale-teklifler", {
+          body: { token: adminToken, ihaleId: id },
+        });
+        teklifData = adminRes?.teklifler || [];
+      } catch {}
+    } else {
+      const { data } = await supabase
+        .from("ihale_teklifler")
+        .select("id, tutar, created_at, teklif_veren_user_id, durum, odeme_secenekleri, kargo_masrafi, odeme_vadesi, ek_dosya_url, ek_dosya_adi")
+        .eq("ihale_id", id)
+        .order("created_at", { ascending: false });
+      teklifData = data || [];
+    }
 
-    if (!teklifData || teklifData.length === 0) {
+    if (teklifData.length === 0) {
       setTeklifler([]);
       setLoading(false);
       return;
     }
-
     // Keep only latest per user
     const latestPerUser = new Map<string, any>();
     for (const t of teklifData) {
