@@ -482,6 +482,7 @@ export default function AnaSayfa() {
     setAppliedSearchTerm(term);
 
     const bestMatch = findBestTaxonomyMatch(term);
+    console.log("[SEARCH DEBUG] handleSearch bestMatch:", { term, bestMatch: bestMatch ? { rootCategoryName: bestMatch.rootCategoryName, nodeName: bestMatch.node.name, score: bestMatch.score } : null });
     if (bestMatch) {
       setSelectedKategori(bestMatch.rootCategoryName);
       setSelectedGrupId(null);
