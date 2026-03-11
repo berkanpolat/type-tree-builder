@@ -105,6 +105,8 @@ export default function Mesajlar() {
 
     const targetConvId = state?.openConversationId || convFromQuery;
 
+    console.log("[Mesajlar] State handler:", { targetConvId, otherUserId: state?.otherUserId, conversationsCount: conversations.length });
+
     if (!targetConvId) return;
 
     handledStateRef.current = true;
@@ -115,9 +117,13 @@ export default function Mesajlar() {
 
     const conv = conversations.find((c) => c.id === targetConvId);
     if (conv) {
+      console.log("[Mesajlar] Found existing conversation, selecting it");
       selectConversation(conv);
     } else if (state?.otherUserId) {
+      console.log("[Mesajlar] Conversation not in list, fetching and opening");
       fetchAndOpenConversation(targetConvId, state.otherUserId);
+    } else {
+      console.log("[Mesajlar] Conversation not found and no otherUserId provided");
     }
 
     // Clear the state/query so it doesn't re-trigger
@@ -339,13 +345,27 @@ export default function Mesajlar() {
   };
 
   const handleSend = async () => {
-    if ((!newMessage.trim() && !pendingFile && !quote) || !selectedConv || !currentUserId) return;
+    console.log("[Mesajlar] handleSend called", { 
+      hasMessage: !!newMessage.trim(), 
+      hasPendingFile: !!pendingFile, 
+      hasQuote: !!quote, 
+      selectedConvId: selectedConv?.id, 
+      currentUserId 
+    });
+    
+    if ((!newMessage.trim() && !pendingFile && !quote) || !selectedConv || !currentUserId) {
+      console.log("[Mesajlar] handleSend early return - missing data");
+      return;
+    }
 
     // Check if this is a new conversation (no messages from current user yet)
     const existingMessages = messages.filter(m => m.sender_id === currentUserId);
+    console.log("[Mesajlar] existingMessages count:", existingMessages.length, "total messages:", messages.length);
+    
     if (existingMessages.length === 0) {
       // This is initiating a new conversation - check quota
       const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      console.log("[Mesajlar] Quota check result:", check);
       if (!check.allowed) {
         setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
         setUpgradeOpen(true);
@@ -355,16 +375,17 @@ export default function Mesajlar() {
       // Also check: if user hasn't received any reply yet, block second message
       const otherMessages = messages.filter(m => m.sender_id !== currentUserId);
       if (messages.length > 0 && otherMessages.length === 0) {
+        console.log("[Mesajlar] Blocked - waiting for reply");
         toast({ title: "Yanıt bekleniyor", description: "Karşı taraf yanıt verene kadar ikinci mesaj gönderemezsiniz.", variant: "destructive" });
         return;
       }
     } else {
       // User already sent messages in this conversation
-      // Check if they sent the first message and other party hasn't replied yet
       const firstMessage = messages[0];
       if (firstMessage?.sender_id === currentUserId) {
         const otherMessages = messages.filter(m => m.sender_id !== currentUserId);
         if (otherMessages.length === 0) {
+          console.log("[Mesajlar] Blocked - waiting for reply (existing conv)");
           toast({ title: "Yanıt bekleniyor", description: "Karşı taraf yanıt verene kadar ikinci mesaj gönderemezsiniz.", variant: "destructive" });
           return;
         }
@@ -406,7 +427,7 @@ export default function Mesajlar() {
 
     setNewMessage("");
 
-    await supabase.from("messages").insert({
+    const { error: insertError } = await supabase.from("messages").insert({
       conversation_id: selectedConv.id,
       sender_id: currentUserId,
       content: content || (fileName ? `📎 ${fileName}` : ""),
@@ -414,10 +435,23 @@ export default function Mesajlar() {
       file_name: fileName,
     });
 
-    await supabase
+    if (insertError) {
+      console.error("[Mesajlar] Message insert error:", insertError);
+      toast({ title: "Mesaj gönderilemedi", description: insertError.message, variant: "destructive" });
+      setUploading(false);
+      return;
+    }
+
+    console.log("[Mesajlar] Message inserted successfully");
+
+    const { error: updateError } = await supabase
       .from("conversations")
       .update({ last_message_at: new Date().toISOString() })
       .eq("id", selectedConv.id);
+
+    if (updateError) {
+      console.error("[Mesajlar] Conversation update error:", updateError);
+    }
 
     setUploading(false);
   };
