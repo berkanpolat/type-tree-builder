@@ -888,7 +888,7 @@ export default function AnaSayfa() {
                 <img src={bannerAlt2.url || bannerSatisFallback} alt="Banner 2" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
               </div>
               <div className="relative rounded-xl overflow-hidden h-36 cursor-pointer" onClick={() => bannerAlt3.linkUrl && window.open(bannerAlt3.linkUrl, "_blank")}>
-                <img src={bannerAlt3.url || bannerIplikFallback} alt="Banner 3" className="w-full h-full object-cover" />
+                <img src={bannerAlt3.url || bannerIplikFallback} alt="Banner 3" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
               </div>
             </div>
 

@@ -959,7 +959,7 @@ export default function UrunDetay() {
           onClick={() => urunBanner.linkUrl && window.open(urunBanner.linkUrl, "_blank")}
         >
           {urunBanner.url ? (
-            <img src={urunBanner.url} alt="Banner" className="w-full h-full object-cover" />
+            <img src={urunBanner.url} alt="Banner" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
           ) : (
             <div>
               <p className="text-primary-foreground text-xl font-bold">Tekstil A.Ş. ile Güvenle Alışveriş Yapın</p>
