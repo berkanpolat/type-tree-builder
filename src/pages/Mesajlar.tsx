@@ -90,7 +90,8 @@ export default function Mesajlar() {
 
   useEffect(() => {
     if (handledStateRef.current) return;
-    if (!currentUserId || conversations.length === 0) return;
+    if (!currentUserId) return;
+    if (loading) return;
 
     // Check URL query param ?conv=xxx (from notification click)
     const searchParams = new URLSearchParams(location.search);
@@ -121,7 +122,7 @@ export default function Mesajlar() {
 
     // Clear the state/query so it doesn't re-trigger
     window.history.replaceState({}, document.title, window.location.pathname);
-  }, [currentUserId, conversations, location.state, location.search]);
+  }, [currentUserId, loading, conversations, location.state, location.search]);
 
   const fetchAndOpenConversation = async (convId: string, otherUserId: string) => {
     const { data: firmaData } = await supabase
