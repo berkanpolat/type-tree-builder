@@ -202,6 +202,11 @@ export default function IhaleDetay() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [bildirOpen, setBildirOpen] = useState(false);
 
+  // Admin state
+  const [isAdminViewing, setIsAdminViewing] = useState(false);
+  const [adminActionLoading, setAdminActionLoading] = useState(false);
+  const [redSebebi, setRedSebebi] = useState("");
+
   // DB dropdown options
   const [dbOdemeSecenekleri, setDbOdemeSecenekleri] = useState<string[]>([]);
   const [dbKargoMasrafi, setDbKargoMasrafi] = useState<string[]>([]);
