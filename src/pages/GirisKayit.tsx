@@ -480,12 +480,14 @@ const GirisKayit = () => {
                   </div>
                   <div className="space-y-2">
                     <Label>Vergi Dairesi</Label>
-                    <SearchableSelect
-                      options={VERGI_DAIRELERI.map((vd) => ({ value: vd, label: vd }))}
+                    <Input
+                      placeholder="Vergi Dairesi"
                       value={vergiDairesi}
-                      onValueChange={setVergiDairesi}
-                      placeholder="Vergi Dairesi Seçiniz"
-                      searchPlaceholder="Vergi dairesi ara..."
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const capitalized = val.charAt(0).toLocaleUpperCase('tr-TR') + val.slice(1);
+                        setVergiDairesi(capitalized);
+                      }}
                     />
                   </div>
                   <Button
