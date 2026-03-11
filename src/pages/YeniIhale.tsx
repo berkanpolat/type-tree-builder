@@ -338,7 +338,7 @@ export default function YeniIhale() {
       teslimat_yeri: formData.teslimat_yeri,
       baslangic_tarihi: formData.baslangic_tarihi || null,
       bitis_tarihi: formData.bitis_tarihi || null,
-      foto_url: formData.foto_url,
+      foto_url: formData.fotograflar[0] || formData.foto_url,
       ek_dosya_url: formData.ek_dosya_url,
       ozel_filtreleme: formData.ozel_filtreleme,
       firma_adi_gizle: formData.firma_adi_gizle,
