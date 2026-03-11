@@ -148,6 +148,36 @@ export function usePackageQuota(): PackageInfo {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Realtime: re-fetch usage when relevant tables change
+  useEffect(() => {
+    const channels = [
+      supabase
+        .channel('quota-profil')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profil_goruntulemeler' }, () => fetchData())
+        .subscribe(),
+      supabase
+        .channel('quota-teklifler')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'ihale_teklifler' }, () => fetchData())
+        .subscribe(),
+      supabase
+        .channel('quota-urunler')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'urunler' }, () => fetchData())
+        .subscribe(),
+      supabase
+        .channel('quota-conversations')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => fetchData())
+        .subscribe(),
+      supabase
+        .channel('quota-abonelik')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'kullanici_abonelikler' }, () => fetchData())
+        .subscribe(),
+    ];
+
+    return () => {
+      channels.forEach(ch => supabase.removeChannel(ch));
+    };
+  }, [fetchData]);
+
   return { paketAd, paketSlug, periyot, donemBitis, durum, limits, usage, loading, stripeSubscriptionId, cancelAtPeriodEnd };
 }
 
