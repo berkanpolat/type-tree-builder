@@ -397,13 +397,10 @@ export default function AnaSayfa() {
   }, [searchTerm]);
 
   const handleSearchResultClick = (result: SearchResult) => {
-    setActiveFilter(result);
     setSearchTerm(result.name);
+    setAppliedSearchTerm(result.name);
+    setActiveFilter(null);
     setShowDropdown(false);
-    if (result.type === "Kategori") {
-      const match = URUN_KATEGORILERI.find((k) => k.toLowerCase() === result.name.toLowerCase());
-      if (match) { setSelectedKategori(match); setSelectedGrupId(null); setSelectedTurId(null); }
-    }
   };
 
   const clearFilter = () => {
