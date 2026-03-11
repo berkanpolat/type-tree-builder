@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
+import { usePackageQuota } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
 import {
   Layers, CheckCircle2, XCircle, Plus, Search, Pencil, Trash2, ImageIcon,
