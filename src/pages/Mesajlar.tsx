@@ -355,6 +355,8 @@ export default function Mesajlar() {
         }
       }
     }
+
+    setUploading(true);
     let fileUrl: string | null = null;
     let fileName: string | null = null;
 
