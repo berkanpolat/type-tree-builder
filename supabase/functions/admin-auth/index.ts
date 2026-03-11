@@ -858,7 +858,8 @@ Deno.serve(async (req) => {
         })).sort((a: any, b: any) => b.count - a.count);
 
         // Ürün Türü dağılımı - 3rd level items (parent is a group, grandparent is a category)
-        const groupIds = new Set(allOpts.filter((o: any) => o.parent_id && roots.some((r: any) => r.id === o.parent_id)).map((o: any) => o.id));
+        const groups = allOpts.filter((o: any) => o.parent_id && roots.some((r: any) => r.id === o.parent_id));
+        const groupIds = new Set(groups.map((o: any) => o.id));
         const turItems = allOpts.filter((o: any) => o.parent_id && groupIds.has(o.parent_id));
         
         const turCountMap: Record<string, number> = {};
@@ -867,11 +868,18 @@ Deno.serve(async (req) => {
             turCountMap[item.urun_tur_id] = (turCountMap[item.urun_tur_id] || 0) + 1;
           }
         }
-        urunTurDagilimi = turItems.map((t: any) => ({
-          id: t.id,
-          name: t.name,
-          count: turCountMap[t.id] || 0,
-        })).filter((t: any) => t.count > 0).sort((a: any, b: any) => b.count - a.count);
+        // Include ALL types (even 0 count) + add parent info for filtering
+        urunTurDagilimi = turItems.map((t: any) => {
+          const parentGroup = groups.find((g: any) => g.id === t.parent_id);
+          const parentCategory = parentGroup ? roots.find((r: any) => r.id === parentGroup.parent_id) : null;
+          return {
+            id: t.id,
+            name: t.name,
+            count: turCountMap[t.id] || 0,
+            grup_id: t.parent_id,
+            kategori_id: parentCategory?.id || null,
+          };
+        }).sort((a: any, b: any) => b.count - a.count);
       }
 
       // Firma Türü distribution
@@ -947,11 +955,11 @@ Deno.serve(async (req) => {
 
       if (error) return jsonResponse({ error: error.message }, 400);
 
-      // Get firma names for all user_ids
+      // Get firma names + logos for all user_ids
       const userIds = [...new Set((urunler || []).map((u: any) => u.user_id))];
       const { data: firmalar } = await supabase
         .from("firmalar")
-        .select("user_id, firma_unvani")
+        .select("user_id, firma_unvani, logo_url")
         .in("user_id", userIds);
 
       // Get category names
@@ -980,11 +988,202 @@ Deno.serve(async (req) => {
         return {
           ...u,
           firma_unvani: firma?.firma_unvani || "—",
+          firma_logo_url: firma?.logo_url || null,
           kategori_label: kategoriLabel || "—",
         };
       });
 
       return jsonResponse({ urunler: enriched });
+    }
+
+    // ─── GET URUN DETAIL (for admin preview - bypasses RLS) ───
+    if (action === "get-urun-detail") {
+      const { token, urunId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+      const { data: urunData, error } = await supabase
+        .from("urunler")
+        .select("*")
+        .eq("id", urunId)
+        .single();
+      if (error || !urunData) return jsonResponse({ error: "Ürün bulunamadı" }, 404);
+      return jsonResponse({ urun: urunData });
+    }
+
+    // ─── APPROVE URUN ───
+    if (action === "approve-urun") {
+      const { token, urunId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+      const { data, error } = await supabase
+        .from("urunler")
+        .update({ durum: "aktif", updated_at: new Date().toISOString() })
+        .eq("id", urunId)
+        .select("id, baslik, urun_no, user_id")
+        .single();
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true, urun: data });
+    }
+
+    // ─── REJECT URUN ───
+    if (action === "reject-urun") {
+      const { token, urunId, redSebebi } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+      
+      // Get urun info before updating
+      const { data: urunInfo } = await supabase
+        .from("urunler")
+        .select("user_id, baslik, urun_no")
+        .eq("id", urunId)
+        .single();
+
+      const { error } = await supabase
+        .from("urunler")
+        .update({ durum: "reddedildi", updated_at: new Date().toISOString() })
+        .eq("id", urunId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Notify user with rejection reason
+      if (urunInfo) {
+        const msg = `${urunInfo.urun_no} numaralı "${urunInfo.baslik}" başlıklı ürününüz reddedilmiştir. Sebep: ${redSebebi}`;
+        await supabase.from("notifications").insert({
+          user_id: urunInfo.user_id,
+          type: "urun_reddedildi",
+          message: msg,
+          link: "/manupazar",
+        });
+      }
+
+      return jsonResponse({ success: true });
+    }
+
+    // ─── TOGGLE URUN (aktif/pasif) ───
+    if (action === "toggle-urun") {
+      const { token, urunId, newDurum } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+      if (newDurum !== "aktif" && newDurum !== "pasif") {
+        return jsonResponse({ error: "Geçersiz durum" }, 400);
+      }
+      const { error } = await supabase
+        .from("urunler")
+        .update({ durum: newDurum, updated_at: new Date().toISOString() })
+        .eq("id", urunId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
+    // ─── REMOVE URUN (delete + notify owner) ───
+    if (action === "remove-urun") {
+      const { token, urunId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      // Get urun info before deleting
+      const { data: urunInfo } = await supabase
+        .from("urunler")
+        .select("user_id, baslik, urun_no")
+        .eq("id", urunId)
+        .single();
+
+      // Delete varyasyonlar first
+      await supabase.from("urun_varyasyonlar").delete().eq("urun_id", urunId);
+      // Delete favoriler
+      await supabase.from("urun_favoriler").delete().eq("urun_id", urunId);
+      // Delete the urun
+      const { error } = await supabase
+        .from("urunler")
+        .delete()
+        .eq("id", urunId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Notify owner
+      if (urunInfo) {
+        const msg = `${urunInfo.urun_no} numaralı "${urunInfo.baslik}" başlıklı ürününüz yönetim tarafından kaldırılmıştır.`;
+        await supabase.from("notifications").insert({
+          user_id: urunInfo.user_id,
+          type: "urun_admin_kaldirildi",
+          message: msg,
+          link: "/manupazar",
+        });
+      }
+
+      return jsonResponse({ success: true });
+    }
+
+    // ─── GET URUN EDIT DATA (for admin editing) ───
+    if (action === "get-urun-edit-data") {
+      const { token, urunId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      const [urunRes, varyRes] = await Promise.all([
+        supabase.from("urunler").select("*").eq("id", urunId).single(),
+        supabase.from("urun_varyasyonlar").select("*").eq("urun_id", urunId).order("created_at"),
+      ]);
+
+      if (urunRes.error || !urunRes.data) return jsonResponse({ error: "Ürün bulunamadı" }, 404);
+      return jsonResponse({ urun: urunRes.data, varyasyonlar: varyRes.data || [] });
+    }
+
+    // ─── ADMIN SAVE URUN (full save bypassing RLS + notify owner) ───
+    if (action === "admin-save-urun") {
+      const { token, urunId, urunData, varyasyonlar } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      // Get urun info before updating for notification
+      const { data: urunInfo } = await supabase
+        .from("urunler")
+        .select("user_id, baslik, urun_no")
+        .eq("id", urunId)
+        .single();
+
+      // Update urun
+      const { error: updateError } = await supabase
+        .from("urunler")
+        .update({ ...urunData, updated_at: new Date().toISOString() })
+        .eq("id", urunId);
+
+      if (updateError) return jsonResponse({ error: updateError.message }, 400);
+
+      // Save varyasyonlar
+      if (varyasyonlar !== undefined) {
+        await supabase.from("urun_varyasyonlar").delete().eq("urun_id", urunId);
+        if (varyasyonlar && varyasyonlar.length > 0) {
+          await supabase.from("urun_varyasyonlar").insert(
+            varyasyonlar.map((v: any) => ({ urun_id: urunId, ...v }))
+          );
+        }
+      }
+
+      // Notify urun owner about edit
+      if (urunInfo) {
+        const msg = `${urunInfo.urun_no} numaralı "${urunInfo.baslik}" başlıklı ürününüz yönetim tarafından düzenlenmiştir.`;
+        await supabase.from("notifications").insert({
+          user_id: urunInfo.user_id,
+          type: "urun_admin_duzenlendi",
+          message: msg,
+          link: "/manupazar",
+        });
+      }
+
+      return jsonResponse({ success: true });
     }
 
     return jsonResponse({ error: "Geçersiz istek" }, 400);

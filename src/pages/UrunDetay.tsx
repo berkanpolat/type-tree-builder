@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BildirDialog from "@/components/BildirDialog";
 import {
   Heart,
@@ -27,6 +28,8 @@ import {
   XCircle,
   CheckCircle,
   Flag,
+  ShieldCheck,
+  ShieldX,
 } from "lucide-react";
 import {
   
@@ -43,6 +46,30 @@ const paraBirimiSymbol: Record<string, string> = {
 
 const isUUID = (val: string): boolean =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+
+const RED_SEBEPLERI = [
+  "Eksik veya yetersiz ürün bilgisi",
+  "Yanlış kategori seçimi",
+  "Yanlış ürün tipi seçimi",
+  "Düşük kaliteli görseller",
+  "Uygunsuz görseller",
+  "Platform kurallarına aykırı içerik",
+  "Platform dışı iletişim bilgisi paylaşımı",
+  "Reklam veya yönlendirme içerikleri",
+  "Tekstil kapsamı dışı ürün",
+  "Yasaklı ürün",
+  "Sahte veya marka ihlali içeren ürün",
+  "Telif hakkı ihlali",
+  "Gerçekçi olmayan fiyatlandırma",
+  "Fiyat bilgisinin eksik olması",
+  "Yinelenen (duplicate) ürün",
+  "Yanıltıcı ürün bilgisi",
+  "Doğrulanmamış veya şüpheli satıcı davranışı",
+  "Spam ürün yükleme",
+  "Eksik teknik özellik bilgileri",
+  "Platform standartlarına uygun olmayan ürün başlığı",
+  "Platform kalite standartlarına uymayan içerik",
+];
 
 const formatLabel = (key: string): string => {
   const turkishMap: Record<string, string> = {
@@ -152,10 +179,21 @@ export default function UrunDetay() {
   const [breadcrumbGrup, setBreadcrumbGrup] = useState("");
   const [breadcrumbTur, setBreadcrumbTur] = useState("");
 
+  // Admin state
+  const [isAdminViewing, setIsAdminViewing] = useState(false);
+  const [adminActionLoading, setAdminActionLoading] = useState(false);
+  const [redSebebi, setRedSebebi] = useState("");
+
   useEffect(() => {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/giris-kayit"); return; }
+      if (!user) {
+        const adminToken = localStorage.getItem("admin_token");
+        if (!adminToken) { navigate("/giris-kayit"); return; }
+        setIsAdminViewing(true);
+        setCurrentUserId("admin");
+        return;
+      }
       setCurrentUserId(user.id);
       const { data: f } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).single();
       if (f) { setFirmaUnvani(f.firma_unvani); setFirmaLogoUrl(f.logo_url); }
@@ -167,11 +205,31 @@ export default function UrunDetay() {
     if (!id || !currentUserId) return;
     setLoading(true);
 
-    const { data: urunData } = await supabase
+    let urunData: any = null;
+
+    const { data: directData } = await supabase
       .from("urunler")
       .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum")
       .eq("id", id)
       .single();
+
+    if (directData) {
+      urunData = directData;
+    } else {
+      // Fallback: try admin edge function
+      const adminToken = localStorage.getItem("admin_token");
+      if (adminToken) {
+        try {
+          const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth/get-urun-detail", {
+            body: { token: adminToken, urunId: id },
+          });
+          if (!adminErr && adminRes?.urun) {
+            urunData = adminRes.urun;
+            setIsAdminViewing(true);
+          }
+        } catch {}
+      }
+    }
 
     if (!urunData) { setLoading(false); return; }
     setUrun({ ...urunData, teknik_detaylar: (urunData.teknik_detaylar as Record<string, string>) || null });
@@ -519,8 +577,63 @@ export default function UrunDetay() {
 
           {/* Right: Product Info + Seller */}
           <div className="lg:col-span-2 space-y-4">
+            {/* Admin Onay/Red Bloğu */}
+            {isAdminViewing && urun.durum === "onay_bekliyor" && (
+              <Card className="p-5 border-2 border-blue-400 bg-blue-50 dark:bg-blue-950/20">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-blue-500" /> Admin İnceleme
+                  </h3>
+                  <Badge className="bg-amber-500 text-white">Onay Bekliyor</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">Bu ürün yayına alınmak için onay bekliyor. İnceleyin ve karar verin.</p>
+                <div className="space-y-3">
+                  <Button
+                    className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    disabled={adminActionLoading}
+                    onClick={async () => {
+                      setAdminActionLoading(true);
+                      try {
+                        const adminToken = localStorage.getItem("admin_token");
+                        await supabase.functions.invoke("admin-auth/approve-urun", { body: { token: adminToken, urunId: urun.id } });
+                        toast({ title: "Ürün onaylandı!" });
+                        setUrun({ ...urun, durum: "aktif" });
+                      } catch { toast({ title: "Hata", variant: "destructive" }); }
+                      setAdminActionLoading(false);
+                    }}
+                  >
+                    <CheckCircle className="w-4 h-4" /> Onayla
+                  </Button>
+                  <div className="space-y-2">
+                    <Select value={redSebebi} onValueChange={setRedSebebi}>
+                      <SelectTrigger className="text-xs"><SelectValue placeholder="Red sebebi seçin..." /></SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {RED_SEBEPLERI.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="destructive"
+                      className="w-full gap-2"
+                      disabled={!redSebebi || adminActionLoading}
+                      onClick={async () => {
+                        setAdminActionLoading(true);
+                        try {
+                          const adminToken = localStorage.getItem("admin_token");
+                          await supabase.functions.invoke("admin-auth/reject-urun", { body: { token: adminToken, urunId: urun.id, redSebebi } });
+                          toast({ title: "Ürün reddedildi" });
+                          setUrun({ ...urun, durum: "reddedildi" });
+                        } catch { toast({ title: "Hata", variant: "destructive" }); }
+                        setAdminActionLoading(false);
+                      }}
+                    >
+                      <ShieldX className="w-4 h-4" /> Reddet
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
             {/* Onay Bloğu - sadece sahip ve duzenleniyor/onay_bekliyor durumunda */}
-            {urun.user_id === currentUserId && (urun.durum === "duzenleniyor" || urun.durum === "onay_bekliyor") && (
+            {!isAdminViewing && urun.user_id === currentUserId && (urun.durum === "duzenleniyor" || urun.durum === "onay_bekliyor") && (
               <Card className="p-5 border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-foreground">

@@ -1,0 +1,1 @@
+ALTER TABLE public.urunler ADD COLUMN IF NOT EXISTS goruntuleme_sayisi integer NOT NULL DEFAULT 0;
