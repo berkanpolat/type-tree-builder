@@ -8,6 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import {
   Crown,
   Check,
   Eye,
@@ -16,6 +27,7 @@ import {
   ShoppingBag,
   MessageSquare,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 
 const FEATURES = [
@@ -31,6 +43,9 @@ const Paketim = () => {
   const isPro = pkg.paketSlug === "pro";
   const [upgradeLoading, setUpgradeLoading] = useState<"aylik" | "yillik" | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const { toast } = useToast();
 
   const handleUpgrade = async (periyot: "aylik" | "yillik") => {
     setUpgradeLoading(periyot);
@@ -58,6 +73,31 @@ const Paketim = () => {
       console.error("Portal error:", err);
     } finally {
       setPortalLoading(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    setCancelLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-subscription");
+      if (error) throw error;
+      if (data?.success) {
+        const cancelDate = data.cancel_at
+          ? new Date(data.cancel_at).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })
+          : "";
+        toast({
+          title: "Abonelik iptal edildi",
+          description: `PRO paketiniz ${cancelDate} tarihine kadar aktif kalacaktır. Bu tarihten sonra Ücretsiz pakete geçirilecektir.`,
+        });
+        setCancelDialogOpen(false);
+        // Reload to reflect changes
+        setTimeout(() => window.location.reload(), 1500);
+      }
+    } catch (err: any) {
+      console.error("Cancel error:", err);
+      toast({ title: "Hata", description: "Abonelik iptal edilemedi. Lütfen tekrar deneyin.", variant: "destructive" });
+    } finally {
+      setCancelLoading(false);
     }
   };
 
@@ -93,13 +133,12 @@ const Paketim = () => {
                 <CardTitle className="text-xl">Aktif Paketiniz</CardTitle>
               </div>
               {isPro && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
                     {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                     Aboneliği Yönet
                   </Button>
-                  <Button variant="destructive" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
-                    {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  <Button variant="destructive" size="sm" onClick={() => setCancelDialogOpen(true)}>
                     Paketi İptal Et
                   </Button>
                 </div>
@@ -266,6 +305,45 @@ const Paketim = () => {
           </Card>
         </div>
       </div>
+
+      {/* İptal Onay Dialogu */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              <AlertDialogTitle>Aboneliği İptal Et</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="space-y-3 text-sm">
+              <p>PRO paketinizi iptal etmek istediğinize emin misiniz?</p>
+              <div className="bg-muted rounded-lg p-3 space-y-2">
+                <p className="font-medium text-foreground">İptal sonrası neler olacak:</p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>
+                    Mevcut dönem bitiş tarihinize ({pkg.donemBitis
+                      ? new Date(pkg.donemBitis).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })
+                      : "—"}) kadar PRO özelliklerini kullanmaya devam edeceksiniz.
+                  </li>
+                  <li>Dönem sona erdikten sonra hesabınız otomatik olarak <strong>Ücretsiz pakete</strong> geçirilecektir.</li>
+                  <li>Ücretsiz pakette profil görüntüleme, teklif verme ve mesaj hakları sınırlıdır.</li>
+                  <li>Gelecek dönemde herhangi bir ücret tahsil edilmeyecektir.</li>
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelLoading}>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelSubscription}
+              disabled={cancelLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Evet, İptal Et
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };
