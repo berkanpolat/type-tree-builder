@@ -1848,8 +1848,18 @@ Deno.serve(async (req) => {
 
     // ─── UPDATE FIRMA PACKAGE ───
     if (action === "update-firma-paket") {
-      const { token, userId, paketId } = body;
+      const { token, userId, paketId, ekstraHaklar } = body;
       verifyToken(token);
+
+      const updatePayload: any = {
+        paket_id: paketId,
+        donem_baslangic: new Date().toISOString(),
+        donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        durum: "aktif",
+      };
+      if (ekstraHaklar !== undefined) {
+        updatePayload.ekstra_haklar = ekstraHaklar;
+      }
 
       // Check if user has existing subscription
       const { data: existing } = await supabase
@@ -1861,25 +1871,13 @@ Deno.serve(async (req) => {
       if (existing) {
         const { error } = await supabase
           .from("kullanici_abonelikler")
-          .update({
-            paket_id: paketId,
-            donem_baslangic: new Date().toISOString(),
-            donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            durum: "aktif",
-          })
+          .update(updatePayload)
           .eq("user_id", userId);
         if (error) return jsonResponse({ error: error.message }, 500);
       } else {
         const { error } = await supabase
           .from("kullanici_abonelikler")
-          .insert({
-            user_id: userId,
-            paket_id: paketId,
-            periyot: "aylik",
-            donem_baslangic: new Date().toISOString(),
-            donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            durum: "aktif",
-          });
+          .insert({ user_id: userId, periyot: "aylik", ...updatePayload });
         if (error) return jsonResponse({ error: error.message }, 500);
       }
 
@@ -1889,6 +1887,27 @@ Deno.serve(async (req) => {
         user_id: userId,
         type: "paket_degisikligi",
         message: `Paketiniz ${paket?.ad || ""} olarak güncellenmiştir.`,
+        link: "/dashboard",
+      });
+
+      return jsonResponse({ success: true });
+    }
+
+    // ─── UPDATE EXTRA QUOTAS ONLY ───
+    if (action === "update-ekstra-haklar") {
+      const { token, userId, ekstraHaklar } = body;
+      verifyToken(token);
+
+      const { error } = await supabase
+        .from("kullanici_abonelikler")
+        .update({ ekstra_haklar: ekstraHaklar || {} })
+        .eq("user_id", userId);
+      if (error) return jsonResponse({ error: error.message }, 500);
+
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "ekstra_hak",
+        message: "Hesabınıza ekstra hak tanımlanmıştır.",
         link: "/dashboard",
       });
 
