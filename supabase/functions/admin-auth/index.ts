@@ -2101,6 +2101,90 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ─── LIST ACTIVITY LOG ───
+    if (action === "list-activity-log") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+
+      const { data, error } = await supabase
+        .from("admin_activity_log")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(500);
+
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ logs: data });
+    }
+
+    // ─── CREATE FIRMA (admin creates user+firma without email confirmation) ───
+    if (action === "create-firma") {
+      const { token, email, password, ad, soyad, iletisim_email, iletisim_numarasi, firma_unvani, vergi_numarasi, vergi_dairesi, firma_turu_id, firma_tipi_id } = body;
+      const payload = verifyToken(token);
+
+      // Create auth user with auto-confirm
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+
+      if (authError) return jsonResponse({ error: authError.message }, 400);
+      const userId = authData.user.id;
+
+      // Create profile
+      const { error: profileError } = await supabase.from("profiles").insert({
+        user_id: userId,
+        ad,
+        soyad,
+        iletisim_email: iletisim_email || email,
+        iletisim_numarasi: iletisim_numarasi || null,
+      });
+
+      if (profileError) {
+        // Rollback: delete auth user
+        await supabase.auth.admin.deleteUser(userId);
+        return jsonResponse({ error: profileError.message }, 400);
+      }
+
+      // Create firma
+      const { error: firmaError } = await supabase.from("firmalar").insert({
+        user_id: userId,
+        firma_turu_id,
+        firma_tipi_id,
+        firma_unvani,
+        vergi_numarasi,
+        vergi_dairesi,
+        onay_durumu: "onaylandi",
+      });
+
+      if (firmaError) {
+        await supabase.from("profiles").delete().eq("user_id", userId);
+        await supabase.auth.admin.deleteUser(userId);
+        return jsonResponse({ error: firmaError.message }, 400);
+      }
+
+      // Auto-assign free package
+      const { data: freePaket } = await supabase.from("paketler").select("id").eq("slug", "ucretsiz").single();
+      if (freePaket) {
+        await supabase.from("kullanici_abonelikler").insert({
+          user_id: userId,
+          paket_id: freePaket.id,
+          periyot: "aylik",
+          donem_baslangic: new Date().toISOString(),
+          donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          durum: "aktif",
+        });
+      }
+
+      await logActivity(supabase, payload, "create-firma", {
+        target_type: "firma",
+        target_label: firma_unvani,
+        details: { email, ad, soyad, firma_unvani, vergi_numarasi },
+      });
+
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
