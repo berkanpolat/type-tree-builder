@@ -13,6 +13,7 @@ import { useNotificationCount } from "@/hooks/use-notifications";
 import HeaderMessagePanel from "@/components/header/HeaderMessagePanel";
 import HeaderFavoritesPanel from "@/components/header/HeaderFavoritesPanel";
 import HeaderNotificationsPanel from "@/components/header/HeaderNotificationsPanel";
+import QuotaReminderBadge from "@/components/QuotaReminderBadge";
 
 interface PazarHeaderProps {
   firmaUnvani: string;
