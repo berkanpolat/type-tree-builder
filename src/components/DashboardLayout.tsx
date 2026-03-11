@@ -1,5 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { useLastSeen } from "@/hooks/use-last-seen";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -7,6 +8,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, title }: DashboardLayoutProps) {
+  useLastSeen();
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
