@@ -137,22 +137,27 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
       updateForm({ fotograflar: [...formData.fotograflar, ...newUrls], foto_url: formData.fotograflar[0] || newUrls[0] || null });
       setUploading(false);
     } else {
-      const file = e.target.files?.[0];
-      if (!file) return;
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
       setUploading(true);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setUploading(false); return; }
 
-      const ext = file.name.split(".").pop();
-      const path = `${user.id}/${ihaleId}/ek_${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("ihale-files").upload(path, file);
-      if (error) {
-        toast({ title: "Hata", description: "Dosya yüklenemedi.", variant: "destructive" });
-      } else {
+      const newFiles: { url: string; adi: string }[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const ext = file.name.split(".").pop();
+        const path = `${user.id}/${ihaleId}/ek_${Date.now()}_${i}.${ext}`;
+        const { error } = await supabase.storage.from("ihale-files").upload(path, file);
+        if (error) {
+          toast({ title: "Hata", description: `${file.name} yüklenemedi.`, variant: "destructive" });
+          continue;
+        }
         const { data: urlData } = supabase.storage.from("ihale-files").getPublicUrl(path);
-        updateForm({ ek_dosya_url: urlData.publicUrl });
+        newFiles.push({ url: urlData.publicUrl, adi: file.name });
       }
+      updateForm({ ek_dosyalar: [...formData.ek_dosyalar, ...newFiles], ek_dosya_url: formData.ek_dosyalar[0]?.url || newFiles[0]?.url || null });
       setUploading(false);
     }
   };
@@ -160,6 +165,11 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
   const removePhoto = (index: number) => {
     const updated = formData.fotograflar.filter((_, i) => i !== index);
     updateForm({ fotograflar: updated, foto_url: updated[0] || null });
+  };
+
+  const removeEkDosya = (index: number) => {
+    const updated = formData.ek_dosyalar.filter((_, i) => i !== index);
+    updateForm({ ek_dosyalar: updated, ek_dosya_url: updated[0]?.url || null });
   };
 
   const showMinTeklifDegisim = formData.teklif_usulu === "acik_indirme" || formData.teklif_usulu === "acik_arttirma";
