@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
 type FieldValue = string | boolean;
 
 type RouteSnapshot = {
   scrollY: number;
+  containerScroll: number;
   fields: Record<string, FieldValue>;
   updatedAt: number;
 };
@@ -125,18 +126,29 @@ const applySnapshotToFields = (fields: Record<string, FieldValue>) => {
   });
 };
 
+/** Find the main scrollable container (DashboardLayout's <main> with overflow-y-auto) */
+const getScrollContainer = (): HTMLElement | null => {
+  return document.querySelector("main.overflow-y-auto") as HTMLElement | null;
+};
+
 const RouteStateManager = () => {
   const location = useLocation();
   const navigationType = useNavigationType();
   const routeKey = getRouteKey(location.pathname, location.search);
+  const isPop = useRef(navigationType === "POP");
+
+  // Update ref on each render
+  isPop.current = navigationType === "POP";
 
   useEffect(() => {
     const saveScroll = () => {
+      const container = getScrollContainer();
       const store = readStore();
-      const prev = store[routeKey] ?? { scrollY: 0, fields: {}, updatedAt: Date.now() };
+      const prev = store[routeKey] ?? { scrollY: 0, containerScroll: 0, fields: {}, updatedAt: Date.now() };
       store[routeKey] = {
         ...prev,
         scrollY: window.scrollY,
+        containerScroll: container?.scrollTop ?? 0,
         updatedAt: Date.now(),
       };
       writeStore(pruneStore(store));
@@ -150,11 +162,13 @@ const RouteStateManager = () => {
       const value = readFieldValue(target);
       if (!key || value === null) return;
 
+      const container = getScrollContainer();
       const store = readStore();
-      const prev = store[routeKey] ?? { scrollY: window.scrollY, fields: {}, updatedAt: Date.now() };
+      const prev = store[routeKey] ?? { scrollY: window.scrollY, containerScroll: container?.scrollTop ?? 0, fields: {}, updatedAt: Date.now() };
 
       store[routeKey] = {
         scrollY: window.scrollY,
+        containerScroll: container?.scrollTop ?? 0,
         fields: {
           ...prev.fields,
           [key]: value,
@@ -165,17 +179,28 @@ const RouteStateManager = () => {
       writeStore(pruneStore(store));
     };
 
-    saveScroll();
+    // Don't save scroll immediately on POP — we want to restore, not overwrite
+    if (!isPop.current) {
+      saveScroll();
+    }
 
-    window.addEventListener("scroll", saveScroll, { passive: true });
+    const container = getScrollContainer();
+
+    const handleScroll = () => saveScroll();
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    container?.addEventListener("scroll", handleScroll, { passive: true });
     document.addEventListener("input", saveFieldChange, true);
     document.addEventListener("change", saveFieldChange, true);
 
     return () => {
-      window.removeEventListener("scroll", saveScroll);
+      window.removeEventListener("scroll", handleScroll);
+      container?.removeEventListener("scroll", handleScroll);
       document.removeEventListener("input", saveFieldChange, true);
       document.removeEventListener("change", saveFieldChange, true);
-      saveScroll();
+      if (!isPop.current) {
+        saveScroll();
+      }
     };
   }, [routeKey]);
 
@@ -187,15 +212,23 @@ const RouteStateManager = () => {
 
     const restore = () => {
       applySnapshotToFields(snapshot.fields);
+
+      // Restore scroll on both window and container
       window.scrollTo({ top: snapshot.scrollY || 0, behavior: "auto" });
+      const container = getScrollContainer();
+      if (container && snapshot.containerScroll) {
+        container.scrollTop = snapshot.containerScroll;
+      }
     };
 
-    const t1 = window.setTimeout(restore, 0);
-    const t2 = window.setTimeout(restore, 220);
+    const t1 = window.setTimeout(restore, 50);
+    const t2 = window.setTimeout(restore, 300);
+    const t3 = window.setTimeout(restore, 600);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
+      clearTimeout(t3);
     };
   }, [routeKey, navigationType]);
 
