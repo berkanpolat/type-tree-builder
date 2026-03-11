@@ -144,7 +144,7 @@ export default function AnaSayfa() {
   const [varyasyonMap, setVaryasyonMap] = useState<Record<string, { renk: string[]; beden: string[] }>>({});
 
   // Sorting
-  const [sortBy, setSortBy] = useState<string>("newest");
+  const [sortBy, setSortBy] = useSessionState<string>("sortBy", "newest");
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
