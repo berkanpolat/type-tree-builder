@@ -260,8 +260,17 @@ export default function YeniUrun() {
     setFiyatTipi(data.fiyat_tipi);
     setParaBirimi(data.para_birimi || "TRY");
     setFiyat(data.fiyat?.toString() || "");
-    setTeknikDetaylar(data.teknik_detaylar as Record<string, string> || {});
+    const td = data.teknik_detaylar as Record<string, string> || {};
+    setTeknikDetaylar(td);
     setDraftId(urunId);
+
+    // Load dependent options for edit mode (e.g., Kumaş Türü depends on Kumaş Grubu)
+    const alanlar = getTeknikAlanlar();
+    for (const alan of alanlar) {
+      if (alan.type === "dependent_dropdown" && alan.dependsOn && td[alan.dependsOn]) {
+        loadDependentOptions(alan.dependsOn, td[alan.dependsOn]);
+      }
+    }
 
     const { data: vars } = await supabase.from("urun_varyasyonlar").select("*").eq("urun_id", urunId).order("created_at");
     if (vars && vars.length > 0) {
