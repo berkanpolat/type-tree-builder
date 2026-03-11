@@ -66,7 +66,6 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "genel", label: "Genel Firma\nBilgileri", icon: ClipboardList },
     { id: "urun-hizmet", label: "Ürün / Hizmet", icon: Package },
     { id: "uretim-satis", label: "Üretim/Satış", icon: Factory },
-    { id: "kapasite", label: "Kapasite ve Tedarik\nYetkinliği", icon: BarChart3 },
     { id: "tesis", label: "Tesis Bilgileri", icon: Building2 },
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },

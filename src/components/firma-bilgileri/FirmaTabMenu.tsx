@@ -22,7 +22,7 @@ export default function FirmaTabMenu({ tabs, activeTab, onTabChange }: FirmaTabM
             {/* Tab button */}
             <button
               onClick={() => onTabChange(tab.id)}
-              className="flex flex-col items-center gap-1.5 group min-w-[90px]"
+              className="flex flex-col items-center gap-1.5 group w-[90px]"
             >
               <div
                 className={cn(
@@ -36,7 +36,7 @@ export default function FirmaTabMenu({ tabs, activeTab, onTabChange }: FirmaTabM
               </div>
               <span
                 className={cn(
-                  "text-[11px] leading-tight text-center whitespace-pre-line max-w-[90px]",
+                  "text-[11px] leading-tight text-center whitespace-pre-line w-[90px] h-[28px] flex items-center justify-center",
                   isActive ? "text-primary font-semibold" : "text-muted-foreground"
                 )}
               >
