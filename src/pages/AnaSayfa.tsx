@@ -405,6 +405,7 @@ export default function AnaSayfa() {
 
   const clearFilter = () => {
     setActiveFilter(null);
+    setAppliedSearchTerm("");
     setSearchTerm("");
     setSelectedKategori(null);
     setSelectedGrupId(null);
