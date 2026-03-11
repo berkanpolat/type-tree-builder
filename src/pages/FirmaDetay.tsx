@@ -1082,6 +1082,12 @@ export default function FirmaDetay() {
         <BildirDialog open={bildirOpen} onOpenChange={setBildirOpen} tur="profil" referansId={firma.id} />
       )}
       <Footer />
+      <UpgradeDialog
+        open={msgUpgradeOpen}
+        onOpenChange={setMsgUpgradeOpen}
+        title="Mesaj Hakkınız Doldu"
+        message={msgUpgradeMessage}
+      />
     </div>
   );
 }
