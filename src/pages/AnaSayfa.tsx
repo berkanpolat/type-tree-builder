@@ -483,30 +483,6 @@ export default function AnaSayfa() {
     }
   }, [searchTerm, findBestTaxonomyMatch]);
 
-  // Helper to resolve kategori hierarchy from a grup/tür id
-  const resolveHierarchy = async (id: string, parentId: string): Promise<{ kategori: string; grupId: string | null; turId: string | null } | null> => {
-    const { data: parent } = await supabase
-      .from("firma_bilgi_secenekleri")
-      .select("id, name, parent_id")
-      .eq("id", parentId)
-      .single();
-    if (!parent) return null;
-
-    if (!parent.parent_id) {
-      // parent is Kategori, id is Grup
-      if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === parent.name.toLowerCase())) return null;
-      return { kategori: parent.name, grupId: id, turId: null };
-    }
-    // parent is Grup, id is Tür — get grandparent (Kategori)
-    const { data: grandparent } = await supabase
-      .from("firma_bilgi_secenekleri")
-      .select("id, name")
-      .eq("id", parent.parent_id)
-      .single();
-    if (!grandparent) return null;
-    if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === grandparent.name.toLowerCase())) return null;
-    return { kategori: grandparent.name, grupId: parent.id, turId: id };
-  };
 
   // Lightweight autocomplete — products + kategori/grup/tür
   useEffect(() => {
