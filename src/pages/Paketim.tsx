@@ -133,13 +133,12 @@ const Paketim = () => {
                 <CardTitle className="text-xl">Aktif Paketiniz</CardTitle>
               </div>
               {isPro && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Button variant="outline" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
                     {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                     Aboneliği Yönet
                   </Button>
-                  <Button variant="destructive" size="sm" onClick={handleManageSubscription} disabled={portalLoading}>
-                    {portalLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  <Button variant="destructive" size="sm" onClick={() => setCancelDialogOpen(true)}>
                     Paketi İptal Et
                   </Button>
                 </div>
