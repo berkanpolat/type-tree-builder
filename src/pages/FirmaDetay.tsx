@@ -255,7 +255,7 @@ export default function FirmaDetay() {
       }
 
       // Kendi firması ise kota kontrolü yapma
-      if (user && firmaData.user_id !== user.id && !packageInfo.loading) {
+      if (user && firmaData.user_id !== user.id) {
         // Daha önce görüntülenmiş mi kontrol et
         const { data: existingView } = await supabase
           .from("profil_goruntulemeler" as any)
