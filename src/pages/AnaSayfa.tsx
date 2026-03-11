@@ -451,9 +451,8 @@ export default function AnaSayfa() {
 
     if (!parent.parent_id) {
       // parent is Kategori, id is Grup
-      const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === parent.name.toLowerCase());
-      if (katName) return { kategori: katName, grupId: id, turId: null };
-      return null;
+      if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === parent.name.toLowerCase())) return null;
+      return { kategori: parent.name, grupId: id, turId: null };
     }
     // parent is Grup, id is Tür — get grandparent (Kategori)
     const { data: grandparent } = await supabase
@@ -462,9 +461,8 @@ export default function AnaSayfa() {
       .eq("id", parent.parent_id)
       .single();
     if (!grandparent) return null;
-    const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === grandparent.name.toLowerCase());
-    if (katName) return { kategori: katName, grupId: parent.id, turId: id };
-    return null;
+    if (HIDDEN_KATEGORILER.some((h) => h.toLowerCase() === grandparent.name.toLowerCase())) return null;
+    return { kategori: grandparent.name, grupId: parent.id, turId: id };
   };
 
   // Lightweight autocomplete — products + kategori/grup/tür
