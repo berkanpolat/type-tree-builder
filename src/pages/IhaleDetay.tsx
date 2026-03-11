@@ -1262,36 +1262,33 @@ export default function IhaleDetay() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
-                    <Select value={teklifOdemeSecenekleri} onValueChange={setTeklifOdemeSecenekleri}>
-                      <SelectTrigger><SelectValue placeholder="Ödeme Seçenekleri" /></SelectTrigger>
-                      <SelectContent>
-                        {dbOdemeSecenekleri.map(o => (
-                          <SelectItem key={o} value={o}>{o}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={dbOdemeSecenekleri.map(o => ({ value: o, label: o }))}
+                      value={teklifOdemeSecenekleri}
+                      onValueChange={setTeklifOdemeSecenekleri}
+                      placeholder="Ödeme Seçenekleri"
+                      searchPlaceholder="Ara..."
+                    />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Kargo Masrafı Ödemesi</label>
-                    <Select value={teklifKargoMasrafi} onValueChange={setTeklifKargoMasrafi}>
-                      <SelectTrigger><SelectValue placeholder="Kargo Masrafı Ödemesi" /></SelectTrigger>
-                      <SelectContent>
-                        {dbKargoMasrafi.map(o => (
-                          <SelectItem key={o} value={o}>{o}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={dbKargoMasrafi.map(o => ({ value: o, label: o }))}
+                      value={teklifKargoMasrafi}
+                      onValueChange={setTeklifKargoMasrafi}
+                      placeholder="Kargo Masrafı Ödemesi"
+                      searchPlaceholder="Ara..."
+                    />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Vadesi</label>
-                    <Select value={teklifOdemeVadesi} onValueChange={setTeklifOdemeVadesi}>
-                      <SelectTrigger><SelectValue placeholder="Ödeme Vadesi" /></SelectTrigger>
-                      <SelectContent>
-                        {dbOdemeVadeleri.map(o => (
-                          <SelectItem key={o} value={o}>{o}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={dbOdemeVadeleri.map(o => ({ value: o, label: o }))}
+                      value={teklifOdemeVadesi}
+                      onValueChange={setTeklifOdemeVadesi}
+                      placeholder="Ödeme Vadesi"
+                      searchPlaceholder="Ara..."
+                    />
                   </div>
                   <div>
                     <label className="relative flex items-center justify-center gap-2 h-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
