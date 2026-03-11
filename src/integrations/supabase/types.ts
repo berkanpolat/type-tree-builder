@@ -1247,6 +1247,56 @@ export type Database = {
         }
         Relationships: []
       }
+      kullanici_abonelikler: {
+        Row: {
+          created_at: string
+          donem_baslangic: string
+          donem_bitis: string
+          durum: string
+          id: string
+          paket_id: string
+          periyot: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          donem_baslangic?: string
+          donem_bitis?: string
+          durum?: string
+          id?: string
+          paket_id: string
+          periyot?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          donem_baslangic?: string
+          donem_bitis?: string
+          durum?: string
+          id?: string
+          paket_id?: string
+          periyot?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kullanici_abonelikler_paket_id_fkey"
+            columns: ["paket_id"]
+            isOneToOne: false
+            referencedRelation: "paketler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -1320,6 +1370,89 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      paketler: {
+        Row: {
+          ad: string
+          aktif: boolean
+          aktif_urun_limiti: number
+          created_at: string
+          fiyat_aylik: number | null
+          fiyat_yillik: number | null
+          id: string
+          ihale_acma_limiti: number | null
+          mesaj_limiti: number | null
+          para_birimi: string
+          profil_goruntuleme_limiti: number | null
+          slug: string
+          stripe_price_aylik_id: string | null
+          stripe_price_yillik_id: string | null
+          teklif_verme_limiti: number | null
+        }
+        Insert: {
+          ad: string
+          aktif?: boolean
+          aktif_urun_limiti?: number
+          created_at?: string
+          fiyat_aylik?: number | null
+          fiyat_yillik?: number | null
+          id?: string
+          ihale_acma_limiti?: number | null
+          mesaj_limiti?: number | null
+          para_birimi?: string
+          profil_goruntuleme_limiti?: number | null
+          slug: string
+          stripe_price_aylik_id?: string | null
+          stripe_price_yillik_id?: string | null
+          teklif_verme_limiti?: number | null
+        }
+        Update: {
+          ad?: string
+          aktif?: boolean
+          aktif_urun_limiti?: number
+          created_at?: string
+          fiyat_aylik?: number | null
+          fiyat_yillik?: number | null
+          id?: string
+          ihale_acma_limiti?: number | null
+          mesaj_limiti?: number | null
+          para_birimi?: string
+          profil_goruntuleme_limiti?: number | null
+          slug?: string
+          stripe_price_aylik_id?: string | null
+          stripe_price_yillik_id?: string | null
+          teklif_verme_limiti?: number | null
+        }
+        Relationships: []
+      }
+      profil_goruntulemeler: {
+        Row: {
+          created_at: string
+          firma_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          firma_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          firma_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profil_goruntulemeler_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

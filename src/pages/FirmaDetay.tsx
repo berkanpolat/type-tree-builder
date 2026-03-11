@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
 import Footer from "@/components/Footer";
+import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -195,6 +196,9 @@ export default function FirmaDetay() {
 
   const [loading, setLoading] = useState(true);
   const [firma, setFirma] = useState<FirmaData | null>(null);
+  const [quotaBlocked, setQuotaBlocked] = useState(false);
+  const [quotaMessage, setQuotaMessage] = useState("");
+  const packageInfo = usePackageQuota();
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
   const [kategoriMap, setKategoriMap] = useState<Record<string, string>>({});
   const [firmaTuruName, setFirmaTuruName] = useState("");
@@ -249,6 +253,32 @@ export default function FirmaDetay() {
         toast({ title: "Firma bulunamadı", variant: "destructive" });
         navigate("/anasayfa");
         return;
+      }
+
+      // Kendi firması ise kota kontrolü yapma
+      if (user && firmaData.user_id !== user.id && !packageInfo.loading) {
+        // Daha önce görüntülenmiş mi kontrol et
+        const { data: existingView } = await supabase
+          .from("profil_goruntulemeler" as any)
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("firma_id", id)
+          .maybeSingle();
+
+        if (!existingView) {
+          // Yeni profil görüntülemesi - kota kontrolü
+          const check = canPerformAction(packageInfo.limits, packageInfo.usage, "profil_goruntuleme");
+          if (!check.allowed) {
+            setQuotaBlocked(true);
+            setQuotaMessage(check.message || "Profil görüntüleme hakkınız dolmuştur.");
+            setLoading(false);
+            return;
+          }
+          // Görüntüleme kaydı oluştur
+          await supabase
+            .from("profil_goruntulemeler" as any)
+            .insert({ user_id: user.id, firma_id: id });
+        }
       }
 
       setFirma(firmaData as FirmaData);
@@ -573,6 +603,23 @@ export default function FirmaDetay() {
         <div className="flex items-center justify-center h-96">
           <p className="text-muted-foreground">Yükleniyor...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (quotaBlocked) {
+    return (
+      <div className="min-h-screen bg-muted/30">
+        <PazarHeader firmaUnvani="" />
+        <div className="flex flex-col items-center justify-center h-96 gap-4 px-4">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+            <Flag className="w-8 h-8 text-destructive" />
+          </div>
+          <h2 className="text-xl font-bold text-foreground text-center">Profil Görüntüleme Hakkınız Doldu</h2>
+          <p className="text-muted-foreground text-center max-w-md">{quotaMessage}</p>
+          <Button onClick={() => navigate("/dashboard")} variant="default">Dashboard'a Dön</Button>
+        </div>
+        <Footer />
       </div>
     );
   }

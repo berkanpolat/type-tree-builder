@@ -4,8 +4,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNotificationCount } from "@/hooks/use-notifications";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
 import { useProfileCompletion } from "@/hooks/use-profile-completion";
+import { usePackageQuota } from "@/hooks/use-package-quota";
+import { STRIPE_CONFIG, PAKET_OZELLIKLERI } from "@/lib/package-config";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Gavel,
   ShoppingBag,
@@ -19,6 +23,8 @@ import {
   Layers,
   Mail,
   Phone,
+  Crown,
+  Infinity,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 
@@ -47,14 +53,24 @@ const Dashboard = () => {
   const unreadNotifications = useNotificationCount();
   const unreadMessages = useUnreadMessages();
   const { percentage: profileCompletion } = useProfileCompletion();
+  const packageInfo = usePackageQuota();
+
+  // Check subscription on page load
+  useEffect(() => {
+    const checkSub = async () => {
+      try {
+        await supabase.functions.invoke("check-subscription");
+      } catch (e) {
+        console.error("Subscription check failed:", e);
+      }
+    };
+    checkSub();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/giris-kayit");
-        return;
-      }
+      if (!user) { navigate("/giris-kayit"); return; }
 
       const [profileRes, firmaRes, ihaleCountRes, urunCountRes] = await Promise.all([
         supabase.from("profiles").select("*").eq("user_id", user.id).single(),
@@ -79,58 +95,44 @@ const Dashboard = () => {
 
       setLoading(false);
     };
-
     fetchData();
   }, [navigate]);
 
+  const handleUpgrade = async (periyot: "aylik" | "yillik") => {
+    try {
+      const priceId = STRIPE_CONFIG.pro[periyot].priceId;
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId },
+      });
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (err: any) {
+      console.error("Checkout error:", err);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("customer-portal");
+      if (error) throw error;
+      if (data?.url) window.open(data.url, "_blank");
+    } catch (err: any) {
+      console.error("Portal error:", err);
+    }
+  };
+
   const statsCards = [
-    {
-      title: "Profil Tamamlama",
-      value: profileCompletion,
-      subtitle: "",
-      icon: UserCheck,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-      isProgress: true,
-      href: "/firma-bilgilerim",
-    },
-    {
-      title: "Aktif Ürünler",
-      value: activeUrunCount,
-      subtitle: "Pazar yerinde yayında",
-      icon: ShoppingBag,
-      color: "text-green-500",
-      bgColor: "bg-green-50",
-      href: "/manupazar",
-    },
-    {
-      title: "Aktif İhaleler",
-      value: activeIhaleCount,
-      subtitle: "Teklif bekleyen",
-      icon: Gavel,
-      color: "text-blue-500",
-      bgColor: "bg-blue-50",
-      href: "/manuihale",
-    },
-    {
-      title: "Mesajlar",
-      value: unreadMessages,
-      subtitle: "Okunmamış",
-      icon: MessageSquare,
-      color: "text-orange-500",
-      bgColor: "bg-orange-50",
-      href: "/mesajlar",
-    },
-    {
-      title: "Bildirimler",
-      value: unreadNotifications,
-      subtitle: "İşlem bekleyen",
-      icon: Bell,
-      color: "text-red-500",
-      bgColor: "bg-red-50",
-      href: "/bildirimler",
-    },
+    { title: "Profil Tamamlama", value: profileCompletion, icon: UserCheck, color: "text-primary", bgColor: "bg-primary/10", isProgress: true, href: "/firma-bilgilerim" },
+    { title: "Aktif Ürünler", value: activeUrunCount, subtitle: "Pazar yerinde yayında", icon: ShoppingBag, color: "text-green-500", bgColor: "bg-green-50", href: "/manupazar" },
+    { title: "Aktif İhaleler", value: activeIhaleCount, subtitle: "Teklif bekleyen", icon: Gavel, color: "text-blue-500", bgColor: "bg-blue-50", href: "/manuihale" },
+    { title: "Mesajlar", value: unreadMessages, subtitle: "Okunmamış", icon: MessageSquare, color: "text-orange-500", bgColor: "bg-orange-50", href: "/mesajlar" },
+    { title: "Bildirimler", value: unreadNotifications, subtitle: "İşlem bekleyen", icon: Bell, color: "text-red-500", bgColor: "bg-red-50", href: "/bildirimler" },
   ];
+
+  const formatLimit = (limit: number | null) => {
+    if (limit === null) return "∞";
+    return limit.toLocaleString("tr-TR");
+  };
 
   if (loading) {
     return (
@@ -141,6 +143,8 @@ const Dashboard = () => {
       </DashboardLayout>
     );
   }
+
+  const isPro = packageInfo.paketSlug === "pro";
 
   return (
     <DashboardLayout title="Ana Sayfa">
@@ -156,19 +160,14 @@ const Dashboard = () => {
                     <Building2 className="w-8 h-8 text-muted-foreground" />
                   </div>
                   <div className="space-y-1">
-                    <h2 className="text-lg font-semibold text-foreground">
-                      {firma?.firma_unvani || "Firma Bilgisi Yok"}
-                    </h2>
+                    <h2 className="text-lg font-semibold text-foreground">{firma?.firma_unvani || "Firma Bilgisi Yok"}</h2>
                     <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                       <MapPin className="w-3.5 h-3.5" />
                       <span>İstanbul, Ataşehir</span>
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => navigate("/firma-bilgilerim")}
-                  className="p-2 rounded-lg hover:bg-muted transition-colors"
-                >
+                <button onClick={() => navigate("/firma-bilgilerim")} className="p-2 rounded-lg hover:bg-muted transition-colors">
                   <Pencil className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -190,15 +189,10 @@ const Dashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-lg font-semibold text-foreground">
-                    {profile ? `${profile.ad} ${profile.soyad}` : "—"}
-                  </h2>
+                  <h2 className="text-lg font-semibold text-foreground">{profile ? `${profile.ad} ${profile.soyad}` : "—"}</h2>
                   <p className="text-sm text-muted-foreground">Firma Yetkilisi</p>
                 </div>
-                <button
-                  onClick={() => navigate("/profil-ayarlari")}
-                  className="p-2 rounded-lg hover:bg-muted transition-colors"
-                >
+                <button onClick={() => navigate("/profil-ayarlari")} className="p-2 rounded-lg hover:bg-muted transition-colors">
                   <Pencil className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -219,35 +213,23 @@ const Dashboard = () => {
         {/* Özet İstatistik Kartları */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {statsCards.map((stat) => (
-            <Card
-              key={stat.title}
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => stat.href && navigate(stat.href)}
-            >
+            <Card key={stat.title} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => stat.href && navigate(stat.href)}>
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-muted-foreground">
-                    {stat.title}
-                  </span>
+                  <span className="text-sm font-medium text-muted-foreground">{stat.title}</span>
                   <div className={`p-2 rounded-full ${stat.bgColor}`}>
                     <stat.icon className={`w-4 h-4 ${stat.color}`} />
                   </div>
                 </div>
                 {stat.isProgress ? (
                   <div>
-                    <span className="text-2xl font-bold text-foreground">
-                      %{stat.value}
-                    </span>
-                    <Progress value={stat.value} className="mt-2 h-2" />
+                    <span className="text-2xl font-bold text-foreground">%{stat.value}</span>
+                    <Progress value={stat.value as number} className="mt-2 h-2" />
                   </div>
                 ) : (
                   <div>
-                    <span className="text-2xl font-bold text-foreground">
-                      {stat.value}
-                    </span>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {stat.subtitle}
-                    </p>
+                    <span className="text-2xl font-bold text-foreground">{stat.value}</span>
+                    <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
                   </div>
                 )}
               </CardContent>
@@ -255,58 +237,93 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Banner */}
-        <Card className="overflow-hidden">
-          <div className="h-40 bg-gradient-to-r from-primary to-primary/70 flex items-center justify-center relative">
-            <div className="text-center text-primary-foreground">
-              <p className="text-sm uppercase tracking-wider opacity-80">
-                Tüm Kumaş Çeşitlerinde
-              </p>
-              <p className="text-4xl font-bold mt-1">%30 İndirim</p>
-            </div>
-          </div>
-        </Card>
-
         {/* Paket Bilgisi */}
         <Card>
           <CardContent className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Paket Adı */}
               <div>
-                <span className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-destructive text-destructive-foreground mb-2">
-                  AKTİF PAKET
-                </span>
-                <h3 className="text-2xl font-bold text-foreground">Elit</h3>
-                <p className="text-lg font-semibold text-foreground mt-1">
-                  ₺199.99<span className="text-sm font-normal text-muted-foreground">/ ay</span>
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Bir sonraki ödemeniz: 15.04.2026
-                </p>
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant={isPro ? "default" : "secondary"} className="text-xs">
+                    {isPro ? <Crown className="w-3 h-3 mr-1" /> : null}
+                    AKTİF PAKET
+                  </Badge>
+                </div>
+                <h3 className="text-2xl font-bold text-foreground">{packageInfo.paketAd}</h3>
+                {isPro && (
+                  <>
+                    <p className="text-lg font-semibold text-foreground mt-1">
+                      ${packageInfo.periyot === "yillik" ? STRIPE_CONFIG.pro.yillik.fiyat : STRIPE_CONFIG.pro.aylik.fiyat}
+                      <span className="text-sm font-normal text-muted-foreground">/ {packageInfo.periyot === "yillik" ? "yıl" : "ay"}</span>
+                    </p>
+                    {packageInfo.donemBitis && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Bir sonraki yenileme: {new Date(packageInfo.donemBitis).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })}
+                      </p>
+                    )}
+                    <Button variant="outline" size="sm" className="mt-3" onClick={handleManageSubscription}>
+                      Aboneliği Yönet
+                    </Button>
+                  </>
+                )}
+                {!isPro && (
+                  <div className="mt-3 space-y-2">
+                    <Button size="sm" onClick={() => handleUpgrade("aylik")} className="w-full">
+                      PRO'ya Yükselt (${STRIPE_CONFIG.pro.aylik.fiyat}/ay)
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => handleUpgrade("yillik")} className="w-full">
+                      Yıllık PRO (${STRIPE_CONFIG.pro.yillik.fiyat}/yıl)
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* Kalan Haklar */}
               <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { label: "Mesaj Hakkı", used: 450, total: 1000, color: "bg-primary" },
-                  { label: "İhale Oluşturma", used: 0, total: 9999999, color: "bg-primary" },
-                  { label: "İhale Katılım", used: 1, total: 9999999, color: "bg-yellow-500" },
-                  { label: "Ürün Sergileme", used: 88, total: 9999999, color: "bg-destructive" },
+                  {
+                    label: "Profil Görüntüleme",
+                    used: packageInfo.usage.profil_goruntuleme,
+                    total: packageInfo.limits.profil_goruntuleme_limiti,
+                    color: "bg-primary",
+                  },
+                  {
+                    label: "Teklif Verme",
+                    used: packageInfo.usage.teklif_verme,
+                    total: packageInfo.limits.teklif_verme_limiti,
+                    color: "bg-blue-500",
+                  },
+                  {
+                    label: "Aktif Ürün",
+                    used: packageInfo.usage.aktif_urun,
+                    total: packageInfo.limits.aktif_urun_limiti,
+                    color: "bg-yellow-500",
+                  },
+                  {
+                    label: "Mesaj Gönderme",
+                    used: packageInfo.usage.mesaj,
+                    total: packageInfo.limits.mesaj_limiti,
+                    color: "bg-destructive",
+                  },
                 ].map((hak) => (
                   <div key={hak.label} className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">{hak.label}</span>
                       <span className="text-muted-foreground text-xs">
-                        {hak.used} / {hak.total.toLocaleString("tr-TR")}
+                        {hak.used} / {hak.total === null ? "∞" : hak.total === 0 ? "—" : hak.total}
                       </span>
                     </div>
                     <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${hak.color}`}
-                        style={{
-                          width: `${Math.min((hak.used / hak.total) * 100, 100)}%`,
-                        }}
-                      />
+                      {hak.total === null ? (
+                        <div className={`h-full rounded-full ${hak.color} w-[5%]`} />
+                      ) : hak.total === 0 ? (
+                        <div className="h-full rounded-full bg-muted w-full" />
+                      ) : (
+                        <div
+                          className={`h-full rounded-full ${hak.color}`}
+                          style={{ width: `${Math.min((hak.used / hak.total) * 100, 100)}%` }}
+                        />
+                      )}
                     </div>
                   </div>
                 ))}
@@ -314,6 +331,19 @@ const Dashboard = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* PRO Banner (sadece ücretsiz kullanıcılara göster) */}
+        {!isPro && (
+          <Card className="overflow-hidden">
+            <div className="h-40 bg-gradient-to-r from-primary to-primary/70 flex items-center justify-center relative">
+              <div className="text-center text-primary-foreground">
+                <p className="text-sm uppercase tracking-wider opacity-80">PRO Pakete Yükselt</p>
+                <p className="text-3xl font-bold mt-1">Sınırsız Erişim</p>
+                <p className="text-sm mt-2 opacity-80">Firma profili, ihale, teklif ve daha fazlası</p>
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
     </DashboardLayout>
   );
