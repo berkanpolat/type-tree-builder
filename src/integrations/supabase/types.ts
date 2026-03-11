@@ -118,6 +118,48 @@ export type Database = {
           },
         ]
       }
+      banners: {
+        Row: {
+          aktif: boolean
+          baslik: string
+          boyut: string
+          created_at: string
+          gorsel_url: string | null
+          id: string
+          konum: string
+          link_url: string | null
+          sayfa: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          aktif?: boolean
+          baslik: string
+          boyut: string
+          created_at?: string
+          gorsel_url?: string | null
+          id?: string
+          konum: string
+          link_url?: string | null
+          sayfa: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          aktif?: boolean
+          baslik?: string
+          boyut?: string
+          created_at?: string
+          gorsel_url?: string | null
+          id?: string
+          konum?: string
+          link_url?: string | null
+          sayfa?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
