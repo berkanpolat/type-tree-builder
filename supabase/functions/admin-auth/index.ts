@@ -2484,6 +2484,89 @@ Deno.serve(async (req) => {
       return jsonResponse({ users: results });
     }
 
+    // ─── LIST UZAKLASTIRMALAR ───
+    if (action === "list-uzaklastirmalar") {
+      const payload = verifyToken(body.token);
+      const { data, error } = await supabase.from("firma_uzaklastirmalar").select("*").order("created_at", { ascending: false });
+      if (error) return jsonResponse({ error: error.message }, 500);
+
+      const enriched = [];
+      for (const u of (data || [])) {
+        const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", u.user_id).single();
+        const { data: profile } = await supabase.from("profiles").select("ad, soyad, iletisim_email").eq("user_id", u.user_id).single();
+        enriched.push({
+          ...u,
+          firma_unvani: firma?.firma_unvani || "—",
+          kullanici_ad: profile ? `${profile.ad} ${profile.soyad}` : "—",
+          kullanici_email: profile?.iletisim_email || "—",
+        });
+      }
+      return jsonResponse({ uzaklastirmalar: enriched });
+    }
+
+    // ─── UPDATE UZAKLASTIRMA ───
+    if (action === "update-uzaklastirma") {
+      const { token: t, uzaklastirmaId, sebep, bitisTarihi, aktif } = body;
+      const payload = verifyToken(t);
+      const updateData: any = {};
+      if (sebep !== undefined) updateData.sebep = sebep;
+      if (bitisTarihi !== undefined) updateData.bitis_tarihi = bitisTarihi;
+      if (aktif !== undefined) updateData.aktif = aktif;
+
+      const { error } = await supabase.from("firma_uzaklastirmalar").update(updateData).eq("id", uzaklastirmaId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // If deactivated, restore firma status
+      if (aktif === false) {
+        const { data: uzak } = await supabase.from("firma_uzaklastirmalar").select("user_id").eq("id", uzaklastirmaId).single();
+        if (uzak) {
+          await supabase.from("firmalar").update({ onay_durumu: "onaylandi" }).eq("user_id", uzak.user_id);
+        }
+      }
+
+      await logActivity(supabase, payload, "Uzaklaştırma güncellendi", { target_type: "uzaklastirma", target_id: String(uzaklastirmaId) });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── DELETE UZAKLASTIRMA ───
+    if (action === "delete-uzaklastirma") {
+      const { token: t, uzaklastirmaId } = body;
+      const payload = verifyToken(t);
+
+      const { data: uzak } = await supabase.from("firma_uzaklastirmalar").select("user_id").eq("id", uzaklastirmaId).single();
+      const { error } = await supabase.from("firma_uzaklastirmalar").delete().eq("id", uzaklastirmaId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Restore firma status
+      if (uzak) {
+        await supabase.from("firmalar").update({ onay_durumu: "onaylandi" }).eq("user_id", uzak.user_id);
+      }
+
+      await logActivity(supabase, payload, "Uzaklaştırma kaldırıldı", { target_type: "uzaklastirma", target_id: String(uzaklastirmaId) });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── LIST YASAKLAR ───
+    if (action === "list-yasaklar") {
+      const payload = verifyToken(body.token);
+      const { data, error } = await supabase.from("firma_yasaklar").select("*").order("created_at", { ascending: false });
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ yasaklar: data || [] });
+    }
+
+    // ─── DELETE YASAK ───
+    if (action === "delete-yasak") {
+      const { token: t, yasakId } = body;
+      const payload = verifyToken(t);
+      if (!payload.is_primary) return jsonResponse({ error: "Yasak kaldırma yetkisi yalnızca ana yöneticidedir" }, 401);
+
+      const { error } = await supabase.from("firma_yasaklar").delete().eq("id", yasakId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      await logActivity(supabase, payload, "Yasak kaldırıldı", { target_type: "yasak", target_id: String(yasakId) });
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
