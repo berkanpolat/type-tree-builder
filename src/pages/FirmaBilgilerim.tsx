@@ -30,6 +30,8 @@ export interface TabItem {
   icon: React.ElementType;
 }
 
+const belgelerimTab: TabItem = { id: "belgelerim", label: "Belgelerim", icon: FolderCheck };
+
 const tabsByFirmaTuru: Record<string, TabItem[]> = {
   "Hazır Giyim Üreticisi": [
     { id: "genel", label: "Genel Firma\nBilgileri", icon: ClipboardList },
@@ -40,6 +42,7 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },
     { id: "galeri", label: "Galeri", icon: Image },
+    belgelerimTab,
   ],
   "Marka": [
     { id: "genel", label: "Genel Firma\nBilgileri", icon: ClipboardList },
@@ -49,6 +52,7 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },
     { id: "galeri", label: "Galeri", icon: Image },
+    belgelerimTab,
   ],
   "Fason Atölye": [
     { id: "genel", label: "Genel Firma\nBilgileri", icon: ClipboardList },
@@ -59,6 +63,7 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },
     { id: "galeri", label: "Galeri", icon: Image },
+    belgelerimTab,
   ],
   "Tedarikçi": [
     { id: "genel", label: "Genel Firma\nBilgileri", icon: ClipboardList },
@@ -68,6 +73,7 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },
     { id: "galeri", label: "Galeri", icon: Image },
+    belgelerimTab,
   ],
   "Mümessil Ofis": [
     { id: "genel", label: "Genel Firma\nBilgileri", icon: ClipboardList },
@@ -77,6 +83,7 @@ const tabsByFirmaTuru: Record<string, TabItem[]> = {
     { id: "referanslar", label: "Referanslar", icon: Users },
     { id: "sertifikalar", label: "Sertifikalar", icon: Award },
     { id: "galeri", label: "Galeri", icon: Image },
+    belgelerimTab,
   ],
 };
 
