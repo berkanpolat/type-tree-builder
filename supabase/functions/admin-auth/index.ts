@@ -534,21 +534,22 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
-      const { count: totalCount } = await supabase
-        .from("ihaleler")
-        .select("*", { count: "exact", head: true });
-
-      const { count: activeCount } = await supabase
-        .from("ihaleler")
-        .select("*", { count: "exact", head: true })
-        .eq("durum", "devam_ediyor");
-
       const { data: ihaleler } = await supabase
         .from("ihaleler")
-        .select("ihale_turu, urun_kategori_id, hizmet_kategori_id");
+        .select("ihale_turu, urun_kategori_id, hizmet_kategori_id, durum");
 
-      const urunCount = (ihaleler || []).filter((i: any) => i.ihale_turu !== "hizmet").length;
-      const hizmetCount = (ihaleler || []).filter((i: any) => i.ihale_turu === "hizmet").length;
+      const allItems = ihaleler || [];
+      const total = allItems.length;
+      const active = allItems.filter((i: any) => i.durum === "devam_ediyor").length;
+      const completed = allItems.filter((i: any) => i.durum === "tamamlandi").length;
+      const cancelled = allItems.filter((i: any) => i.durum === "iptal").length;
+      const pendingApproval = allItems.filter((i: any) => i.durum === "onay_bekliyor").length;
+      const draft = allItems.filter((i: any) => i.durum === "duzenleniyor" || i.durum === "taslak").length;
+
+      // Total teklifler count
+      const { count: totalTeklifler } = await supabase
+        .from("ihale_teklifler")
+        .select("*", { count: "exact", head: true });
 
       // Get ALL categories (including those with 0 ihaleler)
       const { data: kategoriler } = await supabase
@@ -577,28 +578,33 @@ Deno.serve(async (req) => {
       }
 
       // Count per category
-      const urunCatIds = (ihaleler || [])
+      const urunCatIds = allItems
         .filter((i: any) => i.ihale_turu !== "hizmet" && i.urun_kategori_id)
         .map((i: any) => i.urun_kategori_id);
-      const hizmetCatIds = (ihaleler || [])
+      const hizmetCatIds = allItems
         .filter((i: any) => i.ihale_turu === "hizmet" && i.hizmet_kategori_id)
         .map((i: any) => i.hizmet_kategori_id);
 
       const urunKategoriDagilimi = allUrunCats.map((c: any) => ({
+        id: c.id,
         name: c.name,
         count: urunCatIds.filter((id: string) => id === c.id).length,
       })).sort((a: any, b: any) => b.count - a.count);
 
       const hizmetKategoriDagilimi = allHizmetCats.map((c: any) => ({
+        id: c.id,
         name: c.name,
         count: hizmetCatIds.filter((id: string) => id === c.id).length,
       })).sort((a: any, b: any) => b.count - a.count);
 
       return jsonResponse({
-        total: totalCount || 0,
-        active: activeCount || 0,
-        urunCount,
-        hizmetCount,
+        total,
+        active,
+        completed,
+        cancelled,
+        pendingApproval,
+        draft,
+        totalTeklifler: totalTeklifler || 0,
         urunKategoriDagilimi,
         hizmetKategoriDagilimi,
       });
