@@ -122,6 +122,7 @@ export default function YeniIhale() {
       let filtreData: any[] = [];
       let stokData: any[] = [];
       let fotoData: string[] = [];
+      let ekDosyaData: { url: string; adi: string }[] = [];
 
       if (adminToken) {
         // Admin mode: fetch via edge function (bypasses RLS)
