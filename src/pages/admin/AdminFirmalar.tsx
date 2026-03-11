@@ -802,6 +802,44 @@ export default function AdminFirmalar() {
                 </div>
               )}
 
+              {/* Extra quota */}
+              <div>
+                <Label className="text-xs mb-2 block" style={s.muted}>Ekstra Hak Tanımla</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { key: "profil_goruntuleme", label: "Profil Görüntüleme" },
+                    { key: "teklif_verme", label: "Teklif Verme" },
+                    { key: "aktif_urun", label: "Aktif Ürün" },
+                    { key: "mesaj", label: "Mesaj" },
+                  ].map(({ key, label }) => (
+                    <div key={key} className="space-y-1">
+                      <Label className="text-[10px]" style={s.muted}>{label}</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        placeholder="0"
+                        value={ekstraHaklar[key] || ""}
+                        onChange={(e) => setEkstraHaklar((prev) => ({
+                          ...prev,
+                          [key]: parseInt(e.target.value) || 0,
+                        }))}
+                        className="h-8 text-xs"
+                        style={s.input}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  onClick={handleSaveEkstraHaklar}
+                  disabled={ekstraSaving}
+                  size="sm"
+                  className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                >
+                  {ekstraSaving && <Loader2 className="w-3 h-3 mr-1 animate-spin" />}
+                  Ekstra Hakları Kaydet
+                </Button>
+              </div>
+
               {/* Change package */}
               <div>
                 <Label className="text-xs mb-2 block" style={s.muted}>Paket Değiştir</Label>
