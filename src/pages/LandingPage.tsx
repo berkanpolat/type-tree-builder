@@ -274,13 +274,13 @@ const LandingPage = () => {
 
       {/* ISO Banner */}
       <section className="bg-background py-10 border-y border-border overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-center gap-10 flex-wrap">
+        <div className="max-w-5xl mx-auto px-6 grid grid-cols-4 md:grid-cols-8 gap-6 place-items-center">
           {isoBadges.map((badge) => (
-            <div key={badge.label} className="flex items-center justify-center w-20 h-20">
+            <div key={badge.label} className="w-16 h-16 flex items-center justify-center">
               <img
                 src={badge.img}
                 alt={badge.label}
-                className="max-w-full max-h-full object-contain"
+                className="w-14 h-14 object-contain opacity-70 hover:opacity-100 transition-opacity"
               />
             </div>
           ))}
