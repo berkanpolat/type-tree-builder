@@ -27,6 +27,7 @@ import {
   Infinity,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useBanner } from "@/hooks/use-banner";
 
 interface ProfileData {
   ad: string;

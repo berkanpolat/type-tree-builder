@@ -1009,9 +1009,16 @@ export default function IhaleDetay() {
                 <InfoRow label="Mesaj Durumu" value={ihale.firma_adi_gizle ? "Hayır" : "Evet"} />
                 {Object.keys(filtreByType).length > 0 && (
                   <>
-                    {Object.entries(filtreByType).map(([type, values]) => (
-                      <InfoRow key={type} label={`İstenen ${type}`} value={values.join(", ")} />
-                    ))}
+                    {Object.entries(filtreByType).map(([type, values]) => {
+                      const filtreLabelMap: Record<string, string> = {
+                        firma_turu: "Firma Türü",
+                        firma_tipi: "Firma Tipi",
+                        il: "İl",
+                        firma_olcegi: "Firma Ölçeği",
+                        sertifika: "Sertifika",
+                      };
+                      return <InfoRow key={type} label={`İstenen ${filtreLabelMap[type] || type}`} value={values.join(", ")} />;
+                    })}
                   </>
                 )}
                 {ekDosyalar.length > 0 ? (
