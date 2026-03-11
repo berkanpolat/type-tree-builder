@@ -334,26 +334,29 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* PRO Banner (sadece ücretsiz kullanıcılara göster) */}
-        {!isPro && (
+        {/* Banner alanı - admin panelinden görsel yüklenmişse göster */}
+        {dashboardBanner.url && (
           <Card className="overflow-hidden">
-            {dashboardBanner.url ? (
-              dashboardBanner.linkUrl ? (
-                <a href={dashboardBanner.linkUrl} target="_blank" rel="noopener noreferrer">
-                  <img src={dashboardBanner.url} alt="PRO Banner" className="w-full h-40 object-cover" />
-                </a>
-              ) : (
-                <img src={dashboardBanner.url} alt="PRO Banner" className="w-full h-40 object-cover" />
-              )
+            {dashboardBanner.linkUrl ? (
+              <a href={dashboardBanner.linkUrl} target="_blank" rel="noopener noreferrer">
+                <img src={dashboardBanner.url} alt="Dashboard Banner" className="w-full h-40 object-cover" />
+              </a>
             ) : (
-              <div className="h-40 bg-gradient-to-r from-primary to-primary/70 flex items-center justify-center relative">
-                <div className="text-center text-primary-foreground">
-                  <p className="text-sm uppercase tracking-wider opacity-80">PRO Pakete Yükselt</p>
-                  <p className="text-3xl font-bold mt-1">Sınırsız Erişim</p>
-                  <p className="text-sm mt-2 opacity-80">Firma profili, ihale, teklif ve daha fazlası</p>
-                </div>
-              </div>
+              <img src={dashboardBanner.url} alt="Dashboard Banner" className="w-full h-40 object-cover" />
             )}
+          </Card>
+        )}
+
+        {/* PRO Banner - sadece ücretsiz kullanıcılara göster, admin görseli yoksa */}
+        {!isPro && !dashboardBanner.url && (
+          <Card className="overflow-hidden">
+            <div className="h-40 bg-gradient-to-r from-primary to-primary/70 flex items-center justify-center relative">
+              <div className="text-center text-primary-foreground">
+                <p className="text-sm uppercase tracking-wider opacity-80">PRO Pakete Yükselt</p>
+                <p className="text-3xl font-bold mt-1">Sınırsız Erişim</p>
+                <p className="text-sm mt-2 opacity-80">Firma profili, ihale, teklif ve daha fazlası</p>
+              </div>
+            </div>
           </Card>
         )}
       </div>
