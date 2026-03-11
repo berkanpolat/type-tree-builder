@@ -806,6 +806,115 @@ Deno.serve(async (req) => {
       return jsonResponse({ teklifler: teklifler || [] });
     }
 
+    // ─── URUN STATS (for admin ürünler summary) ───
+    if (action === "urun-stats") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      // Get all urunler
+      const { data: urunler } = await supabase
+        .from("urunler")
+        .select("id, durum, user_id, urun_kategori_id");
+
+      const allItems = urunler || [];
+      const total = allItems.length;
+      const aktif = allItems.filter((u: any) => u.durum === "aktif").length;
+      const pasif = allItems.filter((u: any) => u.durum === "pasif").length;
+      const onayBekleyen = allItems.filter((u: any) => u.durum === "onay_bekliyor").length;
+      const reddedilen = allItems.filter((u: any) => u.durum === "reddedildi").length;
+      const taslak = allItems.filter((u: any) => u.durum === "taslak").length;
+
+      // Total users count
+      const { data: { users: allUsers } } = await supabase.auth.admin.listUsers({ perPage: 10000 });
+      const totalUsers = allUsers?.length || 0;
+
+      // Users with products
+      const uniqueProductUsers = new Set(allItems.map((u: any) => u.user_id));
+      const usersWithProducts = uniqueProductUsers.size;
+
+      // Category distribution - Ana Ürün Kategorileri
+      const { data: kategoriler } = await supabase
+        .from("firma_bilgi_kategorileri")
+        .select("id, name");
+
+      const urunKatKat = (kategoriler || []).find((k: any) => k.name === "Ana Ürün Kategorileri");
+      let kategoriDagilimi: any[] = [];
+
+      if (urunKatKat) {
+        const { data: urunKats } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name, parent_id")
+          .eq("kategori_id", urunKatKat.id);
+
+        const roots = (urunKats || []).filter((o: any) => !o.parent_id);
+        kategoriDagilimi = roots.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          count: allItems.filter((u: any) => u.urun_kategori_id === c.id).length,
+        })).sort((a: any, b: any) => b.count - a.count);
+      }
+
+      // Firma Türü distribution
+      const { data: firmalar } = await supabase
+        .from("firmalar")
+        .select("user_id, firma_turu_id, firma_tipi_id");
+
+      const { data: turler } = await supabase
+        .from("firma_turleri")
+        .select("id, name");
+
+      const { data: tipler } = await supabase
+        .from("firma_tipleri")
+        .select("id, name");
+
+      // Map user_id to firma_turu_id and firma_tipi_id
+      const firmaMap = Object.fromEntries((firmalar || []).map((f: any) => [f.user_id, f]));
+
+      // Firma Türü dağılımı
+      const turCounts: Record<string, number> = {};
+      for (const item of allItems) {
+        const firma = firmaMap[item.user_id];
+        if (firma?.firma_turu_id) {
+          turCounts[firma.firma_turu_id] = (turCounts[firma.firma_turu_id] || 0) + 1;
+        }
+      }
+      const firmaTuruDagilimi = (turler || []).map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        count: turCounts[t.id] || 0,
+      })).sort((a: any, b: any) => b.count - a.count);
+
+      // Firma Tipi dağılımı
+      const tipCounts: Record<string, number> = {};
+      for (const item of allItems) {
+        const firma = firmaMap[item.user_id];
+        if (firma?.firma_tipi_id) {
+          tipCounts[firma.firma_tipi_id] = (tipCounts[firma.firma_tipi_id] || 0) + 1;
+        }
+      }
+      const firmaTipiDagilimi = (tipler || []).map((t: any) => ({
+        id: t.id,
+        name: t.name,
+        count: tipCounts[t.id] || 0,
+      })).filter((t: any) => t.count > 0).sort((a: any, b: any) => b.count - a.count);
+
+      return jsonResponse({
+        total,
+        aktif,
+        pasif,
+        onayBekleyen,
+        reddedilen,
+        taslak,
+        totalUsers,
+        usersWithProducts,
+        kategoriDagilimi,
+        firmaTuruDagilimi,
+        firmaTipiDagilimi,
+      });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
