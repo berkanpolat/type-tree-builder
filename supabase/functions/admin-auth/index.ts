@@ -179,10 +179,9 @@ Deno.serve(async (req) => {
         .single();
 
       if (error) return jsonResponse({ error: error.message }, 400);
+      await logActivity(supabase, payload, "update-user", { target_type: "admin_user", target_id: userId, target_label: `${data.ad} ${data.soyad}`, details: { pozisyon: data.pozisyon } });
       return jsonResponse({ user: data });
     }
-
-    // ─── DELETE ADMIN USER ───
     if (action === "delete-user") {
       const { token, userId } = body;
       const payload = verifyToken(token);
