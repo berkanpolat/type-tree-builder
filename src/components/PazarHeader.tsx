@@ -8,8 +8,6 @@ import {
   HelpCircle,
   LogOut,
   Building2,
-  Linkedin,
-  Instagram,
 } from "lucide-react";
 import { useNotificationCount } from "@/hooks/use-notifications";
 import HeaderMessagePanel from "@/components/header/HeaderMessagePanel";
