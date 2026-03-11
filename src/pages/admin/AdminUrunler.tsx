@@ -702,106 +702,104 @@ export default function AdminUrunler() {
           {filtered.length === 0 && (
             <div className="text-center py-16" style={s.muted}>
               <Package className="w-10 h-10 mx-auto mb-3 opacity-30" />
-              <p>Ürün bulunamadı.</p>
+              <p className="text-sm">Ürün bulunamadı.</p>
             </div>
           )}
           {paginated.map((urun) => (
-            <div key={urun.id} style={s.card} className="overflow-hidden hover:shadow-md transition-shadow">
-              <div className="flex">
+            <div key={urun.id} style={s.card} className="overflow-hidden hover:shadow-md transition-shadow h-[140px]">
+              <div className="flex h-full">
                 {/* Photo */}
-                <div className="w-28 min-h-[120px] flex-shrink-0 flex items-center justify-center relative" style={{ background: "hsl(var(--admin-hover))" }}>
+                <div className="w-[140px] h-full flex-shrink-0 flex items-center justify-center" style={{ background: "hsl(var(--admin-hover))" }}>
                   {urun.foto_url ? (
                     <img src={urun.foto_url} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <ImageIcon className="w-8 h-8 opacity-20" style={s.muted} />
+                    <ImageIcon className="w-10 h-10 opacity-20" style={s.muted} />
                   )}
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 p-3 min-w-0">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
+                <div className="flex-1 p-4 min-w-0 flex flex-col justify-between">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1 space-y-1.5">
                       {/* Row 1: ID + Status */}
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <code className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ background: "hsl(var(--admin-hover))", ...s.text }}>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <code className="text-xs font-mono font-bold px-2 py-0.5 rounded" style={{ background: "hsl(var(--admin-hover))", ...s.text }}>
                           {urun.urun_no}
                         </code>
                         {durumBadge(urun.durum)}
                       </div>
 
                       {/* Row 2: Title */}
-                      <h3 className="font-semibold text-sm mb-1 truncate" style={s.text}>{urun.baslik}</h3>
+                      <h3 className="font-semibold text-sm leading-tight truncate" style={s.text}>{urun.baslik}</h3>
 
                       {/* Row 3: Firma info */}
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden shrink-0" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden shrink-0" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
                           {urun.firma_logo_url ? (
                             <img src={urun.firma_logo_url} alt="" className="w-full h-full object-contain" />
                           ) : (
-                            <span className="text-[8px] font-bold" style={s.muted}>{urun.firma_unvani?.charAt(0)}</span>
+                            <span className="text-[9px] font-bold" style={s.muted}>{urun.firma_unvani?.charAt(0)}</span>
                           )}
                         </div>
-                        <span className="text-[11px] font-medium truncate" style={s.secondary}>{urun.firma_unvani}</span>
-                      </div>
-
-                      {/* Row 4: Category + Views */}
-                      <div className="flex items-center gap-2 text-[11px] flex-wrap" style={s.muted}>
-                        {urun.kategori_label !== "—" && (
-                          <span className="text-purple-500 truncate max-w-[250px]">{urun.kategori_label}</span>
-                        )}
-                        <span className="flex items-center gap-1">
-                          <Eye className="w-3 h-3" />
-                          {urun.goruntuleme_sayisi ?? 0}
-                        </span>
-                        {urun.fiyat !== null && (
-                          <span className="font-bold text-emerald-500">
-                            {formatPrice(urun.fiyat, urun.para_birimi)}
-                          </span>
-                        )}
+                        <span className="text-xs font-medium truncate" style={s.secondary}>{urun.firma_unvani}</span>
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
                       <Button
                         onClick={() => window.open(`/urun/${urun.id}`, "_blank")}
                         variant="outline" size="sm"
-                        className="text-[11px] h-7 px-2.5 gap-1"
+                        className="text-xs h-8 px-3 gap-1.5"
                         style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
                       >
-                        <ExternalLink className="w-3 h-3" /> İncele
+                        <ExternalLink className="w-3.5 h-3.5" /> İncele
                       </Button>
 
-                      {/* Toggle aktif/pasif - only for aktif or pasif status */}
-                      {(urun.durum === "aktif" || urun.durum === "pasif") && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px]" style={s.muted}>{urun.durum === "aktif" ? "Aktif" : "Pasif"}</span>
+                      <div className="flex items-center gap-1.5">
+                        {/* Toggle aktif/pasif */}
+                        {(urun.durum === "aktif" || urun.durum === "pasif") && (
                           <Switch
                             checked={urun.durum === "aktif"}
                             onCheckedChange={() => handleToggle(urun.id, urun.durum)}
-                            className="scale-75"
+                            className="scale-[0.85]"
                           />
-                        </div>
-                      )}
-
-                      <div className="flex items-center gap-1">
+                        )}
                         <Button
                           onClick={() => window.open(`/manupazar/duzenle/${urun.id}?admin=1`, "_blank")}
                           variant="ghost" size="sm"
-                          className="text-[10px] h-6 px-1.5 gap-1"
+                          className="h-7 w-7 p-0"
                           style={s.muted}
+                          title="Düzenle"
                         >
-                          <Pencil className="w-3 h-3" />
+                          <Pencil className="w-3.5 h-3.5" />
                         </Button>
                         <Button
                           onClick={() => setRemoveDialog({ open: true, urunId: urun.id, baslik: urun.baslik })}
                           variant="ghost" size="sm"
-                          className="text-[10px] h-6 px-1.5 gap-1 text-red-500 hover:text-red-600"
+                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                          title="Kaldır"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Bottom row: Category + Views + Price */}
+                  <div className="flex items-center gap-3 text-xs mt-auto pt-1" style={s.muted}>
+                    {urun.kategori_label !== "—" && (
+                      <span className="text-purple-500 truncate max-w-[280px]">{urun.kategori_label}</span>
+                    )}
+                    <span className="flex items-center gap-1 shrink-0">
+                      <Eye className="w-3.5 h-3.5" />
+                      {urun.goruntuleme_sayisi ?? 0}
+                    </span>
+                    {urun.fiyat !== null && (
+                      <span className="font-bold text-emerald-500 shrink-0">
+                        {formatPrice(urun.fiyat, urun.para_birimi)}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
