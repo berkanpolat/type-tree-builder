@@ -120,6 +120,14 @@ export default function AdminFirmalar() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
+  // Yeni Firma dialog state
+  const [yeniFirmaOpen, setYeniFirmaOpen] = useState(false);
+  const [yeniFirmaSaving, setYeniFirmaSaving] = useState(false);
+  const [yeniFirma, setYeniFirma] = useState({
+    email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "",
+    firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "",
+  });
+
   const [filterTuru, setFilterTuru] = useState<string>("all");
   const [filterTipi, setFilterTipi] = useState<string>("all");
   const [filterIl, setFilterIl] = useState<string>("all");
