@@ -203,6 +203,7 @@ export default function YeniIhale() {
         foto_url: ihale.foto_url,
         fotograflar: fotoData.length > 0 ? fotoData : (ihale.foto_url ? [ihale.foto_url] : []),
         ek_dosya_url: ihale.ek_dosya_url,
+        ek_dosyalar: ekDosyaData.length > 0 ? ekDosyaData : (ihale.ek_dosya_url ? [{ url: ihale.ek_dosya_url, adi: "Ek Dosya" }] : []),
         ozel_filtreleme: ihale.ozel_filtreleme || false,
         firma_adi_gizle: ihale.firma_adi_gizle || false,
         min_teklif_degisim: ihale.min_teklif_degisim ? Number(ihale.min_teklif_degisim) : null,
