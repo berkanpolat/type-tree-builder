@@ -144,10 +144,9 @@ Deno.serve(async (req) => {
         .single();
 
       if (error) return jsonResponse({ error: error.message }, 400);
+      await logActivity(supabase, payload, "create-user", { target_type: "admin_user", target_id: data.id, target_label: `${data.ad} ${data.soyad}`, details: { username: data.username, pozisyon: data.pozisyon } });
       return jsonResponse({ user: data });
     }
-
-    // ─── UPDATE ADMIN USER ───
     if (action === "update-user") {
       const { token, userId, updates } = body;
       const payload = verifyToken(token);
