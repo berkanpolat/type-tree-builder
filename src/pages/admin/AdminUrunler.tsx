@@ -7,12 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import {
   Package, Activity, XCircle, Clock, FileEdit, Ban, Users, ShoppingBag, Tag, Building2,
   Search, Filter, RotateCcw, ArrowUpDown, ExternalLink, Eye, ChevronLeft, ChevronRight,
-  Image as ImageIcon, X, ChevronDown
+  Image as ImageIcon, X, ChevronDown, Pencil, Trash2, ToggleLeft
 } from "lucide-react";
 
 /* ── Theme-aware style helpers ── */
@@ -50,7 +53,7 @@ interface UrunStats {
   totalUsers: number;
   usersWithProducts: number;
   kategoriDagilimi: { id: string; name: string; count: number }[];
-  urunTurDagilimi: { id: string; name: string; count: number }[];
+  urunTurDagilimi: { id: string; name: string; count: number; grup_id: string | null; kategori_id: string | null }[];
   firmaTuruDagilimi: { id: string; name: string; count: number }[];
   firmaTipiDagilimi: { id: string; name: string; count: number }[];
 }
@@ -68,6 +71,7 @@ interface UrunItem {
   created_at: string;
   user_id: string;
   firma_unvani: string;
+  firma_logo_url: string | null;
   kategori_label: string;
   urun_kategori_id: string | null;
   urun_grup_id: string | null;
@@ -82,6 +86,30 @@ const DURUM_LABELS: Record<string, string> = {
   pasif: "Pasif",
   reddedildi: "Reddedildi",
 };
+
+const RED_SEBEPLERI = [
+  "Eksik veya yetersiz ürün bilgisi",
+  "Yanlış kategori seçimi",
+  "Yanlış ürün tipi seçimi",
+  "Düşük kaliteli görseller",
+  "Uygunsuz görseller",
+  "Platform kurallarına aykırı içerik",
+  "Platform dışı iletişim bilgisi paylaşımı",
+  "Reklam veya yönlendirme içerikleri",
+  "Tekstil kapsamı dışı ürün",
+  "Yasaklı ürün",
+  "Sahte veya marka ihlali içeren ürün",
+  "Telif hakkı ihlali",
+  "Gerçekçi olmayan fiyatlandırma",
+  "Fiyat bilgisinin eksik olması",
+  "Yinelenen (duplicate) ürün",
+  "Yanıltıcı ürün bilgisi",
+  "Doğrulanmamış veya şüpheli satıcı davranışı",
+  "Spam ürün yükleme",
+  "Eksik teknik özellik bilgileri",
+  "Platform standartlarına uygun olmayan ürün başlığı",
+  "Platform kalite standartlarına uymayan içerik",
+];
 
 const ITEMS_PER_PAGE = 10;
 type SortField = "created_at" | "fiyat" | "goruntuleme";
@@ -112,12 +140,20 @@ export default function AdminUrunler() {
   const [allSecenekler, setAllSecenekler] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
   const [categoryRoots, setCategoryRoots] = useState<{ id: string; name: string }[]>([]);
 
+  // Ürün Türü dağılımı filter states
+  const [turFilterKategori, setTurFilterKategori] = useState("all");
+  const [turFilterGrup, setTurFilterGrup] = useState("all");
+
   // Sorting
   const [sortField, setSortField] = useState<SortField>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   // Firma list
   const [firmaList, setFirmaList] = useState<{ user_id: string; firma_unvani: string }[]>([]);
+
+  // Action dialogs
+  const [removeDialog, setRemoveDialog] = useState<{ open: boolean; urunId: string; baslik: string }>({ open: false, urunId: "", baslik: "" });
+  const [actionLoading, setActionLoading] = useState(false);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
@@ -203,7 +239,6 @@ export default function AdminUrunler() {
 
   const filtered = urunler
     .filter((u) => {
-      // Stat filter
       if (statFilter.type !== "all") {
         if (["aktif", "pasif", "onay_bekliyor", "reddedildi", "taslak"].includes(statFilter.type) && u.durum !== statFilter.type) return false;
         if (statFilter.type === "kategori" && u.urun_kategori_id !== statFilter.value) return false;
@@ -263,6 +298,34 @@ export default function AdminUrunler() {
     ? firmaList.filter(f => f.firma_unvani.toLowerCase().includes(firmaSearch.toLowerCase()))
     : firmaList;
 
+  // Toggle ürün aktif/pasif
+  const handleToggle = async (urunId: string, currentDurum: string) => {
+    const newDurum = currentDurum === "aktif" ? "pasif" : "aktif";
+    try {
+      await callApi("toggle-urun", { token, urunId, newDurum });
+      setUrunler(prev => prev.map(u => u.id === urunId ? { ...u, durum: newDurum } : u));
+      toast({ title: `Ürün ${newDurum === "aktif" ? "aktif" : "pasif"} yapıldı` });
+    } catch {
+      toast({ title: "Hata", description: "İşlem başarısız", variant: "destructive" });
+    }
+  };
+
+  // Remove ürün
+  const handleRemove = async () => {
+    if (!removeDialog.urunId) return;
+    setActionLoading(true);
+    try {
+      await callApi("remove-urun", { token, urunId: removeDialog.urunId });
+      setUrunler(prev => prev.filter(u => u.id !== removeDialog.urunId));
+      toast({ title: "Ürün kaldırıldı" });
+      setRemoveDialog({ open: false, urunId: "", baslik: "" });
+    } catch {
+      toast({ title: "Hata", description: "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const SortButton = ({ field, label }: { field: SortField; label: string }) => (
     <button
       onClick={() => handleSort(field)}
@@ -284,6 +347,23 @@ export default function AdminUrunler() {
     if (statFilter.type === "tur") return stats?.urunTurDagilimi.find(c => c.id === statFilter.value)?.name;
     return "";
   };
+
+  // Ürün türü dağılımı filtered by selected kategori/grup
+  const filteredTurDagilimi = stats?.urunTurDagilimi.filter(t => {
+    if (turFilterKategori !== "all" && t.kategori_id !== turFilterKategori) return false;
+    if (turFilterGrup !== "all" && t.grup_id !== turFilterGrup) return false;
+    return true;
+  }) || [];
+
+  // Groups for ürün türü filter (based on selected category)
+  const turFilterGrupOptions = allSecenekler.filter(o =>
+    o.parent_id && (turFilterKategori === "all"
+      ? categoryRoots.some(r => r.id === o.parent_id)
+      : o.parent_id === turFilterKategori)
+  );
+
+  // Reset grup when category changes
+  useEffect(() => { setTurFilterGrup("all"); }, [turFilterKategori]);
 
   if (loading) {
     return (
@@ -391,15 +471,37 @@ export default function AdminUrunler() {
               </div>
             </div>
 
-            {/* Ürün Türü distribution */}
+            {/* Ürün Türü distribution with category/group filters */}
             <div style={s.card} className="p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Tag className="w-3.5 h-3.5 text-teal-500" />
-                <span className="text-xs font-semibold" style={s.text}>Ürün Türü Dağılımı</span>
-                <span className="text-[10px]" style={s.muted}>({stats.urunTurDagilimi.length} tür)</span>
+              <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Tag className="w-3.5 h-3.5 text-teal-500" />
+                  <span className="text-xs font-semibold" style={s.text}>Ürün Türü Dağılımı</span>
+                  <span className="text-[10px]" style={s.muted}>({filteredTurDagilimi.length} tür)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={turFilterKategori}
+                    onChange={(e) => setTurFilterKategori(e.target.value)}
+                    className="text-[11px] px-2 py-1 rounded-md"
+                    style={{ background: "hsl(var(--admin-input-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))", border: "1px solid hsl(var(--admin-border))" }}
+                  >
+                    <option value="all">Tüm Kategoriler</option>
+                    {categoryRoots.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <select
+                    value={turFilterGrup}
+                    onChange={(e) => setTurFilterGrup(e.target.value)}
+                    className="text-[11px] px-2 py-1 rounded-md"
+                    style={{ background: "hsl(var(--admin-input-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))", border: "1px solid hsl(var(--admin-border))" }}
+                  >
+                    <option value="all">Tüm Gruplar</option>
+                    {turFilterGrupOptions.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                  </select>
+                </div>
               </div>
               <div className="flex flex-wrap gap-1.5 max-h-[160px] overflow-y-auto">
-                {stats.urunTurDagilimi.map((item) => (
+                {filteredTurDagilimi.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setStatFilter(
@@ -418,10 +520,10 @@ export default function AdminUrunler() {
                     }}
                   >
                     <span className="truncate max-w-[140px]">{item.name}</span>
-                    <span className="font-bold">{item.count}</span>
+                    <span className={`font-bold ${item.count > 0 ? "text-teal-500" : "text-slate-500"}`}>{item.count}</span>
                   </button>
                 ))}
-                {stats.urunTurDagilimi.length === 0 && (
+                {filteredTurDagilimi.length === 0 && (
                   <span className="text-[11px]" style={s.muted}>Henüz veri yok</span>
                 )}
               </div>
@@ -442,7 +544,7 @@ export default function AdminUrunler() {
                       style={{ background: "hsl(var(--admin-hover))", color: "hsl(var(--admin-text))", border: "1px solid transparent" }}
                     >
                       <span className="truncate max-w-[120px]">{item.name}</span>
-                      <span className="font-bold text-orange-500">{item.count}</span>
+                      <span className={`font-bold ${item.count > 0 ? "text-orange-500" : "text-slate-500"}`}>{item.count}</span>
                     </span>
                   ))}
                 </div>
@@ -607,7 +709,7 @@ export default function AdminUrunler() {
             <div key={urun.id} style={s.card} className="overflow-hidden hover:shadow-md transition-shadow">
               <div className="flex">
                 {/* Photo */}
-                <div className="w-24 min-h-[100px] flex-shrink-0 flex items-center justify-center relative" style={{ background: "hsl(var(--admin-hover))" }}>
+                <div className="w-28 min-h-[120px] flex-shrink-0 flex items-center justify-center relative" style={{ background: "hsl(var(--admin-hover))" }}>
                   {urun.foto_url ? (
                     <img src={urun.foto_url} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -616,41 +718,51 @@ export default function AdminUrunler() {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 p-4 min-w-0">
+                <div className="flex-1 p-3 min-w-0">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                      {/* Row 1: ID + Status */}
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
                         <code className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ background: "hsl(var(--admin-hover))", ...s.text }}>
                           {urun.urun_no}
                         </code>
                         {durumBadge(urun.durum)}
-                        {urun.fiyat !== null && (
-                          <span className="text-[11px] font-bold text-emerald-500">
-                            {formatPrice(urun.fiyat, urun.para_birimi)}
-                          </span>
-                        )}
                       </div>
+
+                      {/* Row 2: Title */}
                       <h3 className="font-semibold text-sm mb-1 truncate" style={s.text}>{urun.baslik}</h3>
 
-                      <div className="flex items-center gap-2 text-[11px] flex-wrap" style={s.secondary}>
-                        <span className="font-medium">{urun.firma_unvani}</span>
+                      {/* Row 3: Firma info */}
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center overflow-hidden shrink-0" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
+                          {urun.firma_logo_url ? (
+                            <img src={urun.firma_logo_url} alt="" className="w-full h-full object-contain" />
+                          ) : (
+                            <span className="text-[8px] font-bold" style={s.muted}>{urun.firma_unvani?.charAt(0)}</span>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-medium truncate" style={s.secondary}>{urun.firma_unvani}</span>
+                      </div>
+
+                      {/* Row 4: Category + Views */}
+                      <div className="flex items-center gap-2 text-[11px] flex-wrap" style={s.muted}>
                         {urun.kategori_label !== "—" && (
-                          <>
-                            <span className="opacity-40">•</span>
-                            <span className="text-purple-500">{urun.kategori_label}</span>
-                          </>
+                          <span className="text-purple-500 truncate max-w-[250px]">{urun.kategori_label}</span>
                         )}
-                        {urun.min_siparis_miktari && (
-                          <>
-                            <span className="opacity-40">•</span>
-                            <span>Min: {urun.min_siparis_miktari}</span>
-                          </>
+                        <span className="flex items-center gap-1">
+                          <Eye className="w-3 h-3" />
+                          {urun.goruntuleme_sayisi ?? 0}
+                        </span>
+                        {urun.fiyat !== null && (
+                          <span className="font-bold text-emerald-500">
+                            {formatPrice(urun.fiyat, urun.para_birimi)}
+                          </span>
                         )}
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                       <Button
                         onClick={() => window.open(`/urun/${urun.id}`, "_blank")}
                         variant="outline" size="sm"
@@ -659,6 +771,36 @@ export default function AdminUrunler() {
                       >
                         <ExternalLink className="w-3 h-3" /> İncele
                       </Button>
+
+                      {/* Toggle aktif/pasif - only for aktif or pasif status */}
+                      {(urun.durum === "aktif" || urun.durum === "pasif") && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px]" style={s.muted}>{urun.durum === "aktif" ? "Aktif" : "Pasif"}</span>
+                          <Switch
+                            checked={urun.durum === "aktif"}
+                            onCheckedChange={() => handleToggle(urun.id, urun.durum)}
+                            className="scale-75"
+                          />
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-1">
+                        <Button
+                          onClick={() => window.open(`/manupazar/duzenle/${urun.id}?admin=1`, "_blank")}
+                          variant="ghost" size="sm"
+                          className="text-[10px] h-6 px-1.5 gap-1"
+                          style={s.muted}
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          onClick={() => setRemoveDialog({ open: true, urunId: urun.id, baslik: urun.baslik })}
+                          variant="ghost" size="sm"
+                          className="text-[10px] h-6 px-1.5 gap-1 text-red-500 hover:text-red-600"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -700,6 +842,24 @@ export default function AdminUrunler() {
           </div>
         )}
       </div>
+
+      {/* Remove Dialog */}
+      <AlertDialog open={removeDialog.open} onOpenChange={(open) => !open && setRemoveDialog({ open: false, urunId: "", baslik: "" })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ürünü Kaldır</AlertDialogTitle>
+            <AlertDialogDescription>
+              <strong>"{removeDialog.baslik}"</strong> başlıklı ürünü kaldırmak istediğinize emin misiniz? Bu işlem geri alınamaz. Ürün sahibine bildirim ve mail gönderilecektir.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemove} disabled={actionLoading} className="bg-red-600 hover:bg-red-700">
+              {actionLoading ? "Kaldırılıyor..." : "Kaldır"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }
@@ -737,7 +897,7 @@ function MultiSelectFilter({ label, options, selected, onChange }: {
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between h-8 px-3 rounded-md text-xs"
-        style={s.input as any}
+        style={{ background: "hsl(var(--admin-input-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))", border: "1px solid hsl(var(--admin-border))" }}
       >
         <span className="truncate" style={s.text}>
           {selected.length ? `${selected.length} seçili` : "Tümü"}
