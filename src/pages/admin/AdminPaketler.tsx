@@ -215,7 +215,7 @@ function PaketContent({
   paketler, stats, loading, saving, dialogOpen, setDialogOpen,
   deleteDialogOpen, setDeleteDialogOpen, editingPaket, form, setForm,
   openCreateDialog, openEditDialog, handleSave, handleDelete, renderLimit,
-  setDeletingId,
+  setDeletingId, hasPermission,
 }: any) {
   const lightMode = useAdminTheme();
 
