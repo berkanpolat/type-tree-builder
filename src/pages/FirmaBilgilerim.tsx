@@ -21,9 +21,6 @@ import {
   Users,
   Award,
   Image,
-  ShoppingCart,
-  Truck,
-  BarChart3,
 } from "lucide-react";
 
 export interface TabItem {
