@@ -60,14 +60,14 @@ const LandingPage = () => {
   }
 
   const isoBadges = [
-    { label: "27001", img: iso27001Img },
-    { label: "20000-1", img: iso20000Img },
-    { label: "27017", img: iso27017Img },
-    { label: "27018", img: iso27018Img },
-    { label: "27701", img: iso27701Img },
-    { label: "9001", img: iso9001Img },
-    { label: "22301", img: iso22301Img },
-    { label: "KOSGEB", img: kosgebImg },
+    { label: "27001", img: iso27001Img, scale: "scale-[1.15]" },
+    { label: "20000-1", img: iso20000Img, scale: "" },
+    { label: "27017", img: iso27017Img, scale: "" },
+    { label: "27018", img: iso27018Img, scale: "" },
+    { label: "27701", img: iso27701Img, scale: "" },
+    { label: "9001", img: iso9001Img, scale: "scale-[1.15]" },
+    { label: "22301", img: iso22301Img, scale: "scale-[1.15]" },
+    { label: "KOSGEB", img: kosgebImg, scale: "scale-[1.15]" },
   ];
 
   const advantages = [
@@ -280,7 +280,7 @@ const LandingPage = () => {
               <img
                 src={badge.img}
                 alt={badge.label}
-                className="w-[72px] h-[72px] object-contain opacity-60 hover:opacity-100 transition-opacity"
+                className={`w-[72px] h-[72px] object-contain opacity-60 hover:opacity-100 transition-opacity ${badge.scale}`}
                 style={{ imageRendering: "crisp-edges" }}
               />
             </div>
