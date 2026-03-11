@@ -167,7 +167,7 @@ export default function TekRehber() {
       .order("firma_unvani").limit(100);
 
     if (selectedFirmaTuru) query = query.eq("firma_turu_id", selectedFirmaTuru);
-    if (activeFilter) query = query.ilike("firma_unvani", `%${activeFilter.name}%`);
+    if (appliedSearchTerm) query = query.ilike("firma_unvani", `%${appliedSearchTerm}%`);
 
     if (fs) {
       if (fs.firmaTipleri.length > 0) query = query.in("firma_tipi_id", fs.firmaTipleri);
