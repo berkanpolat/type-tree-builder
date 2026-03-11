@@ -74,7 +74,7 @@ interface FirmaItem {
   urun_sayisi: number;
   sikayet_sayisi: number;
   profil_doluluk: number;
-  profile: { ad: string; soyad: string; iletisim_email: string; iletisim_numarasi: string | null } | null;
+  profile: { ad: string; soyad: string; iletisim_email: string; iletisim_numarasi: string | null; last_seen: string | null } | null;
   abonelik: {
     paket_id: string;
     paket_ad: string;
@@ -132,6 +132,7 @@ export default function AdminFirmalar() {
   const [filterMaxUrun, setFilterMaxUrun] = useState("");
   const [filterMinProfil, setFilterMinProfil] = useState("");
   const [filterMaxProfil, setFilterMaxProfil] = useState("");
+  const [filterPaket, setFilterPaket] = useState<string>("all");
 
   // Sorting
   const [sortField, setSortField] = useState<SortField | null>(null);
@@ -303,13 +304,13 @@ export default function AdminFirmalar() {
   };
 
   const clearFilters = () => {
-    setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all");
+    setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all"); setFilterPaket("all");
     setFilterMinIhale(""); setFilterMaxIhale(""); setFilterMinTeklif(""); setFilterMaxTeklif("");
     setFilterMinUrun(""); setFilterMaxUrun(""); setFilterMinProfil(""); setFilterMaxProfil("");
     setSearchTerm(""); setSortField(null);
   };
 
-  const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" ||
+  const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" ||
     filterMinIhale || filterMaxIhale || filterMinTeklif || filterMaxTeklif ||
     filterMinUrun || filterMaxUrun || filterMinProfil || filterMaxProfil || searchTerm;
 
@@ -319,6 +320,10 @@ export default function AdminFirmalar() {
     if (filterTipi !== "all" && f.firma_tipi_id !== filterTipi) return false;
     if (filterIl !== "all" && f.kurulus_il_id !== filterIl) return false;
     if (filterDurum !== "all" && f.onay_durumu !== filterDurum) return false;
+    if (filterPaket !== "all") {
+      if (filterPaket === "none" && f.abonelik) return false;
+      if (filterPaket !== "none" && f.abonelik?.paket_id !== filterPaket) return false;
+    }
     if (filterMinIhale && f.ihale_sayisi < Number(filterMinIhale)) return false;
     if (filterMaxIhale && f.ihale_sayisi > Number(filterMaxIhale)) return false;
     if (filterMinTeklif && f.teklif_sayisi < Number(filterMinTeklif)) return false;
@@ -344,7 +349,7 @@ export default function AdminFirmalar() {
   const safePage = Math.min(currentPage, totalPages);
   const paginatedFirmalar = sorted.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterMinIhale, filterMaxIhale, filterMinTeklif, filterMaxTeklif, filterMinUrun, filterMaxUrun, filterMinProfil, filterMaxProfil, sortField, sortDir]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, filterMinIhale, filterMaxIhale, filterMinTeklif, filterMaxTeklif, filterMinUrun, filterMaxUrun, filterMinProfil, filterMaxProfil, sortField, sortDir]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -567,6 +572,12 @@ export default function AdminFirmalar() {
                 options={[{ value: "all", label: "Tümü" }, ...tipler.filter(tp => filterTuru === "all" || tp.firma_turu_id === filterTuru).map(tp => ({ value: tp.id, label: tp.name }))]} />
               <FilterSelect label="İl" value={filterIl} onChange={setFilterIl}
                 options={[{ value: "all", label: "Tümü" }, ...iller.map(il => ({ value: il.id, label: il.name }))]} />
+              <FilterSelect label="Paket" value={filterPaket} onChange={setFilterPaket}
+                options={[
+                  { value: "all", label: "Tümü" },
+                  { value: "none", label: "Paket Yok" },
+                  ...(stats?.paketDagilimi || []).map(p => ({ value: p.id, label: p.ad })),
+                ]} />
               <FilterRange label="İhale Sayısı" min={filterMinIhale} max={filterMaxIhale} onMinChange={setFilterMinIhale} onMaxChange={setFilterMaxIhale} />
               <FilterRange label="Teklif Sayısı" min={filterMinTeklif} max={filterMaxTeklif} onMinChange={setFilterMinTeklif} onMaxChange={setFilterMaxTeklif} />
               <FilterRange label="Ürün Sayısı" min={filterMinUrun} max={filterMaxUrun} onMinChange={setFilterMinUrun} onMaxChange={setFilterMaxUrun} />
@@ -661,7 +672,10 @@ export default function AdminFirmalar() {
 
                 <div className="flex items-center gap-6 mb-3 text-xs" style={s.muted}>
                   <span>Kayıt: {formatDate(firma.created_at)}</span>
-                  <span>Son Hareket: {formatDate(firma.updated_at)}</span>
+                  <span>Son Hareket: {firma.profile?.last_seen ? formatDate(firma.profile.last_seen) : "—"}</span>
+                  {firma.profile?.last_seen && new Date(firma.profile.last_seen) >= new Date(Date.now() - 15 * 60 * 1000) && (
+                    <span className="flex items-center gap-1 text-emerald-400"><Wifi className="w-3 h-3" /> Çevrimiçi</span>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">

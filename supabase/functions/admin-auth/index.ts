@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
       const userIds = (firmalar || []).map((f: any) => f.user_id);
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, ad, soyad, iletisim_email, iletisim_numarasi")
+        .select("user_id, ad, soyad, iletisim_email, iletisim_numarasi, last_seen")
         .in("user_id", userIds);
 
       // Get counts per firma
@@ -518,13 +518,12 @@ Deno.serve(async (req) => {
         sonBirAy: (abonelikler || []).filter((a: any) => a.durum === "aktif" && new Date(a.donem_baslangic) >= m1).length,
       };
 
-      // Online user count (active in last 5 minutes - approximate via profiles updated_at)
-      // We'll use a simpler metric: users active in last 15 minutes
+      // Online user count (active in last 15 minutes via last_seen)
       const onlineThreshold = new Date(now.getTime() - 15 * 60 * 1000);
       const { count: onlineCount } = await supabase
         .from("profiles")
         .select("*", { count: "exact", head: true })
-        .gte("updated_at", onlineThreshold.toISOString());
+        .gte("last_seen", onlineThreshold.toISOString());
 
       return jsonResponse({
         total: totalCount || 0,
@@ -1904,10 +1903,27 @@ Deno.serve(async (req) => {
         .eq("user_id", userId);
       if (error) return jsonResponse({ error: error.message }, 500);
 
+      // Build detailed notification message
+      const detailParts: string[] = [];
+      const labels: Record<string, string> = {
+        profil_goruntuleme: "Profil Görüntüleme",
+        teklif_verme: "Teklif Verme",
+        aktif_urun: "Aktif Ürün",
+        mesaj: "Mesaj",
+        ihale_acma: "İhale Açma",
+      };
+      const hak = ekstraHaklar || {};
+      for (const [key, val] of Object.entries(hak)) {
+        if (typeof val === "number" && val > 0) {
+          detailParts.push(`${labels[key] || key}: +${val}`);
+        }
+      }
+      const detailStr = detailParts.length > 0 ? ` (${detailParts.join(", ")})` : "";
+
       await supabase.from("notifications").insert({
         user_id: userId,
         type: "ekstra_hak",
-        message: "Hesabınıza ekstra hak tanımlanmıştır.",
+        message: `Hesabınıza ekstra hak tanımlanmıştır.${detailStr}`,
         link: "/dashboard",
       });
 
