@@ -1280,6 +1280,10 @@ export type Database = {
           ek_dosya_adi: string | null
           ek_dosya_url: string | null
           id: string
+          islem_detay: string | null
+          islem_tarihi: string | null
+          islem_tipi: string | null
+          islem_yapan: string | null
           referans_id: string
           sebep: string
           sikayet_no: string
@@ -1293,6 +1297,10 @@ export type Database = {
           ek_dosya_adi?: string | null
           ek_dosya_url?: string | null
           id?: string
+          islem_detay?: string | null
+          islem_tarihi?: string | null
+          islem_tipi?: string | null
+          islem_yapan?: string | null
           referans_id: string
           sebep: string
           sikayet_no?: string
@@ -1306,6 +1314,10 @@ export type Database = {
           ek_dosya_adi?: string | null
           ek_dosya_url?: string | null
           id?: string
+          islem_detay?: string | null
+          islem_tarihi?: string | null
+          islem_tipi?: string | null
+          islem_yapan?: string | null
           referans_id?: string
           sebep?: string
           sikayet_no?: string
