@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useSessionState } from "@/hooks/use-session-state";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -20,6 +20,16 @@ import {
   Layers, CheckCircle2, XCircle, Plus, Search, Pencil, Trash2, ImageIcon,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 
@@ -53,6 +63,7 @@ export default function ManuPazar() {
   const [filterKategori, setFilterKategori] = useSessionState("filterKategori", "all");
   const [filterGrup, setFilterGrup] = useSessionState("filterGrup", "all");
   const [filterTur, setFilterTur] = useSessionState("filterTur", "all");
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Category options for filters
   const [kategoriler, setKategoriler] = useState<{ id: string; name: string }[]>([]);
@@ -382,7 +393,7 @@ export default function ManuPazar() {
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDelete(urun.id)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(urun.id)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -401,6 +412,26 @@ export default function ManuPazar() {
         title="Aktif Ürün Limitiniz Doldu"
         message={upgradeMessage}
       />
+
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Ürünü Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu ürünü silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve tüm ilişkili veriler silinecektir.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => { if (deleteId) handleDelete(deleteId); setDeleteId(null); }}
+            >
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
