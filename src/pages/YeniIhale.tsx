@@ -361,6 +361,7 @@ export default function YeniIhale() {
           ihaleData: ihaleUpdateData,
           filtreler: formData.ozel_filtreleme ? formData.filtreler : [],
           stoklar: formData.stoklar,
+          fotograflar: formData.fotograflar,
         },
       });
       if (error || !data?.success) {
