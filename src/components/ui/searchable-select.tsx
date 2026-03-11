@@ -169,7 +169,7 @@ export default function SearchableSelect({
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );
