@@ -338,6 +338,8 @@ export default function YeniUrun() {
     if (step === 2) {
       const alanlar = getTeknikAlanlar();
       for (const alan of alanlar) {
+        // Skip dependent_dropdown validation if parent not selected
+        if (alan.type === "dependent_dropdown" && !teknikDetaylar[alan.dependsOn!]) continue;
         if (!teknikDetaylar[alan.label]?.trim()) {
           toast({ title: `"${alan.label}" alanı zorunludur.`, variant: "destructive" }); return;
         }
