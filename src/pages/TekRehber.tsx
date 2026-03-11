@@ -344,6 +344,9 @@ export default function TekRehber() {
           onShowDropdown={setShowDropdown}
           onSearchResultClick={handleSearchResultClick}
           searchRef={searchRef as React.RefObject<HTMLDivElement>}
+          firmaTuruOptions={firmaTurleri}
+          selectedFirmaTuru={selectedFirmaTuru}
+          onFirmaTuruChange={handleFirmaTuruChange}
         />
 
         {/* Active filter badge */}
