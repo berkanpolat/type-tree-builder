@@ -496,9 +496,15 @@ export default function YeniUrun() {
             const Icon = STEP_ICONS[i];
             const isActive = i === step;
             const isDone = i < step;
+            const isClickable = isAdminMode || isDone || isActive;
             return (
               <div key={label} className="flex items-center">
-                <div className="flex flex-col items-center">
+                <button
+                  type="button"
+                  disabled={!isClickable}
+                  onClick={() => isClickable && setStep(i)}
+                  className="flex flex-col items-center disabled:cursor-not-allowed cursor-pointer"
+                >
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all ${
                     isActive ? "border-primary bg-primary text-primary-foreground"
                     : isDone ? "border-primary bg-primary text-primary-foreground"
@@ -509,7 +515,7 @@ export default function YeniUrun() {
                   <span className={`text-xs mt-2 text-center max-w-[80px] ${
                     isActive ? "text-primary font-semibold" : isDone ? "text-foreground" : "text-muted-foreground"
                   }`}>{label}</span>
-                </div>
+                </button>
                 {i < STEPS.length - 1 && (
                   <div className={`w-8 h-0.5 mx-1 mt-[-18px] ${isDone ? "bg-primary" : "bg-muted-foreground/20"}`} />
                 )}
