@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon
+  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,7 @@ const menuItems = [
   { label: "Şikayetler", path: "/yonetim/sikayetler", icon: MessageSquareWarning, permission: "sikayet_goruntule" as const },
   { label: "İhaleler", path: "/yonetim/ihaleler", icon: Gavel, permission: "ihale_goruntule" as const },
   { label: "Ürünler", path: "/yonetim/urunler", icon: Package, permission: "urun_goruntule" as const },
+  { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: null },
   { label: "Destek Talepleri", path: "/yonetim/destek", icon: HeadphonesIcon, permission: "destek_talepleri" as const },
 ];
 

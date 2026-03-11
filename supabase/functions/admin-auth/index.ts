@@ -1689,6 +1689,78 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── PAKETLER: LIST ───
+    if (action === "paketler-list") {
+      const { data, error } = await supabase
+        .from("paketler")
+        .select("*")
+        .order("created_at", { ascending: true });
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ paketler: data });
+    }
+
+    // ─── PAKETLER: CREATE ───
+    if (action === "paketler-create") {
+      const { token, paket } = body;
+      verifyToken(token);
+      const { data, error } = await supabase
+        .from("paketler")
+        .insert(paket)
+        .select()
+        .single();
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ paket: data });
+    }
+
+    // ─── PAKETLER: UPDATE ───
+    if (action === "paketler-update") {
+      const { token, id, updates } = body;
+      verifyToken(token);
+      const { data, error } = await supabase
+        .from("paketler")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ paket: data });
+    }
+
+    // ─── PAKETLER: DELETE ───
+    if (action === "paketler-delete") {
+      const { token, id } = body;
+      verifyToken(token);
+      // Check if any user has this package
+      const { count } = await supabase
+        .from("kullanici_abonelikler")
+        .select("id", { count: "exact", head: true })
+        .eq("paket_id", id);
+      if (count && count > 0) {
+        return jsonResponse({ error: "Bu pakete abone olan kullanıcılar var. Önce abonelikleri değiştirin." }, 400);
+      }
+      const { error } = await supabase.from("paketler").delete().eq("id", id);
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ success: true });
+    }
+
+    // ─── PAKETLER: STATS ───
+    if (action === "paketler-stats") {
+      const { token } = body;
+      verifyToken(token);
+      const { data, error } = await supabase
+        .from("kullanici_abonelikler")
+        .select("paket_id, durum");
+      if (error) return jsonResponse({ error: error.message }, 500);
+      // Count per paket_id
+      const stats: Record<string, number> = {};
+      for (const row of (data || [])) {
+        if (row.durum === "aktif") {
+          stats[row.paket_id] = (stats[row.paket_id] || 0) + 1;
+        }
+      }
+      return jsonResponse({ stats });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
