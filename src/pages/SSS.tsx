@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
+import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
 import { HelpCircle, Mail, Phone, MessageSquare } from "lucide-react";
 import {
@@ -29,12 +30,12 @@ const sssData = [
     a: "Kurumsal başvurular haftaiçi çalışma saatleri içinde (09:00-18:00) kontrol edilerek onaylanır.\nAmaç; platformda güvenilir ve gerçek firmaların yer almasını sağlamaktır.",
   },
   {
-    q: "Tekstil A.Ş.'yu diğer pazar yerlerinden ayıran fark nedir?",
+    q: "Tekstil A.Ş.'yi diğer pazar yerlerinden ayıran fark nedir?",
     a: "Tekstil A.Ş. sadece bir satış sitesi değil, sektöre özel bir iş ağıdır. En büyük farkı, B2B ve B2C satışlarda %0 komisyon uygulaması ve tekstil odaklı \"TekRehber\" gibi gelişmiş filtreleme ve eşleştirme araçlarına sahip olmasıdır.",
     link: { text: "Daha detaylı bilgi için lütfen tıklayınız", href: "/hakkimizda" },
   },
   {
-    q: "Tekstil A.Ş.'da neler yapabilirim?",
+    q: "Tekstil A.Ş.'de neler yapabilirim?",
     a: "Tekstil A.Ş. ile;\n• Firma profilinizi oluşturabilir\n• Kapasite, uzmanlık ve sertifikalarınızı sergileyebilir\n• Teklif alabilir veya teklif verebilir\n• Satın alma ve satış süreçlerinizi yönetebilir\n• İş ilanı yayınlayabilir\n• Yeni iş ortaklarıyla doğrudan iletişime geçebilirsiniz",
   },
   {
@@ -50,11 +51,11 @@ const sssData = [
     a: "Platformda farklı ihtiyaçlara yönelik üyelik paketleri bulunmaktadır. Temel özelliklerden yararlanabileceğiniz ücretsiz başlangıç paketinin yanı sıra, daha geniş görünürlük ve gelişmiş araçlar sunan Premium paket seçeneklerimiz mevcuttur.",
   },
   {
-    q: "Paket almadan Tekstil A.Ş.'yu kullanabilir miyim?",
+    q: "Paket almadan Tekstil A.Ş.'yi kullanabilir miyim?",
     a: "Temel profil oluşturma mümkündür.\nAncak iş fırsatlarına erişim, teklif süreçleri ve görünürlük için paket gereklidir.",
   },
   {
-    q: "Tekstil A.Ş.'da firmalar nasıl birbirini bulur?",
+    q: "Tekstil A.Ş.'de firmalar nasıl birbirini bulur?",
     a: "Gelişmiş arama ve filtreleme sistemi sayesinde; ürün grubu, kapasite, lokasyon, sertifikalar ve uzmanlık alanlarına göre doğru firmalar kolayca bulunur.",
   },
   {
@@ -102,7 +103,7 @@ export default function SSS() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {isLoggedIn && <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />}
+      {isLoggedIn ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       {/* Hero */}
       <section className="bg-primary">

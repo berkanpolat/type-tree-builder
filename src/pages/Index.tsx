@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { sortFirmaTurleri, sortSecenekler } from "@/lib/sort-utils";
 import {
   Select,
   SelectContent,
@@ -34,7 +35,7 @@ const Index = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("firma_turleri").select("*").order("name");
       if (error) throw error;
-      return data;
+      return sortFirmaTurleri(data);
     },
   });
 
@@ -68,6 +69,12 @@ const Index = () => {
     },
   });
 
+  const getSecenekler = (kategoriId: string) =>
+    sortSecenekler(allSecenekler?.filter((s) => s.kategori_id === kategoriId && s.parent_id === null) || []);
+
+  const getAltSecenekler = (parentId: string) =>
+    sortSecenekler(allSecenekler?.filter((s) => s.parent_id === parentId) || []);
+
   const handleTurChange = (value: string) => {
     setSelectedTurId(value);
     setSelectedTipId("");
@@ -83,11 +90,7 @@ const Index = () => {
     });
   };
 
-  const getSecenekler = (kategoriId: string) =>
-    allSecenekler?.filter((s) => s.kategori_id === kategoriId && s.parent_id === null) || [];
-
-  const getAltSecenekler = (parentId: string) =>
-    allSecenekler?.filter((s) => s.parent_id === parentId) || [];
+  // getSecenekler and getAltSecenekler defined above after allSecenekler query
 
   const hasAltSecenekler = (secenekId: string) =>
     allSecenekler?.some((s) => s.parent_id === secenekId) || false;

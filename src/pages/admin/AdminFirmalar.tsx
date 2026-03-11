@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, CSSProperties } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { sortFirmaTurleri } from "@/lib/sort-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -217,7 +218,7 @@ export default function AdminFirmalar() {
         supabase.from("firma_tipleri").select("id, name, firma_turu_id").order("name"),
         supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
       ]);
-      setTurler(t || []);
+      setTurler(sortFirmaTurleri(t || []));
       setTipler((tp || []) as any);
       setIller(il || []);
     }

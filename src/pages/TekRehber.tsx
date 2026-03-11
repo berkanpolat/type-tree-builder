@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { sortFirmaTurleri } from "@/lib/sort-utils";
 import PazarHeader from "@/components/PazarHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
 import Footer from "@/components/Footer";
@@ -111,10 +112,11 @@ export default function TekRehber() {
   useEffect(() => {
     supabase.from("firma_turleri").select("id, name").order("name").then(({ data }) => {
       if (data) {
-        setFirmaTurleri(data);
-        const tedarikci = data.find((t) => t.name.toLowerCase().includes("tedarikçi"));
+        const sorted = sortFirmaTurleri(data);
+        setFirmaTurleri(sorted);
+        const tedarikci = sorted.find((t) => t.name.toLowerCase().includes("tedarikçi"));
         if (tedarikci) { setSelectedFirmaTuru(tedarikci.id); setSelectedFirmaTuruName(tedarikci.name); }
-        else if (data.length > 0) { setSelectedFirmaTuru(data[0].id); setSelectedFirmaTuruName(data[0].name); }
+        else if (sorted.length > 0) { setSelectedFirmaTuru(sorted[0].id); setSelectedFirmaTuruName(sorted[0].name); }
       }
     });
   }, []);

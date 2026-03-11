@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
+import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import { Target, Eye, Layers, ShoppingBag, Gavel, Users, Briefcase } from "lucide-react";
@@ -51,7 +52,7 @@ export default function Hakkimizda() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {isLoggedIn && <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />}
+      {isLoggedIn ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       {/* Hero */}
       <section className="relative bg-primary overflow-hidden">

@@ -3,6 +3,7 @@ import logoImg from "@/assets/tekstil-as-logo.png";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { sortFirmaTurleri } from "@/lib/sort-utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -157,7 +158,7 @@ const GirisKayit = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("firma_turleri").select("*").order("name");
       if (error) throw error;
-      return data;
+      return sortFirmaTurleri(data);
     },
   });
 
