@@ -314,6 +314,7 @@ export default function AnaSayfa() {
         teknik_detaylar: (u.teknik_detaylar as Record<string, string>) || null,
         firma_unvani: firmaMap[u.user_id]?.firma_unvani,
         firma_logo_url: firmaMap[u.user_id]?.logo_url,
+        belge_onayli: firmaMap[u.user_id]?.belge_onayli || false,
         min_varyant_fiyat: minV,
         max_varyant_fiyat: maxV,
         is_favorited: favSet.has(u.id),
