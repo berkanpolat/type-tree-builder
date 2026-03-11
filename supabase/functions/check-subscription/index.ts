@@ -44,6 +44,25 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
+    const existingDbSubscription = await getCurrentDbSubscription(supabaseAdmin, user.id);
+    if (isManualActivePaidSubscription(existingDbSubscription)) {
+      const paketSlug = existingDbSubscription?.paketler?.slug || "pro";
+      logStep("Manual paid subscription detected, skipping Stripe downgrade", {
+        paket: paketSlug,
+        periyot: existingDbSubscription?.periyot,
+        donem_bitis: existingDbSubscription?.donem_bitis,
+      });
+
+      return jsonResponse({
+        subscribed: paketSlug !== "ucretsiz",
+        paket: paketSlug,
+        periyot: existingDbSubscription?.periyot || "sinirsiz",
+        subscription_end: existingDbSubscription?.donem_bitis,
+        cancel_at_period_end: false,
+        manual_assignment: true,
+      });
+    }
+
     // Check Stripe for customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 

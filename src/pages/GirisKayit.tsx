@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import logoImg from "@/assets/tekstil-as-logo.png";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
@@ -35,7 +35,9 @@ const formatPhoneDisplay = (value: string) => {
 };
 
 const GirisKayit = () => {
-  const [activeTab, setActiveTab] = useState<"giris" | "kayit">("giris");
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<"giris" | "kayit">(tabParam === "kayit" ? "kayit" : "giris");
   const [registerStep, setRegisterStep] = useState(1);
   const { toast } = useToast();
   const navigate = useNavigate();

@@ -53,6 +53,7 @@ import AdminPaketler from "./pages/admin/AdminPaketler";
 import Paketim from "./pages/Paketim";
 import AdminIslemler from "./pages/admin/AdminIslemler";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
+import RouteStateManager from "./components/RouteStateManager";
 
 const queryClient = new QueryClient();
 
