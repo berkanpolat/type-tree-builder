@@ -14,13 +14,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Phone, Loader2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import authBg from "@/assets/auth-bg.jpg";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import CountryCodeSelect from "@/components/CountryCodeSelect";
 
 const GirisKayit = () => {
   const [activeTab, setActiveTab] = useState<"giris" | "kayit">("giris");
