@@ -354,22 +354,144 @@ Deno.serve(async (req) => {
       const { data: { user: authUser } } = await supabase.auth.admin.getUserById(firma.user_id);
       
       if (authUser?.email) {
-        // Send notification email via Supabase Auth admin
-        // For now, create a notification in the notifications table
-        const message = action === "approve-firma"
-          ? `${firma.firma_unvani} firmanızın başvurusu onaylanmıştır. Artık hesabınızı kullanmaya başlayabilirsiniz.`
-          : `${firma.firma_unvani} firmanızın başvurusu reddedilmiştir. Detaylı bilgi için bizimle iletişime geçebilirsiniz.`;
+        if (action === "approve-firma") {
+          // Send password creation link (recovery link) so user can set their password
+          const siteUrl = Deno.env.get("SUPABASE_URL")?.replace('.supabase.co', '') || '';
+          const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+            type: 'recovery',
+            email: authUser.email,
+            options: {
+              redirectTo: `${req.headers.get('origin') || 'https://tekstilas.lovable.app'}/giris-kayit?tab=sifre-olustur`,
+            },
+          });
 
-        await supabase.from("notifications").insert({
-          user_id: firma.user_id,
-          type: action === "approve-firma" ? "firma_onaylandi" : "firma_reddedildi",
-          message,
-          link: "/dashboard",
-        });
+          if (!linkError && linkData?.properties?.action_link) {
+            // Send the recovery email via Supabase Auth (inviteUserByEmail won't work since user exists)
+            // Use the built-in recovery email by calling resetPasswordForEmail via admin
+            await supabase.auth.admin.updateUser(firma.user_id, {
+              // Clear any auto-confirmed email to force password reset flow
+            });
+            
+            // Trigger password reset email
+            const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+            const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+            await fetch(`${supabaseUrl}/auth/v1/recover`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'apikey': supabaseAnonKey,
+              },
+              body: JSON.stringify({
+                email: authUser.email,
+              }),
+            });
+          }
+
+          const message = `${firma.firma_unvani} firmanızın başvurusu onaylanmıştır. Şifre oluşturma bağlantısı e-posta adresinize gönderilmiştir.`;
+          await supabase.from("notifications").insert({
+            user_id: firma.user_id,
+            type: "firma_onaylandi",
+            message,
+            link: null,
+          });
+        } else {
+          const message = `${firma.firma_unvani} firmanızın başvurusu reddedilmiştir. Detaylı bilgi için bizimle iletişime geçebilirsiniz.`;
+          await supabase.from("notifications").insert({
+            user_id: firma.user_id,
+            type: "firma_reddedildi",
+            message,
+            link: null,
+          });
+        }
       }
 
       await logActivity(supabase, payload, action, { target_type: "firma", target_id: firmaId, target_label: firma.firma_unvani, details: { new_status: newStatus } });
       return jsonResponse({ success: true, status: newStatus });
+    }
+
+    // ─── DELETE FIRMA ───
+    if (action === "delete-firma") {
+      const { token, firmaId } = body;
+      const payload = verifyToken(token);
+
+      // Get firma info before deleting
+      const { data: firma, error: firmaError } = await supabase
+        .from("firmalar")
+        .select("user_id, firma_unvani")
+        .eq("id", firmaId)
+        .single();
+
+      if (firmaError || !firma) return jsonResponse({ error: "Firma bulunamadı" }, 404);
+
+      const userId = firma.user_id;
+
+      // Delete related data in order (foreign key dependencies)
+      await supabase.from("firma_makineler").delete().eq("firma_id", firmaId);
+      await supabase.from("firma_tesisler").delete().eq("firma_id", firmaId);
+      await supabase.from("firma_sertifikalar").delete().eq("firma_id", firmaId);
+      await supabase.from("firma_teknolojiler").delete().eq("firma_id", firmaId);
+      await supabase.from("firma_uretim_satis").delete().eq("firma_id", firmaId);
+      await supabase.from("firma_urun_hizmet_secimler").delete().eq("firma_id", firmaId);
+      await supabase.from("firma_referanslar").delete().eq("firma_id", firmaId);
+      await supabase.from("firma_galeri").delete().eq("firma_id", firmaId);
+      await supabase.from("firma_favoriler").delete().eq("firma_id", firmaId);
+      await supabase.from("profil_goruntulemeler").delete().eq("firma_id", firmaId);
+
+      // Delete user-related data
+      await supabase.from("ihale_teklifler").delete().eq("teklif_veren_user_id", userId);
+      await supabase.from("urun_favoriler").delete().eq("user_id", userId);
+      await supabase.from("notifications").delete().eq("user_id", userId);
+      await supabase.from("kullanici_abonelikler").delete().eq("user_id", userId);
+
+      // Delete urun varyasyonlar for user's products
+      const { data: userUrunler } = await supabase.from("urunler").select("id").eq("user_id", userId);
+      if (userUrunler?.length) {
+        const urunIds = userUrunler.map(u => u.id);
+        await supabase.from("urun_varyasyonlar").delete().in("id", urunIds);
+        await supabase.from("urun_favoriler").delete().in("urun_id", urunIds);
+      }
+      await supabase.from("urunler").delete().eq("user_id", userId);
+
+      // Delete ihale related
+      const { data: userIhaleler } = await supabase.from("ihaleler").select("id").eq("user_id", userId);
+      if (userIhaleler?.length) {
+        const ihaleIds = userIhaleler.map(i => i.id);
+        await supabase.from("ihale_teklifler").delete().in("ihale_id", ihaleIds);
+        await supabase.from("ihale_stok").delete().in("ihale_id", ihaleIds);
+        await supabase.from("ihale_filtreler").delete().in("ihale_id", ihaleIds);
+      }
+      await supabase.from("ihaleler").delete().eq("user_id", userId);
+
+      // Delete conversations & messages
+      const { data: convs } = await supabase.from("conversations").select("id").or(`user1_id.eq.${userId},user2_id.eq.${userId}`);
+      if (convs?.length) {
+        const convIds = convs.map(c => c.id);
+        await supabase.from("messages").delete().in("conversation_id", convIds);
+        await supabase.from("conversations").delete().in("id", convIds);
+      }
+
+      // Delete destek
+      const { data: destekler } = await supabase.from("destek_talepleri").select("id").eq("user_id", userId);
+      if (destekler?.length) {
+        const destekIds = destekler.map(d => d.id);
+        await supabase.from("destek_mesajlar").delete().in("destek_id", destekIds);
+      }
+      await supabase.from("destek_talepleri").delete().eq("user_id", userId);
+
+      // Delete sikayetler
+      await supabase.from("sikayetler").delete().eq("bildiren_user_id", userId);
+      await supabase.from("firma_kisitlamalar").delete().eq("user_id", userId);
+      await supabase.from("firma_uzaklastirmalar").delete().eq("user_id", userId);
+
+      // Delete firma and profile
+      await supabase.from("firmalar").delete().eq("id", firmaId);
+      await supabase.from("profiles").delete().eq("user_id", userId);
+
+      // Delete auth user
+      await supabase.auth.admin.deleteUser(userId);
+
+      await logActivity(supabase, payload, "delete-firma", { target_type: "firma", target_id: firmaId, target_label: firma.firma_unvani });
+      return jsonResponse({ success: true });
     }
 
     // ─── GET FIRMA DETAIL (for review popup) ───
