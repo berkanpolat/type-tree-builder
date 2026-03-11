@@ -509,6 +509,110 @@ const LandingPage = () => {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section className="bg-muted/40 py-20">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="text-center mb-10">
+            <span className="inline-block px-5 py-2 rounded-full bg-secondary text-secondary-foreground font-semibold text-sm mb-4">
+              Tekstil Profesyonellerine Özel
+            </span>
+            <h2 className="text-3xl lg:text-4xl font-bold text-foreground">
+              Sektör Liderlerinin Arasına<br />Girmeye Hazırsan
+            </h2>
+          </div>
+
+          {/* Toggle */}
+          <div className="flex items-center justify-center gap-3 mb-12">
+            <span className={`text-sm font-medium ${!billingYearly ? "text-foreground" : "text-muted-foreground"}`}>Aylık</span>
+            <button
+              onClick={() => setBillingYearly(!billingYearly)}
+              className={`relative w-14 h-7 rounded-full transition-colors ${billingYearly ? "bg-secondary" : "bg-border"}`}
+            >
+              <span className={`absolute top-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${billingYearly ? "translate-x-7" : "translate-x-0.5"}`} />
+            </button>
+            <span className={`text-sm font-medium ${billingYearly ? "text-foreground" : "text-muted-foreground"}`}>Yıllık</span>
+            {billingYearly && <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">%45+ İndirim</span>}
+          </div>
+
+          {/* Cards */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+            {/* Ücretsiz */}
+            <div className="bg-background rounded-2xl border border-border p-6 flex flex-col">
+              <span className="inline-block w-fit px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold mb-2">Üye</span>
+              <p className="text-sm text-muted-foreground mb-3">İnternette Görünür Ol!</p>
+              <p className="text-4xl font-extrabold text-foreground mb-6">$0</p>
+              <div className="border-t border-border pt-4 space-y-3 flex-1">
+                {[
+                  ["İhale Açma", PAKET_OZELLIKLERI.ucretsiz.ihale_acma],
+                  ["Teklif Verme", PAKET_OZELLIKLERI.ucretsiz.teklif_verme],
+                  ["Pazar Yeri", PAKET_OZELLIKLERI.ucretsiz.aktif_urun],
+                  ["Mesaj", PAKET_OZELLIKLERI.ucretsiz.mesaj],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-foreground">{label}</span>
+                    </div>
+                    <span className="text-muted-foreground font-medium">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <Link
+                to="/giris-kayit"
+                className="mt-6 block text-center px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
+              >
+                Hemen Kayıt Ol
+              </Link>
+            </div>
+
+            {/* PRO */}
+            <div className="bg-background rounded-2xl border-2 border-secondary p-6 flex flex-col relative">
+              <div className="absolute -top-3 right-4 w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center">
+                <span className="text-lg">⭐</span>
+              </div>
+              <span className="inline-block w-fit px-3 py-1 rounded-full bg-secondary/20 text-secondary font-bold text-xs mb-2">PRO</span>
+              <p className="text-sm text-muted-foreground mb-3">Profesyonel Ol!</p>
+              <div className="mb-6 flex items-baseline gap-2">
+                {billingYearly ? (
+                  <>
+                    <span className="text-sm text-destructive line-through">${STRIPE_CONFIG.pro.aylik.fiyat * 12}</span>
+                    <span className="text-4xl font-extrabold text-foreground">${STRIPE_CONFIG.pro.yillik.fiyat}</span>
+                    <span className="text-muted-foreground text-sm">/ Yıl</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-4xl font-extrabold text-foreground">${STRIPE_CONFIG.pro.aylik.fiyat}</span>
+                    <span className="text-muted-foreground text-sm">/ Ay</span>
+                  </>
+                )}
+              </div>
+              <div className="border-t border-border pt-4 space-y-3 flex-1">
+                {[
+                  ["İhale Açma", PAKET_OZELLIKLERI.pro.ihale_acma],
+                  ["Teklif Verme", PAKET_OZELLIKLERI.pro.teklif_verme],
+                  ["Pazar Yeri", PAKET_OZELLIKLERI.pro.aktif_urun],
+                  ["Mesaj", PAKET_OZELLIKLERI.pro.mesaj],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-secondary" />
+                      <span className="text-foreground">{label}</span>
+                    </div>
+                    <span className="font-bold text-foreground">{value}</span>
+                  </div>
+                ))}
+              </div>
+              <Link
+                to="/giris-kayit"
+                className="mt-6 block text-center px-6 py-3 rounded-full bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/90 transition-colors"
+              >
+                Hemen Kayıt Ol
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <Footer />
     </div>
   );
