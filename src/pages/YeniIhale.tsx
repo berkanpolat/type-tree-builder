@@ -301,7 +301,7 @@ export default function YeniIhale() {
     if (!ihaleId) return;
     setSaving(true);
 
-    const { error } = await supabase.from("ihaleler").update({
+    const ihaleUpdateData = {
       ihale_turu: formData.ihale_turu,
       teklif_usulu: formData.teklif_usulu,
       baslik: formData.baslik,
@@ -329,27 +329,49 @@ export default function YeniIhale() {
       hizmet_kategori_id: formData.hizmet_kategori_id || null,
       hizmet_tur_id: formData.hizmet_tur_id || null,
       teknik_detaylar: formData.teknik_detaylar,
-      durum: "duzenleniyor",
-    } as any).eq("id", ihaleId);
+    };
 
-    if (error) {
-      toast({ title: "Hata", description: "Kayıt başarısız.", variant: "destructive" });
-    }
+    if (isAdminMode) {
+      // Admin mode: save via edge function (bypasses RLS)
+      const adminToken = localStorage.getItem("admin_token");
+      const { data, error } = await supabase.functions.invoke("admin-auth/admin-save-ihale", {
+        body: {
+          token: adminToken,
+          ihaleId,
+          ihaleData: ihaleUpdateData,
+          filtreler: formData.ozel_filtreleme ? formData.filtreler : [],
+          stoklar: formData.stoklar,
+        },
+      });
+      if (error || !data?.success) {
+        toast({ title: "Hata", description: "Kayıt başarısız.", variant: "destructive" });
+      }
+    } else {
+      // Normal user mode
+      const { error } = await supabase.from("ihaleler").update({
+        ...ihaleUpdateData,
+        durum: "duzenleniyor",
+      } as any).eq("id", ihaleId);
 
-    // Save filtreler
-    if (formData.ozel_filtreleme && formData.filtreler.length > 0) {
-      await supabase.from("ihale_filtreler" as any).delete().eq("ihale_id", ihaleId);
-      await supabase.from("ihale_filtreler" as any).insert(
-        formData.filtreler.map((f) => ({ ihale_id: ihaleId, ...f }))
-      );
-    }
+      if (error) {
+        toast({ title: "Hata", description: "Kayıt başarısız.", variant: "destructive" });
+      }
 
-    // Save stok
-    if (formData.stoklar.length > 0) {
-      await supabase.from("ihale_stok" as any).delete().eq("ihale_id", ihaleId);
-      await supabase.from("ihale_stok" as any).insert(
-        formData.stoklar.map((s) => ({ ihale_id: ihaleId, ...s }))
-      );
+      // Save filtreler
+      if (formData.ozel_filtreleme && formData.filtreler.length > 0) {
+        await supabase.from("ihale_filtreler" as any).delete().eq("ihale_id", ihaleId);
+        await supabase.from("ihale_filtreler" as any).insert(
+          formData.filtreler.map((f) => ({ ihale_id: ihaleId, ...f }))
+        );
+      }
+
+      // Save stok
+      if (formData.stoklar.length > 0) {
+        await supabase.from("ihale_stok" as any).delete().eq("ihale_id", ihaleId);
+        await supabase.from("ihale_stok" as any).insert(
+          formData.stoklar.map((s) => ({ ihale_id: ihaleId, ...s }))
+        );
+      }
     }
 
     setSaving(false);
@@ -358,7 +380,11 @@ export default function YeniIhale() {
   const handlePreview = async () => {
     await handleSave();
     if (!ihaleId) return;
-    navigate(`/tekihale/${ihaleId}`);
+    if (isAdminMode) {
+      window.open(`/tekihale/${ihaleId}`, "_blank");
+    } else {
+      navigate(`/tekihale/${ihaleId}`);
+    }
   };
 
   if (loadingEdit) {
