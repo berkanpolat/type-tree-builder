@@ -71,10 +71,13 @@ interface IhaleItem {
 interface IhaleStats {
   total: number;
   active: number;
-  urunCount: number;
-  hizmetCount: number;
-  urunKategoriDagilimi: { name: string; count: number }[];
-  hizmetKategoriDagilimi: { name: string; count: number }[];
+  completed: number;
+  cancelled: number;
+  pendingApproval: number;
+  draft: number;
+  totalTeklifler: number;
+  urunKategoriDagilimi: { id: string; name: string; count: number }[];
+  hizmetKategoriDagilimi: { id: string; name: string; count: number }[];
 }
 
 const ITEMS_PER_PAGE = 10;
