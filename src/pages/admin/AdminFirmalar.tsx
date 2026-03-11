@@ -773,7 +773,6 @@ export default function AdminFirmalar() {
               <span className="text-xs" style={s.muted}>{filtered.length} firma listeleniyor</span>
             </div>
           )}
-          </div>
 
           {showFilters && (
             <div style={s.card} className="p-4 grid grid-cols-2 md:grid-cols-4 gap-4">
