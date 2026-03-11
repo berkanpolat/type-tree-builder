@@ -413,86 +413,172 @@ export default function AdminIhaleler() {
       <div className="space-y-5">
         {/* ── Summary Stats ── */}
         {stats && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Top row: counts */}
-            <div className="grid grid-cols-2 gap-3">
-              <StatCard
-                icon={<Gavel className="w-5 h-5" />}
-                iconBg="bg-blue-500/10"
-                iconColor="text-blue-500"
-                label="Toplam İhale"
+          <div className="space-y-3">
+            {/* Status cards row */}
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+              <MiniStatCard
+                label="Toplam"
                 value={stats.total}
+                icon={<Gavel className="w-3.5 h-3.5" />}
+                color="text-blue-500"
+                active={statFilter.type === "all"}
+                onClick={() => setStatFilter({ type: "all" })}
               />
-              <StatCard
-                icon={<Activity className="w-5 h-5" />}
-                iconBg="bg-emerald-500/10"
-                iconColor="text-emerald-500"
-                label="Aktif İhale"
+              <MiniStatCard
+                label="Aktif"
                 value={stats.active}
-                valueColor="text-emerald-500"
+                icon={<Activity className="w-3.5 h-3.5" />}
+                color="text-emerald-500"
+                active={statFilter.type === "active"}
+                onClick={() => setStatFilter({ type: "active" })}
+              />
+              <MiniStatCard
+                label="Tamamlanan"
+                value={stats.completed}
+                icon={<CheckCircle2 className="w-3.5 h-3.5" />}
+                color="text-blue-400"
+                active={statFilter.type === "completed"}
+                onClick={() => setStatFilter({ type: "completed" })}
+              />
+              <MiniStatCard
+                label="İptal"
+                value={stats.cancelled}
+                icon={<XCircle className="w-3.5 h-3.5" />}
+                color="text-red-500"
+                active={statFilter.type === "cancelled"}
+                onClick={() => setStatFilter({ type: "cancelled" })}
+              />
+              <MiniStatCard
+                label="Onay Bekleyen"
+                value={stats.pendingApproval}
+                icon={<Clock className="w-3.5 h-3.5" />}
+                color="text-amber-500"
+                active={statFilter.type === "pending"}
+                onClick={() => setStatFilter({ type: "pending" })}
+              />
+              <MiniStatCard
+                label="Taslak"
+                value={stats.draft}
+                icon={<FileEdit className="w-3.5 h-3.5" />}
+                color="text-slate-400"
+                active={statFilter.type === "draft"}
+                onClick={() => setStatFilter({ type: "draft" })}
+              />
+              <MiniStatCard
+                label="Toplam Teklif"
+                value={stats.totalTeklifler}
+                icon={<MessageSquare className="w-3.5 h-3.5" />}
+                color="text-purple-500"
+                active={false}
+                onClick={() => {}}
+                clickable={false}
               />
             </div>
 
-            {/* Category distribution charts */}
-            <div className="grid grid-cols-2 gap-3">
-              <div style={s.card} className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <Package className="w-4 h-4 text-purple-500" />
+            {/* Category distribution rows */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
+              {/* Ürün Kategorileri */}
+              <div
+                style={s.card}
+                className="p-3"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Package className="w-3.5 h-3.5 text-purple-500" />
                   <span className="text-xs font-semibold" style={s.text}>Ürün Kategorileri</span>
-                  <span className="text-[10px] ml-auto px-1.5 py-0.5 rounded-full bg-purple-500/10 text-purple-500 font-medium">{stats.urunCount}</span>
                 </div>
-                {stats.urunKategoriDagilimi.length > 0 ? (
-                  <div className="h-[120px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={stats.urunKategoriDagilimi.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
-                        <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 10, fill: "hsl(var(--admin-muted))" }} />
-                        <Tooltip
-                          contentStyle={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.5rem", fontSize: 12 }}
-                          labelStyle={{ color: "hsl(var(--admin-text))" }}
-                        />
-                        <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={16}>
-                          {stats.urunKategoriDagilimi.slice(0, 8).map((_, idx) => (
-                            <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} opacity={0.8} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <p className="text-xs text-center py-6" style={s.muted}>Henüz veri yok</p>
-                )}
+                <div className="flex flex-wrap gap-1.5">
+                  {stats.urunKategoriDagilimi.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setStatFilter(
+                        statFilter.type === "urun_kat" && statFilter.value === cat.id
+                          ? { type: "all" }
+                          : { type: "urun_kat", value: cat.id }
+                      )}
+                      className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md transition-all"
+                      style={{
+                        background: statFilter.type === "urun_kat" && statFilter.value === cat.id
+                          ? "rgba(168, 85, 247, 0.15)"
+                          : "hsl(var(--admin-hover))",
+                        color: statFilter.type === "urun_kat" && statFilter.value === cat.id
+                          ? "rgb(168, 85, 247)"
+                          : "hsl(var(--admin-text))",
+                        border: statFilter.type === "urun_kat" && statFilter.value === cat.id
+                          ? "1px solid rgba(168, 85, 247, 0.3)"
+                          : "1px solid transparent",
+                      }}
+                    >
+                      <span className="truncate max-w-[120px]">{cat.name}</span>
+                      <span className="font-bold">{cat.count}</span>
+                    </button>
+                  ))}
+                  {stats.urunKategoriDagilimi.length === 0 && (
+                    <span className="text-[11px]" style={s.muted}>Henüz veri yok</span>
+                  )}
+                </div>
               </div>
 
-              <div style={s.card} className="p-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <HeadphonesIcon className="w-4 h-4 text-orange-500" />
+              {/* Hizmet Kategorileri */}
+              <div
+                style={s.card}
+                className="p-3"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <HeadphonesIcon className="w-3.5 h-3.5 text-orange-500" />
                   <span className="text-xs font-semibold" style={s.text}>Hizmet Kategorileri</span>
-                  <span className="text-[10px] ml-auto px-1.5 py-0.5 rounded-full bg-orange-500/10 text-orange-500 font-medium">{stats.hizmetCount}</span>
                 </div>
-                {stats.hizmetKategoriDagilimi.length > 0 ? (
-                  <div className="h-[120px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={stats.hizmetKategoriDagilimi.slice(0, 8)} layout="vertical" margin={{ left: 0, right: 8, top: 0, bottom: 0 }}>
-                        <XAxis type="number" hide />
-                        <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 10, fill: "hsl(var(--admin-muted))" }} />
-                        <Tooltip
-                          contentStyle={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.5rem", fontSize: 12 }}
-                          labelStyle={{ color: "hsl(var(--admin-text))" }}
-                        />
-                        <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={16}>
-                          {stats.hizmetKategoriDagilimi.slice(0, 8).map((_, idx) => (
-                            <Cell key={idx} fill={CHART_COLORS[idx % CHART_COLORS.length]} opacity={0.8} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ) : (
-                  <p className="text-xs text-center py-6" style={s.muted}>Henüz veri yok</p>
-                )}
+                <div className="flex flex-wrap gap-1.5">
+                  {stats.hizmetKategoriDagilimi.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setStatFilter(
+                        statFilter.type === "hizmet_kat" && statFilter.value === cat.id
+                          ? { type: "all" }
+                          : { type: "hizmet_kat", value: cat.id }
+                      )}
+                      className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-md transition-all"
+                      style={{
+                        background: statFilter.type === "hizmet_kat" && statFilter.value === cat.id
+                          ? "rgba(249, 115, 22, 0.15)"
+                          : "hsl(var(--admin-hover))",
+                        color: statFilter.type === "hizmet_kat" && statFilter.value === cat.id
+                          ? "rgb(249, 115, 22)"
+                          : "hsl(var(--admin-text))",
+                        border: statFilter.type === "hizmet_kat" && statFilter.value === cat.id
+                          ? "1px solid rgba(249, 115, 22, 0.3)"
+                          : "1px solid transparent",
+                      }}
+                    >
+                      <span className="truncate max-w-[120px]">{cat.name}</span>
+                      <span className="font-bold">{cat.count}</span>
+                    </button>
+                  ))}
+                  {stats.hizmetKategoriDagilimi.length === 0 && (
+                    <span className="text-[11px]" style={s.muted}>Henüz veri yok</span>
+                  )}
+                </div>
               </div>
             </div>
+
+            {/* Active stat filter indicator */}
+            {statFilter.type !== "all" && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs" style={s.muted}>Filtre aktif:</span>
+                <Badge variant="outline" className="text-[11px] gap-1 pr-1">
+                  {statFilter.type === "active" && "Aktif İhaleler"}
+                  {statFilter.type === "completed" && "Tamamlanan İhaleler"}
+                  {statFilter.type === "cancelled" && "İptal Edilen İhaleler"}
+                  {statFilter.type === "pending" && "Onay Bekleyen İhaleler"}
+                  {statFilter.type === "draft" && "Taslak İhaleler"}
+                  {statFilter.type === "urun_kat" && stats.urunKategoriDagilimi.find(c => c.id === statFilter.value)?.name}
+                  {statFilter.type === "hizmet_kat" && stats.hizmetKategoriDagilimi.find(c => c.id === statFilter.value)?.name}
+                  <button onClick={() => setStatFilter({ type: "all" })} className="ml-1 hover:opacity-70">
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+                <span className="text-xs font-medium" style={s.text}>{filtered.length} sonuç</span>
+              </div>
+            )}
           </div>
         )}
 
