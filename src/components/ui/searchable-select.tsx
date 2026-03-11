@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Check, ChevronsUpDown, Search } from "lucide-react";
+import { useLocation, useNavigationType } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,6 +43,9 @@ export default function SearchableSelect({
   className,
   triggerClassName,
 }: SearchableSelectProps) {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+  const persistId = React.useId();
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
 
