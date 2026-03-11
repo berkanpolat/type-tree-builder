@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
+import UpgradeDialog from "@/components/UpgradeDialog";
 import {
   Layers, CheckCircle2, XCircle, Plus, Search, Pencil, Trash2, ImageIcon,
 } from "lucide-react";
@@ -57,6 +59,9 @@ export default function ManuPazar() {
   const [turler, setTurler] = useState<{ id: string; name: string }[]>([]);
   // Name maps
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
+  const packageInfo = usePackageQuota();
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -149,6 +154,15 @@ export default function ManuPazar() {
 
   const handleToggleDurum = async (urun: Urun) => {
     const newDurum = urun.durum === "aktif" ? "pasif" : "aktif";
+    // If activating, check quota
+    if (newDurum === "aktif") {
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "aktif_urun");
+      if (!check.allowed) {
+        setUpgradeMessage(check.message || "Aktif ürün limitiniz dolmuştur.");
+        setUpgradeOpen(true);
+        return;
+      }
+    }
     const { error } = await supabase.from("urunler").update({ durum: newDurum }).eq("id", urun.id);
     if (error) {
       toast({ title: "Hata", description: "Durum güncellenemedi.", variant: "destructive" });
@@ -373,6 +387,12 @@ export default function ManuPazar() {
           </CardContent>
         </Card>
       </div>
+      <UpgradeDialog
+        open={upgradeOpen}
+        onOpenChange={setUpgradeOpen}
+        title="Aktif Ürün Limitiniz Doldu"
+        message={upgradeMessage}
+      />
     </DashboardLayout>
   );
 }
