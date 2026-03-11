@@ -59,17 +59,22 @@ export function usePackageQuota(): PackageInfo {
 
       if (abone) {
         const paket = (abone as any).paketler;
+        const ekstra = (abone as any).ekstra_haklar || {};
         setPaketAd(paket.ad);
         setPaketSlug(paket.slug);
         setPeriyot((abone as any).periyot);
         setDonemBitis((abone as any).donem_bitis);
         setStripeSubscriptionId((abone as any).stripe_subscription_id);
         setLimits({
-          profil_goruntuleme_limiti: paket.profil_goruntuleme_limiti,
-          ihale_acma_limiti: paket.ihale_acma_limiti,
-          teklif_verme_limiti: paket.teklif_verme_limiti,
-          aktif_urun_limiti: paket.aktif_urun_limiti,
-          mesaj_limiti: paket.mesaj_limiti,
+          profil_goruntuleme_limiti: paket.profil_goruntuleme_limiti != null
+            ? paket.profil_goruntuleme_limiti + (ekstra.profil_goruntuleme || 0) : null,
+          ihale_acma_limiti: paket.ihale_acma_limiti != null
+            ? paket.ihale_acma_limiti + (ekstra.ihale_acma || 0) : null,
+          teklif_verme_limiti: paket.teklif_verme_limiti != null
+            ? paket.teklif_verme_limiti + (ekstra.teklif_verme || 0) : null,
+          aktif_urun_limiti: paket.aktif_urun_limiti + (ekstra.aktif_urun || 0),
+          mesaj_limiti: paket.mesaj_limiti != null
+            ? paket.mesaj_limiti + (ekstra.mesaj || 0) : null,
         });
 
         const donemBaslangic = (abone as any).donem_baslangic;
