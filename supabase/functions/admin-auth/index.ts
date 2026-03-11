@@ -1345,31 +1345,32 @@ Deno.serve(async (req) => {
         }
       }
 
-      // For each sikayet, try to resolve the referenced entity's owner firma
+      // For each sikayet, try to resolve the referenced entity's owner firma and user_id
       const enriched = await Promise.all((sikayetler || []).map(async (s: any) => {
         let sikayet_edilen_firma = "-";
+        let sikayet_edilen_user_id: string | null = null;
         try {
           if (s.tur === "profil") {
-            // referans_id is firma.id
-            const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("id", s.referans_id).single();
-            if (f) sikayet_edilen_firma = f.firma_unvani;
+            const { data: f } = await supabase.from("firmalar").select("firma_unvani, user_id").eq("id", s.referans_id).single();
+            if (f) { sikayet_edilen_firma = f.firma_unvani; sikayet_edilen_user_id = f.user_id; }
           } else if (s.tur === "ihale") {
             const { data: i } = await supabase.from("ihaleler").select("user_id").eq("id", s.referans_id).single();
             if (i) {
+              sikayet_edilen_user_id = i.user_id;
               const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", i.user_id).single();
               if (f) sikayet_edilen_firma = f.firma_unvani;
             }
           } else if (s.tur === "urun") {
             const { data: u } = await supabase.from("urunler").select("user_id").eq("id", s.referans_id).single();
             if (u) {
+              sikayet_edilen_user_id = u.user_id;
               const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", u.user_id).single();
               if (f) sikayet_edilen_firma = f.firma_unvani;
             }
           } else if (s.tur === "mesaj") {
-            // message referans_id is the message id - get the conversation's other user
             const { data: m } = await supabase.from("messages").select("conversation_id, sender_id").eq("id", s.referans_id).single();
             if (m) {
-              // The reported user is the sender of the reported message
+              sikayet_edilen_user_id = m.sender_id;
               const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", m.sender_id).single();
               if (f) sikayet_edilen_firma = f.firma_unvani;
             }
@@ -1380,10 +1381,152 @@ Deno.serve(async (req) => {
           ...s,
           bildiren_firma: firmaMap[s.bildiren_user_id] || "-",
           sikayet_edilen_firma,
+          sikayet_edilen_user_id,
         };
       }));
 
       return jsonResponse({ sikayetler: enriched });
+    }
+
+    // ─── KISITLA (Restrict user) ───
+    if (action === "kisitla") {
+      const { token, userId, sikayetId, sebep, kisitlamaAlanlari, bitisTarihi, sikayetNo } = body;
+      const payload = verifyToken(token);
+      
+      // Get admin info
+      const { data: adminUser } = await supabase.from("admin_users").select("ad, soyad, pozisyon").eq("id", payload.id).single();
+      const createdBy = adminUser ? `${adminUser.ad} ${adminUser.soyad} (${adminUser.pozisyon})` : payload.username;
+
+      const { error } = await supabase.from("firma_kisitlamalar").insert({
+        user_id: userId,
+        sikayet_id: sikayetId || null,
+        sebep,
+        kisitlama_alanlari: kisitlamaAlanlari,
+        bitis_tarihi: bitisTarihi,
+        created_by: createdBy,
+      });
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Build restriction labels
+      const alanLabels: Record<string, string> = {
+        ihale_acamaz: "ihale açma",
+        teklif_veremez: "teklif verme",
+        urun_aktif_edemez: "ürün aktif etme",
+        mesaj_gonderemez: "mesaj gönderme",
+        mesaj_alamaz: "mesaj alma",
+        profil_goruntuleyemez: "firma profili görüntüleme",
+        ihale_goruntuleyemez: "ihale görüntüleme",
+        urun_goruntuleyemez: "ürün görüntüleme",
+      };
+      const activeAreas = Object.entries(kisitlamaAlanlari)
+        .filter(([_, v]) => v === true)
+        .map(([k]) => alanLabels[k] || k)
+        .join(", ");
+
+      const bitisStr = new Date(bitisTarihi).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+
+      const msg = sikayetNo
+        ? `${sikayetNo} numaralı şikayet kapsamında ${bitisStr} tarihine kadar ${activeAreas} işlemleriniz kısıtlanmıştır.`
+        : `${bitisStr} tarihine kadar ${activeAreas} işlemleriniz kısıtlanmıştır.`;
+
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "kisitlama",
+        message: msg,
+        link: null,
+      });
+
+      // Update sikayet status if provided
+      if (sikayetId) {
+        await supabase.from("sikayetler").update({ durum: "cozuldu" }).eq("id", sikayetId);
+      }
+
+      return jsonResponse({ success: true });
+    }
+
+    // ─── UZAKLASTIR (Suspend user) ───
+    if (action === "uzaklastir") {
+      const { token, userId, sikayetId, sebep, bitisTarihi, sikayetNo } = body;
+      const payload = verifyToken(token);
+
+      const { data: adminUser } = await supabase.from("admin_users").select("ad, soyad, pozisyon").eq("id", payload.id).single();
+      const createdBy = adminUser ? `${adminUser.ad} ${adminUser.soyad} (${adminUser.pozisyon})` : payload.username;
+
+      const { error } = await supabase.from("firma_uzaklastirmalar").insert({
+        user_id: userId,
+        sikayet_id: sikayetId || null,
+        sebep: sebep || null,
+        bitis_tarihi: bitisTarihi,
+        created_by: createdBy,
+      });
+
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Deactivate all user's products and ihaleler
+      await supabase.from("urunler").update({ durum: "pasif" }).eq("user_id", userId).eq("durum", "aktif");
+      await supabase.from("ihaleler").update({ durum: "iptal" }).eq("user_id", userId).in("durum", ["devam_ediyor", "onay_bekliyor"]);
+
+      // Update firma onay_durumu
+      await supabase.from("firmalar").update({ onay_durumu: "uzaklastirildi" }).eq("user_id", userId);
+
+      const bitisStr = new Date(bitisTarihi).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+      const msg = sikayetNo
+        ? `${sikayetNo} numaralı şikayet kapsamında hesabınız ${bitisStr} tarihine kadar uzaklaştırılmıştır.`
+        : `Hesabınız ${bitisStr} tarihine kadar uzaklaştırılmıştır.`;
+
+      await supabase.from("notifications").insert({
+        user_id: userId,
+        type: "uzaklastirma",
+        message: msg,
+        link: null,
+      });
+
+      if (sikayetId) {
+        await supabase.from("sikayetler").update({ durum: "cozuldu" }).eq("id", sikayetId);
+      }
+
+      return jsonResponse({ success: true });
+    }
+
+    // ─── YASAKLA (Ban user permanently) ───
+    if (action === "yasakla") {
+      const { token, userId, sikayetId, sebep } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yasaklama yetkisi yalnızca ana yöneticidedir" }, 401);
+
+      const { data: adminUser } = await supabase.from("admin_users").select("ad, soyad, pozisyon").eq("id", payload.id).single();
+      const createdBy = adminUser ? `${adminUser.ad} ${adminUser.soyad} (${adminUser.pozisyon})` : payload.username;
+
+      // Get firma info before deletion
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani, vergi_numarasi, user_id").eq("user_id", userId).single();
+      const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+
+      // Add to blacklist
+      await supabase.from("firma_yasaklar").insert({
+        user_id: userId,
+        email: authUser?.email || null,
+        vergi_numarasi: firma?.vergi_numarasi || null,
+        firma_unvani: firma?.firma_unvani || null,
+        sebep: sebep || null,
+        sikayet_id: sikayetId || null,
+        created_by: createdBy,
+      });
+
+      // Delete all user data
+      await supabase.from("urunler").delete().eq("user_id", userId);
+      await supabase.from("ihaleler").delete().eq("user_id", userId);
+      await supabase.from("firmalar").delete().eq("user_id", userId);
+      await supabase.from("profiles").delete().eq("user_id", userId);
+
+      // Delete auth user
+      await supabase.auth.admin.deleteUser(userId);
+
+      if (sikayetId) {
+        await supabase.from("sikayetler").update({ durum: "cozuldu" }).eq("id", sikayetId);
+      }
+
+      return jsonResponse({ success: true });
     }
 
     return jsonResponse({ error: "Geçersiz istek" }, 400);
