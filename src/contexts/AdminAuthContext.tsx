@@ -1,6 +1,36 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+interface AdminPermissions {
+  // İhale
+  ihale_goruntule: boolean;
+  ihale_kaldirabilir: boolean;
+  ihale_duzenleyebilir: boolean;
+  ihale_onaylayabilir: boolean;
+  ihale_inceleyebilir: boolean;
+  // Ürün
+  urun_goruntule: boolean;
+  urun_kaldirabilir: boolean;
+  urun_duzenleyebilir: boolean;
+  urun_onaylayabilir: boolean;
+  urun_inceleyebilir: boolean;
+  // Şikayet
+  sikayet_goruntule: boolean;
+  sikayet_detay_goruntule: boolean;
+  sikayet_islem_yapabilir: boolean;
+  sikayet_kisitlama: boolean;
+  sikayet_uzaklastirma: boolean;
+  sikayet_yasaklama: boolean;
+  // Paket
+  paket_olusturabilir: boolean;
+  paket_duzenleyebilir: boolean;
+  paket_detay_goruntule: boolean;
+  paket_ekstra_hak: boolean;
+  // Destek
+  destek_goruntule: boolean;
+  destek_cevap: boolean;
+}
+
 interface AdminUser {
   id: string;
   username: string;
@@ -10,14 +40,7 @@ interface AdminUser {
   telefon: string | null;
   pozisyon: string;
   is_primary: boolean;
-  permissions: {
-    kullanici_ekle: boolean;
-    kullanici_yonet: boolean;
-    destek_talepleri: boolean;
-    sikayet_goruntule: boolean;
-    ihale_goruntule: boolean;
-    urun_goruntule: boolean;
-  };
+  permissions: AdminPermissions;
   created_at: string;
 }
 
@@ -27,7 +50,7 @@ interface AdminAuthContextType {
   loading: boolean;
   login: (username: string, password: string) => Promise<{ error?: string }>;
   logout: () => void;
-  hasPermission: (key: keyof AdminUser["permissions"]) => boolean;
+  hasPermission: (key: keyof AdminPermissions) => boolean;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | null>(null);
@@ -80,7 +103,7 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("admin_token");
   };
 
-  const hasPermission = (key: keyof AdminUser["permissions"]) => {
+  const hasPermission = (key: keyof AdminPermissions) => {
     if (!user) return false;
     if (user.is_primary) return true;
     return !!user.permissions?.[key];
