@@ -230,7 +230,7 @@ const DashboardDestek = () => {
       </div>
 
       {/* Yeni Talep Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen} modal={true}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Yeni Destek Talebi Oluştur</DialogTitle>
@@ -242,7 +242,7 @@ const DashboardDestek = () => {
                 <SelectTrigger>
                   <SelectValue placeholder="Departman seçiniz" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" className="z-[9999]">
                   {departmanlar.map(d => (
                     <SelectItem key={d} value={d}>{d}</SelectItem>
                   ))}
