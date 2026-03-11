@@ -111,25 +111,55 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "foto" | "ek") => {
-    const file = e.target.files?.[0];
-    if (!file || !ihaleId) return;
-    setUploading(true);
+    if (!ihaleId) return;
+    
+    if (type === "foto") {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
+      setUploading(true);
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setUploading(false); return; }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setUploading(false); return; }
 
-    const ext = file.name.split(".").pop();
-    const path = `${user.id}/${ihaleId}/${type}_${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("ihale-files").upload(path, file);
-
-    if (error) {
-      toast({ title: "Hata", description: "Dosya yüklenemedi.", variant: "destructive" });
+      const newUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const ext = file.name.split(".").pop();
+        const path = `${user.id}/${ihaleId}/foto_${Date.now()}_${i}.${ext}`;
+        const { error } = await supabase.storage.from("ihale-files").upload(path, file);
+        if (error) {
+          toast({ title: "Hata", description: `${file.name} yüklenemedi.`, variant: "destructive" });
+          continue;
+        }
+        const { data: urlData } = supabase.storage.from("ihale-files").getPublicUrl(path);
+        newUrls.push(urlData.publicUrl);
+      }
+      updateForm({ fotograflar: [...formData.fotograflar, ...newUrls], foto_url: formData.fotograflar[0] || newUrls[0] || null });
+      setUploading(false);
     } else {
-      const { data: urlData } = supabase.storage.from("ihale-files").getPublicUrl(path);
-      if (type === "foto") updateForm({ foto_url: urlData.publicUrl });
-      else updateForm({ ek_dosya_url: urlData.publicUrl });
+      const file = e.target.files?.[0];
+      if (!file) return;
+      setUploading(true);
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setUploading(false); return; }
+
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/${ihaleId}/ek_${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("ihale-files").upload(path, file);
+      if (error) {
+        toast({ title: "Hata", description: "Dosya yüklenemedi.", variant: "destructive" });
+      } else {
+        const { data: urlData } = supabase.storage.from("ihale-files").getPublicUrl(path);
+        updateForm({ ek_dosya_url: urlData.publicUrl });
+      }
+      setUploading(false);
     }
-    setUploading(false);
+  };
+
+  const removePhoto = (index: number) => {
+    const updated = formData.fotograflar.filter((_, i) => i !== index);
+    updateForm({ fotograflar: updated, foto_url: updated[0] || null });
   };
 
   const showMinTeklifDegisim = formData.teklif_usulu === "acik_indirme" || formData.teklif_usulu === "acik_arttirma";
