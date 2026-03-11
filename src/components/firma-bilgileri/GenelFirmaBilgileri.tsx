@@ -169,12 +169,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
   const handleSave = async () => {
     setSaving(true);
     const { error } = await supabase.from("firmalar").update({
-      firma_turu_id: firmaTuruId,
-      firma_tipi_id: firmaTipiId,
-      firma_unvani: firmaUnvani,
       firma_olcegi_id: firmaOlcegiId || null,
-      vergi_numarasi: vergiNumarasi,
-      vergi_dairesi: vergiDairesi,
       kurulus_tarihi: kurulusTarihi || null,
       kurulus_il_id: kurulusIlId || null,
       kurulus_ilce_id: kurulusIlceId || null,
