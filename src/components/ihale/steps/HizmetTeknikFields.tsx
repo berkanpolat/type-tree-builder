@@ -6,7 +6,7 @@ import MultiSelectDropdown from "@/components/firma-bilgileri/MultiSelectDropdow
 interface Props {
   td: Record<string, any>;
   setTD: (key: string, value: any) => void;
-  grupName: string;
+  kategoriName: string;
 }
 
 function useKategoriSecenekler(kategoriName: string) {
