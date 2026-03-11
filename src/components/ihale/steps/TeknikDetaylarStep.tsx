@@ -17,6 +17,8 @@ interface Props {
 const normalizeText = (value: string) =>
   value
     .toLocaleLowerCase("tr")
+    .replace(/ı/g, "i")
+    .replace(/İ/g, "i")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
