@@ -665,7 +665,7 @@ export default function AnaSayfa() {
           label="ÜRÜNLER"
           placeholder="Ürün ara... (kumaş, iplik, aksesuar)"
           searchTerm={searchTerm}
-          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) { setActiveFilter(null); setAppliedSearchTerm(""); } }}
+          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) { setActiveFilter(null); setAppliedSearchTerm(""); setSelectedGrupId(null); setSelectedTurId(null); } }}
           onSearch={handleSearch}
           searchResults={searchResults}
           showDropdown={showDropdown}
