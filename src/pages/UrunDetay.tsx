@@ -954,12 +954,16 @@ export default function UrunDetay() {
 
         {/* Banner */}
         <div
-          className="rounded-xl overflow-hidden mb-12 h-32 flex items-center px-8 cursor-pointer"
-          style={urunBanner.url ? undefined : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }}
+          className="rounded-xl overflow-hidden mb-12 flex items-center cursor-pointer mx-auto"
+          style={{
+            maxWidth: 1200,
+            height: 128,
+            ...(urunBanner.url ? {} : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))", paddingLeft: "2rem" }),
+          }}
           onClick={() => urunBanner.linkUrl && window.open(urunBanner.linkUrl, "_blank")}
         >
           {urunBanner.url ? (
-            <img src={urunBanner.url} alt="Banner" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
+            <img src={urunBanner.url} alt="Banner" className="w-full h-full object-contain" style={{ imageRendering: "auto" }} />
           ) : (
             <div>
               <p className="text-primary-foreground text-xl font-bold">Tekstil A.Ş. ile Güvenle Alışveriş Yapın</p>
