@@ -6,7 +6,7 @@ import MultiSelectDropdown from "@/components/firma-bilgileri/MultiSelectDropdow
 interface Props {
   td: Record<string, any>;
   setTD: (key: string, value: any) => void;
-  grupName: string;
+  kategoriName: string;
 }
 
 function useKategoriSecenekler(kategoriName: string) {
@@ -108,8 +108,8 @@ function MultiSelectUrunKategoriSecimi({ label, td, setTD, prefixKey }: { label:
   );
 }
 
-export default function HizmetTeknikFields({ td, setTD, grupName }: Props) {
-  const hizmetName = grupName?.toLowerCase() || "";
+export default function HizmetTeknikFields({ td, setTD, kategoriName }: Props) {
+  const hizmetName = kategoriName?.toLowerCase() || "";
 
   if (hizmetName.includes("ürün hizmeti") || hizmetName.includes("üretim hizmeti")) {
     return (
