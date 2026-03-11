@@ -189,20 +189,9 @@ const GirisKayit = () => {
     }
   };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedTurId || !selectedTipId) {
-      toast({ title: "Hata", description: "Firma türü ve tipi seçiniz", variant: "destructive" });
-      return;
-    }
-    if (!phoneVerified) {
-      toast({ title: "Hata", description: "Lütfen telefon numaranızı doğrulayın", variant: "destructive" });
-      return;
-    }
-    if (!isValidEmail(email)) {
-      toast({ title: "Hata", description: "Geçerli bir e-posta adresi giriniz", variant: "destructive" });
-      return;
-    }
+  const submitRegistration = async () => {
+    if (!selectedTurId || !selectedTipId) return;
+    if (!isValidEmail(email)) return;
     setRegisterLoading(true);
     try {
       // Check duplicate email in profiles
@@ -219,8 +208,6 @@ const GirisKayit = () => {
       }
 
       const fullPhone = getFullPhone();
-
-      // No password signup - use a random password since admin will send password creation email
       const randomPassword = crypto.randomUUID() + "Aa1!";
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -247,18 +234,8 @@ const GirisKayit = () => {
       });
       if (rpcError) throw rpcError;
 
-      // Sign out immediately since user can't login until admin approves
       await supabase.auth.signOut();
-
-      toast({
-        title: "Başvurunuz alındı!",
-        description: "Başvurunuz değerlendirilecektir. Onaylandığında şifre oluşturma bağlantısı e-posta adresinize gönderilecektir.",
-      });
-      setActiveTab("giris");
-      // Reset form
-      setRegisterStep(1);
-      setSelectedTurId(""); setSelectedTipId(""); setFirmaUnvani(""); setVergiNumarasi(""); setVergiDairesi("");
-      setAd(""); setSoyad(""); setEmail(""); setTelefon(""); setPhoneVerified(false); setOtpSent(false); setOtpCode("");
+      setRegistrationComplete(true);
     } catch (error: any) {
       toast({ title: "Hata", description: error.message, variant: "destructive" });
     } finally {
