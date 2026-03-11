@@ -504,60 +504,42 @@ export default function AnaSayfa() {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const handleSearchResultClick = (result: SearchResult) => {
+  const handleSearchResultClick = async (result: SearchResult) => {
     setSearchTerm(result.name);
     setShowDropdown(false);
+    setActiveFilter(null);
+
     if (result.type === "Kategori") {
       const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === result.name.toLowerCase());
       if (katName) {
         setSelectedKategori(katName);
         setSelectedGrupId(null);
         setSelectedTurId(null);
-        setActiveFilter(null);
         setAppliedSearchTerm("");
         return;
       }
     }
-    // For Grup/Tür clicks, trigger a full search to resolve hierarchy
-    setActiveFilter(null);
-    setAppliedSearchTerm(result.name);
-    // Also trigger handleSearch logic asynchronously
-    (async () => {
-      if (result.type === "Grup" || result.type === "Tür") {
-        const { data: match } = await supabase
-          .from("firma_bilgi_secenekleri")
-          .select("id, name, parent_id")
-          .eq("id", result.id)
-          .single();
-        if (!match) return;
-        if (result.type === "Grup" && match.parent_id) {
-          const { data: parent } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("id", match.parent_id).single();
-          if (parent) {
-            const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === parent.name.toLowerCase());
-            if (katName) {
-              setSelectedKategori(katName);
-              setSelectedGrupId(match.id);
-              setSelectedTurId(null);
-              setAppliedSearchTerm("");
-            }
-          }
-        } else if (result.type === "Tür" && match.parent_id) {
-          const { data: parent } = await supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("id", match.parent_id).single();
-          if (parent?.parent_id) {
-            const { data: gp } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("id", parent.parent_id).single();
-            if (gp) {
-              const katName = URUN_KATEGORILERI.find((k) => k.toLowerCase() === gp.name.toLowerCase());
-              if (katName) {
-                setSelectedKategori(katName);
-                setSelectedGrupId(parent.id);
-                setSelectedTurId(match.id);
-                setAppliedSearchTerm("");
-              }
-            }
-          }
+
+    if (result.type === "Grup" || result.type === "Tür") {
+      const { data: match } = await supabase
+        .from("firma_bilgi_secenekleri")
+        .select("id, name, parent_id")
+        .eq("id", result.id)
+        .single();
+      if (match?.parent_id) {
+        const resolved = await resolveHierarchy(match.id, match.parent_id);
+        if (resolved) {
+          setSelectedKategori(resolved.kategori);
+          setSelectedGrupId(resolved.grupId);
+          setSelectedTurId(resolved.turId);
+          setAppliedSearchTerm("");
+          return;
         }
       }
-    })();
+    }
+
+    // Ürün or fallback — text search + detect category
+    setAppliedSearchTerm(result.name);
   };
 
   const clearFilter = () => {
