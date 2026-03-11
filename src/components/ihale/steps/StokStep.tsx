@@ -64,7 +64,13 @@ export default function StokStep({ formData, updateForm }: Props) {
   const birimFromForm = formData.birim || "Adet";
 
   const { data: varyant1Options } = useKategoriSecenekler("Beden");
-  const { data: renkOptions } = useKategoriSecenekler("Renk");
+  const { data: renkOptionsRaw } = useKategoriSecenekler("Renk");
+
+  // Add "Renksiz" as a manual option at the beginning
+  const renkOptions = [
+    { id: "__renksiz__", name: "Renksiz", kategori_id: "" },
+    ...(renkOptionsRaw || []),
+  ];
 
   const [selectedV1, setSelectedV1] = useState<string[]>([]);
   const [selectedV2, setSelectedV2] = useState<string[]>([]);

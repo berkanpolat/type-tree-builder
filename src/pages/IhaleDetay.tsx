@@ -512,10 +512,17 @@ export default function IhaleDetay() {
 
     // Resolve names
     if (idsToResolve.length > 0) {
-      const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...new Set(idsToResolve)]);
-      if (names) {
-        const map: Record<string, string> = {};
-        names.forEach(n => { map[n.id] = n.name; });
+      const uniqueIds = [...new Set(idsToResolve)];
+      const [secenekRes, turleriRes, tipleriRes] = await Promise.all([
+        supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", uniqueIds),
+        supabase.from("firma_turleri").select("id, name").in("id", uniqueIds),
+        supabase.from("firma_tipleri").select("id, name").in("id", uniqueIds),
+      ]);
+      const map: Record<string, string> = {};
+      secenekRes.data?.forEach(n => { map[n.id] = n.name; });
+      turleriRes.data?.forEach(n => { map[n.id] = n.name; });
+      tipleriRes.data?.forEach(n => { map[n.id] = n.name; });
+      if (Object.keys(map).length > 0) {
         setSecenekMap(map);
         if (ihaleData.urun_kategori_id) setBreadcrumbKategori(map[ihaleData.urun_kategori_id] || "");
         if (ihaleData.urun_grup_id) setBreadcrumbGrup(map[ihaleData.urun_grup_id] || "");
@@ -1002,9 +1009,16 @@ export default function IhaleDetay() {
                 <InfoRow label="Mesaj Durumu" value={ihale.firma_adi_gizle ? "Hayır" : "Evet"} />
                 {Object.keys(filtreByType).length > 0 && (
                   <>
-                    {Object.entries(filtreByType).map(([type, values]) => (
-                      <InfoRow key={type} label={`İstenen ${type}`} value={values.join(", ")} />
-                    ))}
+                    {Object.entries(filtreByType).map(([type, values]) => {
+                      const filtreLabelMap: Record<string, string> = {
+                        firma_turu: "Firma Türü",
+                        firma_tipi: "Firma Tipi",
+                        il: "İl",
+                        firma_olcegi: "Firma Ölçeği",
+                        sertifika: "Sertifika",
+                      };
+                      return <InfoRow key={type} label={`İstenen ${filtreLabelMap[type] || type}`} value={values.join(", ")} />;
+                    })}
                   </>
                 )}
                 {ekDosyalar.length > 0 ? (
