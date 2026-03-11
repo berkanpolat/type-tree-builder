@@ -1004,6 +1004,12 @@ export default function IhaleDetay() {
                 <InfoRow label="Teklif Usulü" value={teklifUsuluLabel[ihale.teklif_usulu] || ihale.teklif_usulu} />
                 <InfoRow label="İhale Kategorisi" value={kategoriDisplayLabel} />
                 <InfoRow label="Başlangıç Fiyatı" value={ihale.baslangic_fiyati != null ? `${sym}${Number(ihale.baslangic_fiyati).toLocaleString("tr-TR")}` : null} />
+                {ihale.min_teklif_degisim != null && Number(ihale.min_teklif_degisim) > 0 && (
+                  <InfoRow
+                    label={ihale.teklif_usulu === "acik_arttirma" ? "Minimum Arttırma Bedeli" : ihale.teklif_usulu === "acik_indirme" ? "Minimum İndirme Bedeli" : "Minimum Teklif Değişim"}
+                    value={`${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}`}
+                  />
+                )}
                 <InfoRow label="Başlangıç Tarihi" value={ihale.baslangic_tarihi ? format(new Date(ihale.baslangic_tarihi), "dd/MM/yyyy", { locale: tr }) : null} />
                 <InfoRow label="Bitiş Tarihi" value={ihale.bitis_tarihi ? format(new Date(ihale.bitis_tarihi), "dd/MM/yyyy", { locale: tr }) : null} />
                 <InfoRow label="Mesaj Durumu" value={ihale.firma_adi_gizle ? "Hayır" : "Evet"} />

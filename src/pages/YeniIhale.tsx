@@ -503,7 +503,7 @@ export default function YeniIhale() {
               <p className="text-sm text-muted-foreground mt-1">#{formData.ihale_no}</p>
             )}
           </div>
-          <span className="text-sm text-muted-foreground">{currentStep + 1}</span>
+          <span className="text-sm text-muted-foreground">Adım {currentStep + 1} / {STEPS.length}</span>
         </div>
 
         <IhaleWizardStepper steps={STEPS} currentStep={currentStep} onStepClick={(step) => setCurrentStep(step)} freeNavigation={isAdminMode} />
