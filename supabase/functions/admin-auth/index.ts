@@ -1960,18 +1960,31 @@ Deno.serve(async (req) => {
         }
       }
 
+      const ekstra = abonelik.ekstra_haklar || {};
+
       return jsonResponse({
         abonelik: {
           paket_ad: abonelik.paketler?.ad,
           paket_slug: abonelik.paketler?.slug,
           donem_baslangic: abonelik.donem_baslangic,
           donem_bitis: abonelik.donem_bitis,
+          ekstra_haklar: ekstra,
           limits: {
-            profil_goruntuleme_limiti: abonelik.paketler?.profil_goruntuleme_limiti,
-            ihale_acma_limiti: abonelik.paketler?.ihale_acma_limiti,
-            teklif_verme_limiti: abonelik.paketler?.teklif_verme_limiti,
-            aktif_urun_limiti: abonelik.paketler?.aktif_urun_limiti,
-            mesaj_limiti: abonelik.paketler?.mesaj_limiti,
+            profil_goruntuleme_limiti: abonelik.paketler?.profil_goruntuleme_limiti != null
+              ? abonelik.paketler.profil_goruntuleme_limiti + (ekstra.profil_goruntuleme || 0)
+              : null,
+            ihale_acma_limiti: abonelik.paketler?.ihale_acma_limiti != null
+              ? abonelik.paketler.ihale_acma_limiti + (ekstra.ihale_acma || 0)
+              : null,
+            teklif_verme_limiti: abonelik.paketler?.teklif_verme_limiti != null
+              ? abonelik.paketler.teklif_verme_limiti + (ekstra.teklif_verme || 0)
+              : null,
+            aktif_urun_limiti: abonelik.paketler?.aktif_urun_limiti != null
+              ? abonelik.paketler.aktif_urun_limiti + (ekstra.aktif_urun || 0)
+              : abonelik.paketler?.aktif_urun_limiti,
+            mesaj_limiti: abonelik.paketler?.mesaj_limiti != null
+              ? abonelik.paketler.mesaj_limiti + (ekstra.mesaj || 0)
+              : null,
           },
         },
         usage: {
