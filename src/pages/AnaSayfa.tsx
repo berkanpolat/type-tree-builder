@@ -518,7 +518,7 @@ export default function AnaSayfa() {
         </div>
 
         {/* Active filter badge */}
-        {(activeFilter || selectedKategori) && (
+        {(appliedSearchTerm || selectedKategori) && (
           <div className="flex items-center gap-2 flex-wrap">
             {selectedKategori && (
               <Badge variant="secondary" className="gap-1 px-3 py-1.5">
@@ -526,9 +526,9 @@ export default function AnaSayfa() {
                 <button onClick={clearFilter} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
               </Badge>
             )}
-            {activeFilter && activeFilter.type !== "Kategori" && (
+            {appliedSearchTerm && (
               <Badge variant="secondary" className="gap-1 px-3 py-1.5">
-                {activeFilter.type}: {activeFilter.name}
+                Arama: {appliedSearchTerm}
                 <button onClick={clearFilter} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
               </Badge>
             )}
