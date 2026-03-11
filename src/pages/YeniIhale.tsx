@@ -408,7 +408,7 @@ export default function YeniIhale() {
           <span className="text-sm text-muted-foreground">{currentStep + 1}</span>
         </div>
 
-        <IhaleWizardStepper steps={STEPS} currentStep={currentStep} onStepClick={(step) => setCurrentStep(step)} />
+        <IhaleWizardStepper steps={STEPS} currentStep={currentStep} onStepClick={(step) => setCurrentStep(step)} freeNavigation={isAdminMode} />
 
         <Card>
           <CardContent className="p-6">
