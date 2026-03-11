@@ -297,7 +297,7 @@ export default function AdminIhaleler() {
         if (statFilter.type === "completed" && i.durum !== "tamamlandi") return false;
         if (statFilter.type === "cancelled" && i.durum !== "iptal") return false;
         if (statFilter.type === "pending" && i.durum !== "onay_bekliyor") return false;
-        if (statFilter.type === "draft" && i.durum !== "duzenleniyor" && i.durum !== "taslak") return false;
+        if (statFilter.type === "draft" && i.durum !== "duzenleniyor") return false;
         if (statFilter.type === "urun_kat" && i.urun_kategori_id !== statFilter.value) return false;
         if (statFilter.type === "hizmet_kat" && i.hizmet_kategori_id !== statFilter.value) return false;
       }
