@@ -208,21 +208,23 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
           <Textarea value={formData.aciklama} onChange={(e) => updateForm({ aciklama: e.target.value })} placeholder="İhale açıklaması giriniz" rows={4} maxLength={2000} />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+        <div className={`grid grid-cols-1 ${skipBirim ? "sm:grid-cols-2" : "sm:grid-cols-3"} gap-4 items-end`}>
           <div className="space-y-2">
             <Label>İhale Başlangıç Fiyatı (Birim Fiyat) *</Label>
             <Input type="number" value={formData.baslangic_fiyati ?? ""} onChange={(e) => updateForm({ baslangic_fiyati: e.target.value ? Number(e.target.value) : null })} placeholder="0.00" min={0} />
           </div>
-          <div className="space-y-2">
-            <Label>Birim *</Label>
-            <SearchableSelect
-              options={(birimOptions || []).map(o => ({ value: o.name, label: o.name }))}
-              value={formData.birim}
-              onValueChange={(v) => updateForm({ birim: v })}
-              placeholder="Birim seçiniz"
-              searchPlaceholder="Birim ara..."
-            />
-          </div>
+          {!skipBirim && (
+            <div className="space-y-2">
+              <Label>Birim *</Label>
+              <SearchableSelect
+                options={(birimOptions || []).map(o => ({ value: o.name, label: o.name }))}
+                value={formData.birim}
+                onValueChange={(v) => updateForm({ birim: v })}
+                placeholder="Birim seçiniz"
+                searchPlaceholder="Birim ara..."
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <Label>Para Birimi</Label>
             <SearchableSelect
