@@ -31,14 +31,11 @@ import {
   ShieldCheck,
   ShieldX,
 } from "lucide-react";
-import {
-  
-  SiInstagram,
-  SiFacebook,
-  SiTiktok,
-} from "react-icons/si";
-import { RiTwitterXFill } from "react-icons/ri";
-import { FaLinkedinIn } from "react-icons/fa";
+import { Instagram, Facebook, Linkedin, Twitter } from "lucide-react";
+
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.46V13.2a8.16 8.16 0 005.58 2.17v-3.44a4.85 4.85 0 01-2-.71v-4.53z"/></svg>
+);
 
 const paraBirimiSymbol: Record<string, string> = {
   TRY: "₺", USD: "$", EUR: "€", GBP: "£",
@@ -840,31 +837,31 @@ export default function UrunDetay() {
                       {firma.linkedin && (
                         <a href={firma.linkedin.startsWith("http") ? firma.linkedin : `https://${firma.linkedin}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <FaLinkedinIn className="w-4 h-4" /> LinkedIn
+                          <Linkedin className="w-4 h-4" /> LinkedIn
                         </a>
                       )}
                       {firma.instagram && (
                         <a href={firma.instagram.startsWith("http") ? firma.instagram : `https://instagram.com/${firma.instagram}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <SiInstagram className="w-4 h-4" /> Instagram
+                          <Instagram className="w-4 h-4" /> Instagram
                         </a>
                       )}
                       {firma.facebook && (
                         <a href={firma.facebook.startsWith("http") ? firma.facebook : `https://${firma.facebook}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <SiFacebook className="w-4 h-4" /> Facebook
+                          <Facebook className="w-4 h-4" /> Facebook
                         </a>
                       )}
                       {firma.x_twitter && (
                         <a href={firma.x_twitter.startsWith("http") ? firma.x_twitter : `https://x.com/${firma.x_twitter}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <RiTwitterXFill className="w-4 h-4" /> X
+                          <Twitter className="w-4 h-4" /> X
                         </a>
                       )}
                       {firma.tiktok && (
                         <a href={firma.tiktok.startsWith("http") ? firma.tiktok : `https://tiktok.com/@${firma.tiktok}`} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 border border-border rounded-lg py-2.5 hover:bg-muted transition-colors text-sm text-foreground">
-                          <SiTiktok className="w-4 h-4" /> TikTok
+                          <TikTokIcon className="w-4 h-4" /> TikTok
                         </a>
                       )}
                     </div>
