@@ -152,6 +152,20 @@ export default function AdminFirmalar() {
   const [statTurFilter, setStatTurFilter] = useState<string>("all");
   const [abonePeriod, setAbonePeriod] = useState<"son24saat" | "sonBirHafta" | "sonBirAy">("sonBirHafta");
 
+  // Active stat card filter
+  type StatCardFilter = "total" | "pending" | "recent" | "online" | "yeniAbone" | null;
+  const [activeStatCard, setActiveStatCard] = useState<StatCardFilter>(null);
+
+  const handleStatCardClick = (card: StatCardFilter) => {
+    if (activeStatCard === card) {
+      setActiveStatCard(null);
+    } else {
+      setActiveStatCard(card);
+    }
+    // Clear other manual filters when stat card is clicked
+    clearFilters();
+  };
+
   const [turler, setTurler] = useState<{ id: string; name: string }[]>([]);
   const [tipler, setTipler] = useState<{ id: string; name: string; firma_turu_id: string }[]>([]);
   const [iller, setIller] = useState<{ id: string; name: string }[]>([]);
