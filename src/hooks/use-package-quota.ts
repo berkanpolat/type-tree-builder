@@ -21,10 +21,12 @@ export interface PackageInfo {
   paketSlug: string;
   periyot: string;
   donemBitis: string | null;
+  durum: string;
   limits: PackageLimits;
   usage: QuotaUsage;
   loading: boolean;
   stripeSubscriptionId: string | null;
+  cancelAtPeriodEnd: boolean;
 }
 
 const DEFAULT_LIMITS: PackageLimits = {
@@ -41,9 +43,11 @@ export function usePackageQuota(): PackageInfo {
   const [paketSlug, setPaketSlug] = useState("ucretsiz");
   const [periyot, setPeriyot] = useState("aylik");
   const [donemBitis, setDonemBitis] = useState<string | null>(null);
+  const [durum, setDurum] = useState("aktif");
   const [limits, setLimits] = useState<PackageLimits>(DEFAULT_LIMITS);
   const [usage, setUsage] = useState<QuotaUsage>({ profil_goruntuleme: 0, teklif_verme: 0, aktif_urun: 0, mesaj: 0 });
   const [stripeSubscriptionId, setStripeSubscriptionId] = useState<string | null>(null);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -64,7 +68,13 @@ export function usePackageQuota(): PackageInfo {
         setPaketSlug(paket.slug);
         setPeriyot((abone as any).periyot);
         setDonemBitis((abone as any).donem_bitis);
+        setDurum((abone as any).durum || "aktif");
         setStripeSubscriptionId((abone as any).stripe_subscription_id);
+        
+        // Check if durum indicates pending cancellation
+        const aboneDurum = (abone as any).durum || "";
+        setCancelAtPeriodEnd(aboneDurum === "iptal_bekliyor");
+        
         setLimits({
           profil_goruntuleme_limiti: paket.profil_goruntuleme_limiti != null
             ? paket.profil_goruntuleme_limiti + (ekstra.profil_goruntuleme || 0) : null,
@@ -81,25 +91,21 @@ export function usePackageQuota(): PackageInfo {
 
         // Fetch usage counts in parallel
         const [profilRes, teklifRes, urunRes, mesajRes] = await Promise.all([
-          // Profile views this period
           supabase
             .from("profil_goruntulemeler" as any)
             .select("id", { count: "exact", head: true })
             .eq("user_id", user.id)
             .gte("created_at", donemBaslangic),
-          // Unique ihaleler bid on this period
           supabase
             .from("ihale_teklifler")
             .select("ihale_id")
             .eq("teklif_veren_user_id", user.id)
             .gte("created_at", donemBaslangic),
-          // Active products count
           supabase
             .from("urunler")
             .select("id", { count: "exact", head: true })
             .eq("user_id", user.id)
             .eq("durum", "aktif"),
-          // Conversations initiated this period (user was first message sender)
           supabase
             .from("conversations")
             .select("id, user1_id, user2_id, created_at")
@@ -107,10 +113,8 @@ export function usePackageQuota(): PackageInfo {
             .gte("created_at", donemBaslangic),
         ]);
 
-        // Count unique ihaleler
         const uniqueIhaleIds = new Set((teklifRes.data || []).map((t: any) => t.ihale_id));
 
-        // Count conversations where user initiated (sent first message)
         let initiatedConversations = 0;
         if (mesajRes.data) {
           for (const conv of mesajRes.data) {
@@ -143,7 +147,7 @@ export function usePackageQuota(): PackageInfo {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  return { paketAd, paketSlug, periyot, donemBitis, limits, usage, loading, stripeSubscriptionId };
+  return { paketAd, paketSlug, periyot, donemBitis, durum, limits, usage, loading, stripeSubscriptionId, cancelAtPeriodEnd };
 }
 
 // Helper: Check if a specific action is allowed
@@ -168,12 +172,10 @@ export function canPerformAction(
 
   const limit = limitMap[action];
   
-  // mesaj_limiti === 0 means only reply allowed
   if (action === "mesaj" && limit === 0) {
     return { allowed: false, message: "Ücretsiz paketinizde yeni mesaj oluşturma hakkınız bulunmamaktadır. Sadece gelen mesajlara yanıt verebilirsiniz. PRO pakete yükselterek sınırsız mesajlaşma hakkı kazanabilirsiniz." };
   }
 
-  // null = unlimited
   if (limit === null) {
     return { allowed: true };
   }

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,7 +19,6 @@ serve(async (req) => {
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-      { auth: { persistSession: false } }
     );
 
     const authHeader = req.headers.get("Authorization");
@@ -32,26 +31,51 @@ serve(async (req) => {
     if (!user?.email) throw new Error("Kullanıcı doğrulanamadı");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    if (customers.data.length === 0) throw new Error("Stripe müşteri kaydı bulunamadı");
 
-    const customerId = customers.data[0].id;
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
+    // First check if user has a stripe_subscription_id in our DB
+    const { data: abone } = await supabaseClient
+      .from("kullanici_abonelikler")
+      .select("stripe_subscription_id")
+      .eq("user_id", user.id)
+      .single();
 
-    if (subscriptions.data.length === 0) throw new Error("Aktif abonelik bulunamadı");
+    let subscriptionId = abone?.stripe_subscription_id;
 
-    // Cancel at period end so user keeps access until the end of the billing period
-    const updated = await stripe.subscriptions.update(subscriptions.data[0].id, {
+    // If no subscription ID in DB, try to find via Stripe customer
+    if (!subscriptionId) {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length === 0) throw new Error("Stripe müşteri kaydı bulunamadı");
+
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customers.data[0].id,
+        status: "active",
+        limit: 1,
+      });
+
+      if (subscriptions.data.length === 0) throw new Error("Aktif abonelik bulunamadı");
+      subscriptionId = subscriptions.data[0].id;
+    }
+
+    console.log("Cancelling subscription:", subscriptionId);
+
+    // Cancel at period end
+    const updated = await stripe.subscriptions.update(subscriptionId, {
       cancel_at_period_end: true,
     });
 
+    const cancelAt = new Date(updated.current_period_end * 1000).toISOString();
+
+    // Update DB status to iptal_bekliyor
+    await supabaseClient
+      .from("kullanici_abonelikler")
+      .update({ durum: "iptal_bekliyor" })
+      .eq("user_id", user.id);
+
+    console.log("Subscription cancelled successfully, cancel_at:", cancelAt);
+
     return new Response(JSON.stringify({
       success: true,
-      cancel_at: new Date(updated.current_period_end * 1000).toISOString(),
+      cancel_at: cancelAt,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
