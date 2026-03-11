@@ -125,6 +125,9 @@ const Paketim = () => {
                     })}
                   </p>
                 )}
+                <p className="text-xs text-muted-foreground mt-2 bg-muted/50 rounded-md p-2">
+                  İptal etmeniz durumunda dönem bitiş tarihine kadar PRO özelliklerini kullanmaya devam edersiniz. Süre dolduğunda hesabınız otomatik olarak Ücretsiz pakete geçirilir.
+                </p>
               </div>
             )}
 
