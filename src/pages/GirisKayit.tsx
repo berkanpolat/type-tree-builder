@@ -459,11 +459,11 @@ const GirisKayit = () => {
                   <h3 className="text-base font-semibold text-foreground">Kişisel Bilgiler</h3>
                   <div className="space-y-2">
                     <Label>Ad</Label>
-                    <Input placeholder="Ad" value={ad} onChange={(e) => setAd(e.target.value)} />
+                    <Input placeholder="Ad" value={ad} onChange={(e) => setAd(e.target.value)} disabled={otpSent} />
                   </div>
                   <div className="space-y-2">
                     <Label>Soyad</Label>
-                    <Input placeholder="Soyad" value={soyad} onChange={(e) => setSoyad(e.target.value)} />
+                    <Input placeholder="Soyad" value={soyad} onChange={(e) => setSoyad(e.target.value)} disabled={otpSent} />
                   </div>
                   <div className="space-y-2">
                     <Label>İletişim E-Posta Adresi</Label>
@@ -472,6 +472,7 @@ const GirisKayit = () => {
                       placeholder="ornek@firma.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      disabled={otpSent}
                     />
                     {email && !isValidEmail(email) && (
                       <p className="text-xs text-destructive">Geçerli bir e-posta adresi giriniz</p>
@@ -483,7 +484,7 @@ const GirisKayit = () => {
                       <CountryCodeSelect
                         value={countryCode}
                         onChange={(code) => { setCountryCode(code); if (phoneVerified) { setPhoneVerified(false); setOtpSent(false); setOtpCode(""); } }}
-                        disabled={phoneVerified}
+                        disabled={phoneVerified || otpSent}
                       />
                       <Input
                         placeholder="532 XXX XX XX"
@@ -493,39 +494,118 @@ const GirisKayit = () => {
                           setTelefon(formatted);
                           if (phoneVerified) { setPhoneVerified(false); setOtpSent(false); setOtpCode(""); }
                         }}
-                        disabled={phoneVerified}
+                        disabled={phoneVerified || otpSent}
                         className="flex-1"
                         inputMode="tel"
                       />
                     </div>
                   </div>
 
-                  <div className="flex gap-3">
-                    <Button type="button" variant="outline" className="flex-1" onClick={() => setRegisterStep(1)}>Geri</Button>
-                    <Button
-                      type="button"
-                      className="flex-1"
-                      onClick={() => {
-                        if (!ad || !soyad || !email || !telefon) {
-                          toast({ title: "Hata", description: "Lütfen tüm kişisel bilgileri doldurunuz", variant: "destructive" });
-                          return;
-                        }
-                        if (!isValidEmail(email)) {
-                          toast({ title: "Hata", description: "Geçerli bir e-posta adresi giriniz", variant: "destructive" });
-                          return;
-                        }
-                        if (telefon.replace(/\D/g, "").length < 7) {
-                          toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
-                          return;
-                        }
-                        handleSendOtp();
-                      }}
-                      disabled={sendingOtp || !ad || !soyad || !email || !isValidEmail(email) || !telefon}
-                    >
-                      {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                      Başvuru Yap
-                    </Button>
-                  </div>
+                  {/* Inline OTP Verification */}
+                  {otpSent && !phoneVerified && (
+                    <div className="space-y-4 pt-2 border-t border-border">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                          <ShieldCheck className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Telefon Doğrulama</p>
+                          <p className="text-xs text-muted-foreground">
+                            {getFormattedPhone()} numaranıza 6 haneli bir kod gönderdik.
+                          </p>
+                        </div>
+                      </div>
+
+                      {otpCountdown > 0 && (
+                        <p className="text-center text-xs text-muted-foreground">
+                          Kalan Süre: {otpMinutes}:{String(otpSeconds).padStart(2, "0")}
+                        </p>
+                      )}
+
+                      <div className="flex justify-center">
+                        <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
+                          <InputOTPGroup className="gap-2">
+                            {[0, 1, 2, 3, 4, 5].map((i) => (
+                              <InputOTPSlot
+                                key={i}
+                                index={i}
+                                className="w-10 h-12 text-base font-semibold rounded-lg border-2 border-border first:rounded-l-lg last:rounded-r-lg"
+                              />
+                            ))}
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+
+                      <Button
+                        className="w-full"
+                        onClick={handleVerifyOtp}
+                        disabled={verifyingOtp || otpCode.length !== 6}
+                      >
+                        {verifyingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                        Doğrula ve Başvuruyu Gönder
+                      </Button>
+
+                      <div className="text-center">
+                        {otpCountdown > 0 ? (
+                          <p className="text-xs text-muted-foreground">
+                            Kodu alamadınız mı? <span className="text-foreground font-medium">{otpMinutes}:{String(otpSeconds).padStart(2, "0")}</span> sonra tekrar gönderebilirsiniz.
+                          </p>
+                        ) : (
+                          <div className="space-y-1">
+                            <p className="text-xs text-muted-foreground">Kodu alamadınız mı?</p>
+                            <Button
+                              variant="link"
+                              className="text-xs text-primary p-0 h-auto"
+                              onClick={() => { setOtpCode(""); handleSendOtp(); }}
+                              disabled={sendingOtp}
+                            >
+                              {sendingOtp ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                              Yeniden Kod Gönder
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full text-xs text-muted-foreground"
+                        onClick={() => { setOtpSent(false); setOtpCode(""); }}
+                      >
+                        <ArrowLeft className="w-3 h-3 mr-1" /> Bilgileri Düzenle
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Action buttons (hidden when OTP is active) */}
+                  {!otpSent && (
+                    <div className="flex gap-3">
+                      <Button type="button" variant="outline" className="flex-1" onClick={() => setRegisterStep(1)}>Geri</Button>
+                      <Button
+                        type="button"
+                        className="flex-1"
+                        onClick={() => {
+                          if (!ad || !soyad || !email || !telefon) {
+                            toast({ title: "Hata", description: "Lütfen tüm kişisel bilgileri doldurunuz", variant: "destructive" });
+                            return;
+                          }
+                          if (!isValidEmail(email)) {
+                            toast({ title: "Hata", description: "Geçerli bir e-posta adresi giriniz", variant: "destructive" });
+                            return;
+                          }
+                          if (telefon.replace(/\D/g, "").length < 7) {
+                            toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
+                            return;
+                          }
+                          handleSendOtp();
+                        }}
+                        disabled={sendingOtp || !ad || !soyad || !email || !isValidEmail(email) || !telefon}
+                      >
+                        {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                        Başvuru Yap
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
