@@ -1561,12 +1561,16 @@ export default function IhaleDetay() {
 
         {/* Banner */}
         <div
-          className="rounded-xl overflow-hidden mt-8 h-32 cursor-pointer"
-          style={ihaleDetayBanner.url ? undefined : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }}
+          className="rounded-xl overflow-hidden mt-8 cursor-pointer mx-auto"
+          style={{
+            maxWidth: 1060,
+            height: 128,
+            ...(ihaleDetayBanner.url ? {} : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }),
+          }}
           onClick={() => ihaleDetayBanner.linkUrl && window.open(ihaleDetayBanner.linkUrl, "_blank")}
         >
           {ihaleDetayBanner.url ? (
-            <img src={ihaleDetayBanner.url} alt="Reklam" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
+            <img src={ihaleDetayBanner.url} alt="Reklam" className="w-full h-full object-contain" style={{ imageRendering: "auto" }} />
           ) : (
             <div className="flex items-center px-8 h-full">
               <div>
