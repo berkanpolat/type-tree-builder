@@ -91,7 +91,7 @@ export default function AdminSikayetler() {
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [viewItem, setViewItem] = useState<SikayetItem | null>(null);
-
+  const [actionItem, setActionItem] = useState<SikayetItem | null>(null);
   // Filters
   const [filterTur, setFilterTur] = useState("all");
   const [filterFirma, setFilterFirma] = useState("");
