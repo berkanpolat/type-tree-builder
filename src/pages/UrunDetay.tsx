@@ -152,6 +152,7 @@ interface BenzerUrun {
 export default function UrunDetay() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const urunBanner = useBanner("urun-detay-alt-banner");
   const { toast } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const [firmaUnvani, setFirmaUnvani] = useState("");
