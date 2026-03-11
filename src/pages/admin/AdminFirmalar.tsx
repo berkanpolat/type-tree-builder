@@ -253,6 +253,7 @@ export default function AdminFirmalar() {
     setPaketDialogOpen(true);
     setPaketDialogLoading(true);
     setSelectedPaketId(firma.abonelik?.paket_id || "");
+    setEkstraHaklar({});
     try {
       const [quotaRes, paketlerRes] = await Promise.all([
         callApi("get-firma-quota", { token, userId: firma.user_id }),
@@ -260,6 +261,7 @@ export default function AdminFirmalar() {
       ]);
       setPaketDialogQuota(quotaRes);
       setAllPaketler(paketlerRes.paketler || []);
+      setEkstraHaklar(quotaRes?.abonelik?.ekstra_haklar || {});
     } catch {
       toast({ title: "Hata", description: "Paket bilgisi yüklenemedi", variant: "destructive" });
     } finally {
@@ -271,7 +273,7 @@ export default function AdminFirmalar() {
     if (!paketDialogFirma || !selectedPaketId) return;
     setPaketSaving(true);
     try {
-      const res = await callApi("update-firma-paket", { token, userId: paketDialogFirma.user_id, paketId: selectedPaketId });
+      const res = await callApi("update-firma-paket", { token, userId: paketDialogFirma.user_id, paketId: selectedPaketId, ekstraHaklar });
       if (res.error) throw new Error(res.error);
       toast({ title: "Başarılı", description: "Paket güncellendi." });
       setPaketDialogOpen(false);
@@ -280,6 +282,23 @@ export default function AdminFirmalar() {
       toast({ title: "Hata", description: err?.message, variant: "destructive" });
     } finally {
       setPaketSaving(false);
+    }
+  };
+
+  const handleSaveEkstraHaklar = async () => {
+    if (!paketDialogFirma) return;
+    setEkstraSaving(true);
+    try {
+      const res = await callApi("update-ekstra-haklar", { token, userId: paketDialogFirma.user_id, ekstraHaklar });
+      if (res.error) throw new Error(res.error);
+      toast({ title: "Başarılı", description: "Ekstra haklar güncellendi." });
+      // Refresh quota display
+      const quotaRes = await callApi("get-firma-quota", { token, userId: paketDialogFirma.user_id });
+      setPaketDialogQuota(quotaRes);
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message, variant: "destructive" });
+    } finally {
+      setEkstraSaving(false);
     }
   };
 
