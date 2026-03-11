@@ -443,7 +443,7 @@ export default function TekIhale() {
               onClick={() => ihaleSidebarBanner.linkUrl && window.open(ihaleSidebarBanner.linkUrl, "_blank")}
             >
               {ihaleSidebarBanner.url ? (
-                <img src={ihaleSidebarBanner.url} alt="Reklam" className="w-full h-auto object-contain bg-muted" style={{ imageRendering: "auto" }} />
+                <img src={ihaleSidebarBanner.url} alt="Reklam" className="w-full h-auto object-cover" style={{ imageRendering: "auto" }} />
               ) : (
                 <div className="py-10 px-6 flex flex-col items-center justify-center text-center" style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.75))" }}>
                   <p className="text-primary-foreground font-bold text-base">Tekstil A.Ş.</p>
@@ -539,7 +539,7 @@ export default function TekIhale() {
                         onClick={() => ihaleAltBanner.linkUrl && window.open(ihaleAltBanner.linkUrl, "_blank")}
                       >
                         {ihaleAltBanner.url ? (
-                          <img src={ihaleAltBanner.url} alt="Reklam" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
+                          <img src={ihaleAltBanner.url} alt="Reklam" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
                         ) : (
                           <div className="flex items-center px-8 h-full">
                             <div>

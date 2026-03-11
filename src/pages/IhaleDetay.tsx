@@ -1553,7 +1553,7 @@ export default function IhaleDetay() {
           onClick={() => ihaleDetayBanner.linkUrl && window.open(ihaleDetayBanner.linkUrl, "_blank")}
         >
           {ihaleDetayBanner.url ? (
-            <img src={ihaleDetayBanner.url} alt="Reklam" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
+            <img src={ihaleDetayBanner.url} alt="Reklam" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
           ) : (
             <div className="flex items-center px-8 h-full">
               <div>

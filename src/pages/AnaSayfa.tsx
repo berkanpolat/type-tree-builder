@@ -863,7 +863,7 @@ export default function AnaSayfa() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <div className="lg:col-span-3">
                 <div className="relative rounded-xl overflow-hidden h-48 cursor-pointer" onClick={() => bannerAna.linkUrl && window.open(bannerAna.linkUrl, "_blank")}>
-                  <img src={bannerAna.url || bannerKomisyonFallback} alt="Banner" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
+                  <img src={bannerAna.url || bannerKomisyonFallback} alt="Banner" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
                   {!bannerAna.url?.includes("banners/") && (
                     <div className="absolute inset-0 flex items-center px-8">
                       <div>
@@ -882,13 +882,13 @@ export default function AnaSayfa() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="relative rounded-xl overflow-hidden h-36 cursor-pointer" onClick={() => bannerAlt1.linkUrl && window.open(bannerAlt1.linkUrl, "_blank")}>
-                <img src={bannerAlt1.url || bannerStoktanFallback} alt="Banner 1" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
+                <img src={bannerAlt1.url || bannerStoktanFallback} alt="Banner 1" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
               </div>
               <div className="relative rounded-xl overflow-hidden h-36 cursor-pointer" onClick={() => bannerAlt2.linkUrl && window.open(bannerAlt2.linkUrl, "_blank")}>
-                <img src={bannerAlt2.url || bannerSatisFallback} alt="Banner 2" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
+                <img src={bannerAlt2.url || bannerSatisFallback} alt="Banner 2" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
               </div>
               <div className="relative rounded-xl overflow-hidden h-36 cursor-pointer" onClick={() => bannerAlt3.linkUrl && window.open(bannerAlt3.linkUrl, "_blank")}>
-                <img src={bannerAlt3.url || bannerIplikFallback} alt="Banner 3" className="w-full h-full object-contain bg-muted" style={{ imageRendering: "auto" }} />
+                <img src={bannerAlt3.url || bannerIplikFallback} alt="Banner 3" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
               </div>
             </div>
 
