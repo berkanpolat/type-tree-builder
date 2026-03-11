@@ -549,8 +549,17 @@ export default function TekIhale() {
                 </div>
               </div>
             )}
+
+            {/* Alt banner */}
+            {ihaleAltBanner.url && (
+              <div
+                className="rounded-xl overflow-hidden mt-4 h-32 cursor-pointer"
+                onClick={() => ihaleAltBanner.linkUrl && window.open(ihaleAltBanner.linkUrl, "_blank")}
+              >
+                <img src={ihaleAltBanner.url} alt="Reklam" className="w-full h-full object-cover" />
+              </div>
+            )}
           </div>
-        </div>
       </div>
       <Footer />
     </div>
