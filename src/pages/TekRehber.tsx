@@ -4,6 +4,7 @@ import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
+import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
 import Footer from "@/components/Footer";
