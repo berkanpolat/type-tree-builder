@@ -87,8 +87,8 @@ interface SikayetItem {
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminSikayetler() {
-  const { token } = useAdminAuth();
-  const [sikayetler, setSikayetler] = useState<SikayetItem[]>([]);
+  const { token, hasPermission } = useAdminAuth();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
