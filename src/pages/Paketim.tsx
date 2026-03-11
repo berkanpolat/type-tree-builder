@@ -325,6 +325,34 @@ const Paketim = () => {
         </div>
       </div>
 
+      {/* Ödeme Başarılı Dialogu */}
+      <AlertDialog open={successDialogOpen} onOpenChange={(open) => {
+        setSuccessDialogOpen(open);
+        if (!open) window.location.replace("/paketim");
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex flex-col items-center gap-3 py-4">
+              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center">
+                <Check className="w-8 h-8 text-green-600" />
+              </div>
+              <AlertDialogTitle className="text-xl">Ödeme Başarılı!</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-center text-sm">
+              PRO paketiniz başarıyla aktif edildi. Tüm PRO özelliklerini hemen kullanmaya başlayabilirsiniz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="justify-center sm:justify-center">
+            <AlertDialogAction onClick={() => {
+              setSuccessDialogOpen(false);
+              window.location.replace("/paketim");
+            }}>
+              Tamam
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* İptal Onay Dialogu */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <AlertDialogContent>
