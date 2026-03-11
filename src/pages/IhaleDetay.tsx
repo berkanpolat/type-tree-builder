@@ -1008,7 +1008,7 @@ export default function IhaleDetay() {
                 </div>
               </Card>
             )}
-            {/* Onay Bloğu - sahip: duzenleniyor/onay_bekliyor/reddedildi */}
+            {/* Onay Bloğu - sahip: duzenleniyor/onay_bekliyor/reddedildi/devam_ediyor(karar bilgisi) */}
             {!isAdminViewing && isOwner && (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor" || ihale.durum === "reddedildi") && (
               <Card className={`p-5 border-2 ${ihale.durum === "reddedildi" ? "border-red-400 bg-red-50 dark:bg-red-950/20" : "border-amber-300 bg-amber-50 dark:bg-amber-950/20"}`}>
                 <div className="flex items-center justify-between mb-2">
@@ -1023,13 +1023,30 @@ export default function IhaleDetay() {
                     {ihale.durum === "onay_bekliyor" ? "İnceleniyor" : ihale.durum === "reddedildi" ? "Reddedildi" : "Taslak"}
                   </Badge>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">
-                  {ihale.durum === "onay_bekliyor"
-                    ? "İhaleniz şu anda incelenmektedir. Onay sürecinde düzenleme yapamazsınız."
-                    : ihale.durum === "reddedildi"
-                    ? "İhaleniz reddedilmiştir. Düzenleyerek yeniden onaya gönderebilirsiniz."
-                    : "İhalenizin önizlemesini kontrol edin. Bilgiler doğruysa onaya gönderin veya düzenlemeye devam edin."}
-                </p>
+                {/* Admin karar bilgisi */}
+                {ihale.admin_karar_veren && (ihale.durum === "reddedildi" || ihale.durum === "devam_ediyor") && (
+                  <div className="mb-4 p-3 rounded-lg bg-background border border-border space-y-1.5">
+                    <p className="text-sm font-medium text-foreground">
+                      Verilen Karar: <span className={ihale.durum === "reddedildi" ? "text-destructive" : "text-emerald-600"}>{ihale.durum === "reddedildi" ? "Reddedildi" : "Onaylandı"}</span>
+                    </p>
+                    {ihale.admin_karar_sebebi && (
+                      <p className="text-sm text-destructive">Sebep: {ihale.admin_karar_sebebi}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">İşlemi yapan: {ihale.admin_karar_veren}</p>
+                    {ihale.admin_karar_tarihi && (
+                      <p className="text-xs text-muted-foreground">Tarih: {format(new Date(ihale.admin_karar_tarihi), "dd/MM/yyyy HH:mm", { locale: tr })}</p>
+                    )}
+                  </div>
+                )}
+                {!ihale.admin_karar_veren && (
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {ihale.durum === "onay_bekliyor"
+                      ? "İhaleniz şu anda incelenmektedir. Onay sürecinde düzenleme yapamazsınız."
+                      : ihale.durum === "reddedildi"
+                      ? "İhaleniz reddedilmiştir. Düzenleyerek yeniden onaya gönderebilirsiniz."
+                      : "İhalenizin önizlemesini kontrol edin. Bilgiler doğruysa onaya gönderin veya düzenlemeye devam edin."}
+                  </p>
+                )}
                 <div className="flex gap-3">
                   {(ihale.durum === "duzenleniyor" || ihale.durum === "reddedildi") && (
                     <Button
@@ -1070,6 +1087,26 @@ export default function IhaleDetay() {
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
+                  )}
+                </div>
+              </Card>
+            )}
+            {/* Onaylandıktan sonra karar bilgisi gösterimi */}
+            {!isAdminViewing && isOwner && ihale.durum === "devam_ediyor" && ihale.admin_karar_veren && (
+              <Card className="p-5 border-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Onaylandı
+                  </h3>
+                  <Badge className="bg-emerald-500 text-white">Yayında</Badge>
+                </div>
+                <div className="p-3 rounded-lg bg-background border border-border space-y-1.5">
+                  <p className="text-sm font-medium text-foreground">
+                    Verilen Karar: <span className="text-emerald-600">Onaylandı</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">İşlemi yapan: {ihale.admin_karar_veren}</p>
+                  {ihale.admin_karar_tarihi && (
+                    <p className="text-xs text-muted-foreground">Tarih: {format(new Date(ihale.admin_karar_tarihi), "dd/MM/yyyy HH:mm", { locale: tr })}</p>
                   )}
                 </div>
               </Card>
