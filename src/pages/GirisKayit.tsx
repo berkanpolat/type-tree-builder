@@ -113,7 +113,7 @@ const GirisKayit = () => {
     setVerifyingOtp(true);
     try {
       const { data, error } = await supabase.functions.invoke("verify-sms-otp", {
-        body: { telefon, kod: otpCode },
+        body: { telefon: getFullPhone(), kod: otpCode },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
