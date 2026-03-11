@@ -322,7 +322,7 @@ export default function AnaSayfa() {
 
     setAllUrunler(enriched);
     setUrunLoading(false);
-  }, [activeFilter, appliedSearchTerm, selectedKategori, selectedGrupId, selectedTurId, kategoriSecenekler, currentUserId, isFiltered, filterState?.minFiyat, filterState?.maxFiyat]);
+  }, [activeFilter, appliedSearchTerm, selectedKategori, selectedGrupId, selectedTurId, kategoriSecenekler, currentUserId, isFiltered, filterState?.minFiyat, filterState?.maxFiyat, filterState?.renkFiltreler?.length, filterState?.bedenFiltreler?.length]);
 
   // Client-side filtering
   const filteredUrunler = useMemo(() => {
