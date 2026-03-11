@@ -346,15 +346,15 @@ export default function IhaleDetay() {
     setIhaleFiltreler(filtreData);
     filtreData.forEach(f => idsToResolve.push(f.secenek_id));
 
-    // Collect UUID values from teknik_detaylar for resolving
+    // Collect UUID values from teknik_detaylar for resolving (supports both single UUIDs and arrays)
     const teknikData = (ihaleData.teknik_detaylar as Record<string, any>) || {};
-    const teknikUUIDs: string[] = [];
     Object.values(teknikData).forEach(val => {
-      if (typeof val === "string" && isUUID(val)) teknikUUIDs.push(val);
+      if (typeof val === "string" && isUUID(val)) {
+        idsToResolve.push(val);
+      } else if (Array.isArray(val)) {
+        val.forEach(v => { if (typeof v === "string" && isUUID(v)) idsToResolve.push(v); });
+      }
     });
-
-    // Add teknik UUIDs to resolve list
-    teknikUUIDs.forEach(uid => idsToResolve.push(uid));
 
     // Resolve names
     if (idsToResolve.length > 0) {
@@ -369,10 +369,15 @@ export default function IhaleDetay() {
         if (ihaleData.hizmet_kategori_id) setBreadcrumbKategori(map[ihaleData.hizmet_kategori_id] || "");
         if (ihaleData.hizmet_tur_id) setBreadcrumbGrup(map[ihaleData.hizmet_tur_id] || "");
 
-        // Resolve teknik detaylar values
+        // Resolve teknik detaylar values (single UUID, array of UUIDs, or plain text)
         const resolved: Record<string, string> = {};
         Object.entries(teknikData).forEach(([key, val]) => {
-          if (typeof val === "string" && isUUID(val)) {
+          if (Array.isArray(val)) {
+            const resolvedNames = val
+              .map(v => (typeof v === "string" && isUUID(v) ? map[v] : v))
+              .filter(Boolean);
+            resolved[key] = resolvedNames.length > 0 ? resolvedNames.join(", ") : "";
+          } else if (typeof val === "string" && isUUID(val)) {
             resolved[key] = map[val] || String(val);
           } else {
             resolved[key] = val ? String(val) : "";
@@ -384,7 +389,11 @@ export default function IhaleDetay() {
       // No UUIDs to resolve, just use raw values
       const resolved: Record<string, string> = {};
       Object.entries(teknikData).forEach(([key, val]) => {
-        resolved[key] = val ? String(val) : "";
+        if (Array.isArray(val)) {
+          resolved[key] = val.filter(Boolean).join(", ");
+        } else {
+          resolved[key] = val ? String(val) : "";
+        }
       });
       setResolvedTeknikDetaylar(resolved);
     }
@@ -858,11 +867,15 @@ export default function IhaleDetay() {
             {/* Teknik Detaylar */}
             {Object.keys(resolvedTeknikDetaylar).length > 0 && (
               <Card className="p-6">
-                <h3 className="text-lg font-bold text-foreground mb-4">Ürün/Hizmet Teknik Detaylar</h3>
+                <h3 className="text-lg font-bold text-foreground mb-4">
+                  {ihale?.ihale_turu === "hizmet_alim" ? "Hizmet Bilgileri" : "Ürün Teknik Detaylar"}
+                </h3>
                 <div className="divide-y divide-border">
-                  {Object.entries(resolvedTeknikDetaylar).map(([key, value]) => (
-                    <InfoRow key={key} label={formatLabel(key)} value={value || null} />
-                  ))}
+                  {Object.entries(resolvedTeknikDetaylar)
+                    .filter(([_, value]) => value && value.trim() !== "")
+                    .map(([key, value]) => (
+                      <InfoRow key={key} label={formatLabel(key)} value={value} />
+                    ))}
                 </div>
               </Card>
             )}
