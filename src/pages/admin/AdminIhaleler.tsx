@@ -96,7 +96,6 @@ const TEKLIF_USULU_LABELS: Record<string, string> = {
 
 const DURUM_LABELS: Record<string, string> = {
   duzenleniyor: "Düzenleniyor",
-  taslak: "Taslak",
   onay_bekliyor: "Onay Bekliyor",
   devam_ediyor: "Devam Ediyor",
   tamamlandi: "Tamamlandı",
