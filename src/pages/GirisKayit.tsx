@@ -184,7 +184,10 @@ const GirisKayit = () => {
       toast({ title: "Giriş başarılı" });
       navigate("/dashboard");
     } catch (error: any) {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      let msg = error.message;
+      if (msg?.includes("Invalid login")) msg = "E-posta veya şifre hatalı.";
+      else if (msg?.includes("Email not confirmed")) msg = "E-posta adresiniz henüz doğrulanmamış.";
+      toast({ title: "Hata", description: msg, variant: "destructive" });
     } finally {
       setLoginLoading(false);
     }
