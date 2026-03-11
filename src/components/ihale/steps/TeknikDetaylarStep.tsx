@@ -78,6 +78,35 @@ function useChildOptions(parentId: string | null) {
   });
 }
 
+function useMultiChildOptions(parentIds: string[]) {
+  return useQuery({
+    queryKey: ["multi_dependent_options", parentIds],
+    queryFn: async () => {
+      if (!parentIds.length) return [];
+      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").in("parent_id", parentIds).order("name");
+      return sortSecenekler(data || []);
+    },
+    enabled: parentIds.length > 0,
+  });
+}
+
+// Multi-select dependent dropdown supporting multiple parents
+function MultiDependentMultiParentField({ label, parentIds, value, onChange, disabled }: { label: string; parentIds: string[]; value: string[]; onChange: (v: string[]) => void; disabled?: boolean }) {
+  const { data: options } = useMultiChildOptions(parentIds);
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <MultiSelectDropdown
+        options={(options || []).map(o => ({ id: o.id, name: o.name }))}
+        selected={value || []}
+        onChange={onChange}
+        disabled={disabled || !parentIds.length}
+        placeholder={parentIds.length ? `${label} seçiniz` : "Önce üst seçimi yapınız"}
+      />
+    </div>
+  );
+}
+
 // Multi-select dropdown field that fetches from DB category
 function MultiDropdownField({ label, kategoriName, value, onChange }: { label: string; kategoriName: string | string[]; value: string[]; onChange: (v: string[]) => void }) {
   const { data: options } = useKategoriSecenekler(kategoriName);
