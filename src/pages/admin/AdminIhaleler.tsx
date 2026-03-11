@@ -714,7 +714,7 @@ export default function AdminIhaleler() {
                             className="text-[11px] h-7 px-2.5 gap-1"
                             style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
                           >
-                            <TrendingUp className="w-3 h-3" /> Takip
+                            <Activity className="w-3 h-3" /> Takip
                           </Button>
                         )}
 
