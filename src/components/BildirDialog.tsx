@@ -185,7 +185,7 @@ export default function BildirDialog({ open, onOpenChange, tur, referansId }: Bi
               <SelectTrigger>
                 <SelectValue placeholder="Lütfen bir kategori seçiniz.." />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[201]">
                 {sebepler.map((s) => (
                   <SelectItem key={s} value={s}>{s}</SelectItem>
                 ))}
