@@ -344,17 +344,26 @@ const GirisKayit = () => {
             </Button>
 
             {/* Resend */}
-            {otpCountdown <= 0 && (
-              <Button
-                variant="ghost"
-                className="w-full text-sm text-primary"
-                onClick={handleSendOtp}
-                disabled={sendingOtp}
-              >
-                {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                Kodu Tekrar Gönder
-              </Button>
-            )}
+            <div className="text-center space-y-2">
+              {otpCountdown > 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Kodu alamadınız mı? <span className="text-foreground font-medium">{minutes}:{String(seconds).padStart(2, "0")}</span> sonra tekrar gönderebilirsiniz.
+                </p>
+              ) : (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Kodu alamadınız mı?</p>
+                  <Button
+                    variant="link"
+                    className="text-sm text-primary p-0 h-auto"
+                    onClick={() => { setOtpCode(""); handleSendOtp(); }}
+                    disabled={sendingOtp}
+                  >
+                    {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : null}
+                    Yeniden Kod Gönder
+                  </Button>
+                </div>
+              )}
+            </div>
 
             {/* Back button */}
             <Button
