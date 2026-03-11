@@ -100,6 +100,7 @@ const Paketim = () => {
     try {
       const { data, error } = await supabase.functions.invoke("cancel-subscription");
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
       if (data?.success) {
         const cancelDate = data.cancel_at
           ? new Date(data.cancel_at).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })

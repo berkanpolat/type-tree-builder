@@ -31,7 +31,7 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("Kullanıcı doğrulanamadı");
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     if (customers.data.length === 0) throw new Error("Stripe müşteri kaydı bulunamadı");
 
@@ -57,9 +57,10 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
+    console.error("Cancel subscription error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: 400,
     });
   }
 });
