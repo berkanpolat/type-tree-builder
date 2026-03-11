@@ -88,7 +88,7 @@ export default function Hakkimizda() {
             Tekstil A.Ş., tekstil endüstrisinin tamamını tek bir dijital platformda buluşturan yeni nesil bir iş platformudur.
           </p>
           <p>
-            Markalar, üreticiler, tedarikçiler, fason atölyeler, mümessil ofisler ve bireysel profesyoneller; üretimden tedarike, satın almadan satışa, insan kaynağından iş birliklerine kadar tüm süreçlerini Tekstil A.Ş. üzerinden yönetebilir.
+            Tekstil dünyasının üretimden tedariğe, satın almadan satışa kadar tüm kritik süreçlerini dijitalleştiren güçlü bir iş ağı kurar.
           </p>
           <p>
             Bugün tekstil sektörü hâlâ telefon rehberleri, kişisel ilişkiler, WhatsApp grupları ve dağınık kanallar üzerinden ilerliyor. Bu yapı; zamanı boşa harcıyor, verimliliği düşürüyor ve işletmeleri sınırlı network'lere mahkûm ediyor.
