@@ -98,6 +98,10 @@ export default function AnaSayfa() {
   const navigate = useNavigate();
   const location = useLocation();
   const [firmaUnvani, setFirmaUnvani] = useState("");
+  const bannerAna = useBanner("anasayfa-ana-banner", bannerKomisyonFallback);
+  const bannerAlt1 = useBanner("anasayfa-alt-1", bannerStoktanFallback);
+  const bannerAlt2 = useBanner("anasayfa-alt-2", bannerSatisFallback);
+  const bannerAlt3 = useBanner("anasayfa-alt-3", bannerIplikFallback);
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
