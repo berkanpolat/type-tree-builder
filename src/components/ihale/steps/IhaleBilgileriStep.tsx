@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { sortFirmaTurleri } from "@/lib/sort-utils";
+import { sortFirmaTurleri, sortSecenekler } from "@/lib/sort-utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FileText, X, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import MultiSelectDropdown from "@/components/firma-bilgileri/MultiSelectDropdown";
+import SearchableSelect from "@/components/ui/searchable-select";
 import type { IhaleFormData } from "@/pages/YeniIhale";
 
 interface Props {
@@ -29,7 +29,7 @@ function useKategoriSecenekler(kategoriName: string, enabled = true) {
       const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", kategoriName).single();
       if (!kat) return [];
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("kategori_id", kat.id).is("parent_id", null).order("name");
-      return data || [];
+      return sortSecenekler(data || []);
     },
     enabled,
   });
@@ -41,7 +41,7 @@ function useAltSecenekler(parentId: string | null) {
     queryFn: async () => {
       if (!parentId) return [];
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", parentId).order("name");
-      return data || [];
+      return sortSecenekler(data || []);
     },
     enabled: !!parentId,
   });
@@ -81,7 +81,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
         query = query.in("firma_turu_id", selectedFirmaTuruIds);
       }
       const { data } = await query;
-      return data || [];
+      return sortSecenekler(data || []);
     },
     enabled: formData.ozel_filtreleme,
   });
@@ -167,28 +167,30 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
           <Textarea value={formData.aciklama} onChange={(e) => updateForm({ aciklama: e.target.value })} placeholder="İhale açıklaması giriniz" rows={4} maxLength={2000} />
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
           <div className="space-y-2">
             <Label>İhale Başlangıç Fiyatı (Birim Fiyat) *</Label>
             <Input type="number" value={formData.baslangic_fiyati ?? ""} onChange={(e) => updateForm({ baslangic_fiyati: e.target.value ? Number(e.target.value) : null })} placeholder="0.00" min={0} />
           </div>
           <div className="space-y-2">
             <Label>Birim *</Label>
-            <Select value={formData.birim} onValueChange={(v) => updateForm({ birim: v })}>
-              <SelectTrigger><SelectValue placeholder="Birim seçiniz" /></SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {(birimOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={(birimOptions || []).map(o => ({ value: o.name, label: o.name }))}
+              value={formData.birim}
+              onValueChange={(v) => updateForm({ birim: v })}
+              placeholder="Birim seçiniz"
+              searchPlaceholder="Birim ara..."
+            />
           </div>
           <div className="space-y-2">
             <Label>Para Birimi</Label>
-            <Select value={formData.para_birimi} onValueChange={(v) => updateForm({ para_birimi: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {PARA_BIRIMLERI.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={PARA_BIRIMLERI.map(p => ({ value: p, label: p }))}
+              value={formData.para_birimi}
+              onValueChange={(v) => updateForm({ para_birimi: v })}
+              placeholder="Para birimi"
+              searchPlaceholder="Ara..."
+            />
           </div>
         </div>
 
@@ -202,12 +204,13 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>KDV Durumu *</Label>
-            <Select value={formData.kdv_durumu} onValueChange={(v) => updateForm({ kdv_durumu: v })}>
-              <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {(kdvOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={(kdvOptions || []).map(o => ({ value: o.name, label: o.name }))}
+              value={formData.kdv_durumu}
+              onValueChange={(v) => updateForm({ kdv_durumu: v })}
+              placeholder="Seçiniz"
+              searchPlaceholder="Ara..."
+            />
           </div>
           <div className="space-y-2">
             <Label>Ödeme Seçenekleri *</Label>
@@ -232,24 +235,26 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
           </div>
           <div className="space-y-2">
             <Label>Kargo Masrafı Ödemesi *</Label>
-            <Select value={formData.kargo_masrafi} onValueChange={(v) => updateForm({ kargo_masrafi: v })}>
-              <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {(kargoMasrafiOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={(kargoMasrafiOptions || []).map(o => ({ value: o.name, label: o.name }))}
+              value={formData.kargo_masrafi}
+              onValueChange={(v) => updateForm({ kargo_masrafi: v })}
+              placeholder="Seçiniz"
+              searchPlaceholder="Ara..."
+            />
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Kargo Şirketi Anlaşması *</Label>
-            <Select value={formData.kargo_sirketi_anlasmasi} onValueChange={(v) => updateForm({ kargo_sirketi_anlasmasi: v })}>
-              <SelectTrigger><SelectValue placeholder="Seçiniz" /></SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {(kargoSirketiOptions || []).map((o) => <SelectItem key={o.id} value={o.name}>{o.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={(kargoSirketiOptions || []).map(o => ({ value: o.name, label: o.name }))}
+              value={formData.kargo_sirketi_anlasmasi}
+              onValueChange={(v) => updateForm({ kargo_sirketi_anlasmasi: v })}
+              placeholder="Seçiniz"
+              searchPlaceholder="Ara..."
+            />
           </div>
           <div className="space-y-2">
             <Label>Teslimat Yeri</Label>
@@ -339,14 +344,14 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
                   {tipi === "firma_tipi" && selectedFirmaTuruIds.length === 0 && (
                     <p className="text-xs text-muted-foreground">Önce firma türü seçiniz</p>
                   )}
-                  <Select onValueChange={(v) => addFilter(tipi, v)} disabled={tipi === "firma_tipi" && selectedFirmaTuruIds.length === 0}>
-                    <SelectTrigger className="w-full"><SelectValue placeholder={`${label} seçiniz`} /></SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {(options || []).map((o: any) => (
-                        <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={(options || []).map((o: any) => ({ value: o.id, label: o.name }))}
+                    value=""
+                    onValueChange={(v) => addFilter(tipi, v)}
+                    disabled={tipi === "firma_tipi" && selectedFirmaTuruIds.length === 0}
+                    placeholder={`${label} seçiniz`}
+                    searchPlaceholder={`${label} ara...`}
+                  />
                   <div className="flex flex-wrap gap-1 mt-1">
                     {formData.filtreler.filter((f) => f.filtre_tipi === tipi).map((f) => (
                       <Badge key={f.secenek_id} variant="secondary" className="gap-1">
@@ -362,22 +367,21 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
               <div className="space-y-1">
                 <Label className="text-sm">Sertifika</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Select value={selectedSertifikaKat || ""} onValueChange={(v) => setSelectedSertifikaKat(v)}>
-                    <SelectTrigger><SelectValue placeholder="Sertifika Kategorisi" /></SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {(sertifikaKategorileri || []).map((o: any) => (
-                        <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select onValueChange={(v) => addFilter("sertifika", v)} disabled={!selectedSertifikaKat}>
-                    <SelectTrigger><SelectValue placeholder="Sertifika Türü" /></SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {(sertifikaTurleri || []).map((o: any) => (
-                        <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={(sertifikaKategorileri || []).map((o: any) => ({ value: o.id, label: o.name }))}
+                    value={selectedSertifikaKat || ""}
+                    onValueChange={(v) => setSelectedSertifikaKat(v)}
+                    placeholder="Sertifika Kategorisi"
+                    searchPlaceholder="Kategori ara..."
+                  />
+                  <SearchableSelect
+                    options={(sertifikaTurleri || []).map((o: any) => ({ value: o.id, label: o.name }))}
+                    value=""
+                    onValueChange={(v) => addFilter("sertifika", v)}
+                    disabled={!selectedSertifikaKat}
+                    placeholder="Sertifika Türü"
+                    searchPlaceholder="Tür ara..."
+                  />
                 </div>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {formData.filtreler.filter((f) => f.filtre_tipi === "sertifika").map((f) => (
@@ -392,14 +396,13 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId }: Pr
               {/* İhale Bölgesi (İl) */}
               <div className="space-y-1">
                 <Label className="text-sm">İhale Bölgesi</Label>
-                <Select onValueChange={(v) => addFilter("il", v)}>
-                  <SelectTrigger className="w-full"><SelectValue placeholder="İl seçiniz" /></SelectTrigger>
-                  <SelectContent className="bg-popover z-50">
-                    {(iller || []).map((o: any) => (
-                      <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={(iller || []).map((o: any) => ({ value: o.id, label: o.name }))}
+                  value=""
+                  onValueChange={(v) => addFilter("il", v)}
+                  placeholder="İl seçiniz"
+                  searchPlaceholder="İl ara..."
+                />
                 <div className="flex flex-wrap gap-1 mt-1">
                   {formData.filtreler.filter((f) => f.filtre_tipi === "il").map((f) => (
                     <Badge key={f.secenek_id} variant="secondary" className="gap-1">

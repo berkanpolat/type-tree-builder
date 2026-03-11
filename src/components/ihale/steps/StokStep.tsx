@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Package, Trash2, X, Plus } from "lucide-react";
 import type { IhaleFormData } from "@/pages/YeniIhale";
+import { sortSecenekler } from "@/lib/sort-utils";
+import SearchableSelect from "@/components/ui/searchable-select";
 
 interface Props {
   formData: IhaleFormData;
@@ -33,7 +35,7 @@ function useKategoriSecenekler(kategoriName: string) {
       const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", kategoriName).single();
       if (!kat) return [];
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("kategori_id", kat.id).is("parent_id", null).order("name");
-      return data || [];
+      return sortSecenekler(data || []);
     },
   });
 }
@@ -42,15 +44,15 @@ export default function StokStep({ formData, updateForm }: Props) {
   const { data: kategoriName } = useCategoryName(formData.urun_kategori_id || formData.hizmet_kategori_id);
   const isHazirGiyim = kategoriName?.toLowerCase().includes("hazır giyim");
 
-  const varyant1Label = isHazirGiyim ? "Beden" : "Birim";
-  const varyant1KategoriName = isHazirGiyim ? "Beden" : "Birim Türleri";
+  const varyant1Label = isHazirGiyim ? "Beden" : "Varyant";
+  const varyant1KategoriName = isHazirGiyim ? "Beden" : "Beden";
   const varyant2Label = "Renk";
+
+  // Birim comes from İhale Bilgileri step - no separate birim selection here
+  const birimFromForm = formData.birim || "Adet";
 
   const { data: varyant1Options } = useKategoriSecenekler(varyant1KategoriName);
   const { data: renkOptions } = useKategoriSecenekler("Renk");
-
-  // Birim from previous step
-  const birimFromForm = formData.birim;
 
   const [selectedV1, setSelectedV1] = useState<string[]>([]);
   const [selectedV2, setSelectedV2] = useState<string[]>([]);
@@ -59,8 +61,6 @@ export default function StokStep({ formData, updateForm }: Props) {
 
   const handleGenerate = () => {
     const newStoklar: IhaleFormData["stoklar"] = [];
-    // Use birim from form for miktar_tipi
-    const miktarTipi = birimFromForm || "Adet";
     for (const v1 of selectedV1) {
       for (const v2 of selectedV2) {
         if (!formData.stoklar.some((s) => s.varyant_1_value === getOptionName(varyant1Options, v1) && s.varyant_2_value === getOptionName(renkOptions, v2))) {
@@ -69,7 +69,7 @@ export default function StokStep({ formData, updateForm }: Props) {
             varyant_1_value: getOptionName(varyant1Options, v1),
             varyant_2_label: varyant2Label,
             varyant_2_value: getOptionName(renkOptions, v2),
-            miktar_tipi: miktarTipi,
+            miktar_tipi: birimFromForm,
             stok_sayisi: 0,
           });
         }
@@ -99,11 +99,9 @@ export default function StokStep({ formData, updateForm }: Props) {
         <h3 className="text-lg font-semibold text-foreground">Stok</h3>
       </div>
       <p className="text-sm text-muted-foreground mb-2">{kategoriName} Stok</p>
-      {birimFromForm && (
-        <p className="text-sm text-muted-foreground mb-6">
-          Birim: <strong>{birimFromForm}</strong> (İhale bilgilerinde seçildi)
-        </p>
-      )}
+      <p className="text-sm text-muted-foreground mb-6">
+        Birim: <strong>{birimFromForm}</strong> (İhale bilgilerinde seçildi)
+      </p>
 
       <div className="border rounded-lg p-4 space-y-4">
         <div className="flex items-center gap-4 flex-wrap">
@@ -117,18 +115,14 @@ export default function StokStep({ formData, updateForm }: Props) {
                   <button onClick={() => toggleSelection(selectedV1, setSelectedV1, id)}><X className="w-3 h-3" /></button>
                 </Badge>
               ))}
-              <select
-                className="border-0 bg-transparent text-sm outline-none flex-1 min-w-[100px]"
+              <SearchableSelect
+                options={(varyant1Options || []).filter((o) => !selectedV1.includes(o.id)).map(o => ({ value: o.id, label: o.name }))}
                 value=""
-                onChange={(e) => {
-                  if (e.target.value) toggleSelection(selectedV1, setSelectedV1, e.target.value);
-                }}
-              >
-                <option value="">Ekle...</option>
-                {(varyant1Options || []).filter((o) => !selectedV1.includes(o.id)).map((o) => (
-                  <option key={o.id} value={o.id}>{o.name}</option>
-                ))}
-              </select>
+                onValueChange={(v) => { if (v) toggleSelection(selectedV1, setSelectedV1, v); }}
+                placeholder="Ekle..."
+                searchPlaceholder="Ara..."
+                triggerClassName="border-0 shadow-none h-8 min-w-[100px]"
+              />
             </div>
           </div>
 
@@ -142,18 +136,14 @@ export default function StokStep({ formData, updateForm }: Props) {
                   <button onClick={() => toggleSelection(selectedV2, setSelectedV2, id)}><X className="w-3 h-3" /></button>
                 </Badge>
               ))}
-              <select
-                className="border-0 bg-transparent text-sm outline-none flex-1 min-w-[100px]"
+              <SearchableSelect
+                options={(renkOptions || []).filter((o) => !selectedV2.includes(o.id)).map(o => ({ value: o.id, label: o.name }))}
                 value=""
-                onChange={(e) => {
-                  if (e.target.value) toggleSelection(selectedV2, setSelectedV2, e.target.value);
-                }}
-              >
-                <option value="">Ekle...</option>
-                {(renkOptions || []).filter((o) => !selectedV2.includes(o.id)).map((o) => (
-                  <option key={o.id} value={o.id}>{o.name}</option>
-                ))}
-              </select>
+                onValueChange={(v) => { if (v) toggleSelection(selectedV2, setSelectedV2, v); }}
+                placeholder="Ekle..."
+                searchPlaceholder="Ara..."
+                triggerClassName="border-0 shadow-none h-8 min-w-[100px]"
+              />
             </div>
           </div>
 
@@ -178,7 +168,7 @@ export default function StokStep({ formData, updateForm }: Props) {
                 <TableRow key={i}>
                   <TableCell>{stok.varyant_1_value}</TableCell>
                   <TableCell>{stok.varyant_2_value}</TableCell>
-                  <TableCell>{stok.miktar_tipi}</TableCell>
+                  <TableCell>{birimFromForm}</TableCell>
                   <TableCell>
                     <Input
                       type="number"

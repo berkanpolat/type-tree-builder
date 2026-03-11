@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Check, ChevronDown, X } from "lucide-react";
+import { Check, ChevronDown, X, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sortSecenekler } from "@/lib/sort-utils";
 
 interface Option {
   id: string;
@@ -17,6 +18,7 @@ interface Props {
 
 export default function MultiSelectDropdown({ options, selected, onChange, placeholder = "Seçiniz", disabled }: Props) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,6 +32,12 @@ export default function MultiSelectDropdown({ options, selected, onChange, place
   const toggle = (id: string) => {
     onChange(selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id]);
   };
+
+  const sortedOptions = sortSecenekler(options);
+  const filteredOptions = sortedOptions.filter(o => {
+    if (!search.trim()) return true;
+    return o.name.toLowerCase().includes(search.toLowerCase());
+  });
 
   const selectedNames = options.filter(o => selected.includes(o.id)).map(o => o.name);
 
@@ -60,23 +68,39 @@ export default function MultiSelectDropdown({ options, selected, onChange, place
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-md border bg-popover text-popover-foreground shadow-md">
-          {options.map(opt => (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={() => toggle(opt.id)}
-              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
-            >
-              <div className={cn(
-                "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-primary",
-                selected.includes(opt.id) ? "bg-primary text-primary-foreground" : "opacity-50"
-              )}>
-                {selected.includes(opt.id) && <Check className="h-3 w-3" />}
-              </div>
-              {opt.name}
-            </button>
-          ))}
+        <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md">
+          <div className="flex items-center border-b px-3 py-2">
+            <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+            <input
+              placeholder="Ara..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex h-8 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+          <div className="max-h-60 overflow-auto">
+            {filteredOptions.length === 0 ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">Sonuç bulunamadı</div>
+            ) : (
+              filteredOptions.map(opt => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => toggle(opt.id)}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+                >
+                  <div className={cn(
+                    "flex h-4 w-4 shrink-0 items-center justify-center rounded-sm border border-primary",
+                    selected.includes(opt.id) ? "bg-primary text-primary-foreground" : "opacity-50"
+                  )}>
+                    {selected.includes(opt.id) && <Check className="h-3 w-3" />}
+                  </div>
+                  {opt.name}
+                </button>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>

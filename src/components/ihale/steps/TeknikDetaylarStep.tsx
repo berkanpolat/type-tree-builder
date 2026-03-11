@@ -2,10 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Settings } from "lucide-react";
 import type { IhaleFormData } from "@/pages/YeniIhale";
 import HizmetTeknikFields from "./HizmetTeknikFields";
+import MultiSelectDropdown from "@/components/firma-bilgileri/MultiSelectDropdown";
+import SearchableSelect from "@/components/ui/searchable-select";
+import { sortSecenekler } from "@/lib/sort-utils";
 
 interface Props {
   formData: IhaleFormData;
@@ -31,45 +33,52 @@ function useKategoriSecenekler(kategoriName: string) {
       const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", kategoriName).single();
       if (!kat) return [];
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("kategori_id", kat.id).is("parent_id", null).order("name");
-      return data || [];
+      return sortSecenekler(data || []);
     },
   });
 }
 
-function DropdownField({ label, kategoriName, value, onChange }: { label: string; kategoriName: string; value: string; onChange: (v: string) => void }) {
-  const { data: options } = useKategoriSecenekler(kategoriName);
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      <Select value={value || ""} onValueChange={onChange}>
-        <SelectTrigger><SelectValue placeholder={`${label} seçiniz`} /></SelectTrigger>
-        <SelectContent className="bg-popover z-50">
-          {(options || []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
-        </SelectContent>
-      </Select>
-    </div>
-  );
-}
-
-function DependentDropdownField({ label, parentId, value, onChange, disabled }: { label: string; parentId: string | null; value: string; onChange: (v: string) => void; disabled?: boolean }) {
-  const { data: options } = useQuery({
+function useChildOptions(parentId: string | null) {
+  return useQuery({
     queryKey: ["dependent_options", parentId],
     queryFn: async () => {
       if (!parentId) return [];
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", parentId).order("name");
-      return data || [];
+      return sortSecenekler(data || []);
     },
     enabled: !!parentId,
   });
+}
+
+// Multi-select dropdown field that fetches from DB category
+function MultiDropdownField({ label, kategoriName, value, onChange }: { label: string; kategoriName: string; value: string[]; onChange: (v: string[]) => void }) {
+  const { data: options } = useKategoriSecenekler(kategoriName);
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
-      <Select value={value || ""} onValueChange={onChange} disabled={disabled || !parentId}>
-        <SelectTrigger><SelectValue placeholder={parentId ? `${label} seçiniz` : "Önce grup seçiniz"} /></SelectTrigger>
-        <SelectContent className="bg-popover z-50">
-          {(options || []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
-        </SelectContent>
-      </Select>
+      <MultiSelectDropdown
+        options={(options || []).map(o => ({ id: o.id, name: o.name }))}
+        selected={value || []}
+        onChange={onChange}
+        placeholder={`${label} seçiniz`}
+      />
+    </div>
+  );
+}
+
+// Multi-select dependent dropdown (children of a parent)
+function MultiDependentDropdownField({ label, parentId, value, onChange, disabled }: { label: string; parentId: string | null; value: string[]; onChange: (v: string[]) => void; disabled?: boolean }) {
+  const { data: options } = useChildOptions(parentId);
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <MultiSelectDropdown
+        options={(options || []).map(o => ({ id: o.id, name: o.name }))}
+        selected={value || []}
+        onChange={onChange}
+        disabled={disabled || !parentId}
+        placeholder={parentId ? `${label} seçiniz` : "Önce üst seçimi yapınız"}
+      />
     </div>
   );
 }
@@ -83,70 +92,18 @@ function TextField({ label, value, onChange, placeholder }: { label: string; val
   );
 }
 
-// Kategori seçimi component for hizmet teknik detaylarında ürün kategori/grup/tür seçimi
-function UrunKategoriSecimi({ label, td, setTD, prefixKey }: { label: string; td: Record<string, any>; setTD: (k: string, v: any) => void; prefixKey: string }) {
-  const { data: kategoriler } = useQuery({
-    queryKey: ["teknik_urun_kategoriler"],
-    queryFn: async () => {
-      const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "Ana Ürün Kategorileri").single();
-      if (!kat) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("kategori_id", kat.id).is("parent_id", null).order("name");
-      return data || [];
-    },
-  });
-
-  const selectedKat = td[`${prefixKey}_kategori`];
-  const { data: gruplar } = useQuery({
-    queryKey: ["teknik_urun_gruplar", selectedKat],
-    queryFn: async () => {
-      if (!selectedKat) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", selectedKat).order("name");
-      return data || [];
-    },
-    enabled: !!selectedKat,
-  });
-
-  const selectedGrup = td[`${prefixKey}_grup`];
-  const { data: turler } = useQuery({
-    queryKey: ["teknik_urun_turler", selectedGrup],
-    queryFn: async () => {
-      if (!selectedGrup) return [];
-      const { data } = await supabase.from("firma_bilgi_secenekleri").select("*").eq("parent_id", selectedGrup).order("name");
-      return data || [];
-    },
-    enabled: !!selectedGrup,
-  });
-
+function SearchableDropdownField({ label, kategoriName, value, onChange }: { label: string; kategoriName: string; value: string; onChange: (v: string) => void }) {
+  const { data: options } = useKategoriSecenekler(kategoriName);
   return (
-    <div className="space-y-3 border rounded-lg p-3">
-      <Label className="text-sm font-medium">{label}</Label>
-      <div className="space-y-2">
-        <Label className="text-xs">Ana Kategori</Label>
-        <Select value={selectedKat || ""} onValueChange={(v) => { setTD(`${prefixKey}_kategori`, v); setTD(`${prefixKey}_grup`, ""); setTD(`${prefixKey}_tur`, ""); }}>
-          <SelectTrigger><SelectValue placeholder="Kategori seçiniz" /></SelectTrigger>
-          <SelectContent className="bg-popover z-50">
-            {(kategoriler || []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label className="text-xs">Grup</Label>
-        <Select value={selectedGrup || ""} onValueChange={(v) => { setTD(`${prefixKey}_grup`, v); setTD(`${prefixKey}_tur`, ""); }} disabled={!selectedKat}>
-          <SelectTrigger><SelectValue placeholder="Grup seçiniz" /></SelectTrigger>
-          <SelectContent className="bg-popover z-50">
-            {(gruplar || []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-2">
-        <Label className="text-xs">Tür</Label>
-        <Select value={td[`${prefixKey}_tur`] || ""} onValueChange={(v) => setTD(`${prefixKey}_tur`, v)} disabled={!selectedGrup}>
-          <SelectTrigger><SelectValue placeholder="Tür seçiniz" /></SelectTrigger>
-          <SelectContent className="bg-popover z-50">
-            {(turler || []).map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <SearchableSelect
+        options={(options || []).map(o => ({ value: o.id, label: o.name }))}
+        value={value || ""}
+        onValueChange={onChange}
+        placeholder={`${label} seçiniz`}
+        searchPlaceholder="Ara..."
+      />
     </div>
   );
 }
@@ -162,6 +119,13 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
 
   const isHizmet = formData.ihale_turu === "hizmet_alim";
 
+  // Helper: ensure value is always string[] for multi-select fields
+  const toArr = (v: any): string[] => {
+    if (Array.isArray(v)) return v;
+    if (typeof v === "string" && v) return [v];
+    return [];
+  };
+
   const renderUrunFields = () => {
     const cat = kategoriName?.toLowerCase() || "";
 
@@ -169,13 +133,13 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       return (
         <>
           <TextField label="Kumaş Kompozisyonu" value={td.kumas_kompozisyonu} onChange={(v) => setTD("kumas_kompozisyonu", v)} />
-          <DropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={td.kumas_grubu} onChange={(v) => { setTD("kumas_grubu", v); setTD("kumas_turu", ""); }} />
-          <DependentDropdownField label="Kumaş Türü" parentId={td.kumas_grubu || null} value={td.kumas_turu} onChange={(v) => setTD("kumas_turu", v)} />
-          <DropdownField label="Sezon" kategoriName="Sezon" value={td.sezon} onChange={(v) => setTD("sezon", v)} />
-          <DropdownField label="Cinsiyet" kategoriName="Cinsiyet" value={td.cinsiyet} onChange={(v) => setTD("cinsiyet", v)} />
-          <DropdownField label="Yaş Grubu" kategoriName="Yaş Grubu" value={td.yas_grubu} onChange={(v) => setTD("yas_grubu", v)} />
-          <DropdownField label="Desen" kategoriName="Desen" value={td.desen} onChange={(v) => setTD("desen", v)} />
-          <DropdownField label="Kalıp" kategoriName="Kalıp" value={td.kalip} onChange={(v) => setTD("kalip", v)} />
+          <MultiDropdownField label="Kumaş Grubu" kategoriName="Kumaş Grubu" value={toArr(td.kumas_grubu)} onChange={(v) => { setTD("kumas_grubu", v); setTD("kumas_turu", []); }} />
+          <MultiDependentDropdownField label="Kumaş Türü" parentId={toArr(td.kumas_grubu).length === 1 ? toArr(td.kumas_grubu)[0] : null} value={toArr(td.kumas_turu)} onChange={(v) => setTD("kumas_turu", v)} disabled={toArr(td.kumas_grubu).length !== 1} />
+          <MultiDropdownField label="Sezon" kategoriName="Sezon" value={toArr(td.sezon)} onChange={(v) => setTD("sezon", v)} />
+          <MultiDropdownField label="Cinsiyet" kategoriName="Cinsiyet" value={toArr(td.cinsiyet)} onChange={(v) => setTD("cinsiyet", v)} />
+          <MultiDropdownField label="Yaş Grubu" kategoriName="Yaş Grubu" value={toArr(td.yas_grubu)} onChange={(v) => setTD("yas_grubu", v)} />
+          <MultiDropdownField label="Desen" kategoriName="Desen" value={toArr(td.desen)} onChange={(v) => setTD("desen", v)} />
+          <MultiDropdownField label="Kalıp" kategoriName="Kalıp" value={toArr(td.kalip)} onChange={(v) => setTD("kalip", v)} />
         </>
       );
     }
@@ -183,9 +147,9 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
     if (cat.includes("aksesuar")) {
       return (
         <>
-          <DropdownField label="Aksesuar Kullanım Alanı" kategoriName="Aksesuar Kullanım Alanı" value={td.aksesuar_kullanim_alani} onChange={(v) => setTD("aksesuar_kullanim_alani", v)} />
-          <DropdownField label="Malzeme Türü" kategoriName="Malzeme Türü" value={td.malzeme_turu} onChange={(v) => setTD("malzeme_turu", v)} />
-          <DropdownField label="Kaplama" kategoriName="Kaplama" value={td.kaplama} onChange={(v) => setTD("kaplama", v)} />
+          <MultiDropdownField label="Aksesuar Kullanım Alanı" kategoriName="Aksesuar Kullanım Alanı" value={toArr(td.aksesuar_kullanim_alani)} onChange={(v) => setTD("aksesuar_kullanim_alani", v)} />
+          <MultiDropdownField label="Malzeme Türü" kategoriName="Malzeme Türü" value={toArr(td.malzeme_turu)} onChange={(v) => setTD("malzeme_turu", v)} />
+          <MultiDropdownField label="Kaplama" kategoriName="Kaplama" value={toArr(td.kaplama)} onChange={(v) => setTD("kaplama", v)} />
           <TextField label="Ebat Ölçü (cm)" value={td.ebat_olcu} onChange={(v) => setTD("ebat_olcu", v)} />
         </>
       );
@@ -194,13 +158,13 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
     if (cat.includes("ambalaj")) {
       return (
         <>
-          <DropdownField label="Ambalaj Kullanım Alanı" kategoriName="Ambalaj Kullanım Alanı" value={td.ambalaj_kullanim_alani} onChange={(v) => setTD("ambalaj_kullanim_alani", v)} />
-          <DropdownField label="Malzeme Türü" kategoriName="Malzeme Türü" value={td.malzeme_turu} onChange={(v) => setTD("malzeme_turu", v)} />
-          <DropdownField label="Baskı" kategoriName="Baskı" value={td.baski} onChange={(v) => setTD("baski", v)} />
+          <MultiDropdownField label="Ambalaj Kullanım Alanı" kategoriName="Ambalaj Kullanım Alanı" value={toArr(td.ambalaj_kullanim_alani)} onChange={(v) => setTD("ambalaj_kullanim_alani", v)} />
+          <MultiDropdownField label="Malzeme Türü" kategoriName="Malzeme Türü" value={toArr(td.malzeme_turu)} onChange={(v) => setTD("malzeme_turu", v)} />
+          <MultiDropdownField label="Baskı" kategoriName="Baskı" value={toArr(td.baski)} onChange={(v) => setTD("baski", v)} />
           <TextField label="Ebat Ölçü (cm)" value={td.ebat_olcu} onChange={(v) => setTD("ebat_olcu", v)} />
           <TextField label="Gramaj (gram)" value={td.gramaj} onChange={(v) => setTD("gramaj", v)} />
           <TextField label="Kalınlık Bilgisi" value={td.kalinlik} onChange={(v) => setTD("kalinlik", v)} />
-          <DropdownField label="Kaplama" kategoriName="Kaplama" value={td.kaplama} onChange={(v) => setTD("kaplama", v)} />
+          <MultiDropdownField label="Kaplama" kategoriName="Kaplama" value={toArr(td.kaplama)} onChange={(v) => setTD("kaplama", v)} />
         </>
       );
     }
@@ -208,12 +172,12 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
     if (cat.includes("iplik")) {
       return (
         <>
+          <MultiDropdownField label="İplik Kullanım Alanı" kategoriName="İplik Kullanım Alanı" value={toArr(td.iplik_kullanim_alani)} onChange={(v) => setTD("iplik_kullanim_alani", v)} />
           <TextField label="İplik Kompozisyonu" value={td.iplik_kompozisyonu} onChange={(v) => setTD("iplik_kompozisyonu", v)} />
-          <DropdownField label="İplik Kullanım Alanı" kategoriName="İplik Kullanım Alanı" value={td.iplik_kullanim_alani} onChange={(v) => setTD("iplik_kullanim_alani", v)} />
-          <DropdownField label="Büküm Tipi" kategoriName="Büküm Tipi" value={td.bukum_tipi} onChange={(v) => setTD("bukum_tipi", v)} />
-          <DropdownField label="Mukavemet" kategoriName="Mukavemet" value={td.mukavemet} onChange={(v) => setTD("mukavemet", v)} />
-          <DropdownField label="Paket Tipi" kategoriName="Paket Tipi" value={td.paket_tipi} onChange={(v) => setTD("paket_tipi", v)} />
-          <DropdownField label="İplik Numarası" kategoriName="İplik Numarası" value={td.iplik_numarasi} onChange={(v) => setTD("iplik_numarasi", v)} />
+          <MultiDropdownField label="Büküm Tipi" kategoriName="Büküm Tipi" value={toArr(td.bukum_tipi)} onChange={(v) => setTD("bukum_tipi", v)} />
+          <MultiDropdownField label="Mukavemet" kategoriName="Mukavemet" value={toArr(td.mukavemet)} onChange={(v) => setTD("mukavemet", v)} />
+          <MultiDropdownField label="İplik Numara Bilgisi" kategoriName="İplik Numarası" value={toArr(td.iplik_numarasi)} onChange={(v) => setTD("iplik_numarasi", v)} />
+          <MultiDropdownField label="Paket Tipi" kategoriName="Paket Tipi" value={toArr(td.paket_tipi)} onChange={(v) => setTD("paket_tipi", v)} />
         </>
       );
     }
@@ -221,12 +185,12 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
     if (cat.includes("boya") || cat.includes("kimyasal")) {
       return (
         <>
-          <DropdownField label="Kimyasal Kullanım Alanı" kategoriName="Kimyasal Kullanım Alanı" value={td.kimyasal_kullanim_alani} onChange={(v) => setTD("kimyasal_kullanim_alani", v)} />
+          <MultiDropdownField label="Kimyasal Kullanım Alanı" kategoriName="Kimyasal Kullanım Alanı" value={toArr(td.kimyasal_kullanim_alani)} onChange={(v) => setTD("kimyasal_kullanim_alani", v)} />
           <TextField label="Marka" value={td.marka} onChange={(v) => setTD("marka", v)} />
           <TextField label="Model" value={td.model} onChange={(v) => setTD("model", v)} />
-          <DropdownField label="Kimyasal Türü" kategoriName="Kimyasal Türü" value={td.kimyasal_turu} onChange={(v) => setTD("kimyasal_turu", v)} />
-          <DropdownField label="Fiziksel Formu" kategoriName="Fiziksel Formu" value={td.fiziksel_formu} onChange={(v) => setTD("fiziksel_formu", v)} />
-          <DropdownField label="Depolama Koşulu" kategoriName="Depolama Koşulu" value={td.depolama_kosulu} onChange={(v) => setTD("depolama_kosulu", v)} />
+          <MultiDropdownField label="Kimyasal Türü" kategoriName="Kimyasal Türü" value={toArr(td.kimyasal_turu)} onChange={(v) => setTD("kimyasal_turu", v)} />
+          <MultiDropdownField label="Fiziksel Formu" kategoriName="Fiziksel Formu" value={toArr(td.fiziksel_formu)} onChange={(v) => setTD("fiziksel_formu", v)} />
+          <MultiDropdownField label="Depolama Koşulu" kategoriName="Depolama Koşulu" value={toArr(td.depolama_kosulu)} onChange={(v) => setTD("depolama_kosulu", v)} />
           <TextField label="Yoğunluk / Viskozite" value={td.yogunluk} onChange={(v) => setTD("yogunluk", v)} />
           <TextField label="pH" value={td.ph} onChange={(v) => setTD("ph", v)} />
           <div className="space-y-2">
@@ -246,9 +210,9 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
             <TextField label="Boy (cm)" value={td.boy} onChange={(v) => setTD("boy", v)} />
           </div>
           <TextField label="Gramaj (gram)" value={td.gramaj} onChange={(v) => setTD("gramaj", v)} />
-          <DropdownField label="Desen" kategoriName="Desen" value={td.desen} onChange={(v) => setTD("desen", v)} />
+          <MultiDropdownField label="Desen" kategoriName="Desen" value={toArr(td.desen)} onChange={(v) => setTD("desen", v)} />
           <TextField label="Esneklik Oranı" value={td.esneklik_orani} onChange={(v) => setTD("esneklik_orani", v)} />
-          <DropdownField label="İplik Numarası" kategoriName="İplik Numarası" value={td.iplik_numarasi} onChange={(v) => setTD("iplik_numarasi", v)} />
+          <MultiDropdownField label="İplik Numarası" kategoriName="İplik Numarası" value={toArr(td.iplik_numarasi)} onChange={(v) => setTD("iplik_numarasi", v)} />
         </>
       );
     }
@@ -257,21 +221,22 @@ export default function TeknikDetaylarStep({ formData, updateForm }: Props) {
       const years = Array.from({ length: 50 }, (_, i) => (new Date().getFullYear() - i).toString());
       return (
         <>
-          <DropdownField label="Makine Kullanım Alanı" kategoriName="Makine Kullanım Alanı" value={td.makine_kullanim_alani} onChange={(v) => setTD("makine_kullanim_alani", v)} />
-          <DropdownField label="Kullanım Durumu" kategoriName="Kullanım Durumu" value={td.kullanim_durumu} onChange={(v) => setTD("kullanim_durumu", v)} />
+          <MultiDropdownField label="Makine Kullanım Alanı" kategoriName="Makine Kullanım Alanı" value={toArr(td.makine_kullanim_alani)} onChange={(v) => setTD("makine_kullanim_alani", v)} />
+          <MultiDropdownField label="Kullanım Durumu" kategoriName="Kullanım Durumu" value={toArr(td.kullanim_durumu)} onChange={(v) => setTD("kullanim_durumu", v)} />
           <TextField label="Marka" value={td.marka} onChange={(v) => setTD("marka", v)} />
           <TextField label="Model" value={td.model} onChange={(v) => setTD("model", v)} />
           <div className="space-y-2">
             <Label>Üretim Yılı</Label>
-            <Select value={td.uretim_yili || ""} onValueChange={(v) => setTD("uretim_yili", v)}>
-              <SelectTrigger><SelectValue placeholder="Yıl seçiniz" /></SelectTrigger>
-              <SelectContent className="bg-popover z-50">
-                {years.map((y) => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={years.map(y => ({ value: y, label: y }))}
+              value={td.uretim_yili || ""}
+              onValueChange={(v) => setTD("uretim_yili", v)}
+              placeholder="Yıl seçiniz"
+              searchPlaceholder="Yıl ara..."
+            />
           </div>
-          <DropdownField label="Motor Tipi" kategoriName="Motor Tipi" value={td.motor_tipi} onChange={(v) => setTD("motor_tipi", v)} />
-          <DropdownField label="Motor Gücü" kategoriName="Motor Gücü" value={td.motor_gucu} onChange={(v) => setTD("motor_gucu", v)} />
+          <MultiDropdownField label="Motor Tipi" kategoriName="Motor Tipi" value={toArr(td.motor_tipi)} onChange={(v) => setTD("motor_tipi", v)} />
+          <MultiDropdownField label="Motor Gücü" kategoriName="Motor Gücü" value={toArr(td.motor_gucu)} onChange={(v) => setTD("motor_gucu", v)} />
         </>
       );
     }

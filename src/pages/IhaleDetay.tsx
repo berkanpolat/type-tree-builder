@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import SearchableSelect from "@/components/ui/searchable-select";
 import {
   Select,
   SelectContent,
@@ -246,6 +247,7 @@ export default function IhaleDetay() {
 
   // Filtreler
   const [ihaleFiltreler, setIhaleFiltreler] = useState<{ filtre_tipi: string; secenek_id: string }[]>([]);
+  const [filterBlockMessage, setFilterBlockMessage] = useState<string | null>(null);
 
   // Benzer ihaleler
   const [benzerIhaleler, setBenzerIhaleler] = useState<any[]>([]);
@@ -391,6 +393,95 @@ export default function IhaleDetay() {
     const filtreData = filtreRes.data || [];
     setIhaleFiltreler(filtreData);
     filtreData.forEach(f => idsToResolve.push(f.secenek_id));
+
+    // Check if current user passes filter requirements
+    if (filtreData.length > 0 && currentUserId && ihaleData.user_id !== currentUserId && ihaleData.ozel_filtreleme) {
+      try {
+        const blockReasons: string[] = [];
+        
+        // Get current user's firma details
+        const { data: myFirma } = await supabase.from("firmalar")
+          .select("firma_turu_id, firma_tipi_id, firma_olcegi_id, kurulus_il_id")
+          .eq("user_id", currentUserId).maybeSingle();
+
+        // Firma Türü check
+        const firmaTuruFilters = filtreData.filter(f => f.filtre_tipi === "firma_turu");
+        if (firmaTuruFilters.length > 0 && myFirma) {
+          if (!firmaTuruFilters.some(f => f.secenek_id === myFirma.firma_turu_id)) {
+            blockReasons.push("Firma Türü");
+          }
+        }
+
+        // Firma Tipi check
+        const firmaTipiFilters = filtreData.filter(f => f.filtre_tipi === "firma_tipi");
+        if (firmaTipiFilters.length > 0 && myFirma) {
+          if (!firmaTipiFilters.some(f => f.secenek_id === myFirma.firma_tipi_id)) {
+            blockReasons.push("Firma Tipi");
+          }
+        }
+
+        // İl check
+        const ilFilters = filtreData.filter(f => f.filtre_tipi === "il");
+        if (ilFilters.length > 0 && myFirma) {
+          if (!ilFilters.some(f => f.secenek_id === myFirma.kurulus_il_id)) {
+            blockReasons.push("İl");
+          }
+        }
+
+        // Firma Ölçeği check - hierarchical: orta -> orta+büyük, büyük -> sadece büyük
+        const olcekFilters = filtreData.filter(f => f.filtre_tipi === "firma_olcegi");
+        if (olcekFilters.length > 0 && myFirma) {
+          // Get names for comparison
+          const olcekIds = olcekFilters.map(f => f.secenek_id);
+          const { data: olcekNames } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", olcekIds);
+          const requiredOlcekNames = (olcekNames || []).map(o => o.name.toLowerCase());
+          
+          let userOlcekName = "";
+          if (myFirma.firma_olcegi_id) {
+            const { data: myOlcek } = await supabase.from("firma_bilgi_secenekleri").select("name").eq("id", myFirma.firma_olcegi_id).single();
+            userOlcekName = myOlcek?.name?.toLowerCase() || "";
+          }
+
+          // Logic: if "orta" is required -> orta and büyük pass. If "büyük" -> only büyük passes.
+          const olcekHierarchy = ["küçük", "orta", "büyük"];
+          const userLevel = olcekHierarchy.indexOf(userOlcekName.includes("küçük") ? "küçük" : userOlcekName.includes("orta") ? "orta" : userOlcekName.includes("büyük") ? "büyük" : "");
+          const minRequired = Math.min(...requiredOlcekNames.map(n => {
+            if (n.includes("küçük")) return 0;
+            if (n.includes("orta")) return 1;
+            if (n.includes("büyük")) return 2;
+            return 0;
+          }));
+          
+          if (userLevel < minRequired) {
+            blockReasons.push("Firma Ölçeği");
+          }
+        }
+
+        // Sertifika check - all required certificates must be present
+        const sertifikaFilters = filtreData.filter(f => f.filtre_tipi === "sertifika");
+        if (sertifikaFilters.length > 0) {
+          const { data: mySertifikalar } = await supabase.from("firma_sertifikalar")
+            .select("sertifika_tur_id")
+            .eq("firma_id", (await supabase.from("firmalar").select("id").eq("user_id", currentUserId).maybeSingle()).data?.id || "");
+          
+          const mySertIds = (mySertifikalar || []).map(s => s.sertifika_tur_id);
+          const missingCerts = sertifikaFilters.filter(f => !mySertIds.includes(f.secenek_id));
+          if (missingCerts.length > 0) {
+            blockReasons.push("Sertifika");
+          }
+        }
+
+        if (blockReasons.length > 0) {
+          setFilterBlockMessage(`Bu ihaleye teklif verebilmek için gerekli şartları karşılamıyorsunuz. Eksik kriterler: ${blockReasons.join(", ")}. İhale sahibi bu alanlar için özel filtreleme uygulamıştır.`);
+        } else {
+          setFilterBlockMessage(null);
+        }
+      } catch {
+        setFilterBlockMessage(null);
+      }
+    } else {
+      setFilterBlockMessage(null);
+    }
 
     // Collect UUID values from teknik_detaylar for resolving (supports both single UUIDs and arrays)
     const teknikData = (ihaleData.teknik_detaylar as Record<string, any>) || {};
@@ -1149,8 +1240,16 @@ export default function IhaleDetay() {
                 </div>
               )}
 
-              {/* Teklif Formu - sadece ihale sahibi değilse ve ihale devam ediyorsa */}
-              {!isOwner && ihale.durum === "devam_ediyor" && (
+              {/* Filter block message */}
+              {!isOwner && ihale.durum === "devam_ediyor" && filterBlockMessage && (
+                <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                  <p className="text-sm text-destructive font-medium mb-1">Teklif Veremezsiniz</p>
+                  <p className="text-xs text-destructive/80">{filterBlockMessage}</p>
+                </div>
+              )}
+
+              {/* Teklif Formu - sadece ihale sahibi değilse ve ihale devam ediyorsa ve filtre geçiyorsa */}
+              {!isOwner && ihale.durum === "devam_ediyor" && !filterBlockMessage && (
                 <div className="space-y-3">
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Teklif Tutarı ({sym})</label>
@@ -1163,36 +1262,33 @@ export default function IhaleDetay() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
-                    <Select value={teklifOdemeSecenekleri} onValueChange={setTeklifOdemeSecenekleri}>
-                      <SelectTrigger><SelectValue placeholder="Ödeme Seçenekleri" /></SelectTrigger>
-                      <SelectContent>
-                        {dbOdemeSecenekleri.map(o => (
-                          <SelectItem key={o} value={o}>{o}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={dbOdemeSecenekleri.map(o => ({ value: o, label: o }))}
+                      value={teklifOdemeSecenekleri}
+                      onValueChange={setTeklifOdemeSecenekleri}
+                      placeholder="Ödeme Seçenekleri"
+                      searchPlaceholder="Ara..."
+                    />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Kargo Masrafı Ödemesi</label>
-                    <Select value={teklifKargoMasrafi} onValueChange={setTeklifKargoMasrafi}>
-                      <SelectTrigger><SelectValue placeholder="Kargo Masrafı Ödemesi" /></SelectTrigger>
-                      <SelectContent>
-                        {dbKargoMasrafi.map(o => (
-                          <SelectItem key={o} value={o}>{o}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={dbKargoMasrafi.map(o => ({ value: o, label: o }))}
+                      value={teklifKargoMasrafi}
+                      onValueChange={setTeklifKargoMasrafi}
+                      placeholder="Kargo Masrafı Ödemesi"
+                      searchPlaceholder="Ara..."
+                    />
                   </div>
                   <div>
                     <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Vadesi</label>
-                    <Select value={teklifOdemeVadesi} onValueChange={setTeklifOdemeVadesi}>
-                      <SelectTrigger><SelectValue placeholder="Ödeme Vadesi" /></SelectTrigger>
-                      <SelectContent>
-                        {dbOdemeVadeleri.map(o => (
-                          <SelectItem key={o} value={o}>{o}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                      options={dbOdemeVadeleri.map(o => ({ value: o, label: o }))}
+                      value={teklifOdemeVadesi}
+                      onValueChange={setTeklifOdemeVadesi}
+                      placeholder="Ödeme Vadesi"
+                      searchPlaceholder="Ara..."
+                    />
                   </div>
                   <div>
                     <label className="relative flex items-center justify-center gap-2 h-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
