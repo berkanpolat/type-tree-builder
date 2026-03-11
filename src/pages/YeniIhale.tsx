@@ -195,6 +195,7 @@ export default function YeniIhale() {
         baslangic_tarihi: formatDatetime(ihale.baslangic_tarihi),
         bitis_tarihi: formatDatetime(ihale.bitis_tarihi),
         foto_url: ihale.foto_url,
+        fotograflar: fotoData.length > 0 ? fotoData : (ihale.foto_url ? [ihale.foto_url] : []),
         ek_dosya_url: ihale.ek_dosya_url,
         ozel_filtreleme: ihale.ozel_filtreleme || false,
         firma_adi_gizle: ihale.firma_adi_gizle || false,
