@@ -327,11 +327,11 @@ const LandingPage = () => {
         <div className="relative max-w-7xl mx-auto px-6 py-20">
           <div className="grid lg:grid-cols-2 gap-8 mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold text-primary-foreground">
-              İşinizi İleri Taşıyan Avantajlar
+              Tekstil A.Ş. Üyesi Olmanın Avantajları:
             </h2>
             <p className="text-primary-foreground/80 text-lg leading-relaxed">
-              Tekstil A.Ş.'nin en cazip özelliklerinden biri, satışlarda %0 satıcı komisyonu sunmasıdır. Bu,
-              ürünlerinizi ek maliyet olmadan satmanıza ve kâr marjınızı korumanıza olanak tanır.
+              Tedarikçi veya müşteri aramaya son. Aradığınız üretim kapasitesine, sertifikalara ve ürün
+              grubuna sahip onaylı firmalarla tek tıkla eşleşin, zaman kazanın.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
