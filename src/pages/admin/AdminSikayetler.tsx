@@ -404,6 +404,14 @@ export default function AdminSikayetler() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Action Dialog */}
+      <SikayetAksiyonDialog
+        open={!!actionItem}
+        onClose={() => setActionItem(null)}
+        item={actionItem}
+        onSuccess={fetchData}
+      />
     </AdminLayout>
   );
 }
