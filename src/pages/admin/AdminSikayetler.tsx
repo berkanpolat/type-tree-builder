@@ -12,7 +12,7 @@ import {
 import {
   MessageSquareWarning, Eye, Filter, RotateCcw, Search,
   ChevronLeft, ChevronRight, MessageSquare, Gavel, Package, User,
-  FileText, Calendar, Building2, AlertTriangle, ShieldAlert
+  FileText, Calendar, Building2, AlertTriangle, ShieldAlert, ExternalLink
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -369,8 +369,29 @@ export default function AdminSikayetler() {
                   <p className="text-sm" style={s.text}>{format(new Date(viewItem.created_at), "dd MMM yyyy HH:mm", { locale: tr })}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium mb-1" style={s.muted}>Referans ID</p>
-                  <p className="text-sm font-mono" style={s.text}>{viewItem.referans_id.slice(0, 8)}...</p>
+                  <p className="text-xs font-medium mb-1" style={s.muted}>Şikayet Edilen İçerik</p>
+                  {(() => {
+                    const linkMap: Record<string, { href: string; label: string }> = {
+                      profil: { href: `/firma/${viewItem.referans_id}`, label: "Firma Profilini Görüntüle" },
+                      ihale: { href: `/tekihale/${viewItem.referans_id}`, label: "İhaleyi Görüntüle" },
+                      urun: { href: `/urun/${viewItem.referans_id}`, label: "Ürünü Görüntüle" },
+                      mesaj: { href: `/mesajlar`, label: "Mesajı Görüntüle" },
+                    };
+                    const link = linkMap[viewItem.tur];
+                    return link ? (
+                      <a
+                        href={link.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-sm text-amber-500 hover:underline"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5" />
+                        {link.label}
+                      </a>
+                    ) : (
+                      <p className="text-sm font-mono" style={s.text}>{viewItem.referans_id.slice(0, 8)}...</p>
+                    );
+                  })()}
                 </div>
               </div>
 
