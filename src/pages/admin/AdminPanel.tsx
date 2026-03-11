@@ -137,7 +137,7 @@ function SectionFilters({ timeFilter, onTimeChange, dateRange, onDateChange }: {
   dateRange: DateRange; onDateChange: (v: DateRange) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       <TimeFilterSelect value={timeFilter} onChange={onTimeChange} />
       <DateRangeFilter value={dateRange} onChange={onDateChange} />
     </div>
