@@ -133,6 +133,7 @@ export default function YeniIhale() {
     const loadIhale = async () => {
       setLoadingEdit(true);
       const adminToken = localStorage.getItem("admin_token");
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
 
       let ihale: any = null;
       let filtreData: any[] = [];
@@ -140,8 +141,37 @@ export default function YeniIhale() {
       let fotoData: string[] = [];
       let ekDosyaData: { url: string; adi: string }[] = [];
 
-      if (adminToken) {
-        // Admin mode: fetch via edge function (bypasses RLS)
+      // First try normal user mode (to check ownership)
+      if (currentUser) {
+        const { data, error } = await supabase.from("ihaleler").select("*").eq("id", editId).single();
+        if (!error && data) {
+          // If the logged-in user owns this ihale, always use normal mode (not admin)
+          if (data.user_id === currentUser.id) {
+            ihale = data;
+
+            // Normal users can only edit duzenleniyor, taslak, or onay_bekliyor
+            if (ihale.durum !== "duzenleniyor" && ihale.durum !== "taslak" && ihale.durum !== "onay_bekliyor") {
+              toast({ title: "Hata", description: "Bu ihale düzenlenemez.", variant: "destructive" });
+              navigate("/manuihale");
+              return;
+            }
+
+            const [filtreRes, stokRes, fotoRes, ekDosyaRes] = await Promise.all([
+              supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", editId),
+              supabase.from("ihale_stok").select("varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value, miktar_tipi, stok_sayisi").eq("ihale_id", editId),
+              supabase.from("ihale_fotograflar" as any).select("foto_url, sira").eq("ihale_id", editId).order("sira"),
+              supabase.from("ihale_ek_dosyalar" as any).select("dosya_url, dosya_adi, sira").eq("ihale_id", editId).order("sira"),
+            ]);
+            filtreData = filtreRes.data || [];
+            stokData = stokRes.data || [];
+            fotoData = (fotoRes.data || []).map((f: any) => f.foto_url);
+            ekDosyaData = (ekDosyaRes.data || []).map((f: any) => ({ url: f.dosya_url, adi: f.dosya_adi }));
+          }
+        }
+      }
+
+      // If not loaded as owner, try admin mode
+      if (!ihale && adminToken) {
         try {
           const { data, error } = await supabase.functions.invoke("admin-auth/get-ihale-edit-data", {
             body: { token: adminToken, ihaleId: editId },
@@ -158,32 +188,9 @@ export default function YeniIhale() {
       }
 
       if (!ihale) {
-        // Normal user mode
-        const { data, error } = await supabase.from("ihaleler").select("*").eq("id", editId).single();
-        if (error || !data) {
-          toast({ title: "Hata", description: "İhale bulunamadı.", variant: "destructive" });
-          navigate("/manuihale");
-          return;
-        }
-        ihale = data;
-
-        // Normal users can only edit duzenleniyor, taslak, or onay_bekliyor
-        if (ihale.durum !== "duzenleniyor" && ihale.durum !== "taslak" && ihale.durum !== "onay_bekliyor") {
-          toast({ title: "Hata", description: "Bu ihale düzenlenemez.", variant: "destructive" });
-          navigate("/manuihale");
-          return;
-        }
-
-        const [filtreRes, stokRes, fotoRes, ekDosyaRes] = await Promise.all([
-          supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", editId),
-          supabase.from("ihale_stok").select("varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value, miktar_tipi, stok_sayisi").eq("ihale_id", editId),
-          supabase.from("ihale_fotograflar" as any).select("foto_url, sira").eq("ihale_id", editId).order("sira"),
-          supabase.from("ihale_ek_dosyalar" as any).select("dosya_url, dosya_adi, sira").eq("ihale_id", editId).order("sira"),
-        ]);
-        filtreData = filtreRes.data || [];
-        stokData = stokRes.data || [];
-        fotoData = (fotoRes.data || []).map((f: any) => f.foto_url);
-        ekDosyaData = (ekDosyaRes.data || []).map((f: any) => ({ url: f.dosya_url, adi: f.dosya_adi }));
+        toast({ title: "Hata", description: "İhale bulunamadı.", variant: "destructive" });
+        navigate("/manuihale");
+        return;
       }
 
       const formatDatetime = (val: string | null) => {
@@ -496,7 +503,7 @@ export default function YeniIhale() {
               <p className="text-sm text-muted-foreground mt-1">#{formData.ihale_no}</p>
             )}
           </div>
-          <span className="text-sm text-muted-foreground">{currentStep + 1}</span>
+          <span className="text-sm text-muted-foreground">Adım {currentStep + 1} / {STEPS.length}</span>
         </div>
 
         <IhaleWizardStepper steps={STEPS} currentStep={currentStep} onStepClick={(step) => setCurrentStep(step)} freeNavigation={isAdminMode} />
