@@ -30,6 +30,7 @@ const menuItems = [
   { label: "Ürünler", path: "/yonetim/urunler", icon: Package, permission: "urun_goruntule" as const },
   { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: "paket_detay_goruntule" as const },
   { label: "Destek Talepleri", path: "/yonetim/destek", icon: HeadphonesIcon, permission: "destek_goruntule" as const },
+  { label: "Reklam", path: "/yonetim/reklam", icon: Megaphone, permission: null, primaryOnly: true },
 ];
 
 export default function AdminLayout({ children, title }: AdminLayoutProps) {
