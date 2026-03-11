@@ -192,16 +192,30 @@ export default function AdminFirmalar() {
   }, [token, statsDays, callApi, toast]);
 
   const fetchDropdowns = useCallback(async () => {
-    const ilKatId = await getIlKategoriId();
-    const [{ data: t }, { data: tp }, { data: il }] = await Promise.all([
-      supabase.from("firma_turleri").select("id, name").order("name"),
-      supabase.from("firma_tipleri").select("id, name, firma_turu_id").order("name"),
-      supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
-    ]);
-    setTurler(t || []);
-    setTipler((tp || []) as any);
-    setIller(il || []);
-  }, []);
+    if (!token) return;
+    try {
+      // Fetch turler/tipler via edge function (bypasses RLS)
+      const dropdownData = await callApi("get-dropdown-options", { token });
+      setTurler(dropdownData.turler || []);
+      setTipler((dropdownData.tipler || []) as any);
+
+      // Fetch iller via edge function's panel-stats or directly
+      const ilKatId = await getIlKategoriId();
+      const { data: il } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name");
+      setIller(il || []);
+    } catch {
+      // fallback: try direct queries
+      const ilKatId = await getIlKategoriId();
+      const [{ data: t }, { data: tp }, { data: il }] = await Promise.all([
+        supabase.from("firma_turleri").select("id, name").order("name"),
+        supabase.from("firma_tipleri").select("id, name, firma_turu_id").order("name"),
+        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
+      ]);
+      setTurler(t || []);
+      setTipler((tp || []) as any);
+      setIller(il || []);
+    }
+  }, [token, callApi]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
   useEffect(() => { fetchDropdowns(); }, []);
