@@ -400,9 +400,37 @@ export default function AdminFirmalar() {
     (tp) => statTurFilter === "all" || tp.firma_turu_id === statTurFilter
   ) || [];
 
+  const handleCreateFirma = async () => {
+    if (!yeniFirma.email || !yeniFirma.password || !yeniFirma.ad || !yeniFirma.soyad || !yeniFirma.firma_unvani || !yeniFirma.vergi_numarasi || !yeniFirma.vergi_dairesi || !yeniFirma.firma_turu_id || !yeniFirma.firma_tipi_id) {
+      toast({ title: "Hata", description: "E-posta, şifre, ad, soyad, firma ünvanı, vergi numarası, vergi dairesi, firma türü ve firma tipi zorunludur", variant: "destructive" });
+      return;
+    }
+    setYeniFirmaSaving(true);
+    try {
+      await callApi("create-firma", { token, ...yeniFirma });
+      toast({ title: "Başarılı", description: "Firma oluşturuldu" });
+      setYeniFirmaOpen(false);
+      setYeniFirma({ email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "", firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "" });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setYeniFirmaSaving(false);
+    }
+  };
+
+  const filteredTipler = tipler.filter(t => yeniFirma.firma_turu_id === "" || t.firma_turu_id === yeniFirma.firma_turu_id);
+
   return (
     <AdminLayout title="Firmalar">
       <div className="space-y-6">
+        {/* Action Bar */}
+        <div className="flex justify-end">
+          <Button onClick={() => setYeniFirmaOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white">
+            <Building2 className="w-4 h-4 mr-2" /> Yeni Firma Oluştur
+          </Button>
+        </div>
+
         {/* Summary Cards */}
         {stats && (
           <div className="space-y-3">

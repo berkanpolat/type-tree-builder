@@ -115,6 +115,7 @@ const App = () => (
           <Route path="/yonetim/sikayetler" element={<AdminRoute><AdminSikayetler /></AdminRoute>} />
           <Route path="/yonetim/paketler" element={<AdminRoute><AdminPaketler /></AdminRoute>} />
           <Route path="/yonetim/destek" element={<AdminRoute><AdminDestek /></AdminRoute>} />
+          <Route path="/yonetim/islemler" element={<AdminRoute><AdminIslemler /></AdminRoute>} />
 
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
