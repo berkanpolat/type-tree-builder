@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useRestrictions } from "@/hooks/use-restrictions";
 import IhaleWizardStepper from "@/components/ihale/IhaleWizardStepper";
 import IhaleTuruStep from "@/components/ihale/steps/IhaleTuruStep";
 import TeklifUsuluStep from "@/components/ihale/steps/TeklifUsuluStep";
