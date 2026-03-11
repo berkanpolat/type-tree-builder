@@ -744,6 +744,11 @@ export default function AdminFirmalar() {
                       style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
                       <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Kullanıcıyı Yönet
                     </Button>
+                    <Button onClick={(e) => { e.stopPropagation(); setDeleteFirma(firma); setDeleteConfirmText(""); setDeleteDialogOpen(true); }}
+                      variant="outline" size="sm" className="text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                      style={{ borderColor: "hsl(var(--admin-border))" }}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
                   </div>
                 </div>
 
