@@ -610,7 +610,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ─── UPDATE IHALE (admin can edit without restrictions) ───
+    // ─── UPDATE IHALE (admin can edit without restrictions + notify owner) ───
     if (action === "update-ihale") {
       const { token, ihaleId, updates } = body;
       const payload = verifyToken(token);
@@ -622,10 +622,22 @@ Deno.serve(async (req) => {
         .from("ihaleler")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", ihaleId)
-        .select()
+        .select("*, user_id, baslik, ihale_no")
         .single();
 
       if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Notify ihale owner
+      if (data) {
+        const msg = `${data.ihale_no} numaralı "${data.baslik}" başlıklı ihaleniz yönetim tarafından düzenlenmiştir.`;
+        await supabase.from("notifications").insert({
+          user_id: data.user_id,
+          type: "ihale_admin_duzenlendi",
+          message: msg,
+          link: "/manuihale",
+        });
+      }
+
       return jsonResponse({ ihale: data });
     }
 
