@@ -392,6 +392,14 @@ export default function YeniIhale() {
           formData.stoklar.map((s) => ({ ihale_id: ihaleId, ...s }))
         );
       }
+
+      // Save fotograflar
+      await supabase.from("ihale_fotograflar" as any).delete().eq("ihale_id", ihaleId);
+      if (formData.fotograflar.length > 0) {
+        await supabase.from("ihale_fotograflar" as any).insert(
+          formData.fotograflar.map((url, i) => ({ ihale_id: ihaleId, foto_url: url, sira: i }))
+        );
+      }
     }
 
     setSaving(false);
