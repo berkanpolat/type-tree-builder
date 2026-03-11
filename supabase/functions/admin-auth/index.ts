@@ -1012,7 +1012,58 @@ Deno.serve(async (req) => {
       return jsonResponse({ urun: urunData });
     }
 
-    // ─── APPROVE URUN ───
+    // ─── APPROVE IHALE ───
+    if (action === "approve-ihale") {
+      const { token, ihaleId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+      const { data, error } = await supabase
+        .from("ihaleler")
+        .update({ durum: "devam_ediyor", updated_at: new Date().toISOString() })
+        .eq("id", ihaleId)
+        .select("id, baslik, ihale_no, user_id")
+        .single();
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true, ihale: data });
+    }
+
+    // ─── REJECT IHALE ───
+    if (action === "reject-ihale") {
+      const { token, ihaleId, redSebebi } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.ihale_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      // Get ihale info before updating
+      const { data: ihaleInfo } = await supabase
+        .from("ihaleler")
+        .select("user_id, baslik, ihale_no")
+        .eq("id", ihaleId)
+        .single();
+
+      const { error } = await supabase
+        .from("ihaleler")
+        .update({ durum: "reddedildi", updated_at: new Date().toISOString() })
+        .eq("id", ihaleId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Notify user with rejection reason
+      if (ihaleInfo) {
+        const msg = `${ihaleInfo.ihale_no} numaralı "${ihaleInfo.baslik}" başlıklı ihaleniz reddedilmiştir. Sebep: ${redSebebi}`;
+        await supabase.from("notifications").insert({
+          user_id: ihaleInfo.user_id,
+          type: "ihale_reddedildi",
+          message: msg,
+          link: "/manuihale",
+        });
+      }
+
+      return jsonResponse({ success: true });
+    }
+
     if (action === "approve-urun") {
       const { token, urunId } = body;
       const payload = verifyToken(token);

@@ -632,32 +632,40 @@ export default function UrunDetay() {
                 </div>
               </Card>
             )}
-            {/* Onay Bloğu - sadece sahip ve duzenleniyor/onay_bekliyor durumunda */}
-            {!isAdminViewing && urun.user_id === currentUserId && (urun.durum === "duzenleniyor" || urun.durum === "onay_bekliyor") && (
-              <Card className="p-5 border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+            {/* Onay Bloğu - sahip: duzenleniyor/onay_bekliyor/reddedildi */}
+            {!isAdminViewing && urun.user_id === currentUserId && (urun.durum === "duzenleniyor" || urun.durum === "onay_bekliyor" || urun.durum === "reddedildi") && (
+              <Card className={`p-5 border-2 ${urun.durum === "reddedildi" ? "border-red-400 bg-red-50 dark:bg-red-950/20" : "border-amber-300 bg-amber-50 dark:bg-amber-950/20"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-foreground">
-                    {urun.durum === "onay_bekliyor" ? "Onay Bekliyor" : "Önizleme"}
+                    {urun.durum === "onay_bekliyor" ? "Onay Bekliyor" : urun.durum === "reddedildi" ? "Reddedildi" : "Önizleme"}
                   </h3>
-                  <Badge className={urun.durum === "onay_bekliyor" ? "bg-amber-500 text-white" : "bg-blue-500 text-white"}>
-                    {urun.durum === "onay_bekliyor" ? "İnceleniyor" : "Taslak"}
+                  <Badge className={
+                    urun.durum === "onay_bekliyor" ? "bg-amber-500 text-white"
+                    : urun.durum === "reddedildi" ? "bg-red-500 text-white"
+                    : "bg-blue-500 text-white"
+                  }>
+                    {urun.durum === "onay_bekliyor" ? "İnceleniyor" : urun.durum === "reddedildi" ? "Reddedildi" : "Taslak"}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
                   {urun.durum === "onay_bekliyor"
-                    ? "Bu ilan yayına alınmak için onayınızı beklemektedir. Lütfen ilanı inceleyip karar veriniz."
+                    ? "Ürününüz şu anda incelenmektedir. Onay sürecinde düzenleme yapamazsınız."
+                    : urun.durum === "reddedildi"
+                    ? "Ürününüz reddedilmiştir. Düzenleyerek yeniden onaya gönderebilirsiniz."
                     : "Ürününüzün önizlemesini kontrol edin. Bilgiler doğruysa onaya gönderin veya düzenlemeye devam edin."}
                 </p>
                 <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1 gap-2"
-                    onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}
-                  >
-                    <Pencil className="w-4 h-4" />
-                    Düzenle
-                  </Button>
-                  {urun.durum === "duzenleniyor" && (
+                  {(urun.durum === "duzenleniyor" || urun.durum === "reddedildi") && (
+                    <Button
+                      variant="outline"
+                      className="flex-1 gap-2"
+                      onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}
+                    >
+                      <Pencil className="w-4 h-4" />
+                      Düzenle
+                    </Button>
+                  )}
+                  {(urun.durum === "duzenleniyor" || urun.durum === "reddedildi") && (
                     <Button
                       className="flex-1 gap-2"
                       onClick={async () => {
@@ -667,7 +675,7 @@ export default function UrunDetay() {
                       }}
                     >
                       <CheckCircle className="w-4 h-4" />
-                      Onayla
+                      {urun.durum === "reddedildi" ? "Yeniden Onaya Gönder" : "Onayla"}
                     </Button>
                   )}
                 </div>

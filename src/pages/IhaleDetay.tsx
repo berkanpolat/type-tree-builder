@@ -63,6 +63,8 @@ import {
   Upload,
   Trash2,
   Flag,
+  ShieldCheck,
+  ShieldX,
 } from "lucide-react";
 import {
   SiInstagram,
@@ -121,6 +123,32 @@ const teklifUsuluLabel: Record<string, string> = {
   acik_indirme: "Açık İndirme",
   kapali_teklif: "Kapalı Teklif",
 };
+
+const IHALE_RED_SEBEPLERI = [
+  "Eksik ihale bilgisi",
+  "Yetersiz veya belirsiz ihale açıklaması",
+  "Yanlış kategori seçimi",
+  "Yanlış ihale türü seçimi",
+  "Teknik şartnamenin eksik olması",
+  "Teslimat veya termin bilgilerinin eksik olması",
+  "Miktar bilgisinin belirtilmemesi",
+  "Platform kurallarına aykırı içerik",
+  "Platform dışı iletişim bilgisi paylaşımı",
+  "Reklam veya yönlendirme içerikleri",
+  "Tekstil kapsamı dışı ihale",
+  "Yasaklı ürün veya hizmet talebi",
+  "Sahte veya yanıltıcı ihale",
+  "Gerçekçi olmayan fiyat veya bütçe bilgisi",
+  "Yinelenen (duplicate) ihale",
+  "Yanıltıcı veya yanlış bilgi içeren ihale",
+  "Spam amaçlı ihale açılması",
+  "Telif veya marka ihlali içeren ihale talebi",
+  "Platform standartlarına uygun olmayan ihale başlığı",
+  "Eksik teknik detaylar",
+  "İhale başlangıç veya bitiş tarihinin kurallara uygun olmaması",
+  "Platform güvenliği açısından riskli ihale",
+  "Doğrulanmamış veya şüpheli kullanıcı tarafından açılan ihale",
+];
 
 function useCountdown(targetDate: string | null) {
   const [remaining, setRemaining] = useState("");
@@ -200,6 +228,11 @@ export default function IhaleDetay() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [bildirOpen, setBildirOpen] = useState(false);
 
+  // Admin state
+  const [isAdminViewing, setIsAdminViewing] = useState(false);
+  const [adminActionLoading, setAdminActionLoading] = useState(false);
+  const [redSebebi, setRedSebebi] = useState("");
+
   // DB dropdown options
   const [dbOdemeSecenekleri, setDbOdemeSecenekleri] = useState<string[]>([]);
   const [dbKargoMasrafi, setDbKargoMasrafi] = useState<string[]>([]);
@@ -277,7 +310,7 @@ export default function IhaleDetay() {
       if (!user) {
         const adminToken = localStorage.getItem("admin_token");
         if (!adminToken) { navigate("/giris-kayit"); return; }
-        // Admin viewing without main site login - continue without user context
+        setIsAdminViewing(true);
         return;
       }
       setCurrentUserId(user.id);
@@ -314,6 +347,7 @@ export default function IhaleDetay() {
           });
           if (!adminErr && adminRes?.ihale) {
             ihaleData = adminRes.ihale;
+            setIsAdminViewing(true);
           }
         } catch {}
       }
@@ -919,37 +953,100 @@ export default function IhaleDetay() {
 
           {/* Right Sidebar */}
           <div className="lg:col-span-2 space-y-4">
-            {/* Onay Bloğu - sadece sahip ve duzenleniyor/onay_bekliyor durumunda */}
-            {isOwner && (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") && (
-              <Card className="p-5 border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/20">
+            {/* Admin Onay/Red Bloğu */}
+            {isAdminViewing && ihale.durum === "onay_bekliyor" && (
+              <Card className="p-5 border-2 border-blue-400 bg-blue-50 dark:bg-blue-950/20">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-foreground flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-blue-500" /> Admin İnceleme
+                  </h3>
+                  <Badge className="bg-amber-500 text-white">Onay Bekliyor</Badge>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">Bu ihale yayına alınmak için onay bekliyor. İnceleyin ve karar verin.</p>
+                <div className="space-y-3">
+                  <Button
+                    className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    disabled={adminActionLoading}
+                    onClick={async () => {
+                      setAdminActionLoading(true);
+                      try {
+                        const adminToken = localStorage.getItem("admin_token");
+                        await supabase.functions.invoke("admin-auth/approve-ihale", { body: { token: adminToken, ihaleId: ihale.id } });
+                        toast({ title: "İhale onaylandı!" });
+                        setIhale({ ...ihale, durum: "devam_ediyor" });
+                      } catch { toast({ title: "Hata", variant: "destructive" }); }
+                      setAdminActionLoading(false);
+                    }}
+                  >
+                    <CheckCircle2 className="w-4 h-4" /> Onayla
+                  </Button>
+                  <div className="space-y-2">
+                    <Select value={redSebebi} onValueChange={setRedSebebi}>
+                      <SelectTrigger className="text-xs"><SelectValue placeholder="Red sebebi seçin..." /></SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {IHALE_RED_SEBEPLERI.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      variant="destructive"
+                      className="w-full gap-2"
+                      disabled={!redSebebi || adminActionLoading}
+                      onClick={async () => {
+                        setAdminActionLoading(true);
+                        try {
+                          const adminToken = localStorage.getItem("admin_token");
+                          await supabase.functions.invoke("admin-auth/reject-ihale", { body: { token: adminToken, ihaleId: ihale.id, redSebebi } });
+                          toast({ title: "İhale reddedildi" });
+                          setIhale({ ...ihale, durum: "reddedildi" });
+                        } catch { toast({ title: "Hata", variant: "destructive" }); }
+                        setAdminActionLoading(false);
+                      }}
+                    >
+                      <ShieldX className="w-4 h-4" /> Reddet
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )}
+            {/* Onay Bloğu - sahip: duzenleniyor/onay_bekliyor/reddedildi */}
+            {!isAdminViewing && isOwner && (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor" || ihale.durum === "reddedildi") && (
+              <Card className={`p-5 border-2 ${ihale.durum === "reddedildi" ? "border-red-400 bg-red-50 dark:bg-red-950/20" : "border-amber-300 bg-amber-50 dark:bg-amber-950/20"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-foreground">
-                    {ihale.durum === "onay_bekliyor" ? "Onay Bekliyor" : "Önizleme"}
+                    {ihale.durum === "onay_bekliyor" ? "Onay Bekliyor" : ihale.durum === "reddedildi" ? "Reddedildi" : "Önizleme"}
                   </h3>
-                  <Badge className={ihale.durum === "onay_bekliyor" ? "bg-amber-500 text-white" : "bg-blue-500 text-white"}>
-                    {ihale.durum === "onay_bekliyor" ? "İnceleniyor" : "Taslak"}
+                  <Badge className={
+                    ihale.durum === "onay_bekliyor" ? "bg-amber-500 text-white"
+                    : ihale.durum === "reddedildi" ? "bg-red-500 text-white"
+                    : "bg-blue-500 text-white"
+                  }>
+                    {ihale.durum === "onay_bekliyor" ? "İnceleniyor" : ihale.durum === "reddedildi" ? "Reddedildi" : "Taslak"}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">
                   {ihale.durum === "onay_bekliyor"
-                    ? "Bu ilan yayına alınmak için onayınızı beklemektedir. Lütfen ilanı inceleyip karar veriniz."
+                    ? "İhaleniz şu anda incelenmektedir. Onay sürecinde düzenleme yapamazsınız."
+                    : ihale.durum === "reddedildi"
+                    ? "İhaleniz reddedilmiştir. Düzenleyerek yeniden onaya gönderebilirsiniz."
                     : "İhalenizin önizlemesini kontrol edin. Bilgiler doğruysa onaya gönderin veya düzenlemeye devam edin."}
                 </p>
                 <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1 gap-2"
-                    onClick={() => navigate(`/manuihale/duzenle/${ihale.id}`)}
-                  >
-                    <FileText className="w-4 h-4" />
-                    Düzenle
-                  </Button>
-                  {ihale.durum === "duzenleniyor" && (
+                  {(ihale.durum === "duzenleniyor" || ihale.durum === "reddedildi") && (
+                    <Button
+                      variant="outline"
+                      className="flex-1 gap-2"
+                      onClick={() => navigate(`/manuihale/duzenle/${ihale.id}`)}
+                    >
+                      <FileText className="w-4 h-4" />
+                      Düzenle
+                    </Button>
+                  )}
+                  {(ihale.durum === "duzenleniyor" || ihale.durum === "reddedildi") && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button className="flex-1 gap-2">
                           <CheckCircle2 className="w-4 h-4" />
-                          Onayla
+                          {ihale.durum === "reddedildi" ? "Yeniden Onaya Gönder" : "Onayla"}
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
@@ -968,7 +1065,7 @@ export default function IhaleDetay() {
                               navigate("/manuihale");
                             }}
                           >
-                            Evet, Onayla
+                            Evet, Gönder
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
