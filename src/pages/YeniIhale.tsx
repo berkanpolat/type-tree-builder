@@ -93,7 +93,20 @@ export default function YeniIhale() {
   const [ihaleId, setIhaleId] = useState<string | null>(null);
   const [loadingEdit, setLoadingEdit] = useState(!!editId);
   const [isAdminMode, setIsAdminMode] = useState(false);
+  const { isRestricted, getRestrictionMessage } = useRestrictions();
 
+  // Check restriction before allowing ihale creation
+  useEffect(() => {
+    if (!editId && !isAdminMode && isRestricted("ihale_acamaz")) {
+      const msg = getRestrictionMessage("ihale_acamaz");
+      toast({
+        title: "İşlem Kısıtlandı",
+        description: msg || "İhale açma işleminiz kısıtlanmıştır.",
+        variant: "destructive",
+      });
+      navigate("/manuihale");
+    }
+  }, [isRestricted, editId, isAdminMode]);
   // Load existing ihale for editing
   useEffect(() => {
     if (!editId) return;
