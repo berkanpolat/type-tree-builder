@@ -305,6 +305,45 @@ const Paketim = () => {
           </Card>
         </div>
       </div>
+
+      {/* İptal Onay Dialogu */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-5 h-5 text-destructive" />
+              <AlertDialogTitle>Aboneliği İptal Et</AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="space-y-3 text-sm">
+              <p>PRO paketinizi iptal etmek istediğinize emin misiniz?</p>
+              <div className="bg-muted rounded-lg p-3 space-y-2">
+                <p className="font-medium text-foreground">İptal sonrası neler olacak:</p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>
+                    Mevcut dönem bitiş tarihinize ({pkg.donemBitis
+                      ? new Date(pkg.donemBitis).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })
+                      : "—"}) kadar PRO özelliklerini kullanmaya devam edeceksiniz.
+                  </li>
+                  <li>Dönem sona erdikten sonra hesabınız otomatik olarak <strong>Ücretsiz pakete</strong> geçirilecektir.</li>
+                  <li>Ücretsiz pakette profil görüntüleme, teklif verme ve mesaj hakları sınırlıdır.</li>
+                  <li>Gelecek dönemde herhangi bir ücret tahsil edilmeyecektir.</li>
+                </ul>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelLoading}>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelSubscription}
+              disabled={cancelLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {cancelLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Evet, İptal Et
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };
