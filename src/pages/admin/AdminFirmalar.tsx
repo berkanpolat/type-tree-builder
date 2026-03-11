@@ -287,6 +287,10 @@ export default function AdminFirmalar() {
   };
 
   const handleSaveEkstraHaklar = async () => {
+    if (!hasPermission("paket_ekstra_hak")) {
+      toast({ title: "Yetkisiz", description: "Buna yetkiniz yok", variant: "destructive" });
+      return;
+    }
     if (!paketDialogFirma) return;
     setEkstraSaving(true);
     try {
