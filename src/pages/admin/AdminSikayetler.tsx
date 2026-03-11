@@ -425,6 +425,45 @@ export default function AdminSikayetler() {
                   </a>
                 </div>
               )}
+
+              {/* Action Log Section */}
+              {viewItem.islem_tipi && (
+                <div className="p-3 rounded-lg" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <p className="text-xs font-medium mb-2" style={s.text}>
+                    ✅ Yapılan İşlem
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className="text-xs" style={s.muted}>İşlem Tipi</p>
+                      <Badge variant="outline" className={
+                        viewItem.islem_tipi === "kisitlama" ? "bg-amber-500/10 text-amber-600 border-amber-500/20" :
+                        viewItem.islem_tipi === "uzaklastirma" ? "bg-orange-500/10 text-orange-600 border-orange-500/20" :
+                        "bg-red-500/10 text-red-600 border-red-500/20"
+                      }>
+                        {viewItem.islem_tipi === "kisitlama" ? "Kısıtlama" :
+                         viewItem.islem_tipi === "uzaklastirma" ? "Uzaklaştırma" :
+                         viewItem.islem_tipi === "yasaklama" ? "Yasaklama" : viewItem.islem_tipi}
+                      </Badge>
+                    </div>
+                    <div>
+                      <p className="text-xs" style={s.muted}>İşlem Yapan</p>
+                      <p className="text-xs font-medium" style={s.text}>{viewItem.islem_yapan}</p>
+                    </div>
+                    {viewItem.islem_tarihi && (
+                      <div className="col-span-2">
+                        <p className="text-xs" style={s.muted}>İşlem Tarihi</p>
+                        <p className="text-xs" style={s.text}>{format(new Date(viewItem.islem_tarihi), "dd MMM yyyy HH:mm", { locale: tr })}</p>
+                      </div>
+                    )}
+                    {viewItem.islem_detay && (
+                      <div className="col-span-2">
+                        <p className="text-xs" style={s.muted}>İşlem Detayı</p>
+                        <p className="text-xs whitespace-pre-wrap" style={s.text}>{viewItem.islem_detay}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
