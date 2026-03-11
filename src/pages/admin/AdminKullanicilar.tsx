@@ -304,11 +304,11 @@ export default function AdminKullanicilar() {
               id={item.key}
               checked={isChecked}
               onCheckedChange={(checked) => togglePermission(item.key, !!checked)}
-              className="border-slate-500 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+              className="data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+              style={{ borderColor: "hsl(var(--admin-border))" }}
             />
-            <Label htmlFor={item.key} className="text-slate-300 text-sm cursor-pointer">{item.label}</Label>
+            <Label htmlFor={item.key} className="text-sm cursor-pointer" style={{ color: "hsl(var(--admin-text))" }}>{item.label}</Label>
           </div>
-          {/* Show children only if parent is checked */}
           {item.children && isChecked && (
             <div className="mt-2 space-y-2">
               {renderPermissionItems(item.children, depth + 1)}

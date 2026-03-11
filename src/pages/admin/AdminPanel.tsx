@@ -308,10 +308,10 @@ export default function AdminPanel() {
 
   return (
     <AdminLayout title="Panel Özeti">
-      <div className="space-y-8">
+      <div className="space-y-6 md:space-y-8">
         {/* Welcome */}
-        <div className="rounded-xl p-6" style={{ background: "linear-gradient(to right, hsla(30,90%,55%,0.1), hsla(25,90%,55%,0.1))", border: "1px solid hsla(30,90%,55%,0.2)" }}>
-          <h2 className="text-xl font-bold" style={{ color: "hsl(var(--admin-text))" }}>
+        <div className="rounded-xl p-4 md:p-6" style={{ background: "linear-gradient(to right, hsla(30,90%,55%,0.1), hsla(25,90%,55%,0.1))", border: "1px solid hsla(30,90%,55%,0.2)" }}>
+          <h2 className="text-lg md:text-xl font-bold" style={{ color: "hsl(var(--admin-text))" }}>
             Hoş geldiniz, {user?.ad} {user?.soyad}
           </h2>
           <p className="mt-1" style={{ color: "hsl(var(--admin-text-secondary))" }}>
