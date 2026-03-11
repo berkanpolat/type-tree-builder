@@ -273,7 +273,13 @@ export default function IhaleDetay() {
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/giris-kayit"); return; }
+      // Don't redirect to login if admin token exists
+      if (!user) {
+        const adminToken = localStorage.getItem("admin_token");
+        if (!adminToken) { navigate("/giris-kayit"); return; }
+        // Admin viewing without main site login - continue without user context
+        return;
+      }
       setCurrentUserId(user.id);
       const { data: f } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).maybeSingle();
       if (f) { setHeaderFirmaUnvani(f.firma_unvani); setHeaderFirmaLogoUrl(f.logo_url); }
