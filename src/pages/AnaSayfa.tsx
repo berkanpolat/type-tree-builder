@@ -147,7 +147,7 @@ export default function AnaSayfa() {
   const [sortBy, setSortBy] = useSessionState<string>("sortBy", "newest");
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useSessionState("currentPage", 1);
 
   // Name maps
   const [kategoriSecenekler, setKategoriSecenekler] = useState<{ id: string; name: string }[]>([]);
