@@ -49,7 +49,7 @@ const LandingPage = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/anasayfa", { replace: true });
+        navigate("/tekpazar", { replace: true });
       } else {
         setLoading(false);
       }
