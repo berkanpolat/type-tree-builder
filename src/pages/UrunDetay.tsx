@@ -353,7 +353,7 @@ export default function UrunDetay() {
     }
 
     setLoading(false);
-  }, [id, currentUserId]);
+  }, [slugParam, currentUserId]);
 
   useEffect(() => { fetchUrun(); }, [fetchUrun]);
 
