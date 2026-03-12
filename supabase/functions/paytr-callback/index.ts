@@ -52,15 +52,29 @@ Deno.serve(async (req) => {
 
     logStep("Hash verified successfully");
 
-    // Parse merchant_oid: {user_id}_{periyot}_{timestamp}
-    const parts = merchantOid.split("_");
-    if (parts.length < 3) {
-      logStep("Invalid merchant_oid format");
+    // Parse merchant_oid format: {32hexUserId}{A|Y}{timestamp}
+    // Example: 36fe196079bd482facdb84159d414911Y1773314064430
+    // userId (no dashes) = first 32 chars, periyot indicator = char at index 32, rest = timestamp
+    if (merchantOid.length < 34) {
+      logStep("Invalid merchant_oid format - too short", { length: merchantOid.length });
       return new Response("OK", { status: 200 });
     }
 
-    const userId = parts[0];
-    const periyot = parts[1]; // "aylik" or "yillik"
+    const userIdNoDashes = merchantOid.substring(0, 32);
+    const periyotIndicator = merchantOid.charAt(32); // "A" or "Y"
+    
+    // Reconstruct UUID with dashes: 8-4-4-4-12
+    const userId = [
+      userIdNoDashes.substring(0, 8),
+      userIdNoDashes.substring(8, 12),
+      userIdNoDashes.substring(12, 16),
+      userIdNoDashes.substring(16, 20),
+      userIdNoDashes.substring(20, 32),
+    ].join("-");
+
+    const periyot = periyotIndicator === "Y" ? "yillik" : "aylik";
+
+    logStep("Parsed merchant_oid", { userId, periyot, periyotIndicator });
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -107,8 +121,6 @@ Deno.serve(async (req) => {
             donem_baslangic: now.toISOString(),
             donem_bitis: donemBitis.toISOString(),
             durum: "aktif",
-            stripe_subscription_id: null,
-            stripe_customer_id: null,
             updated_at: now.toISOString(),
           })
           .eq("user_id", userId);

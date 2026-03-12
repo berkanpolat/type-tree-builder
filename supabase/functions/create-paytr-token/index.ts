@@ -138,9 +138,11 @@ serve(async (req) => {
     const debugOn = "0";
     const lang = "tr";
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const merchantOkUrl = `${supabaseUrl}/functions/v1/paytr-callback`;
-    const merchantFailUrl = `${supabaseUrl}/functions/v1/paytr-callback`;
+    // merchant_ok_url ve merchant_fail_url kullanıcının yönlendirileceği sayfalardır
+    // PayTR callback (bildirim) URL'i merchant panelinden ayarlanır
+    const siteUrl = "https://tekstilas.com";
+    const merchantOkUrl = `${siteUrl}/paketim?odeme=basarili`;
+    const merchantFailUrl = `${siteUrl}/paketim?odeme=basarisiz`;
     const timeoutLimit = "30";
 
     // PayTR iFrame API hash formula:
