@@ -889,7 +889,7 @@ export default function IhaleDetay() {
     <div className="min-h-screen bg-muted/30 font-sans">
       <PazarHeader firmaUnvani={headerFirmaUnvani} firmaLogoUrl={headerFirmaLogoUrl} />
 
-      <main className="max-w-7xl mx-auto px-6 py-6">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
           <Link to="/tekihale" className="hover:text-foreground transition-colors">İhale Anasayfa</Link>
