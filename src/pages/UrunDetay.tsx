@@ -320,7 +320,7 @@ export default function UrunDetay() {
         .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, user_id")
         .eq("durum", "aktif")
         .eq("urun_kategori_id", urunData.urun_kategori_id)
-        .neq("id", id)
+        .neq("id", urunData.id)
         .limit(10);
 
       if (benzer && benzer.length > 0) {
