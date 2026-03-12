@@ -25,7 +25,6 @@ export interface PackageInfo {
   limits: PackageLimits;
   usage: QuotaUsage;
   loading: boolean;
-  stripeSubscriptionId: string | null;
   cancelAtPeriodEnd: boolean;
 }
 
@@ -46,7 +45,6 @@ export function usePackageQuota(): PackageInfo {
   const [durum, setDurum] = useState("aktif");
   const [limits, setLimits] = useState<PackageLimits>(DEFAULT_LIMITS);
   const [usage, setUsage] = useState<QuotaUsage>({ profil_goruntuleme: 0, teklif_verme: 0, aktif_urun: 0, mesaj: 0 });
-  const [stripeSubscriptionId, setStripeSubscriptionId] = useState<string | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -69,8 +67,6 @@ export function usePackageQuota(): PackageInfo {
         setPeriyot((abone as any).periyot);
         setDonemBitis((abone as any).donem_bitis);
         setDurum((abone as any).durum || "aktif");
-        setStripeSubscriptionId((abone as any).stripe_subscription_id);
-        
         // Check if durum indicates pending cancellation
         const aboneDurum = (abone as any).durum || "";
         setCancelAtPeriodEnd(aboneDurum === "iptal_bekliyor");
@@ -237,7 +233,7 @@ export function usePackageQuota(): PackageInfo {
     };
   }, [fetchData]);
 
-  return { paketAd, paketSlug, periyot, donemBitis, durum, limits, usage, loading, stripeSubscriptionId, cancelAtPeriodEnd };
+  return { paketAd, paketSlug, periyot, donemBitis, durum, limits, usage, loading, cancelAtPeriodEnd };
 }
 
 // Helper: Check if a specific action is allowed
