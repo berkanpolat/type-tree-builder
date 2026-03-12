@@ -279,6 +279,17 @@ export default function ManuIhale() {
                         {ihale.bitis_tarihi && <span className="text-destructive"> → {format(new Date(ihale.bitis_tarihi), "dd MMM yyyy", { locale: tr })}</span>}
                       </div>
                       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                        {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
+                          <Button variant="ghost" size="icon" className="h-7 w-7" title="İhale Takip" onClick={() => navigate(`/manuihale/takip/${ihale.id}`)}>
+                            <TrendingUp className="w-3.5 h-3.5" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                          if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/manuihale/duzenle/${ihale.id}`);
+                          else navigate(`/ihale/${ihale.id}`);
+                        }}>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteId(ihale.id)}>
                           <Trash2 className="w-3.5 h-3.5 text-destructive" />
                         </Button>
