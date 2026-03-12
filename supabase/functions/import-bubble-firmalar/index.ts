@@ -215,7 +215,6 @@ Deno.serve(async (req) => {
 
         if (firmaError) {
           failList.push({ firma: firmaUnvani, error: `Firma hatası: ${firmaError.message}` });
-          await supabase.auth.admin.deleteUser(userId);
           continue;
         }
 
