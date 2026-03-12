@@ -117,41 +117,34 @@ Deno.serve(async (req) => {
 
         // Create or find auth user
         let userId: string;
-        const randomPass = crypto.randomUUID() + "Ax1!";
-        const { data: authData, error: authError } =
-          await supabase.auth.admin.createUser({
-            email,
-            password: randomPass,
-            email_confirm: true,
-          });
+        const existingUserId = emailToUserId[email];
 
-        if (authError) {
-          if (authError.message?.includes("already been registered")) {
-            // Find existing user by email
-            const { data: listData } = await supabase.auth.admin.listUsers();
-            const existingUser = listData?.users?.find(u => u.email === email);
-            if (!existingUser) {
-              failList.push({ firma: firmaUnvani, error: `Kullanıcı bulunamadı: ${email}` });
-              continue;
-            }
-            userId = existingUser.id;
-
-            // Check if firma already exists for this user
-            const { data: existingFirma } = await supabase
-              .from("firmalar")
-              .select("id")
-              .eq("user_id", userId)
-              .maybeSingle();
-            if (existingFirma) {
-              failList.push({ firma: firmaUnvani, error: `Firma zaten mevcut: ${email}` });
-              continue;
-            }
-          } else {
-            failList.push({ firma: firmaUnvani, error: `Auth hatası: ${authError.message}` });
+        if (existingUserId) {
+          userId = existingUserId;
+          // Check if firma already exists
+          const { data: existingFirma } = await supabase
+            .from("firmalar")
+            .select("id")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (existingFirma) {
+            failList.push({ firma: firmaUnvani, error: `Firma zaten mevcut: ${email}` });
             continue;
           }
         } else {
+          const randomPass = crypto.randomUUID() + "Ax1!";
+          const { data: authData, error: authError } =
+            await supabase.auth.admin.createUser({
+              email,
+              password: randomPass,
+              email_confirm: true,
+            });
+          if (authError) {
+            failList.push({ firma: firmaUnvani, error: `Auth hatası: ${authError.message}` });
+            continue;
+          }
           userId = authData.user.id;
+          emailToUserId[email] = userId;
         }
 
         // Lookup optional IDs
