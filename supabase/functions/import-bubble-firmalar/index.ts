@@ -89,12 +89,8 @@ Deno.serve(async (req) => {
           }
 
           // Vergi
-          const vergiNo = (item[" Vergi Numarası"] || "").trim();
-          const vergiDairesi = (item[" Vergi Dairesi"] || "").trim();
-          if (!vergiNo || !vergiDairesi) {
-            failList.push({ firma: firmaUnvani, error: "Vergi bilgisi eksik" });
-            continue;
-          }
+          const vergiNo = (item[" Vergi Numarası"] || "").trim() || null;
+          const vergiDairesi = (item[" Vergi Dairesi"] || "").trim() || null;
 
           // Email for auth user
           const email = (item["iletişim E-Posta Adresi"] || "").trim();
