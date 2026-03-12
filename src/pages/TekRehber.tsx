@@ -332,8 +332,10 @@ export default function TekRehber() {
     if (!currentUserId) return;
     if (isFav) {
       await supabase.from("firma_favoriler").delete().eq("user_id", currentUserId).eq("firma_id", firmaId);
+      toast({ title: "Favorilerden çıkarıldı" });
     } else {
       await supabase.from("firma_favoriler").insert({ user_id: currentUserId, firma_id: firmaId });
+      toast({ title: "Favorilere eklendi" });
     }
     setFirmaFavSet((prev) => {
       const next = new Set(prev);
