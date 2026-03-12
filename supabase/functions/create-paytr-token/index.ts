@@ -218,6 +218,17 @@ serve(async (req) => {
 
     const iframeUrl = `https://www.paytr.com/odeme/guvenli/${paytrResult.token}`;
 
+    // Ödeme kaydını DB'ye kaydet (callback gelmezse client-side doğrulama için)
+    await supabaseAdmin.from("odeme_kayitlari").insert({
+      user_id: user.id,
+      merchant_oid: merchantOid,
+      periyot,
+      tutar_kurus: paymentAmountKurus,
+      durum: "bekliyor",
+    });
+
+    console.log("[CREATE-PAYTR-TOKEN] Payment record saved:", merchantOid);
+
     return new Response(
       JSON.stringify({
         url: iframeUrl,
