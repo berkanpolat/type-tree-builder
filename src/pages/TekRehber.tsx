@@ -440,7 +440,7 @@ export default function TekRehber() {
                   <Card
                     key={firma.id}
                     className="p-4 sm:p-5 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => navigate(`/firma/${firma.id}`)}
+                    onClick={() => navigate(`/${(firma as any).slug || firma.id}`)}
                   >
                     <div className="flex items-start gap-3 sm:gap-4">
                       <div className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
