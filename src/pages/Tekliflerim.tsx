@@ -57,6 +57,7 @@ interface TeklifRow {
   baslangic_tarihi: string | null;
   bitis_tarihi: string | null;
   teklif_sirasi: number | null;
+  ihale_slug: string | null;
 }
 
 export default function Tekliflerim() {
