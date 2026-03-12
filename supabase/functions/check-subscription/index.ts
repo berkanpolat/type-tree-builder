@@ -28,10 +28,10 @@ serve(async (req) => {
     if (!authHeader) throw new Error("Authorization header yok");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) throw new Error(`Auth error: ${claimsError?.message || "Invalid token"}`);
+    const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
+    if (userError || !user) throw new Error(`Auth error: ${userError?.message || "Invalid token"}`);
 
-    const userId = claimsData.claims.sub as string;
+    const userId = user.id;
     if (!userId) throw new Error("Kullanıcı doğrulanamadı");
 
     logStep("User authenticated", { userId });
