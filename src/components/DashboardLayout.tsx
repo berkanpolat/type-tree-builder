@@ -15,7 +15,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col">
-          <header className="h-14 flex items-center border-b bg-background px-6">
+          <header className="h-14 flex items-center border-b bg-background px-4 md:px-6">
             <SidebarTrigger className="mr-4" />
             {title && (
               <h1 className="text-lg font-bold text-foreground">{title}</h1>
