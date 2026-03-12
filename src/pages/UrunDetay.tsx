@@ -989,7 +989,7 @@ export default function UrunDetay() {
 
         {/* Banner */}
         <div
-          className="rounded-xl overflow-hidden mb-12 flex items-center cursor-pointer mx-auto"
+          className="hidden md:flex rounded-xl overflow-hidden mb-12 items-center cursor-pointer mx-auto"
           style={{
             maxWidth: 1200,
             height: 128,

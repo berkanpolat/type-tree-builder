@@ -349,7 +349,7 @@ const Dashboard = () => {
 
         {/* PRO Banner - sadece ücretsiz kullanıcılara göster, admin görseli yoksa */}
         {!isPro && !dashboardBanner.url && (
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden hidden md:block">
             <div className="h-40 bg-gradient-to-r from-primary to-primary/70 flex items-center justify-center relative">
               <div className="text-center text-primary-foreground">
                 <p className="text-sm uppercase tracking-wider opacity-80">PRO Pakete Yükselt</p>

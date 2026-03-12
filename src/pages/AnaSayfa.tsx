@@ -884,7 +884,7 @@ export default function AnaSayfa() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="relative rounded-xl overflow-hidden h-36 cursor-pointer" onClick={() => bannerAlt1.linkUrl && window.open(bannerAlt1.linkUrl, "_blank")}>
                 <img src={bannerAlt1.url || bannerStoktanFallback} alt="Banner 1" loading="lazy" className="w-full h-full object-cover" style={{ imageRendering: "auto" }} />
               </div>
