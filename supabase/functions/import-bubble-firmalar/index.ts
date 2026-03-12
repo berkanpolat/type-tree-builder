@@ -47,6 +47,14 @@ Deno.serve(async (req) => {
       tipleriMap[t.name].push({ id: t.id, firma_turu_id: t.firma_turu_id });
     });
 
+    // Bubble → DB name mapping for firma tipleri
+    const firmaTipiMapping: Record<string, string> = {
+      "Boya ve Kimyasal Madde Tedarikçisi": "Boya/Kimyasal Tedarikçisi",
+      "Dikimhane Atölyesi": "Dikimhane",
+      "Finishli Atölye (CMT)": "CMT Atölyesi",
+      "Örme / Penye Giyim Üreticisi": "Örme/Penye Giyim Üreticisi",
+    };
+
     const seceneklerByName: Record<string, string> = {};
     seceneklerRes.data?.forEach((s) => {
       seceneklerByName[s.name] = s.id;
@@ -93,14 +101,15 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Lookup firma_tipi_id
-        const firmaTipiName = item["Firma Tipi op"];
+        // Lookup firma_tipi_id (with mapping)
+        const rawFirmaTipiName = item["Firma Tipi op"];
+        const firmaTipiName = firmaTipiMapping[rawFirmaTipiName] || rawFirmaTipiName;
         const tipiCandidates = tipleriMap[firmaTipiName] || [];
         const firmaTipiId = tipiCandidates.find(
           (t) => t.firma_turu_id === firmaTuruId
         )?.id || tipiCandidates[0]?.id;
         if (!firmaTipiId) {
-          failList.push({ firma: firmaUnvani, error: `Firma tipi bulunamadı: ${firmaTipiName}` });
+          failList.push({ firma: firmaUnvani, error: `Firma tipi bulunamadı: ${rawFirmaTipiName} (mapped: ${firmaTipiName})` });
           continue;
         }
 
