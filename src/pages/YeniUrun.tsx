@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import MultiSelectDropdown from "@/components/firma-bilgileri/MultiSelectDropdown";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { usePackageQuota } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
@@ -118,14 +119,14 @@ interface FiyatKademesi {
   birim_fiyat: number;
 }
 
-// Product variation (Renk + Beden/Birim + photo)
+// Product variation (Renk + Beden/Birim + photos)
 interface UrunVaryasyon {
   varyant_1_label: string;
   varyant_1_value: string;
   varyant_2_label: string;
   varyant_2_value: string;
-  foto_url: string;
-  foto_file?: File;
+  foto_urls: string[];
+  foto_files?: File[];
 }
 
 export default function YeniUrun() {
@@ -162,7 +163,7 @@ export default function YeniUrun() {
   ]);
 
   // Step 2: Teknik Detaylar
-  const [teknikDetaylar, setTeknikDetaylar] = useState<Record<string, string>>({});
+  const [teknikDetaylar, setTeknikDetaylar] = useState<Record<string, string | string[]>>({});
   const [dropdownOptions, setDropdownOptions] = useState<Record<string, { id: string; name: string }[]>>({});
   const [dependentOptions, setDependentOptions] = useState<Record<string, { id: string; name: string }[]>>({});
 
@@ -247,6 +248,15 @@ export default function YeniUrun() {
     setDependentOptions(prev => ({ ...prev, [parentLabel]: data || [] }));
   };
 
+  const loadDependentOptionsMulti = async (parentLabel: string, parentIds: string[]) => {
+    if (parentIds.length === 0) {
+      setDependentOptions(prev => ({ ...prev, [parentLabel]: [] }));
+      return;
+    }
+    const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("parent_id", parentIds).order("name");
+    setDependentOptions(prev => ({ ...prev, [parentLabel]: data || [] }));
+  };
+
   const loadUrun = async (urunId: string) => {
     const { data } = await supabase.from("urunler").select("*").eq("id", urunId).single();
     if (!data) return;
@@ -259,7 +269,7 @@ export default function YeniUrun() {
     setFiyatTipi(data.fiyat_tipi);
     setParaBirimi(data.para_birimi || "TRY");
     setFiyat(data.fiyat?.toString() || "");
-    const td = data.teknik_detaylar as Record<string, string> || {};
+    const td = data.teknik_detaylar as Record<string, string | string[]> || {};
     setTeknikDetaylar(td);
     setDraftId(urunId);
 
@@ -267,7 +277,9 @@ export default function YeniUrun() {
     const alanlar = getTeknikAlanlar();
     for (const alan of alanlar) {
       if (alan.type === "dependent_dropdown" && alan.dependsOn && td[alan.dependsOn]) {
-        loadDependentOptions(alan.dependsOn, td[alan.dependsOn]);
+        const parentVal = td[alan.dependsOn];
+        const parentId = Array.isArray(parentVal) ? parentVal[0] : parentVal;
+        if (parentId) loadDependentOptions(alan.dependsOn, parentId);
       }
     }
 
@@ -287,7 +299,7 @@ export default function YeniUrun() {
             varyant_1_value: v.varyant_1_value,
             varyant_2_label: v.varyant_2_label || "",
             varyant_2_value: v.varyant_2_value || "",
-            foto_url: v.foto_url,
+            foto_urls: [v.foto_url],
           });
         }
         priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
@@ -334,7 +346,7 @@ export default function YeniUrun() {
             varyant_1_value: v.varyant_1_value,
             varyant_2_label: v.varyant_2_label || "",
             varyant_2_value: v.varyant_2_value || "",
-            foto_url: v.foto_url,
+            foto_urls: [v.foto_url],
           });
         }
         priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
@@ -393,9 +405,10 @@ export default function YeniUrun() {
     if (step === 2) {
       const alanlar = getTeknikAlanlar();
       for (const alan of alanlar) {
-        // Skip dependent_dropdown validation if parent not selected
         if (alan.type === "dependent_dropdown" && !teknikDetaylar[alan.dependsOn!]) continue;
-        if (!teknikDetaylar[alan.label]?.trim()) {
+        const val = teknikDetaylar[alan.label];
+        const isEmpty = !val || (Array.isArray(val) ? val.length === 0 : !val.trim());
+        if (isEmpty) {
           toast({ title: `"${alan.label}" alanı zorunludur.`, variant: "destructive" }); return;
         }
       }
@@ -442,8 +455,8 @@ export default function YeniUrun() {
       toast({ title: "En az bir ürün varyasyonu ekleyiniz.", variant: "destructive" }); return;
     }
     for (const v of varyasyonlar) {
-      if (!v.foto_url && !v.foto_file) {
-        toast({ title: "Her varyasyon için fotoğraf zorunludur.", variant: "destructive" }); return;
+      if (v.foto_urls.length === 0 && (!v.foto_files || v.foto_files.length === 0)) {
+        toast({ title: "Her varyasyon için en az bir fotoğraf zorunludur.", variant: "destructive" }); return;
       }
     }
 
@@ -472,11 +485,19 @@ export default function YeniUrun() {
       await supabase.from("urun_varyasyonlar").delete().eq("urun_id", urunId);
       const dbRows = [];
       for (const v of varyasyonlar) {
-        let fotoUrl = v.foto_url;
-        if (v.foto_file) {
-          const uploaded = await uploadVaryasyonFoto(v.foto_file);
-          if (uploaded) fotoUrl = uploaded;
+        // Upload all new files
+        const uploadedUrls: string[] = [];
+        if (v.foto_files && v.foto_files.length > 0) {
+          for (const file of v.foto_files) {
+            const uploaded = await uploadVaryasyonFoto(file);
+            if (uploaded) uploadedUrls.push(uploaded);
+          }
         }
+        // Combine existing URLs (non-blob) with newly uploaded
+        const existingUrls = v.foto_urls.filter(u => !u.startsWith("blob:"));
+        const allFotoUrls = [...existingUrls, ...uploadedUrls];
+        const primaryFoto = allFotoUrls[0] || "";
+
         // For varyasyonlu, save each variation with price tiers
         if (fiyatTipi === "varyasyonlu") {
           for (const k of fiyatKademeleri) {
@@ -485,7 +506,7 @@ export default function YeniUrun() {
               varyant_1_label: v.varyant_1_label, varyant_1_value: v.varyant_1_value,
               varyant_2_label: v.varyant_2_label, varyant_2_value: v.varyant_2_value,
               min_adet: k.min_adet, max_adet: k.max_adet, birim_fiyat: k.birim_fiyat,
-              foto_url: fotoUrl,
+              foto_url: primaryFoto,
             });
           }
         } else {
@@ -494,7 +515,7 @@ export default function YeniUrun() {
             varyant_1_label: v.varyant_1_label, varyant_1_value: v.varyant_1_value,
             varyant_2_label: v.varyant_2_label, varyant_2_value: v.varyant_2_value,
             min_adet: 1, max_adet: 1, birim_fiyat: parseFloat(fiyat) || 0,
-            foto_url: fotoUrl,
+            foto_url: primaryFoto,
           });
         }
       }
@@ -554,7 +575,7 @@ export default function YeniUrun() {
           newItems.push({
             varyant_1_label: varyant1Label, varyant_1_value: v1Name,
             varyant_2_label: varyant2Label, varyant_2_value: v2Name,
-            foto_url: "",
+            foto_urls: [],
           });
         }
       }
@@ -564,11 +585,28 @@ export default function YeniUrun() {
     setSelectedV2([]);
   };
 
-  const handleVaryasyonFotoChange = (idx: number, file: File) => {
-    const previewUrl = URL.createObjectURL(file);
+  const handleVaryasyonFotoAdd = (idx: number, files: FileList) => {
+    const newFiles = Array.from(files);
+    const newPreviewUrls = newFiles.map(f => URL.createObjectURL(f));
     setVaryasyonlar(prev => {
       const updated = [...prev];
-      updated[idx] = { ...updated[idx], foto_url: previewUrl, foto_file: file };
+      const existing = updated[idx];
+      updated[idx] = {
+        ...existing,
+        foto_urls: [...existing.foto_urls, ...newPreviewUrls],
+        foto_files: [...(existing.foto_files || []), ...newFiles],
+      };
+      return updated;
+    });
+  };
+
+  const handleVaryasyonFotoRemove = (vIdx: number, fotoIdx: number) => {
+    setVaryasyonlar(prev => {
+      const updated = [...prev];
+      const v = updated[vIdx];
+      const newUrls = v.foto_urls.filter((_, i) => i !== fotoIdx);
+      const newFiles = (v.foto_files || []).filter((_, i) => i !== fotoIdx);
+      updated[vIdx] = { ...v, foto_urls: newUrls, foto_files: newFiles };
       return updated;
     });
   };
@@ -801,40 +839,34 @@ export default function YeniUrun() {
                       <div key={alan.label}>
                         <Label>{alan.label}*</Label>
                         {alan.type === "dropdown" ? (
-                          <Select value={teknikDetaylar[alan.label] || ""}
-                            onValueChange={(v) => {
-                              setTeknikDetaylar(prev => ({ ...prev, [alan.label]: v }));
-                              // If a dependent field depends on this, load its children
+                          <MultiSelectDropdown
+                            options={dropdownOptions[alan.kategoriName!] || []}
+                            selected={Array.isArray(teknikDetaylar[alan.label]) ? teknikDetaylar[alan.label] as string[] : teknikDetaylar[alan.label] ? [teknikDetaylar[alan.label] as string] : []}
+                            onChange={(vals) => {
+                              setTeknikDetaylar(prev => ({ ...prev, [alan.label]: vals }));
                               const dependentField = teknikAlanlar.find(a => a.type === "dependent_dropdown" && a.dependsOn === alan.label);
                               if (dependentField) {
-                                setTeknikDetaylar(prev => ({ ...prev, [dependentField.label]: "" }));
-                                loadDependentOptions(alan.label, v);
+                                setTeknikDetaylar(prev => ({ ...prev, [dependentField.label]: [] }));
+                                // Load dependent options for all selected parents
+                                loadDependentOptionsMulti(alan.label, vals);
                               }
-                            }}>
-                            <SelectTrigger><SelectValue placeholder={`${alan.label} seçiniz`} /></SelectTrigger>
-                            <SelectContent className="bg-popover z-50">
-                              {(dropdownOptions[alan.kategoriName!] || []).map(opt => (
-                                <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            }}
+                            placeholder={`${alan.label} seçiniz`}
+                          />
                         ) : alan.type === "dependent_dropdown" ? (
-                          <Select value={teknikDetaylar[alan.label] || ""}
-                            onValueChange={(v) => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: v }))}
-                            disabled={!teknikDetaylar[alan.dependsOn!]}>
-                            <SelectTrigger><SelectValue placeholder={teknikDetaylar[alan.dependsOn!] ? `${alan.label} seçiniz` : `Önce ${alan.dependsOn} seçiniz`} /></SelectTrigger>
-                            <SelectContent className="bg-popover z-50">
-                              {(dependentOptions[alan.dependsOn!] || []).map(opt => (
-                                <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <MultiSelectDropdown
+                            options={dependentOptions[alan.dependsOn!] || []}
+                            selected={Array.isArray(teknikDetaylar[alan.label]) ? teknikDetaylar[alan.label] as string[] : teknikDetaylar[alan.label] ? [teknikDetaylar[alan.label] as string] : []}
+                            onChange={(vals) => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: vals }))}
+                            placeholder={teknikDetaylar[alan.dependsOn!] && (Array.isArray(teknikDetaylar[alan.dependsOn!]) ? (teknikDetaylar[alan.dependsOn!] as string[]).length > 0 : true) ? `${alan.label} seçiniz` : `Önce ${alan.dependsOn} seçiniz`}
+                            disabled={!teknikDetaylar[alan.dependsOn!] || (Array.isArray(teknikDetaylar[alan.dependsOn!]) && (teknikDetaylar[alan.dependsOn!] as string[]).length === 0)}
+                          />
                         ) : alan.type === "date" ? (
-                          <Input type="date" value={teknikDetaylar[alan.label] || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} />
+                          <Input type="date" value={(teknikDetaylar[alan.label] as string) || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} />
                         ) : alan.type === "number" ? (
-                          <Input type="number" value={teknikDetaylar[alan.label] || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} placeholder={alan.label} />
+                          <Input type="number" value={(teknikDetaylar[alan.label] as string) || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} placeholder={alan.label} />
                         ) : (
-                          <Input value={teknikDetaylar[alan.label] || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} placeholder={alan.label} maxLength={500} />
+                          <Input value={(teknikDetaylar[alan.label] as string) || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} placeholder={alan.label} maxLength={500} />
                         )}
                       </div>
                     ))}
@@ -916,19 +948,29 @@ export default function YeniUrun() {
                         {varyasyonlar.map((v, idx) => (
                           <TableRow key={idx}>
                             <TableCell>
-                              <label className="cursor-pointer">
-                                <input type="file" accept="image/*" className="hidden"
-                                  onChange={e => { const file = e.target.files?.[0]; if (file) handleVaryasyonFotoChange(idx, file); }} />
-                                {v.foto_url ? (
-                                  <div className="w-12 h-12 rounded overflow-hidden border">
-                                    <img src={v.foto_url} alt="" className="w-full h-full object-cover" />
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {v.foto_urls.map((url, fIdx) => (
+                                  <div key={fIdx} className="relative group">
+                                    <div className="w-12 h-12 rounded overflow-hidden border">
+                                      <img src={url} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleVaryasyonFotoRemove(idx, fIdx)}
+                                      className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
                                   </div>
-                                ) : (
+                                ))}
+                                <label className="cursor-pointer">
+                                  <input type="file" accept="image/*" multiple className="hidden"
+                                    onChange={e => { if (e.target.files && e.target.files.length > 0) handleVaryasyonFotoAdd(idx, e.target.files); }} />
                                   <div className="w-12 h-12 rounded border-2 border-dashed border-muted-foreground/40 flex items-center justify-center hover:border-primary transition-colors">
                                     <Upload className="w-4 h-4 text-muted-foreground" />
                                   </div>
-                                )}
-                              </label>
+                                </label>
+                              </div>
                             </TableCell>
                             <TableCell className="text-sm font-medium">{v.varyant_1_value}</TableCell>
                             <TableCell className="text-sm">{v.varyant_2_value}</TableCell>
