@@ -152,7 +152,7 @@ export default function YeniIhale() {
             // Normal users can only edit duzenleniyor or onay_bekliyor
             if (ihale.durum !== "duzenleniyor" && ihale.durum !== "onay_bekliyor") {
               toast({ title: "Hata", description: "Bu ihale düzenlenemez.", variant: "destructive" });
-              navigate("/manuihale");
+              navigate("/ihalelerim");
               return;
             }
 
