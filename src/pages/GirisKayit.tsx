@@ -250,14 +250,9 @@ const GirisKayit = () => {
     if (!isValidEmail(email)) return;
     setRegisterLoading(true);
     try {
-      // Check duplicate email in profiles
-      const { data: existingEmail } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("iletisim_email", email)
-        .limit(1);
-
-      if (existingEmail && existingEmail.length > 0) {
+      // Check duplicate email via RPC
+      const { data: dupResult } = await supabase.rpc("check_registration_duplicate", { p_email: email });
+      if (dupResult && (dupResult as any).email_exists) {
         toast({ title: "Hata", description: "Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
         setRegisterLoading(false);
         return;
