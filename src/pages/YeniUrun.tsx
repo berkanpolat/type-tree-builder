@@ -299,6 +299,53 @@ export default function YeniUrun() {
     }
   };
 
+  const loadUrunForCopy = async (urunId: string) => {
+    const { data } = await supabase.from("urunler").select("*").eq("id", urunId).single();
+    if (!data) return;
+    setSelectedKategori(data.urun_kategori_id || "");
+    setSelectedGrup(data.urun_grup_id || "");
+    setSelectedTur(data.urun_tur_id || "");
+    setBaslik(data.baslik + " (Kopya)");
+    setAciklama(data.aciklama || "");
+    setMinSiparisMiktari(data.min_siparis_miktari?.toString() || "");
+    setFiyatTipi(data.fiyat_tipi);
+    setParaBirimi(data.para_birimi || "TRY");
+    setFiyat(data.fiyat?.toString() || "");
+    const td = data.teknik_detaylar as Record<string, string> || {};
+    setTeknikDetaylar(td);
+    // draftId remains null — this is a NEW product
+
+    const alanlar = getTeknikAlanlar();
+    for (const alan of alanlar) {
+      if (alan.type === "dependent_dropdown" && alan.dependsOn && td[alan.dependsOn]) {
+        loadDependentOptions(alan.dependsOn, td[alan.dependsOn]);
+      }
+    }
+
+    const { data: vars } = await supabase.from("urun_varyasyonlar").select("*").eq("urun_id", urunId).order("created_at");
+    if (vars && vars.length > 0) {
+      const seenCombos = new Set<string>();
+      const prodVars: UrunVaryasyon[] = [];
+      const priceTiers: FiyatKademesi[] = [];
+      for (const v of vars) {
+        const comboKey = `${v.varyant_1_value}|${v.varyant_2_value}`;
+        if (!seenCombos.has(comboKey)) {
+          seenCombos.add(comboKey);
+          prodVars.push({
+            varyant_1_label: v.varyant_1_label,
+            varyant_1_value: v.varyant_1_value,
+            varyant_2_label: v.varyant_2_label || "",
+            varyant_2_value: v.varyant_2_value || "",
+            foto_url: v.foto_url,
+          });
+        }
+        priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
+      }
+      setVaryasyonlar(prodVars);
+      if (priceTiers.length > 0) setFiyatKademeleri(priceTiers);
+    }
+  };
+
   const getTeknikAlanlar = () => {
     if (TEKNIK_ALANLAR[kategoriName]) return TEKNIK_ALANLAR[kategoriName];
     const key = Object.keys(TEKNIK_ALANLAR).find(k => kategoriName.toLowerCase().includes(k.toLowerCase()));
