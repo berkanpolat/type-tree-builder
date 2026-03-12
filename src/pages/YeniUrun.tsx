@@ -54,7 +54,6 @@ const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" 
     { label: "Ambalaj Kullanım Alanı", type: "dropdown", kategoriName: "Ambalaj Kullanım Alanı" },
     { label: "Malzeme Türü", type: "dropdown", kategoriName: "Malzeme Türü" },
     { label: "Baskı", type: "dropdown", kategoriName: "Baskı" },
-    { label: "Beden", type: "dropdown", kategoriName: "Beden" },
     { label: "Ebat Ölçü (cm)", type: "text" },
     { label: "Gramaj (gram)", type: "text" },
     { label: "Kalınlık Bilgisi", type: "text" },
