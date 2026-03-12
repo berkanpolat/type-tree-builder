@@ -446,8 +446,8 @@ export default function YeniUrun() {
       toast({ title: "En az bir ürün varyasyonu ekleyiniz.", variant: "destructive" }); return;
     }
     for (const v of varyasyonlar) {
-      if (!v.foto_url && !v.foto_file) {
-        toast({ title: "Her varyasyon için fotoğraf zorunludur.", variant: "destructive" }); return;
+      if (v.foto_urls.length === 0 && (!v.foto_files || v.foto_files.length === 0)) {
+        toast({ title: "Her varyasyon için en az bir fotoğraf zorunludur.", variant: "destructive" }); return;
       }
     }
 
