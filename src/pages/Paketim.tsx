@@ -81,7 +81,10 @@ const Paketim = () => {
         body: { periyot, clientIp },
       });
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) {
+        const popup = window.open(data.url, "_blank");
+        if (!popup) window.location.href = data.url;
+      }
     } catch (err) {
       console.error("PayTR error:", err);
       toast({ title: "Hata", description: "Ödeme sayfası oluşturulamadı. Lütfen tekrar deneyin.", variant: "destructive" });

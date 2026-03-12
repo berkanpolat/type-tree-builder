@@ -113,7 +113,10 @@ const Dashboard = () => {
         body: { periyot, clientIp },
       });
       if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
+      if (data?.url) {
+        const popup = window.open(data.url, "_blank");
+        if (!popup) window.location.href = data.url;
+      }
     } catch (err: any) {
       console.error("PayTR error:", err);
     }
