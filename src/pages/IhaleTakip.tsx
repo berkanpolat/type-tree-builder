@@ -335,7 +335,7 @@ export default function IhaleTakip() {
       return;
     }
     toast({ title: "İhale silindi" });
-    navigate("/manuihale");
+    navigate("/ihalelerim");
   };
 
   const handleConfirmAction = async () => {
