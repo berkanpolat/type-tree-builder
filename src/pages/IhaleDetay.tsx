@@ -352,7 +352,7 @@ export default function IhaleDetay() {
       if (adminToken) {
         try {
           const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth/get-ihale-detail", {
-            body: { token: adminToken, ihaleId: id },
+            body: { token: adminToken, ihaleId: slugParam },
           });
           if (!adminErr && adminRes?.ihale) {
             ihaleData = adminRes.ihale;
