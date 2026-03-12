@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import {
@@ -24,9 +24,12 @@ interface PazarHeaderProps {
 
 export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const isActive = (path: string) => location.pathname.startsWith(path);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -55,9 +58,9 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
           </Link>
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-6">
-            <Link to="/firmalar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekRehber</Link>
-            <Link to="/tekpazar" className="text-sm font-medium text-foreground hover:text-secondary transition-colors">TekPazar</Link>
-            <Link to="/ihaleler" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Tekİhale</Link>
+            <Link to="/firmalar" className={`text-sm font-medium transition-colors ${isActive("/firmalar") ? "text-secondary border-b-2 border-secondary pb-0.5" : "text-muted-foreground hover:text-secondary"}`}>TekRehber</Link>
+            <Link to="/tekpazar" className={`text-sm font-medium transition-colors ${isActive("/tekpazar") ? "text-secondary border-b-2 border-secondary pb-0.5" : "text-muted-foreground hover:text-secondary"}`}>TekPazar</Link>
+            <Link to="/ihaleler" className={`text-sm font-medium transition-colors ${isActive("/ihaleler") ? "text-secondary border-b-2 border-secondary pb-0.5" : "text-muted-foreground hover:text-secondary"}`}>Tekİhale</Link>
           </nav>
         </div>
 
@@ -65,9 +68,9 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
         <div className="flex items-center gap-1">
           {/* Mobile nav links */}
           <nav className="flex md:hidden items-center gap-1 mr-1">
-            <Link to="/firmalar" className="text-[11px] font-medium text-muted-foreground px-1.5 py-1 rounded hover:bg-muted">Rehber</Link>
-            <Link to="/tekpazar" className="text-[11px] font-medium text-foreground px-1.5 py-1 rounded bg-muted">Pazar</Link>
-            <Link to="/ihaleler" className="text-[11px] font-medium text-muted-foreground px-1.5 py-1 rounded hover:bg-muted">İhale</Link>
+            <Link to="/firmalar" className={`text-[11px] font-medium px-1.5 py-1 rounded ${isActive("/firmalar") ? "text-secondary bg-secondary/10" : "text-muted-foreground hover:bg-muted"}`}>Rehber</Link>
+            <Link to="/tekpazar" className={`text-[11px] font-medium px-1.5 py-1 rounded ${isActive("/tekpazar") ? "text-secondary bg-secondary/10" : "text-muted-foreground hover:bg-muted"}`}>Pazar</Link>
+            <Link to="/ihaleler" className={`text-[11px] font-medium px-1.5 py-1 rounded ${isActive("/ihaleler") ? "text-secondary bg-secondary/10" : "text-muted-foreground hover:bg-muted"}`}>İhale</Link>
           </nav>
 
           {/* Icons */}

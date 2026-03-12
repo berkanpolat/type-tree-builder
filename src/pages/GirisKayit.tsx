@@ -218,7 +218,7 @@ const GirisKayit = () => {
       });
       if (error) throw error;
       toast({ title: "Giriş başarılı" });
-      navigate("/dashboard");
+      navigate("/firmalar");
     } catch (error: any) {
       let msg = error.message;
       if (msg?.includes("Invalid login")) msg = "E-posta veya şifre hatalı.";
