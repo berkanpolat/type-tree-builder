@@ -28,8 +28,6 @@ const STEP_ICONS = [Pencil, FileText, Settings, Package];
 const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" | "number" | "date" | "dependent_dropdown"; kategoriName?: string; dependsOn?: string }[]> = {
   "Hazır Giyim": [
     { label: "Kumaş Kompozisyonu", type: "text" },
-    { label: "Kumaş Grubu", type: "dropdown", kategoriName: "Kumaş Grubu" },
-    { label: "Kumaş Türü", type: "dependent_dropdown", dependsOn: "Kumaş Grubu" },
     { label: "Sezon", type: "dropdown", kategoriName: "Sezon" },
     { label: "Cinsiyet", type: "dropdown", kategoriName: "Cinsiyet" },
     { label: "Yaş Grubu", type: "dropdown", kategoriName: "Yaş Grubu" },
@@ -589,7 +587,7 @@ export default function YeniUrun() {
                     <Select value={selectedKategori} onValueChange={(v) => { setSelectedKategori(v); setSelectedGrup(""); setSelectedTur(""); setGruplar([]); setTurler([]); }}>
                       <SelectTrigger><SelectValue placeholder="Kategori Seçin" /></SelectTrigger>
                       <SelectContent className="bg-popover z-50">
-                        {kategoriler.map(k => <SelectItem key={k.id} value={k.id}>{k.name}</SelectItem>)}
+                        {kategoriler.filter(k => k.name !== "Hazır Giyim (Üretim)").map(k => <SelectItem key={k.id} value={k.id}>{k.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
