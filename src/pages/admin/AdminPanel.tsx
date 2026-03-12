@@ -436,7 +436,7 @@ export default function AdminPanel() {
             <SectionFilters timeFilter={sikayetFilter} onTimeChange={setSikayetFilter} dateRange={sikayetDateRange} onDateChange={setSikayetDateRange} />
           </div>
           {sikayetComputed && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
               <StatCard title="Toplam" value={sikayetComputed.toplam} icon={MessageSquareWarning} color="from-red-500 to-red-600" onClick={() => goSikayetler()} />
               <StatCard title="Mesaj" value={sikayetComputed.mesaj} icon={MessageSquareWarning} color="from-blue-500 to-blue-600" onClick={() => goSikayetler("mesaj")} />
               <StatCard title="İhale" value={sikayetComputed.ihale} icon={Gavel} color="from-emerald-500 to-emerald-600" onClick={() => goSikayetler("ihale")} />

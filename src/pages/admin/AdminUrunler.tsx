@@ -708,10 +708,10 @@ export default function AdminUrunler() {
             </div>
           )}
           {paginated.map((urun) => (
-            <div key={urun.id} style={s.card} className="overflow-hidden hover:shadow-md transition-shadow h-[140px]">
-              <div className="flex h-full">
+            <div key={urun.id} style={s.card} className="overflow-hidden hover:shadow-md transition-shadow sm:h-[140px]">
+              <div className="flex flex-col sm:flex-row sm:h-full">
                 {/* Photo */}
-                <div className="w-[140px] h-full flex-shrink-0 flex items-center justify-center" style={{ background: "hsl(var(--admin-hover))" }}>
+                <div className="w-full h-36 sm:w-[140px] sm:h-full flex-shrink-0 flex items-center justify-center" style={{ background: "hsl(var(--admin-hover))" }}>
                   {urun.foto_url ? (
                     <img src={urun.foto_url} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -720,9 +720,9 @@ export default function AdminUrunler() {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 p-4 min-w-0 flex flex-col justify-between">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1 space-y-1.5">
+                <div className="flex-1 p-3 sm:p-4 min-w-0 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="min-w-0 space-y-1.5">
                       {/* Row 1: ID + Status */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <code className="text-xs font-mono font-bold px-2 py-0.5 rounded" style={{ background: "hsl(var(--admin-hover))", ...s.text }}>
@@ -732,7 +732,7 @@ export default function AdminUrunler() {
                       </div>
 
                       {/* Row 2: Title */}
-                      <h3 className="font-semibold text-sm leading-tight truncate" style={s.text}>{urun.baslik}</h3>
+                      <h3 className="font-semibold text-sm leading-tight line-clamp-2 sm:truncate" style={s.text}>{urun.baslik}</h3>
 
                       {/* Row 3: Firma info */}
                       <div className="flex items-center gap-2">
@@ -748,56 +748,52 @@ export default function AdminUrunler() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
                       {hasPermission("urun_inceleyebilir") && (
                         <Button
                           onClick={() => window.open(`/urun/${urun.id}`, "_blank")}
                           variant="outline" size="sm"
-                          className="text-xs h-8 px-3 gap-1.5"
+                          className="text-xs h-7 px-2.5 gap-1.5"
                           style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
                         >
                           <ExternalLink className="w-3.5 h-3.5" /> İncele
                         </Button>
                       )}
-
-                      <div className="flex items-center gap-1.5">
-                        {/* Toggle aktif/pasif */}
-                        {(urun.durum === "aktif" || urun.durum === "pasif") && hasPermission("urun_onaylayabilir") && (
-                          <Switch
-                            checked={urun.durum === "aktif"}
-                            onCheckedChange={() => handleToggle(urun.id, urun.durum)}
-                            className="scale-[0.85]"
-                          />
-                        )}
-                        {hasPermission("urun_duzenleyebilir") && (
-                          <Button
-                            onClick={() => window.open(`/manupazar/duzenle/${urun.id}?admin=1`, "_blank")}
-                            variant="ghost" size="sm"
-                            className="h-7 w-7 p-0"
-                            style={s.muted}
-                            title="Düzenle"
-                          >
-                            <Pencil className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
-                        {hasPermission("urun_kaldirabilir") && (
-                          <Button
-                            onClick={() => setRemoveDialog({ open: true, urunId: urun.id, baslik: urun.baslik })}
-                            variant="ghost" size="sm"
-                            className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
-                            title="Kaldır"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        )}
-                      </div>
+                      {(urun.durum === "aktif" || urun.durum === "pasif") && hasPermission("urun_onaylayabilir") && (
+                        <Switch
+                          checked={urun.durum === "aktif"}
+                          onCheckedChange={() => handleToggle(urun.id, urun.durum)}
+                          className="scale-[0.85]"
+                        />
+                      )}
+                      {hasPermission("urun_duzenleyebilir") && (
+                        <Button
+                          onClick={() => window.open(`/manupazar/duzenle/${urun.id}?admin=1`, "_blank")}
+                          variant="ghost" size="sm"
+                          className="h-7 w-7 p-0"
+                          style={s.muted}
+                          title="Düzenle"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
+                      {hasPermission("urun_kaldirabilir") && (
+                        <Button
+                          onClick={() => setRemoveDialog({ open: true, urunId: urun.id, baslik: urun.baslik })}
+                          variant="ghost" size="sm"
+                          className="h-7 w-7 p-0 text-red-500 hover:text-red-600"
+                          title="Kaldır"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      )}
                     </div>
                   </div>
 
                   {/* Bottom row: Category + Views + Price */}
-                  <div className="flex items-center gap-3 text-xs mt-auto pt-1" style={s.muted}>
+                  <div className="flex items-center gap-3 text-xs mt-auto pt-1 flex-wrap" style={s.muted}>
                     {urun.kategori_label !== "—" && (
-                      <span className="text-purple-500 truncate max-w-[280px]">{urun.kategori_label}</span>
+                      <span className="text-purple-500 truncate max-w-[200px] sm:max-w-[280px]">{urun.kategori_label}</span>
                     )}
                     <span className="flex items-center gap-1 shrink-0">
                       <Eye className="w-3.5 h-3.5" />

@@ -734,9 +734,9 @@ export default function AdminIhaleler() {
             )}
             {paginated.map((ihale) => (
               <div key={ihale.id} style={s.card} className="overflow-hidden hover:shadow-md transition-shadow">
-                <div className="flex">
+                <div className="flex flex-col sm:flex-row">
                   {/* Photo */}
-                  <div className="w-24 min-h-[120px] flex-shrink-0 flex items-center justify-center relative" style={{ background: "hsl(var(--admin-hover))" }}>
+                  <div className="w-full h-32 sm:w-24 sm:h-auto sm:min-h-[120px] flex-shrink-0 flex items-center justify-center relative" style={{ background: "hsl(var(--admin-hover))" }}>
                     {ihale.foto_url ? (
                       <img src={ihale.foto_url} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -745,9 +745,9 @@ export default function AdminIhaleler() {
                   </div>
 
                   {/* Content */}
-                  <div className="flex-1 p-4 min-w-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
+                  <div className="flex-1 p-3 sm:p-4 min-w-0">
+                    <div className="space-y-2">
+                      <div className="min-w-0">
                         {/* Title row */}
                         <div className="flex items-center gap-2 flex-wrap mb-1.5">
                           <code className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded" style={{ background: "hsl(var(--admin-hover))", ...s.text }}>
@@ -755,26 +755,26 @@ export default function AdminIhaleler() {
                           </code>
                           {durumBadge(ihale.durum)}
                         </div>
-                        <h3 className="font-semibold text-sm mb-1 truncate" style={s.text}>{ihale.baslik}</h3>
+                        <h3 className="font-semibold text-sm mb-1 line-clamp-2 sm:truncate" style={s.text}>{ihale.baslik}</h3>
 
                         {/* Meta info */}
                         <div className="flex items-center gap-2 text-[11px] flex-wrap mb-2" style={s.secondary}>
                           <span className="font-medium">{ihale.firma_unvani}</span>
                           <span className="opacity-40">•</span>
                           <span>{IHALE_TURU_LABELS[ihale.ihale_turu] || ihale.ihale_turu}</span>
-                          <span className="opacity-40">•</span>
-                          <span>{TEKLIF_USULU_LABELS[ihale.teklif_usulu] || ihale.teklif_usulu}</span>
+                          <span className="opacity-40 hidden sm:inline">•</span>
+                          <span className="hidden sm:inline">{TEKLIF_USULU_LABELS[ihale.teklif_usulu] || ihale.teklif_usulu}</span>
                           {ihale.kategori_label !== "—" && (
                             <>
-                              <span className="opacity-40">•</span>
-                              <span className="text-purple-500">{ihale.kategori_label}</span>
+                              <span className="opacity-40 hidden sm:inline">•</span>
+                              <span className="text-purple-500 hidden sm:inline">{ihale.kategori_label}</span>
                             </>
                           )}
                         </div>
 
                         {/* Dates & Stats */}
-                        <div className="flex items-center gap-4 text-[11px] flex-wrap" style={s.muted}>
-                          <span>{formatDate(ihale.baslangic_tarihi)} — {formatDate(ihale.bitis_tarihi)}</span>
+                        <div className="flex items-center gap-3 sm:gap-4 text-[11px] flex-wrap" style={s.muted}>
+                          <span className="hidden sm:inline">{formatDate(ihale.baslangic_tarihi)} — {formatDate(ihale.bitis_tarihi)}</span>
                           {ihale.durum === "devam_ediyor" && ihale.bitis_tarihi && (
                             <span className="text-amber-500 font-semibold">{getRemainingTime(ihale.bitis_tarihi)}</span>
                           )}
@@ -784,13 +784,13 @@ export default function AdminIhaleler() {
                           </span>
                           <span className="flex items-center gap-1">
                             <Eye className="w-3 h-3" />
-                            <strong style={s.text}>{ihale.goruntuleme_sayisi}</strong> görüntülenme
+                            <strong style={s.text}>{ihale.goruntuleme_sayisi}</strong>
                           </span>
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className="flex items-center gap-1.5 flex-wrap pt-1">
                         {hasPermission("ihale_duzenleyebilir") && (
                           <Button
                             onClick={() => window.open(`/manuihale/duzenle/${ihale.id}`, "_blank")}

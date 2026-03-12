@@ -452,11 +452,11 @@ export default function AdminKisitlamalar() {
               <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
             </div>
           ) : (
-            <>
+            <div className="overflow-x-auto">
               {activeTab === "kisitlama" && <KisitlamaTable data={kisitlamalar} search={search} filterAktif={filterAktif} isExpired={isExpired} onEdit={openEditKisitlama} onDelete={(k) => { setSelectedItem(k); setShowDelete(true); }} />}
               {activeTab === "uzaklastirma" && <UzaklastirmaTable data={uzaklastirmalar} search={search} filterAktif={filterAktif} isExpired={isExpired} onEdit={openEditUzaklastirma} onDelete={(u) => { setSelectedItem(u); setShowDelete(true); }} />}
               {activeTab === "yasak" && <YasakTable data={yasaklar} search={search} onDelete={(y) => { setSelectedItem(y); setShowDelete(true); }} />}
-            </>
+            </div>
           )}
         </div>
       </div>
