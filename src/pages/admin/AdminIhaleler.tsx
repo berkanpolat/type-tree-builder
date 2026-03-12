@@ -804,7 +804,7 @@ export default function AdminIhaleler() {
 
                         {hasPermission("ihale_inceleyebilir") && (
                           <Button
-                            onClick={() => window.open(`/tekihale/${ihale.id}`, "_blank")}
+                            onClick={() => window.open(`/ihaleler/${ihale.id}`, "_blank")}
                             variant="outline" size="sm"
                             className="text-[11px] h-7 px-2.5 gap-1"
                             style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
