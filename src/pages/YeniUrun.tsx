@@ -587,7 +587,7 @@ export default function YeniUrun() {
                     <Select value={selectedKategori} onValueChange={(v) => { setSelectedKategori(v); setSelectedGrup(""); setSelectedTur(""); setGruplar([]); setTurler([]); }}>
                       <SelectTrigger><SelectValue placeholder="Kategori Seçin" /></SelectTrigger>
                       <SelectContent className="bg-popover z-50">
-                        {kategoriler.map(k => <SelectItem key={k.id} value={k.id}>{k.name}</SelectItem>)}
+                        {kategoriler.filter(k => k.name !== "Hazır Giyim (Üretim)").map(k => <SelectItem key={k.id} value={k.id}>{k.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
