@@ -498,59 +498,59 @@ export default function IhaleTakip() {
         </Card>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
+        <div className="space-y-3">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input placeholder="Ünvana göre ara..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">Teklif Edilen Fiyat</label>
+              <label className="text-xs text-muted-foreground block mb-1">Fiyat (Min-Max)</label>
               <div className="flex gap-1">
-                <Input placeholder="Min" value={fiyatMin} onChange={(e) => setFiyatMin(e.target.value)} className="w-20" type="number" />
-                <Input placeholder="Max" value={fiyatMax} onChange={(e) => setFiyatMax(e.target.value)} className="w-20" type="number" />
+                <Input placeholder="Min" value={fiyatMin} onChange={(e) => setFiyatMin(e.target.value)} className="w-full" type="number" />
+                <Input placeholder="Max" value={fiyatMax} onChange={(e) => setFiyatMax(e.target.value)} className="w-full" type="number" />
               </div>
             </div>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Ödeme Şekli</label>
-            <Select value={filterOdeme} onValueChange={setFilterOdeme}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Ödeme Şekli" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                {dbOdemeSecenekleri.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Ödeme Vadesi</label>
-            <Select value={filterVade} onValueChange={setFilterVade}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Ödeme Vadesi" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                {dbOdemeVadeleri.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Kargo Masrafı</label>
-            <Select value={filterKargo} onValueChange={setFilterKargo}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Kargo Masrafı" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                {dbKargoMasrafi.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Artan Sıralama</label>
-            <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="asc">Tutar (Artan)</SelectItem>
-                <SelectItem value="desc">Tutar (Azalan)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Ödeme Şekli</label>
+              <Select value={filterOdeme} onValueChange={setFilterOdeme}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Ödeme Şekli" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {dbOdemeSecenekleri.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Ödeme Vadesi</label>
+              <Select value={filterVade} onValueChange={setFilterVade}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Ödeme Vadesi" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {dbOdemeVadeleri.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Kargo Masrafı</label>
+              <Select value={filterKargo} onValueChange={setFilterKargo}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Kargo Masrafı" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {dbKargoMasrafi.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Sıralama</label>
+              <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="asc">Tutar (Artan)</SelectItem>
+                  <SelectItem value="desc">Tutar (Azalan)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -568,56 +568,56 @@ export default function IhaleTakip() {
             <div className="space-y-4">
               {filteredTeklifler.map((teklif) => (
                 <Card key={teklif.id} className="border">
-                  <CardContent className="p-5">
-                    <div className="flex flex-wrap items-start gap-4 md:gap-6">
-                      {/* Firma Info */}
-                      <div className="flex items-center gap-3 min-w-[180px]">
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                          {teklif.firma_logo_url ? (
-                            <img src={teklif.firma_logo_url} alt="" className="w-full h-full object-contain" />
-                          ) : (
-                            <span className="text-xs font-bold text-muted-foreground">{teklif.firma_unvani.charAt(0)}</span>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground text-sm">{teklif.firma_unvani}</p>
-                          {teklif.firma_il && (
-                            <p className="text-xs text-muted-foreground">📍 {teklif.firma_il}, {teklif.firma_ulke}</p>
-                          )}
-                        </div>
-                      </div>
+                    <div className="p-4 sm:p-5">
+                     <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 md:gap-6">
+                       {/* Firma Info */}
+                       <div className="flex items-center gap-3 w-full sm:w-auto sm:min-w-[180px]">
+                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                           {teklif.firma_logo_url ? (
+                             <img src={teklif.firma_logo_url} alt="" className="w-full h-full object-contain" />
+                           ) : (
+                             <span className="text-xs font-bold text-muted-foreground">{teklif.firma_unvani.charAt(0)}</span>
+                           )}
+                         </div>
+                         <div className="min-w-0">
+                           <p className="font-semibold text-foreground text-sm truncate">{teklif.firma_unvani}</p>
+                           {teklif.firma_il && (
+                             <p className="text-xs text-muted-foreground">📍 {teklif.firma_il}, {teklif.firma_ulke}</p>
+                           )}
+                         </div>
+                       </div>
 
-                      {/* Teklif Details */}
-                      <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                          <p className="text-xs text-muted-foreground font-medium uppercase">Teklif Tutarı</p>
-                          <p className="text-lg font-bold text-foreground">{sym}{teklif.tutar.toLocaleString("tr-TR")}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground font-medium uppercase">Ödeme Vadesi</p>
-                          <p className="text-sm font-medium text-foreground">{teklif.odeme_vadesi || "-"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground font-medium uppercase">Teklif Tarihi</p>
-                          <p className="text-sm font-medium text-foreground">
-                            {format(new Date(teklif.created_at), "dd.MM.yyyy, HH:mm", { locale: tr })}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground font-medium uppercase">Durum</p>
-                          <Badge
-                            variant="secondary"
-                            className={
-                              teklif.durum === "kabul_edildi" ? "bg-emerald-100 text-emerald-700" :
-                                teklif.durum === "reddedildi" ? "bg-red-100 text-red-700" :
-                                  "bg-amber-100 text-amber-700"
-                            }
-                          >
-                            {teklif.durum === "kabul_edildi" ? "Kabul Edildi" : teklif.durum === "reddedildi" ? "Reddedildi" : "İnceleniyor"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
+                       {/* Teklif Details */}
+                       <div className="flex-1 grid grid-cols-2 gap-3 w-full">
+                         <div>
+                           <p className="text-xs text-muted-foreground font-medium uppercase">Teklif Tutarı</p>
+                           <p className="text-base sm:text-lg font-bold text-foreground">{sym}{teklif.tutar.toLocaleString("tr-TR")}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-muted-foreground font-medium uppercase">Ödeme Vadesi</p>
+                           <p className="text-sm font-medium text-foreground">{teklif.odeme_vadesi || "-"}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-muted-foreground font-medium uppercase">Teklif Tarihi</p>
+                           <p className="text-sm font-medium text-foreground">
+                             {format(new Date(teklif.created_at), "dd.MM.yyyy, HH:mm", { locale: tr })}
+                           </p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-muted-foreground font-medium uppercase">Durum</p>
+                           <Badge
+                             variant="secondary"
+                             className={
+                               teklif.durum === "kabul_edildi" ? "bg-emerald-100 text-emerald-700" :
+                                 teklif.durum === "reddedildi" ? "bg-red-100 text-red-700" :
+                                   "bg-amber-100 text-amber-700"
+                             }
+                           >
+                             {teklif.durum === "kabul_edildi" ? "Kabul Edildi" : teklif.durum === "reddedildi" ? "Reddedildi" : "İnceleniyor"}
+                           </Badge>
+                         </div>
+                       </div>
+                     </div>
 
                     {/* Second row: Ödeme Şekli & Kargo */}
                     <div className="flex flex-wrap gap-6 mt-3 pt-3 border-t">
@@ -631,47 +631,45 @@ export default function IhaleTakip() {
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => handleMesajGonder(teklif.teklif_veren_user_id)}
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" /> Mesaj Gönder
-                      </Button>
-                      {teklif.ek_dosya_url && (
-                        <a href={teklif.ek_dosya_url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="outline" size="sm" className="gap-1">
-                            <Download className="w-3.5 h-3.5" /> Ek Dosyayı İndir {teklif.ek_dosya_adi ? `(${teklif.ek_dosya_adi.split('.').pop()?.toUpperCase()})` : ""}
-                          </Button>
-                        </a>
-                      )}
+                     {/* Actions */}
+                     <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 mt-4 pt-3 border-t">
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         className="gap-1 w-full sm:w-auto"
+                         onClick={() => handleMesajGonder(teklif.teklif_veren_user_id)}
+                       >
+                         <MessageSquare className="w-3.5 h-3.5" /> Mesaj Gönder
+                       </Button>
+                       {teklif.ek_dosya_url && (
+                         <a href={teklif.ek_dosya_url} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                           <Button variant="outline" size="sm" className="gap-1 w-full">
+                             <Download className="w-3.5 h-3.5" /> Ek Dosya {teklif.ek_dosya_adi ? `(${teklif.ek_dosya_adi.split('.').pop()?.toUpperCase()})` : ""}
+                           </Button>
+                         </a>
+                       )}
 
-                      <div className="ml-auto flex gap-2">
-                        {teklif.durum === "inceleniyor" && ihale.durum === "devam_ediyor" && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                              onClick={() => setConfirmAction({ type: "red", teklifId: teklif.id })}
-                            >
-                              Reddet
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                              onClick={() => setConfirmAction({ type: "kabul", teklifId: teklif.id })}
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Teklifi Kabul Et
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
+                       {teklif.durum === "inceleniyor" && ihale.durum === "devam_ediyor" && (
+                         <div className="flex gap-2 sm:ml-auto w-full sm:w-auto">
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground flex-1 sm:flex-none"
+                             onClick={() => setConfirmAction({ type: "red", teklifId: teklif.id })}
+                           >
+                             Reddet
+                           </Button>
+                           <Button
+                             size="sm"
+                             className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white flex-1 sm:flex-none"
+                             onClick={() => setConfirmAction({ type: "kabul", teklifId: teklif.id })}
+                           >
+                             <CheckCircle2 className="w-3.5 h-3.5" /> Kabul Et
+                           </Button>
+                         </div>
+                       )}
+                     </div>
+                   </div>
                 </Card>
               ))}
             </div>
