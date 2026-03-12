@@ -503,10 +503,12 @@ export default function UrunDetay() {
           <span className="text-foreground font-medium truncate max-w-[200px]">{urun.baslik}</span>
         </nav>
 
-        {/* Main Content */}
+        {/* Main Content - Mobile: single column with specific order, Desktop: 2-column */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
-          {/* Left: Image Gallery */}
-          <div className="lg:col-span-3 space-y-6">
+          {/* Left Column (desktop) */}
+          <div className="lg:col-span-3 space-y-6 order-2 lg:order-1">
+            {/* Image Gallery - mobile order 2 */}
+            <div className="order-2 lg:order-none">
             <div className="flex flex-col sm:flex-row gap-4">
             {/* Thumbnails - horizontal on mobile, vertical on desktop */}
             {allImages.length > 1 && (
@@ -585,16 +587,95 @@ export default function UrunDetay() {
               )}
             </div>
             </div>
+            </div>
 
+            {/* Price Card - MOBILE ONLY (order 3, after photo) */}
+            <div className="lg:hidden order-3">
+              <Card className="p-6">
+                {/* Kademeli Fiyatlandırma */}
+                {urun.fiyat_tipi === "varyasyonlu" && varyasyonlar.length > 0 ? (
+                  <div>
+                    {(() => {
+                      const combos = new Map<string, VaryasyonData[]>();
+                      varyasyonlar.forEach(v => {
+                        const key = `${v.varyant_1_value}|${v.varyant_2_value || ""}`;
+                        if (!combos.has(key)) combos.set(key, []);
+                        combos.get(key)!.push(v);
+                      });
+                      const firstComboTiers = Array.from(combos.values())[0] || [];
+                      return (
+                        <div className="flex flex-wrap gap-4">
+                          {firstComboTiers.map((tier, i) => (
+                            <div key={i} className="text-center">
+                              <p className="text-sm text-muted-foreground">{tier.min_adet}-{tier.max_adet} adet</p>
+                              <p className="text-xl font-bold text-foreground">{sym}{tier.birim_fiyat.toLocaleString("tr-TR")}</p>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <div>{priceDisplay}</div>
+                )}
+                {urun.min_siparis_miktari && (
+                  <div className="flex items-center gap-3 bg-muted rounded-lg px-4 py-3 mt-4">
+                    <Package className="w-5 h-5 text-muted-foreground shrink-0" />
+                    <span className="text-sm text-foreground">
+                      Minimum Sipariş Miktarı: <strong>{urun.min_siparis_miktari} Adet</strong>
+                    </span>
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* Seller Info - MOBILE ONLY (order 4, after price) */}
+            <div className="lg:hidden order-4">
+              {firma && (
+                <Card className="p-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-4">Satıcı Bilgileri</h3>
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
+                      {firma.logo_url ? (
+                        <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
+                      ) : (
+                        <span className="text-xl font-bold text-muted-foreground">{firma.firma_unvani.charAt(0)}</span>
+                      )}
+                    </div>
+                    <div>
+                      {firma.belge_onayli && (
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          <span className="text-sm text-emerald-600 font-medium">Doğrulanmış</span>
+                        </div>
+                      )}
+                      <p className="font-semibold text-foreground">{firma.firma_unvani}</p>
+                      {locationText && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
+                          <MapPin className="w-3.5 h-3.5" />
+                          <span>{locationText}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <Button onClick={handleSaticiyaSor} className="w-full h-12 gap-2 text-base" disabled={urun.user_id === currentUserId}>
+                    <MessageSquare className="w-5 h-5" /> Satıcıya Soru Sor
+                  </Button>
+                </Card>
+              )}
+            </div>
+
+            {/* Açıklama - order 5 */}
             {urun.aciklama && (
-              <Card className="p-6 -mt-6">
+              <Card className="p-6 order-5 lg:order-none">
                 <h2 className="text-lg font-bold text-foreground mb-3">Açıklama</h2>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{urun.aciklama}</p>
               </Card>
             )}
 
+            {/* Teknik Özellikler - order 6 */}
             {Object.keys(resolvedTeknikDetaylar).length > 0 && (
-              <Card className="p-6">
+              <Card className="p-6 order-6 lg:order-none">
                 <h2 className="text-lg font-bold text-foreground mb-4">Teknik Özellikler</h2>
                 <div className="space-y-4">
                   {Object.entries(resolvedTeknikDetaylar).map(([key, value]) => (
@@ -607,13 +688,12 @@ export default function UrunDetay() {
               </Card>
             )}
 
-            {/* Varyasyonlar */}
+            {/* Varyasyonlar - order 7 */}
             {varyasyonlar.length > 0 && (
-              <Card className="p-6">
+              <Card className="p-6 order-7 lg:order-none">
                 <h2 className="text-lg font-bold text-foreground mb-4">Varyasyonlar</h2>
                 <div className="overflow-x-auto">
                   {(() => {
-                    // Deduplicate: show each varyant combo only once (ignore price tiers)
                     const seen = new Set<string>();
                     const uniqueVars = varyasyonlar.filter(v => {
                       const key = `${v.varyant_1_value}|${v.varyant_2_value || ""}`;
@@ -651,8 +731,8 @@ export default function UrunDetay() {
             )}
           </div>
 
-          {/* Right: Product Info + Seller */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* Right Column: Product Info + Seller (desktop only for price/seller, always for admin/title) */}
+          <div className="lg:col-span-2 space-y-4 order-1 lg:order-2">
             {/* Admin Onay/Red Bloğu */}
             {isAdminViewing && urun.durum === "onay_bekliyor" && (
               <Card className="p-5 border-2 border-blue-400 bg-blue-50 dark:bg-blue-950/20">
@@ -794,88 +874,91 @@ export default function UrunDetay() {
                 </div>
               </Card>
             )}
-            {/* Product Info Card */}
+            {/* Product Info Card - Title always visible, price/actions desktop only */}
             <Card className="p-6">
               <p className="text-sm text-muted-foreground mb-1">#{urun.urun_no.replace("#", "")}</p>
               <h1 className="text-xl font-bold text-foreground mb-3">{urun.baslik}</h1>
 
-              {/* Kademeli Fiyatlandırma - show price tiers */}
-              {urun.fiyat_tipi === "varyasyonlu" && varyasyonlar.length > 0 ? (
-                <div className="mb-4">
-                  {(() => {
-                    // Group by varyant combo to show tiers per combo, or just show all tiers if single combo
-                    const combos = new Map<string, VaryasyonData[]>();
-                    varyasyonlar.forEach(v => {
-                      const key = `${v.varyant_1_value}|${v.varyant_2_value || ""}`;
-                      if (!combos.has(key)) combos.set(key, []);
-                      combos.get(key)!.push(v);
-                    });
-                    // Check if all combos have same tiers (typical for uniform pricing)
-                    const firstComboTiers = Array.from(combos.values())[0] || [];
-                    const allSameTiers = Array.from(combos.values()).every(tiers => 
-                      tiers.length === firstComboTiers.length && 
-                      tiers.every((t, i) => t.birim_fiyat === firstComboTiers[i].birim_fiyat && t.min_adet === firstComboTiers[i].min_adet && t.max_adet === firstComboTiers[i].max_adet)
-                    );
-                    const tiersToShow = allSameTiers ? firstComboTiers : firstComboTiers;
-                    return (
-                      <div className="flex flex-wrap gap-4">
-                        {tiersToShow.map((tier, i) => (
-                          <div key={i} className="text-center">
-                            <p className="text-sm text-muted-foreground">{tier.min_adet}-{tier.max_adet} adet</p>
-                            <p className="text-xl font-bold text-foreground">{sym}{tier.birim_fiyat.toLocaleString("tr-TR")}</p>
-                          </div>
+              {/* Price section - desktop only (on mobile shown separately after photo) */}
+              <div className="hidden lg:block">
+                {/* Kademeli Fiyatlandırma - show price tiers */}
+                {urun.fiyat_tipi === "varyasyonlu" && varyasyonlar.length > 0 ? (
+                  <div className="mb-4">
+                    {(() => {
+                      const combos = new Map<string, VaryasyonData[]>();
+                      varyasyonlar.forEach(v => {
+                        const key = `${v.varyant_1_value}|${v.varyant_2_value || ""}`;
+                        if (!combos.has(key)) combos.set(key, []);
+                        combos.get(key)!.push(v);
+                      });
+                      const firstComboTiers = Array.from(combos.values())[0] || [];
+                      const allSameTiers = Array.from(combos.values()).every(tiers => 
+                        tiers.length === firstComboTiers.length && 
+                        tiers.every((t, i) => t.birim_fiyat === firstComboTiers[i].birim_fiyat && t.min_adet === firstComboTiers[i].min_adet && t.max_adet === firstComboTiers[i].max_adet)
+                      );
+                      const tiersToShow = allSameTiers ? firstComboTiers : firstComboTiers;
+                      return (
+                        <div className="flex flex-wrap gap-4">
+                          {tiersToShow.map((tier, i) => (
+                            <div key={i} className="text-center">
+                              <p className="text-sm text-muted-foreground">{tier.min_adet}-{tier.max_adet} adet</p>
+                              <p className="text-xl font-bold text-foreground">{sym}{tier.birim_fiyat.toLocaleString("tr-TR")}</p>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <div className="mb-4">{priceDisplay}</div>
+                )}
+
+                {urun.min_siparis_miktari && (
+                  <div className="flex items-center gap-3 bg-muted rounded-lg px-4 py-3 mb-4">
+                    <Package className="w-5 h-5 text-muted-foreground shrink-0" />
+                    <span className="text-sm text-foreground">
+                      Minimum Sipariş Miktarı: <strong>{urun.min_siparis_miktari} Adet</strong>
+                    </span>
+                  </div>
+                )}
+
+                {/* Renk Seçenekleri */}
+                {(() => {
+                  const uniqueColors = [...new Set(varyasyonlar.filter(v => v.varyant_2_value).map(v => v.varyant_2_value!))];
+                  if (uniqueColors.length === 0) return null;
+                  return (
+                    <div className="mb-4">
+                      <h3 className="text-sm font-semibold text-foreground mb-2">Renk Seçenekleri</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {uniqueColors.map(color => (
+                          <Badge key={color} variant="outline" className="px-3 py-1.5 text-sm font-normal">
+                            {color}
+                          </Badge>
                         ))}
                       </div>
-                    );
-                  })()}
-                </div>
-              ) : (
-                <div className="mb-4">{priceDisplay}</div>
-              )}
-
-              {urun.min_siparis_miktari && (
-                <div className="flex items-center gap-3 bg-muted rounded-lg px-4 py-3 mb-4">
-                  <Package className="w-5 h-5 text-muted-foreground shrink-0" />
-                  <span className="text-sm text-foreground">
-                    Minimum Sipariş Miktarı: <strong>{urun.min_siparis_miktari} Adet</strong>
-                  </span>
-                </div>
-              )}
-
-              {/* Renk Seçenekleri */}
-              {(() => {
-                const uniqueColors = [...new Set(varyasyonlar.filter(v => v.varyant_2_value).map(v => v.varyant_2_value!))];
-                if (uniqueColors.length === 0) return null;
-                return (
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-foreground mb-2">Renk Seçenekleri</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {uniqueColors.map(color => (
-                        <Badge key={color} variant="outline" className="px-3 py-1.5 text-sm font-normal">
-                          {color}
-                        </Badge>
-                      ))}
                     </div>
-                  </div>
-                );
-              })()}
+                  );
+                })()}
 
-              <Button
-                onClick={handleSaticiyaSor}
-                className="w-full h-12 gap-2 text-base"
-                disabled={urun.user_id === currentUserId}
-              >
-                <MessageSquare className="w-5 h-5" />
-                Satıcıya Soru Sor
-              </Button>
-              {urun.user_id !== currentUserId && (
-                <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
-                  <Flag className="w-4 h-4" />
-                  Ürünü Bildir
+                <Button
+                  onClick={handleSaticiyaSor}
+                  className="w-full h-12 gap-2 text-base"
+                  disabled={urun.user_id === currentUserId}
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  Satıcıya Soru Sor
                 </Button>
-              )}
+                {urun.user_id !== currentUserId && (
+                  <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
+                    <Flag className="w-4 h-4" />
+                    Ürünü Bildir
+                  </Button>
+                )}
+              </div>
             </Card>
-            {/* Seller Info Card */}
+
+            {/* Seller Info Card - desktop only (on mobile shown after price) */}
+            <div className="hidden lg:block">
             {firma && (
               <Card className="p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Satıcı Bilgileri</h3>
@@ -983,6 +1066,7 @@ export default function UrunDetay() {
                 )}
               </Card>
             )}
+            </div>
           </div>
         </div>
 
