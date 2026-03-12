@@ -516,10 +516,9 @@ export default function YeniUrun() {
     if (varyasyonlar.length === 0) {
       toast({ title: "En az bir ürün varyasyonu ekleyiniz.", variant: "destructive" }); return;
     }
-    for (const v of varyasyonlar) {
-      if (v.foto_urls.length === 0 && (!v.foto_files || v.foto_files.length === 0)) {
-        toast({ title: "Her varyasyon için en az bir fotoğraf zorunludur.", variant: "destructive" }); return;
-      }
+    const hasAnyVaryasyonPhoto = varyasyonlar.some(v => v.foto_urls.length > 0 || (v.foto_files && v.foto_files.length > 0));
+    if (!hasAnyVaryasyonPhoto) {
+      toast({ title: "En az bir varyasyona fotoğraf eklemelisiniz.", variant: "destructive" }); return;
     }
 
     setSaving(true);
