@@ -246,8 +246,9 @@ const Dashboard = () => {
                 {isPro && (
                   <>
                     <p className="text-lg font-semibold text-foreground mt-1">
-                      {packageInfo.periyot === "yillik" ? PRO_FIYATLAR.yillik.fiyat : PRO_FIYATLAR.aylik.fiyat}₺
+                      {packageInfo.periyot === "yillik" ? PRO_FIYATLAR.yillik.kdvli : PRO_FIYATLAR.aylik.kdvli}₺
                       <span className="text-sm font-normal text-muted-foreground">/ {packageInfo.periyot === "yillik" ? "yıl" : "ay"}</span>
+                      <span className="text-xs font-normal text-muted-foreground ml-1">(KDV dahil)</span>
                     </p>
                     {packageInfo.donemBitis && (
                       <p className="text-xs text-muted-foreground mt-2">
