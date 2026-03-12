@@ -132,8 +132,6 @@ export default function TekIhale() {
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const ihaleSidebarBanner = useBanner("tekihale-sidebar");
   const ihaleAltBanner = useBanner("tekihale-alt-banner");
-  const [ihaleler, setIhaleler] = useState<IhaleWithExtra[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
   const [page, setPage] = useSessionState("page", 1);
 
@@ -157,11 +155,61 @@ export default function TekIhale() {
   const [filterHizmetKategori, setFilterHizmetKategori] = useSessionState<string[]>("filterHizmetKategori", []);
   const [filterHizmetTur, setFilterHizmetTur] = useSessionState<string[]>("filterHizmetTur", []);
 
-  // Name map for category display
-  const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
-
   const isHizmetMode = filterIhaleTuru.length > 0 && filterIhaleTuru.every(v => v === "hizmet_alim");
   const isUrunMode = filterIhaleTuru.length > 0 && filterIhaleTuru.every(v => v === "urun_alis" || v === "urun_satis");
+
+  // Fetch active ihaleler with react-query for caching (instant on back navigation)
+  const { data: queryResult, isLoading: loading } = useQuery({
+    queryKey: ["tekihale-list"],
+    queryFn: async () => {
+      const { data: ihaleData } = await supabase
+        .from("ihaleler")
+        .select("id, ihale_no, baslik, foto_url, ihale_turu, teklif_usulu, baslangic_fiyati, para_birimi, bitis_tarihi, user_id, firma_adi_gizle, urun_kategori_id, urun_grup_id, urun_tur_id, hizmet_kategori_id, hizmet_tur_id, odeme_secenekleri, odeme_vadesi, slug")
+        .eq("durum", "devam_ediyor")
+        .order("created_at", { ascending: false });
+
+      if (!ihaleData || ihaleData.length === 0) {
+        return { ihaleler: [] as IhaleWithExtra[], secenekMap: {} as Record<string, string> };
+      }
+
+      const userIds = [...new Set(ihaleData.map((i) => i.user_id))];
+      const ihaleIds = ihaleData.map((i) => i.id);
+
+      const [firmaRes, teklifRes] = await Promise.all([
+        supabase.from("firmalar").select("user_id, firma_unvani, logo_url").in("user_id", userIds),
+        supabase.from("ihale_teklifler").select("ihale_id").in("ihale_id", ihaleIds),
+      ]);
+
+      const firmaMap: Record<string, { unvan: string; logo: string | null }> = {};
+      firmaRes.data?.forEach((f) => {
+        firmaMap[f.user_id] = { unvan: f.firma_unvani, logo: f.logo_url };
+      });
+
+      const teklifCount: Record<string, number> = {};
+      teklifRes.data?.forEach((t) => {
+        teklifCount[t.ihale_id] = (teklifCount[t.ihale_id] || 0) + 1;
+      });
+
+      const enriched: IhaleWithExtra[] = ihaleData.map((i) => ({
+        ...i,
+        firma_unvani: firmaMap[i.user_id]?.unvan || "",
+        firma_logo_url: firmaMap[i.user_id]?.logo || null,
+        teklif_sayisi: teklifCount[i.id] || 0,
+      }));
+
+      const allIds = ihaleData.flatMap((i) => [i.urun_kategori_id, i.urun_grup_id, i.urun_tur_id, i.hizmet_kategori_id, i.hizmet_tur_id].filter(Boolean)) as string[];
+      let sMap: Record<string, string> = {};
+      if (allIds.length > 0) {
+        const { data: secData } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...new Set(allIds)]);
+        secData?.forEach((s) => { sMap[s.id] = s.name; });
+      }
+
+      return { ihaleler: enriched, secenekMap: sMap };
+    },
+  });
+
+  const ihaleler = queryResult?.ihaleler ?? [];
+  const secenekMap = queryResult?.secenekMap ?? {};
 
   // Fetch user firm info
   useEffect(() => {
@@ -189,63 +237,6 @@ export default function TekIhale() {
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
-
-  // Fetch active ihaleler
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const { data: ihaleData } = await supabase
-        .from("ihaleler")
-        .select("id, ihale_no, baslik, foto_url, ihale_turu, teklif_usulu, baslangic_fiyati, para_birimi, bitis_tarihi, user_id, firma_adi_gizle, urun_kategori_id, urun_grup_id, urun_tur_id, hizmet_kategori_id, hizmet_tur_id, odeme_secenekleri, odeme_vadesi, slug")
-        .eq("durum", "devam_ediyor")
-        .order("created_at", { ascending: false });
-
-      if (!ihaleData || ihaleData.length === 0) {
-        setIhaleler([]);
-        setLoading(false);
-        return;
-      }
-
-      // Fetch firma info and teklif counts
-      const userIds = [...new Set(ihaleData.map((i) => i.user_id))];
-      const ihaleIds = ihaleData.map((i) => i.id);
-
-      const [firmaRes, teklifRes] = await Promise.all([
-        supabase.from("firmalar").select("user_id, firma_unvani, logo_url").in("user_id", userIds),
-        supabase.from("ihale_teklifler").select("ihale_id").in("ihale_id", ihaleIds),
-      ]);
-
-      const firmaMap: Record<string, { unvan: string; logo: string | null }> = {};
-      firmaRes.data?.forEach((f) => {
-        firmaMap[f.user_id] = { unvan: f.firma_unvani, logo: f.logo_url };
-      });
-
-      const teklifCount: Record<string, number> = {};
-      teklifRes.data?.forEach((t) => {
-        teklifCount[t.ihale_id] = (teklifCount[t.ihale_id] || 0) + 1;
-      });
-
-      const enriched: IhaleWithExtra[] = ihaleData.map((i) => ({
-        ...i,
-        firma_unvani: firmaMap[i.user_id]?.unvan || "",
-        firma_logo_url: firmaMap[i.user_id]?.logo || null,
-        teklif_sayisi: teklifCount[i.id] || 0,
-      }));
-
-      setIhaleler(enriched);
-
-      // Build secenek map for category names
-      const allIds = ihaleData.flatMap((i) => [i.urun_kategori_id, i.urun_grup_id, i.urun_tur_id, i.hizmet_kategori_id, i.hizmet_tur_id].filter(Boolean)) as string[];
-      if (allIds.length > 0) {
-        const { data: secData } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...new Set(allIds)]);
-        const map: Record<string, string> = {};
-        secData?.forEach((s) => { map[s.id] = s.name; });
-        setSecenekMap(map);
-      }
-
-      setLoading(false);
-    })();
-  }, []);
 
   // Fetch ürün kategorileri
   useEffect(() => {
