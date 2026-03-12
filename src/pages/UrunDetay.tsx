@@ -821,10 +821,12 @@ export default function UrunDetay() {
                     )}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      <span className="text-sm text-emerald-600 font-medium">Doğrulanmış</span>
-                    </div>
+                    {firma.belge_onayli && (
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        <span className="text-sm text-emerald-600 font-medium">Doğrulanmış</span>
+                      </div>
+                    )}
                     <p className="font-semibold text-foreground">{firma.firma_unvani}</p>
                     {locationText && (
                       <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
