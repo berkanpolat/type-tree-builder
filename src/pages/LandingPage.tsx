@@ -580,13 +580,13 @@ const LandingPage = () => {
               <div className="mb-6 flex items-baseline gap-2">
                 {billingYearly ? (
                   <>
-                    <span className="text-sm text-destructive line-through">${STRIPE_CONFIG.pro.aylik.fiyat * 12}</span>
-                    <span className="text-4xl font-extrabold text-foreground">${STRIPE_CONFIG.pro.yillik.fiyat}</span>
+                    <span className="text-sm text-destructive line-through">{PRO_FIYATLAR.aylik.fiyat * 12}₺</span>
+                    <span className="text-4xl font-extrabold text-foreground">{PRO_FIYATLAR.yillik.fiyat}₺</span>
                     <span className="text-muted-foreground text-sm">/ Yıl</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-4xl font-extrabold text-foreground">${STRIPE_CONFIG.pro.aylik.fiyat}</span>
+                    <span className="text-4xl font-extrabold text-foreground">{PRO_FIYATLAR.aylik.fiyat}₺</span>
                     <span className="text-muted-foreground text-sm">/ Ay</span>
                   </>
                 )}
