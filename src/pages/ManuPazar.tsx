@@ -223,7 +223,7 @@ export default function ManuPazar() {
             <h2 className="text-xl md:text-2xl font-bold text-foreground">Pazarım</h2>
             <p className="text-sm text-muted-foreground">Mağazandaki ürünleri yönet, düzenle ve yeni ürün ekle.</p>
           </div>
-          <Button onClick={() => navigate("/manupazar/yeni")} className="gap-2 w-full sm:w-auto">
+          <Button onClick={() => navigate("/urunlerim/yeni")} className="gap-2 w-full sm:w-auto">
             <Plus className="w-4 h-4" />
             Yeni Ürün
           </Button>
