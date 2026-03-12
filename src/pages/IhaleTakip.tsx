@@ -188,7 +188,7 @@ export default function IhaleTakip() {
     // Verify ownership only for non-admin users
     if (!adminToken && currentUserId && ihaleData.user_id !== currentUserId) {
       toast({ title: "Yetki hatası", description: "Bu ihaleye erişim yetkiniz yok.", variant: "destructive" });
-      navigate("/manuihale");
+      navigate("/ihalelerim");
       return;
     }
 
