@@ -10,11 +10,28 @@ const corsHeaders = {
 
 const PAYTR_API_URL = "https://www.paytr.com/odeme/api/get-token";
 
-// PRO paket fiyatları (kuruş cinsinden, %20 KDV dahil, USD)
-const PRO_PRICES = {
-  aylik: 23880,   // 238.80 USD (199 + %20 KDV)
-  yillik: 155880, // 1558.80 USD (1299 + %20 KDV)
+// PRO paket fiyatları (USD bazlı, KDV hariç)
+const PRO_PRICES_USD = {
+  aylik: 199,
+  yillik: 1299,
 };
+
+const KDV_ORANI = 0.20;
+
+async function getUsdTryRate(): Promise<number> {
+  try {
+    const res = await fetch("https://open.er-api.com/v6/latest/USD");
+    const data = await res.json();
+    if (data?.result === "success" && data?.rates?.TRY) {
+      return data.rates.TRY;
+    }
+    throw new Error("Döviz kuru alınamadı");
+  } catch (e) {
+    console.error("[CREATE-PAYTR-TOKEN] Exchange rate fetch failed:", e.message);
+    // Fallback kur (güncel olmayabilir)
+    throw new Error("Anlık döviz kuru alınamadı. Lütfen tekrar deneyin.");
+  }
+}
 
 async function hmacSha256Base64(key: string, data: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -51,6 +68,25 @@ serve(async (req) => {
       throw new Error("Geçersiz periyot");
     }
 
+    // Anlık döviz kuru al
+    const usdTryRate = await getUsdTryRate();
+    const usdPrice = PRO_PRICES_USD[periyot as keyof typeof PRO_PRICES_USD];
+    const tlPrice = usdPrice * usdTryRate;
+    const kdvTutar = tlPrice * KDV_ORANI;
+    const toplamTl = tlPrice + kdvTutar;
+    // PayTR kuruş cinsinden (yuvarlama)
+    const paymentAmountKurus = Math.round(toplamTl * 100);
+
+    console.log("[CREATE-PAYTR-TOKEN] Fiyat hesaplama:", {
+      periyot,
+      usdPrice,
+      usdTryRate: usdTryRate.toFixed(4),
+      tlPrice: tlPrice.toFixed(2),
+      kdvTutar: kdvTutar.toFixed(2),
+      toplamTl: toplamTl.toFixed(2),
+      paymentAmountKurus,
+    });
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -83,14 +119,16 @@ serve(async (req) => {
 
     const merchantOid = `${user.id.replace(/-/g, "")}${periyot === "yillik" ? "Y" : "A"}${Date.now()}`;
     const email = user.email;
-    const paymentAmount = PRO_PRICES[periyot as keyof typeof PRO_PRICES].toString();
+    const paymentAmount = paymentAmountKurus.toString();
     const userName = `${profile?.ad || ""} ${profile?.soyad || ""}`.trim() || "Kullanıcı";
     const userPhone = profile?.iletisim_numarasi || "05000000000";
     const userAddress = firma?.firma_unvani || "Türkiye";
 
     // Basket: base64 encoded JSON array [[name, price, quantity]]
-    const basketLabel = periyot === "yillik" ? "PRO Paket (Yillik) KDV Dahil" : "PRO Paket (Aylik) KDV Dahil";
-    const basketPrice = (PRO_PRICES[periyot as keyof typeof PRO_PRICES] / 100).toFixed(2);
+    const basketLabel = periyot === "yillik"
+      ? `PRO Paket (Yillik) $${usdPrice} x ${usdTryRate.toFixed(2)} + %20 KDV`
+      : `PRO Paket (Aylik) $${usdPrice} x ${usdTryRate.toFixed(2)} + %20 KDV`;
+    const basketPrice = (paymentAmountKurus / 100).toFixed(2);
     const userBasket = btoa(JSON.stringify([[basketLabel, basketPrice, 1]]));
 
     const noInstallment = "1";
@@ -134,7 +172,7 @@ serve(async (req) => {
     formData.append("lang", lang);
 
     console.log("[CREATE-PAYTR-TOKEN] Requesting token for:", {
-      merchantOid, email, paymentAmount, periyot,
+      merchantOid, email, paymentAmount, periyot, usdTryRate: usdTryRate.toFixed(4),
     });
 
     const paytrRes = await fetch(PAYTR_API_URL, {
@@ -153,7 +191,17 @@ serve(async (req) => {
     const iframeUrl = `https://www.paytr.com/odeme/guvenli/${paytrResult.token}`;
 
     return new Response(
-      JSON.stringify({ url: iframeUrl, token: paytrResult.token }),
+      JSON.stringify({
+        url: iframeUrl,
+        token: paytrResult.token,
+        fiyat_detay: {
+          usd_fiyat: usdPrice,
+          kur: parseFloat(usdTryRate.toFixed(4)),
+          tl_fiyat: parseFloat(tlPrice.toFixed(2)),
+          kdv_tutar: parseFloat(kdvTutar.toFixed(2)),
+          toplam_tl: parseFloat(toplamTl.toFixed(2)),
+        },
+      }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
