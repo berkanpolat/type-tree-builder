@@ -680,8 +680,17 @@ export default function FirmaDetay() {
   };
 
   if (notFound) {
-    const NotFound = lazy(() => import("./NotFound"));
-    return <NotFound />;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted">
+        <div className="text-center">
+          <h1 className="mb-4 text-4xl font-bold">404</h1>
+          <p className="mb-4 text-xl text-muted-foreground">Sayfa bulunamadı</p>
+          <a href="/" className="text-primary underline hover:text-primary/90">
+            Ana Sayfaya Dön
+          </a>
+        </div>
+      </div>
+    );
   }
 
   if (loading) {
