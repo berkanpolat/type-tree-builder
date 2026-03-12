@@ -231,7 +231,7 @@ export default function UrunDetay() {
       if (adminToken) {
         try {
           const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth/get-urun-detail", {
-            body: { token: adminToken, urunId: id },
+            body: { token: adminToken, urunId: slugParam },
           });
           if (!adminErr && adminRes?.urun) {
             urunData = adminRes.urun;
