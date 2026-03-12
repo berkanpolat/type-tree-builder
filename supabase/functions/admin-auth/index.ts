@@ -200,10 +200,39 @@ Deno.serve(async (req) => {
     if (action === "list-firmalar") {
       const payload = verifyToken(body.token);
 
+      // Helper: fetch all rows bypassing 1000-row default limit
+      async function fetchAll(table: string, select: string, opts?: { order?: string; filter?: [string, string, any] }) {
+        const PAGE_SIZE = 1000;
+        let allRows: any[] = [];
+        let from = 0;
+        while (true) {
+          let q = supabase.from(table).select(select).range(from, from + PAGE_SIZE - 1);
+          if (opts?.order) q = q.order(opts.order, { ascending: false });
+          if (opts?.filter) q = q.eq(opts.filter[1], opts.filter[2]);
+          const { data, error } = await q;
+          if (error || !data || data.length === 0) break;
+          allRows = allRows.concat(data);
+          if (data.length < PAGE_SIZE) break;
+          from += PAGE_SIZE;
+        }
+        return allRows;
+      }
+
+      // Helper: .in() with batching for arrays > 1000
+      async function fetchIn(table: string, select: string, column: string, ids: string[]) {
+        if (ids.length === 0) return [];
+        const BATCH = 1000;
+        let allRows: any[] = [];
+        for (let i = 0; i < ids.length; i += BATCH) {
+          const batch = ids.slice(i, i + BATCH);
+          const { data } = await supabase.from(table).select(select).in(column, batch);
+          if (data) allRows = allRows.concat(data);
+        }
+        return allRows;
+      }
+
       // Get all firmalar with profiles, firma_turleri, firma_tipleri
-      const { data: firmalar, error } = await supabase
-        .from("firmalar")
-        .select(`
+      const firmalar = await fetchAll("firmalar", `
           id, firma_unvani, logo_url, created_at, updated_at, onay_durumu, user_id,
           firma_turu_id, firma_tipi_id, kurulus_il_id, kurulus_ilce_id,
           firma_olcegi_id, vergi_numarasi, vergi_dairesi,
@@ -213,53 +242,27 @@ Deno.serve(async (req) => {
           kurulus_il_id, kurulus_ilce_id, moq, aylik_uretim_kapasitesi,
           firma_turleri:firma_turu_id(id, name),
           firma_tipleri:firma_tipi_id(id, name)
-        `)
-        .order("created_at", { ascending: false });
-
-      if (error) return jsonResponse({ error: error.message }, 400);
+        `, { order: "created_at" });
 
       // Get profiles for all users
-      const userIds = (firmalar || []).map((f: any) => f.user_id);
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, ad, soyad, iletisim_email, iletisim_numarasi, last_seen")
-        .in("user_id", userIds);
+      const userIds = firmalar.map((f: any) => f.user_id);
+      const profiles = await fetchIn("profiles", "user_id, ad, soyad, iletisim_email, iletisim_numarasi, last_seen", "user_id", userIds);
 
       // Get counts per firma
-      const { data: ihaleCounts } = await supabase
-        .from("ihaleler")
-        .select("user_id")
-        .in("user_id", userIds);
-
-      const { data: teklifCounts } = await supabase
-        .from("ihale_teklifler")
-        .select("teklif_veren_user_id")
-        .in("teklif_veren_user_id", userIds);
-
-      const { data: urunCounts } = await supabase
-        .from("urunler")
-        .select("user_id")
-        .in("user_id", userIds);
-
-      const { data: sikayetCounts } = await supabase
-        .from("sikayetler")
-        .select("bildiren_user_id")
-        .in("bildiren_user_id", userIds);
+      const ihaleCounts = await fetchIn("ihaleler", "user_id", "user_id", userIds);
+      const teklifCounts = await fetchIn("ihale_teklifler", "teklif_veren_user_id", "teklif_veren_user_id", userIds);
+      const urunCounts = await fetchIn("urunler", "user_id", "user_id", userIds);
+      const sikayetCounts = await fetchIn("sikayetler", "bildiren_user_id", "bildiren_user_id", userIds);
 
       // Get il/ilce names
-      const ilIds = (firmalar || []).map((f: any) => f.kurulus_il_id).filter(Boolean);
-      const ilceIds = (firmalar || []).map((f: any) => f.kurulus_ilce_id).filter(Boolean);
+      const ilIds = firmalar.map((f: any) => f.kurulus_il_id).filter(Boolean);
+      const ilceIds = firmalar.map((f: any) => f.kurulus_ilce_id).filter(Boolean);
       const allLocationIds = [...new Set([...ilIds, ...ilceIds])];
       
       let locationMap: Record<string, string> = {};
       if (allLocationIds.length > 0) {
-        const { data: locations } = await supabase
-          .from("firma_bilgi_secenekleri")
-          .select("id, name")
-          .in("id", allLocationIds);
-        if (locations) {
-          locationMap = Object.fromEntries(locations.map((l: any) => [l.id, l.name]));
-        }
+        const locations = await fetchIn("firma_bilgi_secenekleri", "id, name", "id", allLocationIds as string[]);
+        locationMap = Object.fromEntries(locations.map((l: any) => [l.id, l.name]));
       }
 
       // Calculate profile completion
@@ -271,10 +274,7 @@ Deno.serve(async (req) => {
       ];
 
       // Get subscription/package info for each user
-      const { data: abonelikler } = await supabase
-        .from("kullanici_abonelikler")
-        .select("user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, stripe_subscription_id")
-        .in("user_id", userIds);
+      const abonelikler = await fetchIn("kullanici_abonelikler", "user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, stripe_subscription_id", "user_id", userIds);
 
       const { data: paketler } = await supabase
         .from("paketler")
@@ -283,12 +283,12 @@ Deno.serve(async (req) => {
       const paketMap: Record<string, any> = {};
       for (const p of (paketler || [])) paketMap[p.id] = p;
 
-      const enriched = (firmalar || []).map((f: any) => {
-        const profile = (profiles || []).find((p: any) => p.user_id === f.user_id);
-        const ihaleCount = (ihaleCounts || []).filter((i: any) => i.user_id === f.user_id).length;
-        const teklifCount = (teklifCounts || []).filter((t: any) => t.teklif_veren_user_id === f.user_id).length;
-        const urunCount = (urunCounts || []).filter((u: any) => u.user_id === f.user_id).length;
-        const sikayetCount = (sikayetCounts || []).filter((s: any) => s.bildiren_user_id === f.user_id).length;
+      const enriched = firmalar.map((f: any) => {
+        const profile = profiles.find((p: any) => p.user_id === f.user_id);
+        const ihaleCount = ihaleCounts.filter((i: any) => i.user_id === f.user_id).length;
+        const teklifCount = teklifCounts.filter((t: any) => t.teklif_veren_user_id === f.user_id).length;
+        const urunCount = urunCounts.filter((u: any) => u.user_id === f.user_id).length;
+        const sikayetCount = sikayetCounts.filter((s: any) => s.bildiren_user_id === f.user_id).length;
 
         let filled = 0;
         for (const field of FIRMA_FIELDS) {
@@ -297,7 +297,7 @@ Deno.serve(async (req) => {
         }
         const profilDoluluk = Math.round((filled / FIRMA_FIELDS.length) * 100);
 
-        const abonelik = (abonelikler || []).find((a: any) => a.user_id === f.user_id);
+        const abonelik = abonelikler.find((a: any) => a.user_id === f.user_id);
         const paket = abonelik ? paketMap[abonelik.paket_id] || null : null;
 
         return {
