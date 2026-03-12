@@ -234,7 +234,7 @@ function GalleryLightbox({ images, initialIndex, onClose }: { images: GaleriFoto
 }
 
 export default function FirmaDetay() {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const sidebarBanner = useBanner("firma-detay-sidebar", adBannerImg);
   const { toast } = useToast();
