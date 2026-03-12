@@ -1,10 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -13,75 +13,61 @@ serve(async (req) => {
   }
 
   try {
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY tanımlı değil");
-
-    const supabaseClient = createClient(
+    const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
     );
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Authorization header yok");
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Auth error: ${userError.message}`);
-    const user = userData.user;
-    if (!user?.email) throw new Error("Kullanıcı doğrulanamadı");
+    const { data: claimsData, error: claimsError } = await supabaseAdmin.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) throw new Error("Kullanıcı doğrulanamadı");
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    const userId = claimsData.claims.sub as string;
 
-    // First check if user has a stripe_subscription_id in our DB
-    const { data: abone } = await supabaseClient
+    // Get current subscription
+    const { data: abone } = await supabaseAdmin
       .from("kullanici_abonelikler")
-      .select("stripe_subscription_id")
-      .eq("user_id", user.id)
+      .select("*, paketler(slug)")
+      .eq("user_id", userId)
       .single();
 
-    let subscriptionId = abone?.stripe_subscription_id;
-
-    // If no subscription ID in DB, try to find via Stripe customer
-    if (!subscriptionId) {
-      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-      if (customers.data.length === 0) throw new Error("Stripe müşteri kaydı bulunamadı");
-
-      const subscriptions = await stripe.subscriptions.list({
-        customer: customers.data[0].id,
-        status: "active",
-        limit: 1,
-      });
-
-      if (subscriptions.data.length === 0) throw new Error("Aktif abonelik bulunamadı");
-      subscriptionId = subscriptions.data[0].id;
+    if (!abone || abone.paketler?.slug === "ucretsiz") {
+      throw new Error("Aktif PRO abonelik bulunamadı");
     }
 
-    console.log("Cancelling subscription:", subscriptionId);
+    if (abone.durum === "iptal_bekliyor") {
+      throw new Error("Abonelik zaten iptal edilmiş");
+    }
 
-    // Cancel at period end
-    const updated = await stripe.subscriptions.update(subscriptionId, {
-      cancel_at_period_end: true,
-    });
-
-    const cancelAt = new Date(updated.current_period_end * 1000).toISOString();
-
-    // Update DB status to iptal_bekliyor
-    await supabaseClient
+    // Set status to iptal_bekliyor - package stays active until donem_bitis
+    const { error: updateError } = await supabaseAdmin
       .from("kullanici_abonelikler")
-      .update({ durum: "iptal_bekliyor" })
-      .eq("user_id", user.id);
+      .update({
+        durum: "iptal_bekliyor",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
 
-    console.log("Subscription cancelled successfully, cancel_at:", cancelAt);
+    if (updateError) throw new Error("Abonelik güncellenemedi");
 
-    return new Response(JSON.stringify({
-      success: true,
-      cancel_at: cancelAt,
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    console.log("[CANCEL-SUBSCRIPTION] Cancelled for user:", userId, "until:", abone.donem_bitis);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        cancel_at: abone.donem_bitis,
+      }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      }
+    );
   } catch (error) {
-    console.error("Cancel subscription error:", error.message);
+    console.error("[CANCEL-SUBSCRIPTION] Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
