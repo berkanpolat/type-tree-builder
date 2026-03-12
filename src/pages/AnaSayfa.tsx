@@ -761,7 +761,7 @@ export default function AnaSayfa() {
         />
 
         {/* Category Tabs */}
-        <div className="bg-background rounded-xl px-6 border border-border">
+        <div className="bg-background rounded-xl px-3 md:px-6 border border-border">
           <KategoriMegaMenu
             kategoriler={URUN_KATEGORILERI}
             selectedKategori={selectedKategori}
