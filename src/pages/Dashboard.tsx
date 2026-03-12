@@ -336,7 +336,7 @@ const Dashboard = () => {
 
         {/* Banner alanı - admin panelinden görsel yüklenmişse göster */}
         {dashboardBanner.url && (
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden hidden md:block">
             {dashboardBanner.linkUrl ? (
               <a href={dashboardBanner.linkUrl} target="_blank" rel="noopener noreferrer">
                   <img src={dashboardBanner.url} alt="Dashboard Banner" className="w-full h-40 object-cover" style={{ imageRendering: "auto" }} />
