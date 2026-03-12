@@ -146,6 +146,7 @@ interface BenzerUrun {
   para_birimi: string | null;
   urun_no: string;
   user_id: string;
+  slug: string | null;
   firma_unvani?: string;
   firma_logo_url?: string | null;
   min_varyant_fiyat?: number | null;
@@ -153,7 +154,7 @@ interface BenzerUrun {
 }
 
 export default function UrunDetay() {
-  const { id } = useParams<{ id: string }>();
+  const { slug: slugParam } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const urunBanner = useBanner("urun-detay-alt-banner");
   const { toast } = useToast();
@@ -208,16 +209,19 @@ export default function UrunDetay() {
     init();
   }, [navigate]);
 
+  const [resolvedUrunId, setResolvedUrunId] = useState<string | null>(null);
+
   const fetchUrun = useCallback(async () => {
-    if (!id || !currentUserId) return;
+    if (!slugParam || !currentUserId) return;
     setLoading(true);
 
     let urunData: any = null;
+    const isId = isUUID(slugParam);
 
     const { data: directData } = await supabase
       .from("urunler")
-      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum, admin_karar_sebebi, admin_karar_veren, admin_karar_tarihi")
-      .eq("id", id)
+      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum, slug, admin_karar_sebebi, admin_karar_veren, admin_karar_tarihi")
+      .eq(isId ? "id" : "slug", slugParam)
       .single();
 
     if (directData) {
@@ -228,7 +232,7 @@ export default function UrunDetay() {
       if (adminToken) {
         try {
           const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth/get-urun-detail", {
-            body: { token: adminToken, urunId: id },
+            body: { token: adminToken, urunId: slugParam },
           });
           if (!adminErr && adminRes?.urun) {
             urunData = adminRes.urun;
@@ -239,13 +243,14 @@ export default function UrunDetay() {
     }
 
     if (!urunData) { setLoading(false); return; }
+    setResolvedUrunId(urunData.id);
     setUrun({ ...urunData, teknik_detaylar: (urunData.teknik_detaylar as Record<string, string>) || null });
 
     // Fetch all varyasyonlar including price tiers
     const { data: varyantlar } = await supabase
       .from("urun_varyasyonlar")
       .select("id, foto_url, birim_fiyat, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value, min_adet, max_adet")
-      .eq("urun_id", id)
+      .eq("urun_id", urunData.id)
       .order("varyant_1_value")
       .order("min_adet");
     setVaryasyonlar(varyantlar || []);
@@ -306,17 +311,17 @@ export default function UrunDetay() {
     }
 
     // Favorite check
-    const { data: fav } = await supabase.from("urun_favoriler").select("id").eq("user_id", currentUserId).eq("urun_id", id).maybeSingle();
+    const { data: fav } = await supabase.from("urun_favoriler").select("id").eq("user_id", currentUserId).eq("urun_id", urunData.id).maybeSingle();
     setIsFavorited(!!fav);
 
     // Similar products
     if (urunData.urun_kategori_id) {
       const { data: benzer } = await supabase
         .from("urunler")
-        .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, user_id")
+        .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, user_id, slug")
         .eq("durum", "aktif")
         .eq("urun_kategori_id", urunData.urun_kategori_id)
-        .neq("id", id)
+        .neq("id", urunData.id)
         .limit(10);
 
       if (benzer && benzer.length > 0) {
@@ -349,17 +354,17 @@ export default function UrunDetay() {
     }
 
     setLoading(false);
-  }, [id, currentUserId]);
+  }, [slugParam, currentUserId]);
 
   useEffect(() => { fetchUrun(); }, [fetchUrun]);
 
   const toggleFavorite = async () => {
-    if (!currentUserId || !id) return;
+    if (!currentUserId || !resolvedUrunId) return;
     if (isFavorited) {
-      await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", id);
+      await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", resolvedUrunId);
       toast({ title: "Favorilerden çıkarıldı" });
     } else {
-      await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: id });
+      await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: resolvedUrunId });
       toast({ title: "Favorilere eklendi" });
     }
     setIsFavorited(!isFavorited);
@@ -1108,7 +1113,7 @@ export default function UrunDetay() {
                 }
 
                 return (
-                  <Card key={b.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer" onClick={() => navigate(`/urunler/${b.id}`)}>
+                  <Card key={b.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer" onClick={() => navigate(`/urunler/${b.slug || b.id}`)}>
                     <div className="aspect-square bg-muted relative overflow-hidden">
                       {b.foto_url ? (
                         <img src={b.foto_url} alt={b.baslik} className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />

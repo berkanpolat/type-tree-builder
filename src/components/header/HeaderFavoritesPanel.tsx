@@ -17,6 +17,7 @@ interface FavUrun {
   urun_id: string;
   baslik: string;
   foto_url: string | null;
+  slug: string | null;
 }
 
 export default function HeaderFavoritesPanel() {
@@ -48,8 +49,8 @@ export default function HeaderFavoritesPanel() {
     const urunItems: FavUrun[] = [];
     if (urunRes.data) {
       for (const u of urunRes.data) {
-        const { data: urun } = await supabase.from("urunler").select("baslik, foto_url").eq("id", u.urun_id).single();
-        urunItems.push({ id: u.id, urun_id: u.urun_id, baslik: urun?.baslik || "—", foto_url: urun?.foto_url || null });
+        const { data: urun } = await supabase.from("urunler").select("baslik, foto_url, slug").eq("id", u.urun_id).single();
+        urunItems.push({ id: u.id, urun_id: u.urun_id, baslik: urun?.baslik || "—", foto_url: urun?.foto_url || null, slug: urun?.slug || null });
       }
     }
 
@@ -136,7 +137,7 @@ export default function HeaderFavoritesPanel() {
                   {urunler.map((u) => (
                     <button
                       key={u.id}
-                      onClick={() => { setOpen(false); navigate(`/urunler/${u.urun_id}`); }}
+                      onClick={() => { setOpen(false); navigate(`/urunler/${u.slug || u.urun_id}`); }}
                       className="w-full text-left px-4 py-2.5 hover:bg-muted/50 transition-colors flex items-center gap-2.5"
                     >
                       <div className="w-8 h-8 rounded bg-muted overflow-hidden shrink-0">

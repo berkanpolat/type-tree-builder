@@ -77,6 +77,7 @@ interface UrunListItem {
   min_siparis_miktari: number | null;
   user_id: string;
   teknik_detaylar: Record<string, string> | null;
+  slug: string | null;
 }
 
 interface UrunWithExtra extends UrunListItem {
@@ -200,7 +201,7 @@ export default function AnaSayfa() {
     setUrunLoading(true);
     let query = supabase
       .from("urunler")
-      .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, urun_kategori_id, urun_grup_id, urun_tur_id, min_siparis_miktari, user_id, teknik_detaylar")
+      .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, urun_kategori_id, urun_grup_id, urun_tur_id, min_siparis_miktari, user_id, teknik_detaylar, slug")
       .eq("durum", "aktif")
       .order("created_at", { ascending: false })
       .limit(200);
@@ -705,7 +706,7 @@ export default function AnaSayfa() {
     }
 
     return (
-      <Card key={urun.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer" onClick={() => navigate(`/urunler/${urun.id}`)}>
+      <Card key={urun.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer" onClick={() => navigate(`/urunler/${urun.slug || urun.id}`)}>
         <div className="aspect-square bg-muted relative overflow-hidden">
           {urun.foto_url ? (
             <img src={urun.foto_url} alt={urun.baslik} loading="lazy" className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />
