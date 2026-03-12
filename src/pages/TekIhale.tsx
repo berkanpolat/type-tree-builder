@@ -515,7 +515,7 @@ export default function TekIhale() {
                             )}
                           </div>
 
-                          <div className="flex items-center gap-8">
+                          <div className="flex flex-wrap items-center gap-4 sm:gap-8">
                             <div>
                               <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Başlangıç Fiyatı</p>
                               <p className="font-semibold text-foreground">

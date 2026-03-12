@@ -789,7 +789,7 @@ export default function AnaSayfa() {
 
         {/* Content Area */}
         {isFiltered ? (
-          <div className="flex gap-6">
+          <div className="flex flex-col lg:flex-row gap-6">
             {selectedKategori && (
               <UrunFiltreler
                 selectedKategori={selectedKategori}
