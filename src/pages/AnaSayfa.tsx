@@ -801,15 +801,15 @@ export default function AnaSayfa() {
               />
             )}
 
-            <div className="flex-1 space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="flex-1 space-y-4 min-w-0">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-sm text-muted-foreground">
                   <span className="font-semibold text-foreground">{totalItems}</span> ürün bulundu
                 </p>
                 <div className="flex items-center gap-2">
-                  <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+                  <ArrowUpDown className="w-4 h-4 text-muted-foreground hidden sm:block" />
                   <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-[180px] h-9 text-sm">
+                    <SelectTrigger className="w-[130px] sm:w-[180px] h-9 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover z-50">

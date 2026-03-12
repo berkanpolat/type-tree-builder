@@ -5,11 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, X, SlidersHorizontal } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 
-// Category-specific filter definitions
 const KATEGORI_FILTRELER: Record<string, { label: string; kategoriName: string }[]> = {
   "Hazır Giyim (Satış)": [
     { label: "Renk", kategoriName: "Renk" },
@@ -58,10 +64,8 @@ const KATEGORI_FILTRELER: Record<string, { label: string; kategoriName: string }
   ],
 };
 
-// Fields that are stored in urun_varyasyonlar, not teknik_detaylar
 const VARYANT_FIELDS = ["Renk", "Beden"];
 
-// teknik_detaylar key mapping (label used as key in JSONB)
 const TEKNIK_KEY_MAP: Record<string, string> = {
   "Sezon": "Sezon",
   "Cinsiyet": "Cinsiyet",
@@ -101,9 +105,9 @@ export interface FilterState {
   turId: string | null;
   minFiyat: string;
   maxFiyat: string;
-  teknikFiltreler: Record<string, string[]>; // kategoriName -> selected option IDs
-  renkFiltreler: string[]; // selected renk names
-  bedenFiltreler: string[]; // selected beden names
+  teknikFiltreler: Record<string, string[]>;
+  renkFiltreler: string[];
+  bedenFiltreler: string[];
 }
 
 interface Props {
@@ -115,7 +119,6 @@ interface Props {
   onTurChange: (turId: string | null) => void;
 }
 
-// Cache for filter options
 const filterOptionsCache: Record<string, FilterOption[]> = {};
 
 export default function UrunFiltreler({
@@ -135,10 +138,10 @@ export default function UrunFiltreler({
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [searchTerms, setSearchTerms] = useState<Record<string, string>>({});
   const [katMap, setKatMap] = useState<Record<string, string>>({});
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const filtreler = KATEGORI_FILTRELER[selectedKategori] || [];
 
-  // Load category name -> id map
   useEffect(() => {
     supabase
       .from("firma_bilgi_secenekleri")
@@ -154,7 +157,6 @@ export default function UrunFiltreler({
       });
   }, []);
 
-  // Load groups for the selected category
   useEffect(() => {
     const katId = katMap[selectedKategori];
     if (!katId) { setGruplar([]); return; }
@@ -166,7 +168,6 @@ export default function UrunFiltreler({
       .then(({ data }) => setGruplar(data || []));
   }, [selectedKategori, katMap]);
 
-  // Load types when group changes
   useEffect(() => {
     if (!selectedGrupId) { setTurler([]); return; }
     supabase
@@ -177,22 +178,16 @@ export default function UrunFiltreler({
       .then(({ data }) => setTurler(data || []));
   }, [selectedGrupId]);
 
-  // Load filter options for each category-specific filter
   useEffect(() => {
     if (filtreler.length === 0) return;
-
     const kategoriNames = filtreler.map((f) => f.kategoriName);
     const uncached = kategoriNames.filter((n) => !filterOptionsCache[n]);
-
     if (uncached.length === 0) {
-      // All cached
       const opts: Record<string, FilterOption[]> = {};
       kategoriNames.forEach((n) => { opts[n] = filterOptionsCache[n] || []; });
       setFilterOptions(opts);
       return;
     }
-
-    // Fetch kategori IDs for uncached
     supabase
       .from("firma_bilgi_kategorileri")
       .select("id, name")
@@ -206,11 +201,9 @@ export default function UrunFiltreler({
           .in("kategori_id", katIds)
           .is("parent_id", null)
           .order("name");
-
         if (opts) {
           const katIdToName: Record<string, string> = {};
           kats.forEach((k) => { katIdToName[k.id] = k.name; });
-
           opts.forEach((o) => {
             const catName = katIdToName[o.kategori_id];
             if (catName) {
@@ -219,15 +212,12 @@ export default function UrunFiltreler({
             }
           });
         }
-
-        // Set all options
         const allOpts: Record<string, FilterOption[]> = {};
         kategoriNames.forEach((n) => { allOpts[n] = filterOptionsCache[n] || []; });
         setFilterOptions(allOpts);
       });
   }, [selectedKategori]);
 
-  // Reset filters when category changes
   useEffect(() => {
     setSelections({});
     setMinFiyat("");
@@ -236,16 +226,13 @@ export default function UrunFiltreler({
     setExpandedSections({});
   }, [selectedKategori]);
 
-  // Emit filter changes
   useEffect(() => {
     const teknikFiltreler: Record<string, string[]> = {};
     let renkFiltreler: string[] = [];
     let bedenFiltreler: string[] = [];
-
     Object.entries(selections).forEach(([key, values]) => {
       if (values.length === 0) return;
       if (key === "Renk") {
-        // For Renk, we need names not IDs (varyasyonlar store names)
         const opts = filterOptions["Renk"] || [];
         renkFiltreler = values.map((id) => opts.find((o) => o.id === id)?.name || "").filter(Boolean);
       } else if (key === "Beden") {
@@ -258,7 +245,6 @@ export default function UrunFiltreler({
         }
       }
     });
-
     onFilterChange({
       grupId: selectedGrupId,
       turId: selectedTurId,
@@ -302,8 +288,8 @@ export default function UrunFiltreler({
     onTurChange(null);
   };
 
-  return (
-    <div className="w-72 shrink-0 space-y-4 hidden lg:block">
+  const filterContent = (
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-foreground text-lg">Filtreler</h3>
@@ -413,7 +399,6 @@ export default function UrunFiltreler({
       {filtreler.map((filtre) => {
         const opts = getFilteredOptions(filtre.kategoriName);
         const selected = selections[filtre.kategoriName] || [];
-
         return (
           <FilterSection
             key={filtre.kategoriName}
@@ -447,6 +432,44 @@ export default function UrunFiltreler({
         );
       })}
     </div>
+  );
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <div className="w-72 shrink-0 hidden lg:block">
+        {filterContent}
+      </div>
+
+      {/* Mobile filter button + sheet */}
+      <div className="lg:hidden">
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => setMobileOpen(true)}
+        >
+          <SlidersHorizontal className="w-4 h-4" />
+          Filtreler
+          {activeFilterCount > 0 && (
+            <span className="bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {activeFilterCount}
+            </span>
+          )}
+        </Button>
+
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-[300px] sm:w-[340px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Filtreler</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4">
+              {filterContent}
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+    </>
   );
 }
 
@@ -500,15 +523,13 @@ function FilterSearchInput({
 }) {
   return (
     <div className="relative">
-      <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-7 text-xs pl-7 bg-muted/50"
+        className="h-7 text-xs pl-8"
       />
     </div>
   );
 }
-
-export { KATEGORI_FILTRELER, VARYANT_FIELDS, TEKNIK_KEY_MAP };
