@@ -58,6 +58,8 @@ const GirisKayit = () => {
   const [ad, setAd] = useState("");
   const [soyad, setSoyad] = useState("");
   const [email, setEmail] = useState("");
+  const [emailDuplicate, setEmailDuplicate] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const [telefon, setTelefon] = useState("");
   const [countryCode, setCountryCode] = useState("+90");
   const [registerLoading, setRegisterLoading] = useState(false);
