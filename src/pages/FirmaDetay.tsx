@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, lazy } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
