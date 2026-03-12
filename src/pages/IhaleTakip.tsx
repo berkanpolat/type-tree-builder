@@ -569,7 +569,7 @@ export default function IhaleTakip() {
               {filteredTeklifler.map((teklif) => (
                 <Card key={teklif.id} className="border">
                   <CardContent className="p-5">
-                    <div className="flex flex-wrap items-start gap-6">
+                    <div className="flex flex-wrap items-start gap-4 md:gap-6">
                       {/* Firma Info */}
                       <div className="flex items-center gap-3 min-w-[180px]">
                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
