@@ -476,10 +476,13 @@ export default function YeniIhale() {
   const handlePreview = async () => {
     await handleSave();
     if (!ihaleId) return;
+    // Fetch slug for navigation
+    const { data: ihaleRow } = await supabase.from("ihaleler").select("slug").eq("id", ihaleId).maybeSingle();
+    const target = ihaleRow?.slug || ihaleId;
     if (isAdminMode) {
-      window.open(`/ihaleler/${ihaleId}`, "_blank");
+      window.open(`/ihaleler/${target}`, "_blank");
     } else {
-      navigate(`/ihaleler/${ihaleId}`);
+      navigate(`/ihaleler/${target}`);
     }
   };
 
