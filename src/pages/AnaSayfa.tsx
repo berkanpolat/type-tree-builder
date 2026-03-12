@@ -200,7 +200,7 @@ export default function AnaSayfa() {
     setUrunLoading(true);
     let query = supabase
       .from("urunler")
-      .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, urun_kategori_id, urun_grup_id, urun_tur_id, min_siparis_miktari, user_id, teknik_detaylar")
+      .select("id, baslik, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, urun_kategori_id, urun_grup_id, urun_tur_id, min_siparis_miktari, user_id, teknik_detaylar, slug")
       .eq("durum", "aktif")
       .order("created_at", { ascending: false })
       .limit(200);
