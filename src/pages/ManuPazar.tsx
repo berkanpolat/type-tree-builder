@@ -449,10 +449,10 @@ export default function ManuPazar() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Kopyala" onClick={() => navigate(`/manupazar/yeni?kopyala=${urun.id}`)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Kopyala" onClick={() => navigate(`/urunlerim/yeni?kopyala=${urun.id}`)}>
                             <Copy className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(urun.id)}>
