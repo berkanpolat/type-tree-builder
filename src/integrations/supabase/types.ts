@@ -1020,6 +1020,7 @@ export type Database = {
           vergi_numarasi: string
           web_sitesi: string | null
           x_twitter: string | null
+          youtube: string | null
         }
         Insert: {
           aylik_tedarik_birim_id?: string | null
@@ -1057,6 +1058,7 @@ export type Database = {
           vergi_numarasi: string
           web_sitesi?: string | null
           x_twitter?: string | null
+          youtube?: string | null
         }
         Update: {
           aylik_tedarik_birim_id?: string | null
@@ -1094,6 +1096,7 @@ export type Database = {
           vergi_numarasi?: string
           web_sitesi?: string | null
           x_twitter?: string | null
+          youtube?: string | null
         }
         Relationships: [
           {
