@@ -427,7 +427,7 @@ export default function IhaleTakip() {
     <DashboardLayout title="İhale Takip">
       <div className="space-y-6">
         {/* Back button */}
-        <Button variant="ghost" size="sm" onClick={() => navigate("/manuihale")} className="gap-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/ihalelerim")} className="gap-2">
           <ArrowLeft className="w-4 h-4" /> İhalelerime Dön
         </Button>
 

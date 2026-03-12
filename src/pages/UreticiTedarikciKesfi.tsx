@@ -165,7 +165,7 @@ export default function UreticiTedarikcikesfi() {
           <Button
             size="lg"
             className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold px-8"
-            onClick={() => navigate("/tekrehber")}
+            onClick={() => navigate("/firmalar")}
           >
             Hemen Başla
           </Button>
