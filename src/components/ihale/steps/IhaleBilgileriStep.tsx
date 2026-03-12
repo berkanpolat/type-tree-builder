@@ -305,7 +305,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>Teslimat Tarihi</Label>
             <Input type="date" value={formData.teslimat_tarihi?.split("T")[0] || ""} onChange={(e) => updateForm({ teslimat_tarihi: e.target.value })} />
