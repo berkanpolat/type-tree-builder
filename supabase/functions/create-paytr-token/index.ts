@@ -81,7 +81,7 @@ serve(async (req) => {
       req.headers.get("cf-connecting-ip") ||
       "127.0.0.1";
 
-    const merchantOid = `${user.id}_${periyot}_${Date.now()}`;
+    const merchantOid = `${user.id.replace(/-/g, "")}${periyot === "yillik" ? "Y" : "A"}${Date.now()}`;
     const email = user.email;
     const paymentAmount = PRO_PRICES[periyot as keyof typeof PRO_PRICES].toString();
     const userName = `${profile?.ad || ""} ${profile?.soyad || ""}`.trim() || "Kullanıcı";
