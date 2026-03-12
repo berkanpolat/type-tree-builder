@@ -18,6 +18,11 @@ const PRO_PRICES_USD = {
 
 const KDV_ORANI = 0.20;
 
+function isValidIpv4(ip: string): boolean {
+  const ipv4Regex = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
+  return ipv4Regex.test(ip);
+}
+
 async function getUsdTryRate(): Promise<number> {
   try {
     const res = await fetch("https://open.er-api.com/v6/latest/USD");
@@ -63,10 +68,12 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("Kullanıcı doğrulanamadı");
 
-    const { periyot, clientIp: clientProvidedIp } = await req.json();
+    const { periyot, clientIp: rawClientIp } = await req.json();
     if (!periyot || !["aylik", "yillik"].includes(periyot)) {
       throw new Error("Geçersiz periyot");
     }
+
+    const clientProvidedIp = typeof rawClientIp === "string" ? rawClientIp.trim() : "";
 
     // Anlık döviz kuru al
     const usdTryRate = await getUsdTryRate();
@@ -112,12 +119,17 @@ serve(async (req) => {
       throw new Error("PayTR yapılandırması eksik");
     }
 
-    // Öncelik: client'tan gelen gerçek IP > header IP > fallback
-    const userIp =
-      clientProvidedIp ||
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("cf-connecting-ip") ||
-      "127.0.0.1";
+    // Öncelik: client'tan gelen geçerli IPv4 > header IP > fallback
+    const headerForwardedIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
+    const headerCfIp = req.headers.get("cf-connecting-ip")?.trim() || "";
+
+    const userIp = isValidIpv4(clientProvidedIp)
+      ? clientProvidedIp
+      : isValidIpv4(headerForwardedIp)
+      ? headerForwardedIp
+      : isValidIpv4(headerCfIp)
+      ? headerCfIp
+      : "127.0.0.1";
 
     const merchantOid = `${user.id.replace(/-/g, "")}${periyot === "yillik" ? "Y" : "A"}${Date.now()}`;
     const email = user.email;
@@ -136,13 +148,17 @@ serve(async (req) => {
     const noInstallment = "1";
     const maxInstallment = "0";
     const currency = "TL";
-    const testMode = "1";
-    const debugOn = "0";
+
+    const origin = req.headers.get("origin") || "";
+
+    // Live varsayılan: 0 (isteğe bağlı PAYTR_TEST_MODE secret ile override edilebilir)
+    const testMode = Deno.env.get("PAYTR_TEST_MODE") === "1" ? "1" : "0";
+    const debugOn = Deno.env.get("PAYTR_DEBUG_ON") === "1" ? "1" : "0";
     const lang = "tr";
 
     // merchant_ok_url ve merchant_fail_url kullanıcının yönlendirileceği sayfalardır
     // PayTR callback (bildirim) URL'i merchant panelinden ayarlanır
-    const siteUrl = "https://tekstilas.com";
+    const siteUrl = origin || Deno.env.get("PAYTR_SITE_URL") || "https://tekstilas.com";
     const merchantOkUrl = `${siteUrl}/paketim?odeme=basarili`;
     const merchantFailUrl = `${siteUrl}/paketim?odeme=basarisiz`;
     const timeoutLimit = "30";
@@ -176,7 +192,15 @@ serve(async (req) => {
     formData.append("lang", lang);
 
     console.log("[CREATE-PAYTR-TOKEN] Requesting token for:", {
-      merchantOid, email, paymentAmount, periyot, usdTryRate: usdTryRate.toFixed(4),
+      merchantOid,
+      email,
+      paymentAmount,
+      periyot,
+      userIp,
+      clientProvidedIp: clientProvidedIp || null,
+      origin: origin || null,
+      testMode,
+      usdTryRate: usdTryRate.toFixed(4),
     });
 
     const paytrRes = await fetch(PAYTR_API_URL, {
