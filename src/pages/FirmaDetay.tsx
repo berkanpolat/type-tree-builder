@@ -240,6 +240,7 @@ export default function FirmaDetay() {
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [firma, setFirma] = useState<FirmaData | null>(null);
   const [quotaBlocked, setQuotaBlocked] = useState(false);
   const [quotaMessage, setQuotaMessage] = useState("");
@@ -300,8 +301,8 @@ export default function FirmaDetay() {
         .single();
 
       if (!firmaData) {
-        // Not a firma slug — show 404
-        navigate("/404", { replace: true });
+        setNotFound(true);
+        setLoading(false);
         return;
       }
 
@@ -677,6 +678,20 @@ export default function FirmaDetay() {
 
     return grouped;
   };
+
+  if (notFound) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-muted">
+        <div className="text-center">
+          <h1 className="mb-4 text-4xl font-bold">404</h1>
+          <p className="mb-4 text-xl text-muted-foreground">Sayfa bulunamadı</p>
+          <a href="/" className="text-primary underline hover:text-primary/90">
+            Ana Sayfaya Dön
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
