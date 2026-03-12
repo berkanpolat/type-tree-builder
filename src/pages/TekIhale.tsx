@@ -471,7 +471,7 @@ export default function TekIhale() {
                       className="p-5 hover:shadow-md transition-shadow cursor-pointer"
                       onClick={() => navigate(`/tekihale/${ihale.id}`)}
                     >
-                      <div className="flex gap-5">
+                      <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
                         {/* Image */}
                         <div className="w-[140px] h-[140px] rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                           {ihale.foto_url ? (
