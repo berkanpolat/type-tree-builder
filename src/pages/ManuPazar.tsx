@@ -358,10 +358,10 @@ export default function ManuPazar() {
                       <span>{format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}</span>
                     </div>
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Kopyala" onClick={() => navigate(`/manupazar/yeni?kopyala=${urun.id}`)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Kopyala" onClick={() => navigate(`/urunlerim/yeni?kopyala=${urun.id}`)}>
                         <Copy className="w-3.5 h-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(urun.id)}>
