@@ -370,7 +370,7 @@ export default function IhaleDetay() {
     const { data: fotoRows } = await supabase
       .from("ihale_fotograflar" as any)
       .select("foto_url, sira")
-      .eq("ihale_id", id)
+      .eq("ihale_id", ihaleId)
       .order("sira");
     
     const imgs: string[] = (fotoRows || []).map((f: any) => f.foto_url);
@@ -381,7 +381,7 @@ export default function IhaleDetay() {
     const { data: ekRows } = await supabase
       .from("ihale_ek_dosyalar" as any)
       .select("dosya_url, dosya_adi, sira")
-      .eq("ihale_id", id)
+      .eq("ihale_id", ihaleId)
       .order("sira");
     setEkDosyalar(ekRows || []);
 
