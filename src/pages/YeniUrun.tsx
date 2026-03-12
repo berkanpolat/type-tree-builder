@@ -566,7 +566,7 @@ export default function YeniUrun() {
           newItems.push({
             varyant_1_label: varyant1Label, varyant_1_value: v1Name,
             varyant_2_label: varyant2Label, varyant_2_value: v2Name,
-            foto_url: "",
+            foto_urls: [],
           });
         }
       }
