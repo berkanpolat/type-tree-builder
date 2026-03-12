@@ -753,7 +753,7 @@ export default function UrunDetay() {
                         {tiersToShow.map((tier, i) => (
                           <div key={i} className="text-center">
                             <p className="text-sm text-muted-foreground">{tier.min_adet}-{tier.max_adet} adet</p>
-                            <p className="text-xl font-bold text-foreground">{tier.birim_fiyat.toLocaleString("tr-TR")} {(urun.para_birimi || "TRY").toLowerCase()}</p>
+                            <p className="text-xl font-bold text-foreground">{sym}{tier.birim_fiyat.toLocaleString("tr-TR")}</p>
                           </div>
                         ))}
                       </div>
