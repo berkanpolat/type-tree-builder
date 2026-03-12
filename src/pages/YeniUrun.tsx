@@ -591,7 +591,9 @@ export default function YeniUrun() {
 
     setSaving(false);
     toast({ title: "Ürün kaydedildi!" });
-    navigate(`/urunler/${urunId}`);
+    // Fetch slug for navigation
+    const { data: savedUrun } = await supabase.from("urunler").select("slug").eq("id", urunId).single();
+    navigate(`/urunler/${savedUrun?.slug || urunId}`);
   };
 
   // --- Fiyat Kademesi helpers ---

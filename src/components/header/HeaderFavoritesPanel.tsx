@@ -136,7 +136,7 @@ export default function HeaderFavoritesPanel() {
                   {urunler.map((u) => (
                     <button
                       key={u.id}
-                      onClick={() => { setOpen(false); navigate(`/urunler/${u.urun_id}`); }}
+                      onClick={() => { setOpen(false); navigate(`/urunler/${u.slug || u.urun_id}`); }}
                       className="w-full text-left px-4 py-2.5 hover:bg-muted/50 transition-colors flex items-center gap-2.5"
                     >
                       <div className="w-8 h-8 rounded bg-muted overflow-hidden shrink-0">
