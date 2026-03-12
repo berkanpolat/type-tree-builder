@@ -673,8 +673,10 @@ export default function AnaSayfa() {
     if (!currentUserId) return;
     if (isFav) {
       await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", urunId);
+      toast({ title: "Favorilerden çıkarıldı" });
     } else {
       await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: urunId });
+      toast({ title: "Favorilere eklendi" });
     }
     setAllUrunler((prev) => prev.map((u) => u.id === urunId ? { ...u, is_favorited: !isFav } : u));
   };
