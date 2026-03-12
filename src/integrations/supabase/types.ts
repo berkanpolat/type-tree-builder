@@ -2015,6 +2015,10 @@ export type Database = {
         Args: { p_password: string; p_username: string }
         Returns: boolean
       }
+      check_registration_duplicate: {
+        Args: { p_email: string; p_phone?: string }
+        Returns: Json
+      }
       generate_firma_slug: { Args: { p_unvani: string }; Returns: string }
       generate_slug: {
         Args: { p_existing_id?: string; p_table: string; p_text: string }
