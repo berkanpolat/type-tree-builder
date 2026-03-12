@@ -268,7 +268,9 @@ export default function YeniUrun() {
     const alanlar = getTeknikAlanlar();
     for (const alan of alanlar) {
       if (alan.type === "dependent_dropdown" && alan.dependsOn && td[alan.dependsOn]) {
-        loadDependentOptions(alan.dependsOn, td[alan.dependsOn]);
+        const parentVal = td[alan.dependsOn];
+        const parentId = Array.isArray(parentVal) ? parentVal[0] : parentVal;
+        if (parentId) loadDependentOptions(alan.dependsOn, parentId);
       }
     }
 
