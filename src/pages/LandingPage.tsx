@@ -263,7 +263,7 @@ const LandingPage = () => {
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-4 md:mb-6">
               İşiniz Tekstilse, Yeriniz <span className="text-secondary">Tekstil A.Ş.</span>
             </h1>
-            <p className="text-lg text-muted-foreground mb-10 leading-relaxed">
+            <p className="text-base md:text-lg text-muted-foreground mb-6 md:mb-10 leading-relaxed">
               Markalar, üreticiler, tedarikçiler, mümessil ofisler ve fason atölyeler tek panelde
               buluşuyor. Doğru firmaya hızlıca ulaşın, teklif alın, teklif verin, yeni iş fırsatlarını
               yakalayın!
