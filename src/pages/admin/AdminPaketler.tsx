@@ -444,22 +444,6 @@ function PaketContent({
                 placeholder="Sınırsız" style={{ background: `hsl(var(--admin-bg))`, borderColor: `hsl(var(--admin-border))`, color: `hsl(var(--admin-text))` }} />
             </div>
 
-            {/* Stripe IDs */}
-            <div className="col-span-2 pt-2">
-              <h3 className="text-sm font-semibold mb-3" style={{ color: `hsl(var(--admin-text))` }}>
-                Stripe Entegrasyonu
-              </h3>
-            </div>
-            <div className="space-y-2">
-              <Label style={mutedStyle}>Stripe Aylık Price ID</Label>
-              <Input value={form.stripe_price_aylik_id ?? ""} onChange={(e) => setForm({ ...form, stripe_price_aylik_id: e.target.value || null })}
-                placeholder="price_..." style={{ background: `hsl(var(--admin-bg))`, borderColor: `hsl(var(--admin-border))`, color: `hsl(var(--admin-text))` }} />
-            </div>
-            <div className="space-y-2">
-              <Label style={mutedStyle}>Stripe Yıllık Price ID</Label>
-              <Input value={form.stripe_price_yillik_id ?? ""} onChange={(e) => setForm({ ...form, stripe_price_yillik_id: e.target.value || null })}
-                placeholder="price_..." style={{ background: `hsl(var(--admin-bg))`, borderColor: `hsl(var(--admin-border))`, color: `hsl(var(--admin-text))` }} />
-            </div>
           </div>
 
           <DialogFooter className="mt-4">

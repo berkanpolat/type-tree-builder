@@ -233,7 +233,7 @@ export function usePackageQuota(): PackageInfo {
     };
   }, [fetchData]);
 
-  return { paketAd, paketSlug, periyot, donemBitis, durum, limits, usage, loading, stripeSubscriptionId, cancelAtPeriodEnd };
+  return { paketAd, paketSlug, periyot, donemBitis, durum, limits, usage, loading, cancelAtPeriodEnd };
 }
 
 // Helper: Check if a specific action is allowed
