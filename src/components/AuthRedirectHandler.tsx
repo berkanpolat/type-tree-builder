@@ -8,11 +8,8 @@ const isRecoveryFlow = () => {
   return hashParams.get("type") === "recovery" || searchParams.get("type") === "recovery";
 };
 
-const mustSetPassword = (user: { user_metadata?: Record<string, unknown> } | null | undefined) =>
-  user?.user_metadata?.must_set_password === true;
-
 /**
- * Global listener: force users with recovery/must_set_password
+ * Global listener: force users arriving via a recovery link
  * to land on /sifre-sifirla before normal app usage.
  */
 const AuthRedirectHandler = () => {
@@ -25,22 +22,11 @@ const AuthRedirectHandler = () => {
       return;
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (mustSetPassword(session?.user) && location.pathname !== "/sifre-sifirla") {
-        navigate("/sifre-sifirla", { replace: true });
-      }
-    });
-
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY") {
         navigate({ pathname: "/sifre-sifirla", hash: window.location.hash }, { replace: true });
-        return;
-      }
-
-      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && mustSetPassword(session?.user)) {
-        navigate("/sifre-sifirla", { replace: true });
       }
     });
 
