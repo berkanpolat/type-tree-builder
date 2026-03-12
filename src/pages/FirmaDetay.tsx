@@ -709,16 +709,16 @@ export default function FirmaDetay() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
-              <Button variant="outline" className="gap-1.5" onClick={toggleFavorite}>
+            <div className="flex flex-wrap items-center gap-2 shrink-0 mt-3 md:mt-0">
+              <Button variant="outline" size="sm" className="gap-1.5" onClick={toggleFavorite}>
                 <Bookmark className={`w-4 h-4 ${isFavorited ? "fill-secondary text-secondary" : ""}`} />
-                Kaydet
+                <span className="hidden sm:inline">Kaydet</span>
               </Button>
-              <Button className="gap-1.5 bg-primary" onClick={handleMessage}>
+              <Button size="sm" className="gap-1.5 bg-primary" onClick={handleMessage}>
                 <MessageSquare className="w-4 h-4" />
                 Mesaj
               </Button>
-              <Button variant="outline" size="icon" onClick={() => setBildirOpen(true)} title="Bildir">
+              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setBildirOpen(true)} title="Bildir">
                 <Flag className="w-4 h-4 text-muted-foreground" />
               </Button>
             </div>

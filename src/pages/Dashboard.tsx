@@ -155,11 +155,11 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Firma Kartı */}
           <Card>
-            <CardContent className="p-6">
+           <CardContent className="p-4 sm:p-6">
               <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
-                    <Building2 className="w-8 h-8 text-muted-foreground" />
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-muted flex items-center justify-center">
+                    <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
                   </div>
                   <div className="space-y-1">
                     <h2 className="text-lg font-semibold text-foreground">{firma?.firma_unvani || "Firma Bilgisi Yok"}</h2>

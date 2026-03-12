@@ -237,8 +237,8 @@ export default function Favoriler() {
             ) : (
               <div className="divide-y divide-border">
                 {favUrunler.map((fav) => (
-                  <div key={fav.id} className="flex items-center gap-4 py-4 px-2">
-                    <div className="w-12 h-12 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                  <div key={fav.id} className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4 px-2">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                       {fav.urun?.foto_url ? (
                         <img src={fav.urun.foto_url} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -247,26 +247,20 @@ export default function Favoriler() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-foreground">{fav.urun?.baslik || "-"}</p>
-                        {fav.urun?.urun_kategori_id && secenekMap[fav.urun.urun_kategori_id] && (
-                          <span className="text-xs text-primary font-medium">{secenekMap[fav.urun.urun_kategori_id]}</span>
-                        )}
-                        {fav.urun?.urun_grup_id && secenekMap[fav.urun.urun_grup_id] && (
-                          <span className="text-xs text-primary font-medium">{secenekMap[fav.urun.urun_grup_id]}</span>
-                        )}
+                        <p className="font-semibold text-foreground text-sm sm:text-base truncate">{fav.urun?.baslik || "-"}</p>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-0.5 flex items-center gap-1">
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 flex items-center gap-1 truncate">
                         🏢 {fav.urun?.user_id ? firmaAdMap[fav.urun.user_id] || "-" : "-"}
                       </p>
                     </div>
-                    <Button variant="outline" size="sm" className="shrink-0">
+                    <Button variant="outline" size="sm" className="shrink-0 hidden sm:flex">
                       Ürünü Gör
                     </Button>
                     <button
                       onClick={() => removeUrunFav(fav.id)}
-                      className="shrink-0 p-2 rounded-lg hover:bg-muted transition-colors"
+                      className="shrink-0 p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
                     >
-                      <Heart className="w-5 h-5 text-destructive fill-destructive" />
+                      <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-destructive fill-destructive" />
                     </button>
                   </div>
                 ))}
