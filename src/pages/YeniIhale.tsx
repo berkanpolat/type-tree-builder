@@ -189,7 +189,7 @@ export default function YeniIhale() {
 
       if (!ihale) {
         toast({ title: "Hata", description: "İhale bulunamadı.", variant: "destructive" });
-        navigate("/manuihale");
+        navigate("/ihalelerim");
         return;
       }
 
