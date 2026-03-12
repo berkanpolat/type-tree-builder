@@ -5,7 +5,7 @@ import { useNotificationCount } from "@/hooks/use-notifications";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
 import { useProfileCompletion } from "@/hooks/use-profile-completion";
 import { usePackageQuota } from "@/hooks/use-package-quota";
-import { STRIPE_CONFIG, PAKET_OZELLIKLERI } from "@/lib/package-config";
+import { PRO_FIYATLAR, PAKET_OZELLIKLERI } from "@/lib/package-config";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
