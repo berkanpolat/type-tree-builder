@@ -68,9 +68,9 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
         <div className="flex items-center gap-1">
           {/* Mobile nav links */}
           <nav className="flex md:hidden items-center gap-1 mr-1">
-            <Link to="/firmalar" className="text-[11px] font-medium text-muted-foreground px-1.5 py-1 rounded hover:bg-muted">Rehber</Link>
-            <Link to="/tekpazar" className="text-[11px] font-medium text-foreground px-1.5 py-1 rounded bg-muted">Pazar</Link>
-            <Link to="/ihaleler" className="text-[11px] font-medium text-muted-foreground px-1.5 py-1 rounded hover:bg-muted">İhale</Link>
+            <Link to="/firmalar" className={`text-[11px] font-medium px-1.5 py-1 rounded ${isActive("/firmalar") ? "text-secondary bg-secondary/10" : "text-muted-foreground hover:bg-muted"}`}>Rehber</Link>
+            <Link to="/tekpazar" className={`text-[11px] font-medium px-1.5 py-1 rounded ${isActive("/tekpazar") ? "text-secondary bg-secondary/10" : "text-muted-foreground hover:bg-muted"}`}>Pazar</Link>
+            <Link to="/ihaleler" className={`text-[11px] font-medium px-1.5 py-1 rounded ${isActive("/ihaleler") ? "text-secondary bg-secondary/10" : "text-muted-foreground hover:bg-muted"}`}>İhale</Link>
           </nav>
 
           {/* Icons */}
