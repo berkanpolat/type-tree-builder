@@ -729,7 +729,40 @@ export default function UrunDetay() {
             <Card className="p-6">
               <p className="text-sm text-muted-foreground mb-1">#{urun.urun_no.replace("#", "")}</p>
               <h1 className="text-xl font-bold text-foreground mb-3">{urun.baslik}</h1>
-              <div className="mb-4">{priceDisplay}</div>
+
+              {/* Kademeli Fiyatlandırma - show price tiers */}
+              {urun.fiyat_tipi === "varyasyonlu" && varyasyonlar.length > 0 ? (
+                <div className="mb-4">
+                  {(() => {
+                    // Group by varyant combo to show tiers per combo, or just show all tiers if single combo
+                    const combos = new Map<string, VaryasyonData[]>();
+                    varyasyonlar.forEach(v => {
+                      const key = `${v.varyant_1_value}|${v.varyant_2_value || ""}`;
+                      if (!combos.has(key)) combos.set(key, []);
+                      combos.get(key)!.push(v);
+                    });
+                    // Check if all combos have same tiers (typical for uniform pricing)
+                    const firstComboTiers = Array.from(combos.values())[0] || [];
+                    const allSameTiers = Array.from(combos.values()).every(tiers => 
+                      tiers.length === firstComboTiers.length && 
+                      tiers.every((t, i) => t.birim_fiyat === firstComboTiers[i].birim_fiyat && t.min_adet === firstComboTiers[i].min_adet && t.max_adet === firstComboTiers[i].max_adet)
+                    );
+                    const tiersToShow = allSameTiers ? firstComboTiers : firstComboTiers;
+                    return (
+                      <div className="flex flex-wrap gap-4">
+                        {tiersToShow.map((tier, i) => (
+                          <div key={i} className="text-center">
+                            <p className="text-sm text-muted-foreground">{tier.min_adet}-{tier.max_adet} adet</p>
+                            <p className="text-xl font-bold text-foreground">{tier.birim_fiyat.toLocaleString("tr-TR")} {(urun.para_birimi || "TRY").toLowerCase()}</p>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })()}
+                </div>
+              ) : (
+                <div className="mb-4">{priceDisplay}</div>
+              )}
 
               {urun.min_siparis_miktari && (
                 <div className="flex items-center gap-3 bg-muted rounded-lg px-4 py-3 mb-4">
