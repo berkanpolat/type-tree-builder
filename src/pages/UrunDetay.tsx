@@ -262,7 +262,7 @@ export default function UrunDetay() {
     // Fetch firma
     const { data: firmaData } = await supabase
       .from("firmalar")
-      .select("firma_unvani, logo_url, firma_iletisim_numarasi, firma_iletisim_email, web_sitesi, instagram, facebook, linkedin, x_twitter, tiktok, kurulus_il_id, kurulus_ilce_id, user_id")
+      .select("firma_unvani, logo_url, firma_iletisim_numarasi, firma_iletisim_email, web_sitesi, instagram, facebook, linkedin, x_twitter, tiktok, kurulus_il_id, kurulus_ilce_id, user_id, belge_onayli")
       .eq("user_id", urunData.user_id)
       .single();
     setFirma(firmaData);
