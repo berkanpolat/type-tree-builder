@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { usePackageQuota } from "@/hooks/use-package-quota";
-import { STRIPE_CONFIG, PAKET_OZELLIKLERI } from "@/lib/package-config";
+import { PRO_FIYATLAR, PAKET_OZELLIKLERI } from "@/lib/package-config";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,7 +50,7 @@ const Paketim = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
-  // Sync subscription from Stripe after checkout or on page load
+  // Sync subscription on page load
   useEffect(() => {
     const syncSubscription = async () => {
       try {
@@ -58,14 +58,6 @@ const Paketim = () => {
         if (error) console.error("Subscription sync error:", error);
         if (searchParams.get("checkout") === "success") {
           setSuccessDialogOpen(true);
-          // Send payment success SMS
-          try {
-            await supabase.functions.invoke("send-notification-sms", {
-              body: { type: "odeme_basarili" },
-            });
-          } catch (smsErr) {
-            console.error("Payment SMS failed:", smsErr);
-          }
         }
       } catch (e) {
         console.error("Subscription sync failed:", e);
@@ -77,14 +69,14 @@ const Paketim = () => {
   const handleUpgrade = async (periyot: "aylik" | "yillik") => {
     setUpgradeLoading(periyot);
     try {
-      const priceId = STRIPE_CONFIG.pro[periyot].priceId;
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
+      const { data, error } = await supabase.functions.invoke("create-paytr-token", {
+        body: { periyot },
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
     } catch (err) {
-      console.error("Checkout error:", err);
+      console.error("PayTR error:", err);
+      toast({ title: "Hata", description: "Ödeme sayfası oluşturulamadı. Lütfen tekrar deneyin.", variant: "destructive" });
     } finally {
       setUpgradeLoading(null);
     }
@@ -97,15 +89,6 @@ const Paketim = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       if (data?.success) {
-        // Update local DB status to iptal_bekliyor
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          await supabase
-            .from("kullanici_abonelikler")
-            .update({ durum: "iptal_bekliyor" } as any)
-            .eq("user_id", user.id);
-        }
-
         const cancelDate = data.cancel_at
           ? new Date(data.cancel_at).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })
           : "";
@@ -118,7 +101,7 @@ const Paketim = () => {
       }
     } catch (err: any) {
       console.error("Cancel error:", err);
-      toast({ title: "Hata", description: err?.message || "Abonelik iptal edilemedi. Lütfen tekrar deneyin.", variant: "destructive" });
+      toast({ title: "Hata", description: err?.message || "Abonelik iptal edilemedi.", variant: "destructive" });
     } finally {
       setCancelLoading(false);
     }
@@ -159,8 +142,7 @@ const Paketim = () => {
                   <p className="font-semibold text-foreground">Aboneliğiniz iptal edilmiştir</p>
                   <p className="text-sm text-muted-foreground">
                     PRO paketiniz <strong className="text-foreground">{cancelDateFormatted}</strong> tarihine kadar aktif kalacaktır. 
-                    Bu tarihten sonra hesabınız otomatik olarak <strong className="text-foreground">Ücretsiz pakete</strong> geçirilecek 
-                    ve gelecek dönemde herhangi bir ücret tahsil edilmeyecektir.
+                    Bu tarihten sonra hesabınız otomatik olarak <strong className="text-foreground">Ücretsiz pakete</strong> geçirilecek.
                   </p>
                 </div>
               </div>
@@ -195,15 +177,14 @@ const Paketim = () => {
             {isPro && (
               <div className="space-y-1 mb-4">
                 <p className="text-lg font-semibold text-foreground">
-                  ${pkg.periyot === "yillik" ? STRIPE_CONFIG.pro.yillik.fiyat : STRIPE_CONFIG.pro.aylik.fiyat}
+                  {pkg.periyot === "yillik" ? PRO_FIYATLAR.yillik.fiyat : PRO_FIYATLAR.aylik.fiyat}₺
                   <span className="text-sm font-normal text-muted-foreground">
                     / {pkg.periyot === "yillik" ? "yıl" : "ay"}
                   </span>
                 </p>
                 {pkg.donemBitis && !pkg.cancelAtPeriodEnd && (
                   <p className="text-sm text-muted-foreground">
-                    Sonraki yenileme:{" "}
-                    {cancelDateFormatted}
+                    Dönem bitiş: {cancelDateFormatted}
                   </p>
                 )}
               </div>
@@ -242,13 +223,9 @@ const Paketim = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-lg">{PAKET_OZELLIKLERI.ucretsiz.ad}</CardTitle>
-                {!isPro && (
-                  <Badge variant="outline" className="text-xs">Mevcut Paketiniz</Badge>
-                )}
+                {!isPro && <Badge variant="outline" className="text-xs">Mevcut Paketiniz</Badge>}
               </div>
-              <p className="text-3xl font-bold text-foreground mt-2">
-                Ücretsiz
-              </p>
+              <p className="text-3xl font-bold text-foreground mt-2">Ücretsiz</p>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
@@ -274,17 +251,15 @@ const Paketim = () => {
                   <Crown className="w-5 h-5 text-primary" />
                   <CardTitle className="text-lg">{PAKET_OZELLIKLERI.pro.ad}</CardTitle>
                 </div>
-                {isPro && (
-                  <Badge className="text-xs">Mevcut Paketiniz</Badge>
-                )}
+                {isPro && <Badge className="text-xs">Mevcut Paketiniz</Badge>}
               </div>
               <div className="mt-2 space-y-1">
                 <p className="text-3xl font-bold text-foreground">
-                  ${STRIPE_CONFIG.pro.aylik.fiyat}
+                  {PRO_FIYATLAR.aylik.fiyat}₺
                   <span className="text-base font-normal text-muted-foreground">/ay</span>
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  veya ${STRIPE_CONFIG.pro.yillik.fiyat}/yıl
+                  veya {PRO_FIYATLAR.yillik.fiyat}₺/yıl
                 </p>
               </div>
             </CardHeader>
@@ -304,22 +279,13 @@ const Paketim = () => {
 
               {!isPro && (
                 <div className="space-y-2 pt-2">
-                  <Button
-                    className="w-full"
-                    onClick={() => handleUpgrade("aylik")}
-                    disabled={!!upgradeLoading}
-                  >
+                  <Button className="w-full" onClick={() => handleUpgrade("aylik")} disabled={!!upgradeLoading}>
                     {upgradeLoading === "aylik" && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    Aylık PRO'ya Geç (${STRIPE_CONFIG.pro.aylik.fiyat}/ay)
+                    Aylık PRO'ya Geç ({PRO_FIYATLAR.aylik.fiyat}₺/ay)
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleUpgrade("yillik")}
-                    disabled={!!upgradeLoading}
-                  >
+                  <Button variant="outline" className="w-full" onClick={() => handleUpgrade("yillik")} disabled={!!upgradeLoading}>
                     {upgradeLoading === "yillik" && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    Yıllık PRO'ya Geç (${STRIPE_CONFIG.pro.yillik.fiyat}/yıl)
+                    Yıllık PRO'ya Geç ({PRO_FIYATLAR.yillik.fiyat}₺/yıl)
                   </Button>
                 </div>
               )}
@@ -327,16 +293,11 @@ const Paketim = () => {
               {isPro && pkg.periyot === "aylik" && !pkg.cancelAtPeriodEnd && (
                 <div className="pt-2 border-t border-border space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    Yıllık plana geçerek tasarruf edin. Mevcut dönem bitiş tarihinizden itibaren 1 yıl geçerli olur.
+                    Yıllık plana geçerek tasarruf edin.
                   </p>
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => handleUpgrade("yillik")}
-                    disabled={!!upgradeLoading}
-                  >
+                  <Button variant="outline" className="w-full" onClick={() => handleUpgrade("yillik")} disabled={!!upgradeLoading}>
                     {upgradeLoading === "yillik" && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    Yıllık Plana Geç (${STRIPE_CONFIG.pro.yillik.fiyat}/yıl)
+                    Yıllık Plana Geç ({PRO_FIYATLAR.yillik.fiyat}₺/yıl)
                   </Button>
                 </div>
               )}
@@ -386,12 +347,9 @@ const Paketim = () => {
               <div className="bg-muted rounded-lg p-3 space-y-2">
                 <p className="font-medium text-foreground">İptal sonrası neler olacak:</p>
                 <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>
-                    Mevcut dönem bitiş tarihinize ({cancelDateFormatted || "—"}) kadar PRO özelliklerini kullanmaya devam edeceksiniz.
-                  </li>
+                  <li>Mevcut dönem bitiş tarihinize ({cancelDateFormatted || "—"}) kadar PRO özelliklerini kullanmaya devam edeceksiniz.</li>
                   <li>Dönem sona erdikten sonra hesabınız otomatik olarak <strong>Ücretsiz pakete</strong> geçirilecektir.</li>
                   <li>Ücretsiz pakette profil görüntüleme, teklif verme ve mesaj hakları sınırlıdır.</li>
-                  <li>Gelecek dönemde herhangi bir ücret tahsil edilmeyecektir.</li>
                 </ul>
               </div>
             </AlertDialogDescription>
