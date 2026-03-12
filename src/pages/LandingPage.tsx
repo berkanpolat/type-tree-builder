@@ -47,9 +47,16 @@ const LandingPage = () => {
   const [billingYearly, setBillingYearly] = useState(true);
 
   useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    if (hashParams.get("type") === "recovery") {
+      navigate({ pathname: "/sifre-sifirla", hash: window.location.hash }, { replace: true });
+      return;
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/tekpazar", { replace: true });
+        const mustSet = (session.user.user_metadata as { must_set_password?: boolean } | null)?.must_set_password === true;
+        navigate(mustSet ? "/sifre-sifirla" : "/tekpazar", { replace: true });
       } else {
         setLoading(false);
       }

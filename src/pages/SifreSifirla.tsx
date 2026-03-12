@@ -53,8 +53,17 @@ export default function SifreSifirla() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password });
+      const { data: { user } } = await supabase.auth.getUser();
+      const existingMetadata = (user?.user_metadata ?? {}) as Record<string, unknown>;
+      const { error } = await supabase.auth.updateUser({
+        password,
+        data: {
+          ...existingMetadata,
+          must_set_password: false,
+        },
+      });
       if (error) throw error;
+      await supabase.auth.signOut();
       setSuccess(true);
     } catch (err: any) {
       let msg = err.message;
