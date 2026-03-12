@@ -58,6 +58,14 @@ const Paketim = () => {
         if (error) console.error("Subscription sync error:", error);
         if (searchParams.get("checkout") === "success") {
           setSuccessDialogOpen(true);
+          // Send payment success SMS
+          try {
+            await supabase.functions.invoke("send-notification-sms", {
+              body: { type: "odeme_basarili" },
+            });
+          } catch (smsErr) {
+            console.error("Payment SMS failed:", smsErr);
+          }
         }
       } catch (e) {
         console.error("Subscription sync failed:", e);

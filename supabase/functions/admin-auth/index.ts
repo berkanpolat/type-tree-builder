@@ -350,6 +350,14 @@ Deno.serve(async (req) => {
 
       if (firmaError) return jsonResponse({ error: firmaError.message }, 400);
 
+      // Get user phone for SMS
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("iletisim_numarasi")
+        .eq("user_id", firma.user_id)
+        .single();
+      const userPhone = profile?.iletisim_numarasi;
+
       // Get user email from auth
       const { data: { user: authUser } } = await supabase.auth.admin.getUserById(firma.user_id);
       
@@ -380,6 +388,25 @@ Deno.serve(async (req) => {
             message,
             link: null,
           });
+
+          // Send approval SMS
+          if (userPhone) {
+            try {
+              await fetch("http://194.62.55.240:3000/api/send-sms", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  messages: [{
+                    msg: `${firma.firma_unvani}, Tekstil A.S. basvurunuz onaylandi! E-postaniza gonderilen baglanti uzerinden sifrenizi olusturarak dijital dunyaya ilk adiminizi atabilirsiniz. Aramiza hos geldiniz!`,
+                    dest: userPhone,
+                    id: "1",
+                  }],
+                }),
+              });
+            } catch (smsErr) {
+              console.error("Approval SMS failed:", smsErr);
+            }
+          }
         } else {
           const message = `${firma.firma_unvani} firmanızın başvurusu reddedilmiştir. Detaylı bilgi için bizimle iletişime geçebilirsiniz.`;
           await supabase.from("notifications").insert({
@@ -388,6 +415,25 @@ Deno.serve(async (req) => {
             message,
             link: null,
           });
+
+          // Send rejection SMS
+          if (userPhone) {
+            try {
+              await fetch("http://194.62.55.240:3000/api/send-sms", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  messages: [{
+                    msg: `${firma.firma_unvani}, Tekstil A.S. basvurunuz ne yazik ki red ile sonuclandi. Detaylari ogrenmek icin mailinizi kontrol ediniz. Gerekli duzeltmelerden sonra yeniden basvuru yapabilirsiniz.`,
+                    dest: userPhone,
+                    id: "1",
+                  }],
+                }),
+              });
+            } catch (smsErr) {
+              console.error("Rejection SMS failed:", smsErr);
+            }
+          }
         }
       }
 
@@ -1610,14 +1656,14 @@ Deno.serve(async (req) => {
       const { data: adminUser } = await supabase.from("admin_users").select("ad, soyad, pozisyon").eq("id", payload.id).single();
       const createdBy = adminUser ? `${adminUser.ad} ${adminUser.soyad} (${adminUser.pozisyon})` : payload.username;
 
-      const { error } = await supabase.from("firma_kisitlamalar").insert({
+      const { data: kisitlamaData, error } = await supabase.from("firma_kisitlamalar").insert({
         user_id: userId,
         sikayet_id: sikayetId || null,
         sebep,
         kisitlama_alanlari: kisitlamaAlanlari,
         bitis_tarihi: bitisTarihi,
         created_by: createdBy,
-      });
+      }).select("id").single();
 
       if (error) return jsonResponse({ error: error.message }, 400);
 
@@ -1638,6 +1684,7 @@ Deno.serve(async (req) => {
         .join(", ");
 
       const bitisStr = new Date(bitisTarihi).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
+      const kisitlamaTarihStr = new Date().toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
       const msg = sikayetNo
         ? `${sikayetNo} numaralı şikayet kapsamında ${bitisStr} tarihine kadar ${activeAreas} işlemleriniz kısıtlanmıştır.`
@@ -1649,6 +1696,52 @@ Deno.serve(async (req) => {
         message: msg,
         link: null,
       });
+
+      // Send restriction SMS
+      const { data: kisitProfile } = await supabase
+        .from("profiles")
+        .select("iletisim_numarasi")
+        .eq("user_id", userId)
+        .single();
+
+      if (kisitProfile?.iletisim_numarasi) {
+        const smsAlanlar = Object.entries(kisitlamaAlanlari)
+          .filter(([_, v]) => v === true)
+          .map(([k]) => {
+            const smsLabels: Record<string, string> = {
+              ihale_acamaz: "ihale acma",
+              teklif_veremez: "teklif verme",
+              urun_aktif_edemez: "urun aktif etme",
+              mesaj_gonderemez: "mesaj gonderme",
+              mesaj_alamaz: "mesaj alma",
+              profil_goruntuleyemez: "profil goruntuleme",
+              ihale_goruntuleyemez: "ihale goruntuleme",
+              urun_goruntuleyemez: "urun goruntuleme",
+            };
+            return smsLabels[k] || k;
+          })
+          .join(", ");
+
+        const smsBitis = new Date(bitisTarihi).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
+        const smsTarih = new Date().toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
+        const kisitId = kisitlamaData?.id?.slice(0, 8)?.toUpperCase() || "-";
+
+        try {
+          await fetch("http://194.62.55.240:3000/api/send-sms", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              messages: [{
+                msg: `${smsTarih} tarihinde ${kisitId} ID numarali kisitlama geregince ${smsAlanlar} haklariniz ${smsBitis} tarihine kadar askiya alinmistir. Detaylari ogrenmek ve itirazda bulunmak icin destek@tekstilas.com adresinden veya 0850 242 5700 numarasindan iletisim kurabilirsiniz.`,
+                dest: kisitProfile.iletisim_numarasi,
+                id: "1",
+              }],
+            }),
+          });
+        } catch (smsErr) {
+          console.error("Restriction SMS failed:", smsErr);
+        }
+      }
 
       // Update sikayet status and log action details
       if (sikayetId) {

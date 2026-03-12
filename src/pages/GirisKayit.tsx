@@ -287,6 +287,19 @@ const GirisKayit = () => {
         console.error("Welcome email failed:", emailErr);
       }
 
+      // Send registration SMS notification
+      try {
+        await supabase.functions.invoke("send-notification-sms", {
+          body: {
+            type: "kayit_alindi",
+            telefon: fullPhone,
+            firmaUnvani,
+          },
+        });
+      } catch (smsErr) {
+        console.error("Registration SMS failed:", smsErr);
+      }
+
       await supabase.auth.signOut();
       setRegistrationComplete(true);
     } catch (error: any) {
