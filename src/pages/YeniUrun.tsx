@@ -118,14 +118,14 @@ interface FiyatKademesi {
   birim_fiyat: number;
 }
 
-// Product variation (Renk + Beden/Birim + photo)
+// Product variation (Renk + Beden/Birim + photos)
 interface UrunVaryasyon {
   varyant_1_label: string;
   varyant_1_value: string;
   varyant_2_label: string;
   varyant_2_value: string;
-  foto_url: string;
-  foto_file?: File;
+  foto_urls: string[];
+  foto_files?: File[];
 }
 
 export default function YeniUrun() {
