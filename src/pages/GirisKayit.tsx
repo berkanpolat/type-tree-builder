@@ -634,10 +634,13 @@ const GirisKayit = () => {
                           if (phoneVerified) { setPhoneVerified(false); setOtpSent(false); setOtpCode(""); }
                         }}
                         disabled={phoneVerified || otpSent}
-                        className="flex-1"
+                        className={`flex-1 ${phoneDuplicate ? "border-destructive" : ""}`}
                         inputMode="tel"
                       />
                     </div>
+                    {phoneDuplicate && (
+                      <p className="text-xs text-destructive">Bu telefon numarası ile zaten bir üyelik bulunmaktadır.</p>
+                    )}
                   </div>
 
                   {/* Inline OTP Verification */}
