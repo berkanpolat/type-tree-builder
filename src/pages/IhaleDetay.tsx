@@ -908,7 +908,7 @@ export default function IhaleDetay() {
             <>
               <span>/</span>
               <button
-                onClick={() => navigate("/tekihale", { state: { kategoriId: ihale.urun_kategori_id || ihale.hizmet_kategori_id, grupId: ihale.urun_grup_id || ihale.hizmet_tur_id, isHizmet: !!ihale.hizmet_kategori_id } })}
+                onClick={() => navigate("/ihaleler", { state: { kategoriId: ihale.urun_kategori_id || ihale.hizmet_kategori_id, grupId: ihale.urun_grup_id || ihale.hizmet_tur_id, isHizmet: !!ihale.hizmet_kategori_id } })}
                 className="hover:text-foreground transition-colors"
               >
                 {breadcrumbGrup}
