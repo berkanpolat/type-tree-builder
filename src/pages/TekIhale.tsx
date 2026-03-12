@@ -355,7 +355,7 @@ export default function TekIhale() {
     <div className="min-h-screen bg-muted/30">
       <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
 
-      <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-5">
         {/* Search */}
         <Card className="p-0">
           <div className="relative">
