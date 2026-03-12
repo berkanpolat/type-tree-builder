@@ -45,7 +45,6 @@ export function usePackageQuota(): PackageInfo {
   const [durum, setDurum] = useState("aktif");
   const [limits, setLimits] = useState<PackageLimits>(DEFAULT_LIMITS);
   const [usage, setUsage] = useState<QuotaUsage>({ profil_goruntuleme: 0, teklif_verme: 0, aktif_urun: 0, mesaj: 0 });
-  const [stripeSubscriptionId, setStripeSubscriptionId] = useState<string | null>(null);
   const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(false);
 
   const fetchData = useCallback(async () => {
