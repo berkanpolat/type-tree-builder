@@ -504,7 +504,8 @@ export default function UrunDetay() {
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
           {/* Left: Image Gallery */}
-          <div className="lg:col-span-3 flex gap-4">
+          <div className="lg:col-span-3 space-y-6">
+            <div className="flex gap-4">
             {/* Thumbnails */}
             {allImages.length > 1 && (
               <div className="flex flex-col gap-2 shrink-0">
