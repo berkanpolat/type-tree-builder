@@ -241,8 +241,8 @@ const Dashboard = () => {
 
         {/* Paket Bilgisi */}
         <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {/* Paket Adı */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
