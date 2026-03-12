@@ -4,7 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Search, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, X, SlidersHorizontal } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1"; // Ana Ürün Kategorileri
 
@@ -299,9 +302,12 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
     setUsSelectedTurler((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
   };
 
-  return (
-    <div className="w-72 shrink-0 space-y-3 hidden lg:block">
-      <div className="flex items-center justify-between">
+  const isMobile = useIsMobile();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const filterContent = (
+    <>
+      <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-foreground text-lg">Filtreler</h3>
         {activeCount > 0 && (
           <Button variant="ghost" size="sm" onClick={clearAll} className="text-xs text-muted-foreground h-auto py-1">
@@ -434,6 +440,34 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
 
         return null;
       })}
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <Button variant="outline" className="lg:hidden gap-2" onClick={() => setMobileOpen(true)}>
+          <SlidersHorizontal className="w-4 h-4" />
+          Filtreler
+          {activeCount > 0 && (
+            <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">{activeCount}</Badge>
+          )}
+        </Button>
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-[300px] overflow-y-auto p-4">
+            <SheetHeader className="mb-4">
+              <SheetTitle>Filtreler</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-3">{filterContent}</div>
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  return (
+    <div className="w-72 shrink-0 space-y-3 hidden lg:block">
+      {filterContent}
     </div>
   );
 }

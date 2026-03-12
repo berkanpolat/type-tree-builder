@@ -935,12 +935,12 @@ export default function IhaleDetay() {
           {/* Left: Image + Details */}
           <div className="lg:col-span-3 space-y-6">
             {/* Image Gallery with inline zoom */}
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
               {allImages.length > 1 && (
-                <div className="flex flex-col gap-2 shrink-0">
+                <div className="flex sm:flex-col gap-2 shrink-0 overflow-x-auto sm:overflow-x-visible">
                   {allImages.map((img, i) => (
                     <button key={i} onClick={() => setSelectedImageIndex(i)}
-                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${selectedImageIndex === i ? "border-primary" : "border-border hover:border-primary/50"}`}
+                      className={`w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-colors shrink-0 ${selectedImageIndex === i ? "border-primary" : "border-border hover:border-primary/50"}`}
                     >
                       <img src={img} alt="" className="w-full h-full object-contain p-0.5" />
                     </button>

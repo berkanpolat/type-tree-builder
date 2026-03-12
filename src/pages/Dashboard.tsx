@@ -155,11 +155,11 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Firma Kartı */}
           <Card>
-            <CardContent className="p-6">
+           <CardContent className="p-4 sm:p-6">
               <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
-                    <Building2 className="w-8 h-8 text-muted-foreground" />
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-muted flex items-center justify-center">
+                    <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
                   </div>
                   <div className="space-y-1">
                     <h2 className="text-lg font-semibold text-foreground">{firma?.firma_unvani || "Firma Bilgisi Yok"}</h2>
@@ -213,25 +213,25 @@ const Dashboard = () => {
         </div>
 
         {/* Özet İstatistik Kartları */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {statsCards.map((stat) => (
             <Card key={stat.title} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => stat.href && navigate(stat.href)}>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-muted-foreground">{stat.title}</span>
-                  <div className={`p-2 rounded-full ${stat.bgColor}`}>
-                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
+              <CardContent className="p-3 sm:p-5">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground">{stat.title}</span>
+                  <div className={`p-1.5 sm:p-2 rounded-full ${stat.bgColor}`}>
+                    <stat.icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${stat.color}`} />
                   </div>
                 </div>
                 {stat.isProgress ? (
                   <div>
-                    <span className="text-2xl font-bold text-foreground">%{stat.value}</span>
+                    <span className="text-xl sm:text-2xl font-bold text-foreground">%{stat.value}</span>
                     <Progress value={stat.value as number} className="mt-2 h-2" />
                   </div>
                 ) : (
                   <div>
-                    <span className="text-2xl font-bold text-foreground">{stat.value}</span>
-                    <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
+                    <span className="text-xl sm:text-2xl font-bold text-foreground">{stat.value}</span>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
                   </div>
                 )}
               </CardContent>
@@ -241,8 +241,8 @@ const Dashboard = () => {
 
         {/* Paket Bilgisi */}
         <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {/* Paket Adı */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
@@ -281,7 +281,7 @@ const Dashboard = () => {
               </div>
 
               {/* Kalan Haklar */}
-              <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="sm:col-span-2 lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {[
                   {
                     label: "Profil Görüntüleme",

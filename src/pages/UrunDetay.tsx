@@ -507,15 +507,15 @@ export default function UrunDetay() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
           {/* Left: Image Gallery */}
           <div className="lg:col-span-3 space-y-6">
-            <div className="flex gap-4">
-            {/* Thumbnails */}
+            <div className="flex flex-col sm:flex-row gap-4">
+            {/* Thumbnails - horizontal on mobile, vertical on desktop */}
             {allImages.length > 1 && (
-              <div className="flex flex-col gap-2 shrink-0">
+              <div className="flex sm:flex-col gap-2 shrink-0 overflow-x-auto sm:overflow-x-visible">
                 {allImages.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setSelectedImageIndex(i)}
-                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                    className={`w-14 h-14 sm:w-16 sm:h-16 rounded-lg overflow-hidden border-2 transition-colors shrink-0 ${
                       selectedImageIndex === i ? "border-primary" : "border-border hover:border-primary/50"
                     }`}
                   >
