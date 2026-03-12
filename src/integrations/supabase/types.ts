@@ -1999,6 +1999,25 @@ export type Database = {
         Args: { p_user1: string; p_user2: string }
         Returns: string
       }
+      get_sorted_firmalar: {
+        Args: {
+          p_firma_ids?: string[]
+          p_firma_olcegi_ids?: string[]
+          p_firma_tipi_ids?: string[]
+          p_firma_turu_id?: string
+          p_il_ids?: string[]
+          p_moq?: number
+          p_page?: number
+          p_per_page?: number
+          p_search?: string
+        }
+        Returns: {
+          firma_id: string
+          is_pro: boolean
+          profile_score: number
+          total_count: number
+        }[]
+      }
       get_user_bid_ihale_ids: { Args: { _user_id: string }; Returns: string[] }
       get_user_ihale_ids: { Args: { _user_id: string }; Returns: string[] }
       has_bid_on_ihale: {
