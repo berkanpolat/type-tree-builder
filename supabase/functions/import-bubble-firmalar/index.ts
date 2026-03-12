@@ -160,22 +160,29 @@ Deno.serve(async (req) => {
           ? item["Kuruluş Tarihi"].split("T")[0]
           : null;
 
-        // Insert profile
+        // Insert profile (upsert - skip if exists)
         const telefon = (item["telefon"] || "").trim();
-        const { error: profileError } = await supabase
+        const { data: existingProfile } = await supabase
           .from("profiles")
-          .insert({
-            user_id: userId,
-            ad: firmaUnvani.split(" ")[0] || "İthal",
-            soyad: firmaUnvani.split(" ").slice(1).join(" ") || "Firma",
-            iletisim_email: email,
-            iletisim_numarasi: telefon || null,
-          });
+          .select("id")
+          .eq("user_id", userId)
+          .maybeSingle();
 
-        if (profileError) {
-          failList.push({ firma: firmaUnvani, error: `Profil hatası: ${profileError.message}` });
-          await supabase.auth.admin.deleteUser(userId);
-          continue;
+        if (!existingProfile) {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .insert({
+              user_id: userId,
+              ad: firmaUnvani.split(" ")[0] || "İthal",
+              soyad: firmaUnvani.split(" ").slice(1).join(" ") || "Firma",
+              iletisim_email: email,
+              iletisim_numarasi: telefon || null,
+            });
+
+          if (profileError) {
+            failList.push({ firma: firmaUnvani, error: `Profil hatası: ${profileError.message}` });
+            continue;
+          }
         }
 
         // Insert firma
