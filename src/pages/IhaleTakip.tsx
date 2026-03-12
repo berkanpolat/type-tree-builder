@@ -443,7 +443,7 @@ export default function IhaleTakip() {
         {/* Ihale Info Card */}
         <Card>
           <CardContent className="p-5">
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col sm:flex-row items-start gap-4">
               {/* Photo */}
               <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                 {ihale.foto_url ? (
