@@ -629,7 +629,7 @@ export default function IhaleDetay() {
     } as any).eq("id", ihaleId);
 
     setLoading(false);
-  }, [id, currentUserId]);
+  }, [slugParam, currentUserId]);
 
   useEffect(() => { fetchIhale(); }, [fetchIhale]);
 
