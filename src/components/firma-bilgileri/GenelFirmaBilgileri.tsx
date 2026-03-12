@@ -380,27 +380,27 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Instagram</Label>
-              <Input value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="@kullaniciadi" className="bg-muted/50" />
+              <Input value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="https://instagram.com/kullaniciadi" className="bg-muted/50" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Facebook</Label>
-              <Input value={facebook} onChange={e => setFacebook(e.target.value)} placeholder="facebook.com/sayfa" className="bg-muted/50" />
+              <Input value={facebook} onChange={e => setFacebook(e.target.value)} placeholder="https://facebook.com/sayfa" className="bg-muted/50" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">LinkedIn</Label>
-              <Input value={linkedin} onChange={e => setLinkedin(e.target.value)} placeholder="linkedin.com/company/firma" className="bg-muted/50" />
+              <Input value={linkedin} onChange={e => setLinkedin(e.target.value)} placeholder="https://linkedin.com/company/firma" className="bg-muted/50" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">X (Twitter)</Label>
-              <Input value={xTwitter} onChange={e => setXTwitter(e.target.value)} placeholder="@kullaniciadi" className="bg-muted/50" />
+              <Input value={xTwitter} onChange={e => setXTwitter(e.target.value)} placeholder="https://x.com/kullaniciadi" className="bg-muted/50" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">TikTok</Label>
-              <Input value={tiktok} onChange={e => setTiktok(e.target.value)} placeholder="@kullaniciadi" className="bg-muted/50" />
+              <Input value={tiktok} onChange={e => setTiktok(e.target.value)} placeholder="https://tiktok.com/@kullaniciadi" className="bg-muted/50" />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">YouTube</Label>
-              <Input value={youtube} onChange={e => setYoutube(e.target.value)} placeholder="youtube.com/@kanal" className="bg-muted/50" />
+              <Input value={youtube} onChange={e => setYoutube(e.target.value)} placeholder="https://youtube.com/@kanal" className="bg-muted/50" />
             </div>
           </div>
         </div>
