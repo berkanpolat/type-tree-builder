@@ -61,6 +61,8 @@ const GirisKayit = () => {
   const [emailDuplicate, setEmailDuplicate] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [telefon, setTelefon] = useState("");
+  const [phoneDuplicate, setPhoneDuplicate] = useState(false);
+  const [checkingPhone, setCheckingPhone] = useState(false);
   const [countryCode, setCountryCode] = useState("+90");
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
