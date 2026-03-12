@@ -324,6 +324,7 @@ const LandingPage = () => {
               <img
                 src={badge.img}
                 alt={badge.label}
+                loading="lazy"
                 className={`w-[72px] h-[72px] object-contain opacity-60 hover:opacity-100 transition-opacity ${badge.scale}`}
                 style={{ imageRendering: "crisp-edges" }}
               />
