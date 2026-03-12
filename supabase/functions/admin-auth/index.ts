@@ -2090,7 +2090,9 @@ Deno.serve(async (req) => {
     // ─── UPDATE FIRMA PACKAGE ───
     if (action === "update-firma-paket") {
       const { token, userId, paketId, ekstraHaklar } = body;
-      verifyToken(token);
+      const payload = verifyToken(token);
+
+      console.log("[UPDATE-FIRMA-PAKET] Starting", { userId, paketId });
 
       // When admin assigns a package, set unlimited duration (100 years)
       const unlimitedDate = new Date();
@@ -2102,29 +2104,42 @@ Deno.serve(async (req) => {
         donem_bitis: unlimitedDate.toISOString(),
         durum: "aktif",
         periyot: "sinursiz",
+        stripe_subscription_id: null,
+        stripe_customer_id: null,
+        updated_at: new Date().toISOString(),
       };
       if (ekstraHaklar !== undefined) {
         updatePayload.ekstra_haklar = ekstraHaklar;
       }
 
-      // Check if user has existing subscription
-      const { data: existing } = await supabase
+      // Use maybeSingle to avoid error when no row exists
+      const { data: existing, error: existingError } = await supabase
         .from("kullanici_abonelikler")
         .select("id")
         .eq("user_id", userId)
-        .single();
+        .maybeSingle();
+
+      console.log("[UPDATE-FIRMA-PAKET] Existing check", { existing: !!existing, existingError: existingError?.message });
 
       if (existing) {
         const { error } = await supabase
           .from("kullanici_abonelikler")
           .update(updatePayload)
           .eq("user_id", userId);
-        if (error) return jsonResponse({ error: error.message }, 500);
+        if (error) {
+          console.error("[UPDATE-FIRMA-PAKET] Update error", error.message);
+          return jsonResponse({ error: error.message }, 500);
+        }
+        console.log("[UPDATE-FIRMA-PAKET] Updated successfully");
       } else {
         const { error } = await supabase
           .from("kullanici_abonelikler")
-          .insert({ user_id: userId, periyot: "aylik", ...updatePayload });
-        if (error) return jsonResponse({ error: error.message }, 500);
+          .insert({ user_id: userId, ...updatePayload });
+        if (error) {
+          console.error("[UPDATE-FIRMA-PAKET] Insert error", error.message);
+          return jsonResponse({ error: error.message }, 500);
+        }
+        console.log("[UPDATE-FIRMA-PAKET] Inserted successfully");
       }
 
       // Notify user
@@ -2134,6 +2149,14 @@ Deno.serve(async (req) => {
         type: "paket_degisikligi",
         message: `Paketiniz ${paket?.ad || ""} olarak güncellenmiştir.`,
         link: "/dashboard",
+      });
+
+      // Log activity
+      await logActivity(supabase, payload, "update-firma-paket", {
+        target_type: "kullanici",
+        target_id: userId,
+        target_label: paket?.ad || paketId,
+        details: { paketId, periyot: "sinursiz" },
       });
 
       return jsonResponse({ success: true });
