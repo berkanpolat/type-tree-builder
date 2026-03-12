@@ -153,7 +153,7 @@ interface BenzerUrun {
 }
 
 export default function UrunDetay() {
-  const { id } = useParams<{ id: string }>();
+  const { slug: slugParam } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const urunBanner = useBanner("urun-detay-alt-banner");
   const { toast } = useToast();
