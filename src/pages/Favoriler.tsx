@@ -175,15 +175,15 @@ export default function Favoriler() {
         </div>
 
         <Tabs value={tab} onValueChange={setTab}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <TabsList>
               <TabsTrigger value="firmalar">Favori Firmalar</TabsTrigger>
               <TabsTrigger value="urunler">Favori Ürünler</TabsTrigger>
             </TabsList>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               {tab === "firmalar"
-                ? `${favFirmalar.length} firma favorilerinizde listeleniyor`
-                : `${favUrunler.length} ürün favorilerinizde listeleniyor`}
+                ? `${favFirmalar.length} firma`
+                : `${favUrunler.length} ürün`}
             </p>
           </div>
 
