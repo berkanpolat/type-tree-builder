@@ -170,7 +170,7 @@ export default function AdminSikayetler() {
   return (
     <AdminLayout title="Şikayetler">
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
         {statCards.map((c) => (
           <div key={c.label} className="p-4 rounded-xl" style={s.card}>
             <div className="flex items-center gap-3">

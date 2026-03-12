@@ -804,10 +804,10 @@ export default function AdminFirmalar() {
         </div>
 
         {/* Sorting + result count */}
-        <div className="flex items-center justify-between text-xs" style={s.muted}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs" style={s.muted}>
           <span>{sorted.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}</span>
-          <div className="flex items-center gap-2">
-            <span>Sırala:</span>
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="mr-1">Sırala:</span>
             {(["ihale_sayisi", "teklif_sayisi", "urun_sayisi", "profil_doluluk"] as SortField[]).map(field => (
               <Button key={field} variant="ghost" size="sm" onClick={() => toggleSort(field)}
                 className={`text-xs h-7 px-2 gap-1 ${sortField === field ? "text-amber-500" : ""}`}
@@ -816,7 +816,7 @@ export default function AdminFirmalar() {
                 <SortIcon field={field} />
               </Button>
             ))}
-            <span className="ml-4">Sayfa {safePage} / {totalPages}</span>
+            <span className="ml-2">Sayfa {safePage} / {totalPages}</span>
           </div>
         </div>
 
@@ -831,21 +831,20 @@ export default function AdminFirmalar() {
               <div className="text-center py-12" style={s.muted}>Firma bulunamadı.</div>
             )}
             {paginatedFirmalar.map((firma) => (
-              <div key={firma.id} style={s.card} className="p-5 hover:shadow-lg transition-all">
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: "hsl(var(--admin-hover))" }}>
+              <div key={firma.id} style={s.card} className="p-4 md:p-5 hover:shadow-lg transition-all">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: "hsl(var(--admin-hover))" }}>
                       {firma.logo_url ? (
                         <img src={firma.logo_url} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <Building2 className="w-5 h-5" style={s.muted} />
                       )}
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-semibold text-base" style={s.text}>{firma.firma_unvani}</h3>
+                        <h3 className="font-semibold text-sm md:text-base truncate" style={s.text}>{firma.firma_unvani}</h3>
                         {durumBadge(firma.onay_durumu)}
-                        {/* Package badge */}
                         <Badge
                           className="text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80 transition-opacity"
                           style={{
@@ -859,7 +858,7 @@ export default function AdminFirmalar() {
                           {firma.abonelik?.paket_ad || "Paket Yok"}
                         </Badge>
                       </div>
-                      <p className="text-sm" style={s.secondary}>
+                      <p className="text-xs md:text-sm truncate" style={s.secondary}>
                         {firma.firma_turu_name || "—"} · {firma.firma_tipi_name || "—"}
                       </p>
                       {firma.il_name && (
@@ -868,21 +867,21 @@ export default function AdminFirmalar() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
                     {firma.onay_durumu === "onay_bekliyor" && (
                       <Button onClick={(e) => { e.stopPropagation(); openReview(firma); }} className="bg-amber-500 hover:bg-amber-600 text-white text-xs" size="sm">
-                        <AlertCircle className="w-3.5 h-3.5 mr-1.5" /> Başvuruyu Değerlendir
+                        <AlertCircle className="w-3.5 h-3.5 mr-1.5" /> Değerlendir
                       </Button>
                     )}
                     <Button onClick={(e) => { e.stopPropagation(); openBelgeDialog(firma); }}
                       variant="outline" size="sm" className="text-xs"
                       style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}>
-                      <ShieldCheck className="w-3.5 h-3.5 mr-1.5" /> Doğrulama
+                      <ShieldCheck className="w-3.5 h-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Doğrulama</span>
                     </Button>
                     <Button onClick={(e) => { e.stopPropagation(); handleImpersonate(firma.user_id); }}
                       variant="outline" size="sm" className="text-xs"
                       style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
-                      <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Kullanıcıyı Yönet
+                      <ExternalLink className="w-3.5 h-3.5 sm:mr-1.5" /> <span className="hidden sm:inline">Yönet</span>
                     </Button>
                     <Button onClick={(e) => { e.stopPropagation(); setDeleteFirma(firma); setDeleteConfirmText(""); setDeleteDialogOpen(true); }}
                       variant="outline" size="sm" className="text-xs text-red-500 hover:text-red-600 hover:bg-red-500/10"
@@ -892,7 +891,7 @@ export default function AdminFirmalar() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-6 mb-3 text-xs" style={s.muted}>
+                <div className="flex items-center gap-3 md:gap-6 mb-3 text-xs flex-wrap" style={s.muted}>
                   <span>Kayıt: {formatDate(firma.created_at)}</span>
                   <span>Son Hareket: {firma.profile?.last_seen ? formatDate(firma.profile.last_seen) : "—"}</span>
                   {firma.profile?.last_seen && new Date(firma.profile.last_seen) >= new Date(Date.now() - 15 * 60 * 1000) && (
@@ -900,7 +899,7 @@ export default function AdminFirmalar() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 md:gap-3">
                   <ColoredStatBox icon={Gavel} label="İhale" value={firma.ihale_sayisi} />
                   <ColoredStatBox icon={FileText} label="Teklif" value={firma.teklif_sayisi} />
                   <ColoredStatBox icon={Package} label="Ürün" value={firma.urun_sayisi} />
