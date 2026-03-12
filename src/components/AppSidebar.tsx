@@ -77,7 +77,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
       {/* Logo */}
       <div className="px-4 pt-4 pb-4 flex items-center gap-2 border-b border-sidebar-border mb-1">
-        <Link to="/anasayfa" className="flex items-center gap-2">
+        <Link to="/tekpazar" className="flex items-center gap-2">
           {!collapsed ? (
             <img src={logoImg} alt="Tekstil A.Ş." className="h-6 object-contain" />
           ) : (
@@ -88,7 +88,7 @@ export function AppSidebar() {
         </Link>
         {!collapsed && (
           <Link
-            to="/anasayfa"
+            to="/tekpazar"
             className="ml-auto p-1 rounded-md hover:bg-sidebar-accent transition-colors"
             title="Ana Sayfaya Git"
           >
