@@ -204,7 +204,15 @@ serve(async (req) => {
     formData.append("lang", lang);
 
     console.log("[CREATE-PAYTR-TOKEN] Requesting token for:", {
-      merchantOid, email, paymentAmount, periyot, usdTryRate: usdTryRate.toFixed(4),
+      merchantOid,
+      email,
+      paymentAmount,
+      periyot,
+      userIp,
+      clientProvidedIp: clientProvidedIp || null,
+      origin: origin || null,
+      testMode,
+      usdTryRate: usdTryRate.toFixed(4),
     });
 
     const paytrRes = await fetch(PAYTR_API_URL, {
