@@ -1,15 +1,14 @@
-// PayTR PRO paket fiyatları (KDV dahil)
+// PayTR PRO paket fiyatları
 export const PRO_FIYATLAR = {
   aylik: {
     fiyat: 199,
-    kdvli: 238.80,
     label: "Aylık",
   },
   yillik: {
     fiyat: 1299,
-    kdvli: 1558.80,
     label: "Yıllık",
   },
+  paraBirimi: "$",
   kdvOrani: 20,
 } as const;
 

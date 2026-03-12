@@ -10,10 +10,10 @@ const corsHeaders = {
 
 const PAYTR_API_URL = "https://www.paytr.com/odeme/api/get-token";
 
-// PRO paket fiyatları (kuruş cinsinden, %20 KDV dahil)
+// PRO paket fiyatları (kuruş cinsinden, %20 KDV dahil, USD)
 const PRO_PRICES = {
-  aylik: 23880,   // 238.80 TL (199 + %20 KDV)
-  yillik: 155880, // 1558.80 TL (1299 + %20 KDV)
+  aylik: 23880,   // 238.80 USD (199 + %20 KDV)
+  yillik: 155880, // 1558.80 USD (1299 + %20 KDV)
 };
 
 async function hmacSha256Base64(key: string, data: string): Promise<string> {
