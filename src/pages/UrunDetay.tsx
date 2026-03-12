@@ -146,6 +146,7 @@ interface BenzerUrun {
   para_birimi: string | null;
   urun_no: string;
   user_id: string;
+  slug: string | null;
   firma_unvani?: string;
   firma_logo_url?: string | null;
   min_varyant_fiyat?: number | null;
