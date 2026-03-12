@@ -476,11 +476,13 @@ const LandingPage = () => {
               <img
                 src={fabricImg}
                 alt="Tekstil kumaşları"
+                loading="lazy"
                 className="rounded-2xl shadow-lg w-full max-w-md object-cover aspect-[4/3]"
               />
               <img
                 src={warehouseImg}
                 alt="Tekstil deposu"
+                loading="lazy"
                 className="rounded-2xl shadow-lg w-72 object-cover aspect-[4/3] absolute -bottom-8 right-0 border-4 border-background"
               />
             </div>
