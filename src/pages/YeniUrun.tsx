@@ -476,11 +476,19 @@ export default function YeniUrun() {
       await supabase.from("urun_varyasyonlar").delete().eq("urun_id", urunId);
       const dbRows = [];
       for (const v of varyasyonlar) {
-        let fotoUrl = v.foto_url;
-        if (v.foto_file) {
-          const uploaded = await uploadVaryasyonFoto(v.foto_file);
-          if (uploaded) fotoUrl = uploaded;
+        // Upload all new files
+        const uploadedUrls: string[] = [];
+        if (v.foto_files && v.foto_files.length > 0) {
+          for (const file of v.foto_files) {
+            const uploaded = await uploadVaryasyonFoto(file);
+            if (uploaded) uploadedUrls.push(uploaded);
+          }
         }
+        // Combine existing URLs (non-blob) with newly uploaded
+        const existingUrls = v.foto_urls.filter(u => !u.startsWith("blob:"));
+        const allFotoUrls = [...existingUrls, ...uploadedUrls];
+        const primaryFoto = allFotoUrls[0] || "";
+
         // For varyasyonlu, save each variation with price tiers
         if (fiyatTipi === "varyasyonlu") {
           for (const k of fiyatKademeleri) {
@@ -489,7 +497,7 @@ export default function YeniUrun() {
               varyant_1_label: v.varyant_1_label, varyant_1_value: v.varyant_1_value,
               varyant_2_label: v.varyant_2_label, varyant_2_value: v.varyant_2_value,
               min_adet: k.min_adet, max_adet: k.max_adet, birim_fiyat: k.birim_fiyat,
-              foto_url: fotoUrl,
+              foto_url: primaryFoto,
             });
           }
         } else {
@@ -498,7 +506,7 @@ export default function YeniUrun() {
             varyant_1_label: v.varyant_1_label, varyant_1_value: v.varyant_1_value,
             varyant_2_label: v.varyant_2_label, varyant_2_value: v.varyant_2_value,
             min_adet: 1, max_adet: 1, birim_fiyat: parseFloat(fiyat) || 0,
-            foto_url: fotoUrl,
+            foto_url: primaryFoto,
           });
         }
       }
