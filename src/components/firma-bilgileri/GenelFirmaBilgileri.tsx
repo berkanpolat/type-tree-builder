@@ -398,6 +398,10 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
               <Label className="text-xs text-muted-foreground">TikTok</Label>
               <Input value={tiktok} onChange={e => setTiktok(e.target.value)} placeholder="@kullaniciadi" className="bg-muted/50" />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">YouTube</Label>
+              <Input value={youtube} onChange={e => setYoutube(e.target.value)} placeholder="youtube.com/@kanal" className="bg-muted/50" />
+            </div>
           </div>
         </div>
 

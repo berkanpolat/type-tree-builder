@@ -1042,7 +1042,12 @@ export default function FirmaDetay() {
                     <TikTokIcon className="w-4 h-4" />
                   </a>
                 )}
-                {!firma.linkedin && !firma.instagram && !firma.facebook && !firma.x_twitter && !firma.tiktok && (
+                {firma.youtube && (
+                  <a href={firma.youtube.startsWith("http") ? firma.youtube : `https://youtube.com/${firma.youtube}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                    <Youtube className="w-4 h-4" />
+                  </a>
+                )}
+                {!firma.linkedin && !firma.instagram && !firma.facebook && !firma.x_twitter && !firma.tiktok && !firma.youtube && (
                   <p className="text-sm text-muted-foreground">Sosyal medya hesabı belirtilmemiştir.</p>
                 )}
               </div>
