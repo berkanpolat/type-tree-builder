@@ -508,7 +508,7 @@ export default function TekRehber() {
                         </Button>
                         <button
                           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          onClick={() => navigate(`/firma/${firma.id}`)}
+                          onClick={() => navigate(`/${(firma as any).slug || firma.id}`)}
                         >
                           <ArrowRight className="w-3 h-3" /> Profili Gör
                         </button>

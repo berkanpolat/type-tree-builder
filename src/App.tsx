@@ -151,6 +151,8 @@ const App = () => (
             <Route path="/yonetim/kisitlamalar" element={<AdminRoute><AdminKisitlamalar /></AdminRoute>} />
             <Route path="/yonetim/reklam" element={<AdminRoute><AdminReklam /></AdminRoute>} />
 
+            {/* Catch-all: try firma slug at root level */}
+            <Route path="/:slug" element={<FirmaDetay />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
