@@ -690,7 +690,7 @@ export default function YeniUrun() {
             const Icon = STEP_ICONS[i];
             const isActive = i === step;
             const isDone = i < step;
-            const isClickable = isAdminMode || isDone || isActive;
+            const isClickable = !loadingData && (isAdminMode || isDone || isActive);
             return (
               <div key={label} className="flex items-center">
                 <button
