@@ -63,7 +63,7 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("Kullanıcı doğrulanamadı");
 
-    const { periyot } = await req.json();
+    const { periyot, clientIp: clientProvidedIp } = await req.json();
     if (!periyot || !["aylik", "yillik"].includes(periyot)) {
       throw new Error("Geçersiz periyot");
     }

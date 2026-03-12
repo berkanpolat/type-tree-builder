@@ -102,8 +102,15 @@ const Dashboard = () => {
 
   const handleUpgrade = async (periyot: "aylik" | "yillik") => {
     try {
+      let clientIp = "";
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        clientIp = ipData.ip || "";
+      } catch { /* fallback */ }
+
       const { data, error } = await supabase.functions.invoke("create-paytr-token", {
-        body: { periyot },
+        body: { periyot, clientIp },
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
