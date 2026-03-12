@@ -6,6 +6,7 @@ import { useEffect } from "react";
  */
 const preloadRoutes = () => {
   const routes = [
+    // Main pages
     () => import("@/pages/AnaSayfa"),
     () => import("@/pages/TekIhale"),
     () => import("@/pages/Dashboard"),
@@ -17,9 +18,28 @@ const preloadRoutes = () => {
     () => import("@/pages/Bildirimler"),
     () => import("@/pages/FirmaBilgilerim"),
     () => import("@/pages/Tekliflerim"),
+    // Detail pages
     () => import("@/pages/UrunDetay"),
     () => import("@/pages/IhaleDetay"),
     () => import("@/pages/FirmaDetay"),
+    () => import("@/pages/IhaleTakip"),
+    () => import("@/pages/YeniIhale"),
+    () => import("@/pages/YeniUrun"),
+    // Other pages
+    () => import("@/pages/ProfilAyarlari"),
+    () => import("@/pages/Paketim"),
+    () => import("@/pages/DashboardDestek"),
+    () => import("@/pages/DashboardDestekDetay"),
+    () => import("@/pages/HizmetBilgileri"),
+    () => import("@/pages/UrunBilgileri"),
+    () => import("@/pages/UrunKategorisi"),
+    () => import("@/pages/LandingPage"),
+    () => import("@/pages/Hakkimizda"),
+    () => import("@/pages/Iletisim"),
+    () => import("@/pages/SSS"),
+    () => import("@/pages/UreticiTedarikciKesfi"),
+    () => import("@/pages/TekIhaleTanitim"),
+    () => import("@/pages/TekPazarTanitim"),
   ];
 
   let i = 0;
