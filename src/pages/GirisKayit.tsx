@@ -128,6 +128,32 @@ const GirisKayit = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [email]);
+
+  // Debounced phone duplicate check
+  useEffect(() => {
+    const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
+    if (!cleaned || cleaned.length < 7) {
+      setPhoneDuplicate(false);
+      return;
+    }
+    const fullPhone = `${countryCode}${cleaned}`;
+    const timer = setTimeout(async () => {
+      setCheckingPhone(true);
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("iletisim_numarasi", fullPhone)
+          .limit(1);
+        setPhoneDuplicate(!!(data && data.length > 0));
+      } catch {
+        setPhoneDuplicate(false);
+      } finally {
+        setCheckingPhone(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [telefon, countryCode]);
   const handleSendOtp = async () => {
     const fullPhone = getFullPhone();
     const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
