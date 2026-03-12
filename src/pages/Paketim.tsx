@@ -300,7 +300,7 @@ const Paketim = () => {
                   </p>
                   <Button variant="outline" className="w-full" onClick={() => handleUpgrade("yillik")} disabled={!!upgradeLoading}>
                     {upgradeLoading === "yillik" && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    Yıllık Plana Geç ({PRO_FIYATLAR.yillik.fiyat}₺/yıl)
+                    Yıllık Plana Geç ({PRO_FIYATLAR.yillik.kdvli}₺/yıl)
                   </Button>
                 </div>
               )}
