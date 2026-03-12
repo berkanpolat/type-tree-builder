@@ -3,6 +3,7 @@ import { useSessionState } from "@/hooks/use-session-state";
 import { useBanner } from "@/hooks/use-banner";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import PazarHeader from "@/components/PazarHeader";
 import Footer from "@/components/Footer";
 import { Input } from "@/components/ui/input";
