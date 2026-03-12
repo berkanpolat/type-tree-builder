@@ -28,8 +28,6 @@ const STEP_ICONS = [Pencil, FileText, Settings, Package];
 const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" | "number" | "date" | "dependent_dropdown"; kategoriName?: string; dependsOn?: string }[]> = {
   "Hazır Giyim": [
     { label: "Kumaş Kompozisyonu", type: "text" },
-    { label: "Kumaş Grubu", type: "dropdown", kategoriName: "Kumaş Grubu" },
-    { label: "Kumaş Türü", type: "dependent_dropdown", dependsOn: "Kumaş Grubu" },
     { label: "Sezon", type: "dropdown", kategoriName: "Sezon" },
     { label: "Cinsiyet", type: "dropdown", kategoriName: "Cinsiyet" },
     { label: "Yaş Grubu", type: "dropdown", kategoriName: "Yaş Grubu" },
