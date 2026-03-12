@@ -554,7 +554,7 @@ export default function Mesajlar() {
     <DashboardLayout title="Mesajlar">
       <div className="flex h-[calc(100vh-8rem)] border border-border rounded-lg overflow-hidden bg-background">
         {/* Left: Conversation list */}
-        <div className="w-80 border-r border-border flex flex-col shrink-0">
+        <div className={`w-full md:w-80 border-r border-border flex flex-col shrink-0 ${selectedConv ? "hidden md:flex" : "flex"}`}>
           <div className="p-4 border-b border-border">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
