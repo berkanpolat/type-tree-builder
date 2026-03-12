@@ -415,7 +415,7 @@ export default function TekRehber() {
         )}
 
         {/* Firma Content */}
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           <FirmaFiltreler
             firmaTuruId={selectedFirmaTuru}
             firmaTuruName={selectedFirmaTuruName}
