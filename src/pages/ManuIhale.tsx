@@ -280,7 +280,7 @@ export default function ManuIhale() {
                       </div>
                       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7" title="İhale Takip" onClick={() => navigate(`/manuihale/takip/${ihale.id}`)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" title="İhale Takip" onClick={() => navigate(`/ihalelerim/takip/${ihale.id}`)}>
                             <TrendingUp className="w-3.5 h-3.5" />
                           </Button>
                         )}
