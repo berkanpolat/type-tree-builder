@@ -947,32 +947,40 @@ export default function UrunDetay() {
               <Card className="p-6">
                 <h2 className="text-lg font-bold text-foreground mb-4">Varyasyonlar</h2>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left py-2 pr-4 text-muted-foreground font-medium">Görsel</th>
-                        <th className="text-left py-2 pr-4 text-muted-foreground font-medium">{varyasyonlar[0]?.varyant_1_label}</th>
-                        {varyasyonlar[0]?.varyant_2_label && (
-                          <th className="text-left py-2 pr-4 text-muted-foreground font-medium">{varyasyonlar[0].varyant_2_label}</th>
-                        )}
-                        <th className="text-left py-2 pr-4 text-muted-foreground font-medium">Adet Aralığı</th>
-                        <th className="text-right py-2 text-muted-foreground font-medium">Fiyat</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {varyasyonlar.map(v => (
-                        <tr key={v.id} className="border-b border-border last:border-0">
-                          <td className="py-2 pr-4">
-                            <img src={v.foto_url} alt="" className="w-10 h-10 rounded object-cover" />
-                          </td>
-                          <td className="py-2 pr-4 text-foreground">{v.varyant_1_value}</td>
-                          {v.varyant_2_label && <td className="py-2 pr-4 text-foreground">{v.varyant_2_value}</td>}
-                          <td className="py-2 pr-4 text-foreground">{v.min_adet}-{v.max_adet}</td>
-                          <td className="py-2 text-right font-semibold text-foreground">{sym}{v.birim_fiyat.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                  {(() => {
+                    // Deduplicate: show each varyant combo only once (ignore price tiers)
+                    const seen = new Set<string>();
+                    const uniqueVars = varyasyonlar.filter(v => {
+                      const key = `${v.varyant_1_value}|${v.varyant_2_value || ""}|${v.foto_url}`;
+                      if (seen.has(key)) return false;
+                      seen.add(key);
+                      return true;
+                    });
+                    return (
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border">
+                            <th className="text-left py-2 pr-4 text-muted-foreground font-medium">Görsel</th>
+                            <th className="text-left py-2 pr-4 text-muted-foreground font-medium">{varyasyonlar[0]?.varyant_1_label}</th>
+                            {varyasyonlar[0]?.varyant_2_label && (
+                              <th className="text-left py-2 pr-4 text-muted-foreground font-medium">{varyasyonlar[0].varyant_2_label}</th>
+                            )}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {uniqueVars.map((v, i) => (
+                            <tr key={i} className="border-b border-border last:border-0">
+                              <td className="py-2 pr-4">
+                                <img src={v.foto_url} alt="" className="w-10 h-10 rounded object-cover" />
+                              </td>
+                              <td className="py-2 pr-4 text-foreground">{v.varyant_1_value}</td>
+                              {v.varyant_2_label && <td className="py-2 pr-4 text-foreground">{v.varyant_2_value}</td>}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    );
+                  })()}
                 </div>
               </Card>
             )}
