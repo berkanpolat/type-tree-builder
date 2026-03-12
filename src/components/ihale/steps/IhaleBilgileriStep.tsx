@@ -208,7 +208,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
           <Textarea value={formData.aciklama} onChange={(e) => updateForm({ aciklama: e.target.value })} placeholder="İhale açıklaması giriniz" rows={4} maxLength={2000} />
         </div>
 
-        <div className={`grid grid-cols-1 ${skipBirim ? "sm:grid-cols-2" : "sm:grid-cols-3"} gap-4 items-end`}>
+        <div className={`grid grid-cols-1 ${skipBirim ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"} gap-4 items-end`}>
           <div className="space-y-2">
             <Label>İhale Başlangıç Fiyatı (Birim Fiyat) *</Label>
             <Input type="number" value={formData.baslangic_fiyati ?? ""} onChange={(e) => updateForm({ baslangic_fiyati: e.target.value ? Number(e.target.value) : null })} placeholder="0.00" min={0} />
