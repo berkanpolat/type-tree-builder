@@ -951,7 +951,7 @@ export default function UrunDetay() {
                     // Deduplicate: show each varyant combo only once (ignore price tiers)
                     const seen = new Set<string>();
                     const uniqueVars = varyasyonlar.filter(v => {
-                      const key = `${v.varyant_1_value}|${v.varyant_2_value || ""}|${v.foto_url}`;
+                      const key = `${v.varyant_1_value}|${v.varyant_2_value || ""}`;
                       if (seen.has(key)) return false;
                       seen.add(key);
                       return true;
