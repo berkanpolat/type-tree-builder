@@ -18,6 +18,15 @@ Deno.serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+  // Accept cursor and limit from request body for pagination
+  let startCursor = 0;
+  let pageLimit = 100;
+  try {
+    const body = await req.json();
+    if (body.cursor !== undefined) startCursor = body.cursor;
+    if (body.limit !== undefined) pageLimit = body.limit;
+  } catch {}
+
   const successList: string[] = [];
   const failList: { firma: string; error: string }[] = [];
 
