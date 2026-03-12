@@ -24,9 +24,12 @@ interface PazarHeaderProps {
 
 export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const isActive = (path: string) => location.pathname.startsWith(path);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
