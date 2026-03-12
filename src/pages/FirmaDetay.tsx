@@ -679,6 +679,11 @@ export default function FirmaDetay() {
     return grouped;
   };
 
+  if (notFound) {
+    const NotFound = lazy(() => import("./NotFound"));
+    return <NotFound />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-muted/30">
