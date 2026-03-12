@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Crown, Check, Eye, Gavel, FileText, ShoppingBag, MessageSquare, AlertTriangle } from "lucide-react";
-import { PAKET_OZELLIKLERI, STRIPE_CONFIG } from "@/lib/package-config";
+import { PAKET_OZELLIKLERI, PRO_FIYATLAR } from "@/lib/package-config";
 
 interface Props {
   open: boolean;
