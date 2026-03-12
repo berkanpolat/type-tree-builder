@@ -626,9 +626,17 @@ Deno.serve(async (req) => {
         .select("*", { count: "exact", head: true });
 
       // Count by firma_turu
-      const { data: firmalar } = await supabase
-        .from("firmalar")
-        .select("firma_turu_id, firma_tipi_id");
+      // Fetch all firmalar (bypass 1000-row limit)
+      let allFirmalar: any[] = [];
+      let firmaFrom = 0;
+      while (true) {
+        const { data: batch } = await supabase.from("firmalar").select("firma_turu_id, firma_tipi_id").range(firmaFrom, firmaFrom + 999);
+        if (!batch || batch.length === 0) break;
+        allFirmalar = allFirmalar.concat(batch);
+        if (batch.length < 1000) break;
+        firmaFrom += 1000;
+      }
+      const firmalar = allFirmalar;
 
       const { data: turler } = await supabase
         .from("firma_turleri")
