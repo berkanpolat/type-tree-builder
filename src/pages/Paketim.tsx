@@ -177,10 +177,11 @@ const Paketim = () => {
             {isPro && (
               <div className="space-y-1 mb-4">
                 <p className="text-lg font-semibold text-foreground">
-                  {pkg.periyot === "yillik" ? PRO_FIYATLAR.yillik.fiyat : PRO_FIYATLAR.aylik.fiyat}₺
+                  {pkg.periyot === "yillik" ? PRO_FIYATLAR.yillik.kdvli : PRO_FIYATLAR.aylik.kdvli}₺
                   <span className="text-sm font-normal text-muted-foreground">
                     / {pkg.periyot === "yillik" ? "yıl" : "ay"}
                   </span>
+                  <span className="text-xs font-normal text-muted-foreground ml-1">(KDV dahil)</span>
                 </p>
                 {pkg.donemBitis && !pkg.cancelAtPeriodEnd && (
                   <p className="text-sm text-muted-foreground">
