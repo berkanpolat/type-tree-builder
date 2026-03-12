@@ -71,7 +71,7 @@ export default function UpgradeDialog({ open, onOpenChange, title, message }: Pr
             }}
           >
             <Crown className="w-4 h-4" />
-            PRO Pakete Yükselt — ${STRIPE_CONFIG.pro.aylik.fiyat}/ay
+            PRO Pakete Yükselt — {PRO_FIYATLAR.aylik.fiyat}₺/ay
           </Button>
           <Button
             variant="ghost"
