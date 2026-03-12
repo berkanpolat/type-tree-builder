@@ -112,6 +112,8 @@ interface VaryasyonData {
   id: string;
   foto_url: string;
   birim_fiyat: number;
+  min_adet: number;
+  max_adet: number;
   varyant_1_label: string;
   varyant_1_value: string;
   varyant_2_label: string | null;
