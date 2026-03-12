@@ -1017,8 +1017,8 @@ export type Database = {
           uretim_satis_rolu: string | null
           uretim_vardiyasi_id: string | null
           user_id: string
-          vergi_dairesi: string
-          vergi_numarasi: string
+          vergi_dairesi: string | null
+          vergi_numarasi: string | null
           web_sitesi: string | null
           x_twitter: string | null
           youtube: string | null
@@ -1056,8 +1056,8 @@ export type Database = {
           uretim_satis_rolu?: string | null
           uretim_vardiyasi_id?: string | null
           user_id: string
-          vergi_dairesi: string
-          vergi_numarasi: string
+          vergi_dairesi?: string | null
+          vergi_numarasi?: string | null
           web_sitesi?: string | null
           x_twitter?: string | null
           youtube?: string | null
@@ -1095,8 +1095,8 @@ export type Database = {
           uretim_satis_rolu?: string | null
           uretim_vardiyasi_id?: string | null
           user_id?: string
-          vergi_dairesi?: string
-          vergi_numarasi?: string
+          vergi_dairesi?: string | null
+          vergi_numarasi?: string | null
           web_sitesi?: string | null
           x_twitter?: string | null
           youtube?: string | null
