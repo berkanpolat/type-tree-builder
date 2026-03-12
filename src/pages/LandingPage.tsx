@@ -420,6 +420,7 @@ const LandingPage = () => {
                   key={productSlide}
                   src={currentProduct.img}
                   alt={currentProduct.name}
+                  loading="lazy"
                   className="max-h-80 object-contain animate-fade-in"
                 />
               </div>
