@@ -177,10 +177,11 @@ const Paketim = () => {
             {isPro && (
               <div className="space-y-1 mb-4">
                 <p className="text-lg font-semibold text-foreground">
-                  {pkg.periyot === "yillik" ? PRO_FIYATLAR.yillik.fiyat : PRO_FIYATLAR.aylik.fiyat}₺
+                  {pkg.periyot === "yillik" ? PRO_FIYATLAR.yillik.kdvli : PRO_FIYATLAR.aylik.kdvli}₺
                   <span className="text-sm font-normal text-muted-foreground">
                     / {pkg.periyot === "yillik" ? "yıl" : "ay"}
                   </span>
+                  <span className="text-xs font-normal text-muted-foreground ml-1">(KDV dahil)</span>
                 </p>
                 {pkg.donemBitis && !pkg.cancelAtPeriodEnd && (
                   <p className="text-sm text-muted-foreground">
@@ -255,12 +256,13 @@ const Paketim = () => {
               </div>
               <div className="mt-2 space-y-1">
                 <p className="text-3xl font-bold text-foreground">
-                  {PRO_FIYATLAR.aylik.fiyat}₺
+                  {PRO_FIYATLAR.aylik.kdvli}₺
                   <span className="text-base font-normal text-muted-foreground">/ay</span>
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  veya {PRO_FIYATLAR.yillik.fiyat}₺/yıl
+                  veya {PRO_FIYATLAR.yillik.kdvli}₺/yıl
                 </p>
+                <p className="text-xs text-muted-foreground">Fiyatlara %{PRO_FIYATLAR.kdvOrani} KDV dahildir.</p>
               </div>
             </CardHeader>
             <CardContent className="space-y-5">
@@ -281,12 +283,13 @@ const Paketim = () => {
                 <div className="space-y-2 pt-2">
                   <Button className="w-full" onClick={() => handleUpgrade("aylik")} disabled={!!upgradeLoading}>
                     {upgradeLoading === "aylik" && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    Aylık PRO'ya Geç ({PRO_FIYATLAR.aylik.fiyat}₺/ay)
+                    Aylık PRO'ya Geç ({PRO_FIYATLAR.aylik.kdvli}₺/ay)
                   </Button>
                   <Button variant="outline" className="w-full" onClick={() => handleUpgrade("yillik")} disabled={!!upgradeLoading}>
                     {upgradeLoading === "yillik" && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    Yıllık PRO'ya Geç ({PRO_FIYATLAR.yillik.fiyat}₺/yıl)
+                    Yıllık PRO'ya Geç ({PRO_FIYATLAR.yillik.kdvli}₺/yıl)
                   </Button>
+                  <p className="text-xs text-center text-muted-foreground">Fiyatlara %{PRO_FIYATLAR.kdvOrani} KDV dahildir.</p>
                 </div>
               )}
 
@@ -297,7 +300,7 @@ const Paketim = () => {
                   </p>
                   <Button variant="outline" className="w-full" onClick={() => handleUpgrade("yillik")} disabled={!!upgradeLoading}>
                     {upgradeLoading === "yillik" && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                    Yıllık Plana Geç ({PRO_FIYATLAR.yillik.fiyat}₺/yıl)
+                    Yıllık Plana Geç ({PRO_FIYATLAR.yillik.kdvli}₺/yıl)
                   </Button>
                 </div>
               )}

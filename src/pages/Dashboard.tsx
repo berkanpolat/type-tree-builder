@@ -246,8 +246,9 @@ const Dashboard = () => {
                 {isPro && (
                   <>
                     <p className="text-lg font-semibold text-foreground mt-1">
-                      {packageInfo.periyot === "yillik" ? PRO_FIYATLAR.yillik.fiyat : PRO_FIYATLAR.aylik.fiyat}₺
+                      {packageInfo.periyot === "yillik" ? PRO_FIYATLAR.yillik.kdvli : PRO_FIYATLAR.aylik.kdvli}₺
                       <span className="text-sm font-normal text-muted-foreground">/ {packageInfo.periyot === "yillik" ? "yıl" : "ay"}</span>
+                      <span className="text-xs font-normal text-muted-foreground ml-1">(KDV dahil)</span>
                     </p>
                     {packageInfo.donemBitis && (
                       <p className="text-xs text-muted-foreground mt-2">
@@ -262,11 +263,12 @@ const Dashboard = () => {
                 {!isPro && (
                   <div className="mt-3 space-y-2">
                     <Button size="sm" onClick={() => handleUpgrade("aylik")} className="w-full">
-                      PRO'ya Yükselt ({PRO_FIYATLAR.aylik.fiyat}₺/ay)
+                      PRO'ya Yükselt ({PRO_FIYATLAR.aylik.kdvli}₺/ay)
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleUpgrade("yillik")} className="w-full">
-                      Yıllık PRO ({PRO_FIYATLAR.yillik.fiyat}₺/yıl)
+                      Yıllık PRO ({PRO_FIYATLAR.yillik.kdvli}₺/yıl)
                     </Button>
+                    <p className="text-xs text-center text-muted-foreground">%{PRO_FIYATLAR.kdvOrani} KDV dahil</p>
                   </div>
                 )}
               </div>

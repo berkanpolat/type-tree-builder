@@ -577,20 +577,21 @@ const LandingPage = () => {
               </div>
               <span className="inline-block w-fit px-3 py-1 rounded-full bg-secondary/20 text-secondary font-bold text-xs mb-2">PRO</span>
               <p className="text-sm text-muted-foreground mb-3">Profesyonel Ol!</p>
-              <div className="mb-6 flex items-baseline gap-2">
+              <div className="mb-1 flex items-baseline gap-2">
                 {billingYearly ? (
                   <>
-                    <span className="text-sm text-destructive line-through">{PRO_FIYATLAR.aylik.fiyat * 12}₺</span>
-                    <span className="text-4xl font-extrabold text-foreground">{PRO_FIYATLAR.yillik.fiyat}₺</span>
+                    <span className="text-sm text-destructive line-through">{PRO_FIYATLAR.aylik.kdvli * 12}₺</span>
+                    <span className="text-4xl font-extrabold text-foreground">{PRO_FIYATLAR.yillik.kdvli}₺</span>
                     <span className="text-muted-foreground text-sm">/ Yıl</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-4xl font-extrabold text-foreground">{PRO_FIYATLAR.aylik.fiyat}₺</span>
+                    <span className="text-4xl font-extrabold text-foreground">{PRO_FIYATLAR.aylik.kdvli}₺</span>
                     <span className="text-muted-foreground text-sm">/ Ay</span>
                   </>
                 )}
               </div>
+              <p className="text-xs text-muted-foreground mb-5">Fiyatlara %{PRO_FIYATLAR.kdvOrani} KDV dahildir.</p>
               <div className="border-t border-border pt-4 space-y-3 flex-1">
                 {[
                   ["İhale Açma", PAKET_OZELLIKLERI.pro.ihale_acma],

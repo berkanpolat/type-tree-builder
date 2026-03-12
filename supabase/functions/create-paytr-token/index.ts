@@ -10,10 +10,10 @@ const corsHeaders = {
 
 const PAYTR_API_URL = "https://www.paytr.com/odeme/api/get-token";
 
-// PRO paket fiyatları (kuruş cinsinden)
+// PRO paket fiyatları (kuruş cinsinden, %20 KDV dahil)
 const PRO_PRICES = {
-  aylik: 19900,   // 199.00 TL
-  yillik: 129900, // 1299.00 TL
+  aylik: 23880,   // 238.80 TL (199 + %20 KDV)
+  yillik: 155880, // 1558.80 TL (1299 + %20 KDV)
 };
 
 async function hmacSha256Base64(key: string, data: string): Promise<string> {
@@ -89,7 +89,7 @@ serve(async (req) => {
     const userAddress = firma?.firma_unvani || "Türkiye";
 
     // Basket: base64 encoded JSON array [[name, price, quantity]]
-    const basketLabel = periyot === "yillik" ? "PRO Paket (Yillik)" : "PRO Paket (Aylik)";
+    const basketLabel = periyot === "yillik" ? "PRO Paket (Yillik) KDV Dahil" : "PRO Paket (Aylik) KDV Dahil";
     const basketPrice = (PRO_PRICES[periyot as keyof typeof PRO_PRICES] / 100).toFixed(2);
     const userBasket = btoa(JSON.stringify([[basketLabel, basketPrice, 1]]));
 
@@ -106,7 +106,6 @@ serve(async (req) => {
     const timeoutLimit = "30";
 
     // PayTR iFrame API hash formula:
-    // hash_str = merchant_id + user_ip + merchant_oid + email + payment_amount + user_basket + no_installment + max_installment + currency + test_mode
     const hashStr =
       merchantId + userIp + merchantOid + email + paymentAmount +
       userBasket + noInstallment + maxInstallment + currency + testMode;
