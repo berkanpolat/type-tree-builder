@@ -244,13 +244,30 @@ export default function TekRehber() {
       setFirmaFavSet(favSet);
       setSecenekMap(newSecenekMap);
 
-      const enriched: FirmaWithExtra[] = data.map((f) => ({
+      let enriched: FirmaWithExtra[] = data.map((f) => ({
         ...f,
         firma_turu_name: turNameMap[f.firma_turu_id] || "",
         firma_tipi_name: newSecenekMap[f.firma_tipi_id] || "",
         faaliyet_alani: faaliyetMap[f.id] || "",
         is_favorited: favSet.has(f.id),
       }));
+
+      // Sort by PRO status first, then profile completion
+      if (firmaIds.length > 0) {
+        const { data: scores } = await supabase.rpc("get_firma_sort_scores", {
+          p_firma_ids: firmaIds,
+        } as any);
+        if (scores && Array.isArray(scores)) {
+          const scoreMap = new Map<string, { is_pro: boolean; profile_score: number }>();
+          (scores as any[]).forEach((s: any) => scoreMap.set(s.firma_id, { is_pro: s.is_pro, profile_score: s.profile_score }));
+          enriched.sort((a, b) => {
+            const sa = scoreMap.get(a.id) || { is_pro: false, profile_score: 0 };
+            const sb = scoreMap.get(b.id) || { is_pro: false, profile_score: 0 };
+            if (sa.is_pro !== sb.is_pro) return sa.is_pro ? -1 : 1;
+            return sb.profile_score - sa.profile_score;
+          });
+        }
+      }
 
       setFirmalar(enriched);
     }

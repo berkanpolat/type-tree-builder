@@ -1987,6 +1987,14 @@ export type Database = {
         Args: { p_existing_id?: string; p_table: string; p_text: string }
         Returns: string
       }
+      get_firma_sort_scores: {
+        Args: { p_firma_ids: string[] }
+        Returns: {
+          firma_id: string
+          is_pro: boolean
+          profile_score: number
+        }[]
+      }
       get_or_create_conversation: {
         Args: { p_user1: string; p_user2: string }
         Returns: string
