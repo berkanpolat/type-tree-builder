@@ -150,22 +150,10 @@ serve(async (req) => {
     const currency = "TL";
 
     const origin = req.headers.get("origin") || "";
-    const originHost = (() => {
-      try {
-        return origin ? new URL(origin).hostname : "";
-      } catch {
-        return "";
-      }
-    })();
 
-    const isPreviewEnv =
-      originHost.includes("lovable.app") ||
-      originHost.includes("lovableproject.com") ||
-      originHost.includes("localhost");
-
-    // Preview/development ortamında test, canlı domainde live mode
-    const testMode = isPreviewEnv ? "1" : "0";
-    const debugOn = isPreviewEnv ? "1" : "0";
+    // Live varsayılan: 0 (isteğe bağlı PAYTR_TEST_MODE secret ile override edilebilir)
+    const testMode = Deno.env.get("PAYTR_TEST_MODE") === "1" ? "1" : "0";
+    const debugOn = Deno.env.get("PAYTR_DEBUG_ON") === "1" ? "1" : "0";
     const lang = "tr";
 
     // merchant_ok_url ve merchant_fail_url kullanıcının yönlendirileceği sayfalardır
