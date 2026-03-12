@@ -498,59 +498,59 @@ export default function IhaleTakip() {
         </Card>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="relative flex-1 min-w-[180px] max-w-xs">
+        <div className="space-y-3">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input placeholder="Ünvana göre ara..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             <div>
-              <label className="text-xs text-muted-foreground block mb-1">Teklif Edilen Fiyat</label>
+              <label className="text-xs text-muted-foreground block mb-1">Fiyat (Min-Max)</label>
               <div className="flex gap-1">
-                <Input placeholder="Min" value={fiyatMin} onChange={(e) => setFiyatMin(e.target.value)} className="w-20" type="number" />
-                <Input placeholder="Max" value={fiyatMax} onChange={(e) => setFiyatMax(e.target.value)} className="w-20" type="number" />
+                <Input placeholder="Min" value={fiyatMin} onChange={(e) => setFiyatMin(e.target.value)} className="w-full" type="number" />
+                <Input placeholder="Max" value={fiyatMax} onChange={(e) => setFiyatMax(e.target.value)} className="w-full" type="number" />
               </div>
             </div>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Ödeme Şekli</label>
-            <Select value={filterOdeme} onValueChange={setFilterOdeme}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Ödeme Şekli" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                {dbOdemeSecenekleri.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Ödeme Vadesi</label>
-            <Select value={filterVade} onValueChange={setFilterVade}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Ödeme Vadesi" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                {dbOdemeVadeleri.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Kargo Masrafı</label>
-            <Select value={filterKargo} onValueChange={setFilterKargo}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Kargo Masrafı" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tümü</SelectItem>
-                {dbKargoMasrafi.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs text-muted-foreground block mb-1">Artan Sıralama</label>
-            <Select value={sortOrder} onValueChange={setSortOrder}>
-              <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="asc">Tutar (Artan)</SelectItem>
-                <SelectItem value="desc">Tutar (Azalan)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Ödeme Şekli</label>
+              <Select value={filterOdeme} onValueChange={setFilterOdeme}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Ödeme Şekli" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {dbOdemeSecenekleri.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Ödeme Vadesi</label>
+              <Select value={filterVade} onValueChange={setFilterVade}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Ödeme Vadesi" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {dbOdemeVadeleri.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Kargo Masrafı</label>
+              <Select value={filterKargo} onValueChange={setFilterKargo}>
+                <SelectTrigger className="w-full"><SelectValue placeholder="Kargo Masrafı" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tümü</SelectItem>
+                  {dbKargoMasrafi.map(k => <SelectItem key={k} value={k}>{k}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">Sıralama</label>
+              <Select value={sortOrder} onValueChange={setSortOrder}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="asc">Tutar (Artan)</SelectItem>
+                  <SelectItem value="desc">Tutar (Azalan)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
