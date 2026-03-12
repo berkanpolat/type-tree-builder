@@ -967,8 +967,8 @@ export default function FirmaDetay() {
               <CollapsibleBlock title="Galeri" maxHeight={300}>
                 {galeri.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {galeri.map(g => (
-                      <div key={g.id} className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                    {galeri.map((g, idx) => (
+                      <div key={g.id} className="aspect-square rounded-lg overflow-hidden border border-border bg-muted cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setLightboxIndex(idx)}>
                         <img src={g.foto_url} alt={g.foto_adi || "Galeri"} className="w-full h-full object-cover" />
                       </div>
                     ))}
