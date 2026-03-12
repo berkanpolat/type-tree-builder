@@ -270,10 +270,10 @@ const Dashboard = () => {
                 {!isPro && (
                   <div className="mt-3 space-y-2">
                     <Button size="sm" onClick={() => handleUpgrade("aylik")} className="w-full">
-                      PRO'ya Yükselt (${STRIPE_CONFIG.pro.aylik.fiyat}/ay)
+                      PRO'ya Yükselt ({PRO_FIYATLAR.aylik.fiyat}₺/ay)
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleUpgrade("yillik")} className="w-full">
-                      Yıllık PRO (${STRIPE_CONFIG.pro.yillik.fiyat}/yıl)
+                      Yıllık PRO ({PRO_FIYATLAR.yillik.fiyat}₺/yıl)
                     </Button>
                   </div>
                 )}
