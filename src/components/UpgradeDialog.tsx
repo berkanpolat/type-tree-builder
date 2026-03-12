@@ -71,9 +71,9 @@ export default function UpgradeDialog({ open, onOpenChange, title, message }: Pr
             }}
           >
             <Crown className="w-4 h-4" />
-            PRO Pakete Yükselt — {PRO_FIYATLAR.aylik.kdvli}₺/ay
+            PRO Pakete Yükselt — {PRO_FIYATLAR.aylik.fiyat}{PRO_FIYATLAR.paraBirimi}/ay
           </Button>
-          <p className="text-xs text-center text-muted-foreground">%{PRO_FIYATLAR.kdvOrani} KDV dahil</p>
+          <p className="text-xs text-center text-muted-foreground">+%{PRO_FIYATLAR.kdvOrani} KDV</p>
           <Button
             variant="ghost"
             className="w-full text-muted-foreground"
