@@ -804,10 +804,10 @@ export default function AdminFirmalar() {
         </div>
 
         {/* Sorting + result count */}
-        <div className="flex items-center justify-between text-xs" style={s.muted}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs" style={s.muted}>
           <span>{sorted.length} firma listeleniyor {hasActiveFilters && `(${firmalar.length} toplam)`}</span>
-          <div className="flex items-center gap-2">
-            <span>Sırala:</span>
+          <div className="flex items-center gap-1 flex-wrap">
+            <span className="mr-1">Sırala:</span>
             {(["ihale_sayisi", "teklif_sayisi", "urun_sayisi", "profil_doluluk"] as SortField[]).map(field => (
               <Button key={field} variant="ghost" size="sm" onClick={() => toggleSort(field)}
                 className={`text-xs h-7 px-2 gap-1 ${sortField === field ? "text-amber-500" : ""}`}
@@ -816,7 +816,7 @@ export default function AdminFirmalar() {
                 <SortIcon field={field} />
               </Button>
             ))}
-            <span className="ml-4">Sayfa {safePage} / {totalPages}</span>
+            <span className="ml-2">Sayfa {safePage} / {totalPages}</span>
           </div>
         </div>
 
