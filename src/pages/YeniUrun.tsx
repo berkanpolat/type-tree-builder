@@ -1035,14 +1035,20 @@ export default function YeniUrun() {
         </Card>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate("/manupazar")}>Geri</Button>
-          {step < STEPS.length - 1 ? (
-            <Button onClick={handleNext}>İleri</Button>
-          ) : (
-            <Button onClick={handleSubmit} disabled={saving}>{saving ? "Kaydediliyor..." : "İlerle ve Önizle"}</Button>
-          )}
-        </div>
+        {loadingData ? (
+          <div className="flex items-center justify-center py-4">
+            <p className="text-muted-foreground">Ürün bilgileri yükleniyor...</p>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate("/manupazar")}>Geri</Button>
+            {step < STEPS.length - 1 ? (
+              <Button onClick={handleNext}>İleri</Button>
+            ) : (
+              <Button onClick={handleSubmit} disabled={saving}>{saving ? "Kaydediliyor..." : "İlerle ve Önizle"}</Button>
+            )}
+          </div>
+        )}
       </div>
       <UpgradeDialog
         open={upgradeOpen}
