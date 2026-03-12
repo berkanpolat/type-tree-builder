@@ -386,7 +386,7 @@ export default function TekRehber() {
     <div className="min-h-screen bg-muted/30 font-sans">
       <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
 
-      <main className="max-w-7xl mx-auto px-6 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
         {/* Search Header */}
         <HeroSearchSection
           label="ÜRETİCİ / TEDARİKÇİ"
@@ -415,7 +415,7 @@ export default function TekRehber() {
         )}
 
         {/* Firma Content */}
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           <FirmaFiltreler
             firmaTuruId={selectedFirmaTuru}
             firmaTuruName={selectedFirmaTuruName}

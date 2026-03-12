@@ -443,7 +443,7 @@ export default function IhaleTakip() {
         {/* Ihale Info Card */}
         <Card>
           <CardContent className="p-5">
-            <div className="flex items-start gap-4">
+            <div className="flex flex-col sm:flex-row items-start gap-4">
               {/* Photo */}
               <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                 {ihale.foto_url ? (
@@ -466,9 +466,9 @@ export default function IhaleTakip() {
 
               {/* Countdown */}
               {countdown && (
-                <div className="border rounded-lg px-4 py-2 flex items-center gap-2 shrink-0">
+                <div className="border rounded-lg px-3 md:px-4 py-2 flex items-center gap-2 shrink-0 mt-2 sm:mt-0">
                   <Clock className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">{countdown}</span>
+                  <span className="text-xs md:text-sm font-medium text-foreground">{countdown}</span>
                 </div>
               )}
             </div>
@@ -569,7 +569,7 @@ export default function IhaleTakip() {
               {filteredTeklifler.map((teklif) => (
                 <Card key={teklif.id} className="border">
                   <CardContent className="p-5">
-                    <div className="flex flex-wrap items-start gap-6">
+                    <div className="flex flex-wrap items-start gap-4 md:gap-6">
                       {/* Firma Info */}
                       <div className="flex items-center gap-3 min-w-[180px]">
                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">

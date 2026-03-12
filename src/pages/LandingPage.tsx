@@ -213,7 +213,7 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-background font-sans">
       {/* Top Info Strip */}
-      <div className="bg-primary text-primary-foreground text-xs">
+      <div className="bg-primary text-primary-foreground text-xs hidden md:block">
         <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
           <div className="flex items-center gap-6 flex-wrap">
             <a href="mailto:info@tekstilas.com" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
@@ -245,11 +245,11 @@ const LandingPage = () => {
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
           <img src={logoImg} alt="Tekstil A.Ş." className="h-7 object-contain" />
           <Link
             to="/giris-kayit?tab=kayit"
-            className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors"
+            className="px-4 md:px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-xs md:text-sm font-medium hover:bg-primary/90 transition-colors"
           >
             Giriş Yap / Kayıt Ol
           </Link>
@@ -258,12 +258,12 @@ const LandingPage = () => {
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-background via-background to-muted">
-        <div className="max-w-7xl mx-auto px-6 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-10 md:py-16 lg:py-24 grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
-            <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-4 md:mb-6">
               İşiniz Tekstilse, Yeriniz <span className="text-secondary">Tekstil A.Ş.</span>
             </h1>
-            <p className="text-lg text-muted-foreground mb-10 leading-relaxed">
+            <p className="text-base md:text-lg text-muted-foreground mb-6 md:mb-10 leading-relaxed">
               Markalar, üreticiler, tedarikçiler, mümessil ofisler ve fason atölyeler tek panelde
               buluşuyor. Doğru firmaya hızlıca ulaşın, teklif alın, teklif verin, yeni iş fırsatlarını
               yakalayın!
@@ -454,20 +454,21 @@ const LandingPage = () => {
           <h2 className="text-3xl lg:text-4xl font-bold text-foreground text-center mb-8">
             Sizin İçin Neler Var?
           </h2>
-          <div className="flex justify-center mb-12">
-            <div className="inline-flex items-center bg-muted rounded-full p-1 gap-1">
+          <div className="flex justify-center mb-8 md:mb-12">
+            <div className="inline-flex items-center bg-muted rounded-full p-1 gap-1 overflow-x-auto max-w-full scrollbar-hide">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                  className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                     activeTab === tab.key
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {tab.icon}
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
                 </button>
               ))}
             </div>

@@ -889,7 +889,7 @@ export default function IhaleDetay() {
     <div className="min-h-screen bg-muted/30 font-sans">
       <PazarHeader firmaUnvani={headerFirmaUnvani} firmaLogoUrl={headerFirmaLogoUrl} />
 
-      <main className="max-w-7xl mx-auto px-6 py-6">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
           <Link to="/tekihale" className="hover:text-foreground transition-colors">İhale Anasayfa</Link>
@@ -931,7 +931,7 @@ export default function IhaleDetay() {
         </nav>
 
         {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 mb-12">
           {/* Left: Image + Details */}
           <div className="lg:col-span-3 space-y-6">
             {/* Image Gallery with inline zoom */}

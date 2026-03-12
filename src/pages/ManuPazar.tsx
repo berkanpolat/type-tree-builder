@@ -218,12 +218,12 @@ export default function ManuPazar() {
     <DashboardLayout title="Pazarım">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Pazarım</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-foreground">Pazarım</h2>
             <p className="text-sm text-muted-foreground">Mağazandaki ürünleri yönet, düzenle ve yeni ürün ekle.</p>
           </div>
-          <Button onClick={() => navigate("/manupazar/yeni")} className="gap-2">
+          <Button onClick={() => navigate("/manupazar/yeni")} className="gap-2 w-full sm:w-auto">
             <Plus className="w-4 h-4" />
             Yeni Ürün
           </Button>
@@ -311,8 +311,8 @@ export default function ManuPazar() {
 
         {/* Table */}
         <Card>
-          <CardContent className="p-0">
-            <Table>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table className="min-w-[900px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Ürün</TableHead>

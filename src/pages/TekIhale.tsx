@@ -355,7 +355,7 @@ export default function TekIhale() {
     <div className="min-h-screen bg-muted/30">
       <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
 
-      <div className="max-w-7xl mx-auto px-6 py-6 space-y-5">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-5">
         {/* Search */}
         <Card className="p-0">
           <div className="relative">
@@ -471,9 +471,9 @@ export default function TekIhale() {
                       className="p-5 hover:shadow-md transition-shadow cursor-pointer"
                       onClick={() => navigate(`/tekihale/${ihale.id}`)}
                     >
-                      <div className="flex gap-5">
+                      <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
                         {/* Image */}
-                        <div className="w-[140px] h-[140px] rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                        <div className="w-full sm:w-[140px] h-[140px] rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                           {ihale.foto_url ? (
                             <img src={ihale.foto_url} alt="" className="w-full h-full object-contain" />
                           ) : (
@@ -515,7 +515,7 @@ export default function TekIhale() {
                             )}
                           </div>
 
-                          <div className="flex items-center gap-8">
+                          <div className="flex flex-wrap items-center gap-4 sm:gap-8">
                             <div>
                               <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Başlangıç Fiyatı</p>
                               <p className="font-semibold text-foreground">
