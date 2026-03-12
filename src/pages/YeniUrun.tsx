@@ -288,6 +288,7 @@ export default function YeniUrun() {
       // Separate price tiers from product variations
       const seenCombos = new Set<string>();
       const prodVars: UrunVaryasyon[] = [];
+      const seenTiers = new Set<string>();
       const priceTiers: FiyatKademesi[] = [];
 
       for (const v of vars) {
@@ -302,7 +303,12 @@ export default function YeniUrun() {
             foto_urls: [v.foto_url],
           });
         }
-        priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
+        // Deduplicate price tiers
+        const tierKey = `${v.min_adet}|${v.max_adet}|${v.birim_fiyat}`;
+        if (!seenTiers.has(tierKey)) {
+          seenTiers.add(tierKey);
+          priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
+        }
       }
       setVaryasyonlar(prodVars);
       if (priceTiers.length > 0) setFiyatKademeleri(priceTiers);
@@ -895,41 +901,23 @@ export default function YeniUrun() {
                     {/* Varyant 1: Beden / Birim */}
                     <div className="flex-1 min-w-[200px]">
                       <Label className="text-sm mb-2 block">{varyant1Label}</Label>
-                      <div className="flex flex-wrap gap-1 border rounded-lg p-2 min-h-[40px]">
-                        {selectedV1.map(id => (
-                          <Badge key={id} variant="secondary" className="gap-1">
-                            {getOptionName(varyant1Options, id)}
-                            <button onClick={() => toggleSelection(selectedV1, setSelectedV1, id)}><X className="w-3 h-3" /></button>
-                          </Badge>
-                        ))}
-                        <select className="border-0 bg-transparent text-sm outline-none flex-1 min-w-[100px]" value=""
-                          onChange={e => { if (e.target.value) toggleSelection(selectedV1, setSelectedV1, e.target.value); }}>
-                          <option value="">Ekle...</option>
-                          {varyant1Options.filter(o => !selectedV1.includes(o.id)).map(o => (
-                            <option key={o.id} value={o.id}>{o.name}</option>
-                          ))}
-                        </select>
-                      </div>
+                      <MultiSelectDropdown
+                        options={varyant1Options}
+                        selected={selectedV1}
+                        onChange={setSelectedV1}
+                        placeholder={`${varyant1Label} seçiniz`}
+                      />
                     </div>
 
                     {/* Varyant 2: Renk */}
                     <div className="flex-1 min-w-[200px]">
                       <Label className="text-sm mb-2 block">{varyant2Label}</Label>
-                      <div className="flex flex-wrap gap-1 border rounded-lg p-2 min-h-[40px]">
-                        {selectedV2.map(id => (
-                          <Badge key={id} variant="secondary" className="gap-1">
-                            {getOptionName(renkOptions, id)}
-                            <button onClick={() => toggleSelection(selectedV2, setSelectedV2, id)}><X className="w-3 h-3" /></button>
-                          </Badge>
-                        ))}
-                        <select className="border-0 bg-transparent text-sm outline-none flex-1 min-w-[100px]" value=""
-                          onChange={e => { if (e.target.value) toggleSelection(selectedV2, setSelectedV2, e.target.value); }}>
-                          <option value="">Ekle...</option>
-                          {renkOptions.filter(o => !selectedV2.includes(o.id)).map(o => (
-                            <option key={o.id} value={o.id}>{o.name}</option>
-                          ))}
-                        </select>
-                      </div>
+                      <MultiSelectDropdown
+                        options={renkOptions}
+                        selected={selectedV2}
+                        onChange={setSelectedV2}
+                        placeholder={`${varyant2Label} seçiniz`}
+                      />
                     </div>
 
                     <Button onClick={handleGenerateVaryasyonlar} disabled={selectedV1.length === 0 || selectedV2.length === 0} className="mt-6">
