@@ -66,6 +66,7 @@ interface FirmaWithExtra extends FirmaListItem {
 
 export default function TekRehber() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const rehberSidebarBanner = useBanner("tekrehber-sidebar");
