@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Search,
   ImageIcon,
@@ -22,6 +25,7 @@ import {
   CreditCard,
   CalendarClock,
   Layers,
+  SlidersHorizontal,
 } from "lucide-react";
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
