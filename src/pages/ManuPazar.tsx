@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePackageQuota } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
 import {
-  Layers, CheckCircle2, XCircle, Plus, Search, Pencil, Trash2, ImageIcon,
+  Layers, CheckCircle2, XCircle, Plus, Search, Pencil, Trash2, ImageIcon, Copy,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -392,6 +392,9 @@ export default function ManuPazar() {
                         <div className="flex items-center justify-center gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
                             <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Kopyala" onClick={() => navigate(`/manupazar/yeni?kopyala=${urun.id}`)}>
+                            <Copy className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(urun.id)}>
                             <Trash2 className="w-4 h-4" />
