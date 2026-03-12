@@ -1367,7 +1367,7 @@ export default function IhaleDetay() {
                         <AlertDialogHeader><AlertDialogTitle>İhaleyi Onaya Göndermek İstediğinize Emin Misiniz?</AlertDialogTitle><AlertDialogDescription>İhaleniz süper admin onayına gönderilecektir.</AlertDialogDescription></AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>İptal</AlertDialogCancel>
-                          <AlertDialogAction onClick={async () => { await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id); toast({ title: "İhale onaya gönderildi!" }); navigate("/manuihale"); }}>Evet, Gönder</AlertDialogAction>
+                          <AlertDialogAction onClick={async () => { await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id); toast({ title: "İhale onaya gönderildi!" }); navigate("/ihalelerim"); }}>Evet, Gönder</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
