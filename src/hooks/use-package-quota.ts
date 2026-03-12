@@ -25,7 +25,6 @@ export interface PackageInfo {
   limits: PackageLimits;
   usage: QuotaUsage;
   loading: boolean;
-  stripeSubscriptionId: string | null;
   cancelAtPeriodEnd: boolean;
 }
 
