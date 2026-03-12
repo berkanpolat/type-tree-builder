@@ -916,7 +916,7 @@ export default function UrunDetay() {
         </div>
 
         {/* Description & Technical Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
           <div className="lg:col-span-3 space-y-6">
             {urun.aciklama && (
               <Card className="p-6">
