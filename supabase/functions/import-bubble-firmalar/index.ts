@@ -47,6 +47,14 @@ Deno.serve(async (req) => {
       tipleriMap[t.name].push({ id: t.id, firma_turu_id: t.firma_turu_id });
     });
 
+    // Bubble → DB name mapping for firma tipleri
+    const firmaTipiMapping: Record<string, string> = {
+      "Boya ve Kimyasal Madde Tedarikçisi": "Boya/Kimyasal Tedarikçisi",
+      "Dikimhane Atölyesi": "Dikimhane",
+      "Finishli Atölye (CMT)": "CMT Atölyesi",
+      "Örme / Penye Giyim Üreticisi": "Örme/Penye Giyim Üreticisi",
+    };
+
     const seceneklerByName: Record<string, string> = {};
     seceneklerRes.data?.forEach((s) => {
       seceneklerByName[s.name] = s.id;
