@@ -494,34 +494,6 @@ export default function TekIhale() {
               </FilterSection>
             )}
 
-            {/* Hizmet kategorileri - show only when hizmet selected */}
-            {isHizmetMode && hizmetKategoriler.length > 0 && (
-              <FilterSection title="Hizmet Kategorisi" icon={Layers}>
-                {hizmetKategoriler.map((k) => (
-                  <CheckboxFilter key={k.id} label={k.name} checked={filterHizmetKategori.includes(k.id)} onChange={() => toggleFilter(filterHizmetKategori, k.id, setFilterHizmetKategori)} />
-                ))}
-                {filterHizmetKategori.length === 1 && hizmetTurler.length > 0 && (
-                  <div className="ml-4 mt-2 space-y-2 border-l-2 border-border pl-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-1">Hizmet Türü</p>
-                    {hizmetTurler.map((t) => (
-                      <CheckboxFilter key={t.id} label={t.name} checked={filterHizmetTur.includes(t.id)} onChange={() => toggleFilter(filterHizmetTur, t.id, setFilterHizmetTur)} />
-                    ))}
-                  </div>
-                )}
-              </FilterSection>
-            )}
-
-            <FilterSection title="Ödeme Seçenekleri" icon={CreditCard}>
-              {ODEME_SECENEKLERI_OPTIONS.map((o) => (
-                <CheckboxFilter key={o} label={o} checked={filterOdeme.includes(o)} onChange={() => toggleFilter(filterOdeme, o, setFilterOdeme)} />
-              ))}
-            </FilterSection>
-
-            <FilterSection title="Ödeme Vadesi" icon={CalendarClock}>
-              {ODEME_VADESI_OPTIONS.map((o) => (
-                <CheckboxFilter key={o} label={o} checked={filterVade.includes(o)} onChange={() => toggleFilter(filterVade, o, setFilterVade)} />
-              ))}
-            </FilterSection>
             {/* Sidebar banner */}
             <div
               className="hidden lg:block rounded-xl overflow-hidden border border-border cursor-pointer"
