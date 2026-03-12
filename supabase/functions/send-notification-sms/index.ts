@@ -72,24 +72,37 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Resolve userId from auth header if not provided
+    let userId = body.userId;
+    if (!userId) {
+      const authHeader = req.headers.get("Authorization");
+      if (authHeader) {
+        try {
+          const token = authHeader.replace("Bearer ", "");
+          const { data: claimsData } = await supabase.auth.getClaims(token);
+          userId = claimsData?.claims?.sub as string;
+        } catch {}
+      }
+    }
+
     // Resolve phone number
     let telefon = body.telefon;
     let firmaUnvani = body.firmaUnvani;
 
-    if (!telefon && body.userId) {
+    if (!telefon && userId) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("iletisim_numarasi")
-        .eq("user_id", body.userId)
+        .eq("user_id", userId)
         .single();
       telefon = profile?.iletisim_numarasi || null;
     }
 
-    if (!firmaUnvani && body.userId) {
+    if (!firmaUnvani && userId) {
       const { data: firma } = await supabase
         .from("firmalar")
         .select("firma_unvani")
-        .eq("user_id", body.userId)
+        .eq("user_id", userId)
         .single();
       firmaUnvani = firma?.firma_unvani || null;
     }
