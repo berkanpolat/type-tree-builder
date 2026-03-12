@@ -300,8 +300,8 @@ export default function FirmaDetay() {
         .single();
 
       if (!firmaData) {
-        toast({ title: "Firma bulunamadı", variant: "destructive" });
-        navigate("/anasayfa");
+        // Not a firma slug — show 404
+        navigate("/404", { replace: true });
         return;
       }
 
