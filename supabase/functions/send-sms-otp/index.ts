@@ -68,7 +68,7 @@ serve(async (req) => {
       body: JSON.stringify({
         messages: [
           {
-            msg: `Tekstil A.Ş doğrulama kodunuz: ${kod}`,
+            msg: `Tekstil A.Ş. doğrulama kodunuz: ${kod} B038`,
             dest: telefon,
             id: "1",
           },
