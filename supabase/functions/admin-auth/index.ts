@@ -734,12 +734,17 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "Yetkisiz" }, 401);
       }
 
-      const { data: ihaleler, error } = await supabase
-        .from("ihaleler")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) return jsonResponse({ error: error.message }, 400);
+      // Fetch all ihaleler (bypass 1000-row limit)
+      let allIhaleler: any[] = [];
+      let ihaleFrom = 0;
+      while (true) {
+        const { data: batch, error: batchError } = await supabase.from("ihaleler").select("*").order("created_at", { ascending: false }).range(ihaleFrom, ihaleFrom + 999);
+        if (batchError || !batch || batch.length === 0) break;
+        allIhaleler = allIhaleler.concat(batch);
+        if (batch.length < 1000) break;
+        ihaleFrom += 1000;
+      }
+      const ihaleler = allIhaleler;
 
       // Get firma names for all user_ids
       const userIds = [...new Set((ihaleler || []).map((i: any) => i.user_id))];
