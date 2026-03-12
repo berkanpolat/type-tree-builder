@@ -673,10 +673,17 @@ Deno.serve(async (req) => {
         .select("*", { count: "exact", head: true })
         .eq("onay_durumu", "onay_bekliyor");
 
-      // Package subscriber counts
-      const { data: abonelikler } = await supabase
-        .from("kullanici_abonelikler")
-        .select("paket_id, user_id, donem_baslangic, durum");
+      // Package subscriber counts (bypass 1000-row limit)
+      let allAbonelikler: any[] = [];
+      let aboneFrom = 0;
+      while (true) {
+        const { data: batch } = await supabase.from("kullanici_abonelikler").select("paket_id, user_id, donem_baslangic, durum").range(aboneFrom, aboneFrom + 999);
+        if (!batch || batch.length === 0) break;
+        allAbonelikler = allAbonelikler.concat(batch);
+        if (batch.length < 1000) break;
+        aboneFrom += 1000;
+      }
+      const abonelikler = allAbonelikler;
 
       const { data: paketler } = await supabase
         .from("paketler")
