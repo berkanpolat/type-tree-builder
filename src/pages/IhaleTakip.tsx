@@ -324,7 +324,7 @@ export default function IhaleTakip() {
   const handleIhaleIptal = async () => {
     await supabase.from("ihaleler").update({ durum: "iptal" } as any).eq("id", id);
     toast({ title: "İhale iptal edildi" });
-    navigate("/manuihale");
+    navigate("/ihalelerim");
   };
 
   // Handle ihale sil
