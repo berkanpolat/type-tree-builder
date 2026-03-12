@@ -191,6 +191,48 @@ function CollapsibleBlock({ title, children, maxHeight = 160 }: { title: string;
   );
 }
 
+// Gallery Lightbox component
+function GalleryLightbox({ images, initialIndex, onClose }: { images: GaleriFoto[]; initialIndex: number; onClose: () => void }) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const img = images[currentIndex];
+  
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") setCurrentIndex(i => i > 0 ? i - 1 : images.length - 1);
+      if (e.key === "ArrowRight") setCurrentIndex(i => i < images.length - 1 ? i + 1 : 0);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [images.length, onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center" onClick={onClose}>
+      <button onClick={onClose} className="absolute top-4 right-4 text-white/80 hover:text-white z-10">
+        <ChevronUp className="w-8 h-8 rotate-45" />
+      </button>
+      <div className="relative max-w-[90vw] max-h-[90vh] flex items-center justify-center" onClick={e => e.stopPropagation()}>
+        <img src={img.foto_url} alt={img.foto_adi || "Galeri"} className="max-w-full max-h-[85vh] object-contain rounded-lg" />
+        {images.length > 1 && (
+          <>
+            <button onClick={() => setCurrentIndex(i => i > 0 ? i - 1 : images.length - 1)} className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70">
+              <ChevronDown className="w-6 h-6 rotate-90" />
+            </button>
+            <button onClick={() => setCurrentIndex(i => i < images.length - 1 ? i + 1 : 0)} className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70">
+              <ChevronDown className="w-6 h-6 -rotate-90" />
+            </button>
+          </>
+        )}
+      </div>
+      {images.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
+          {currentIndex + 1} / {images.length}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function FirmaDetay() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -223,6 +265,7 @@ export default function FirmaDetay() {
   const [urunHizmetItems, setUrunHizmetItems] = useState<{ kategoriId: string; kategoriName: string; secenek: string }[]>([]);
 
   const [activeMenu, setActiveMenu] = useState("hakkinda");
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const scrollToSection = (sectionId: string) => {
@@ -924,8 +967,8 @@ export default function FirmaDetay() {
               <CollapsibleBlock title="Galeri" maxHeight={300}>
                 {galeri.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {galeri.map(g => (
-                      <div key={g.id} className="aspect-square rounded-lg overflow-hidden border border-border bg-muted">
+                    {galeri.map((g, idx) => (
+                      <div key={g.id} className="aspect-square rounded-lg overflow-hidden border border-border bg-muted cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setLightboxIndex(idx)}>
                         <img src={g.foto_url} alt={g.foto_adi || "Galeri"} className="w-full h-full object-cover" />
                       </div>
                     ))}
@@ -1110,6 +1153,9 @@ export default function FirmaDetay() {
       </div>
       {firma && (
         <BildirDialog open={bildirOpen} onOpenChange={setBildirOpen} tur="profil" referansId={firma.id} />
+      )}
+      {lightboxIndex !== null && galeri.length > 0 && (
+        <GalleryLightbox images={galeri} initialIndex={lightboxIndex} onClose={() => setLightboxIndex(null)} />
       )}
       <Footer />
       <UpgradeDialog
