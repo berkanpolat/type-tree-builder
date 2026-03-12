@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Fields to check on firmalar table for profile completion
+// Fields that contribute to profile completion (excluding zero-weight fields)
+// Zero-weight (excluded): firma_unvani, firma_turu_id, firma_tipi_id, vergi_numarasi, vergi_dairesi,
+//   instagram, facebook, linkedin, x_twitter, tiktok, youtube
 const FIRMA_FIELDS = [
-  "firma_unvani",
-  "firma_turu_id",
-  "firma_tipi_id",
-  "vergi_numarasi",
-  "vergi_dairesi",
   "firma_olcegi_id",
   "kurulus_tarihi",
   "kurulus_il_id",
@@ -15,11 +12,6 @@ const FIRMA_FIELDS = [
   "web_sitesi",
   "firma_iletisim_numarasi",
   "firma_iletisim_email",
-  "instagram",
-  "facebook",
-  "linkedin",
-  "x_twitter",
-  "tiktok",
   "logo_url",
   "kapak_fotografi_url",
   "firma_hakkinda",
