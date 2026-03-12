@@ -112,7 +112,9 @@ serve(async (req) => {
       throw new Error("PayTR yapılandırması eksik");
     }
 
+    // Öncelik: client'tan gelen gerçek IP > header IP > fallback
     const userIp =
+      clientProvidedIp ||
       req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
       req.headers.get("cf-connecting-ip") ||
       "127.0.0.1";
