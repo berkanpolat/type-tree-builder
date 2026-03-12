@@ -103,6 +103,29 @@ const GirisKayit = () => {
   // Email validation
   const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
 
+  // Debounced email duplicate check
+  useEffect(() => {
+    if (!email || !isValidEmail(email)) {
+      setEmailDuplicate(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setCheckingEmail(true);
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("iletisim_email", email)
+          .limit(1);
+        setEmailDuplicate(!!(data && data.length > 0));
+      } catch {
+        setEmailDuplicate(false);
+      } finally {
+        setCheckingEmail(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [email]);
   const handleSendOtp = async () => {
     const fullPhone = getFullPhone();
     const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
