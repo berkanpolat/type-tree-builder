@@ -1011,6 +1011,7 @@ export type Database = {
           logo_url: string | null
           moq: number | null
           onay_durumu: string
+          slug: string | null
           tiktok: string | null
           updated_at: string
           uretim_satis_rolu: string | null
@@ -1049,6 +1050,7 @@ export type Database = {
           logo_url?: string | null
           moq?: number | null
           onay_durumu?: string
+          slug?: string | null
           tiktok?: string | null
           updated_at?: string
           uretim_satis_rolu?: string | null
@@ -1087,6 +1089,7 @@ export type Database = {
           logo_url?: string | null
           moq?: number | null
           onay_durumu?: string
+          slug?: string | null
           tiktok?: string | null
           updated_at?: string
           uretim_satis_rolu?: string | null
@@ -1973,6 +1976,7 @@ export type Database = {
         Args: { p_password: string; p_username: string }
         Returns: boolean
       }
+      generate_firma_slug: { Args: { p_unvani: string }; Returns: string }
       get_or_create_conversation: {
         Args: { p_user1: string; p_user2: string }
         Returns: string
