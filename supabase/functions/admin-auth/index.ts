@@ -367,6 +367,8 @@ Deno.serve(async (req) => {
           try {
             const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
             const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+            // Determine the site URL for redirect
+            const siteUrl = req.headers.get("origin") || Deno.env.get("SITE_URL") || `${supabaseUrl.replace('.supabase.co', '.lovable.app')}`;
             await fetch(`${supabaseUrl}/auth/v1/recover`, {
               method: 'POST',
               headers: {
@@ -375,6 +377,7 @@ Deno.serve(async (req) => {
               },
               body: JSON.stringify({
                 email: authUser.email,
+                redirect_to: `${siteUrl}/sifre-sifirla`,
               }),
             });
           } catch (e) {
