@@ -18,6 +18,11 @@ const PRO_PRICES_USD = {
 
 const KDV_ORANI = 0.20;
 
+function isValidIpv4(ip: string): boolean {
+  const ipv4Regex = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
+  return ipv4Regex.test(ip);
+}
+
 async function getUsdTryRate(): Promise<number> {
   try {
     const res = await fetch("https://open.er-api.com/v6/latest/USD");
