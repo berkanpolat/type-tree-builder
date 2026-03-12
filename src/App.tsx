@@ -93,6 +93,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <RouteStateManager />
+        <RoutePreloader />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
