@@ -119,23 +119,23 @@ Deno.serve(async (req) => {
 
     switch (type) {
       case "kayit_alindi":
-        message = `${firmaUnvani || "Firma"}, Tekstil A.S. basvurunuz alindi. Ekiplerimiz en kisa sure icerisinde sizlere donus saglayacaktir.`;
+        message = `${firmaUnvani || "Firma"}, Tekstil A.Ş. başvurunuz alındı. Ekiplerimiz en kısa süre içerisinde sizlere dönüş sağlayacaktır.`;
         break;
 
       case "basvuru_onaylandi":
-        message = `${firmaUnvani || "Firma"}, Tekstil A.S. basvurunuz onaylandi! E-postaniza gonderilen baglanti uzerinden sifrenizi olusturarak dijital dunyaya ilk adiminizi atabilirsiniz. Aramiza hos geldiniz!`;
+        message = `${firmaUnvani || "Firma"}, Tekstil A.Ş. başvurunuz onaylandı! E-postanıza gönderilen bağlantı üzerinden şifrenizi oluşturarak dijital dünyaya ilk adımınızı atabilirsiniz. Aramıza hoş geldiniz!`;
         break;
 
       case "basvuru_reddedildi":
-        message = `${firmaUnvani || "Firma"}, Tekstil A.S. basvurunuz ne yazik ki red ile sonuclandi. Detaylari ogrenmek icin mailinizi kontrol ediniz. Gerekli duzeltmelerden sonra yeniden basvuru yapabilirsiniz.`;
+        message = `${firmaUnvani || "Firma"}, Tekstil A.Ş. başvurunuz ne yazık ki red ile sonuçlandı. Detayları öğrenmek için mailinizi kontrol ediniz. Gerekli düzeltmelerden sonra yeniden başvuru yapabilirsiniz.`;
         break;
 
       case "odeme_basarili":
-        message = `${firmaUnvani || "Firma"}, odemeniz onaylandi. Tekstil A.S. ayricaliklarin dan faydalanmaya hazirsiniz.`;
+        message = `${firmaUnvani || "Firma"}, ödemeniz onaylandı. Tekstil A.Ş. ayrıcalıklarından faydalanmaya hazırsınız.`;
         break;
 
       case "kota_uyari":
-        message = `${body.paketAd || "Paket"} paketinizin ${body.ozellikAd || "ozellik"} ozelliginden kalan hakkiniz ${body.kalanSayi ?? 0}. Paketinizi yukseltmek icin tiklayin: ${SITE_URL}/paketim`;
+        message = `${body.paketAd || "Paket"} paketinizin ${body.ozellikAd || "özellik"} özelliğinden kalan hakkınız ${body.kalanSayi ?? 0}. Paketinizi yükseltmek için tıklayın: ${SITE_URL}/paketim`;
         break;
 
       case "kisitlama": {
@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
         const bitis = body.kisitlamaBitis || "-";
         const alanlar = body.kisitlamaAlanlari || "-";
         const kid = body.kisitlamaId || "-";
-        message = `${tarih} tarihinde ${kid} ID numarali kisitlama geregince ${alanlar} haklariniz ${bitis} tarihine kadar askiya alinmistir. Detaylari ogrenmek ve itirazda bulunmak icin destek@tekstilas.com adresinden veya 0850 242 5700 numarasindan iletisim kurabilirsiniz.`;
+        message = `${tarih} tarihinde ${kid} ID numaralı kısıtlama gereğince ${alanlar} haklarınız ${bitis} tarihine kadar askıya alınmıştır. Detayları öğrenmek ve itirazda bulunmak için destek@tekstilas.com adresinden veya 0850 242 5700 numarasından iletişim kurabilirsiniz.`;
         break;
       }
 
