@@ -355,38 +355,119 @@ export default function TekIhale() {
     </label>
   );
 
+  const isMobile = useIsMobile();
+  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+
+  const activeFilterCount = filterIhaleTuru.length + filterTeklifUsulu.length + filterKategori.length + filterGrup.length + filterTur.length + filterHizmetKategori.length + filterHizmetTur.length + filterOdeme.length + filterVade.length;
+
+  const filterSidebarContent = (
+    <div className="space-y-4">
+      <FilterSection title="İhale Türü" icon={Target}>
+        {IHALE_TURU_OPTIONS.map((o) => (
+          <CheckboxFilter key={o.value} label={o.label} checked={filterIhaleTuru.includes(o.value)} onChange={() => toggleFilter(filterIhaleTuru, o.value, setFilterIhaleTuru)} />
+        ))}
+      </FilterSection>
+
+      <FilterSection title="Teklif Usulü" icon={Gavel}>
+        {TEKLIF_USULU_OPTIONS.map((o) => (
+          <CheckboxFilter key={o.value} label={o.label} checked={filterTeklifUsulu.includes(o.value)} onChange={() => toggleFilter(filterTeklifUsulu, o.value, setFilterTeklifUsulu)} />
+        ))}
+      </FilterSection>
+
+      {isUrunMode && (
+        <FilterSection title="Ürün Kategorisi" icon={Layers}>
+          {kategoriler.map((k) => (
+            <CheckboxFilter key={k.id} label={k.name} checked={filterKategori.includes(k.id)} onChange={() => toggleFilter(filterKategori, k.id, setFilterKategori)} />
+          ))}
+          {filterKategori.length === 1 && gruplar.length > 0 && (
+            <div className="ml-4 mt-2 space-y-2 border-l-2 border-border pl-3">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Ürün Grubu</p>
+              {gruplar.map((g) => (
+                <CheckboxFilter key={g.id} label={g.name} checked={filterGrup.includes(g.id)} onChange={() => toggleFilter(filterGrup, g.id, setFilterGrup)} />
+              ))}
+              {filterGrup.length === 1 && turler.length > 0 && (
+                <div className="ml-4 mt-2 space-y-2 border-l-2 border-border pl-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-1">Ürün Türü</p>
+                  {turler.map((t) => (
+                    <CheckboxFilter key={t.id} label={t.name} checked={filterTur.includes(t.id)} onChange={() => toggleFilter(filterTur, t.id, setFilterTur)} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </FilterSection>
+      )}
+
+      {isHizmetMode && hizmetKategoriler.length > 0 && (
+        <FilterSection title="Hizmet Kategorisi" icon={Layers}>
+          {hizmetKategoriler.map((k) => (
+            <CheckboxFilter key={k.id} label={k.name} checked={filterHizmetKategori.includes(k.id)} onChange={() => toggleFilter(filterHizmetKategori, k.id, setFilterHizmetKategori)} />
+          ))}
+          {filterHizmetKategori.length === 1 && hizmetTurler.length > 0 && (
+            <div className="ml-4 mt-2 space-y-2 border-l-2 border-border pl-3">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Hizmet Türü</p>
+              {hizmetTurler.map((t) => (
+                <CheckboxFilter key={t.id} label={t.name} checked={filterHizmetTur.includes(t.id)} onChange={() => toggleFilter(filterHizmetTur, t.id, setFilterHizmetTur)} />
+              ))}
+            </div>
+          )}
+        </FilterSection>
+      )}
+
+      <FilterSection title="Ödeme Seçenekleri" icon={CreditCard}>
+        {ODEME_SECENEKLERI_OPTIONS.map((o) => (
+          <CheckboxFilter key={o} label={o} checked={filterOdeme.includes(o)} onChange={() => toggleFilter(filterOdeme, o, setFilterOdeme)} />
+        ))}
+      </FilterSection>
+
+      <FilterSection title="Ödeme Vadesi" icon={CalendarClock}>
+        {ODEME_VADESI_OPTIONS.map((o) => (
+          <CheckboxFilter key={o} label={o} checked={filterVade.includes(o)} onChange={() => toggleFilter(filterVade, o, setFilterVade)} />
+        ))}
+      </FilterSection>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-muted/30">
       <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
 
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-5">
-        {/* Search */}
-        <Card className="p-0">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="İhale Ara"
-              value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-              className="pl-10 border-0 h-12 text-sm"
-            />
-          </div>
-        </Card>
+      <div className="max-w-7xl mx-auto px-3 md:px-6 py-6 space-y-5">
+        {/* Search + Mobile Filter Button */}
+        <div className="flex gap-2">
+          <Card className="p-0 flex-1">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="İhale Ara"
+                value={searchTerm}
+                onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+                className="pl-10 border-0 h-12 text-sm"
+              />
+            </div>
+          </Card>
+          <Button variant="outline" className="lg:hidden h-12 gap-2 shrink-0" onClick={() => setMobileFilterOpen(true)}>
+            <SlidersHorizontal className="w-4 h-4" />
+            {activeFilterCount > 0 && (
+              <Badge className="h-5 w-5 p-0 flex items-center justify-center text-[10px]">{activeFilterCount}</Badge>
+            )}
+          </Button>
+        </div>
+
+        {/* Mobile Filter Sheet */}
+        <Sheet open={mobileFilterOpen} onOpenChange={setMobileFilterOpen}>
+          <SheetContent side="left" className="w-[300px] overflow-y-auto p-4">
+            <SheetHeader className="mb-4">
+              <SheetTitle>Filtreler</SheetTitle>
+            </SheetHeader>
+            {filterSidebarContent}
+          </SheetContent>
+        </Sheet>
 
         <div className="flex gap-6">
-          {/* Filters sidebar */}
+          {/* Filters sidebar - desktop only */}
           <aside className="w-[300px] shrink-0 space-y-4 hidden lg:block">
-            <FilterSection title="İhale Türü" icon={Target}>
-              {IHALE_TURU_OPTIONS.map((o) => (
-                <CheckboxFilter key={o.value} label={o.label} checked={filterIhaleTuru.includes(o.value)} onChange={() => toggleFilter(filterIhaleTuru, o.value, setFilterIhaleTuru)} />
-              ))}
-            </FilterSection>
-
-            <FilterSection title="Teklif Usulü" icon={Gavel}>
-              {TEKLIF_USULU_OPTIONS.map((o) => (
-                <CheckboxFilter key={o.value} label={o.label} checked={filterTeklifUsulu.includes(o.value)} onChange={() => toggleFilter(filterTeklifUsulu, o.value, setFilterTeklifUsulu)} />
-              ))}
-            </FilterSection>
+            {filterSidebarContent}
 
             {/* Ürün kategorileri - show only when ürün türü selected */}
             {isUrunMode && (
