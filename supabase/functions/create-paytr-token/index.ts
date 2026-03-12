@@ -170,7 +170,7 @@ serve(async (req) => {
 
     // merchant_ok_url ve merchant_fail_url kullanıcının yönlendirileceği sayfalardır
     // PayTR callback (bildirim) URL'i merchant panelinden ayarlanır
-    const siteUrl = "https://tekstilas.com";
+    const siteUrl = origin || Deno.env.get("PAYTR_SITE_URL") || "https://tekstilas.com";
     const merchantOkUrl = `${siteUrl}/paketim?odeme=basarili`;
     const merchantFailUrl = `${siteUrl}/paketim?odeme=basarisiz`;
     const timeoutLimit = "30";
