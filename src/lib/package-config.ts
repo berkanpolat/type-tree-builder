@@ -1,18 +1,12 @@
-// Stripe product & price IDs
-export const STRIPE_CONFIG = {
-  pro: {
-    aylik: {
-      priceId: "price_1T9kVU16sgu1Ou2XJkpzKddd",
-      productId: "prod_U80WHflxsIWOlO",
-      fiyat: 199,
-      label: "Aylık",
-    },
-    yillik: {
-      priceId: "price_1T9kVs16sgu1Ou2X9S0sStli",
-      productId: "prod_U80WAzlvl7py3Y",
-      fiyat: 1299,
-      label: "Yıllık",
-    },
+// PayTR PRO paket fiyatları
+export const PRO_FIYATLAR = {
+  aylik: {
+    fiyat: 199,
+    label: "Aylık",
+  },
+  yillik: {
+    fiyat: 1299,
+    label: "Yıllık",
   },
 } as const;
 

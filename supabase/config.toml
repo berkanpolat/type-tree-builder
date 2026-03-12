@@ -2,3 +2,15 @@ project_id = "bctoawgovyyueifnmwhq"
 
 [functions.send-notification-sms]
 verify_jwt = false
+
+[functions.create-paytr-token]
+verify_jwt = false
+
+[functions.paytr-callback]
+verify_jwt = false
+
+[functions.check-subscription]
+verify_jwt = false
+
+[functions.cancel-subscription]
+verify_jwt = false

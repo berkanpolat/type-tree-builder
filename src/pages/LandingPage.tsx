@@ -17,7 +17,7 @@ import iso9001Img from "@/assets/iso-9001.png";
 import iso22301Img from "@/assets/iso-22301.png";
 import kosgebImg from "@/assets/kosgeb.png";
 import Footer from "@/components/Footer";
-import { PAKET_OZELLIKLERI, STRIPE_CONFIG } from "@/lib/package-config";
+import { PAKET_OZELLIKLERI, PRO_FIYATLAR } from "@/lib/package-config";
 import { Mail, Phone, MapPin } from "lucide-react";
 import {
   BadgeDollarSign,
@@ -580,13 +580,13 @@ const LandingPage = () => {
               <div className="mb-6 flex items-baseline gap-2">
                 {billingYearly ? (
                   <>
-                    <span className="text-sm text-destructive line-through">${STRIPE_CONFIG.pro.aylik.fiyat * 12}</span>
-                    <span className="text-4xl font-extrabold text-foreground">${STRIPE_CONFIG.pro.yillik.fiyat}</span>
+                    <span className="text-sm text-destructive line-through">{PRO_FIYATLAR.aylik.fiyat * 12}₺</span>
+                    <span className="text-4xl font-extrabold text-foreground">{PRO_FIYATLAR.yillik.fiyat}₺</span>
                     <span className="text-muted-foreground text-sm">/ Yıl</span>
                   </>
                 ) : (
                   <>
-                    <span className="text-4xl font-extrabold text-foreground">${STRIPE_CONFIG.pro.aylik.fiyat}</span>
+                    <span className="text-4xl font-extrabold text-foreground">{PRO_FIYATLAR.aylik.fiyat}₺</span>
                     <span className="text-muted-foreground text-sm">/ Ay</span>
                   </>
                 )}

@@ -5,7 +5,7 @@ import { useNotificationCount } from "@/hooks/use-notifications";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
 import { useProfileCompletion } from "@/hooks/use-profile-completion";
 import { usePackageQuota } from "@/hooks/use-package-quota";
-import { STRIPE_CONFIG, PAKET_OZELLIKLERI } from "@/lib/package-config";
+import { PRO_FIYATLAR, PAKET_OZELLIKLERI } from "@/lib/package-config";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -102,26 +102,17 @@ const Dashboard = () => {
 
   const handleUpgrade = async (periyot: "aylik" | "yillik") => {
     try {
-      const priceId = STRIPE_CONFIG.pro[periyot].priceId;
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
+      const { data, error } = await supabase.functions.invoke("create-paytr-token", {
+        body: { periyot },
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
     } catch (err: any) {
-      console.error("Checkout error:", err);
+      console.error("PayTR error:", err);
     }
   };
 
-  const handleManageSubscription = async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke("customer-portal");
-      if (error) throw error;
-      if (data?.url) window.open(data.url, "_blank");
-    } catch (err: any) {
-      console.error("Portal error:", err);
-    }
-  };
+  
 
   const statsCards = [
     { title: "Profil Tamamlama", value: profileCompletion, icon: UserCheck, color: "text-primary", bgColor: "bg-primary/10", isProgress: true, href: "/firma-bilgilerim" },
@@ -255,7 +246,7 @@ const Dashboard = () => {
                 {isPro && (
                   <>
                     <p className="text-lg font-semibold text-foreground mt-1">
-                      ${packageInfo.periyot === "yillik" ? STRIPE_CONFIG.pro.yillik.fiyat : STRIPE_CONFIG.pro.aylik.fiyat}
+                      {packageInfo.periyot === "yillik" ? PRO_FIYATLAR.yillik.fiyat : PRO_FIYATLAR.aylik.fiyat}₺
                       <span className="text-sm font-normal text-muted-foreground">/ {packageInfo.periyot === "yillik" ? "yıl" : "ay"}</span>
                     </p>
                     {packageInfo.donemBitis && (
@@ -263,7 +254,7 @@ const Dashboard = () => {
                         Bir sonraki yenileme: {new Date(packageInfo.donemBitis).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })}
                       </p>
                     )}
-                    <Button variant="outline" size="sm" className="mt-3" onClick={handleManageSubscription}>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate("/paketim")}>
                       Aboneliği Yönet
                     </Button>
                   </>
@@ -271,10 +262,10 @@ const Dashboard = () => {
                 {!isPro && (
                   <div className="mt-3 space-y-2">
                     <Button size="sm" onClick={() => handleUpgrade("aylik")} className="w-full">
-                      PRO'ya Yükselt (${STRIPE_CONFIG.pro.aylik.fiyat}/ay)
+                      PRO'ya Yükselt ({PRO_FIYATLAR.aylik.fiyat}₺/ay)
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleUpgrade("yillik")} className="w-full">
-                      Yıllık PRO (${STRIPE_CONFIG.pro.yillik.fiyat}/yıl)
+                      Yıllık PRO ({PRO_FIYATLAR.yillik.fiyat}₺/yıl)
                     </Button>
                   </div>
                 )}
