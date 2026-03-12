@@ -195,8 +195,8 @@ export default function Favoriler() {
             ) : (
               <div className="divide-y divide-border">
                 {favFirmalar.map((fav) => (
-                  <div key={fav.id} className="flex items-center gap-4 py-4 px-2">
-                    <div className="w-12 h-12 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                  <div key={fav.id} className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4 px-2">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                       {fav.firma?.logo_url ? (
                         <img src={fav.firma.logo_url} alt="" className="w-full h-full object-contain" />
                       ) : (
@@ -204,24 +204,24 @@ export default function Favoriler() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground">{fav.firma?.firma_unvani || "-"}</p>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-0.5">
-                        <span className="flex items-center gap-1">
+                      <p className="font-semibold text-foreground text-sm sm:text-base truncate">{fav.firma?.firma_unvani || "-"}</p>
+                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mt-0.5 flex-wrap">
+                        <span className="flex items-center gap-1 truncate">
                           📍 {getLocation(fav.firma?.kurulus_il_id, fav.firma?.kurulus_ilce_id)}
                         </span>
-                        <span className="flex items-center gap-1">
+                        <span className="hidden sm:flex items-center gap-1">
                           🏢 {fav.firma?.firma_tipi_id ? firmaTipiMap[fav.firma.firma_tipi_id] || "-" : "-"}
                         </span>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="shrink-0">
+                    <Button variant="outline" size="sm" className="shrink-0 hidden sm:flex">
                       Profili Gör
                     </Button>
                     <button
                       onClick={() => removeFirmaFav(fav.id)}
-                      className="shrink-0 p-2 rounded-lg hover:bg-muted transition-colors"
+                      className="shrink-0 p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
                     >
-                      <Heart className="w-5 h-5 text-destructive fill-destructive" />
+                      <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-destructive fill-destructive" />
                     </button>
                   </div>
                 ))}
