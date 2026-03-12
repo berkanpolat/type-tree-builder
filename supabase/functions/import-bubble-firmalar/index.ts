@@ -219,6 +219,8 @@ Deno.serve(async (req) => {
         basarisiz_sayisi: failList.length,
         basarili_firmalar: successList,
         basarisiz_firmalar: failList,
+        next_cursor: startCursor + results.length,
+        remaining,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
