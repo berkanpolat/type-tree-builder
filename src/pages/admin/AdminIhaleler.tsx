@@ -793,7 +793,7 @@ export default function AdminIhaleler() {
                       <div className="flex items-center gap-1.5 flex-wrap pt-1">
                         {hasPermission("ihale_duzenleyebilir") && (
                           <Button
-                            onClick={() => window.open(`/manuihale/duzenle/${ihale.id}`, "_blank")}
+                            onClick={() => window.open(`/ihalelerim/duzenle/${ihale.id}`, "_blank")}
                             variant="outline" size="sm"
                             className="text-[11px] h-7 px-2.5 gap-1"
                             style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
@@ -804,7 +804,7 @@ export default function AdminIhaleler() {
 
                         {hasPermission("ihale_inceleyebilir") && (
                           <Button
-                            onClick={() => window.open(`/tekihale/${ihale.id}`, "_blank")}
+                            onClick={() => window.open(`/ihaleler/${ihale.id}`, "_blank")}
                             variant="outline" size="sm"
                             className="text-[11px] h-7 px-2.5 gap-1"
                             style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
@@ -815,7 +815,7 @@ export default function AdminIhaleler() {
 
                         {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && hasPermission("ihale_inceleyebilir") && (
                           <Button
-                            onClick={() => window.open(`/manuihale/takip/${ihale.id}`, "_blank")}
+                            onClick={() => window.open(`/ihalelerim/takip/${ihale.id}`, "_blank")}
                             variant="outline" size="sm"
                             className="text-[11px] h-7 px-2.5 gap-1"
                             style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}

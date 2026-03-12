@@ -97,19 +97,18 @@ const App = () => (
             <Route path="/" element={<LandingPage />} />
             <Route path="/test-index" element={<Index />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/anasayfa" element={<AnaSayfa />} />
+            <Route path="/tekpazar" element={<AnaSayfa />} />
             <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
-            <Route path="/manuihale" element={<ManuIhale />} />
-            <Route path="/manuihale/yeni" element={<YeniIhale />} />
-            <Route path="/tekihale" element={<TekIhale />} />
-            <Route path="/tekihale/:id" element={<IhaleDetay />} />
-            <Route path="/ihale/:id" element={<IhaleDetay />} />
-            <Route path="/manuihale/duzenle/:id" element={<YeniIhale />} />
-            <Route path="/manuihale/takip/:id" element={<IhaleTakip />} />
+            <Route path="/ihalelerim" element={<ManuIhale />} />
+            <Route path="/ihalelerim/yeni" element={<YeniIhale />} />
+            <Route path="/ihaleler" element={<TekIhale />} />
+            <Route path="/ihaleler/:slug" element={<IhaleDetay />} />
+            <Route path="/ihalelerim/duzenle/:id" element={<YeniIhale />} />
+            <Route path="/ihalelerim/takip/:id" element={<IhaleTakip />} />
             <Route path="/tekliflerim" element={<Tekliflerim />} />
-            <Route path="/manupazar" element={<ManuPazar />} />
-            <Route path="/manupazar/yeni" element={<YeniUrun />} />
-            <Route path="/manupazar/duzenle/:id" element={<YeniUrun />} />
+            <Route path="/urunlerim" element={<ManuPazar />} />
+            <Route path="/urunlerim/yeni" element={<YeniUrun />} />
+            <Route path="/urunlerim/duzenle/:id" element={<YeniUrun />} />
             <Route path="/favoriler" element={<Favoriler />} />
             <Route path="/mesajlar" element={<Mesajlar />} />
             <Route path="/bildirimler" element={<Bildirimler />} />
@@ -120,9 +119,9 @@ const App = () => (
             <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
             <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
             <Route path="/giris-kayit" element={<GirisKayit />} />
-            <Route path="/urun/:id" element={<UrunDetay />} />
+            <Route path="/urunler/:slug" element={<UrunDetay />} />
             <Route path="/firma/:slug" element={<FirmaDetay />} />
-            <Route path="/tekrehber" element={<TekRehber />} />
+            <Route path="/firmalar" element={<TekRehber />} />
             <Route path="/ayarlar" element={<ProfilAyarlari />} />
             <Route path="/profil-ayarlari" element={<ProfilAyarlari />} />
             <Route path="/hakkimizda" element={<Hakkimizda />} />

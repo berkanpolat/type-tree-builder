@@ -188,7 +188,7 @@ export default function IhaleTakip() {
     // Verify ownership only for non-admin users
     if (!adminToken && currentUserId && ihaleData.user_id !== currentUserId) {
       toast({ title: "Yetki hatası", description: "Bu ihaleye erişim yetkiniz yok.", variant: "destructive" });
-      navigate("/manuihale");
+      navigate("/ihalelerim");
       return;
     }
 
@@ -324,7 +324,7 @@ export default function IhaleTakip() {
   const handleIhaleIptal = async () => {
     await supabase.from("ihaleler").update({ durum: "iptal" } as any).eq("id", id);
     toast({ title: "İhale iptal edildi" });
-    navigate("/manuihale");
+    navigate("/ihalelerim");
   };
 
   // Handle ihale sil
@@ -335,7 +335,7 @@ export default function IhaleTakip() {
       return;
     }
     toast({ title: "İhale silindi" });
-    navigate("/manuihale");
+    navigate("/ihalelerim");
   };
 
   const handleConfirmAction = async () => {
@@ -427,7 +427,7 @@ export default function IhaleTakip() {
     <DashboardLayout title="İhale Takip">
       <div className="space-y-6">
         {/* Back button */}
-        <Button variant="ghost" size="sm" onClick={() => navigate("/manuihale")} className="gap-2">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/ihalelerim")} className="gap-2">
           <ArrowLeft className="w-4 h-4" /> İhalelerime Dön
         </Button>
 

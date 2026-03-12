@@ -160,7 +160,7 @@ export default function ManuIhale() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <h2 className="text-xl md:text-2xl font-bold text-foreground">İhalelerim</h2>
-          <Button onClick={() => navigate("/manuihale/yeni")} className="gap-2 w-full sm:w-auto">
+          <Button onClick={() => navigate("/ihalelerim/yeni")} className="gap-2 w-full sm:w-auto">
             <Plus className="w-4 h-4" />
             Yeni İhale Oluştur
           </Button>
@@ -241,9 +241,9 @@ export default function ManuIhale() {
                   key={ihale.id}
                   className="cursor-pointer"
                   onClick={() => {
-                    if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/manuihale/duzenle/${ihale.id}`);
-                    else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") navigate(`/manuihale/takip/${ihale.id}`);
-                    else navigate(`/ihale/${ihale.id}`);
+                    if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/ihalelerim/duzenle/${ihale.id}`);
+                    else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") navigate(`/ihalelerim/takip/${ihale.id}`);
+                    else navigate(`/ihaleler/${ihale.id}`);
                   }}
                 >
                   <CardContent className="p-4 space-y-3">
@@ -280,13 +280,13 @@ export default function ManuIhale() {
                       </div>
                       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                         {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
-                          <Button variant="ghost" size="icon" className="h-7 w-7" title="İhale Takip" onClick={() => navigate(`/manuihale/takip/${ihale.id}`)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" title="İhale Takip" onClick={() => navigate(`/ihalelerim/takip/${ihale.id}`)}>
                             <TrendingUp className="w-3.5 h-3.5" />
                           </Button>
                         )}
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
-                          if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/manuihale/duzenle/${ihale.id}`);
-                          else navigate(`/ihale/${ihale.id}`);
+                          if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/ihalelerim/duzenle/${ihale.id}`);
+                          else navigate(`/ihaleler/${ihale.id}`);
                         }}>
                           <ExternalLink className="w-3.5 h-3.5" />
                         </Button>
@@ -335,9 +335,9 @@ export default function ManuIhale() {
                         key={ihale.id}
                         className="cursor-pointer"
                         onClick={() => {
-                          if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/manuihale/duzenle/${ihale.id}`);
-                          else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") navigate(`/manuihale/takip/${ihale.id}`);
-                          else navigate(`/ihale/${ihale.id}`);
+                          if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/ihalelerim/duzenle/${ihale.id}`);
+                          else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") navigate(`/ihalelerim/takip/${ihale.id}`);
+                          else navigate(`/ihaleler/${ihale.id}`);
                         }}
                       >
                         <TableCell>
@@ -372,13 +372,13 @@ export default function ManuIhale() {
                         <TableCell>
                           <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                             {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8" title="İhale Takip" onClick={() => navigate(`/manuihale/takip/${ihale.id}`)}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title="İhale Takip" onClick={() => navigate(`/ihalelerim/takip/${ihale.id}`)}>
                                 <TrendingUp className="w-4 h-4" />
                               </Button>
                             )}
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                              if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/manuihale/duzenle/${ihale.id}`);
-                              else navigate(`/ihale/${ihale.id}`);
+                              if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/ihalelerim/duzenle/${ihale.id}`);
+                              else navigate(`/ihaleler/${ihale.id}`);
                             }}>
                               <ExternalLink className="w-4 h-4" />
                             </Button>

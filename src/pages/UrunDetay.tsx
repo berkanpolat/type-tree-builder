@@ -433,7 +433,7 @@ export default function UrunDetay() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <p className="text-muted-foreground">Ürün bulunamadı.</p>
-        <Button onClick={() => navigate("/anasayfa")}>Ana Sayfaya Dön</Button>
+        <Button onClick={() => navigate("/tekpazar")}>Ana Sayfaya Dön</Button>
       </div>
     );
   }
@@ -465,12 +465,12 @@ export default function UrunDetay() {
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
-          <Link to="/anasayfa" className="hover:text-foreground transition-colors">Pazar Anasayfa</Link>
+          <Link to="/tekpazar" className="hover:text-foreground transition-colors">Pazar Anasayfa</Link>
           {breadcrumbKategori && (
             <>
               <span>/</span>
               <button
-                onClick={() => navigate("/anasayfa", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id } })}
+                onClick={() => navigate("/tekpazar", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id } })}
                 className="hover:text-foreground transition-colors"
               >
                 {breadcrumbKategori}
@@ -481,7 +481,7 @@ export default function UrunDetay() {
             <>
               <span>/</span>
               <button
-                onClick={() => navigate("/anasayfa", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id, grupId: urun.urun_grup_id } })}
+                onClick={() => navigate("/tekpazar", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id, grupId: urun.urun_grup_id } })}
                 className="hover:text-foreground transition-colors"
               >
                 {breadcrumbGrup}
@@ -492,7 +492,7 @@ export default function UrunDetay() {
             <>
               <span>/</span>
               <button
-                onClick={() => navigate("/anasayfa", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id, grupId: urun.urun_grup_id, turId: urun.urun_tur_id } })}
+                onClick={() => navigate("/tekpazar", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id, grupId: urun.urun_grup_id, turId: urun.urun_tur_id } })}
                 className="hover:text-foreground transition-colors"
               >
                 {breadcrumbTur}
@@ -1108,7 +1108,7 @@ export default function UrunDetay() {
                 }
 
                 return (
-                  <Card key={b.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer" onClick={() => navigate(`/urun/${b.id}`)}>
+                  <Card key={b.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer" onClick={() => navigate(`/urunler/${b.id}`)}>
                     <div className="aspect-square bg-muted relative overflow-hidden">
                       {b.foto_url ? (
                         <img src={b.foto_url} alt={b.baslik} className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />

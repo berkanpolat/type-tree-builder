@@ -839,7 +839,7 @@ export default function IhaleDetay() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <p className="text-muted-foreground">İhale bulunamadı.</p>
-        <Button onClick={() => navigate("/tekihale")}>İhalelere Dön</Button>
+        <Button onClick={() => navigate("/ihaleler")}>İhalelere Dön</Button>
       </div>
     );
   }
@@ -892,12 +892,12 @@ export default function IhaleDetay() {
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
-          <Link to="/tekihale" className="hover:text-foreground transition-colors">İhale Anasayfa</Link>
+          <Link to="/ihaleler" className="hover:text-foreground transition-colors">İhale Anasayfa</Link>
           {breadcrumbKategori && (
             <>
               <span>/</span>
               <button
-                onClick={() => navigate("/tekihale", { state: { kategoriId: ihale.urun_kategori_id || ihale.hizmet_kategori_id, isHizmet: !!ihale.hizmet_kategori_id } })}
+                onClick={() => navigate("/ihaleler", { state: { kategoriId: ihale.urun_kategori_id || ihale.hizmet_kategori_id, isHizmet: !!ihale.hizmet_kategori_id } })}
                 className="hover:text-foreground transition-colors"
               >
                 {breadcrumbKategori}
@@ -908,7 +908,7 @@ export default function IhaleDetay() {
             <>
               <span>/</span>
               <button
-                onClick={() => navigate("/tekihale", { state: { kategoriId: ihale.urun_kategori_id || ihale.hizmet_kategori_id, grupId: ihale.urun_grup_id || ihale.hizmet_tur_id, isHizmet: !!ihale.hizmet_kategori_id } })}
+                onClick={() => navigate("/ihaleler", { state: { kategoriId: ihale.urun_kategori_id || ihale.hizmet_kategori_id, grupId: ihale.urun_grup_id || ihale.hizmet_tur_id, isHizmet: !!ihale.hizmet_kategori_id } })}
                 className="hover:text-foreground transition-colors"
               >
                 {breadcrumbGrup}
@@ -919,7 +919,7 @@ export default function IhaleDetay() {
             <>
               <span>/</span>
               <button
-                onClick={() => navigate("/tekihale", { state: { kategoriId: ihale.urun_kategori_id, grupId: ihale.urun_grup_id, turId: ihale.urun_tur_id } })}
+                onClick={() => navigate("/ihaleler", { state: { kategoriId: ihale.urun_kategori_id, grupId: ihale.urun_grup_id, turId: ihale.urun_tur_id } })}
                 className="hover:text-foreground transition-colors"
               >
                 {breadcrumbTur}
@@ -1260,7 +1260,7 @@ export default function IhaleDetay() {
                   <h3 className="font-bold text-foreground mb-4">Benzer İhaleler</h3>
                   <div className="space-y-3">
                     {benzerIhaleler.map((b) => (
-                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/tekihale/${b.id}`)}>
+                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/ihaleler/${b.id}`)}>
                         <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                           {b.foto_url ? <img src={b.foto_url} alt="" className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
                         </div>
@@ -1367,7 +1367,7 @@ export default function IhaleDetay() {
                         <AlertDialogHeader><AlertDialogTitle>İhaleyi Onaya Göndermek İstediğinize Emin Misiniz?</AlertDialogTitle><AlertDialogDescription>İhaleniz süper admin onayına gönderilecektir.</AlertDialogDescription></AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>İptal</AlertDialogCancel>
-                          <AlertDialogAction onClick={async () => { await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id); toast({ title: "İhale onaya gönderildi!" }); navigate("/manuihale"); }}>Evet, Gönder</AlertDialogAction>
+                          <AlertDialogAction onClick={async () => { await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id); toast({ title: "İhale onaya gönderildi!" }); navigate("/ihalelerim"); }}>Evet, Gönder</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -1567,7 +1567,7 @@ export default function IhaleDetay() {
                   <h3 className="font-bold text-foreground mb-4">Benzer İhaleler</h3>
                   <div className="space-y-3">
                     {benzerIhaleler.map((b) => (
-                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/tekihale/${b.id}`)}>
+                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/ihaleler/${b.id}`)}>
                         <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                           {b.foto_url ? <img src={b.foto_url} alt="" className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
                         </div>

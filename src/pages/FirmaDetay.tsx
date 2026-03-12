@@ -719,7 +719,7 @@ export default function FirmaDetay() {
         </div>
         <UpgradeDialog
           open={quotaBlocked}
-          onOpenChange={(open) => { if (!open) navigate("/anasayfa"); }}
+          onOpenChange={(open) => { if (!open) navigate("/tekpazar"); }}
           title="Profil Görüntüleme Hakkınız Doldu"
           message={quotaMessage}
         />

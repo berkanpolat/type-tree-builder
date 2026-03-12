@@ -80,7 +80,7 @@ export default function TekPazarTanitim() {
             <Button
               size="lg"
               className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold px-8"
-              onClick={() => navigate("/anasayfa")}
+              onClick={() => navigate("/tekpazar")}
             >
               <ShoppingBag className="w-4 h-4 mr-2" />
               Ürünleri Keşfet
@@ -138,7 +138,7 @@ export default function TekPazarTanitim() {
           <Button
             size="lg"
             className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold px-8"
-            onClick={() => navigate("/anasayfa")}
+            onClick={() => navigate("/tekpazar")}
           >
             Hemen Başla
           </Button>

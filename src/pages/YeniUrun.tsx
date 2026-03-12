@@ -591,7 +591,7 @@ export default function YeniUrun() {
 
     setSaving(false);
     toast({ title: "Ürün kaydedildi!" });
-    navigate(`/urun/${urunId}`);
+    navigate(`/urunler/${urunId}`);
   };
 
   // --- Fiyat Kademesi helpers ---

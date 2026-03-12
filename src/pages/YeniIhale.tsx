@@ -124,7 +124,7 @@ export default function YeniIhale() {
         description: msg || "İhale açma işleminiz kısıtlanmıştır.",
         variant: "destructive",
       });
-      navigate("/manuihale");
+      navigate("/ihalelerim");
     }
   }, [isRestricted, editId, isAdminMode]);
   // Load existing ihale for editing
@@ -152,7 +152,7 @@ export default function YeniIhale() {
             // Normal users can only edit duzenleniyor or onay_bekliyor
             if (ihale.durum !== "duzenleniyor" && ihale.durum !== "onay_bekliyor") {
               toast({ title: "Hata", description: "Bu ihale düzenlenemez.", variant: "destructive" });
-              navigate("/manuihale");
+              navigate("/ihalelerim");
               return;
             }
 
@@ -189,7 +189,7 @@ export default function YeniIhale() {
 
       if (!ihale) {
         toast({ title: "Hata", description: "İhale bulunamadı.", variant: "destructive" });
-        navigate("/manuihale");
+        navigate("/ihalelerim");
         return;
       }
 
@@ -477,9 +477,9 @@ export default function YeniIhale() {
     await handleSave();
     if (!ihaleId) return;
     if (isAdminMode) {
-      window.open(`/tekihale/${ihaleId}`, "_blank");
+      window.open(`/ihaleler/${ihaleId}`, "_blank");
     } else {
-      navigate(`/tekihale/${ihaleId}`);
+      navigate(`/ihaleler/${ihaleId}`);
     }
   };
 

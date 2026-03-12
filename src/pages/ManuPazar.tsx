@@ -223,7 +223,7 @@ export default function ManuPazar() {
             <h2 className="text-xl md:text-2xl font-bold text-foreground">Pazarım</h2>
             <p className="text-sm text-muted-foreground">Mağazandaki ürünleri yönet, düzenle ve yeni ürün ekle.</p>
           </div>
-          <Button onClick={() => navigate("/manupazar/yeni")} className="gap-2 w-full sm:w-auto">
+          <Button onClick={() => navigate("/urunlerim/yeni")} className="gap-2 w-full sm:w-auto">
             <Plus className="w-4 h-4" />
             Yeni Ürün
           </Button>
@@ -319,7 +319,7 @@ export default function ManuPazar() {
             <div className="text-center py-10 text-muted-foreground">Henüz ürün bulunmamaktadır.</div>
           ) : (
             filteredUrunler.map((urun) => (
-              <Card key={urun.id} className="cursor-pointer" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
+              <Card key={urun.id} className="cursor-pointer" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
@@ -358,10 +358,10 @@ export default function ManuPazar() {
                       <span>{format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}</span>
                     </div>
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Kopyala" onClick={() => navigate(`/manupazar/yeni?kopyala=${urun.id}`)}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Kopyala" onClick={() => navigate(`/urunlerim/yeni?kopyala=${urun.id}`)}>
                         <Copy className="w-3.5 h-3.5" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(urun.id)}>
@@ -449,10 +449,10 @@ export default function ManuPazar() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
                             <Pencil className="w-4 h-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Kopyala" onClick={() => navigate(`/manupazar/yeni?kopyala=${urun.id}`)}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Kopyala" onClick={() => navigate(`/urunlerim/yeni?kopyala=${urun.id}`)}>
                             <Copy className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(urun.id)}>
