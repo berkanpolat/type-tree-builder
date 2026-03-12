@@ -69,8 +69,16 @@ const Paketim = () => {
   const handleUpgrade = async (periyot: "aylik" | "yillik") => {
     setUpgradeLoading(periyot);
     try {
+      // Kullanıcının gerçek IP adresini al (PayTR IP doğrulaması için)
+      let clientIp = "";
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        clientIp = ipData.ip || "";
+      } catch { /* IP alınamazsa edge function kendi belirler */ }
+
       const { data, error } = await supabase.functions.invoke("create-paytr-token", {
-        body: { periyot },
+        body: { periyot, clientIp },
       });
       if (error) throw error;
       if (data?.url) window.open(data.url, "_blank");
