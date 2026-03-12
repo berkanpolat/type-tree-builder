@@ -358,12 +358,12 @@ export default function UrunDetay() {
   useEffect(() => { fetchUrun(); }, [fetchUrun]);
 
   const toggleFavorite = async () => {
-    if (!currentUserId || !id) return;
+    if (!currentUserId || !resolvedUrunId) return;
     if (isFavorited) {
-      await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", id);
+      await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", resolvedUrunId);
       toast({ title: "Favorilerden çıkarıldı" });
     } else {
-      await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: id });
+      await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: resolvedUrunId });
       toast({ title: "Favorilere eklendi" });
     }
     setIsFavorited(!isFavorited);
