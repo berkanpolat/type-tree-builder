@@ -939,19 +939,29 @@ export default function YeniUrun() {
                         {varyasyonlar.map((v, idx) => (
                           <TableRow key={idx}>
                             <TableCell>
-                              <label className="cursor-pointer">
-                                <input type="file" accept="image/*" className="hidden"
-                                  onChange={e => { const file = e.target.files?.[0]; if (file) handleVaryasyonFotoChange(idx, file); }} />
-                                {v.foto_url ? (
-                                  <div className="w-12 h-12 rounded overflow-hidden border">
-                                    <img src={v.foto_url} alt="" className="w-full h-full object-cover" />
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {v.foto_urls.map((url, fIdx) => (
+                                  <div key={fIdx} className="relative group">
+                                    <div className="w-12 h-12 rounded overflow-hidden border">
+                                      <img src={url} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleVaryasyonFotoRemove(idx, fIdx)}
+                                      className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
                                   </div>
-                                ) : (
+                                ))}
+                                <label className="cursor-pointer">
+                                  <input type="file" accept="image/*" multiple className="hidden"
+                                    onChange={e => { if (e.target.files && e.target.files.length > 0) handleVaryasyonFotoAdd(idx, e.target.files); }} />
                                   <div className="w-12 h-12 rounded border-2 border-dashed border-muted-foreground/40 flex items-center justify-center hover:border-primary transition-colors">
                                     <Upload className="w-4 h-4 text-muted-foreground" />
                                   </div>
-                                )}
-                              </label>
+                                </label>
+                              </div>
                             </TableCell>
                             <TableCell className="text-sm font-medium">{v.varyant_1_value}</TableCell>
                             <TableCell className="text-sm">{v.varyant_2_value}</TableCell>
