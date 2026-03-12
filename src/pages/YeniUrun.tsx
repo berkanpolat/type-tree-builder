@@ -853,11 +853,11 @@ export default function YeniUrun() {
                             disabled={!teknikDetaylar[alan.dependsOn!] || (Array.isArray(teknikDetaylar[alan.dependsOn!]) && (teknikDetaylar[alan.dependsOn!] as string[]).length === 0)}
                           />
                         ) : alan.type === "date" ? (
-                          <Input type="date" value={teknikDetaylar[alan.label] || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} />
+                          <Input type="date" value={(teknikDetaylar[alan.label] as string) || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} />
                         ) : alan.type === "number" ? (
-                          <Input type="number" value={teknikDetaylar[alan.label] || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} placeholder={alan.label} />
+                          <Input type="number" value={(teknikDetaylar[alan.label] as string) || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} placeholder={alan.label} />
                         ) : (
-                          <Input value={teknikDetaylar[alan.label] || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} placeholder={alan.label} maxLength={500} />
+                          <Input value={(teknikDetaylar[alan.label] as string) || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} placeholder={alan.label} maxLength={500} />
                         )}
                       </div>
                     ))}
