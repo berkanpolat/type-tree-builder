@@ -68,10 +68,12 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("Kullanıcı doğrulanamadı");
 
-    const { periyot, clientIp: clientProvidedIp } = await req.json();
+    const { periyot, clientIp: rawClientIp } = await req.json();
     if (!periyot || !["aylik", "yillik"].includes(periyot)) {
       throw new Error("Geçersiz periyot");
     }
+
+    const clientProvidedIp = typeof rawClientIp === "string" ? rawClientIp.trim() : "";
 
     // Anlık döviz kuru al
     const usdTryRate = await getUsdTryRate();
