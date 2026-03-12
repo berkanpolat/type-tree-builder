@@ -148,8 +148,24 @@ serve(async (req) => {
     const noInstallment = "1";
     const maxInstallment = "0";
     const currency = "TL";
-    const testMode = "1";
-    const debugOn = "0";
+
+    const origin = req.headers.get("origin") || "";
+    const originHost = (() => {
+      try {
+        return origin ? new URL(origin).hostname : "";
+      } catch {
+        return "";
+      }
+    })();
+
+    const isPreviewEnv =
+      originHost.includes("lovable.app") ||
+      originHost.includes("lovableproject.com") ||
+      originHost.includes("localhost");
+
+    // Preview/development ortamında test, canlı domainde live mode
+    const testMode = isPreviewEnv ? "1" : "0";
+    const debugOn = isPreviewEnv ? "1" : "0";
     const lang = "tr";
 
     // merchant_ok_url ve merchant_fail_url kullanıcının yönlendirileceği sayfalardır
