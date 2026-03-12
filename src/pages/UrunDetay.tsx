@@ -134,6 +134,7 @@ interface FirmaData {
   kurulus_il_id: string | null;
   kurulus_ilce_id: string | null;
   user_id: string;
+  belge_onayli: boolean;
 }
 
 interface BenzerUrun {
@@ -261,7 +262,7 @@ export default function UrunDetay() {
     // Fetch firma
     const { data: firmaData } = await supabase
       .from("firmalar")
-      .select("firma_unvani, logo_url, firma_iletisim_numarasi, firma_iletisim_email, web_sitesi, instagram, facebook, linkedin, x_twitter, tiktok, kurulus_il_id, kurulus_ilce_id, user_id")
+      .select("firma_unvani, logo_url, firma_iletisim_numarasi, firma_iletisim_email, web_sitesi, instagram, facebook, linkedin, x_twitter, tiktok, kurulus_il_id, kurulus_ilce_id, user_id, belge_onayli")
       .eq("user_id", urunData.user_id)
       .single();
     setFirma(firmaData);
@@ -501,7 +502,7 @@ export default function UrunDetay() {
         </nav>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-2">
           {/* Left: Image Gallery */}
           <div className="lg:col-span-3 flex gap-4">
             {/* Thumbnails */}
@@ -820,10 +821,12 @@ export default function UrunDetay() {
                     )}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                      <span className="text-sm text-emerald-600 font-medium">Doğrulanmış</span>
-                    </div>
+                    {firma.belge_onayli && (
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        <span className="text-sm text-emerald-600 font-medium">Doğrulanmış</span>
+                      </div>
+                    )}
                     <p className="font-semibold text-foreground">{firma.firma_unvani}</p>
                     {locationText && (
                       <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
@@ -916,7 +919,7 @@ export default function UrunDetay() {
         </div>
 
         {/* Description & Technical Details */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
           <div className="lg:col-span-3 space-y-6">
             {urun.aciklama && (
               <Card className="p-6">
