@@ -1,66 +1,79 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LandingPage from "./pages/LandingPage";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import DashboardDestek from "./pages/DashboardDestek";
-import DashboardDestekDetay from "./pages/DashboardDestekDetay";
-import AnaSayfa from "./pages/AnaSayfa";
-import HizmetBilgileri from "./pages/HizmetBilgileri";
-import UrunBilgileri from "./pages/UrunBilgileri";
-import UrunKategorisi from "./pages/UrunKategorisi";
-import GirisKayit from "./pages/GirisKayit";
-import FirmaBilgilerim from "./pages/FirmaBilgilerim";
-import ManuIhale from "./pages/ManuIhale";
-import YeniIhale from "./pages/YeniIhale";
-import TekIhale from "./pages/TekIhale";
-import IhaleDetay from "./pages/IhaleDetay";
-import IhaleTakip from "./pages/IhaleTakip";
-import Tekliflerim from "./pages/Tekliflerim";
-import ManuPazar from "./pages/ManuPazar";
-import YeniUrun from "./pages/YeniUrun";
-import Favoriler from "./pages/Favoriler";
-import Mesajlar from "./pages/Mesajlar";
-import Bildirimler from "./pages/Bildirimler";
-import UrunDetay from "./pages/UrunDetay";
-import FirmaDetay from "./pages/FirmaDetay";
-import ProfilAyarlari from "./pages/ProfilAyarlari";
-import TekRehber from "./pages/TekRehber";
-import Hakkimizda from "./pages/Hakkimizda";
-import Iletisim from "./pages/Iletisim";
-import UreticiTedarikciKesfi from "./pages/UreticiTedarikciKesfi";
-import TekIhaleTanitim from "./pages/TekIhaleTanitim";
-import TekPazarTanitim from "./pages/TekPazarTanitim";
-import SSS from "./pages/SSS";
-import GizlilikKosullari from "./pages/GizlilikKosullari";
-import KVKKAydinlatma from "./pages/KVKKAydinlatma";
-import KullanimKosullari from "./pages/KullanimKosullari";
-import MesafeliSatisSozlesmesi from "./pages/MesafeliSatisSozlesmesi";
-import NotFound from "./pages/NotFound";
-import SifreSifirla from "./pages/SifreSifirla";
-import AdminGiris from "./pages/admin/AdminGiris";
-import AdminPanel from "./pages/admin/AdminPanel";
-import AdminKullanicilar from "./pages/admin/AdminKullanicilar";
-import AdminFirmalar from "./pages/admin/AdminFirmalar";
-import AdminIhaleler from "./pages/admin/AdminIhaleler";
-import AdminUrunler from "./pages/admin/AdminUrunler";
-import AdminSikayetler from "./pages/admin/AdminSikayetler";
-import AdminDestek from "./pages/admin/AdminDestek";
-import AdminPaketler from "./pages/admin/AdminPaketler";
-import Paketim from "./pages/Paketim";
-import AdminIslemler from "./pages/admin/AdminIslemler";
-import AdminKisitlamalar from "./pages/admin/AdminKisitlamalar";
-import AdminReklam from "./pages/admin/AdminReklam";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import RouteStateManager from "./components/RouteStateManager";
+
+// Critical pages loaded eagerly (landing, auth, dashboard)
+import LandingPage from "./pages/LandingPage";
+import GirisKayit from "./pages/GirisKayit";
+import Dashboard from "./pages/Dashboard";
+
+// Lazy-loaded pages
+const Index = lazy(() => import("./pages/Index"));
+const AnaSayfa = lazy(() => import("./pages/AnaSayfa"));
+const FirmaBilgilerim = lazy(() => import("./pages/FirmaBilgilerim"));
+const ManuIhale = lazy(() => import("./pages/ManuIhale"));
+const YeniIhale = lazy(() => import("./pages/YeniIhale"));
+const TekIhale = lazy(() => import("./pages/TekIhale"));
+const IhaleDetay = lazy(() => import("./pages/IhaleDetay"));
+const IhaleTakip = lazy(() => import("./pages/IhaleTakip"));
+const Tekliflerim = lazy(() => import("./pages/Tekliflerim"));
+const ManuPazar = lazy(() => import("./pages/ManuPazar"));
+const YeniUrun = lazy(() => import("./pages/YeniUrun"));
+const Favoriler = lazy(() => import("./pages/Favoriler"));
+const Mesajlar = lazy(() => import("./pages/Mesajlar"));
+const Bildirimler = lazy(() => import("./pages/Bildirimler"));
+const UrunDetay = lazy(() => import("./pages/UrunDetay"));
+const FirmaDetay = lazy(() => import("./pages/FirmaDetay"));
+const ProfilAyarlari = lazy(() => import("./pages/ProfilAyarlari"));
+const TekRehber = lazy(() => import("./pages/TekRehber"));
+const Hakkimizda = lazy(() => import("./pages/Hakkimizda"));
+const Iletisim = lazy(() => import("./pages/Iletisim"));
+const UreticiTedarikciKesfi = lazy(() => import("./pages/UreticiTedarikciKesfi"));
+const TekIhaleTanitim = lazy(() => import("./pages/TekIhaleTanitim"));
+const TekPazarTanitim = lazy(() => import("./pages/TekPazarTanitim"));
+const SSS = lazy(() => import("./pages/SSS"));
+const GizlilikKosullari = lazy(() => import("./pages/GizlilikKosullari"));
+const KVKKAydinlatma = lazy(() => import("./pages/KVKKAydinlatma"));
+const KullanimKosullari = lazy(() => import("./pages/KullanimKosullari"));
+const MesafeliSatisSozlesmesi = lazy(() => import("./pages/MesafeliSatisSozlesmesi"));
+const SifreSifirla = lazy(() => import("./pages/SifreSifirla"));
+const Paketim = lazy(() => import("./pages/Paketim"));
+const DashboardDestek = lazy(() => import("./pages/DashboardDestek"));
+const DashboardDestekDetay = lazy(() => import("./pages/DashboardDestekDetay"));
+const HizmetBilgileri = lazy(() => import("./pages/HizmetBilgileri"));
+const UrunBilgileri = lazy(() => import("./pages/UrunBilgileri"));
+const UrunKategorisi = lazy(() => import("./pages/UrunKategorisi"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Admin pages
+const AdminGiris = lazy(() => import("./pages/admin/AdminGiris"));
+const AdminPanel = lazy(() => import("./pages/admin/AdminPanel"));
+const AdminKullanicilar = lazy(() => import("./pages/admin/AdminKullanicilar"));
+const AdminFirmalar = lazy(() => import("./pages/admin/AdminFirmalar"));
+const AdminIhaleler = lazy(() => import("./pages/admin/AdminIhaleler"));
+const AdminUrunler = lazy(() => import("./pages/admin/AdminUrunler"));
+const AdminSikayetler = lazy(() => import("./pages/admin/AdminSikayetler"));
+const AdminDestek = lazy(() => import("./pages/admin/AdminDestek"));
+const AdminPaketler = lazy(() => import("./pages/admin/AdminPaketler"));
+const AdminIslemler = lazy(() => import("./pages/admin/AdminIslemler"));
+const AdminKisitlamalar = lazy(() => import("./pages/admin/AdminKisitlamalar"));
+const AdminReklam = lazy(() => import("./pages/admin/AdminReklam"));
 
 const queryClient = new QueryClient();
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => (
   <AdminAuthProvider>{children}</AdminAuthProvider>
+);
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-screen">
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
 );
 
 const App = () => (
@@ -70,66 +83,69 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <RouteStateManager />
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/test-index" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/anasayfa" element={<AnaSayfa />} />
-          <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
-          <Route path="/manuihale" element={<ManuIhale />} />
-          <Route path="/manuihale/yeni" element={<YeniIhale />} />
-          <Route path="/tekihale" element={<TekIhale />} />
-          <Route path="/tekihale/:id" element={<IhaleDetay />} />
-          <Route path="/ihale/:id" element={<IhaleDetay />} />
-          <Route path="/manuihale/duzenle/:id" element={<YeniIhale />} />
-          <Route path="/manuihale/takip/:id" element={<IhaleTakip />} />
-          <Route path="/tekliflerim" element={<Tekliflerim />} />
-          <Route path="/manupazar" element={<ManuPazar />} />
-          <Route path="/manupazar/yeni" element={<YeniUrun />} />
-          <Route path="/manupazar/duzenle/:id" element={<YeniUrun />} />
-          <Route path="/favoriler" element={<Favoriler />} />
-          <Route path="/mesajlar" element={<Mesajlar />} />
-          <Route path="/bildirimler" element={<Bildirimler />} />
-          <Route path="/paketim" element={<Paketim />} />
-          <Route path="/destek" element={<DashboardDestek />} />
-          <Route path="/destek/:id" element={<DashboardDestekDetay />} />
-          <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
-          <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
-          <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
-          <Route path="/giris-kayit" element={<GirisKayit />} />
-          <Route path="/urun/:id" element={<UrunDetay />} />
-          <Route path="/firma/:id" element={<FirmaDetay />} />
-          <Route path="/tekrehber" element={<TekRehber />} />
-          <Route path="/ayarlar" element={<ProfilAyarlari />} />
-          <Route path="/hakkimizda" element={<Hakkimizda />} />
-          <Route path="/iletisim" element={<Iletisim />} />
-          <Route path="/uretici-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
-          <Route path="/tekihale-tanitim" element={<TekIhaleTanitim />} />
-          <Route path="/tekpazar-tanitim" element={<TekPazarTanitim />} />
-          <Route path="/sss" element={<SSS />} />
-          <Route path="/gizlilik-kosullari" element={<GizlilikKosullari />} />
-          <Route path="/kvkk-aydinlatma" element={<KVKKAydinlatma />} />
-          <Route path="/kullanim-kosullari" element={<KullanimKosullari />} />
-          <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
-          <Route path="/sifre-sifirla" element={<SifreSifirla />} />
-          
-          {/* Admin Panel Routes */}
-          <Route path="/yonetim" element={<AdminRoute><AdminGiris /></AdminRoute>} />
-          <Route path="/yonetim/panel" element={<AdminRoute><AdminPanel /></AdminRoute>} />
-          <Route path="/yonetim/kullanicilar" element={<AdminRoute><AdminKullanicilar /></AdminRoute>} />
-          <Route path="/yonetim/firmalar" element={<AdminRoute><AdminFirmalar /></AdminRoute>} />
-          <Route path="/yonetim/ihaleler" element={<AdminRoute><AdminIhaleler /></AdminRoute>} />
-          <Route path="/yonetim/urunler" element={<AdminRoute><AdminUrunler /></AdminRoute>} />
-          <Route path="/yonetim/sikayetler" element={<AdminRoute><AdminSikayetler /></AdminRoute>} />
-          <Route path="/yonetim/paketler" element={<AdminRoute><AdminPaketler /></AdminRoute>} />
-          <Route path="/yonetim/destek" element={<AdminRoute><AdminDestek /></AdminRoute>} />
-          <Route path="/yonetim/islemler" element={<AdminRoute><AdminIslemler /></AdminRoute>} />
-          <Route path="/yonetim/kisitlamalar" element={<AdminRoute><AdminKisitlamalar /></AdminRoute>} />
-          <Route path="/yonetim/reklam" element={<AdminRoute><AdminReklam /></AdminRoute>} />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/test-index" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/anasayfa" element={<AnaSayfa />} />
+            <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
+            <Route path="/manuihale" element={<ManuIhale />} />
+            <Route path="/manuihale/yeni" element={<YeniIhale />} />
+            <Route path="/tekihale" element={<TekIhale />} />
+            <Route path="/tekihale/:id" element={<IhaleDetay />} />
+            <Route path="/ihale/:id" element={<IhaleDetay />} />
+            <Route path="/manuihale/duzenle/:id" element={<YeniIhale />} />
+            <Route path="/manuihale/takip/:id" element={<IhaleTakip />} />
+            <Route path="/tekliflerim" element={<Tekliflerim />} />
+            <Route path="/manupazar" element={<ManuPazar />} />
+            <Route path="/manupazar/yeni" element={<YeniUrun />} />
+            <Route path="/manupazar/duzenle/:id" element={<YeniUrun />} />
+            <Route path="/favoriler" element={<Favoriler />} />
+            <Route path="/mesajlar" element={<Mesajlar />} />
+            <Route path="/bildirimler" element={<Bildirimler />} />
+            <Route path="/paketim" element={<Paketim />} />
+            <Route path="/destek" element={<DashboardDestek />} />
+            <Route path="/destek/:id" element={<DashboardDestekDetay />} />
+            <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
+            <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
+            <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
+            <Route path="/giris-kayit" element={<GirisKayit />} />
+            <Route path="/urun/:id" element={<UrunDetay />} />
+            <Route path="/firma/:id" element={<FirmaDetay />} />
+            <Route path="/tekrehber" element={<TekRehber />} />
+            <Route path="/ayarlar" element={<ProfilAyarlari />} />
+            <Route path="/profil-ayarlari" element={<ProfilAyarlari />} />
+            <Route path="/hakkimizda" element={<Hakkimizda />} />
+            <Route path="/iletisim" element={<Iletisim />} />
+            <Route path="/uretici-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
+            <Route path="/tekihale-tanitim" element={<TekIhaleTanitim />} />
+            <Route path="/tekpazar-tanitim" element={<TekPazarTanitim />} />
+            <Route path="/sss" element={<SSS />} />
+            <Route path="/gizlilik-kosullari" element={<GizlilikKosullari />} />
+            <Route path="/kvkk-aydinlatma" element={<KVKKAydinlatma />} />
+            <Route path="/kullanim-kosullari" element={<KullanimKosullari />} />
+            <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
+            <Route path="/sifre-sifirla" element={<SifreSifirla />} />
+            
+            {/* Admin Panel Routes */}
+            <Route path="/yonetim" element={<AdminRoute><AdminGiris /></AdminRoute>} />
+            <Route path="/yonetim/panel" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+            <Route path="/yonetim/kullanicilar" element={<AdminRoute><AdminKullanicilar /></AdminRoute>} />
+            <Route path="/yonetim/firmalar" element={<AdminRoute><AdminFirmalar /></AdminRoute>} />
+            <Route path="/yonetim/ihaleler" element={<AdminRoute><AdminIhaleler /></AdminRoute>} />
+            <Route path="/yonetim/urunler" element={<AdminRoute><AdminUrunler /></AdminRoute>} />
+            <Route path="/yonetim/sikayetler" element={<AdminRoute><AdminSikayetler /></AdminRoute>} />
+            <Route path="/yonetim/paketler" element={<AdminRoute><AdminPaketler /></AdminRoute>} />
+            <Route path="/yonetim/destek" element={<AdminRoute><AdminDestek /></AdminRoute>} />
+            <Route path="/yonetim/islemler" element={<AdminRoute><AdminIslemler /></AdminRoute>} />
+            <Route path="/yonetim/kisitlamalar" element={<AdminRoute><AdminKisitlamalar /></AdminRoute>} />
+            <Route path="/yonetim/reklam" element={<AdminRoute><AdminReklam /></AdminRoute>} />
 
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
