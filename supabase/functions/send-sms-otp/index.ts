@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const VERIMOR_API_URL = "https://sms.verimor.com.tr/v2/send.json";
+const SMS_API_URL = "http://194.62.55.240:3000/api/send-sms";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
