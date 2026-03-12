@@ -619,7 +619,7 @@ export default function Mesajlar() {
         </div>
 
         {/* Right: Chat area */}
-        <div className="flex-1 flex flex-col">
+        <div className={`flex-1 flex flex-col ${!selectedConv ? "hidden md:flex" : "flex"}`}>
           {!selectedConv ? (
             <div className="flex-1 flex items-center justify-center text-muted-foreground">
               <p>Bir konuşma seçin</p>
