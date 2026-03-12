@@ -364,6 +364,7 @@ export default function IhaleDetay() {
 
     if (!ihaleData) { setLoading(false); return; }
     setIhale(ihaleData);
+    const ihaleId = ihaleData.id;
 
     // Images - load from ihale_fotograflar table, fallback to foto_url
     const { data: fotoRows } = await supabase
