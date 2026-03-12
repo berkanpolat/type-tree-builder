@@ -1154,6 +1154,9 @@ export default function FirmaDetay() {
       {firma && (
         <BildirDialog open={bildirOpen} onOpenChange={setBildirOpen} tur="profil" referansId={firma.id} />
       )}
+      {lightboxIndex !== null && galeri.length > 0 && (
+        <GalleryLightbox images={galeri} initialIndex={lightboxIndex} onClose={() => setLightboxIndex(null)} />
+      )}
       <Footer />
       <UpgradeDialog
         open={msgUpgradeOpen}
