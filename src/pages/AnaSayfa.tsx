@@ -745,7 +745,7 @@ export default function AnaSayfa() {
     <div className="min-h-screen bg-muted/30 font-sans">
       <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
 
-      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
+      <main className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
         {/* Search Header */}
         <HeroSearchSection
           label="ÜRÜNLER"
@@ -761,7 +761,7 @@ export default function AnaSayfa() {
         />
 
         {/* Category Tabs */}
-        <div className="bg-background rounded-xl px-6 border border-border">
+        <div className="bg-background rounded-xl px-3 md:px-6 border border-border">
           <KategoriMegaMenu
             kategoriler={URUN_KATEGORILERI}
             selectedKategori={selectedKategori}
@@ -801,15 +801,15 @@ export default function AnaSayfa() {
               />
             )}
 
-            <div className="flex-1 space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="flex-1 space-y-4 min-w-0">
+              <div className="flex items-center justify-between gap-2">
                 <p className="text-sm text-muted-foreground">
                   <span className="font-semibold text-foreground">{totalItems}</span> ürün bulundu
                 </p>
                 <div className="flex items-center gap-2">
-                  <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+                  <ArrowUpDown className="w-4 h-4 text-muted-foreground hidden sm:block" />
                   <Select value={sortBy} onValueChange={setSortBy}>
-                    <SelectTrigger className="w-[180px] h-9 text-sm">
+                    <SelectTrigger className="w-[130px] sm:w-[180px] h-9 text-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover z-50">
@@ -831,7 +831,7 @@ export default function AnaSayfa() {
                 </div>
               ) : (
                 <>
-                  <div className={`grid gap-4 ${selectedKategori ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-4" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"}`}>
+                  <div className={`grid gap-3 md:gap-4 ${selectedKategori ? "grid-cols-2 md:grid-cols-3 xl:grid-cols-4" : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"}`}>
                     {paginatedUrunler.map(renderProductCard)}
                   </div>
 
@@ -906,7 +906,7 @@ export default function AnaSayfa() {
                 Henüz aktif ürün bulunmamaktadır.
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4">
                 {allUrunler.slice(0, 24).map(renderProductCard)}
               </div>
             )}

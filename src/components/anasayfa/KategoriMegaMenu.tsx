@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronDown } from "lucide-react";
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 
@@ -15,7 +15,6 @@ interface Props {
   onSelect: (kategoriName: string, grupId?: string, turId?: string) => void;
 }
 
-// In-memory caches to avoid repeated DB calls
 const katMapCache: Record<string, string> = {};
 const grupCache: Record<string, KategoriItem[]> = {};
 const turCache: Record<string, KategoriItem[]> = {};
@@ -32,7 +31,12 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Load category name -> id map (once, cached globally)
+  // Mobile expanded state
+  const [mobileExpandedKat, setMobileExpandedKat] = useState<string | null>(null);
+  const [mobileGruplar, setMobileGruplar] = useState<KategoriItem[]>([]);
+  const [mobileExpandedGrup, setMobileExpandedGrup] = useState<string | null>(null);
+  const [mobileTurler, setMobileTurler] = useState<KategoriItem[]>([]);
+
   useEffect(() => {
     if (katMapLoaded) return;
     supabase
@@ -49,20 +53,17 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
       });
   }, []);
 
-  // Fetch groups when category hovered (with cache)
+  // Desktop: Fetch groups when category hovered
   useEffect(() => {
     if (!hoveredKat) { setGruplar([]); setTurler([]); return; }
     const katId = katMap[hoveredKat];
     if (!katId) { setGruplar([]); return; }
-
-    // Check cache first
     if (grupCache[katId]) {
       setGruplar(grupCache[katId]);
       setTurler([]);
       setHoveredGrup(null);
       return;
     }
-
     setGrupLoading(true);
     setTurler([]);
     setHoveredGrup(null);
@@ -79,15 +80,10 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
       });
   }, [hoveredKat, katMap]);
 
-  // Fetch types when group hovered (with cache)
+  // Desktop: Fetch types when group hovered
   useEffect(() => {
     if (!hoveredGrup) { setTurler([]); return; }
-
-    if (turCache[hoveredGrup]) {
-      setTurler(turCache[hoveredGrup]);
-      return;
-    }
-
+    if (turCache[hoveredGrup]) { setTurler(turCache[hoveredGrup]); return; }
     setTurLoading(true);
     supabase
       .from("firma_bilgi_secenekleri")
@@ -101,6 +97,40 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
         setTurLoading(false);
       });
   }, [hoveredGrup]);
+
+  // Mobile: Fetch groups when category tapped
+  useEffect(() => {
+    if (!mobileExpandedKat) { setMobileGruplar([]); return; }
+    const katId = katMap[mobileExpandedKat];
+    if (!katId) return;
+    if (grupCache[katId]) { setMobileGruplar(grupCache[katId]); return; }
+    supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name")
+      .eq("parent_id", katId)
+      .order("name")
+      .then(({ data }) => {
+        const result = data || [];
+        grupCache[katId] = result;
+        setMobileGruplar(result);
+      });
+  }, [mobileExpandedKat, katMap]);
+
+  // Mobile: Fetch types when group tapped
+  useEffect(() => {
+    if (!mobileExpandedGrup) { setMobileTurler([]); return; }
+    if (turCache[mobileExpandedGrup]) { setMobileTurler(turCache[mobileExpandedGrup]); return; }
+    supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name")
+      .eq("parent_id", mobileExpandedGrup)
+      .order("name")
+      .then(({ data }) => {
+        const result = data || [];
+        turCache[mobileExpandedGrup] = result;
+        setMobileTurler(result);
+      });
+  }, [mobileExpandedGrup]);
 
   const handleMouseEnterKat = (katName: string) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -123,10 +153,32 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
     setHoveredGrup(null);
   };
 
+  const handleMobileKatToggle = (kat: string) => {
+    if (mobileExpandedKat === kat) {
+      setMobileExpandedKat(null);
+      setMobileExpandedGrup(null);
+    } else {
+      setMobileExpandedKat(kat);
+      setMobileExpandedGrup(null);
+      onSelect(kat);
+    }
+  };
+
+  const handleMobileGrupToggle = (grupId: string) => {
+    if (mobileExpandedGrup === grupId) {
+      setMobileExpandedGrup(null);
+    } else {
+      setMobileExpandedGrup(grupId);
+      onSelect(mobileExpandedKat!, grupId);
+    }
+  };
+
+  const displayName = (kat: string) => kat === "Hazır Giyim (Satış)" ? "Hazır Giyim" : kat;
+
   return (
     <div className="relative" ref={menuRef}>
-      {/* Category bar */}
-      <div className="flex items-center justify-center gap-8 overflow-x-auto py-3 scrollbar-hide">
+      {/* Desktop: horizontal tab bar with hover mega menu */}
+      <div className="hidden md:flex items-center justify-center gap-8 overflow-x-auto py-3 scrollbar-hide">
         {kategoriler.map((kat) => (
           <button
             key={kat}
@@ -141,15 +193,15 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
                   : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            {kat === "Hazır Giyim (Satış)" ? "Hazır Giyim" : kat}
+            {displayName(kat)}
           </button>
         ))}
       </div>
 
-      {/* Mega menu dropdown */}
+      {/* Desktop mega menu dropdown */}
       {hoveredKat && (gruplar.length > 0 || grupLoading) && (
         <div
-          className="absolute left-0 right-0 top-full bg-background border border-border rounded-b-xl shadow-xl z-50 flex max-h-[400px]"
+          className="absolute left-0 right-0 top-full bg-background border border-border rounded-b-xl shadow-xl z-50 hidden md:flex max-h-[400px]"
           onMouseEnter={handleMouseEnterDropdown}
           onMouseLeave={handleMouseLeaveMenu}
         >
@@ -159,7 +211,6 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
             </div>
           ) : (
             <>
-              {/* Left: Groups */}
               <div className="w-56 border-r border-border py-2 shrink-0 overflow-y-auto">
                 {gruplar.map((grup) => (
                   <button
@@ -177,8 +228,6 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
                   </button>
                 ))}
               </div>
-
-              {/* Right: Types */}
               <div className="flex-1 p-4 overflow-y-auto">
                 {hoveredGrup ? (
                   turler.length > 0 ? (
@@ -208,6 +257,61 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
           )}
         </div>
       )}
+
+      {/* Mobile: scrollable pill bar + expandable accordion below */}
+      <div className="md:hidden">
+        <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide -mx-2 px-2">
+          {kategoriler.map((kat) => (
+            <button
+              key={kat}
+              onClick={() => handleMobileKatToggle(kat)}
+              className={`whitespace-nowrap text-xs font-medium px-3 py-1.5 rounded-full border transition-colors shrink-0 ${
+                selectedKategori === kat
+                  ? "bg-secondary text-secondary-foreground border-secondary"
+                  : "bg-background text-muted-foreground border-border hover:border-foreground"
+              }`}
+            >
+              {displayName(kat)}
+            </button>
+          ))}
+        </div>
+
+        {/* Mobile accordion for subcategories */}
+        {mobileExpandedKat && mobileGruplar.length > 0 && (
+          <div className="border-t border-border py-2 space-y-1 max-h-60 overflow-y-auto">
+            {mobileGruplar.map((grup) => (
+              <div key={grup.id}>
+                <button
+                  onClick={() => handleMobileGrupToggle(grup.id)}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-sm rounded-lg transition-colors ${
+                    mobileExpandedGrup === grup.id ? "bg-muted text-secondary font-medium" : "text-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  <span>{grup.name}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${mobileExpandedGrup === grup.id ? "rotate-180" : ""}`} />
+                </button>
+                {mobileExpandedGrup === grup.id && mobileTurler.length > 0 && (
+                  <div className="pl-4 py-1 space-y-0.5">
+                    {mobileTurler.map((tur) => (
+                      <button
+                        key={tur.id}
+                        onClick={() => {
+                          onSelect(mobileExpandedKat!, mobileExpandedGrup!, tur.id);
+                          setMobileExpandedKat(null);
+                          setMobileExpandedGrup(null);
+                        }}
+                        className="w-full text-left text-sm text-muted-foreground hover:text-secondary py-1.5 px-2 rounded transition-colors"
+                      >
+                        {tur.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
