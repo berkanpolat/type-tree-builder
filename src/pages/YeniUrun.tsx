@@ -337,7 +337,7 @@ export default function YeniUrun() {
             varyant_1_value: v.varyant_1_value,
             varyant_2_label: v.varyant_2_label || "",
             varyant_2_value: v.varyant_2_value || "",
-            foto_url: v.foto_url,
+            foto_urls: [v.foto_url],
           });
         }
         priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
