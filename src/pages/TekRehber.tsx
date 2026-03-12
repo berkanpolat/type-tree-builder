@@ -512,7 +512,7 @@ export default function TekRehber() {
 
         {/* Full-width banner */}
         <div
-          className="rounded-xl overflow-hidden cursor-pointer mx-auto"
+          className="hidden md:block rounded-xl overflow-hidden cursor-pointer mx-auto"
           style={{
             maxWidth: 1200,
             height: 128,

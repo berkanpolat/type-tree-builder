@@ -1561,7 +1561,7 @@ export default function IhaleDetay() {
 
         {/* Banner */}
         <div
-          className="rounded-xl overflow-hidden mt-8 cursor-pointer mx-auto"
+          className="hidden md:block rounded-xl overflow-hidden mt-8 cursor-pointer mx-auto"
           style={{
             maxWidth: 1060,
             height: 128,

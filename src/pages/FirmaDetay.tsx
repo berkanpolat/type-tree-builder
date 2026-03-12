@@ -1098,7 +1098,7 @@ export default function FirmaDetay() {
 
             {/* Reklam alanı */}
             <div
-              className="rounded-xl overflow-hidden border border-border cursor-pointer mx-auto"
+              className="hidden md:block rounded-xl overflow-hidden border border-border cursor-pointer mx-auto"
               style={{ maxWidth: 300, height: 250 }}
               onClick={() => sidebarBanner.linkUrl && window.open(sidebarBanner.linkUrl, "_blank")}
             >

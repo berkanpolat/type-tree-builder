@@ -439,7 +439,7 @@ export default function TekIhale() {
             </FilterSection>
             {/* Sidebar banner */}
             <div
-              className="rounded-xl overflow-hidden border border-border cursor-pointer"
+              className="hidden lg:block rounded-xl overflow-hidden border border-border cursor-pointer"
               onClick={() => ihaleSidebarBanner.linkUrl && window.open(ihaleSidebarBanner.linkUrl, "_blank")}
             >
               {ihaleSidebarBanner.url ? (
@@ -534,7 +534,7 @@ export default function TekIhale() {
                     </Card>
                     {showBannerAfter && (
                       <div
-                        className="rounded-xl overflow-hidden h-28 cursor-pointer mt-4"
+                        className="hidden md:block rounded-xl overflow-hidden h-28 cursor-pointer mt-4"
                         style={ihaleAltBanner.url ? undefined : { background: "linear-gradient(to right, hsl(var(--primary)), hsl(var(--primary) / 0.8))" }}
                         onClick={() => ihaleAltBanner.linkUrl && window.open(ihaleAltBanner.linkUrl, "_blank")}
                       >
