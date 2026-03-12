@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import RouteStateManager from "./components/RouteStateManager";
+import RoutePreloader from "./components/RoutePreloader";
 
 // Only GirisKayit is eagerly loaded (auth gate)
 import GirisKayit from "./pages/GirisKayit";
