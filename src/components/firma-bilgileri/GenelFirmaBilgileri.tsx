@@ -50,6 +50,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
   const [linkedin, setLinkedin] = useState("");
   const [xTwitter, setXTwitter] = useState("");
   const [tiktok, setTiktok] = useState("");
+  const [youtube, setYoutube] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [kapakUrl, setKapakUrl] = useState("");
   const [firmaHakkinda, setFirmaHakkinda] = useState("");
