@@ -2016,7 +2016,7 @@ export type Database = {
         Returns: boolean
       }
       check_registration_duplicate: {
-        Args: { p_email: string; p_phone?: string }
+        Args: { p_email: string; p_exclude_user_id?: string; p_phone?: string }
         Returns: Json
       }
       generate_firma_slug: { Args: { p_unvani: string }; Returns: string }
@@ -2065,6 +2065,8 @@ export type Database = {
         Args: { _ihale_id: string; _user_id: string }
         Returns: boolean
       }
+      normalize_email: { Args: { p_email: string }; Returns: string }
+      normalize_phone: { Args: { p_phone: string }; Returns: string }
       register_user: {
         Args: {
           p_ad: string

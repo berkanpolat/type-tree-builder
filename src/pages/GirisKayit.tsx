@@ -250,15 +250,27 @@ const GirisKayit = () => {
     if (!isValidEmail(email)) return;
     setRegisterLoading(true);
     try {
-      // Check duplicate email via RPC
-      const { data: dupResult } = await supabase.rpc("check_registration_duplicate", { p_email: email });
+      const fullPhone = getFullPhone();
+
+      // Final duplicate check (email + phone) via RPC
+      const { data: dupResult } = await supabase.rpc("check_registration_duplicate", {
+        p_email: email,
+        p_phone: fullPhone,
+      });
+
       if (dupResult && (dupResult as any).email_exists) {
+        setEmailDuplicate(true);
         toast({ title: "Hata", description: "Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
         setRegisterLoading(false);
         return;
       }
 
-      const fullPhone = getFullPhone();
+      if (dupResult && (dupResult as any).phone_exists) {
+        setPhoneDuplicate(true);
+        toast({ title: "Hata", description: "Bu telefon numarası ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
+        setRegisterLoading(false);
+        return;
+      }
       const randomPassword = crypto.randomUUID() + "Aa1!";
 
       const { data: authData, error: authError } = await supabase.auth.signUp({
