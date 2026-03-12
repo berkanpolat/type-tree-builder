@@ -97,6 +97,7 @@ const paraBirimiSymbol: Record<string, string> = {
 
 export default function AnaSayfa() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const location = useLocation();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const bannerAna = useBanner("anasayfa-ana-banner", bannerKomisyonFallback);
