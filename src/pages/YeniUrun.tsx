@@ -830,34 +830,28 @@ export default function YeniUrun() {
                       <div key={alan.label}>
                         <Label>{alan.label}*</Label>
                         {alan.type === "dropdown" ? (
-                          <Select value={teknikDetaylar[alan.label] || ""}
-                            onValueChange={(v) => {
-                              setTeknikDetaylar(prev => ({ ...prev, [alan.label]: v }));
-                              // If a dependent field depends on this, load its children
+                          <MultiSelectDropdown
+                            options={dropdownOptions[alan.kategoriName!] || []}
+                            selected={Array.isArray(teknikDetaylar[alan.label]) ? teknikDetaylar[alan.label] as string[] : teknikDetaylar[alan.label] ? [teknikDetaylar[alan.label] as string] : []}
+                            onChange={(vals) => {
+                              setTeknikDetaylar(prev => ({ ...prev, [alan.label]: vals }));
                               const dependentField = teknikAlanlar.find(a => a.type === "dependent_dropdown" && a.dependsOn === alan.label);
                               if (dependentField) {
-                                setTeknikDetaylar(prev => ({ ...prev, [dependentField.label]: "" }));
-                                loadDependentOptions(alan.label, v);
+                                setTeknikDetaylar(prev => ({ ...prev, [dependentField.label]: [] }));
+                                // Load dependent options for all selected parents
+                                loadDependentOptionsMulti(alan.label, vals);
                               }
-                            }}>
-                            <SelectTrigger><SelectValue placeholder={`${alan.label} seçiniz`} /></SelectTrigger>
-                            <SelectContent className="bg-popover z-50">
-                              {(dropdownOptions[alan.kategoriName!] || []).map(opt => (
-                                <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                            }}
+                            placeholder={`${alan.label} seçiniz`}
+                          />
                         ) : alan.type === "dependent_dropdown" ? (
-                          <Select value={teknikDetaylar[alan.label] || ""}
-                            onValueChange={(v) => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: v }))}
-                            disabled={!teknikDetaylar[alan.dependsOn!]}>
-                            <SelectTrigger><SelectValue placeholder={teknikDetaylar[alan.dependsOn!] ? `${alan.label} seçiniz` : `Önce ${alan.dependsOn} seçiniz`} /></SelectTrigger>
-                            <SelectContent className="bg-popover z-50">
-                              {(dependentOptions[alan.dependsOn!] || []).map(opt => (
-                                <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <MultiSelectDropdown
+                            options={dependentOptions[alan.dependsOn!] || []}
+                            selected={Array.isArray(teknikDetaylar[alan.label]) ? teknikDetaylar[alan.label] as string[] : teknikDetaylar[alan.label] ? [teknikDetaylar[alan.label] as string] : []}
+                            onChange={(vals) => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: vals }))}
+                            placeholder={teknikDetaylar[alan.dependsOn!] && (Array.isArray(teknikDetaylar[alan.dependsOn!]) ? (teknikDetaylar[alan.dependsOn!] as string[]).length > 0 : true) ? `${alan.label} seçiniz` : `Önce ${alan.dependsOn} seçiniz`}
+                            disabled={!teknikDetaylar[alan.dependsOn!] || (Array.isArray(teknikDetaylar[alan.dependsOn!]) && (teknikDetaylar[alan.dependsOn!] as string[]).length === 0)}
+                          />
                         ) : alan.type === "date" ? (
                           <Input type="date" value={teknikDetaylar[alan.label] || ""} onChange={e => setTeknikDetaylar(prev => ({ ...prev, [alan.label]: e.target.value }))} />
                         ) : alan.type === "number" ? (
