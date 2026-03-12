@@ -8,6 +8,7 @@ import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
 import Footer from "@/components/Footer";
+import { useToast } from "@/hooks/use-toast";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
