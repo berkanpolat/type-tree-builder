@@ -95,6 +95,7 @@ const App = () => (
       <BrowserRouter>
         <RouteStateManager />
         <RoutePreloader />
+        <AuthRedirectHandler />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
