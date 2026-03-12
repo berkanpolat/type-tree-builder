@@ -54,11 +54,17 @@ const Paketim = () => {
   useEffect(() => {
     const syncSubscription = async () => {
       try {
+        // Ödeme başarılı ise verify-payment çağır (callback gelmemiş olabilir)
+        if (searchParams.get("odeme") === "basarili") {
+          const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-payment");
+          if (verifyError) console.error("Verify payment error:", verifyError);
+          if (verifyData?.success) {
+            setSuccessDialogOpen(true);
+          }
+        }
+        // Her durumda abonelik durumunu senkronize et
         const { data, error } = await supabase.functions.invoke("check-subscription");
         if (error) console.error("Subscription sync error:", error);
-        if (searchParams.get("checkout") === "success") {
-          setSuccessDialogOpen(true);
-        }
       } catch (e) {
         console.error("Subscription sync failed:", e);
       }

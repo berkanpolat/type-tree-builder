@@ -1596,6 +1596,39 @@ export type Database = {
         }
         Relationships: []
       }
+      odeme_kayitlari: {
+        Row: {
+          created_at: string
+          durum: string
+          id: string
+          merchant_oid: string
+          periyot: string
+          tutar_kurus: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          durum?: string
+          id?: string
+          merchant_oid: string
+          periyot?: string
+          tutar_kurus?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          durum?: string
+          id?: string
+          merchant_oid?: string
+          periyot?: string
+          tutar_kurus?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       paketler: {
         Row: {
           ad: string

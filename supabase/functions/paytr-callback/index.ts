@@ -52,6 +52,19 @@ Deno.serve(async (req) => {
 
     logStep("Hash verified successfully");
 
+    // Supabase client oluştur (ödeme kaydı güncellemesi için üste taşındı)
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { persistSession: false } }
+    );
+
+    // Ödeme kaydını güncelle
+    await supabase
+      .from("odeme_kayitlari")
+      .update({ durum: status === "success" ? "basarili" : "basarisiz", updated_at: new Date().toISOString() })
+      .eq("merchant_oid", merchantOid);
+
     // Parse merchant_oid format: {32hexUserId}{A|Y}{timestamp}
     // Example: 36fe196079bd482facdb84159d414911Y1773314064430
     // userId (no dashes) = first 32 chars, periyot indicator = char at index 32, rest = timestamp
@@ -76,11 +89,6 @@ Deno.serve(async (req) => {
 
     logStep("Parsed merchant_oid", { userId, periyot, periyotIndicator });
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      { auth: { persistSession: false } }
-    );
 
     if (status === "success") {
       logStep("Payment successful, assigning PRO package", { userId, periyot });
