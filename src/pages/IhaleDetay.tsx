@@ -839,7 +839,7 @@ export default function IhaleDetay() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <p className="text-muted-foreground">İhale bulunamadı.</p>
-        <Button onClick={() => navigate("/tekihale")}>İhalelere Dön</Button>
+        <Button onClick={() => navigate("/ihaleler")}>İhalelere Dön</Button>
       </div>
     );
   }
