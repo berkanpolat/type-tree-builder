@@ -952,6 +952,7 @@ export default function UrunDetay() {
                         {varyasyonlar[0]?.varyant_2_label && (
                           <th className="text-left py-2 pr-4 text-muted-foreground font-medium">{varyasyonlar[0].varyant_2_label}</th>
                         )}
+                        <th className="text-left py-2 pr-4 text-muted-foreground font-medium">Adet Aralığı</th>
                         <th className="text-right py-2 text-muted-foreground font-medium">Fiyat</th>
                       </tr>
                     </thead>
@@ -963,6 +964,7 @@ export default function UrunDetay() {
                           </td>
                           <td className="py-2 pr-4 text-foreground">{v.varyant_1_value}</td>
                           {v.varyant_2_label && <td className="py-2 pr-4 text-foreground">{v.varyant_2_value}</td>}
+                          <td className="py-2 pr-4 text-foreground">{v.min_adet}-{v.max_adet}</td>
                           <td className="py-2 text-right font-semibold text-foreground">{sym}{v.birim_fiyat.toFixed(2)}</td>
                         </tr>
                       ))}
