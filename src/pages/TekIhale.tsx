@@ -526,7 +526,7 @@ export default function TekIhale() {
                   <div key={ihale.id}>
                     <Card
                       className="p-5 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => navigate(`/ihaleler/${ihale.id}`)}
+                      onClick={() => navigate(`/ihaleler/${ihale.slug || ihale.id}`)}
                     >
                       <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
                         {/* Image */}
