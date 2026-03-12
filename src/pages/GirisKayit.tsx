@@ -58,6 +58,8 @@ const GirisKayit = () => {
   const [ad, setAd] = useState("");
   const [soyad, setSoyad] = useState("");
   const [email, setEmail] = useState("");
+  const [emailDuplicate, setEmailDuplicate] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const [telefon, setTelefon] = useState("");
   const [countryCode, setCountryCode] = useState("+90");
   const [registerLoading, setRegisterLoading] = useState(false);
@@ -101,6 +103,29 @@ const GirisKayit = () => {
   // Email validation
   const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
 
+  // Debounced email duplicate check
+  useEffect(() => {
+    if (!email || !isValidEmail(email)) {
+      setEmailDuplicate(false);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setCheckingEmail(true);
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("iletisim_email", email)
+          .limit(1);
+        setEmailDuplicate(!!(data && data.length > 0));
+      } catch {
+        setEmailDuplicate(false);
+      } finally {
+        setCheckingEmail(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [email]);
   const handleSendOtp = async () => {
     const fullPhone = getFullPhone();
     const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
@@ -542,9 +567,13 @@ const GirisKayit = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={otpSent}
+                      className={emailDuplicate ? "border-destructive" : ""}
                     />
                     {email && !isValidEmail(email) && (
                       <p className="text-xs text-destructive">Geçerli bir e-posta adresi giriniz</p>
+                    )}
+                    {emailDuplicate && (
+                      <p className="text-xs text-destructive">Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.</p>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -653,7 +682,7 @@ const GirisKayit = () => {
                       <Button
                         type="button"
                         className="flex-1"
-                        onClick={() => {
+                        onClick={async () => {
                           if (!ad || !soyad || !email || !telefon) {
                             toast({ title: "Hata", description: "Lütfen tüm kişisel bilgileri doldurunuz", variant: "destructive" });
                             return;
@@ -662,13 +691,28 @@ const GirisKayit = () => {
                             toast({ title: "Hata", description: "Geçerli bir e-posta adresi giriniz", variant: "destructive" });
                             return;
                           }
+                          if (emailDuplicate) {
+                            toast({ title: "Hata", description: "Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
+                            return;
+                          }
                           if (telefon.replace(/\D/g, "").length < 7) {
                             toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
                             return;
                           }
+                          // Check duplicate phone before OTP
+                          const fullPhone = getFullPhone();
+                          const { data: existingPhone } = await supabase
+                            .from("profiles")
+                            .select("id")
+                            .eq("iletisim_numarasi", fullPhone)
+                            .limit(1);
+                          if (existingPhone && existingPhone.length > 0) {
+                            toast({ title: "Hata", description: "Bu telefon numarası ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
+                            return;
+                          }
                           handleSendOtp();
                         }}
-                        disabled={sendingOtp || !ad || !soyad || !email || !isValidEmail(email) || !telefon}
+                        disabled={sendingOtp || !ad || !soyad || !email || !isValidEmail(email) || emailDuplicate || !telefon}
                       >
                         {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                         Başvuru Yap
