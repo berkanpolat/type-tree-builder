@@ -9,6 +9,7 @@ interface FavFirma {
   id: string;
   firma_id: string;
   firma_unvani: string;
+  slug: string | null;
 }
 
 interface FavUrun {
