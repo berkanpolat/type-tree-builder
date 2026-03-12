@@ -357,8 +357,10 @@ export default function UrunDetay() {
     if (!currentUserId || !id) return;
     if (isFavorited) {
       await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", id);
+      toast({ title: "Favorilerden çıkarıldı" });
     } else {
       await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: id });
+      toast({ title: "Favorilere eklendi" });
     }
     setIsFavorited(!isFavorited);
   };

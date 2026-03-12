@@ -8,6 +8,7 @@ import KategoriMegaMenu from "@/components/anasayfa/KategoriMegaMenu";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
 import UrunFiltreler, { type FilterState } from "@/components/anasayfa/UrunFiltreler";
 import Footer from "@/components/Footer";
+import { useToast } from "@/hooks/use-toast";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -96,6 +97,7 @@ const paraBirimiSymbol: Record<string, string> = {
 
 export default function AnaSayfa() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const location = useLocation();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const bannerAna = useBanner("anasayfa-ana-banner", bannerKomisyonFallback);
@@ -673,8 +675,10 @@ export default function AnaSayfa() {
     if (!currentUserId) return;
     if (isFav) {
       await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", urunId);
+      toast({ title: "Favorilerden çıkarıldı" });
     } else {
       await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: urunId });
+      toast({ title: "Favorilere eklendi" });
     }
     setAllUrunler((prev) => prev.map((u) => u.id === urunId ? { ...u, is_favorited: !isFav } : u));
   };
