@@ -160,7 +160,7 @@ export default function ManuIhale() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <h2 className="text-xl md:text-2xl font-bold text-foreground">İhalelerim</h2>
-          <Button onClick={() => navigate("/manuihale/yeni")} className="gap-2 w-full sm:w-auto">
+          <Button onClick={() => navigate("/ihalelerim/yeni")} className="gap-2 w-full sm:w-auto">
             <Plus className="w-4 h-4" />
             Yeni İhale Oluştur
           </Button>
