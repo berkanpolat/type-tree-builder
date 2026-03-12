@@ -181,6 +181,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
       linkedin: linkedin || null,
       x_twitter: xTwitter || null,
       tiktok: tiktok || null,
+      youtube: youtube || null,
       logo_url: logoUrl || null,
       kapak_fotografi_url: kapakUrl || null,
       firma_hakkinda: firmaHakkinda || null,
