@@ -477,9 +477,9 @@ export default function YeniIhale() {
     await handleSave();
     if (!ihaleId) return;
     if (isAdminMode) {
-      window.open(`/tekihale/${ihaleId}`, "_blank");
+      window.open(`/ihaleler/${ihaleId}`, "_blank");
     } else {
-      navigate(`/tekihale/${ihaleId}`);
+      navigate(`/ihaleler/${ihaleId}`);
     }
   };
 
