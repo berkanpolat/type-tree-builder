@@ -249,7 +249,7 @@ export default function UrunDetay() {
     const { data: varyantlar } = await supabase
       .from("urun_varyasyonlar")
       .select("id, foto_url, birim_fiyat, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value, min_adet, max_adet")
-      .eq("urun_id", id)
+      .eq("urun_id", urunData.id)
       .order("varyant_1_value")
       .order("min_adet");
     setVaryasyonlar(varyantlar || []);
