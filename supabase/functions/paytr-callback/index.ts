@@ -89,11 +89,6 @@ Deno.serve(async (req) => {
 
     logStep("Parsed merchant_oid", { userId, periyot, periyotIndicator });
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      { auth: { persistSession: false } }
-    );
 
     if (status === "success") {
       logStep("Payment successful, assigning PRO package", { userId, periyot });
