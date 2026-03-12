@@ -473,7 +473,7 @@ export default function TekIhale() {
                     >
                       <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
                         {/* Image */}
-                        <div className="w-[140px] h-[140px] rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                        <div className="w-full sm:w-[140px] h-[140px] rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                           {ihale.foto_url ? (
                             <img src={ihale.foto_url} alt="" className="w-full h-full object-contain" />
                           ) : (
