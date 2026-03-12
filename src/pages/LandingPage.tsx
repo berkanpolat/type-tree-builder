@@ -324,6 +324,7 @@ const LandingPage = () => {
               <img
                 src={badge.img}
                 alt={badge.label}
+                loading="lazy"
                 className={`w-[72px] h-[72px] object-contain opacity-60 hover:opacity-100 transition-opacity ${badge.scale}`}
                 style={{ imageRendering: "crisp-edges" }}
               />
@@ -420,6 +421,7 @@ const LandingPage = () => {
                   key={productSlide}
                   src={currentProduct.img}
                   alt={currentProduct.name}
+                  loading="lazy"
                   className="max-h-80 object-contain animate-fade-in"
                 />
               </div>
@@ -475,11 +477,13 @@ const LandingPage = () => {
               <img
                 src={fabricImg}
                 alt="Tekstil kumaşları"
+                loading="lazy"
                 className="rounded-2xl shadow-lg w-full max-w-md object-cover aspect-[4/3]"
               />
               <img
                 src={warehouseImg}
                 alt="Tekstil deposu"
+                loading="lazy"
                 className="rounded-2xl shadow-lg w-72 object-cover aspect-[4/3] absolute -bottom-8 right-0 border-4 border-background"
               />
             </div>
