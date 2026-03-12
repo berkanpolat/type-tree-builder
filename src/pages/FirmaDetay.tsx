@@ -557,19 +557,19 @@ export default function FirmaDetay() {
     };
 
     fetchAll();
-  }, [id, navigate, toast, packageInfo.loading]);
+  }, [slug, navigate, toast, packageInfo.loading]);
 
   const toggleFavorite = async () => {
-    if (!currentUserId || !id) {
+    if (!currentUserId || !firma) {
       navigate("/giris-kayit");
       return;
     }
     if (isFavorited) {
-      await supabase.from("firma_favoriler").delete().eq("user_id", currentUserId).eq("firma_id", id);
+      await supabase.from("firma_favoriler").delete().eq("user_id", currentUserId).eq("firma_id", firma.id);
       setIsFavorited(false);
       toast({ title: "Favorilerden çıkarıldı" });
     } else {
-      await supabase.from("firma_favoriler").insert({ user_id: currentUserId, firma_id: id });
+      await supabase.from("firma_favoriler").insert({ user_id: currentUserId, firma_id: firma.id });
       setIsFavorited(true);
       toast({ title: "Favorilere eklendi" });
     }
