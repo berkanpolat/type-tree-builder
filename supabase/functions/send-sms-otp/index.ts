@@ -79,7 +79,7 @@ serve(async (req) => {
       body: JSON.stringify({
         username: verimorUsername,
         password: verimorPassword,
-        source_addr: "Tekstil A.S",
+        source_addr: "Tekstil A.Ş",
         valid_for: "48:00",
         datacoding: "0",
         messages: [
