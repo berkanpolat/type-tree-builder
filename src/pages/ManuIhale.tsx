@@ -59,6 +59,7 @@ interface Ihale {
   bitis_tarihi: string | null;
   goruntuleme_sayisi: number;
   created_at: string;
+  slug: string | null;
 }
 
 interface IhaleTeklif {
