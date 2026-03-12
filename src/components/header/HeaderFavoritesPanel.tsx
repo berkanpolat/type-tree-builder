@@ -9,6 +9,7 @@ interface FavFirma {
   id: string;
   firma_id: string;
   firma_unvani: string;
+  slug: string | null;
 }
 
 interface FavUrun {
@@ -39,8 +40,8 @@ export default function HeaderFavoritesPanel() {
     const firmaItems: FavFirma[] = [];
     if (firmaRes.data) {
       for (const f of firmaRes.data) {
-        const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", f.firma_id).single();
-        firmaItems.push({ id: f.id, firma_id: f.firma_id, firma_unvani: firma?.firma_unvani || "—" });
+        const { data: firma } = await supabase.from("firmalar").select("firma_unvani, slug").eq("id", f.firma_id).single();
+        firmaItems.push({ id: f.id, firma_id: f.firma_id, firma_unvani: firma?.firma_unvani || "—", slug: firma?.slug || null });
       }
     }
 
@@ -111,7 +112,7 @@ export default function HeaderFavoritesPanel() {
                   {firmalar.map((f) => (
                     <button
                       key={f.id}
-                      onClick={() => { setOpen(false); navigate(`/firma/${f.firma_id}`); }}
+                      onClick={() => { setOpen(false); navigate(`/${f.slug || f.firma_id}`); }}
                       className="w-full text-left px-4 py-2.5 hover:bg-muted/50 transition-colors flex items-center gap-2.5"
                     >
                       <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">

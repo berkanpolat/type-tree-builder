@@ -121,7 +121,7 @@ const App = () => (
             <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
             <Route path="/giris-kayit" element={<GirisKayit />} />
             <Route path="/urun/:id" element={<UrunDetay />} />
-            <Route path="/firma/:id" element={<FirmaDetay />} />
+            <Route path="/firma/:slug" element={<FirmaDetay />} />
             <Route path="/tekrehber" element={<TekRehber />} />
             <Route path="/ayarlar" element={<ProfilAyarlari />} />
             <Route path="/profil-ayarlari" element={<ProfilAyarlari />} />
@@ -151,6 +151,8 @@ const App = () => (
             <Route path="/yonetim/kisitlamalar" element={<AdminRoute><AdminKisitlamalar /></AdminRoute>} />
             <Route path="/yonetim/reklam" element={<AdminRoute><AdminReklam /></AdminRoute>} />
 
+            {/* Catch-all: try firma slug at root level */}
+            <Route path="/:slug" element={<FirmaDetay />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

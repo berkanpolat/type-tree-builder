@@ -234,7 +234,7 @@ function GalleryLightbox({ images, initialIndex, onClose }: { images: GaleriFoto
 }
 
 export default function FirmaDetay() {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const sidebarBanner = useBanner("firma-detay-sidebar", adBannerImg);
   const { toast } = useToast();
@@ -278,7 +278,7 @@ export default function FirmaDetay() {
   };
 
   useEffect(() => {
-    if (!id || packageInfo.loading) return;
+    if (!slug || packageInfo.loading) return;
 
     const fetchAll = async () => {
       setLoading(true);
@@ -291,17 +291,21 @@ export default function FirmaDetay() {
         setCurrentUserId(user.id);
       }
 
+      // Support both UUID and slug lookup
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
       const { data: firmaData } = await supabase
         .from("firmalar")
         .select("*")
-        .eq("id", id)
+        .eq(isUuid ? "id" : "slug", slug)
         .single();
 
       if (!firmaData) {
-        toast({ title: "Firma bulunamadı", variant: "destructive" });
-        navigate("/anasayfa");
+        // Not a firma slug — show 404
+        navigate("/404", { replace: true });
         return;
       }
+
+      const firmaId = firmaData.id;
 
       // Kendi firması ise kota kontrolü yapma
       if (user && firmaData.user_id !== user.id) {
@@ -310,7 +314,7 @@ export default function FirmaDetay() {
           .from("profil_goruntulemeler" as any)
           .select("id")
           .eq("user_id", user.id)
-          .eq("firma_id", id)
+          .eq("firma_id", firmaId)
           .maybeSingle();
 
         if (!existingView) {
@@ -325,7 +329,7 @@ export default function FirmaDetay() {
           // Görüntüleme kaydı oluştur
           await supabase
             .from("profil_goruntulemeler" as any)
-            .insert({ user_id: user.id, firma_id: id });
+            .insert({ user_id: user.id, firma_id: firmaId });
         }
         // Daha önce görüntülenmişse → serbestçe devam et, hak düşmez
       }
@@ -349,24 +353,24 @@ export default function FirmaDetay() {
               .from("firma_favoriler")
               .select("id")
               .eq("user_id", user.id)
-              .eq("firma_id", id)
+              .eq("firma_id", firmaId)
           : Promise.resolve({ data: [] }),
-        supabase.from("firma_tesisler").select("*").eq("firma_id", id),
-        supabase.from("firma_sertifikalar").select("*").eq("firma_id", id),
-        supabase.from("firma_referanslar").select("*").eq("firma_id", id),
-        supabase.from("firma_galeri").select("*").eq("firma_id", id),
+        supabase.from("firma_tesisler").select("*").eq("firma_id", firmaId),
+        supabase.from("firma_sertifikalar").select("*").eq("firma_id", firmaId),
+        supabase.from("firma_referanslar").select("*").eq("firma_id", firmaId),
+        supabase.from("firma_galeri").select("*").eq("firma_id", firmaId),
         supabase
           .from("urunler")
           .select("id, baslik, foto_url, fiyat, para_birimi, urun_no, durum")
           .eq("user_id", firmaData.user_id)
           .eq("durum", "aktif"),
-        supabase.from("firma_makineler").select("*").eq("firma_id", id),
-        supabase.from("firma_teknolojiler").select("*").eq("firma_id", id),
-        supabase.from("firma_uretim_satis").select("*").eq("firma_id", id),
+        supabase.from("firma_makineler").select("*").eq("firma_id", firmaId),
+        supabase.from("firma_teknolojiler").select("*").eq("firma_id", firmaId),
+        supabase.from("firma_uretim_satis").select("*").eq("firma_id", firmaId),
         supabase
           .from("firma_urun_hizmet_secimler")
           .select("*")
-          .eq("firma_id", id),
+          .eq("firma_id", firmaId),
       ]);
 
       const tesisRows = tesisRes.data || [];
@@ -553,19 +557,19 @@ export default function FirmaDetay() {
     };
 
     fetchAll();
-  }, [id, navigate, toast, packageInfo.loading]);
+  }, [slug, navigate, toast, packageInfo.loading]);
 
   const toggleFavorite = async () => {
-    if (!currentUserId || !id) {
+    if (!currentUserId || !firma) {
       navigate("/giris-kayit");
       return;
     }
     if (isFavorited) {
-      await supabase.from("firma_favoriler").delete().eq("user_id", currentUserId).eq("firma_id", id);
+      await supabase.from("firma_favoriler").delete().eq("user_id", currentUserId).eq("firma_id", firma.id);
       setIsFavorited(false);
       toast({ title: "Favorilerden çıkarıldı" });
     } else {
-      await supabase.from("firma_favoriler").insert({ user_id: currentUserId, firma_id: id });
+      await supabase.from("firma_favoriler").insert({ user_id: currentUserId, firma_id: firma.id });
       setIsFavorited(true);
       toast({ title: "Favorilere eklendi" });
     }

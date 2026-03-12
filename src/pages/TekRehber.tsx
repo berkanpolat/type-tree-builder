@@ -171,7 +171,7 @@ export default function TekRehber() {
     }
 
     let query = supabase.from("firmalar")
-      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id, belge_onayli")
+      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id, belge_onayli, slug")
       .order("firma_unvani").limit(100);
 
     if (selectedFirmaTuru) query = query.eq("firma_turu_id", selectedFirmaTuru);
@@ -440,7 +440,7 @@ export default function TekRehber() {
                   <Card
                     key={firma.id}
                     className="p-4 sm:p-5 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => navigate(`/firma/${firma.id}`)}
+                    onClick={() => navigate(`/${(firma as any).slug || firma.id}`)}
                   >
                     <div className="flex items-start gap-3 sm:gap-4">
                       <div className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
@@ -508,7 +508,7 @@ export default function TekRehber() {
                         </Button>
                         <button
                           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          onClick={() => navigate(`/firma/${firma.id}`)}
+                          onClick={() => navigate(`/${(firma as any).slug || firma.id}`)}
                         >
                           <ArrowRight className="w-3 h-3" /> Profili Gör
                         </button>
