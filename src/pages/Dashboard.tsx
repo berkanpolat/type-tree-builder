@@ -262,7 +262,7 @@ const Dashboard = () => {
                         Bir sonraki yenileme: {new Date(packageInfo.donemBitis).toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" })}
                       </p>
                     )}
-                    <Button variant="outline" size="sm" className="mt-3" onClick={handleManageSubscription}>
+                    <Button variant="outline" size="sm" className="mt-3" onClick={() => navigate("/paketim")}>
                       Aboneliği Yönet
                     </Button>
                   </>
