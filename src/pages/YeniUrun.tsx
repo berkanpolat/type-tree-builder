@@ -248,6 +248,15 @@ export default function YeniUrun() {
     setDependentOptions(prev => ({ ...prev, [parentLabel]: data || [] }));
   };
 
+  const loadDependentOptionsMulti = async (parentLabel: string, parentIds: string[]) => {
+    if (parentIds.length === 0) {
+      setDependentOptions(prev => ({ ...prev, [parentLabel]: [] }));
+      return;
+    }
+    const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("parent_id", parentIds).order("name");
+    setDependentOptions(prev => ({ ...prev, [parentLabel]: data || [] }));
+  };
+
   const loadUrun = async (urunId: string) => {
     const { data } = await supabase.from("urunler").select("*").eq("id", urunId).single();
     if (!data) return;
