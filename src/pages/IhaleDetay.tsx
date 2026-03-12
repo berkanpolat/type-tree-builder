@@ -1567,7 +1567,7 @@ export default function IhaleDetay() {
                   <h3 className="font-bold text-foreground mb-4">Benzer İhaleler</h3>
                   <div className="space-y-3">
                     {benzerIhaleler.map((b) => (
-                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/tekihale/${b.id}`)}>
+                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/ihaleler/${b.id}`)}>
                         <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                           {b.foto_url ? <img src={b.foto_url} alt="" className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
                         </div>
