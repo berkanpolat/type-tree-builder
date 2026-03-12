@@ -48,8 +48,8 @@ export default function HeaderFavoritesPanel() {
     const urunItems: FavUrun[] = [];
     if (urunRes.data) {
       for (const u of urunRes.data) {
-        const { data: urun } = await supabase.from("urunler").select("baslik, foto_url").eq("id", u.urun_id).single();
-        urunItems.push({ id: u.id, urun_id: u.urun_id, baslik: urun?.baslik || "—", foto_url: urun?.foto_url || null });
+        const { data: urun } = await supabase.from("urunler").select("baslik, foto_url, slug").eq("id", u.urun_id).single();
+        urunItems.push({ id: u.id, urun_id: u.urun_id, baslik: urun?.baslik || "—", foto_url: urun?.foto_url || null, slug: urun?.slug || null });
       }
     }
 
