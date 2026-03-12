@@ -329,18 +329,19 @@ export default function IhaleDetay() {
 
   // Fetch ihale
   const fetchIhale = useCallback(async () => {
-    if (!id) return;
+    if (!slugParam) return;
     const adminToken = localStorage.getItem("admin_token");
     // Allow fetch if user is logged in OR admin token exists
     if (!currentUserId && !adminToken) return;
     setLoading(true);
 
     let ihaleData: any = null;
+    const isId = isUUID(slugParam);
 
     const { data: directData, error } = await supabase
       .from("ihaleler")
       .select("*")
-      .eq("id", id)
+      .eq(isId ? "id" : "slug", slugParam)
       .single();
 
     if (directData) {
