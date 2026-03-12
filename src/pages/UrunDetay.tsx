@@ -1113,7 +1113,7 @@ export default function UrunDetay() {
                 }
 
                 return (
-                  <Card key={b.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer" onClick={() => navigate(`/urunler/${(b as any).slug || b.id}`)}>
+                  <Card key={b.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer" onClick={() => navigate(`/urunler/${b.slug || b.id}`)}>
                     <div className="aspect-square bg-muted relative overflow-hidden">
                       {b.foto_url ? (
                         <img src={b.foto_url} alt={b.baslik} className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />
