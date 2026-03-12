@@ -372,13 +372,13 @@ export default function ManuIhale() {
                         <TableCell>
                           <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                             {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8" title="İhale Takip" onClick={() => navigate(`/manuihale/takip/${ihale.id}`)}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title="İhale Takip" onClick={() => navigate(`/ihalelerim/takip/${ihale.id}`)}>
                                 <TrendingUp className="w-4 h-4" />
                               </Button>
                             )}
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
-                              if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/manuihale/duzenle/${ihale.id}`);
-                              else navigate(`/ihale/${ihale.id}`);
+                              if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/ihalelerim/duzenle/${ihale.id}`);
+                              else navigate(`/ihaleler/${ihale.id}`);
                             }}>
                               <ExternalLink className="w-4 h-4" />
                             </Button>
