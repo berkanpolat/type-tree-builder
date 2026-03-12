@@ -265,6 +265,7 @@ export default function FirmaDetay() {
   const [urunHizmetItems, setUrunHizmetItems] = useState<{ kategoriId: string; kategoriName: string; secenek: string }[]>([]);
 
   const [activeMenu, setActiveMenu] = useState("hakkinda");
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const scrollToSection = (sectionId: string) => {
