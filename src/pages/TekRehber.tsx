@@ -12,19 +12,19 @@ import { useToast } from "@/hooks/use-toast";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 import {
-  Search,
   MapPin,
   Users,
   Globe,
@@ -34,7 +34,7 @@ import {
   Bookmark,
 } from "lucide-react";
 
-const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
+const PER_PAGE = 20;
 
 interface SearchResult {
   id: string;
@@ -42,7 +42,7 @@ interface SearchResult {
   type: "Firma" | "Tür";
 }
 
-interface FirmaListItem {
+interface FirmaWithExtra {
   id: string;
   firma_unvani: string;
   logo_url: string | null;
@@ -55,9 +55,8 @@ interface FirmaListItem {
   kurulus_tarihi: string | null;
   moq: number | null;
   user_id: string;
-}
-
-interface FirmaWithExtra extends FirmaListItem {
+  belge_onayli: boolean;
+  slug: string | null;
   firma_turu_name?: string;
   firma_tipi_name?: string;
   faaliyet_alani?: string;
@@ -91,7 +90,6 @@ export default function TekRehber() {
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Firma state
   const [firmalar, setFirmalar] = useState<FirmaWithExtra[]>([]);
   const [firmaLoading, setFirmaLoading] = useState(false);
   const [firmaTurleri, setFirmaTurleri] = useState<{ id: string; name: string }[]>([]);
@@ -104,6 +102,14 @@ export default function TekRehber() {
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PER_PAGE));
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm]);
 
   // Click outside
   useEffect(() => {
@@ -127,11 +133,12 @@ export default function TekRehber() {
     });
   }, []);
 
-  // Fetch companies
+  // Fetch companies with pagination
   const fetchFirmalar = useCallback(async () => {
     setFirmaLoading(true);
     const fs = firmaFilterState;
 
+    // Pre-filter junction IDs
     let junctionFirmaIds: string[] | null = null;
     if (fs) {
       const allJunctionIds = Object.values(fs.junctionFilters).flat();
@@ -170,121 +177,132 @@ export default function TekRehber() {
       }
     }
 
-    let query = supabase.from("firmalar")
+    if (junctionFirmaIds !== null && junctionFirmaIds.length === 0) {
+      setFirmalar([]);
+      setTotalCount(0);
+      setFirmaLoading(false);
+      return;
+    }
+
+    // Call RPC for sorted + paginated firma IDs
+    const rpcParams: Record<string, unknown> = {
+      p_page: currentPage,
+      p_per_page: PER_PAGE,
+    };
+    if (selectedFirmaTuru) rpcParams.p_firma_turu_id = selectedFirmaTuru;
+    if (appliedSearchTerm) rpcParams.p_search = appliedSearchTerm;
+    if (fs?.firmaTipleri?.length) rpcParams.p_firma_tipi_ids = fs.firmaTipleri;
+    if (fs?.firmaOlcekleri?.length) rpcParams.p_firma_olcegi_ids = fs.firmaOlcekleri;
+    if (fs?.iller?.length) rpcParams.p_il_ids = fs.iller;
+    if (fs?.moq) rpcParams.p_moq = parseInt(fs.moq);
+    if (junctionFirmaIds) rpcParams.p_firma_ids = junctionFirmaIds;
+
+    const { data: sortedData } = await supabase.rpc("get_sorted_firmalar", rpcParams as any);
+
+    if (!sortedData || !Array.isArray(sortedData) || sortedData.length === 0) {
+      setFirmalar([]);
+      setTotalCount(0);
+      setFirmaLoading(false);
+      return;
+    }
+
+    const sortedIds = (sortedData as any[]).map((s: any) => s.firma_id);
+    const newTotalCount = Number((sortedData as any[])[0]?.total_count || 0);
+    setTotalCount(newTotalCount);
+
+    // Fetch actual firma data for the sorted IDs
+    const { data } = await supabase.from("firmalar")
       .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id, belge_onayli, slug")
-      .order("firma_unvani").limit(100);
+      .in("id", sortedIds);
 
-    if (selectedFirmaTuru) query = query.eq("firma_turu_id", selectedFirmaTuru);
-    if (appliedSearchTerm) query = query.ilike("firma_unvani", `%${appliedSearchTerm}%`);
-
-    if (fs) {
-      if (fs.firmaTipleri.length > 0) query = query.in("firma_tipi_id", fs.firmaTipleri);
-      if (fs.firmaOlcekleri.length > 0) query = query.in("firma_olcegi_id", fs.firmaOlcekleri);
-      if (fs.iller.length > 0) query = query.in("kurulus_il_id", fs.iller);
-      if (fs.moq) query = query.gte("moq", parseInt(fs.moq));
+    if (!data) {
+      setFirmalar([]);
+      setFirmaLoading(false);
+      return;
     }
 
-    if (junctionFirmaIds !== null) {
-      if (junctionFirmaIds.length === 0) { setFirmalar([]); setFirmaLoading(false); return; }
-      query = query.in("id", junctionFirmaIds);
+    // Build lookup maps
+    const ids = new Set<string>();
+    data.forEach((f) => {
+      if (f.firma_tipi_id) ids.add(f.firma_tipi_id);
+      if (f.firma_olcegi_id) ids.add(f.firma_olcegi_id);
+      if (f.kurulus_il_id) ids.add(f.kurulus_il_id);
+      if (f.kurulus_ilce_id) ids.add(f.kurulus_ilce_id);
+    });
+    const allIds = [...ids];
+    let newSecenekMap = { ...secenekMap };
+    if (allIds.length > 0) {
+      const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", allIds);
+      if (names) names.forEach((n) => { newSecenekMap[n.id] = n.name; });
     }
 
-    const { data } = await query;
-    if (data) {
-      const ids = new Set<string>();
-      data.forEach((f) => {
-        if (f.firma_tipi_id) ids.add(f.firma_tipi_id);
-        if (f.firma_olcegi_id) ids.add(f.firma_olcegi_id);
-        if (f.kurulus_il_id) ids.add(f.kurulus_il_id);
-        if (f.kurulus_ilce_id) ids.add(f.kurulus_ilce_id);
-      });
-      const allIds = [...ids];
-      let newSecenekMap = { ...secenekMap };
-      if (allIds.length > 0) {
-        const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", allIds);
-        if (names) names.forEach((n) => { newSecenekMap[n.id] = n.name; });
+    const tipIds = [...new Set(data.map((f) => f.firma_tipi_id))];
+    if (tipIds.length > 0) {
+      const { data: tipNames } = await supabase.from("firma_tipleri").select("id, name").in("id", tipIds);
+      if (tipNames) tipNames.forEach((n) => { newSecenekMap[n.id] = n.name; });
+    }
+
+    const turNameMap: Record<string, string> = {};
+    firmaTurleri.forEach((t) => { turNameMap[t.id] = t.name; });
+
+    const firmaIds = data.map((f) => f.id);
+    const faaliyetMap: Record<string, string> = {};
+    if (firmaIds.length > 0) {
+      const { data: faaliyetData } = await supabase
+        .from("firma_urun_hizmet_secimler")
+        .select("firma_id, secenek_id")
+        .in("firma_id", firmaIds);
+      if (faaliyetData && faaliyetData.length > 0) {
+        const faaliyetSecIds = [...new Set(faaliyetData.map((f) => f.secenek_id))];
+        const { data: faaliyetNames } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", faaliyetSecIds);
+        const fNameMap: Record<string, string> = {};
+        if (faaliyetNames) faaliyetNames.forEach((n) => { fNameMap[n.id] = n.name; });
+        const seen = new Set<string>();
+        faaliyetData.forEach((f) => {
+          if (!seen.has(f.firma_id) && fNameMap[f.secenek_id]) {
+            faaliyetMap[f.firma_id] = fNameMap[f.secenek_id];
+            seen.add(f.firma_id);
+          }
+        });
       }
+    }
 
-      const tipIds = [...new Set(data.map((f) => f.firma_tipi_id))];
-      if (tipIds.length > 0) {
-        const { data: tipNames } = await supabase.from("firma_tipleri").select("id, name").in("id", tipIds);
-        if (tipNames) tipNames.forEach((n) => { newSecenekMap[n.id] = n.name; });
-      }
+    let favSet = new Set<string>();
+    if (currentUserId) {
+      const { data: favs } = await supabase.from("firma_favoriler").select("firma_id").eq("user_id", currentUserId);
+      if (favs) favs.forEach((f) => favSet.add(f.firma_id));
+    }
+    setFirmaFavSet(favSet);
+    setSecenekMap(newSecenekMap);
 
-      const turNameMap: Record<string, string> = {};
-      firmaTurleri.forEach((t) => { turNameMap[t.id] = t.name; });
+    // Build firma map and preserve RPC sort order
+    const firmaMap = new Map<string, typeof data[0]>();
+    data.forEach((f) => firmaMap.set(f.id, f));
 
-      const firmaIds = data.map((f) => f.id);
-      const faaliyetMap: Record<string, string> = {};
-      if (firmaIds.length > 0) {
-        const { data: faaliyetData } = await supabase
-          .from("firma_urun_hizmet_secimler")
-          .select("firma_id, secenek_id")
-          .in("firma_id", firmaIds);
-        if (faaliyetData && faaliyetData.length > 0) {
-          const faaliyetSecIds = [...new Set(faaliyetData.map((f) => f.secenek_id))];
-          const { data: faaliyetNames } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", faaliyetSecIds);
-          const fNameMap: Record<string, string> = {};
-          if (faaliyetNames) faaliyetNames.forEach((n) => { fNameMap[n.id] = n.name; });
-          const seen = new Set<string>();
-          faaliyetData.forEach((f) => {
-            if (!seen.has(f.firma_id) && fNameMap[f.secenek_id]) {
-              faaliyetMap[f.firma_id] = fNameMap[f.secenek_id];
-              seen.add(f.firma_id);
-            }
-          });
-        }
-      }
-
-      let favSet = new Set<string>();
-      if (currentUserId) {
-        const { data: favs } = await supabase.from("firma_favoriler").select("firma_id").eq("user_id", currentUserId);
-        if (favs) favs.forEach((f) => favSet.add(f.firma_id));
-      }
-      setFirmaFavSet(favSet);
-      setSecenekMap(newSecenekMap);
-
-      let enriched: FirmaWithExtra[] = data.map((f) => ({
-        ...f,
-        firma_turu_name: turNameMap[f.firma_turu_id] || "",
-        firma_tipi_name: newSecenekMap[f.firma_tipi_id] || "",
-        faaliyet_alani: faaliyetMap[f.id] || "",
-        is_favorited: favSet.has(f.id),
+    const enriched: FirmaWithExtra[] = sortedIds
+      .map((id) => firmaMap.get(id))
+      .filter(Boolean)
+      .map((f) => ({
+        ...f!,
+        firma_turu_name: turNameMap[f!.firma_turu_id] || "",
+        firma_tipi_name: newSecenekMap[f!.firma_tipi_id] || "",
+        faaliyet_alani: faaliyetMap[f!.id] || "",
+        is_favorited: favSet.has(f!.id),
       }));
 
-      // Sort by PRO status first, then profile completion
-      if (firmaIds.length > 0) {
-        const { data: scores } = await supabase.rpc("get_firma_sort_scores", {
-          p_firma_ids: firmaIds,
-        } as any);
-        if (scores && Array.isArray(scores)) {
-          const scoreMap = new Map<string, { is_pro: boolean; profile_score: number }>();
-          (scores as any[]).forEach((s: any) => scoreMap.set(s.firma_id, { is_pro: s.is_pro, profile_score: s.profile_score }));
-          enriched.sort((a, b) => {
-            const sa = scoreMap.get(a.id) || { is_pro: false, profile_score: 0 };
-            const sb = scoreMap.get(b.id) || { is_pro: false, profile_score: 0 };
-            if (sa.is_pro !== sb.is_pro) return sa.is_pro ? -1 : 1;
-            return sb.profile_score - sa.profile_score;
-          });
-        }
-      }
-
-      setFirmalar(enriched);
-    }
+    setFirmalar(enriched);
     setFirmaLoading(false);
-  }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, firmaTurleri, currentUserId]);
+  }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, firmaTurleri, currentUserId, currentPage]);
 
   useEffect(() => {
     if (currentUserId && selectedFirmaTuru) fetchFirmalar();
   }, [fetchFirmalar, currentUserId, selectedFirmaTuru]);
 
-  // Trigger search on Enter or Ara button — detect firma türü match
+  // Trigger search on Enter or Ara button
   const handleSearch = useCallback(async () => {
     const term = searchTerm.trim();
     if (!term) return;
     setShowDropdown(false);
-
-    // Check if term matches a firma türü
     const matchedTur = firmaTurleri.find((t) => t.name.toLowerCase().includes(term.toLowerCase()));
     if (matchedTur) {
       setSelectedFirmaTuru(matchedTur.id);
@@ -292,11 +310,10 @@ export default function TekRehber() {
       setAppliedSearchTerm("");
       return;
     }
-
     setAppliedSearchTerm(term);
   }, [searchTerm, firmaTurleri]);
 
-  // Lightweight autocomplete - firma names + firma türleri
+  // Autocomplete
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2) {
       setSearchResults([]);
@@ -305,21 +322,17 @@ export default function TekRehber() {
     }
     const timer = setTimeout(async () => {
       const results: SearchResult[] = [];
-
-      // Check firma türü matches
       firmaTurleri.forEach((t) => {
         if (t.name.toLowerCase().includes(searchTerm.toLowerCase())) {
           results.push({ id: t.id, name: t.name, type: "Tür" });
         }
       });
-
       const { data } = await supabase
         .from("firmalar")
         .select("id, firma_unvani")
         .ilike("firma_unvani", `%${searchTerm}%`)
         .limit(6);
       if (data) data.forEach((f) => results.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
-
       setSearchResults(results);
       setShowDropdown(results.length > 0);
     }, 250);
@@ -330,7 +343,6 @@ export default function TekRehber() {
     setSearchTerm(result.name);
     setShowDropdown(false);
     if (result.type === "Tür") {
-      // It's a firma türü — select it
       setSelectedFirmaTuru(result.id);
       setSelectedFirmaTuruName(result.name);
       setAppliedSearchTerm("");
@@ -364,7 +376,6 @@ export default function TekRehber() {
 
   const handleMessageFirma = async (firmaUserId: string) => {
     if (!currentUserId || firmaUserId === currentUserId) return;
-    // Check if conversation already exists
     const { data: existingConv } = await supabase
       .from("conversations")
       .select("id")
@@ -378,7 +389,6 @@ export default function TekRehber() {
         return;
       }
     }
-    // Create or get conversation via RPC
     const { data: convId } = await supabase.rpc("get_or_create_conversation", {
       p_user1: currentUserId,
       p_user2: firmaUserId,
@@ -389,6 +399,29 @@ export default function TekRehber() {
         otherUserId: firmaUserId,
       },
     });
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Generate page numbers to show
+  const getPageNumbers = () => {
+    const pages: (number | "ellipsis")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("ellipsis");
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push("ellipsis");
+      pages.push(totalPages);
+    }
+    return pages;
   };
 
   if (authLoading) {
@@ -404,7 +437,6 @@ export default function TekRehber() {
       <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
-        {/* Search Header */}
         <HeroSearchSection
           label="ÜRETİCİ / TEDARİKÇİ"
           placeholder="Üretici veya tedarikçi ara..."
@@ -421,7 +453,6 @@ export default function TekRehber() {
           onFirmaTuruChange={handleFirmaTuruChange}
         />
 
-        {/* Active search badge */}
         {appliedSearchTerm && (
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="secondary" className="gap-1 px-3 py-1.5">
@@ -431,7 +462,6 @@ export default function TekRehber() {
           </div>
         )}
 
-        {/* Firma Content */}
         <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
           <FirmaFiltreler
             firmaTuruId={selectedFirmaTuru}
@@ -441,7 +471,12 @@ export default function TekRehber() {
 
           <div className="flex-1 space-y-4">
             <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{firmalar.length}</span> firma bulundu
+              <span className="font-semibold text-foreground">{totalCount}</span> firma bulundu
+              {totalPages > 1 && (
+                <span className="ml-1">
+                  (Sayfa {currentPage}/{totalPages})
+                </span>
+              )}
             </p>
             {firmaLoading ? (
               <div className="flex justify-center py-12">
@@ -457,7 +492,7 @@ export default function TekRehber() {
                   <Card
                     key={firma.id}
                     className="p-4 sm:p-5 hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => navigate(`/${(firma as any).slug || firma.id}`)}
+                    onClick={() => navigate(`/${firma.slug || firma.id}`)}
                   >
                     <div className="flex items-start gap-3 sm:gap-4">
                       <div className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
@@ -472,7 +507,7 @@ export default function TekRehber() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-foreground text-base sm:text-lg leading-tight flex items-center gap-1.5 truncate">
                             {firma.firma_unvani}
-                            {(firma as any).belge_onayli && <VerifiedBadge />}
+                            {firma.belge_onayli && <VerifiedBadge />}
                           </h3>
                           {(firma.firma_turu_name || firma.firma_tipi_name) && (
                             <Badge className="bg-primary/10 text-primary border border-primary/20 text-[10px] sm:text-xs font-medium hidden sm:inline-flex">
@@ -504,7 +539,6 @@ export default function TekRehber() {
                           </div>
                         </div>
 
-                        {/* Mobile action buttons */}
                         <div className="flex items-center gap-2 mt-3 sm:hidden" onClick={(e) => e.stopPropagation()}>
                           <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs flex-1" onClick={() => handleMessageFirma(firma.user_id)}>
                             <MessageSquare className="w-3.5 h-3.5" /> Mesaj
@@ -515,7 +549,6 @@ export default function TekRehber() {
                         </div>
                       </div>
 
-                      {/* Desktop action buttons */}
                       <div className="hidden sm:flex flex-col items-end gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                         <button onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)} className="p-1">
                           <Bookmark className={`w-6 h-6 ${firma.is_favorited ? "fill-primary text-primary" : "text-muted-foreground/50"}`} />
@@ -525,7 +558,7 @@ export default function TekRehber() {
                         </Button>
                         <button
                           className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                          onClick={() => navigate(`/${(firma as any).slug || firma.id}`)}
+                          onClick={() => navigate(`/${firma.slug || firma.id}`)}
                         >
                           <ArrowRight className="w-3 h-3" /> Profili Gör
                         </button>
@@ -533,6 +566,47 @@ export default function TekRehber() {
                     </div>
                   </Card>
                 ))}
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="pt-4">
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+
+                        {getPageNumbers().map((page, i) =>
+                          page === "ellipsis" ? (
+                            <PaginationItem key={`ellipsis-${i}`}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          ) : (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                isActive={currentPage === page}
+                                onClick={() => handlePageChange(page)}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          )
+                        )}
+
+                        <PaginationItem>
+                          <PaginationNext
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
               </div>
             )}
           </div>
