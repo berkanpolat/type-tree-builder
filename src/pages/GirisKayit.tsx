@@ -543,7 +543,7 @@ const GirisKayit = () => {
                   <div className="space-y-2">
                     <Label>Firma Ünvanı</Label>
                     <Input placeholder="Firma Ünvanı" value={firmaUnvani} onChange={(e) => {
-                      const val = e.target.value.replace(/\b\w/g, (c) => c.toLocaleUpperCase('tr-TR'));
+                      const val = e.target.value.split(' ').map(w => w.length > 0 ? w.charAt(0).toLocaleUpperCase('tr-TR') + w.slice(1) : w).join(' ');
                       setFirmaUnvani(val);
                     }} />
                   </div>
