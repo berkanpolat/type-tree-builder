@@ -1,5 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+const POSTMARK_API_URL = "https://api.postmarkapp.com/email";
+
+function generateRandomPassword(length = 10): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
+  const array = new Uint8Array(length);
+  crypto.getRandomValues(array);
+  return Array.from(array, (b) => chars[b % chars.length]).join('');
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -363,40 +372,65 @@ Deno.serve(async (req) => {
       
       if (authUser?.email) {
         if (action === "approve-firma") {
-          // Mark user as required to set password on next sign-in
+          // Generate a random password and set it on the user
+          const randomPassword = generateRandomPassword(10);
           try {
             await supabase.auth.admin.updateUserById(firma.user_id, {
+              password: randomPassword,
               user_metadata: {
                 ...(authUser.user_metadata ?? {}),
-                must_set_password: true,
+                must_set_password: false,
               },
             });
           } catch (e) {
-            // Metadata update failure should not block approval
+            console.error("Failed to set random password:", e);
           }
 
-          // Trigger password reset email so user can create their password
-          try {
-            const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-            const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-            // Determine the site URL for redirect
-            const siteUrl = req.headers.get("origin") || Deno.env.get("SITE_URL") || `${supabaseUrl.replace('.supabase.co', '.lovable.app')}`;
-            await fetch(`${supabaseUrl}/auth/v1/recover`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'apikey': supabaseAnonKey,
-              },
-              body: JSON.stringify({
-                email: authUser.email,
-                redirect_to: `${siteUrl}/sifre-sifirla`,
-              }),
-            });
-          } catch (e) {
-            // Recovery email send failed, but approval still succeeds
+          // Send the password via Postmark email
+          const POSTMARK_SERVER_TOKEN = Deno.env.get("POSTMARK_SERVER_TOKEN");
+          if (POSTMARK_SERVER_TOKEN) {
+            try {
+              const siteUrl = req.headers.get("origin") || Deno.env.get("SITE_URL") || "https://type-tree-builder.lovable.app";
+              await fetch(POSTMARK_API_URL, {
+                method: "POST",
+                headers: {
+                  "Accept": "application/json",
+                  "Content-Type": "application/json",
+                  "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+                },
+                body: JSON.stringify({
+                  From: "info@manufixo.com",
+                  To: authUser.email,
+                  Subject: "Tekstil A.Ş. - Hesabınız Onaylandı",
+                  HtmlBody: `
+                    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+                      <div style="text-align:center;margin-bottom:24px;">
+                        <h1 style="color:#1a1a1a;font-size:22px;margin:0;">Tekstil A.Ş.</h1>
+                      </div>
+                      <p style="color:#333;font-size:15px;">Sayın ${authUser.user_metadata?.ad || ""} ${authUser.user_metadata?.soyad || ""},</p>
+                      <p style="color:#333;font-size:15px;"><strong>${firma.firma_unvani}</strong> firmanızın başvurusu <span style="color:#16a34a;font-weight:bold;">onaylanmıştır</span>.</p>
+                      <p style="color:#333;font-size:15px;">Hesabınıza aşağıdaki şifre ile giriş yapabilirsiniz:</p>
+                      <div style="background:#f4f4f5;border:1px solid #e4e4e7;border-radius:8px;padding:16px 24px;text-align:center;margin:20px 0;">
+                        <span style="font-size:22px;font-weight:bold;letter-spacing:2px;color:#1a1a1a;">${randomPassword}</span>
+                      </div>
+                      <p style="color:#dc2626;font-size:14px;font-weight:600;">⚠️ Güvenliğiniz için giriş yaptıktan sonra şifrenizi değiştirmenizi öneririz.</p>
+                      <div style="text-align:center;margin:24px 0;">
+                        <a href="${siteUrl}/giris-kayit" style="display:inline-block;background:#1a1a1a;color:#fff;text-decoration:none;padding:12px 32px;border-radius:8px;font-size:15px;font-weight:600;">Giriş Yap</a>
+                      </div>
+                      <hr style="border:none;border-top:1px solid #e4e4e7;margin:24px 0;" />
+                      <p style="color:#71717a;font-size:12px;text-align:center;">Bu e-posta Tekstil A.Ş. platformu tarafından otomatik olarak gönderilmiştir.</p>
+                    </div>
+                  `,
+                  TextBody: `Sayın ${authUser.user_metadata?.ad || ""} ${authUser.user_metadata?.soyad || ""},\n\n${firma.firma_unvani} firmanızın başvurusu onaylanmıştır.\n\nHesabınıza aşağıdaki şifre ile giriş yapabilirsiniz:\n\nŞifre: ${randomPassword}\n\nGüvenliğiniz için giriş yaptıktan sonra şifrenizi değiştirmenizi öneririz.\n\nGiriş: ${siteUrl}/giris-kayit`,
+                }),
+              });
+              console.log("Approval email with password sent to:", authUser.email);
+            } catch (emailErr) {
+              console.error("Failed to send approval email:", emailErr);
+            }
           }
 
-          const message = `${firma.firma_unvani} firmanızın başvurusu onaylanmıştır. Şifre oluşturma bağlantısı e-posta adresinize gönderilmiştir.`;
+          const message = `${firma.firma_unvani} firmanızın başvurusu onaylanmıştır. Giriş bilgileriniz e-posta adresinize gönderilmiştir.`;
           await supabase.from("notifications").insert({
             user_id: firma.user_id,
             type: "firma_onaylandi",
@@ -412,7 +446,7 @@ Deno.serve(async (req) => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   messages: [{
-                    msg: `${firma.firma_unvani}, Tekstil A.S. basvurunuz onaylandi! E-postaniza gonderilen baglanti uzerinden sifrenizi olusturarak dijital dunyaya ilk adiminizi atabilirsiniz. Aramiza hos geldiniz!`,
+                    msg: `${firma.firma_unvani}, Tekstil A.S. basvurunuz onaylandi! Giris bilgileriniz e-posta adresinize gonderilmistir. Aramiza hos geldiniz!`,
                     dest: userPhone,
                     id: "1",
                   }],
