@@ -241,9 +241,9 @@ export default function ManuIhale() {
                   key={ihale.id}
                   className="cursor-pointer"
                   onClick={() => {
-                    if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/manuihale/duzenle/${ihale.id}`);
-                    else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") navigate(`/manuihale/takip/${ihale.id}`);
-                    else navigate(`/ihale/${ihale.id}`);
+                    if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/ihalelerim/duzenle/${ihale.id}`);
+                    else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") navigate(`/ihalelerim/takip/${ihale.id}`);
+                    else navigate(`/ihaleler/${ihale.id}`);
                   }}
                 >
                   <CardContent className="p-4 space-y-3">
