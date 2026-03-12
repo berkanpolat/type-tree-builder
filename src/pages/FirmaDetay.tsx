@@ -48,6 +48,7 @@ interface FirmaData {
   linkedin: string | null;
   x_twitter: string | null;
   tiktok: string | null;
+  youtube: string | null;
   firma_iletisim_email: string | null;
   firma_iletisim_numarasi: string | null;
   firma_olcegi_id: string | null;
