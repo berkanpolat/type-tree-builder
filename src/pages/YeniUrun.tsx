@@ -259,8 +259,9 @@ export default function YeniUrun() {
   };
 
   const loadUrun = async (urunId: string) => {
+    setLoadingData(true);
     const { data } = await supabase.from("urunler").select("*").eq("id", urunId).single();
-    if (!data) return;
+    if (!data) { setLoadingData(false); return; }
     setSelectedKategori(data.urun_kategori_id || "");
     setSelectedGrup(data.urun_grup_id || "");
     setSelectedTur(data.urun_tur_id || "");
@@ -274,13 +275,35 @@ export default function YeniUrun() {
     setTeknikDetaylar(td);
     setDraftId(urunId);
 
-    // Load dependent options for edit mode (e.g., Kumaş Türü depends on Kumaş Grubu)
-    const alanlar = getTeknikAlanlar();
+    // Resolve category name directly to load dependent options correctly
+    let resolvedKatName = "";
+    if (data.urun_kategori_id) {
+      const { data: katData } = await supabase
+        .from("firma_bilgi_secenekleri")
+        .select("name")
+        .eq("id", data.urun_kategori_id)
+        .single();
+      if (katData) {
+        resolvedKatName = katData.name;
+        setKategoriName(resolvedKatName);
+      }
+    }
+
+    // Load dependent options for edit mode using resolved category name
+    const resolveAlanlar = () => {
+      if (TEKNIK_ALANLAR[resolvedKatName]) return TEKNIK_ALANLAR[resolvedKatName];
+      const key = Object.keys(TEKNIK_ALANLAR).find(k => resolvedKatName.toLowerCase().includes(k.toLowerCase()));
+      return key ? TEKNIK_ALANLAR[key] : [];
+    };
+    const alanlar = resolveAlanlar();
     for (const alan of alanlar) {
       if (alan.type === "dependent_dropdown" && alan.dependsOn && td[alan.dependsOn]) {
         const parentVal = td[alan.dependsOn];
-        const parentId = Array.isArray(parentVal) ? parentVal[0] : parentVal;
-        if (parentId) loadDependentOptions(alan.dependsOn, parentId);
+        if (Array.isArray(parentVal)) {
+          loadDependentOptionsMulti(alan.dependsOn, parentVal);
+        } else {
+          loadDependentOptions(alan.dependsOn, parentVal);
+        }
       }
     }
 
