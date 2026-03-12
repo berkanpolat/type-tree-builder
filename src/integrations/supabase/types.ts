@@ -1376,6 +1376,7 @@ export type Database = {
           odeme_vadesi: string | null
           ozel_filtreleme: boolean | null
           para_birimi: string | null
+          slug: string | null
           teklif_usulu: string
           teknik_detaylar: Json | null
           teslimat_tarihi: string | null
@@ -1415,6 +1416,7 @@ export type Database = {
           odeme_vadesi?: string | null
           ozel_filtreleme?: boolean | null
           para_birimi?: string | null
+          slug?: string | null
           teklif_usulu?: string
           teknik_detaylar?: Json | null
           teslimat_tarihi?: string | null
@@ -1454,6 +1456,7 @@ export type Database = {
           odeme_vadesi?: string | null
           ozel_filtreleme?: boolean | null
           para_birimi?: string | null
+          slug?: string | null
           teklif_usulu?: string
           teknik_detaylar?: Json | null
           teslimat_tarihi?: string | null
@@ -1888,6 +1891,7 @@ export type Database = {
           id: string
           min_siparis_miktari: number | null
           para_birimi: string | null
+          slug: string | null
           teknik_detaylar: Json | null
           updated_at: string
           urun_grup_id: string | null
@@ -1911,6 +1915,7 @@ export type Database = {
           id?: string
           min_siparis_miktari?: number | null
           para_birimi?: string | null
+          slug?: string | null
           teknik_detaylar?: Json | null
           updated_at?: string
           urun_grup_id?: string | null
@@ -1934,6 +1939,7 @@ export type Database = {
           id?: string
           min_siparis_miktari?: number | null
           para_birimi?: string | null
+          slug?: string | null
           teknik_detaylar?: Json | null
           updated_at?: string
           urun_grup_id?: string | null
@@ -1977,6 +1983,10 @@ export type Database = {
         Returns: boolean
       }
       generate_firma_slug: { Args: { p_unvani: string }; Returns: string }
+      generate_slug: {
+        Args: { p_existing_id?: string; p_table: string; p_text: string }
+        Returns: string
+      }
       get_or_create_conversation: {
         Args: { p_user1: string; p_user2: string }
         Returns: string
