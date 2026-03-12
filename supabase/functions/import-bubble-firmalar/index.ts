@@ -52,7 +52,19 @@ Deno.serve(async (req) => {
       seceneklerByName[s.name] = s.id;
     });
 
-    // 2. Single batch from Bubble API
+    // Pre-load all auth users into email->id map
+    const emailToUserId: Record<string, string> = {};
+    let page = 1;
+    const perPage = 1000;
+    while (true) {
+      const { data: usersData } = await supabase.auth.admin.listUsers({ page, perPage });
+      if (!usersData?.users?.length) break;
+      usersData.users.forEach(u => { if (u.email) emailToUserId[u.email] = u.id; });
+      if (usersData.users.length < perPage) break;
+      page++;
+    }
+    console.log(`Loaded ${Object.keys(emailToUserId).length} auth users`);
+
     const url = `${BUBBLE_API_URL}?limit=${pageLimit}&cursor=${startCursor}`;
     console.log(`Fetching: cursor=${startCursor}, limit=${pageLimit}`);
 
