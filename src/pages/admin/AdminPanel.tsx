@@ -359,7 +359,7 @@ export default function AdminPanel() {
             <SectionFilters timeFilter={ihaleFilter} onTimeChange={setIhaleFilter} dateRange={ihaleDateRange} onDateChange={setIhaleDateRange} />
           </div>
           {ihaleComputed && (<>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 mb-4">
               <StatCard title="Toplam" value={ihaleComputed.toplam} icon={Gavel} color="from-emerald-500 to-emerald-600" onClick={() => goIhaleler()} />
               <StatCard title="Aktif" value={ihaleComputed.aktif} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goIhaleler("devam_ediyor")} />
               <StatCard title="Tamamlanan" value={ihaleComputed.tamamlanan} icon={CheckCircle} color="from-teal-500 to-teal-600" onClick={() => goIhaleler("tamamlandi")} />
