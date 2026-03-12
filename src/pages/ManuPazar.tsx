@@ -349,8 +349,18 @@ export default function ManuPazar() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}</span>
+                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <Switch
+                        checked={urun.durum === "aktif"}
+                        onCheckedChange={() => handleToggleDurum(urun)}
+                        disabled={urun.durum === "taslak" || urun.durum === "onay_bekliyor"}
+                      />
+                      <span>{format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}</span>
+                    </div>
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" title="Kopyala" onClick={() => navigate(`/manupazar/yeni?kopyala=${urun.id}`)}>
                         <Copy className="w-3.5 h-3.5" />
                       </Button>
