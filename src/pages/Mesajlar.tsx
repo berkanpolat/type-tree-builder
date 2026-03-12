@@ -627,7 +627,10 @@ export default function Mesajlar() {
           ) : (
             <>
               {/* Chat header */}
-              <div className="px-5 py-3 border-b border-border flex items-center gap-3">
+              <div className="px-3 md:px-5 py-3 border-b border-border flex items-center gap-3">
+                <button className="md:hidden p-1 rounded hover:bg-muted" onClick={() => setSelectedConv(null)}>
+                  <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
                 <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center overflow-hidden">
                   {selectedConv.logo_url ? (
                     <img src={selectedConv.logo_url} alt="" className="w-full h-full object-contain" />
