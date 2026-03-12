@@ -454,20 +454,21 @@ const LandingPage = () => {
           <h2 className="text-3xl lg:text-4xl font-bold text-foreground text-center mb-8">
             Sizin İçin Neler Var?
           </h2>
-          <div className="flex justify-center mb-12">
-            <div className="inline-flex items-center bg-muted rounded-full p-1 gap-1">
+          <div className="flex justify-center mb-8 md:mb-12">
+            <div className="inline-flex items-center bg-muted rounded-full p-1 gap-1 overflow-x-auto max-w-full scrollbar-hide">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all ${
+                  className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all whitespace-nowrap ${
                     activeTab === tab.key
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {tab.icon}
-                  {tab.label}
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.label.split(" ")[0]}</span>
                 </button>
               ))}
             </div>

@@ -311,8 +311,8 @@ export default function ManuPazar() {
 
         {/* Table */}
         <Card>
-          <CardContent className="p-0">
-            <Table>
+          <CardContent className="p-0 overflow-x-auto">
+            <Table className="min-w-[900px]">
               <TableHeader>
                 <TableRow>
                   <TableHead>Ürün</TableHead>
