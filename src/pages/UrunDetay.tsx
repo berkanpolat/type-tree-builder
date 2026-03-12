@@ -492,7 +492,7 @@ export default function UrunDetay() {
             <>
               <span>/</span>
               <button
-                onClick={() => navigate("/anasayfa", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id, grupId: urun.urun_grup_id, turId: urun.urun_tur_id } })}
+                onClick={() => navigate("/tekpazar", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id, grupId: urun.urun_grup_id, turId: urun.urun_tur_id } })}
                 className="hover:text-foreground transition-colors"
               >
                 {breadcrumbTur}
