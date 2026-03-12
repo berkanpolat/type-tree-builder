@@ -337,6 +337,7 @@ export default function YeniUrun() {
       setVaryasyonlar(prodVars);
       if (priceTiers.length > 0) setFiyatKademeleri(priceTiers);
     }
+    setLoadingData(false);
   };
 
   const loadUrunForCopy = async (urunId: string) => {
