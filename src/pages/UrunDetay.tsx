@@ -134,6 +134,7 @@ interface FirmaData {
   kurulus_il_id: string | null;
   kurulus_ilce_id: string | null;
   user_id: string;
+  belge_onayli: boolean;
 }
 
 interface BenzerUrun {
