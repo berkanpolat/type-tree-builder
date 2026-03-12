@@ -50,6 +50,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
   const [linkedin, setLinkedin] = useState("");
   const [xTwitter, setXTwitter] = useState("");
   const [tiktok, setTiktok] = useState("");
+  const [youtube, setYoutube] = useState("");
   const [logoUrl, setLogoUrl] = useState("");
   const [kapakUrl, setKapakUrl] = useState("");
   const [firmaHakkinda, setFirmaHakkinda] = useState("");
@@ -100,6 +101,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
         setLinkedin(f.linkedin || "");
         setXTwitter(f.x_twitter || "");
         setTiktok(f.tiktok || "");
+        setYoutube(f.youtube || "");
         setLogoUrl(f.logo_url || "");
         setKapakUrl(f.kapak_fotografi_url || "");
         setFirmaHakkinda(f.firma_hakkinda || "");
@@ -179,6 +181,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
       linkedin: linkedin || null,
       x_twitter: xTwitter || null,
       tiktok: tiktok || null,
+      youtube: youtube || null,
       logo_url: logoUrl || null,
       kapak_fotografi_url: kapakUrl || null,
       firma_hakkinda: firmaHakkinda || null,
@@ -394,6 +397,10 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">TikTok</Label>
               <Input value={tiktok} onChange={e => setTiktok(e.target.value)} placeholder="@kullaniciadi" className="bg-muted/50" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">YouTube</Label>
+              <Input value={youtube} onChange={e => setYoutube(e.target.value)} placeholder="youtube.com/@kanal" className="bg-muted/50" />
             </div>
           </div>
         </div>

@@ -1,0 +1,1 @@
+ALTER TABLE public.firmalar ADD COLUMN youtube text DEFAULT NULL;
