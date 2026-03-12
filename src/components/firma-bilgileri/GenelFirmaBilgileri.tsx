@@ -101,6 +101,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
         setLinkedin(f.linkedin || "");
         setXTwitter(f.x_twitter || "");
         setTiktok(f.tiktok || "");
+        setYoutube(f.youtube || "");
         setLogoUrl(f.logo_url || "");
         setKapakUrl(f.kapak_fotografi_url || "");
         setFirmaHakkinda(f.firma_hakkinda || "");
