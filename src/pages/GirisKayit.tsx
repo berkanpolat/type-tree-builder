@@ -154,14 +154,10 @@ const GirisKayit = () => {
       return;
     }
 
-    // Check duplicate phone
-    const { data: existingPhone } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("iletisim_numarasi", fullPhone)
-      .limit(1);
-
-    if (existingPhone && existingPhone.length > 0) {
+    // Check duplicate phone via RPC
+    const { data: dupCheck } = await supabase.rpc("check_registration_duplicate", { p_email: "", p_phone: fullPhone });
+    if (dupCheck && (dupCheck as any).phone_exists) {
+      setPhoneDuplicate(true);
       toast({ title: "Hata", description: "Bu telefon numarası ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
       return;
     }
