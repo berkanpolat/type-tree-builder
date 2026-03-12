@@ -101,14 +101,15 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Lookup firma_tipi_id
-        const firmaTipiName = item["Firma Tipi op"];
+        // Lookup firma_tipi_id (with mapping)
+        const rawFirmaTipiName = item["Firma Tipi op"];
+        const firmaTipiName = firmaTipiMapping[rawFirmaTipiName] || rawFirmaTipiName;
         const tipiCandidates = tipleriMap[firmaTipiName] || [];
         const firmaTipiId = tipiCandidates.find(
           (t) => t.firma_turu_id === firmaTuruId
         )?.id || tipiCandidates[0]?.id;
         if (!firmaTipiId) {
-          failList.push({ firma: firmaUnvani, error: `Firma tipi bulunamadı: ${firmaTipiName}` });
+          failList.push({ firma: firmaUnvani, error: `Firma tipi bulunamadı: ${rawFirmaTipiName} (mapped: ${firmaTipiName})` });
           continue;
         }
 
