@@ -255,12 +255,13 @@ const Paketim = () => {
               </div>
               <div className="mt-2 space-y-1">
                 <p className="text-3xl font-bold text-foreground">
-                  {PRO_FIYATLAR.aylik.fiyat}₺
+                  {PRO_FIYATLAR.aylik.kdvli}₺
                   <span className="text-base font-normal text-muted-foreground">/ay</span>
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  veya {PRO_FIYATLAR.yillik.fiyat}₺/yıl
+                  veya {PRO_FIYATLAR.yillik.kdvli}₺/yıl
                 </p>
+                <p className="text-xs text-muted-foreground">Fiyatlara %{PRO_FIYATLAR.kdvOrani} KDV dahildir.</p>
               </div>
             </CardHeader>
             <CardContent className="space-y-5">
