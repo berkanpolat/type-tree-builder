@@ -278,7 +278,7 @@ export default function FirmaDetay() {
   };
 
   useEffect(() => {
-    if (!id || packageInfo.loading) return;
+    if (!slug || packageInfo.loading) return;
 
     const fetchAll = async () => {
       setLoading(true);
@@ -291,10 +291,12 @@ export default function FirmaDetay() {
         setCurrentUserId(user.id);
       }
 
+      // Support both UUID and slug lookup
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
       const { data: firmaData } = await supabase
         .from("firmalar")
         .select("*")
-        .eq("id", id)
+        .eq(isUuid ? "id" : "slug", slug)
         .single();
 
       if (!firmaData) {
