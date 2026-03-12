@@ -67,8 +67,6 @@ export function usePackageQuota(): PackageInfo {
         setPeriyot((abone as any).periyot);
         setDonemBitis((abone as any).donem_bitis);
         setDurum((abone as any).durum || "aktif");
-        setStripeSubscriptionId((abone as any).stripe_subscription_id);
-        
         // Check if durum indicates pending cancellation
         const aboneDurum = (abone as any).durum || "";
         setCancelAtPeriodEnd(aboneDurum === "iptal_bekliyor");
