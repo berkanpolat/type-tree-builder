@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const VERIMOR_API_URL = "https://sms.verimor.com.tr/v2/send.json";
+const SMS_API_URL = "http://194.62.55.240:3000/api/send-sms";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -59,29 +59,13 @@ serve(async (req) => {
       });
     }
 
-    // Send SMS directly via Verimor API
-    const verimorUsername = Deno.env.get("VERIMOR_USERNAME");
-    const verimorPassword = Deno.env.get("VERIMOR_PASSWORD");
-
-    if (!verimorUsername || !verimorPassword) {
-      console.error("Verimor credentials not configured");
-      return new Response(JSON.stringify({ error: "SMS servisi yapılandırılmamış" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      });
-    }
-
-    const smsResponse = await fetch(VERIMOR_API_URL, {
+    // Send SMS via custom API
+    const smsResponse = await fetch(SMS_API_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        username: verimorUsername,
-        password: verimorPassword,
-        source_addr: "Tekstil A.Ş",
-        valid_for: "48:00",
-        datacoding: "0",
         messages: [
           {
             msg: `Tekstil A.Ş doğrulama kodunuz: ${kod}`,
@@ -94,7 +78,7 @@ serve(async (req) => {
 
     if (!smsResponse.ok) {
       const errText = await smsResponse.text();
-      console.error("Verimor API error:", smsResponse.status, errText);
+      console.error("SMS API error:", smsResponse.status, errText);
       return new Response(JSON.stringify({ error: "SMS gönderilemedi" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
