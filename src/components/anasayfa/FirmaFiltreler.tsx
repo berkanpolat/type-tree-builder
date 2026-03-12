@@ -302,9 +302,12 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
     setUsSelectedTurler((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
   };
 
-  return (
-    <div className="w-72 shrink-0 space-y-3 hidden lg:block">
-      <div className="flex items-center justify-between">
+  const isMobile = useIsMobile();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const filterContent = (
+    <>
+      <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-foreground text-lg">Filtreler</h3>
         {activeCount > 0 && (
           <Button variant="ghost" size="sm" onClick={clearAll} className="text-xs text-muted-foreground h-auto py-1">
