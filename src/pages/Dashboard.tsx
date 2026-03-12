@@ -281,7 +281,7 @@ const Dashboard = () => {
               </div>
 
               {/* Kalan Haklar */}
-              <div className="lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="sm:col-span-2 lg:col-span-3 grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {[
                   {
                     label: "Profil Görüntüleme",
