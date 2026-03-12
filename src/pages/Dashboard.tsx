@@ -112,7 +112,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleManageSubscription = async () => {
+  
 
   const statsCards = [
     { title: "Profil Tamamlama", value: profileCompletion, icon: UserCheck, color: "text-primary", bgColor: "bg-primary/10", isProgress: true, href: "/firma-bilgilerim" },
