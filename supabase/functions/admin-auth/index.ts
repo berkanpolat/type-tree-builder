@@ -350,6 +350,14 @@ Deno.serve(async (req) => {
 
       if (firmaError) return jsonResponse({ error: firmaError.message }, 400);
 
+      // Get user phone for SMS
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("iletisim_numarasi")
+        .eq("user_id", firma.user_id)
+        .single();
+      const userPhone = profile?.iletisim_numarasi;
+
       // Get user email from auth
       const { data: { user: authUser } } = await supabase.auth.admin.getUserById(firma.user_id);
       
@@ -380,6 +388,25 @@ Deno.serve(async (req) => {
             message,
             link: null,
           });
+
+          // Send approval SMS
+          if (userPhone) {
+            try {
+              await fetch("http://194.62.55.240:3000/api/send-sms", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  messages: [{
+                    msg: `${firma.firma_unvani}, Tekstil A.S. basvurunuz onaylandi! E-postaniza gonderilen baglanti uzerinden sifrenizi olusturarak dijital dunyaya ilk adiminizi atabilirsiniz. Aramiza hos geldiniz!`,
+                    dest: userPhone,
+                    id: "1",
+                  }],
+                }),
+              });
+            } catch (smsErr) {
+              console.error("Approval SMS failed:", smsErr);
+            }
+          }
         } else {
           const message = `${firma.firma_unvani} firmanızın başvurusu reddedilmiştir. Detaylı bilgi için bizimle iletişime geçebilirsiniz.`;
           await supabase.from("notifications").insert({
@@ -388,6 +415,25 @@ Deno.serve(async (req) => {
             message,
             link: null,
           });
+
+          // Send rejection SMS
+          if (userPhone) {
+            try {
+              await fetch("http://194.62.55.240:3000/api/send-sms", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  messages: [{
+                    msg: `${firma.firma_unvani}, Tekstil A.S. basvurunuz ne yazik ki red ile sonuclandi. Detaylari ogrenmek icin mailinizi kontrol ediniz. Gerekli duzeltmelerden sonra yeniden basvuru yapabilirsiniz.`,
+                    dest: userPhone,
+                    id: "1",
+                  }],
+                }),
+              });
+            } catch (smsErr) {
+              console.error("Rejection SMS failed:", smsErr);
+            }
+          }
         }
       }
 
