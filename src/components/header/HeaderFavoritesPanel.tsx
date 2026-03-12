@@ -40,8 +40,8 @@ export default function HeaderFavoritesPanel() {
     const firmaItems: FavFirma[] = [];
     if (firmaRes.data) {
       for (const f of firmaRes.data) {
-        const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", f.firma_id).single();
-        firmaItems.push({ id: f.id, firma_id: f.firma_id, firma_unvani: firma?.firma_unvani || "—" });
+        const { data: firma } = await supabase.from("firmalar").select("firma_unvani, slug").eq("id", f.firma_id).single();
+        firmaItems.push({ id: f.id, firma_id: f.firma_id, firma_unvani: firma?.firma_unvani || "—", slug: firma?.slug || null });
       }
     }
 
