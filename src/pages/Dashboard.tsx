@@ -125,8 +125,8 @@ const Dashboard = () => {
 
   const statsCards = [
     { title: "Profil Tamamlama", value: profileCompletion, icon: UserCheck, color: "text-primary", bgColor: "bg-primary/10", isProgress: true, href: "/firma-bilgilerim" },
-    { title: "Aktif Ürünler", value: activeUrunCount, subtitle: "Pazar yerinde yayında", icon: ShoppingBag, color: "text-green-500", bgColor: "bg-green-50", href: "/manupazar" },
-    { title: "Aktif İhaleler", value: activeIhaleCount, subtitle: "Teklif bekleyen", icon: Gavel, color: "text-blue-500", bgColor: "bg-blue-50", href: "/manuihale" },
+    { title: "Aktif Ürünler", value: activeUrunCount, subtitle: "Pazar yerinde yayında", icon: ShoppingBag, color: "text-green-500", bgColor: "bg-green-50", href: "/urunlerim" },
+    { title: "Aktif İhaleler", value: activeIhaleCount, subtitle: "Teklif bekleyen", icon: Gavel, color: "text-blue-500", bgColor: "bg-blue-50", href: "/ihalelerim" },
     { title: "Mesajlar", value: unreadMessages, subtitle: "Okunmamış", icon: MessageSquare, color: "text-orange-500", bgColor: "bg-orange-50", href: "/mesajlar" },
     { title: "Bildirimler", value: unreadNotifications, subtitle: "İşlem bekleyen", icon: Bell, color: "text-red-500", bgColor: "bg-red-50", href: "/bildirimler" },
   ];
