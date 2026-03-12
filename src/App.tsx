@@ -121,7 +121,7 @@ const App = () => (
             <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
             <Route path="/giris-kayit" element={<GirisKayit />} />
             <Route path="/urun/:id" element={<UrunDetay />} />
-            <Route path="/firma/:id" element={<FirmaDetay />} />
+            <Route path="/firma/:slug" element={<FirmaDetay />} />
             <Route path="/tekrehber" element={<TekRehber />} />
             <Route path="/ayarlar" element={<ProfilAyarlari />} />
             <Route path="/profil-ayarlari" element={<ProfilAyarlari />} />
