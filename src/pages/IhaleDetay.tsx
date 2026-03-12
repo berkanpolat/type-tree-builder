@@ -930,12 +930,12 @@ export default function IhaleDetay() {
           <span className="text-foreground font-medium truncate max-w-[300px]">{ihale.baslik}</span>
         </nav>
 
-        {/* Main Grid */}
+        {/* Main Grid - Mobile: single column with specific order, Desktop: 2-column */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 md:gap-8 mb-12">
-          {/* Left: Image + Details */}
-          <div className="lg:col-span-3 space-y-6">
-            {/* Image Gallery with inline zoom */}
-            <div className="flex flex-col sm:flex-row gap-4">
+          {/* Left Column */}
+          <div className="lg:col-span-3 space-y-6 order-2 lg:order-1">
+            {/* Image Gallery - mobile order 2 */}
+            <div className="flex flex-col sm:flex-row gap-4 order-2 lg:order-none">
               {allImages.length > 1 && (
                 <div className="flex sm:flex-col gap-2 shrink-0 overflow-x-auto sm:overflow-x-visible">
                   {allImages.map((img, i) => (
@@ -988,16 +988,159 @@ export default function IhaleDetay() {
               </div>
             </div>
 
-            {/* İhale Açıklaması */}
+            {/* İhale Açıklaması - order 3 */}
             {ihale.aciklama && (
-              <Card className="p-6">
+              <Card className="p-6 order-3 lg:order-none">
                 <h3 className="text-lg font-bold text-foreground mb-4">İhale Açıklaması</h3>
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{ihale.aciklama}</p>
               </Card>
             )}
 
-            {/* İhale Bilgileri */}
-            <Card className="p-6">
+            {/* MOBILE ONLY: Teklif Verme - order 4 */}
+            <div className="lg:hidden order-4">
+              <Card className="p-6">
+                <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
+                <p className="text-sm text-muted-foreground mb-3">#{ihale.ihale_no}</p>
+                {countdown && (
+                  <div className="flex items-center gap-2 text-destructive bg-destructive/10 rounded-lg px-4 py-2.5 mb-4">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-medium">{countdown}</span>
+                  </div>
+                )}
+                {!isOwner && ihale.durum === "devam_ediyor" && filterBlockMessage && (
+                  <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                    <p className="text-sm text-destructive font-medium mb-1">Teklif Veremezsiniz</p>
+                    <p className="text-xs text-destructive/80">{filterBlockMessage}</p>
+                  </div>
+                )}
+                {!isOwner && ihale.durum === "devam_ediyor" && !filterBlockMessage && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">Teklif Tutarı ({sym})</label>
+                      <Input type="number" placeholder={`${sym}${ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati).toFixed(2) : "0.00"}`} value={teklifTutar} onChange={(e) => setTeklifTutar(e.target.value)} />
+                      {ihale.min_teklif_degisim != null && Number(ihale.min_teklif_degisim) > 0 && (ihale.teklif_usulu === "acik_indirme" || ihale.teklif_usulu === "acik_arttirma") && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {ihale.teklif_usulu === "acik_indirme" ? `Minimum indirme bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}` : `Minimum arttırma bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}`}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
+                      <SearchableSelect options={dbOdemeSecenekleri.map(o => ({ value: o, label: o }))} value={teklifOdemeSecenekleri} onValueChange={setTeklifOdemeSecenekleri} placeholder="Ödeme Seçenekleri" searchPlaceholder="Ara..." />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">Kargo Masrafı Ödemesi</label>
+                      <SearchableSelect options={dbKargoMasrafi.map(o => ({ value: o, label: o }))} value={teklifKargoMasrafi} onValueChange={setTeklifKargoMasrafi} placeholder="Kargo Masrafı Ödemesi" searchPlaceholder="Ara..." />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Vadesi</label>
+                      <SearchableSelect options={dbOdemeVadeleri.map(o => ({ value: o, label: o }))} value={teklifOdemeVadesi} onValueChange={setTeklifOdemeVadesi} placeholder="Ödeme Vadesi" searchPlaceholder="Ara..." />
+                    </div>
+                    <div>
+                      <label className="relative flex items-center justify-center gap-2 h-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+                        <Upload className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">{uploading ? "Yükleniyor..." : teklifDosyaName || "Belge yükle"}</span>
+                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} disabled={uploading} />
+                      </label>
+                    </div>
+                    <Button className="w-full h-12 gap-2 text-base" onClick={handleTeklifSubmit}>
+                      <Send className="w-4 h-4" /> {myTeklif ? "Teklifi Güncelle" : "Teklif Ver"}
+                    </Button>
+                    {myTeklif && (
+                      <Button variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" onClick={handleTeklifGeriCek}>
+                        <Trash2 className="w-4 h-4" /> Teklifi Geri Çek
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* MOBILE ONLY: Teklifler - order 5 */}
+            <div className="lg:hidden order-5">
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Wifi className="w-4 h-4 text-primary" />
+                    <h3 className="font-bold text-foreground">Teklifler ({visibleTeklifler.length})</h3>
+                  </div>
+                  {!isKapaliTeklif && <Badge className="bg-destructive text-destructive-foreground text-xs">Canlı</Badge>}
+                </div>
+                {!isKapaliTeklif && (
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="text-center p-3 bg-muted rounded-lg">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Min Teklif</p>
+                      <p className="font-bold text-foreground text-sm">{minTeklif != null ? `${sym}${minTeklif.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted rounded-lg">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Maks Teklif</p>
+                      <p className="font-bold text-foreground text-sm">{maxTeklif != null ? `${sym}${maxTeklif.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted rounded-lg">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Sizin Teklifiniz</p>
+                      <p className="font-bold text-foreground text-sm">{myTeklif ? `${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}</p>
+                    </div>
+                  </div>
+                )}
+                {isKapaliTeklif && !isOwner && myTeklif && (
+                  <div className="text-center p-3 bg-muted rounded-lg mb-4">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Sizin Teklifiniz</p>
+                    <p className="font-bold text-foreground text-sm">{`${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`}</p>
+                  </div>
+                )}
+                {visibleTeklifler.length > 0 ? (
+                  <div className="space-y-0">
+                    <div className="grid grid-cols-3 text-[10px] uppercase tracking-wider text-muted-foreground font-medium py-2 border-b border-border">
+                      <span>Teklif Veren</span>
+                      <span className="text-center">Zaman</span>
+                      <span className="text-right">Teklif</span>
+                    </div>
+                    {visibleTeklifler.map((t, i) => (
+                      <div key={t.id} className={`grid grid-cols-3 py-2.5 text-sm border-b border-border/50 ${t.teklif_veren_user_id === currentUserId ? "bg-primary/5 rounded" : ""}`}>
+                        <span className="text-muted-foreground">{isOwner ? (t.firma_unvani || "Anonim") : maskName(t.firma_unvani || `Firma ${i + 1}`)}</span>
+                        <span className="text-center text-muted-foreground text-xs">{format(new Date(t.created_at), "dd/MM HH:mm")}</span>
+                        <span className="text-right font-medium text-foreground">{`${sym}${t.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">Henüz teklif yok.</p>
+                )}
+              </Card>
+            </div>
+
+            {/* MOBILE ONLY: İhale Sahibi - order 6 */}
+            <div className="lg:hidden order-6">
+              {ihale.firma_adi_gizle ? (
+                <Card className="p-6">
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <EyeOff className="w-5 h-5" />
+                    <p className="text-sm">Firma bilgileri gizlenmiştir.</p>
+                  </div>
+                </Card>
+              ) : firma && (
+                <Card className="p-6">
+                  <h3 className="font-bold text-foreground mb-4">İhale Sahibi Firma</h3>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
+                      {firma.logo_url ? <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" /> : <Building2 className="w-6 h-6 text-muted-foreground" />}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">{firma.firma_unvani}</p>
+                      {locationText && <div className="flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="w-3.5 h-3.5" /> {locationText}</div>}
+                    </div>
+                  </div>
+                  {!isOwner && (
+                    <Button className="w-full gap-2" onClick={handleMesajGonder}>
+                      <MessageSquare className="w-4 h-4" /> Mesaj Gönder
+                    </Button>
+                  )}
+                </Card>
+              )}
+            </div>
+
+            {/* İhale Bilgileri - order 7 */}
+            <Card className="p-6 order-7 lg:order-none">
               <h3 className="text-lg font-bold text-foreground mb-4">İhale Bilgileri</h3>
               <div className="divide-y divide-border">
                 <InfoRow label="İhale Türü" value={ihaleTuruLabel[ihale.ihale_turu] || ihale.ihale_turu} />
@@ -1017,11 +1160,7 @@ export default function IhaleDetay() {
                   <>
                     {Object.entries(filtreByType).map(([type, values]) => {
                       const filtreLabelMap: Record<string, string> = {
-                        firma_turu: "Firma Türü",
-                        firma_tipi: "Firma Tipi",
-                        il: "İl",
-                        firma_olcegi: "Firma Ölçeği",
-                        sertifika: "Sertifika",
+                        firma_turu: "Firma Türü", firma_tipi: "Firma Tipi", il: "İl", firma_olcegi: "Firma Ölçeği", sertifika: "Sertifika",
                       };
                       return <InfoRow key={type} label={`İstenen ${filtreLabelMap[type] || type}`} value={values.join(", ")} />;
                     })}
@@ -1032,8 +1171,7 @@ export default function IhaleDetay() {
                     <span className="text-sm text-muted-foreground block mb-2">İhale Ek Dosyaları</span>
                     <div className="space-y-1.5">
                       {ekDosyalar.map((d: any, i: number) => (
-                        <a key={i} href={d.dosya_url} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center gap-1.5 text-sm text-primary hover:underline">
+                        <a key={i} href={d.dosya_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-primary hover:underline">
                           <Download className="w-4 h-4" /> {d.dosya_adi}
                         </a>
                       ))}
@@ -1042,8 +1180,7 @@ export default function IhaleDetay() {
                 ) : ihale.ek_dosya_url && (
                   <div className="flex justify-between items-center py-3">
                     <span className="text-sm text-muted-foreground">İhale Ek Dosyası</span>
-                    <a href={ihale.ek_dosya_url} target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 text-sm text-primary hover:underline">
+                    <a href={ihale.ek_dosya_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-primary hover:underline">
                       <Download className="w-4 h-4" /> İndir
                     </a>
                   </div>
@@ -1051,32 +1188,9 @@ export default function IhaleDetay() {
               </div>
             </Card>
 
-            {/* Ödeme Bilgileri */}
-            <Card className="p-6">
-              <h3 className="text-lg font-bold text-foreground mb-4">Ödeme Bilgileri</h3>
-              <div className="divide-y divide-border">
-                <InfoRow label="İhale Başlangıç Fiyatı (Birim Fiyat)"
-                  value={ihale.baslangic_fiyati != null ? `${sym}${Number(ihale.baslangic_fiyati).toLocaleString("tr-TR")}` : null} />
-                <InfoRow label="KDV Durum Bilgisi" value={ihale.kdv_durumu} />
-                <InfoRow label="Ödeme Seçenekleri" value={ihale.odeme_secenekleri} />
-                <InfoRow label="Tercih Edilen Ödeme Vadeleri" value={ihale.odeme_vadesi} />
-              </div>
-            </Card>
-
-            {/* Teslimat & Kargo */}
-            <Card className="p-6">
-              <h3 className="text-lg font-bold text-foreground mb-4">Teslimat & Kargo Bilgileri</h3>
-              <div className="divide-y divide-border">
-                <InfoRow label="Kargo Masrafı Ödemesi" value={ihale.kargo_masrafi} />
-                <InfoRow label="Kargo Şirketi Anlaşması" value={ihale.kargo_sirketi_anlasmasi} />
-                <InfoRow label="Teslimat Tarihi" value={ihale.teslimat_tarihi ? format(new Date(ihale.teslimat_tarihi), "dd/MM/yyyy", { locale: tr }) : null} />
-                <InfoRow label="Teslimat Yeri" value={ihale.teslimat_yeri} />
-              </div>
-            </Card>
-
-            {/* Teknik Detaylar */}
+            {/* Teknik Detaylar - order 8 */}
             {Object.keys(resolvedTeknikDetaylar).length > 0 && (
-              <Card className="p-6">
+              <Card className="p-6 order-8 lg:order-none">
                 <h3 className="text-lg font-bold text-foreground mb-4">
                   {ihale?.ihale_turu === "hizmet_alim" ? "Hizmet Bilgileri" : "Ürün Teknik Detaylar"}
                 </h3>
@@ -1090,9 +1204,9 @@ export default function IhaleDetay() {
               </Card>
             )}
 
-            {/* Stok Tablosu */}
+            {/* Stok Tablosu - order 9 */}
             {stoklar.length > 0 && (
-              <Card className="p-6">
+              <Card className="p-6 order-9 lg:order-none">
                 <h3 className="text-lg font-bold text-foreground mb-4">Stok / Varyasyonlar</h3>
                 <Table>
                   <TableHeader>
@@ -1116,10 +1230,54 @@ export default function IhaleDetay() {
                 </Table>
               </Card>
             )}
+
+            {/* Ödeme Bilgileri - order 10 */}
+            <Card className="p-6 order-10 lg:order-none">
+              <h3 className="text-lg font-bold text-foreground mb-4">Ödeme Bilgileri</h3>
+              <div className="divide-y divide-border">
+                <InfoRow label="İhale Başlangıç Fiyatı (Birim Fiyat)" value={ihale.baslangic_fiyati != null ? `${sym}${Number(ihale.baslangic_fiyati).toLocaleString("tr-TR")}` : null} />
+                <InfoRow label="KDV Durum Bilgisi" value={ihale.kdv_durumu} />
+                <InfoRow label="Ödeme Seçenekleri" value={ihale.odeme_secenekleri} />
+                <InfoRow label="Tercih Edilen Ödeme Vadeleri" value={ihale.odeme_vadesi} />
+              </div>
+            </Card>
+
+            {/* Teslimat & Kargo - order 11 */}
+            <Card className="p-6 order-11 lg:order-none">
+              <h3 className="text-lg font-bold text-foreground mb-4">Teslimat & Kargo Bilgileri</h3>
+              <div className="divide-y divide-border">
+                <InfoRow label="Kargo Masrafı Ödemesi" value={ihale.kargo_masrafi} />
+                <InfoRow label="Kargo Şirketi Anlaşması" value={ihale.kargo_sirketi_anlasmasi} />
+                <InfoRow label="Teslimat Tarihi" value={ihale.teslimat_tarihi ? format(new Date(ihale.teslimat_tarihi), "dd/MM/yyyy", { locale: tr }) : null} />
+                <InfoRow label="Teslimat Yeri" value={ihale.teslimat_yeri} />
+              </div>
+            </Card>
+
+            {/* MOBILE ONLY: Benzer İhaleler - order 12 */}
+            <div className="lg:hidden order-12">
+              {benzerIhaleler.length > 0 && (
+                <Card className="p-6">
+                  <h3 className="font-bold text-foreground mb-4">Benzer İhaleler</h3>
+                  <div className="space-y-3">
+                    {benzerIhaleler.map((b) => (
+                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/tekihale/${b.id}`)}>
+                        <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                          {b.foto_url ? <img src={b.foto_url} alt="" className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground line-clamp-2">{b.baslik}</p>
+                          {b.baslangic_fiyati && <p className="text-sm font-bold text-foreground mt-1">{paraBirimiSymbol[b.para_birimi || "TRY"] || "₺"}{Number(b.baslangic_fiyati).toLocaleString("tr-TR")}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </div>
           </div>
 
-          {/* Right Sidebar */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* Right Sidebar - desktop only content */}
+          <div className="lg:col-span-2 space-y-4 order-1 lg:order-2">
             {/* Admin Onay/Red Bloğu */}
             {isAdminViewing && ihale.durum === "onay_bekliyor" && (
               <Card className="p-5 border-2 border-blue-400 bg-blue-50 dark:bg-blue-950/20">
@@ -1131,9 +1289,7 @@ export default function IhaleDetay() {
                 </div>
                 <p className="text-sm text-muted-foreground mb-4">Bu ihale yayına alınmak için onay bekliyor. İnceleyin ve karar verin.</p>
                 <div className="space-y-3">
-                  <Button
-                    className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                    disabled={adminActionLoading}
+                  <Button className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" disabled={adminActionLoading}
                     onClick={async () => {
                       setAdminActionLoading(true);
                       try {
@@ -1154,10 +1310,7 @@ export default function IhaleDetay() {
                         {IHALE_RED_SEBEPLERI.map(s => <SelectItem key={s} value={s} className="text-xs">{s}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Button
-                      variant="destructive"
-                      className="w-full gap-2"
-                      disabled={!redSebebi || adminActionLoading}
+                    <Button variant="destructive" className="w-full gap-2" disabled={!redSebebi || adminActionLoading}
                       onClick={async () => {
                         setAdminActionLoading(true);
                         try {
@@ -1175,82 +1328,46 @@ export default function IhaleDetay() {
                 </div>
               </Card>
             )}
-            {/* Onay Bloğu - sahip: duzenleniyor/onay_bekliyor/reddedildi/devam_ediyor(karar bilgisi) */}
+            {/* Onay Bloğu - sahip */}
             {!isAdminViewing && isOwner && (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor" || ihale.durum === "reddedildi") && (
               <Card className={`p-5 border-2 ${ihale.durum === "reddedildi" ? "border-red-400 bg-red-50 dark:bg-red-950/20" : "border-amber-300 bg-amber-50 dark:bg-amber-950/20"}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-foreground">
                     {ihale.durum === "onay_bekliyor" ? "Onay Bekliyor" : ihale.durum === "reddedildi" ? "Reddedildi" : "Önizleme"}
                   </h3>
-                  <Badge className={
-                    ihale.durum === "onay_bekliyor" ? "bg-amber-500 text-white"
-                    : ihale.durum === "reddedildi" ? "bg-red-500 text-white"
-                    : "bg-blue-500 text-white"
-                  }>
+                  <Badge className={ihale.durum === "onay_bekliyor" ? "bg-amber-500 text-white" : ihale.durum === "reddedildi" ? "bg-red-500 text-white" : "bg-blue-500 text-white"}>
                     {ihale.durum === "onay_bekliyor" ? "İnceleniyor" : ihale.durum === "reddedildi" ? "Reddedildi" : "Taslak"}
                   </Badge>
                 </div>
-                {/* Admin karar bilgisi */}
                 {ihale.admin_karar_veren && (ihale.durum === "reddedildi" || ihale.durum === "devam_ediyor") && (
                   <div className="mb-4 p-3 rounded-lg bg-background border border-border space-y-1.5">
-                    <p className="text-sm font-medium text-foreground">
-                      Verilen Karar: <span className={ihale.durum === "reddedildi" ? "text-destructive" : "text-emerald-600"}>{ihale.durum === "reddedildi" ? "Reddedildi" : "Onaylandı"}</span>
-                    </p>
-                    {ihale.admin_karar_sebebi && (
-                      <p className="text-sm text-destructive">Sebep: {ihale.admin_karar_sebebi}</p>
-                    )}
+                    <p className="text-sm font-medium text-foreground">Verilen Karar: <span className={ihale.durum === "reddedildi" ? "text-destructive" : "text-emerald-600"}>{ihale.durum === "reddedildi" ? "Reddedildi" : "Onaylandı"}</span></p>
+                    {ihale.admin_karar_sebebi && <p className="text-sm text-destructive">Sebep: {ihale.admin_karar_sebebi}</p>}
                     <p className="text-xs text-muted-foreground">İşlemi yapan: {ihale.admin_karar_veren}</p>
-                    {ihale.admin_karar_tarihi && (
-                      <p className="text-xs text-muted-foreground">Tarih: {format(new Date(ihale.admin_karar_tarihi), "dd/MM/yyyy HH:mm", { locale: tr })}</p>
-                    )}
+                    {ihale.admin_karar_tarihi && <p className="text-xs text-muted-foreground">Tarih: {format(new Date(ihale.admin_karar_tarihi), "dd/MM/yyyy HH:mm", { locale: tr })}</p>}
                   </div>
                 )}
                 {!ihale.admin_karar_veren && (
                   <p className="text-sm text-muted-foreground mb-4">
-                    {ihale.durum === "onay_bekliyor"
-                      ? "İhaleniz şu anda incelenmektedir. Onay sürecinde düzenleme yapamazsınız."
-                      : ihale.durum === "reddedildi"
-                      ? "İhaleniz reddedilmiştir. Düzenleyerek yeniden onaya gönderebilirsiniz."
-                      : "İhalenizin önizlemesini kontrol edin. Bilgiler doğruysa onaya gönderin veya düzenlemeye devam edin."}
+                    {ihale.durum === "onay_bekliyor" ? "İhaleniz şu anda incelenmektedir." : ihale.durum === "reddedildi" ? "İhaleniz reddedilmiştir." : "İhalenizin önizlemesini kontrol edin."}
                   </p>
                 )}
                 <div className="flex gap-3">
                   {(ihale.durum === "duzenleniyor" || ihale.durum === "reddedildi") && (
-                    <Button
-                      variant="outline"
-                      className="flex-1 gap-2"
-                      onClick={() => navigate(`/manuihale/duzenle/${ihale.id}`)}
-                    >
-                      <FileText className="w-4 h-4" />
-                      Düzenle
+                    <Button variant="outline" className="flex-1 gap-2" onClick={() => navigate(`/manuihale/duzenle/${ihale.id}`)}>
+                      <FileText className="w-4 h-4" /> Düzenle
                     </Button>
                   )}
                   {(ihale.durum === "duzenleniyor" || ihale.durum === "reddedildi") && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button className="flex-1 gap-2">
-                          <CheckCircle2 className="w-4 h-4" />
-                          {ihale.durum === "reddedildi" ? "Yeniden Onaya Gönder" : "Onayla"}
-                        </Button>
+                        <Button className="flex-1 gap-2"><CheckCircle2 className="w-4 h-4" /> {ihale.durum === "reddedildi" ? "Yeniden Onaya Gönder" : "Onayla"}</Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>İhaleyi Onaya Göndermek İstediğinize Emin Misiniz?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            İhaleniz süper admin onayına gönderilecektir. Onay sürecinde düzenleme yapamazsınız.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
+                        <AlertDialogHeader><AlertDialogTitle>İhaleyi Onaya Göndermek İstediğinize Emin Misiniz?</AlertDialogTitle><AlertDialogDescription>İhaleniz süper admin onayına gönderilecektir.</AlertDialogDescription></AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>İptal</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={async () => {
-                              await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id);
-                              toast({ title: "İhale onaya gönderildi!" });
-                              navigate("/manuihale");
-                            }}
-                          >
-                            Evet, Gönder
-                          </AlertDialogAction>
+                          <AlertDialogAction onClick={async () => { await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id); toast({ title: "İhale onaya gönderildi!" }); navigate("/manuihale"); }}>Evet, Gönder</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -1258,304 +1375,212 @@ export default function IhaleDetay() {
                 </div>
               </Card>
             )}
-            {/* Onaylandıktan sonra karar bilgisi gösterimi */}
+            {/* Onaylandıktan sonra karar bilgisi */}
             {!isAdminViewing && isOwner && ihale.durum === "devam_ediyor" && ihale.admin_karar_veren && (
               <Card className="p-5 border-2 border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20">
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-foreground flex items-center gap-2">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Onaylandı
-                  </h3>
+                  <h3 className="font-semibold text-foreground flex items-center gap-2"><CheckCircle2 className="w-5 h-5 text-emerald-500" /> Onaylandı</h3>
                   <Badge className="bg-emerald-500 text-white">Yayında</Badge>
                 </div>
                 <div className="p-3 rounded-lg bg-background border border-border space-y-1.5">
-                  <p className="text-sm font-medium text-foreground">
-                    Verilen Karar: <span className="text-emerald-600">Onaylandı</span>
-                  </p>
+                  <p className="text-sm font-medium text-foreground">Verilen Karar: <span className="text-emerald-600">Onaylandı</span></p>
                   <p className="text-xs text-muted-foreground">İşlemi yapan: {ihale.admin_karar_veren}</p>
-                  {ihale.admin_karar_tarihi && (
-                    <p className="text-xs text-muted-foreground">Tarih: {format(new Date(ihale.admin_karar_tarihi), "dd/MM/yyyy HH:mm", { locale: tr })}</p>
-                  )}
+                  {ihale.admin_karar_tarihi && <p className="text-xs text-muted-foreground">Tarih: {format(new Date(ihale.admin_karar_tarihi), "dd/MM/yyyy HH:mm", { locale: tr })}</p>}
                 </div>
               </Card>
             )}
-            {/* Title & Countdown */}
-            <Card className="p-6">
-              <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
-              <p className="text-sm text-muted-foreground mb-3">#{ihale.ihale_no}</p>
-              {countdown && (
-                <div className="flex items-center gap-2 text-destructive bg-destructive/10 rounded-lg px-4 py-2.5 mb-4">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm font-medium">{countdown}</span>
-                </div>
-              )}
 
-              {/* Filter block message */}
-              {!isOwner && ihale.durum === "devam_ediyor" && filterBlockMessage && (
-                <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
-                  <p className="text-sm text-destructive font-medium mb-1">Teklif Veremezsiniz</p>
-                  <p className="text-xs text-destructive/80">{filterBlockMessage}</p>
-                </div>
-              )}
-
-              {/* Teklif Formu - sadece ihale sahibi değilse ve ihale devam ediyorsa ve filtre geçiyorsa */}
-              {!isOwner && ihale.durum === "devam_ediyor" && !filterBlockMessage && (
-                <div className="space-y-3">
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-1 block">Teklif Tutarı ({sym})</label>
-                    <Input
-                      type="number"
-                      placeholder={`${sym}${ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati).toFixed(2) : "0.00"}`}
-                      value={teklifTutar}
-                      onChange={(e) => setTeklifTutar(e.target.value)}
-                    />
-                    {ihale.min_teklif_degisim != null && Number(ihale.min_teklif_degisim) > 0 && (ihale.teklif_usulu === "acik_indirme" || ihale.teklif_usulu === "acik_arttirma") && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {ihale.teklif_usulu === "acik_indirme"
-                          ? `Minimum indirme bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}`
-                          : `Minimum arttırma bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}`}
-                      </p>
+            {/* Title & Countdown + Teklif Form - desktop only */}
+            <div className="hidden lg:block">
+              <Card className="p-6">
+                <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
+                <p className="text-sm text-muted-foreground mb-3">#{ihale.ihale_no}</p>
+                {countdown && (
+                  <div className="flex items-center gap-2 text-destructive bg-destructive/10 rounded-lg px-4 py-2.5 mb-4">
+                    <Clock className="w-4 h-4" />
+                    <span className="text-sm font-medium">{countdown}</span>
+                  </div>
+                )}
+                {!isOwner && ihale.durum === "devam_ediyor" && filterBlockMessage && (
+                  <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                    <p className="text-sm text-destructive font-medium mb-1">Teklif Veremezsiniz</p>
+                    <p className="text-xs text-destructive/80">{filterBlockMessage}</p>
+                  </div>
+                )}
+                {!isOwner && ihale.durum === "devam_ediyor" && !filterBlockMessage && (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">Teklif Tutarı ({sym})</label>
+                      <Input type="number" placeholder={`${sym}${ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati).toFixed(2) : "0.00"}`} value={teklifTutar} onChange={(e) => setTeklifTutar(e.target.value)} />
+                      {ihale.min_teklif_degisim != null && Number(ihale.min_teklif_degisim) > 0 && (ihale.teklif_usulu === "acik_indirme" || ihale.teklif_usulu === "acik_arttirma") && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {ihale.teklif_usulu === "acik_indirme" ? `Minimum indirme bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}` : `Minimum arttırma bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}`}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
+                      <SearchableSelect options={dbOdemeSecenekleri.map(o => ({ value: o, label: o }))} value={teklifOdemeSecenekleri} onValueChange={setTeklifOdemeSecenekleri} placeholder="Ödeme Seçenekleri" searchPlaceholder="Ara..." />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">Kargo Masrafı Ödemesi</label>
+                      <SearchableSelect options={dbKargoMasrafi.map(o => ({ value: o, label: o }))} value={teklifKargoMasrafi} onValueChange={setTeklifKargoMasrafi} placeholder="Kargo Masrafı Ödemesi" searchPlaceholder="Ara..." />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Vadesi</label>
+                      <SearchableSelect options={dbOdemeVadeleri.map(o => ({ value: o, label: o }))} value={teklifOdemeVadesi} onValueChange={setTeklifOdemeVadesi} placeholder="Ödeme Vadesi" searchPlaceholder="Ara..." />
+                    </div>
+                    <div>
+                      <label className="relative flex items-center justify-center gap-2 h-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+                        <Upload className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">{uploading ? "Yükleniyor..." : teklifDosyaName || "Belge yükle"}</span>
+                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} disabled={uploading} />
+                      </label>
+                    </div>
+                    <Button className="w-full h-12 gap-2 text-base" onClick={handleTeklifSubmit}>
+                      <Send className="w-4 h-4" /> {myTeklif ? "Teklifi Güncelle" : "Teklif Ver"}
+                    </Button>
+                    {myTeklif && (
+                      <Button variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" onClick={handleTeklifGeriCek}>
+                        <Trash2 className="w-4 h-4" /> Teklifi Geri Çek
+                      </Button>
                     )}
                   </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
-                    <SearchableSelect
-                      options={dbOdemeSecenekleri.map(o => ({ value: o, label: o }))}
-                      value={teklifOdemeSecenekleri}
-                      onValueChange={setTeklifOdemeSecenekleri}
-                      placeholder="Ödeme Seçenekleri"
-                      searchPlaceholder="Ara..."
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-1 block">Kargo Masrafı Ödemesi</label>
-                    <SearchableSelect
-                      options={dbKargoMasrafi.map(o => ({ value: o, label: o }))}
-                      value={teklifKargoMasrafi}
-                      onValueChange={setTeklifKargoMasrafi}
-                      placeholder="Kargo Masrafı Ödemesi"
-                      searchPlaceholder="Ara..."
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Vadesi</label>
-                    <SearchableSelect
-                      options={dbOdemeVadeleri.map(o => ({ value: o, label: o }))}
-                      value={teklifOdemeVadesi}
-                      onValueChange={setTeklifOdemeVadesi}
-                      placeholder="Ödeme Vadesi"
-                      searchPlaceholder="Ara..."
-                    />
-                  </div>
-                  <div>
-                    <label className="relative flex items-center justify-center gap-2 h-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
-                      <Upload className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-sm text-muted-foreground">
-                        {uploading ? "Yükleniyor..." : teklifDosyaName || "Belge yükle"}
-                      </span>
-                      <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} disabled={uploading} />
-                    </label>
-                  </div>
-                  <Button className="w-full h-12 gap-2 text-base" onClick={handleTeklifSubmit}>
-                    <Send className="w-4 h-4" /> {myTeklif ? "Teklifi Güncelle" : "Teklif Ver"}
-                  </Button>
-                  {myTeklif && (
-                    <Button variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" onClick={handleTeklifGeriCek}>
-                      <Trash2 className="w-4 h-4" /> Teklifi Geri Çek
-                    </Button>
-                  )}
-                </div>
-              )}
-            </Card>
+                )}
+              </Card>
+            </div>
 
             {/* Bildir button */}
             {!isOwner && (
               <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
-                <Flag className="w-4 h-4" />
-                İhaleyi Bildir
+                <Flag className="w-4 h-4" /> İhaleyi Bildir
               </Button>
             )}
 
-            {/* Teklifler Card */}
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Wifi className="w-4 h-4 text-primary" />
-                  <h3 className="font-bold text-foreground">Teklifler ({visibleTeklifler.length})</h3>
+            {/* Teklifler Card - desktop only */}
+            <div className="hidden lg:block">
+              <Card className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Wifi className="w-4 h-4 text-primary" />
+                    <h3 className="font-bold text-foreground">Teklifler ({visibleTeklifler.length})</h3>
+                  </div>
+                  {!isKapaliTeklif && <Badge className="bg-destructive text-destructive-foreground text-xs">Canlı</Badge>}
                 </div>
                 {!isKapaliTeklif && (
-                  <Badge className="bg-destructive text-destructive-foreground text-xs">Canlı</Badge>
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="text-center p-3 bg-muted rounded-lg">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Min Teklif</p>
+                      <p className="font-bold text-foreground text-sm">{minTeklif != null ? `${sym}${minTeklif.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted rounded-lg">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Maks Teklif</p>
+                      <p className="font-bold text-foreground text-sm">{maxTeklif != null ? `${sym}${maxTeklif.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}</p>
+                    </div>
+                    <div className="text-center p-3 bg-muted rounded-lg">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Sizin Teklifiniz</p>
+                      <p className="font-bold text-foreground text-sm">{myTeklif ? `${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}</p>
+                    </div>
+                  </div>
                 )}
-              </div>
-
-              {/* Min / Max / My */}
-              {!isKapaliTeklif && (
-                <div className="grid grid-cols-3 gap-3 mb-4">
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Min Teklif</p>
-                    <p className="font-bold text-foreground text-sm">
-                      {minTeklif != null ? `${sym}${minTeklif.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
-                    </p>
-                  </div>
-                  <div className="text-center p-3 bg-muted rounded-lg">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Maks Teklif</p>
-                    <p className="font-bold text-foreground text-sm">
-                      {maxTeklif != null ? `${sym}${maxTeklif.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
-                    </p>
-                  </div>
-                  <div className="text-center p-3 bg-muted rounded-lg">
+                {isKapaliTeklif && !isOwner && myTeklif && (
+                  <div className="text-center p-3 bg-muted rounded-lg mb-4">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Sizin Teklifiniz</p>
-                    <p className="font-bold text-foreground text-sm">
-                      {myTeklif ? `${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}` : "-"}
-                    </p>
+                    <p className="font-bold text-foreground text-sm">{`${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`}</p>
                   </div>
-                </div>
-              )}
-
-              {isKapaliTeklif && !isOwner && myTeklif && (
-                <div className="text-center p-3 bg-muted rounded-lg mb-4">
-                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Sizin Teklifiniz</p>
-                  <p className="font-bold text-foreground text-sm">
-                    {`${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`}
-                  </p>
-                </div>
-              )}
-
-              {isKapaliTeklif && !isOwner && (
-                <p className="text-xs text-muted-foreground text-center mb-4">
-                  Kapalı teklif usulünde yalnızca kendi teklifinizi görebilirsiniz.
-                </p>
-              )}
-
-              {myRank && !isKapaliTeklif && (
-                <p className="text-sm text-center text-muted-foreground mb-4">
-                  Teklif sıranız: <strong className="text-foreground">{myRank}.</strong>
-                </p>
-              )}
-
-              {/* Teklif list */}
-              {visibleTeklifler.length > 0 ? (
-                <div className="space-y-0">
-                  <div className="grid grid-cols-3 text-[10px] uppercase tracking-wider text-muted-foreground font-medium py-2 border-b border-border">
-                    <span>Teklif Veren</span>
-                    <span className="text-center">Zaman</span>
-                    <span className="text-right">Teklif</span>
-                  </div>
-                  {visibleTeklifler.map((t, i) => (
-                    <div key={t.id} className={`grid grid-cols-3 py-2.5 text-sm border-b border-border/50 ${t.teklif_veren_user_id === currentUserId ? "bg-primary/5 rounded" : ""}`}>
-                      <span className="text-muted-foreground">
-                        {isOwner ? (t.firma_unvani || "Anonim") : maskName(t.firma_unvani || `Firma ${i + 1}`)}
-                      </span>
-                      <span className="text-center text-muted-foreground text-xs">
-                        {format(new Date(t.created_at), "dd/MM HH:mm")}
-                      </span>
-                      <span className="text-right font-medium text-foreground">
-                        {`${sym}${t.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`}
-                      </span>
+                )}
+                {isKapaliTeklif && !isOwner && <p className="text-xs text-muted-foreground text-center mb-4">Kapalı teklif usulünde yalnızca kendi teklifinizi görebilirsiniz.</p>}
+                {myRank && !isKapaliTeklif && <p className="text-sm text-center text-muted-foreground mb-4">Teklif sıranız: <strong className="text-foreground">{myRank}.</strong></p>}
+                {visibleTeklifler.length > 0 ? (
+                  <div className="space-y-0">
+                    <div className="grid grid-cols-3 text-[10px] uppercase tracking-wider text-muted-foreground font-medium py-2 border-b border-border">
+                      <span>Teklif Veren</span><span className="text-center">Zaman</span><span className="text-right">Teklif</span>
                     </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">Henüz teklif yok.</p>
-              )}
-            </Card>
-
-            {/* İhale Sahibi Firma */}
-            {ihale.firma_adi_gizle ? (
-              <Card className="p-6">
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <EyeOff className="w-5 h-5" />
-                  <p className="text-sm">Firma bilgileri gizlenmiştir.</p>
-                </div>
-              </Card>
-            ) : firma && (
-              <Card className="p-6">
-                <h3 className="font-bold text-foreground mb-4">İhale Sahibi Firma</h3>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
-                    {firma.logo_url ? (
-                      <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
-                    ) : (
-                      <Building2 className="w-6 h-6 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">{firma.firma_unvani}</p>
-                    {locationText && (
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPin className="w-3.5 h-3.5" /> {locationText}
+                    {visibleTeklifler.map((t, i) => (
+                      <div key={t.id} className={`grid grid-cols-3 py-2.5 text-sm border-b border-border/50 ${t.teklif_veren_user_id === currentUserId ? "bg-primary/5 rounded" : ""}`}>
+                        <span className="text-muted-foreground">{isOwner ? (t.firma_unvani || "Anonim") : maskName(t.firma_unvani || `Firma ${i + 1}`)}</span>
+                        <span className="text-center text-muted-foreground text-xs">{format(new Date(t.created_at), "dd/MM HH:mm")}</span>
+                        <span className="text-right font-medium text-foreground">{`${sym}${t.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`}</span>
                       </div>
-                    )}
+                    ))}
                   </div>
-                </div>
-
-                <div className="space-y-3">
-                  {firma.firma_iletisim_numarasi && (
-                    <div className="flex items-center gap-3">
-                      <Phone className="w-4 h-4 text-muted-foreground" />
-                      <div><p className="text-xs text-muted-foreground">Telefon</p><p className="text-sm font-medium">{firma.firma_iletisim_numarasi}</p></div>
-                    </div>
-                  )}
-                  {firma.web_sitesi && (
-                    <div className="flex items-center gap-3">
-                      <Globe className="w-4 h-4 text-muted-foreground" />
-                      <div><p className="text-xs text-muted-foreground">Website</p><p className="text-sm font-medium">{firma.web_sitesi}</p></div>
-                    </div>
-                  )}
-                  {firma.firma_iletisim_email && (
-                    <div className="flex items-center gap-3">
-                      <Mail className="w-4 h-4 text-muted-foreground" />
-                      <div><p className="text-xs text-muted-foreground">E-Posta</p><p className="text-sm font-medium">{firma.firma_iletisim_email}</p></div>
-                    </div>
-                  )}
-
-                  {/* Social */}
-                  {(firma.instagram || firma.facebook || firma.linkedin || firma.x_twitter || firma.tiktok) && (
-                    <div className="flex items-center gap-3 pt-2">
-                      {firma.instagram && <a href={firma.instagram.startsWith("http") ? firma.instagram : `https://instagram.com/${firma.instagram}`} target="_blank" rel="noopener noreferrer"><Instagram className="w-4 h-4 text-muted-foreground hover:text-foreground" /></a>}
-                      {firma.facebook && <a href={firma.facebook.startsWith("http") ? firma.facebook : `https://${firma.facebook}`} target="_blank" rel="noopener noreferrer"><Facebook className="w-4 h-4 text-muted-foreground hover:text-foreground" /></a>}
-                      {firma.linkedin && <a href={firma.linkedin.startsWith("http") ? firma.linkedin : `https://${firma.linkedin}`} target="_blank" rel="noopener noreferrer"><Linkedin className="w-4 h-4 text-muted-foreground hover:text-foreground" /></a>}
-                      {firma.x_twitter && <a href={firma.x_twitter.startsWith("http") ? firma.x_twitter : `https://x.com/${firma.x_twitter}`} target="_blank" rel="noopener noreferrer"><Twitter className="w-4 h-4 text-muted-foreground hover:text-foreground" /></a>}
-                      {firma.tiktok && <a href={firma.tiktok.startsWith("http") ? firma.tiktok : `https://tiktok.com/@${firma.tiktok}`} target="_blank" rel="noopener noreferrer"><TikTokIcon className="w-4 h-4 text-muted-foreground hover:text-foreground" /></a>}
-                    </div>
-                  )}
-                </div>
-
-                {!isOwner && (
-                  <Button className="w-full mt-4 gap-2" onClick={handleMesajGonder}>
-                    <MessageSquare className="w-4 h-4" /> Mesaj Gönder
-                  </Button>
+                ) : (
+                  <p className="text-sm text-muted-foreground text-center py-4">Henüz teklif yok.</p>
                 )}
               </Card>
-            )}
+            </div>
 
-            {/* Benzer İhaleler */}
-            {benzerIhaleler.length > 0 && (
-              <Card className="p-6">
-                <h3 className="font-bold text-foreground mb-4">Benzer İhaleler</h3>
-                <div className="space-y-3">
-                  {benzerIhaleler.map((b) => (
-                    <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors"
-                      onClick={() => navigate(`/tekihale/${b.id}`)}>
-                      <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                        {b.foto_url ? (
-                          <img src={b.foto_url} alt="" className="w-full h-full object-contain" />
-                        ) : (
-                          <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground line-clamp-2">{b.baslik}</p>
-                        {b.baslangic_fiyati && (
-                          <p className="text-sm font-bold text-foreground mt-1">
-                            {paraBirimiSymbol[b.para_birimi || "TRY"] || "₺"}{Number(b.baslangic_fiyati).toLocaleString("tr-TR")}
-                          </p>
-                        )}
-                      </div>
+            {/* İhale Sahibi Firma - desktop only */}
+            <div className="hidden lg:block">
+              {ihale.firma_adi_gizle ? (
+                <Card className="p-6">
+                  <div className="flex items-center gap-3 text-muted-foreground">
+                    <EyeOff className="w-5 h-5" />
+                    <p className="text-sm">Firma bilgileri gizlenmiştir.</p>
+                  </div>
+                </Card>
+              ) : firma && (
+                <Card className="p-6">
+                  <h3 className="font-bold text-foreground mb-4">İhale Sahibi Firma</h3>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
+                      {firma.logo_url ? <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" /> : <Building2 className="w-6 h-6 text-muted-foreground" />}
                     </div>
-                  ))}
-                </div>
-              </Card>
-            )}
+                    <div>
+                      <p className="font-semibold text-foreground">{firma.firma_unvani}</p>
+                      {locationText && <div className="flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="w-3.5 h-3.5" /> {locationText}</div>}
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {firma.firma_iletisim_numarasi && (
+                      <div className="flex items-center gap-3"><Phone className="w-4 h-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">Telefon</p><p className="text-sm font-medium">{firma.firma_iletisim_numarasi}</p></div></div>
+                    )}
+                    {firma.web_sitesi && (
+                      <div className="flex items-center gap-3"><Globe className="w-4 h-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">Website</p><p className="text-sm font-medium">{firma.web_sitesi}</p></div></div>
+                    )}
+                    {firma.firma_iletisim_email && (
+                      <div className="flex items-center gap-3"><Mail className="w-4 h-4 text-muted-foreground" /><div><p className="text-xs text-muted-foreground">E-Posta</p><p className="text-sm font-medium">{firma.firma_iletisim_email}</p></div></div>
+                    )}
+                    {(firma.instagram || firma.facebook || firma.linkedin || firma.x_twitter || firma.tiktok) && (
+                      <div className="flex items-center gap-3 pt-2">
+                        {firma.instagram && <a href={firma.instagram.startsWith("http") ? firma.instagram : `https://instagram.com/${firma.instagram}`} target="_blank" rel="noopener noreferrer"><Instagram className="w-4 h-4 text-muted-foreground hover:text-foreground" /></a>}
+                        {firma.facebook && <a href={firma.facebook.startsWith("http") ? firma.facebook : `https://${firma.facebook}`} target="_blank" rel="noopener noreferrer"><Facebook className="w-4 h-4 text-muted-foreground hover:text-foreground" /></a>}
+                        {firma.linkedin && <a href={firma.linkedin.startsWith("http") ? firma.linkedin : `https://${firma.linkedin}`} target="_blank" rel="noopener noreferrer"><Linkedin className="w-4 h-4 text-muted-foreground hover:text-foreground" /></a>}
+                        {firma.x_twitter && <a href={firma.x_twitter.startsWith("http") ? firma.x_twitter : `https://x.com/${firma.x_twitter}`} target="_blank" rel="noopener noreferrer"><Twitter className="w-4 h-4 text-muted-foreground hover:text-foreground" /></a>}
+                        {firma.tiktok && <a href={firma.tiktok.startsWith("http") ? firma.tiktok : `https://tiktok.com/@${firma.tiktok}`} target="_blank" rel="noopener noreferrer"><TikTokIcon className="w-4 h-4 text-muted-foreground hover:text-foreground" /></a>}
+                      </div>
+                    )}
+                  </div>
+                  {!isOwner && (
+                    <Button className="w-full mt-4 gap-2" onClick={handleMesajGonder}>
+                      <MessageSquare className="w-4 h-4" /> Mesaj Gönder
+                    </Button>
+                  )}
+                </Card>
+              )}
+            </div>
+
+            {/* Benzer İhaleler - desktop only */}
+            <div className="hidden lg:block">
+              {benzerIhaleler.length > 0 && (
+                <Card className="p-6">
+                  <h3 className="font-bold text-foreground mb-4">Benzer İhaleler</h3>
+                  <div className="space-y-3">
+                    {benzerIhaleler.map((b) => (
+                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/tekihale/${b.id}`)}>
+                        <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                          {b.foto_url ? <img src={b.foto_url} alt="" className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground line-clamp-2">{b.baslik}</p>
+                          {b.baslangic_fiyati && <p className="text-sm font-bold text-foreground mt-1">{paraBirimiSymbol[b.para_birimi || "TRY"] || "₺"}{Number(b.baslangic_fiyati).toLocaleString("tr-TR")}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              )}
+            </div>
           </div>
         </div>
 
