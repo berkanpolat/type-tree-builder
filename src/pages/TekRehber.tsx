@@ -8,6 +8,7 @@ import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
 import Footer from "@/components/Footer";
+import { useToast } from "@/hooks/use-toast";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
@@ -65,6 +66,7 @@ interface FirmaWithExtra extends FirmaListItem {
 
 export default function TekRehber() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const rehberSidebarBanner = useBanner("tekrehber-sidebar");
@@ -330,8 +332,10 @@ export default function TekRehber() {
     if (!currentUserId) return;
     if (isFav) {
       await supabase.from("firma_favoriler").delete().eq("user_id", currentUserId).eq("firma_id", firmaId);
+      toast({ title: "Favorilerden çıkarıldı" });
     } else {
       await supabase.from("firma_favoriler").insert({ user_id: currentUserId, firma_id: firmaId });
+      toast({ title: "Favorilere eklendi" });
     }
     setFirmaFavSet((prev) => {
       const next = new Set(prev);
