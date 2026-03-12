@@ -439,7 +439,7 @@ export default function TekIhale() {
             </FilterSection>
             {/* Sidebar banner */}
             <div
-              className="rounded-xl overflow-hidden border border-border cursor-pointer"
+              className="hidden lg:block rounded-xl overflow-hidden border border-border cursor-pointer"
               onClick={() => ihaleSidebarBanner.linkUrl && window.open(ihaleSidebarBanner.linkUrl, "_blank")}
             >
               {ihaleSidebarBanner.url ? (
