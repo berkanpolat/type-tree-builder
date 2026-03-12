@@ -213,25 +213,25 @@ const Dashboard = () => {
         </div>
 
         {/* Özet İstatistik Kartları */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {statsCards.map((stat) => (
             <Card key={stat.title} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => stat.href && navigate(stat.href)}>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-muted-foreground">{stat.title}</span>
-                  <div className={`p-2 rounded-full ${stat.bgColor}`}>
-                    <stat.icon className={`w-4 h-4 ${stat.color}`} />
+              <CardContent className="p-3 sm:p-5">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground">{stat.title}</span>
+                  <div className={`p-1.5 sm:p-2 rounded-full ${stat.bgColor}`}>
+                    <stat.icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${stat.color}`} />
                   </div>
                 </div>
                 {stat.isProgress ? (
                   <div>
-                    <span className="text-2xl font-bold text-foreground">%{stat.value}</span>
+                    <span className="text-xl sm:text-2xl font-bold text-foreground">%{stat.value}</span>
                     <Progress value={stat.value as number} className="mt-2 h-2" />
                   </div>
                 ) : (
                   <div>
-                    <span className="text-2xl font-bold text-foreground">{stat.value}</span>
-                    <p className="text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
+                    <span className="text-xl sm:text-2xl font-bold text-foreground">{stat.value}</span>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">{stat.subtitle}</p>
                   </div>
                 )}
               </CardContent>
