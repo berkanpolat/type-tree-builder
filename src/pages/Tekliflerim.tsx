@@ -101,7 +101,7 @@ export default function Tekliflerim() {
     const ihaleIds = Array.from(latestPerIhale.keys());
     const { data: ihaleler } = await supabase
       .from("ihaleler")
-      .select("id, ihale_no, baslik, foto_url, ihale_turu, teklif_usulu, baslangic_tarihi, bitis_tarihi")
+      .select("id, ihale_no, baslik, foto_url, ihale_turu, teklif_usulu, baslangic_tarihi, bitis_tarihi, slug")
       .in("id", ihaleIds);
 
     // Get all teklifler for ranking (for open auctions)
