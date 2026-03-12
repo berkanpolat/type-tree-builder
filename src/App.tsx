@@ -7,12 +7,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import RouteStateManager from "./components/RouteStateManager";
 
-// Critical pages loaded eagerly (landing, auth, dashboard)
-import LandingPage from "./pages/LandingPage";
+// Only GirisKayit is eagerly loaded (auth gate)
 import GirisKayit from "./pages/GirisKayit";
-import Dashboard from "./pages/Dashboard";
 
-// Lazy-loaded pages
+// All pages lazy-loaded for optimal code splitting
+const LandingPage = lazy(() => import("./pages/LandingPage"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Index = lazy(() => import("./pages/Index"));
 const AnaSayfa = lazy(() => import("./pages/AnaSayfa"));
 const FirmaBilgilerim = lazy(() => import("./pages/FirmaBilgilerim"));
@@ -64,7 +64,16 @@ const AdminIslemler = lazy(() => import("./pages/admin/AdminIslemler"));
 const AdminKisitlamalar = lazy(() => import("./pages/admin/AdminKisitlamalar"));
 const AdminReklam = lazy(() => import("./pages/admin/AdminReklam"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 min - avoid refetching unchanged data
+      gcTime: 10 * 60 * 1000,   // 10 min garbage collection
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const AdminRoute = ({ children }: { children: React.ReactNode }) => (
   <AdminAuthProvider>{children}</AdminAuthProvider>
