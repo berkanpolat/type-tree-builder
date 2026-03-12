@@ -919,7 +919,7 @@ export default function IhaleDetay() {
             <>
               <span>/</span>
               <button
-                onClick={() => navigate("/tekihale", { state: { kategoriId: ihale.urun_kategori_id, grupId: ihale.urun_grup_id, turId: ihale.urun_tur_id } })}
+                onClick={() => navigate("/ihaleler", { state: { kategoriId: ihale.urun_kategori_id, grupId: ihale.urun_grup_id, turId: ihale.urun_tur_id } })}
                 className="hover:text-foreground transition-colors"
               >
                 {breadcrumbTur}
