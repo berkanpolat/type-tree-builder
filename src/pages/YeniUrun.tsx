@@ -576,11 +576,28 @@ export default function YeniUrun() {
     setSelectedV2([]);
   };
 
-  const handleVaryasyonFotoChange = (idx: number, file: File) => {
-    const previewUrl = URL.createObjectURL(file);
+  const handleVaryasyonFotoAdd = (idx: number, files: FileList) => {
+    const newFiles = Array.from(files);
+    const newPreviewUrls = newFiles.map(f => URL.createObjectURL(f));
     setVaryasyonlar(prev => {
       const updated = [...prev];
-      updated[idx] = { ...updated[idx], foto_url: previewUrl, foto_file: file };
+      const existing = updated[idx];
+      updated[idx] = {
+        ...existing,
+        foto_urls: [...existing.foto_urls, ...newPreviewUrls],
+        foto_files: [...(existing.foto_files || []), ...newFiles],
+      };
+      return updated;
+    });
+  };
+
+  const handleVaryasyonFotoRemove = (vIdx: number, fotoIdx: number) => {
+    setVaryasyonlar(prev => {
+      const updated = [...prev];
+      const v = updated[vIdx];
+      const newUrls = v.foto_urls.filter((_, i) => i !== fotoIdx);
+      const newFiles = (v.foto_files || []).filter((_, i) => i !== fotoIdx);
+      updated[vIdx] = { ...v, foto_urls: newUrls, foto_files: newFiles };
       return updated;
     });
   };
