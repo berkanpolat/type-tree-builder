@@ -623,13 +623,9 @@ const GirisKayit = () => {
                           toast({ title: "Hata", description: "Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
                           return;
                         }
-                        // Final server-side email check
-                        const { data: existingEmail } = await supabase
-                          .from("profiles")
-                          .select("id")
-                          .eq("iletisim_email", email)
-                          .limit(1);
-                        if (existingEmail && existingEmail.length > 0) {
+                        // Final server-side email check via RPC
+                        const { data: dupResult } = await supabase.rpc("check_registration_duplicate", { p_email: email });
+                        if (dupResult && (dupResult as any).email_exists) {
                           setEmailDuplicate(true);
                           toast({ title: "Hata", description: "Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
                           return;
