@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
         });
     }
 
-    const sent = await sendSms(telefon, message);
+    const sent = await sendSms(telefon, message + " B038");
     console.log(`[NOTIFICATION-SMS] type=${type}, phone=${telefon.slice(0, 4)}****, sent=${sent}`);
 
     return new Response(JSON.stringify({ success: sent }), {
