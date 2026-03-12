@@ -423,7 +423,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
               {/* Sertifika with Kategori -> Tür hierarchy */}
               <div className="space-y-1">
                 <Label className="text-sm">Sertifika</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <SearchableSelect
                     options={(sertifikaKategorileri || []).map((o: any) => ({ value: o.id, label: o.name }))}
                     value={selectedSertifikaKat || ""}
