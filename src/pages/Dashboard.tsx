@@ -263,11 +263,12 @@ const Dashboard = () => {
                 {!isPro && (
                   <div className="mt-3 space-y-2">
                     <Button size="sm" onClick={() => handleUpgrade("aylik")} className="w-full">
-                      PRO'ya Yükselt ({PRO_FIYATLAR.aylik.fiyat}₺/ay)
+                      PRO'ya Yükselt ({PRO_FIYATLAR.aylik.kdvli}₺/ay)
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => handleUpgrade("yillik")} className="w-full">
-                      Yıllık PRO ({PRO_FIYATLAR.yillik.fiyat}₺/yıl)
+                      Yıllık PRO ({PRO_FIYATLAR.yillik.kdvli}₺/yıl)
                     </Button>
+                    <p className="text-xs text-center text-muted-foreground">%{PRO_FIYATLAR.kdvOrani} KDV dahil</p>
                   </div>
                 )}
               </div>
