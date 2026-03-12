@@ -61,6 +61,8 @@ const GirisKayit = () => {
   const [emailDuplicate, setEmailDuplicate] = useState(false);
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [telefon, setTelefon] = useState("");
+  const [phoneDuplicate, setPhoneDuplicate] = useState(false);
+  const [checkingPhone, setCheckingPhone] = useState(false);
   const [countryCode, setCountryCode] = useState("+90");
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
@@ -126,6 +128,32 @@ const GirisKayit = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, [email]);
+
+  // Debounced phone duplicate check
+  useEffect(() => {
+    const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
+    if (!cleaned || cleaned.length < 7) {
+      setPhoneDuplicate(false);
+      return;
+    }
+    const fullPhone = `${countryCode}${cleaned}`;
+    const timer = setTimeout(async () => {
+      setCheckingPhone(true);
+      try {
+        const { data } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("iletisim_numarasi", fullPhone)
+          .limit(1);
+        setPhoneDuplicate(!!(data && data.length > 0));
+      } catch {
+        setPhoneDuplicate(false);
+      } finally {
+        setCheckingPhone(false);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [telefon, countryCode]);
   const handleSendOtp = async () => {
     const fullPhone = getFullPhone();
     const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
@@ -606,10 +634,13 @@ const GirisKayit = () => {
                           if (phoneVerified) { setPhoneVerified(false); setOtpSent(false); setOtpCode(""); }
                         }}
                         disabled={phoneVerified || otpSent}
-                        className="flex-1"
+                        className={`flex-1 ${phoneDuplicate ? "border-destructive" : ""}`}
                         inputMode="tel"
                       />
                     </div>
+                    {phoneDuplicate && (
+                      <p className="text-xs text-destructive">Bu telefon numarası ile zaten bir üyelik bulunmaktadır.</p>
+                    )}
                   </div>
 
                   {/* Inline OTP Verification */}
@@ -725,7 +756,7 @@ const GirisKayit = () => {
                           }
                           handleSendOtp();
                         }}
-                        disabled={sendingOtp || !ad || !soyad || !email || !isValidEmail(email) || emailDuplicate || !telefon}
+                        disabled={sendingOtp || !ad || !soyad || !email || !isValidEmail(email) || emailDuplicate || phoneDuplicate || !telefon}
                       >
                         {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                         Başvuru Yap
