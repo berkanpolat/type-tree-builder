@@ -263,7 +263,7 @@ export default function Tekliflerim() {
             <div className="text-center py-10 text-muted-foreground">Henüz teklif bulunmamaktadır.</div>
           ) : (
             filteredTeklifler.map((teklif) => (
-              <Card key={teklif.id} className="cursor-pointer" onClick={() => navigate(`/ihale/${teklif.ihale_id}`)}>
+              <Card key={teklif.id} className="cursor-pointer" onClick={() => navigate(`/ihaleler/${teklif.ihale_id}`)}>
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
