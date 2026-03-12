@@ -138,6 +138,7 @@ export default function YeniUrun() {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [loadingData, setLoadingData] = useState(!!editId || !!searchParams.get("kopyala"));
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
@@ -258,8 +259,9 @@ export default function YeniUrun() {
   };
 
   const loadUrun = async (urunId: string) => {
+    setLoadingData(true);
     const { data } = await supabase.from("urunler").select("*").eq("id", urunId).single();
-    if (!data) return;
+    if (!data) { setLoadingData(false); return; }
     setSelectedKategori(data.urun_kategori_id || "");
     setSelectedGrup(data.urun_grup_id || "");
     setSelectedTur(data.urun_tur_id || "");
@@ -273,13 +275,35 @@ export default function YeniUrun() {
     setTeknikDetaylar(td);
     setDraftId(urunId);
 
-    // Load dependent options for edit mode (e.g., Kumaş Türü depends on Kumaş Grubu)
-    const alanlar = getTeknikAlanlar();
+    // Resolve category name directly to load dependent options correctly
+    let resolvedKatName = "";
+    if (data.urun_kategori_id) {
+      const { data: katData } = await supabase
+        .from("firma_bilgi_secenekleri")
+        .select("name")
+        .eq("id", data.urun_kategori_id)
+        .single();
+      if (katData) {
+        resolvedKatName = katData.name;
+        setKategoriName(resolvedKatName);
+      }
+    }
+
+    // Load dependent options for edit mode using resolved category name
+    const resolveAlanlar = () => {
+      if (TEKNIK_ALANLAR[resolvedKatName]) return TEKNIK_ALANLAR[resolvedKatName];
+      const key = Object.keys(TEKNIK_ALANLAR).find(k => resolvedKatName.toLowerCase().includes(k.toLowerCase()));
+      return key ? TEKNIK_ALANLAR[key] : [];
+    };
+    const alanlar = resolveAlanlar();
     for (const alan of alanlar) {
       if (alan.type === "dependent_dropdown" && alan.dependsOn && td[alan.dependsOn]) {
         const parentVal = td[alan.dependsOn];
-        const parentId = Array.isArray(parentVal) ? parentVal[0] : parentVal;
-        if (parentId) loadDependentOptions(alan.dependsOn, parentId);
+        if (Array.isArray(parentVal)) {
+          loadDependentOptionsMulti(alan.dependsOn, parentVal);
+        } else {
+          loadDependentOptions(alan.dependsOn, parentVal);
+        }
       }
     }
 
@@ -313,11 +337,13 @@ export default function YeniUrun() {
       setVaryasyonlar(prodVars);
       if (priceTiers.length > 0) setFiyatKademeleri(priceTiers);
     }
+    setLoadingData(false);
   };
 
   const loadUrunForCopy = async (urunId: string) => {
+    setLoadingData(true);
     const { data } = await supabase.from("urunler").select("*").eq("id", urunId).single();
-    if (!data) return;
+    if (!data) { setLoadingData(false); return; }
     setSelectedKategori(data.urun_kategori_id || "");
     setSelectedGrup(data.urun_grup_id || "");
     setSelectedTur(data.urun_tur_id || "");
@@ -327,14 +353,38 @@ export default function YeniUrun() {
     setFiyatTipi(data.fiyat_tipi);
     setParaBirimi(data.para_birimi || "TRY");
     setFiyat(data.fiyat?.toString() || "");
-    const td = data.teknik_detaylar as Record<string, string> || {};
+    const td = data.teknik_detaylar as Record<string, string | string[]> || {};
     setTeknikDetaylar(td);
     // draftId remains null — this is a NEW product
 
-    const alanlar = getTeknikAlanlar();
+    // Resolve category name directly
+    let resolvedKatName = "";
+    if (data.urun_kategori_id) {
+      const { data: katData } = await supabase
+        .from("firma_bilgi_secenekleri")
+        .select("name")
+        .eq("id", data.urun_kategori_id)
+        .single();
+      if (katData) {
+        resolvedKatName = katData.name;
+        setKategoriName(resolvedKatName);
+      }
+    }
+
+    const resolveAlanlar = () => {
+      if (TEKNIK_ALANLAR[resolvedKatName]) return TEKNIK_ALANLAR[resolvedKatName];
+      const key = Object.keys(TEKNIK_ALANLAR).find(k => resolvedKatName.toLowerCase().includes(k.toLowerCase()));
+      return key ? TEKNIK_ALANLAR[key] : [];
+    };
+    const alanlar = resolveAlanlar();
     for (const alan of alanlar) {
       if (alan.type === "dependent_dropdown" && alan.dependsOn && td[alan.dependsOn]) {
-        loadDependentOptions(alan.dependsOn, td[alan.dependsOn]);
+        const parentVal = td[alan.dependsOn];
+        if (Array.isArray(parentVal)) {
+          loadDependentOptionsMulti(alan.dependsOn, parentVal);
+        } else {
+          loadDependentOptions(alan.dependsOn, parentVal as string);
+        }
       }
     }
 
@@ -356,7 +406,6 @@ export default function YeniUrun() {
             foto_urls: [v.foto_url],
           });
         }
-        // Deduplicate price tiers
         const tierKey = `${v.min_adet}|${v.max_adet}|${v.birim_fiyat}`;
         if (!seenTiers.has(tierKey)) {
           seenTiers.add(tierKey);
@@ -366,6 +415,7 @@ export default function YeniUrun() {
       setVaryasyonlar(prodVars);
       if (priceTiers.length > 0) setFiyatKademeleri(priceTiers);
     }
+    setLoadingData(false);
   };
 
   const getTeknikAlanlar = () => {
@@ -640,7 +690,7 @@ export default function YeniUrun() {
             const Icon = STEP_ICONS[i];
             const isActive = i === step;
             const isDone = i < step;
-            const isClickable = isAdminMode || isDone || isActive;
+            const isClickable = !loadingData && (isAdminMode || isDone || isActive);
             return (
               <div key={label} className="flex items-center">
                 <button
@@ -985,14 +1035,20 @@ export default function YeniUrun() {
         </Card>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate("/manupazar")}>Geri</Button>
-          {step < STEPS.length - 1 ? (
-            <Button onClick={handleNext}>İleri</Button>
-          ) : (
-            <Button onClick={handleSubmit} disabled={saving}>{saving ? "Kaydediliyor..." : "İlerle ve Önizle"}</Button>
-          )}
-        </div>
+        {loadingData ? (
+          <div className="flex items-center justify-center py-4">
+            <p className="text-muted-foreground">Ürün bilgileri yükleniyor...</p>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate("/manupazar")}>Geri</Button>
+            {step < STEPS.length - 1 ? (
+              <Button onClick={handleNext}>İleri</Button>
+            ) : (
+              <Button onClick={handleSubmit} disabled={saving}>{saving ? "Kaydediliyor..." : "İlerle ve Önizle"}</Button>
+            )}
+          </div>
+        )}
       </div>
       <UpgradeDialog
         open={upgradeOpen}
