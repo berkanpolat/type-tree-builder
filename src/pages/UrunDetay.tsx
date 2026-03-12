@@ -502,7 +502,7 @@ export default function UrunDetay() {
         </nav>
 
         {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-0">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
           {/* Left: Image Gallery */}
           <div className="lg:col-span-3 flex gap-4">
             {/* Thumbnails */}
