@@ -188,7 +188,7 @@ interface TeklifForList {
 }
 
 export default function IhaleDetay() {
-  const { id } = useParams<{ id: string }>();
+  const { slug: slugParam } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const ihaleDetayBanner = useBanner("ihale-detay-alt-banner");
@@ -329,18 +329,19 @@ export default function IhaleDetay() {
 
   // Fetch ihale
   const fetchIhale = useCallback(async () => {
-    if (!id) return;
+    if (!slugParam) return;
     const adminToken = localStorage.getItem("admin_token");
     // Allow fetch if user is logged in OR admin token exists
     if (!currentUserId && !adminToken) return;
     setLoading(true);
 
     let ihaleData: any = null;
+    const isId = isUUID(slugParam);
 
     const { data: directData, error } = await supabase
       .from("ihaleler")
       .select("*")
-      .eq("id", id)
+      .eq(isId ? "id" : "slug", slugParam)
       .single();
 
     if (directData) {
@@ -351,7 +352,7 @@ export default function IhaleDetay() {
       if (adminToken) {
         try {
           const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth/get-ihale-detail", {
-            body: { token: adminToken, ihaleId: id },
+            body: { token: adminToken, ihaleId: slugParam },
           });
           if (!adminErr && adminRes?.ihale) {
             ihaleData = adminRes.ihale;
@@ -363,12 +364,13 @@ export default function IhaleDetay() {
 
     if (!ihaleData) { setLoading(false); return; }
     setIhale(ihaleData);
+    const ihaleId = ihaleData.id;
 
     // Images - load from ihale_fotograflar table, fallback to foto_url
     const { data: fotoRows } = await supabase
       .from("ihale_fotograflar" as any)
       .select("foto_url, sira")
-      .eq("ihale_id", id)
+      .eq("ihale_id", ihaleId)
       .order("sira");
     
     const imgs: string[] = (fotoRows || []).map((f: any) => f.foto_url);
@@ -379,7 +381,7 @@ export default function IhaleDetay() {
     const { data: ekRows } = await supabase
       .from("ihale_ek_dosyalar" as any)
       .select("dosya_url, dosya_adi, sira")
-      .eq("ihale_id", id)
+      .eq("ihale_id", ihaleId)
       .order("sira");
     setEkDosyalar(ekRows || []);
 
@@ -394,9 +396,9 @@ export default function IhaleDetay() {
     // Fetch firma, stok, filtreler, teklifler in parallel
     const [firmaRes, stokRes, filtreRes, teklifRes] = await Promise.all([
       supabase.from("firmalar").select("firma_unvani, logo_url, firma_iletisim_numarasi, firma_iletisim_email, web_sitesi, instagram, facebook, linkedin, x_twitter, tiktok, kurulus_il_id, kurulus_ilce_id, user_id").eq("user_id", ihaleData.user_id).maybeSingle(),
-      supabase.from("ihale_stok").select("*").eq("ihale_id", id),
-      supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", id),
-      supabase.from("ihale_teklifler").select("id, tutar, created_at, teklif_veren_user_id, odeme_secenekleri, kargo_masrafi, odeme_vadesi, ek_dosya_url, ek_dosya_adi").eq("ihale_id", id).order("created_at", { ascending: false }),
+      supabase.from("ihale_stok").select("*").eq("ihale_id", ihaleId),
+      supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", ihaleId),
+      supabase.from("ihale_teklifler").select("id, tutar, created_at, teklif_veren_user_id, odeme_secenekleri, kargo_masrafi, odeme_vadesi, ek_dosya_url, ek_dosya_adi").eq("ihale_id", ihaleId).order("created_at", { ascending: false }),
     ]);
 
     setFirma(firmaRes.data);
@@ -613,9 +615,9 @@ export default function IhaleDetay() {
     if (katId) {
       const { data: benzer } = await supabase
         .from("ihaleler")
-        .select("id, baslik, foto_url, baslangic_fiyati, para_birimi")
+        .select("id, baslik, foto_url, baslangic_fiyati, para_birimi, slug")
         .eq("durum", "devam_ediyor")
-        .neq("id", id)
+        .neq("id", ihaleId)
         .or(`urun_kategori_id.eq.${katId},hizmet_kategori_id.eq.${katId}`)
         .limit(4);
       setBenzerIhaleler(benzer || []);
@@ -624,10 +626,10 @@ export default function IhaleDetay() {
     // Increment view count
     await supabase.from("ihaleler").update({
       goruntuleme_sayisi: (ihaleData.goruntuleme_sayisi || 0) + 1,
-    } as any).eq("id", id);
+    } as any).eq("id", ihaleId);
 
     setLoading(false);
-  }, [id, currentUserId]);
+  }, [slugParam, currentUserId]);
 
   useEffect(() => { fetchIhale(); }, [fetchIhale]);
 
@@ -732,7 +734,7 @@ export default function IhaleDetay() {
     setSubmitting(true);
     const tutar = parseFloat(teklifTutar);
     const { error } = await supabase.from("ihale_teklifler").insert({
-      ihale_id: id!,
+      ihale_id: ihale.id,
       teklif_veren_user_id: currentUserId,
       tutar,
       odeme_secenekleri: teklifOdemeSecenekleri || null,
@@ -754,7 +756,7 @@ export default function IhaleDetay() {
   const handleTeklifGeriCek = async () => {
     if (!myTeklif) return;
     // Delete all of user's bids for this ihale
-    const { error } = await supabase.from("ihale_teklifler").delete().eq("ihale_id", id!).eq("teklif_veren_user_id", currentUserId);
+    const { error } = await supabase.from("ihale_teklifler").delete().eq("ihale_id", ihale.id).eq("teklif_veren_user_id", currentUserId);
     if (error) {
       toast({ title: "Hata", description: "Teklif geri çekilemedi.", variant: "destructive" });
     } else {
@@ -1260,7 +1262,7 @@ export default function IhaleDetay() {
                   <h3 className="font-bold text-foreground mb-4">Benzer İhaleler</h3>
                   <div className="space-y-3">
                     {benzerIhaleler.map((b) => (
-                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/ihaleler/${b.id}`)}>
+                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/ihaleler/${b.slug || b.id}`)}>
                         <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                           {b.foto_url ? <img src={b.foto_url} alt="" className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
                         </div>
@@ -1567,7 +1569,7 @@ export default function IhaleDetay() {
                   <h3 className="font-bold text-foreground mb-4">Benzer İhaleler</h3>
                   <div className="space-y-3">
                     {benzerIhaleler.map((b) => (
-                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/ihaleler/${b.id}`)}>
+                      <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/ihaleler/${b.slug || b.id}`)}>
                         <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
                           {b.foto_url ? <img src={b.foto_url} alt="" className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
                         </div>

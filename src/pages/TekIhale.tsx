@@ -78,6 +78,7 @@ interface IhaleRow {
   hizmet_tur_id: string | null;
   odeme_secenekleri: string | null;
   odeme_vadesi: string | null;
+  slug: string | null;
 }
 
 interface IhaleWithExtra extends IhaleRow {
@@ -194,7 +195,7 @@ export default function TekIhale() {
       setLoading(true);
       const { data: ihaleData } = await supabase
         .from("ihaleler")
-        .select("id, ihale_no, baslik, foto_url, ihale_turu, teklif_usulu, baslangic_fiyati, para_birimi, bitis_tarihi, user_id, firma_adi_gizle, urun_kategori_id, urun_grup_id, urun_tur_id, hizmet_kategori_id, hizmet_tur_id, odeme_secenekleri, odeme_vadesi")
+        .select("id, ihale_no, baslik, foto_url, ihale_turu, teklif_usulu, baslangic_fiyati, para_birimi, bitis_tarihi, user_id, firma_adi_gizle, urun_kategori_id, urun_grup_id, urun_tur_id, hizmet_kategori_id, hizmet_tur_id, odeme_secenekleri, odeme_vadesi, slug")
         .eq("durum", "devam_ediyor")
         .order("created_at", { ascending: false });
 
@@ -526,7 +527,7 @@ export default function TekIhale() {
                   <div key={ihale.id}>
                     <Card
                       className="p-5 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() => navigate(`/ihaleler/${ihale.id}`)}
+                      onClick={() => navigate(`/ihaleler/${ihale.slug || ihale.id}`)}
                     >
                       <div className="flex flex-col sm:flex-row gap-4 sm:gap-5">
                         {/* Image */}

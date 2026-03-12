@@ -57,6 +57,7 @@ interface TeklifRow {
   baslangic_tarihi: string | null;
   bitis_tarihi: string | null;
   teklif_sirasi: number | null;
+  ihale_slug: string | null;
 }
 
 export default function Tekliflerim() {
@@ -101,7 +102,7 @@ export default function Tekliflerim() {
     const ihaleIds = Array.from(latestPerIhale.keys());
     const { data: ihaleler } = await supabase
       .from("ihaleler")
-      .select("id, ihale_no, baslik, foto_url, ihale_turu, teklif_usulu, baslangic_tarihi, bitis_tarihi")
+      .select("id, ihale_no, baslik, foto_url, ihale_turu, teklif_usulu, baslangic_tarihi, bitis_tarihi, slug")
       .in("id", ihaleIds);
 
     // Get all teklifler for ranking (for open auctions)
@@ -159,6 +160,7 @@ export default function Tekliflerim() {
         baslangic_tarihi: ihale.baslangic_tarihi,
         bitis_tarihi: ihale.bitis_tarihi,
         teklif_sirasi,
+        ihale_slug: (ihale as any).slug || null,
       });
     }
 
@@ -263,7 +265,7 @@ export default function Tekliflerim() {
             <div className="text-center py-10 text-muted-foreground">Henüz teklif bulunmamaktadır.</div>
           ) : (
             filteredTeklifler.map((teklif) => (
-              <Card key={teklif.id} className="cursor-pointer" onClick={() => navigate(`/ihaleler/${teklif.ihale_id}`)}>
+              <Card key={teklif.id} className="cursor-pointer" onClick={() => navigate(`/ihaleler/${teklif.ihale_slug || teklif.ihale_id}`)}>
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
@@ -358,7 +360,7 @@ export default function Tekliflerim() {
                         <Badge variant="secondary" className={durumColors[teklif.durum] || ""}>{durumLabels[teklif.durum] || teklif.durum}</Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button size="sm" onClick={() => navigate(`/ihaleler/${teklif.ihale_id}`)} className="gap-1">
+                        <Button size="sm" onClick={() => navigate(`/ihaleler/${teklif.ihale_slug || teklif.ihale_id}`)} className="gap-1">
                           <Plus className="w-3 h-3" />Yeni Teklif
                         </Button>
                       </TableCell>

@@ -59,6 +59,7 @@ interface Ihale {
   bitis_tarihi: string | null;
   goruntuleme_sayisi: number;
   created_at: string;
+  slug: string | null;
 }
 
 interface IhaleTeklif {
@@ -243,7 +244,7 @@ export default function ManuIhale() {
                   onClick={() => {
                     if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/ihalelerim/duzenle/${ihale.id}`);
                     else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") navigate(`/ihalelerim/takip/${ihale.id}`);
-                    else navigate(`/ihaleler/${ihale.id}`);
+                    else navigate(`/ihaleler/${ihale.slug || ihale.id}`);
                   }}
                 >
                   <CardContent className="p-4 space-y-3">
@@ -286,7 +287,7 @@ export default function ManuIhale() {
                         )}
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
                           if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/ihalelerim/duzenle/${ihale.id}`);
-                          else navigate(`/ihaleler/${ihale.id}`);
+                          else navigate(`/ihaleler/${ihale.slug || ihale.id}`);
                         }}>
                           <ExternalLink className="w-3.5 h-3.5" />
                         </Button>
@@ -337,7 +338,7 @@ export default function ManuIhale() {
                         onClick={() => {
                           if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/ihalelerim/duzenle/${ihale.id}`);
                           else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") navigate(`/ihalelerim/takip/${ihale.id}`);
-                          else navigate(`/ihaleler/${ihale.id}`);
+                          else navigate(`/ihaleler/${ihale.slug || ihale.id}`);
                         }}
                       >
                         <TableCell>
@@ -378,7 +379,7 @@ export default function ManuIhale() {
                             )}
                             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
                               if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/ihalelerim/duzenle/${ihale.id}`);
-                              else navigate(`/ihaleler/${ihale.id}`);
+                              else navigate(`/ihaleler/${ihale.slug || ihale.id}`);
                             }}>
                               <ExternalLink className="w-4 h-4" />
                             </Button>
