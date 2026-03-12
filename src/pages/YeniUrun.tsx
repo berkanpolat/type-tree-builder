@@ -138,6 +138,7 @@ export default function YeniUrun() {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [loadingData, setLoadingData] = useState(!!editId || !!searchParams.get("kopyala"));
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
