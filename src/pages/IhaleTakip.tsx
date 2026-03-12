@@ -568,56 +568,56 @@ export default function IhaleTakip() {
             <div className="space-y-4">
               {filteredTeklifler.map((teklif) => (
                 <Card key={teklif.id} className="border">
-                  <CardContent className="p-5">
-                    <div className="flex flex-wrap items-start gap-4 md:gap-6">
-                      {/* Firma Info */}
-                      <div className="flex items-center gap-3 min-w-[180px]">
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                          {teklif.firma_logo_url ? (
-                            <img src={teklif.firma_logo_url} alt="" className="w-full h-full object-contain" />
-                          ) : (
-                            <span className="text-xs font-bold text-muted-foreground">{teklif.firma_unvani.charAt(0)}</span>
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground text-sm">{teklif.firma_unvani}</p>
-                          {teklif.firma_il && (
-                            <p className="text-xs text-muted-foreground">📍 {teklif.firma_il}, {teklif.firma_ulke}</p>
-                          )}
-                        </div>
-                      </div>
+                    <div className="p-4 sm:p-5">
+                     <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 md:gap-6">
+                       {/* Firma Info */}
+                       <div className="flex items-center gap-3 w-full sm:w-auto sm:min-w-[180px]">
+                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                           {teklif.firma_logo_url ? (
+                             <img src={teklif.firma_logo_url} alt="" className="w-full h-full object-contain" />
+                           ) : (
+                             <span className="text-xs font-bold text-muted-foreground">{teklif.firma_unvani.charAt(0)}</span>
+                           )}
+                         </div>
+                         <div className="min-w-0">
+                           <p className="font-semibold text-foreground text-sm truncate">{teklif.firma_unvani}</p>
+                           {teklif.firma_il && (
+                             <p className="text-xs text-muted-foreground">📍 {teklif.firma_il}, {teklif.firma_ulke}</p>
+                           )}
+                         </div>
+                       </div>
 
-                      {/* Teklif Details */}
-                      <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div>
-                          <p className="text-xs text-muted-foreground font-medium uppercase">Teklif Tutarı</p>
-                          <p className="text-lg font-bold text-foreground">{sym}{teklif.tutar.toLocaleString("tr-TR")}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground font-medium uppercase">Ödeme Vadesi</p>
-                          <p className="text-sm font-medium text-foreground">{teklif.odeme_vadesi || "-"}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground font-medium uppercase">Teklif Tarihi</p>
-                          <p className="text-sm font-medium text-foreground">
-                            {format(new Date(teklif.created_at), "dd.MM.yyyy, HH:mm", { locale: tr })}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground font-medium uppercase">Durum</p>
-                          <Badge
-                            variant="secondary"
-                            className={
-                              teklif.durum === "kabul_edildi" ? "bg-emerald-100 text-emerald-700" :
-                                teklif.durum === "reddedildi" ? "bg-red-100 text-red-700" :
-                                  "bg-amber-100 text-amber-700"
-                            }
-                          >
-                            {teklif.durum === "kabul_edildi" ? "Kabul Edildi" : teklif.durum === "reddedildi" ? "Reddedildi" : "İnceleniyor"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
+                       {/* Teklif Details */}
+                       <div className="flex-1 grid grid-cols-2 gap-3 w-full">
+                         <div>
+                           <p className="text-xs text-muted-foreground font-medium uppercase">Teklif Tutarı</p>
+                           <p className="text-base sm:text-lg font-bold text-foreground">{sym}{teklif.tutar.toLocaleString("tr-TR")}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-muted-foreground font-medium uppercase">Ödeme Vadesi</p>
+                           <p className="text-sm font-medium text-foreground">{teklif.odeme_vadesi || "-"}</p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-muted-foreground font-medium uppercase">Teklif Tarihi</p>
+                           <p className="text-sm font-medium text-foreground">
+                             {format(new Date(teklif.created_at), "dd.MM.yyyy, HH:mm", { locale: tr })}
+                           </p>
+                         </div>
+                         <div>
+                           <p className="text-xs text-muted-foreground font-medium uppercase">Durum</p>
+                           <Badge
+                             variant="secondary"
+                             className={
+                               teklif.durum === "kabul_edildi" ? "bg-emerald-100 text-emerald-700" :
+                                 teklif.durum === "reddedildi" ? "bg-red-100 text-red-700" :
+                                   "bg-amber-100 text-amber-700"
+                             }
+                           >
+                             {teklif.durum === "kabul_edildi" ? "Kabul Edildi" : teklif.durum === "reddedildi" ? "Reddedildi" : "İnceleniyor"}
+                           </Badge>
+                         </div>
+                       </div>
+                     </div>
 
                     {/* Second row: Ödeme Şekli & Kargo */}
                     <div className="flex flex-wrap gap-6 mt-3 pt-3 border-t">
