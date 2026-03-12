@@ -48,7 +48,6 @@ const TEKNIK_ALANLAR: Record<string, { label: string; type: "dropdown" | "text" 
     { label: "Aksesuar Kullanım Alanı", type: "dropdown", kategoriName: "Aksesuar Kullanım Alanı" },
     { label: "Malzeme Türü", type: "dropdown", kategoriName: "Malzeme Türü" },
     { label: "Kaplama", type: "dropdown", kategoriName: "Kaplama" },
-    { label: "Beden", type: "dropdown", kategoriName: "Beden" },
     { label: "Ebat Ölçü (cm)", type: "text" },
   ],
   "Ambalaj": [
