@@ -96,7 +96,7 @@ serve(async (req) => {
     const noInstallment = "1";
     const maxInstallment = "0";
     const currency = "TL";
-    const testMode = "0";
+    const testMode = "1";
     const debugOn = "0";
     const lang = "tr";
 
