@@ -363,6 +363,18 @@ Deno.serve(async (req) => {
       
       if (authUser?.email) {
         if (action === "approve-firma") {
+          // Mark user as required to set password on next sign-in
+          try {
+            await supabase.auth.admin.updateUserById(firma.user_id, {
+              user_metadata: {
+                ...(authUser.user_metadata ?? {}),
+                must_set_password: true,
+              },
+            });
+          } catch (e) {
+            // Metadata update failure should not block approval
+          }
+
           // Trigger password reset email so user can create their password
           try {
             const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
