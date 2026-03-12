@@ -433,7 +433,7 @@ export default function UrunDetay() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <p className="text-muted-foreground">Ürün bulunamadı.</p>
-        <Button onClick={() => navigate("/anasayfa")}>Ana Sayfaya Dön</Button>
+        <Button onClick={() => navigate("/tekpazar")}>Ana Sayfaya Dön</Button>
       </div>
     );
   }
