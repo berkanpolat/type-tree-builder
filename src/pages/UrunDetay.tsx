@@ -462,7 +462,7 @@ export default function UrunDetay() {
       {/* Header */}
       <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
 
-      <main className="max-w-7xl mx-auto px-6 py-6">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
           <Link to="/anasayfa" className="hover:text-foreground transition-colors">Pazar Anasayfa</Link>
