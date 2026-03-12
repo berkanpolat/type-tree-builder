@@ -12,9 +12,22 @@ const PAYTR_API_URL = "https://www.paytr.com/odeme/api/get-token";
 
 // PRO paket fiyatları (kuruş cinsinden)
 const PRO_PRICES = {
-  aylik: 19900, // 199.00 TL
+  aylik: 19900,   // 199.00 TL
   yillik: 129900, // 1299.00 TL
 };
+
+async function hmacSha256Base64(key: string, data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const cryptoKey = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(key),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", cryptoKey, encoder.encode(data));
+  return base64Encode(new Uint8Array(signature));
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -27,7 +40,6 @@ serve(async (req) => {
   );
 
   try {
-    // Authenticate user
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
     const { data } = await supabaseClient.auth.getUser(token);
@@ -39,7 +51,6 @@ serve(async (req) => {
       throw new Error("Geçersiz periyot");
     }
 
-    // Get firma info for user name
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -77,57 +88,31 @@ serve(async (req) => {
     const userPhone = profile?.iletisim_numarasi || "05000000000";
     const userAddress = firma?.firma_unvani || "Türkiye";
 
-    // Basket: base64 encoded JSON array
+    // Basket: base64 encoded JSON array [[name, price, quantity]]
     const basketLabel = periyot === "yillik" ? "PRO Paket (Yillik)" : "PRO Paket (Aylik)";
     const basketPrice = (PRO_PRICES[periyot as keyof typeof PRO_PRICES] / 100).toFixed(2);
-    const userBasket = btoa(
-      JSON.stringify([[basketLabel, basketPrice, 1]])
-    );
+    const userBasket = btoa(JSON.stringify([[basketLabel, basketPrice, 1]]));
 
-    const noInstallment = "1"; // Taksit yok
+    const noInstallment = "1";
     const maxInstallment = "0";
     const currency = "TL";
-    const testMode = "0"; // Production
+    const testMode = "0";
     const debugOn = "0";
-    const paymentType = "card";
     const lang = "tr";
 
-    const origin = req.headers.get("origin") || "https://type-tree-builder.lovable.app";
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const merchantOkUrl = `${supabaseUrl}/functions/v1/paytr-callback`;
     const merchantFailUrl = `${supabaseUrl}/functions/v1/paytr-callback`;
     const timeoutLimit = "30";
 
-    // Generate PayTR token
-    // hash_str = merchant_id + user_ip + merchant_oid + email + payment_amount + payment_type + user_basket + no_installment + max_installment + currency + test_mode
+    // PayTR iFrame API hash formula:
+    // hash_str = merchant_id + user_ip + merchant_oid + email + payment_amount + user_basket + no_installment + max_installment + currency + test_mode
     const hashStr =
-      merchantId +
-      userIp +
-      merchantOid +
-      email +
-      paymentAmount +
-      payment_type_value() +
-      userBasket +
-      noInstallment +
-      maxInstallment +
-      currency +
-      testMode;
+      merchantId + userIp + merchantOid + email + paymentAmount +
+      userBasket + noInstallment + maxInstallment + currency + testMode;
 
-    const encoder = new TextEncoder();
-    const key = encoder.encode(merchantKey);
-    const data_to_sign = encoder.encode(hashStr + merchantSalt);
+    const paytrToken = await hmacSha256Base64(merchantKey, hashStr + merchantSalt);
 
-    const cryptoKey = await crypto.subtle.importKey(
-      "raw",
-      key,
-      { name: "HMAC", hash: "SHA-256" },
-      false,
-      ["sign"]
-    );
-    const signature = await crypto.subtle.sign("HMAC", cryptoKey, data_to_sign);
-    const paytrToken = base64Encode(new Uint8Array(signature));
-
-    // POST to PayTR
     const formData = new URLSearchParams();
     formData.append("merchant_id", merchantId);
     formData.append("user_ip", userIp);
@@ -150,10 +135,7 @@ serve(async (req) => {
     formData.append("lang", lang);
 
     console.log("[CREATE-PAYTR-TOKEN] Requesting token for:", {
-      merchantOid,
-      email,
-      paymentAmount,
-      periyot,
+      merchantOid, email, paymentAmount, periyot,
     });
 
     const paytrRes = await fetch(PAYTR_API_URL, {
@@ -163,12 +145,10 @@ serve(async (req) => {
     });
 
     const paytrResult = await paytrRes.json();
-    console.log("[CREATE-PAYTR-TOKEN] PayTR response:", JSON.stringify(paytrResult));
+    console.log("[CREATE-PAYTR-TOKEN] PayTR response status:", paytrResult.status);
 
     if (paytrResult.status !== "success") {
-      throw new Error(
-        `PayTR token alınamadı: ${paytrResult.reason || JSON.stringify(paytrResult)}`
-      );
+      throw new Error(`PayTR token alınamadı: ${paytrResult.reason || JSON.stringify(paytrResult)}`);
     }
 
     const iframeUrl = `https://www.paytr.com/odeme/guvenli/${paytrResult.token}`;
@@ -188,7 +168,3 @@ serve(async (req) => {
     });
   }
 });
-
-function payment_type_value() {
-  return "card";
-}
