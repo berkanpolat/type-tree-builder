@@ -305,6 +305,8 @@ export default function FirmaDetay() {
         return;
       }
 
+      const firmaId = firmaData.id;
+
       // Kendi firması ise kota kontrolü yapma
       if (user && firmaData.user_id !== user.id) {
         // Daha önce HİÇ görüntülenmiş mi kontrol et (tüm zamanlar)
@@ -312,7 +314,7 @@ export default function FirmaDetay() {
           .from("profil_goruntulemeler" as any)
           .select("id")
           .eq("user_id", user.id)
-          .eq("firma_id", id)
+          .eq("firma_id", firmaId)
           .maybeSingle();
 
         if (!existingView) {
@@ -327,7 +329,7 @@ export default function FirmaDetay() {
           // Görüntüleme kaydı oluştur
           await supabase
             .from("profil_goruntulemeler" as any)
-            .insert({ user_id: user.id, firma_id: id });
+            .insert({ user_id: user.id, firma_id: firmaId });
         }
         // Daha önce görüntülenmişse → serbestçe devam et, hak düşmez
       }
@@ -351,24 +353,24 @@ export default function FirmaDetay() {
               .from("firma_favoriler")
               .select("id")
               .eq("user_id", user.id)
-              .eq("firma_id", id)
+              .eq("firma_id", firmaId)
           : Promise.resolve({ data: [] }),
-        supabase.from("firma_tesisler").select("*").eq("firma_id", id),
-        supabase.from("firma_sertifikalar").select("*").eq("firma_id", id),
-        supabase.from("firma_referanslar").select("*").eq("firma_id", id),
-        supabase.from("firma_galeri").select("*").eq("firma_id", id),
+        supabase.from("firma_tesisler").select("*").eq("firma_id", firmaId),
+        supabase.from("firma_sertifikalar").select("*").eq("firma_id", firmaId),
+        supabase.from("firma_referanslar").select("*").eq("firma_id", firmaId),
+        supabase.from("firma_galeri").select("*").eq("firma_id", firmaId),
         supabase
           .from("urunler")
           .select("id, baslik, foto_url, fiyat, para_birimi, urun_no, durum")
           .eq("user_id", firmaData.user_id)
           .eq("durum", "aktif"),
-        supabase.from("firma_makineler").select("*").eq("firma_id", id),
-        supabase.from("firma_teknolojiler").select("*").eq("firma_id", id),
-        supabase.from("firma_uretim_satis").select("*").eq("firma_id", id),
+        supabase.from("firma_makineler").select("*").eq("firma_id", firmaId),
+        supabase.from("firma_teknolojiler").select("*").eq("firma_id", firmaId),
+        supabase.from("firma_uretim_satis").select("*").eq("firma_id", firmaId),
         supabase
           .from("firma_urun_hizmet_secimler")
           .select("*")
-          .eq("firma_id", id),
+          .eq("firma_id", firmaId),
       ]);
 
       const tesisRows = tesisRes.data || [];
