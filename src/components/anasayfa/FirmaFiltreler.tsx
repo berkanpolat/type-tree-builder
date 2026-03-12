@@ -440,6 +440,34 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
 
         return null;
       })}
+    </>
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <Button variant="outline" className="lg:hidden gap-2" onClick={() => setMobileOpen(true)}>
+          <SlidersHorizontal className="w-4 h-4" />
+          Filtreler
+          {activeCount > 0 && (
+            <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">{activeCount}</Badge>
+          )}
+        </Button>
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-[300px] overflow-y-auto p-4">
+            <SheetHeader className="mb-4">
+              <SheetTitle>Filtreler</SheetTitle>
+            </SheetHeader>
+            <div className="space-y-3">{filterContent}</div>
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  return (
+    <div className="w-72 shrink-0 space-y-3 hidden lg:block">
+      {filterContent}
     </div>
   );
 }
