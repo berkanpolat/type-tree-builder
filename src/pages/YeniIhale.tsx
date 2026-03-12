@@ -507,29 +507,29 @@ export default function YeniIhale() {
         <IhaleWizardStepper steps={STEPS} currentStep={currentStep} onStepClick={(step) => setCurrentStep(step)} freeNavigation={isAdminMode} />
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             {STEPS[currentStep] === "İhale Türü" && <IhaleTuruStep formData={formData} updateForm={updateForm} />}
             {STEPS[currentStep] === "Teklif Usulü" && <TeklifUsuluStep formData={formData} updateForm={updateForm} />}
             {STEPS[currentStep] === "Kategori" && <KategoriStep formData={formData} updateForm={updateForm} />}
             {STEPS[currentStep] === "İhale Bilgileri" && <IhaleBilgileriStep formData={formData} updateForm={updateForm} ihaleId={ihaleId} skipBirim={skipStokStep} />}
             {STEPS[currentStep] === "Teknik Detaylar" && <TeknikDetaylarStep formData={formData} updateForm={updateForm} />}
             {STEPS[currentStep] === "Stok" && <StokStep formData={formData} updateForm={updateForm} />}
-
-            <div className="flex justify-between mt-8 pt-6 border-t">
-              {currentStep > 0 ? (
-                <Button variant="outline" onClick={handleBack}>Geri</Button>
-              ) : <div />}
-              
-              {currentStep < STEPS.length - 1 ? (
-                <Button onClick={handleNext}>İleri</Button>
-              ) : (
-                <Button onClick={handlePreview} disabled={saving}>
-                  {saving ? "Kaydediliyor..." : "İlerle ve Önizle"}
-                </Button>
-              )}
-            </div>
           </CardContent>
         </Card>
+
+        <div className="flex justify-between sticky bottom-0 bg-background py-3 border-t z-10">
+          {currentStep > 0 ? (
+            <Button variant="outline" onClick={handleBack}>Geri</Button>
+          ) : <div />}
+          
+          {currentStep < STEPS.length - 1 ? (
+            <Button onClick={handleNext}>İleri</Button>
+          ) : (
+            <Button onClick={handlePreview} disabled={saving}>
+              {saving ? "Kaydediliyor..." : "İlerle ve Önizle"}
+            </Button>
+          )}
+        </div>
       </div>
     </DashboardLayout>
   );

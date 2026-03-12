@@ -208,7 +208,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
           <Textarea value={formData.aciklama} onChange={(e) => updateForm({ aciklama: e.target.value })} placeholder="İhale açıklaması giriniz" rows={4} maxLength={2000} />
         </div>
 
-        <div className={`grid grid-cols-1 ${skipBirim ? "sm:grid-cols-2" : "sm:grid-cols-3"} gap-4 items-end`}>
+        <div className={`grid grid-cols-1 ${skipBirim ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3"} gap-4 items-end`}>
           <div className="space-y-2">
             <Label>İhale Başlangıç Fiyatı (Birim Fiyat) *</Label>
             <Input type="number" value={formData.baslangic_fiyati ?? ""} onChange={(e) => updateForm({ baslangic_fiyati: e.target.value ? Number(e.target.value) : null })} placeholder="0.00" min={0} />
@@ -244,7 +244,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>KDV Durumu *</Label>
             <SearchableSelect
@@ -266,7 +266,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Ödeme Vadesi *</Label>
             <MultiSelectDropdown
@@ -288,7 +288,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Kargo Şirketi Anlaşması</Label>
             <SearchableSelect
@@ -305,7 +305,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <div className="space-y-2">
             <Label>Teslimat Tarihi</Label>
             <Input type="date" value={formData.teslimat_tarihi?.split("T")[0] || ""} onChange={(e) => updateForm({ teslimat_tarihi: e.target.value })} />
@@ -323,7 +323,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
         </div>
 
         {/* File Uploads */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Fotoğraf Yükleme {formData.ihale_turu === "urun_satis" && "*"}</Label>
             <div className="border rounded-lg p-4 space-y-3">
@@ -423,7 +423,7 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
               {/* Sertifika with Kategori -> Tür hierarchy */}
               <div className="space-y-1">
                 <Label className="text-sm">Sertifika</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <SearchableSelect
                     options={(sertifikaKategorileri || []).map((o: any) => ({ value: o.id, label: o.name }))}
                     value={selectedSertifikaKat || ""}
