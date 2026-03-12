@@ -260,7 +260,7 @@ export default function YeniUrun() {
     setFiyatTipi(data.fiyat_tipi);
     setParaBirimi(data.para_birimi || "TRY");
     setFiyat(data.fiyat?.toString() || "");
-    const td = data.teknik_detaylar as Record<string, string> || {};
+    const td = data.teknik_detaylar as Record<string, string | string[]> || {};
     setTeknikDetaylar(td);
     setDraftId(urunId);
 
