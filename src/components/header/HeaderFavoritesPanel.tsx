@@ -17,6 +17,7 @@ interface FavUrun {
   urun_id: string;
   baslik: string;
   foto_url: string | null;
+  slug: string | null;
 }
 
 export default function HeaderFavoritesPanel() {

@@ -310,7 +310,7 @@ export default function UrunDetay() {
     }
 
     // Favorite check
-    const { data: fav } = await supabase.from("urun_favoriler").select("id").eq("user_id", currentUserId).eq("urun_id", id).maybeSingle();
+    const { data: fav } = await supabase.from("urun_favoriler").select("id").eq("user_id", currentUserId).eq("urun_id", urunData.id).maybeSingle();
     setIsFavorited(!!fav);
 
     // Similar products

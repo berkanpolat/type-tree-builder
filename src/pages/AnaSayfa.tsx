@@ -77,6 +77,7 @@ interface UrunListItem {
   min_siparis_miktari: number | null;
   user_id: string;
   teknik_detaylar: Record<string, string> | null;
+  slug: string | null;
 }
 
 interface UrunWithExtra extends UrunListItem {
