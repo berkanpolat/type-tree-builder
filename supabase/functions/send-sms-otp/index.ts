@@ -79,12 +79,12 @@ serve(async (req) => {
       body: JSON.stringify({
         username: verimorUsername,
         password: verimorPassword,
-        source_addr: "Tekstil A.S",
+        source_addr: "Tekstil A.Ş",
         valid_for: "48:00",
         datacoding: "0",
         messages: [
           {
-            msg: `Tekstil A.S. dogrulama kodunuz: ${kod}`,
+            msg: `Tekstil A.Ş doğrulama kodunuz: ${kod}`,
             dest: telefon,
             id: "1",
           },
