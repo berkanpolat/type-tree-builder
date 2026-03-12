@@ -336,6 +336,7 @@ export default function YeniUrun() {
     if (vars && vars.length > 0) {
       const seenCombos = new Set<string>();
       const prodVars: UrunVaryasyon[] = [];
+      const seenTiers = new Set<string>();
       const priceTiers: FiyatKademesi[] = [];
       for (const v of vars) {
         const comboKey = `${v.varyant_1_value}|${v.varyant_2_value}`;
@@ -349,7 +350,12 @@ export default function YeniUrun() {
             foto_urls: [v.foto_url],
           });
         }
-        priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
+        // Deduplicate price tiers
+        const tierKey = `${v.min_adet}|${v.max_adet}|${v.birim_fiyat}`;
+        if (!seenTiers.has(tierKey)) {
+          seenTiers.add(tierKey);
+          priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
+        }
       }
       setVaryasyonlar(prodVars);
       if (priceTiers.length > 0) setFiyatKademeleri(priceTiers);
