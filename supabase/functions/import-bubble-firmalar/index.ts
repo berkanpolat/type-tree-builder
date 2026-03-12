@@ -103,7 +103,8 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Create auth user
+        // Create or find auth user
+        let userId: string;
         const randomPass = crypto.randomUUID() + "Ax1!";
         const { data: authData, error: authError } =
           await supabase.auth.admin.createUser({
@@ -114,14 +115,32 @@ Deno.serve(async (req) => {
 
         if (authError) {
           if (authError.message?.includes("already been registered")) {
-            failList.push({ firma: firmaUnvani, error: `E-posta zaten kayıtlı: ${email}` });
+            // Find existing user by email
+            const { data: listData } = await supabase.auth.admin.listUsers();
+            const existingUser = listData?.users?.find(u => u.email === email);
+            if (!existingUser) {
+              failList.push({ firma: firmaUnvani, error: `Kullanıcı bulunamadı: ${email}` });
+              continue;
+            }
+            userId = existingUser.id;
+
+            // Check if firma already exists for this user
+            const { data: existingFirma } = await supabase
+              .from("firmalar")
+              .select("id")
+              .eq("user_id", userId)
+              .maybeSingle();
+            if (existingFirma) {
+              failList.push({ firma: firmaUnvani, error: `Firma zaten mevcut: ${email}` });
+              continue;
+            }
+          } else {
+            failList.push({ firma: firmaUnvani, error: `Auth hatası: ${authError.message}` });
             continue;
           }
-          failList.push({ firma: firmaUnvani, error: `Auth hatası: ${authError.message}` });
-          continue;
+        } else {
+          userId = authData.user.id;
         }
-
-        const userId = authData.user.id;
 
         // Lookup optional IDs
         const ilName = item["il"];
