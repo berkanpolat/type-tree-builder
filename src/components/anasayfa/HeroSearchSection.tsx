@@ -94,16 +94,50 @@ const HeroSearchSection = ({
 
             {/* Search bar */}
             <div className="relative">
+              {/* Firma Türü row on mobile (above search bar) */}
+              {firmaTuruOptions && firmaTuruOptions.length > 0 && (
+                <div className="flex sm:hidden mb-2" ref={turDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setTurDropdownOpen(!turDropdownOpen)}
+                    className="relative flex items-center gap-1 text-xs font-medium text-primary-foreground/80 hover:text-primary-foreground bg-white/10 rounded-lg px-3 py-1.5 transition-colors"
+                  >
+                    {selectedTurName}
+                    <ChevronDown className={`w-3 h-3 transition-transform ${turDropdownOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {turDropdownOpen && (
+                    <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-[0_8px_24px_rgba(0,0,0,0.15)] z-[230] min-w-[180px] py-1 overflow-hidden">
+                      {firmaTuruOptions.map((tur) => (
+                        <button
+                          key={tur.id}
+                          onMouseDown={() => {
+                            onFirmaTuruChange?.(tur.id);
+                            setTurDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                            selectedFirmaTuru === tur.id
+                              ? "bg-secondary/10 text-secondary font-semibold"
+                              : "text-foreground hover:bg-muted"
+                          }`}
+                        >
+                          {tur.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div
-                className={`flex items-center bg-white/95 rounded-xl px-4 py-1 shadow-[0_4px_24px_rgba(0,0,0,0.3)] border-2 transition-all ${
+                className={`flex items-center bg-white/95 rounded-xl px-2 sm:px-4 py-1 shadow-[0_4px_24px_rgba(0,0,0,0.3)] border-2 transition-all ${
                   focused
                     ? "border-secondary shadow-[0_0_0_3px_rgba(245,154,35,0.15),0_4px_24px_rgba(0,0,0,0.3)]"
                     : "border-transparent"
                 }`}
               >
-                {/* Firma Türü Dropdown (optional) */}
+                {/* Firma Türü Dropdown - desktop only (inside bar) */}
                 {firmaTuruOptions && firmaTuruOptions.length > 0 && (
-                  <div className="relative" ref={turDropdownRef}>
+                  <div className="relative hidden sm:block" ref={turDropdownRef}>
                     <button
                       type="button"
                       onClick={() => setTurDropdownOpen(!turDropdownOpen)}
@@ -155,19 +189,19 @@ const HeroSearchSection = ({
                       requestAnimationFrame(() => onSearch());
                     }
                   }}
-                  className="flex-1 bg-transparent text-foreground text-sm h-10 px-2 outline-none placeholder:text-muted-foreground/50"
+                  className="flex-1 min-w-0 bg-transparent text-foreground text-sm h-10 px-2 outline-none placeholder:text-muted-foreground/50"
                 />
                 {searchTerm && (
                   <button
                     onClick={() => onSearchTermChange("")}
-                    className="text-muted-foreground text-xs bg-muted rounded px-1.5 py-0.5 mr-1 hover:bg-muted-foreground/20"
+                    className="text-muted-foreground text-xs bg-muted rounded px-1.5 py-0.5 mr-1 hover:bg-muted-foreground/20 flex-shrink-0"
                   >
                     ✕
                   </button>
                 )}
                 <button
                   onClick={onSearch}
-                  className="flex items-center gap-1.5 bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground rounded-lg px-4 py-2 text-xs font-semibold shadow-[0_3px_10px_rgba(245,154,35,0.5)] hover:brightness-110 active:scale-95 transition-all whitespace-nowrap"
+                  className="flex items-center gap-1.5 bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground rounded-lg px-3 sm:px-4 py-2 text-xs font-semibold shadow-[0_3px_10px_rgba(245,154,35,0.5)] hover:brightness-110 active:scale-95 transition-all whitespace-nowrap flex-shrink-0"
                 >
                   <Search className="w-3 h-3" />
                   Ara
