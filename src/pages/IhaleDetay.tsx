@@ -615,9 +615,9 @@ export default function IhaleDetay() {
     if (katId) {
       const { data: benzer } = await supabase
         .from("ihaleler")
-        .select("id, baslik, foto_url, baslangic_fiyati, para_birimi")
+        .select("id, baslik, foto_url, baslangic_fiyati, para_birimi, slug")
         .eq("durum", "devam_ediyor")
-        .neq("id", id)
+        .neq("id", ihaleId)
         .or(`urun_kategori_id.eq.${katId},hizmet_kategori_id.eq.${katId}`)
         .limit(4);
       setBenzerIhaleler(benzer || []);
@@ -626,7 +626,7 @@ export default function IhaleDetay() {
     // Increment view count
     await supabase.from("ihaleler").update({
       goruntuleme_sayisi: (ihaleData.goruntuleme_sayisi || 0) + 1,
-    } as any).eq("id", id);
+    } as any).eq("id", ihaleId);
 
     setLoading(false);
   }, [id, currentUserId]);
