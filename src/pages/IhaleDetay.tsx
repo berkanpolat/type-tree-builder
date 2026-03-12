@@ -734,7 +734,7 @@ export default function IhaleDetay() {
     setSubmitting(true);
     const tutar = parseFloat(teklifTutar);
     const { error } = await supabase.from("ihale_teklifler").insert({
-      ihale_id: id!,
+      ihale_id: ihale.id,
       teklif_veren_user_id: currentUserId,
       tutar,
       odeme_secenekleri: teklifOdemeSecenekleri || null,
