@@ -145,18 +145,30 @@ serve(async (req) => {
     });
 
     const priceId = subscription.items.data[0]?.price?.id;
-    const periyot = priceId === PRO_PRICES.yillik ? "yillik" : "aylik";
+    const interval = subscription.items.data[0]?.price?.recurring?.interval;
+    const periyot = priceId === PRO_PRICES.yillik || interval === "year" ? "yillik" : "aylik";
 
-    // Safe date conversion
+    // Safe date conversion - handle number (unix ts), string, or Date
     const startTs = subscription.current_period_start;
     const endTs = subscription.current_period_end;
-    const periodStart = (startTs && typeof startTs === "number") ? new Date(startTs * 1000) : new Date();
-    const periodEnd = (endTs && typeof endTs === "number") ? new Date(endTs * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    const toDate = (val: any, fallback: Date): Date => {
+      if (typeof val === "number") return new Date(val * 1000);
+      if (typeof val === "string") return new Date(val);
+      if (val instanceof Date) return val;
+      return fallback;
+    };
+    const periodStart = toDate(startTs, new Date());
+    const periodEnd = toDate(endTs, new Date(Date.now() + (periyot === "yillik" ? 365 : 30) * 24 * 60 * 60 * 1000));
 
     logStep("Period dates", {
       periodStart: periodStart.toISOString(),
       periodEnd: periodEnd.toISOString(),
       periyot,
+      interval,
+      rawStart: startTs,
+      rawEnd: endTs,
+      rawStartType: typeof startTs,
+      rawEndType: typeof endTs,
     });
 
     // Get PRO package ID
