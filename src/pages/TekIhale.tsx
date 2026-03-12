@@ -78,6 +78,7 @@ interface IhaleRow {
   hizmet_tur_id: string | null;
   odeme_secenekleri: string | null;
   odeme_vadesi: string | null;
+  slug: string | null;
 }
 
 interface IhaleWithExtra extends IhaleRow {

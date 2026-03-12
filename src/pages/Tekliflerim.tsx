@@ -358,7 +358,7 @@ export default function Tekliflerim() {
                         <Badge variant="secondary" className={durumColors[teklif.durum] || ""}>{durumLabels[teklif.durum] || teklif.durum}</Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button size="sm" onClick={() => navigate(`/ihaleler/${teklif.ihale_id}`)} className="gap-1">
+                        <Button size="sm" onClick={() => navigate(`/ihaleler/${teklif.ihale_slug || teklif.ihale_id}`)} className="gap-1">
                           <Plus className="w-3 h-3" />Yeni Teklif
                         </Button>
                       </TableCell>
