@@ -160,6 +160,7 @@ export default function Tekliflerim() {
         baslangic_tarihi: ihale.baslangic_tarihi,
         bitis_tarihi: ihale.bitis_tarihi,
         teklif_sirasi,
+        ihale_slug: (ihale as any).slug || null,
       });
     }
 
