@@ -240,6 +240,7 @@ export default function FirmaDetay() {
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [firma, setFirma] = useState<FirmaData | null>(null);
   const [quotaBlocked, setQuotaBlocked] = useState(false);
   const [quotaMessage, setQuotaMessage] = useState("");
