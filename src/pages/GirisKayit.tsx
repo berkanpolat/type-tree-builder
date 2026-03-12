@@ -756,7 +756,7 @@ const GirisKayit = () => {
                           }
                           handleSendOtp();
                         }}
-                        disabled={sendingOtp || !ad || !soyad || !email || !isValidEmail(email) || emailDuplicate || !telefon}
+                        disabled={sendingOtp || !ad || !soyad || !email || !isValidEmail(email) || emailDuplicate || phoneDuplicate || !telefon}
                       >
                         {sendingOtp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                         Başvuru Yap
