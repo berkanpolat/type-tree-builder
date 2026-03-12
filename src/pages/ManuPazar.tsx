@@ -264,8 +264,8 @@ export default function ManuPazar() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px] max-w-md">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Ürün adı, SKU/ID, kategori..."
@@ -274,45 +274,101 @@ export default function ManuPazar() {
               className="pl-9"
             />
           </div>
-          <Select value={filterKategori} onValueChange={(v) => { setFilterKategori(v); setFilterGrup("all"); setFilterTur("all"); }}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Kategori: Tümü" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
-              <SelectItem value="all">Kategori: Tümü</SelectItem>
-              {kategoriler.map((k) => (
-                <SelectItem key={k.id} value={k.id}>{k.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterGrup} onValueChange={(v) => { setFilterGrup(v); setFilterTur("all"); }} disabled={filterKategori === "all"}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Grup Seçin" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
-              <SelectItem value="all">Grup: Tümü</SelectItem>
-              {gruplar.map((g) => (
-                <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={filterTur} onValueChange={setFilterTur} disabled={filterGrup === "all"}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Tür Seçin" />
-            </SelectTrigger>
-            <SelectContent className="bg-popover z-50">
-              <SelectItem value="all">Tür: Tümü</SelectItem>
-              {turler.map((t) => (
-                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-3 sm:flex gap-2 sm:gap-3">
+            <Select value={filterKategori} onValueChange={(v) => { setFilterKategori(v); setFilterGrup("all"); setFilterTur("all"); }}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Kategori" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="all">Tümü</SelectItem>
+                {kategoriler.map((k) => (
+                  <SelectItem key={k.id} value={k.id}>{k.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterGrup} onValueChange={(v) => { setFilterGrup(v); setFilterTur("all"); }} disabled={filterKategori === "all"}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Grup" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="all">Tümü</SelectItem>
+                {gruplar.map((g) => (
+                  <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={filterTur} onValueChange={setFilterTur} disabled={filterGrup === "all"}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Tür" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover z-50">
+                <SelectItem value="all">Tümü</SelectItem>
+                {turler.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Table */}
-        <Card>
-          <CardContent className="p-0 overflow-x-auto">
-            <Table className="min-w-[900px]">
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-3">
+          {loading ? (
+            <div className="text-center py-10 text-muted-foreground">Yükleniyor...</div>
+          ) : filteredUrunler.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">Henüz ürün bulunmamaktadır.</div>
+          ) : (
+            filteredUrunler.map((urun) => (
+              <Card key={urun.id} className="cursor-pointer" onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                      {urun.foto_url ? <img src={urun.foto_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground text-sm truncate">{urun.baslik}</p>
+                      <p className="text-xs text-muted-foreground">{urun.urun_no}</p>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className={
+                        urun.durum === "aktif" ? "bg-emerald-100 text-emerald-700"
+                        : urun.durum === "onay_bekliyor" ? "bg-amber-100 text-amber-700"
+                        : "bg-muted text-muted-foreground"
+                      }
+                    >
+                      {urun.durum === "aktif" ? "Aktif" : urun.durum === "pasif" ? "Pasif" : urun.durum === "onay_bekliyor" ? "Onay Bekliyor" : "Taslak"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">{urun.urun_kategori_id ? secenekMap[urun.urun_kategori_id] || "-" : "-"}</span>
+                    <span className="font-medium text-foreground">
+                      {urun.fiyat != null
+                        ? `${urun.fiyat.toLocaleString("tr-TR")} ${paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi}`
+                        : urun.fiyat_tipi === "varyasyonlu" ? "Varyasyonlu" : "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}</span>
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" title="Kopyala" onClick={() => navigate(`/manupazar/yeni?kopyala=${urun.id}`)}>
+                        <Copy className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(urun.id)}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <Card className="hidden md:block">
+          <CardContent className="p-0">
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Ürün</TableHead>
@@ -339,11 +395,7 @@ export default function ManuPazar() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                            {urun.foto_url ? (
-                              <img src={urun.foto_url} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                            )}
+                            {urun.foto_url ? <img src={urun.foto_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
                           </div>
                           <div>
                             <p className="font-medium text-foreground text-sm truncate max-w-[200px]">{urun.baslik}</p>
@@ -375,13 +427,10 @@ export default function ManuPazar() {
                           <Badge
                             variant="secondary"
                             className={
-                              urun.durum === "aktif"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : urun.durum === "pasif"
-                                ? "bg-muted text-muted-foreground"
-                                : urun.durum === "onay_bekliyor"
-                                ? "bg-amber-100 text-amber-700"
-                                : "bg-muted text-muted-foreground"
+                              urun.durum === "aktif" ? "bg-emerald-100 text-emerald-700"
+                              : urun.durum === "pasif" ? "bg-muted text-muted-foreground"
+                              : urun.durum === "onay_bekliyor" ? "bg-amber-100 text-amber-700"
+                              : "bg-muted text-muted-foreground"
                             }
                           >
                             {urun.durum === "aktif" ? "Aktif" : urun.durum === "pasif" ? "Pasif" : urun.durum === "onay_bekliyor" ? "Onay Bekliyor" : "Taslak"}

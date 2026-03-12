@@ -201,8 +201,8 @@ export default function ManuIhale() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px] max-w-xs">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Ara..."
@@ -212,7 +212,7 @@ export default function ManuIhale() {
             />
           </div>
           <Select value={filterDurum} onValueChange={setFilterDurum}>
-            <SelectTrigger className="w-[160px]">
+            <SelectTrigger className="w-full sm:w-[160px]">
               <SelectValue placeholder="Durum" />
             </SelectTrigger>
             <SelectContent>
@@ -226,10 +226,75 @@ export default function ManuIhale() {
           </Select>
         </div>
 
-        {/* Table */}
-        <Card>
-          <CardContent className="p-0 overflow-x-auto">
-            <Table className="min-w-[800px]">
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-3">
+          {loading ? (
+            <div className="text-center py-10 text-muted-foreground">Yükleniyor...</div>
+          ) : filteredIhaleler.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">Henüz ihale bulunmamaktadır.</div>
+          ) : (
+            filteredIhaleler.map((ihale) => {
+              const teklifSayisi = getTeklifSayisi(ihale.id);
+              const enIyiTeklif = getEnIyiTeklif(ihale);
+              return (
+                <Card
+                  key={ihale.id}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/manuihale/duzenle/${ihale.id}`);
+                    else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") navigate(`/manuihale/takip/${ihale.id}`);
+                    else navigate(`/ihale/${ihale.id}`);
+                  }}
+                >
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                        {ihale.foto_url ? <img src={ihale.foto_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-foreground text-sm truncate">{ihale.baslik}</p>
+                        <p className="text-xs text-muted-foreground">#{ihale.ihale_no}</p>
+                      </div>
+                      <Badge variant="secondary" className={durumColors[ihale.durum] || ""}>
+                        {durumLabels[ihale.durum] || ihale.durum}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 text-center">
+                      <div className="bg-muted/50 rounded-lg p-2">
+                        <p className="text-xs text-muted-foreground">Görüntülenme</p>
+                        <p className="text-sm font-semibold text-foreground">{ihale.goruntuleme_sayisi}</p>
+                      </div>
+                      <div className="bg-muted/50 rounded-lg p-2">
+                        <p className="text-xs text-muted-foreground">Teklif</p>
+                        <p className="text-sm font-semibold text-foreground">{teklifSayisi}</p>
+                      </div>
+                      <div className="bg-muted/50 rounded-lg p-2">
+                        <p className="text-xs text-muted-foreground">En İyi</p>
+                        <p className="text-sm font-semibold text-foreground">{enIyiTeklif !== null ? `₺${enIyiTeklif.toLocaleString("tr-TR")}` : "-"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <div>
+                        {ihale.baslangic_tarihi && <span>{format(new Date(ihale.baslangic_tarihi), "dd MMM yyyy", { locale: tr })}</span>}
+                        {ihale.bitis_tarihi && <span className="text-destructive"> → {format(new Date(ihale.bitis_tarihi), "dd MMM yyyy", { locale: tr })}</span>}
+                      </div>
+                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteId(ihale.id)}>
+                          <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <Card className="hidden md:block">
+          <CardContent className="p-0">
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>İhale Bilgileri</TableHead>
@@ -244,15 +309,11 @@ export default function ManuIhale() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                      Yükleniyor...
-                    </TableCell>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Yükleniyor...</TableCell>
                   </TableRow>
                 ) : filteredIhaleler.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                      Henüz ihale bulunmamaktadır.
-                    </TableCell>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Henüz ihale bulunmamaktadır.</TableCell>
                   </TableRow>
                 ) : (
                   filteredIhaleler.map((ihale) => {
@@ -263,23 +324,15 @@ export default function ManuIhale() {
                         key={ihale.id}
                         className="cursor-pointer"
                         onClick={() => {
-                          if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") {
-                            navigate(`/manuihale/duzenle/${ihale.id}`);
-                          } else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") {
-                            navigate(`/manuihale/takip/${ihale.id}`);
-                          } else {
-                            navigate(`/ihale/${ihale.id}`);
-                          }
+                          if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/manuihale/duzenle/${ihale.id}`);
+                          else if (ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") navigate(`/manuihale/takip/${ihale.id}`);
+                          else navigate(`/ihale/${ihale.id}`);
                         }}
                       >
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                              {ihale.foto_url ? (
-                                <img src={ihale.foto_url} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                              )}
+                              {ihale.foto_url ? <img src={ihale.foto_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
                             </div>
                             <div>
                               <p className="font-medium text-foreground text-sm">{ihale.baslik}</p>
@@ -289,8 +342,7 @@ export default function ManuIhale() {
                         </TableCell>
                         <TableCell className="text-center">
                           <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground">
-                            <Eye className="w-3.5 h-3.5" />
-                            {ihale.goruntuleme_sayisi}
+                            <Eye className="w-3.5 h-3.5" />{ihale.goruntuleme_sayisi}
                           </div>
                         </TableCell>
                         <TableCell className="text-center text-sm">{teklifSayisi}</TableCell>
@@ -299,52 +351,27 @@ export default function ManuIhale() {
                         </TableCell>
                         <TableCell>
                           <div className="text-xs text-muted-foreground space-y-0.5">
-                            {ihale.baslangic_tarihi && (
-                              <p>{format(new Date(ihale.baslangic_tarihi), "dd MMM yyyy", { locale: tr })}</p>
-                            )}
-                            {ihale.bitis_tarihi && (
-                              <p className="text-destructive">{format(new Date(ihale.bitis_tarihi), "dd MMM yyyy", { locale: tr })}</p>
-                            )}
+                            {ihale.baslangic_tarihi && <p>{format(new Date(ihale.baslangic_tarihi), "dd MMM yyyy", { locale: tr })}</p>}
+                            {ihale.bitis_tarihi && <p className="text-destructive">{format(new Date(ihale.bitis_tarihi), "dd MMM yyyy", { locale: tr })}</p>}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="secondary" className={durumColors[ihale.durum] || ""}>
-                            {durumLabels[ihale.durum] || ihale.durum}
-                          </Badge>
+                          <Badge variant="secondary" className={durumColors[ihale.durum] || ""}>{durumLabels[ihale.durum] || ihale.durum}</Badge>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                             {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                title="İhale Takip"
-                                onClick={() => navigate(`/manuihale/takip/${ihale.id}`)}
-                              >
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title="İhale Takip" onClick={() => navigate(`/manuihale/takip/${ihale.id}`)}>
                                 <TrendingUp className="w-4 h-4" />
                               </Button>
                             )}
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => {
-                                if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") {
-                                  navigate(`/manuihale/duzenle/${ihale.id}`);
-                                } else {
-                                  navigate(`/ihale/${ihale.id}`);
-                                }
-                              }}
-                            >
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => {
+                              if (ihale.durum === "duzenleniyor" || ihale.durum === "onay_bekliyor") navigate(`/manuihale/duzenle/${ihale.id}`);
+                              else navigate(`/ihale/${ihale.id}`);
+                            }}>
                               <ExternalLink className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-destructive hover:text-destructive"
-                              onClick={() => setDeleteId(ihale.id)}
-                            >
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setDeleteId(ihale.id)}>
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>

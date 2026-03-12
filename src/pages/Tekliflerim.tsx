@@ -219,8 +219,8 @@ export default function Tekliflerim() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-[200px] max-w-xs">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Ara..."
@@ -229,34 +229,83 @@ export default function Tekliflerim() {
               className="pl-9"
             />
           </div>
-          <Select value={filterIhaleTuru} onValueChange={setFilterIhaleTuru}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="İhale Türü" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">İhale Türü</SelectItem>
-              <SelectItem value="urun_alis">Ürün Alış</SelectItem>
-              <SelectItem value="urun_satis">Ürün Satış</SelectItem>
-              <SelectItem value="hizmet_alim">Hizmet Alım</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={filterTeklifUsulu} onValueChange={setFilterTeklifUsulu}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Teklif Usulü" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Teklif Usulü</SelectItem>
-              <SelectItem value="kapali_teklif">Kapalı Teklif</SelectItem>
-              <SelectItem value="acik_indirme">Açık İndirme</SelectItem>
-              <SelectItem value="acik_arttirma">Açık Arttırma</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="grid grid-cols-2 sm:flex gap-2 sm:gap-3">
+            <Select value={filterIhaleTuru} onValueChange={setFilterIhaleTuru}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="İhale Türü" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">İhale Türü</SelectItem>
+                <SelectItem value="urun_alis">Ürün Alış</SelectItem>
+                <SelectItem value="urun_satis">Ürün Satış</SelectItem>
+                <SelectItem value="hizmet_alim">Hizmet Alım</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterTeklifUsulu} onValueChange={setFilterTeklifUsulu}>
+              <SelectTrigger className="w-full sm:w-[160px]">
+                <SelectValue placeholder="Teklif Usulü" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Teklif Usulü</SelectItem>
+                <SelectItem value="kapali_teklif">Kapalı Teklif</SelectItem>
+                <SelectItem value="acik_indirme">Açık İndirme</SelectItem>
+                <SelectItem value="acik_arttirma">Açık Arttırma</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Table */}
-        <Card>
-          <CardContent className="p-0 overflow-x-auto">
-            <Table className="min-w-[900px]">
+        {/* Mobile Card View */}
+        <div className="md:hidden space-y-3">
+          {loading ? (
+            <div className="text-center py-10 text-muted-foreground">Yükleniyor...</div>
+          ) : filteredTeklifler.length === 0 ? (
+            <div className="text-center py-10 text-muted-foreground">Henüz teklif bulunmamaktadır.</div>
+          ) : (
+            filteredTeklifler.map((teklif) => (
+              <Card key={teklif.id} className="cursor-pointer" onClick={() => navigate(`/ihale/${teklif.ihale_id}`)}>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                      {teklif.ihale_foto_url ? <img src={teklif.ihale_foto_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground text-sm truncate">{teklif.ihale_baslik}</p>
+                      <p className="text-xs text-muted-foreground">#{teklif.ihale_no}</p>
+                    </div>
+                    <Badge variant="secondary" className={durumColors[teklif.durum] || ""}>
+                      {durumLabels[teklif.durum] || teklif.durum}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-muted/50 rounded-lg p-2 text-center">
+                      <p className="text-xs text-muted-foreground">Teklifiniz</p>
+                      <p className="text-sm font-semibold text-foreground">₺{teklif.tutar.toLocaleString("tr-TR")}</p>
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-2 text-center">
+                      <p className="text-xs text-muted-foreground">Sıranız</p>
+                      <p className="text-sm font-semibold text-foreground">{teklif.teklif_sirasi !== null ? teklif.teklif_sirasi : "-"}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="flex gap-1">
+                      <Badge variant="outline" className="text-[10px]">{ihaleTuruLabels[teklif.ihale_turu] || teklif.ihale_turu}</Badge>
+                      <Badge variant="outline" className="text-[10px]">{teklifUsuluLabels[teklif.teklif_usulu] || teklif.teklif_usulu}</Badge>
+                    </div>
+                    <div>
+                      {teklif.bitis_tarihi && <span className="text-destructive">{format(new Date(teklif.bitis_tarihi), "dd/MM/yy", { locale: tr })}</span>}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <Card className="hidden md:block">
+          <CardContent className="p-0">
+            <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>İhale Bilgileri</TableHead>
@@ -271,15 +320,11 @@ export default function Tekliflerim() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                      Yükleniyor...
-                    </TableCell>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Yükleniyor...</TableCell>
                   </TableRow>
                 ) : filteredTeklifler.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
-                      Henüz teklif bulunmamaktadır.
-                    </TableCell>
+                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Henüz teklif bulunmamaktadır.</TableCell>
                   </TableRow>
                 ) : (
                   filteredTeklifler.map((teklif) => (
@@ -287,11 +332,7 @@ export default function Tekliflerim() {
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                            {teklif.ihale_foto_url ? (
-                              <img src={teklif.ihale_foto_url} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                            )}
+                            {teklif.ihale_foto_url ? <img src={teklif.ihale_foto_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
                           </div>
                           <div>
                             <p className="font-medium text-foreground text-sm">{teklif.ihale_baslik}</p>
@@ -301,43 +342,24 @@ export default function Tekliflerim() {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
-                          <Badge variant="outline" className="w-fit text-xs">
-                            {ihaleTuruLabels[teklif.ihale_turu] || teklif.ihale_turu}
-                          </Badge>
-                          <Badge variant="outline" className="w-fit text-xs">
-                            {teklifUsuluLabels[teklif.teklif_usulu] || teklif.teklif_usulu}
-                          </Badge>
+                          <Badge variant="outline" className="w-fit text-xs">{ihaleTuruLabels[teklif.ihale_turu] || teklif.ihale_turu}</Badge>
+                          <Badge variant="outline" className="w-fit text-xs">{teklifUsuluLabels[teklif.teklif_usulu] || teklif.teklif_usulu}</Badge>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center text-sm font-medium">
-                        ₺{teklif.tutar.toLocaleString("tr-TR")}
-                      </TableCell>
-                      <TableCell className="text-center text-sm font-medium">
-                        {teklif.teklif_sirasi !== null ? teklif.teklif_sirasi : "-"}
-                      </TableCell>
+                      <TableCell className="text-center text-sm font-medium">₺{teklif.tutar.toLocaleString("tr-TR")}</TableCell>
+                      <TableCell className="text-center text-sm font-medium">{teklif.teklif_sirasi !== null ? teklif.teklif_sirasi : "-"}</TableCell>
                       <TableCell>
                         <div className="text-xs text-muted-foreground space-y-0.5">
-                          {teklif.baslangic_tarihi && (
-                            <p>{format(new Date(teklif.baslangic_tarihi), "dd/MM/yyyy", { locale: tr })}</p>
-                          )}
-                          {teklif.bitis_tarihi && (
-                            <p className="text-destructive">{format(new Date(teklif.bitis_tarihi), "dd/MM/yyyy", { locale: tr })}</p>
-                          )}
+                          {teklif.baslangic_tarihi && <p>{format(new Date(teklif.baslangic_tarihi), "dd/MM/yyyy", { locale: tr })}</p>}
+                          {teklif.bitis_tarihi && <p className="text-destructive">{format(new Date(teklif.bitis_tarihi), "dd/MM/yyyy", { locale: tr })}</p>}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={durumColors[teklif.durum] || ""}>
-                          {durumLabels[teklif.durum] || teklif.durum}
-                        </Badge>
+                        <Badge variant="secondary" className={durumColors[teklif.durum] || ""}>{durumLabels[teklif.durum] || teklif.durum}</Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Button
-                          size="sm"
-                          onClick={() => navigate(`/ihale/${teklif.ihale_id}`)}
-                          className="gap-1"
-                        >
-                          <Plus className="w-3 h-3" />
-                          Yeni Teklif
+                        <Button size="sm" onClick={() => navigate(`/ihale/${teklif.ihale_id}`)} className="gap-1">
+                          <Plus className="w-3 h-3" />Yeni Teklif
                         </Button>
                       </TableCell>
                     </TableRow>
