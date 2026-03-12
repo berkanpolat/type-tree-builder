@@ -242,6 +242,7 @@ export default function UrunDetay() {
     }
 
     if (!urunData) { setLoading(false); return; }
+    setResolvedUrunId(urunData.id);
     setUrun({ ...urunData, teknik_detaylar: (urunData.teknik_detaylar as Record<string, string>) || null });
 
     // Fetch all varyasyonlar including price tiers
