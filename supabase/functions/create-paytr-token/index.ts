@@ -119,12 +119,17 @@ serve(async (req) => {
       throw new Error("PayTR yapılandırması eksik");
     }
 
-    // Öncelik: client'tan gelen gerçek IP > header IP > fallback
-    const userIp =
-      clientProvidedIp ||
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-      req.headers.get("cf-connecting-ip") ||
-      "127.0.0.1";
+    // Öncelik: client'tan gelen geçerli IPv4 > header IP > fallback
+    const headerForwardedIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
+    const headerCfIp = req.headers.get("cf-connecting-ip")?.trim() || "";
+
+    const userIp = isValidIpv4(clientProvidedIp)
+      ? clientProvidedIp
+      : isValidIpv4(headerForwardedIp)
+      ? headerForwardedIp
+      : isValidIpv4(headerCfIp)
+      ? headerCfIp
+      : "127.0.0.1";
 
     const merchantOid = `${user.id.replace(/-/g, "")}${periyot === "yillik" ? "Y" : "A"}${Date.now()}`;
     const email = user.email;
