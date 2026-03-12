@@ -567,9 +567,13 @@ const GirisKayit = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={otpSent}
+                      className={emailDuplicate ? "border-destructive" : ""}
                     />
                     {email && !isValidEmail(email) && (
                       <p className="text-xs text-destructive">Geçerli bir e-posta adresi giriniz</p>
+                    )}
+                    {emailDuplicate && (
+                      <p className="text-xs text-destructive">Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.</p>
                     )}
                   </div>
                   <div className="space-y-2">
