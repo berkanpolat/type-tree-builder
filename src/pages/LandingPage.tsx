@@ -258,7 +258,7 @@ const LandingPage = () => {
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-background via-background to-muted">
-        <div className="max-w-7xl mx-auto px-6 py-16 lg:py-24 grid lg:grid-cols-2 gap-12 items-center">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-10 md:py-16 lg:py-24 grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-6">
               İşiniz Tekstilse, Yeriniz <span className="text-secondary">Tekstil A.Ş.</span>
