@@ -240,26 +240,14 @@ export default function UrunDetay() {
     if (!urunData) { setLoading(false); return; }
     setUrun({ ...urunData, teknik_detaylar: (urunData.teknik_detaylar as Record<string, string>) || null });
 
-    // Fetch varyasyonlar - deduplicate by combo key (varyasyonlu pricing creates multiple rows per combo)
+    // Fetch all varyasyonlar including price tiers
     const { data: varyantlar } = await supabase
       .from("urun_varyasyonlar")
       .select("id, foto_url, birim_fiyat, varyant_1_label, varyant_1_value, varyant_2_label, varyant_2_value, min_adet, max_adet")
       .eq("urun_id", id)
-      .order("created_at");
-    if (varyantlar && varyantlar.length > 0) {
-      const seen = new Set<string>();
-      const unique: typeof varyantlar = [];
-      for (const v of varyantlar) {
-        const key = `${v.varyant_1_value}|${v.varyant_2_value}`;
-        if (!seen.has(key)) {
-          seen.add(key);
-          unique.push(v);
-        }
-      }
-      setVaryasyonlar(unique);
-    } else {
-      setVaryasyonlar([]);
-    }
+      .order("varyant_1_value")
+      .order("min_adet");
+    setVaryasyonlar(varyantlar || []);
 
     // Build image list
     const imgs: string[] = [];
