@@ -18,21 +18,23 @@ export default function SifreSifirla() {
   const [validSession, setValidSession] = useState(false);
 
   useEffect(() => {
-    // Check if user came from a recovery link
+    // Check recovery hash (synchronous, before Supabase clears it)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get("type");
     
     if (type === "recovery") {
       setValidSession(true);
-    } else {
-      // Also check session
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        if (session) setValidSession(true);
-      });
     }
 
+    // Also check active session + must_set_password
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setValidSession(true);
+      }
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
+      if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
         setValidSession(true);
       }
     });
