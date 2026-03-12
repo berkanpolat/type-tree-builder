@@ -158,9 +158,9 @@ export default function ManuIhale() {
     <DashboardLayout title="İhalelerim">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-foreground">İhalelerim</h2>
-          <Button onClick={() => navigate("/manuihale/yeni")} className="gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">İhalelerim</h2>
+          <Button onClick={() => navigate("/manuihale/yeni")} className="gap-2 w-full sm:w-auto">
             <Plus className="w-4 h-4" />
             Yeni İhale Oluştur
           </Button>
