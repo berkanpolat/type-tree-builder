@@ -84,7 +84,7 @@ serve(async (req) => {
         datacoding: "0",
         messages: [
           {
-            msg: `Tekstil A.S. dogrulama kodunuz: ${kod}`,
+            msg: `Tekstil A.Ş doğrulama kodunuz: ${kod}`,
             dest: telefon,
             id: "1",
           },
