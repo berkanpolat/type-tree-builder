@@ -317,7 +317,7 @@ export default function UrunDetay() {
         .eq("durum", "aktif")
         .eq("urun_kategori_id", urunData.urun_kategori_id)
         .neq("id", id)
-        .limit(8);
+        .limit(10);
 
       if (benzer && benzer.length > 0) {
         const userIds = [...new Set(benzer.map(b => b.user_id))];
