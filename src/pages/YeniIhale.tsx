@@ -124,7 +124,7 @@ export default function YeniIhale() {
         description: msg || "İhale açma işleminiz kısıtlanmıştır.",
         variant: "destructive",
       });
-      navigate("/manuihale");
+      navigate("/ihalelerim");
     }
   }, [isRestricted, editId, isAdminMode]);
   // Load existing ihale for editing
