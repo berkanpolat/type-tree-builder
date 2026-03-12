@@ -631,47 +631,45 @@ export default function IhaleTakip() {
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="gap-1"
-                        onClick={() => handleMesajGonder(teklif.teklif_veren_user_id)}
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" /> Mesaj Gönder
-                      </Button>
-                      {teklif.ek_dosya_url && (
-                        <a href={teklif.ek_dosya_url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="outline" size="sm" className="gap-1">
-                            <Download className="w-3.5 h-3.5" /> Ek Dosyayı İndir {teklif.ek_dosya_adi ? `(${teklif.ek_dosya_adi.split('.').pop()?.toUpperCase()})` : ""}
-                          </Button>
-                        </a>
-                      )}
+                     {/* Actions */}
+                     <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 mt-4 pt-3 border-t">
+                       <Button
+                         variant="outline"
+                         size="sm"
+                         className="gap-1 w-full sm:w-auto"
+                         onClick={() => handleMesajGonder(teklif.teklif_veren_user_id)}
+                       >
+                         <MessageSquare className="w-3.5 h-3.5" /> Mesaj Gönder
+                       </Button>
+                       {teklif.ek_dosya_url && (
+                         <a href={teklif.ek_dosya_url} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto">
+                           <Button variant="outline" size="sm" className="gap-1 w-full">
+                             <Download className="w-3.5 h-3.5" /> Ek Dosya {teklif.ek_dosya_adi ? `(${teklif.ek_dosya_adi.split('.').pop()?.toUpperCase()})` : ""}
+                           </Button>
+                         </a>
+                       )}
 
-                      <div className="ml-auto flex gap-2">
-                        {teklif.durum === "inceleniyor" && ihale.durum === "devam_ediyor" && (
-                          <>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                              onClick={() => setConfirmAction({ type: "red", teklifId: teklif.id })}
-                            >
-                              Reddet
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                              onClick={() => setConfirmAction({ type: "kabul", teklifId: teklif.id })}
-                            >
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Teklifi Kabul Et
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
+                       {teklif.durum === "inceleniyor" && ihale.durum === "devam_ediyor" && (
+                         <div className="flex gap-2 sm:ml-auto w-full sm:w-auto">
+                           <Button
+                             variant="outline"
+                             size="sm"
+                             className="border-destructive text-destructive hover:bg-destructive hover:text-destructive-foreground flex-1 sm:flex-none"
+                             onClick={() => setConfirmAction({ type: "red", teklifId: teklif.id })}
+                           >
+                             Reddet
+                           </Button>
+                           <Button
+                             size="sm"
+                             className="gap-1 bg-emerald-600 hover:bg-emerald-700 text-white flex-1 sm:flex-none"
+                             onClick={() => setConfirmAction({ type: "kabul", teklifId: teklif.id })}
+                           >
+                             <CheckCircle2 className="w-3.5 h-3.5" /> Kabul Et
+                           </Button>
+                         </div>
+                       )}
+                     </div>
+                   </div>
                 </Card>
               ))}
             </div>
