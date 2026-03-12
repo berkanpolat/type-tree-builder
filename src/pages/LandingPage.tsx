@@ -213,7 +213,7 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-background font-sans">
       {/* Top Info Strip */}
-      <div className="bg-primary text-primary-foreground text-xs">
+      <div className="bg-primary text-primary-foreground text-xs hidden md:block">
         <div className="max-w-7xl mx-auto px-6 py-2 flex items-center justify-between">
           <div className="flex items-center gap-6 flex-wrap">
             <a href="mailto:info@tekstilas.com" className="flex items-center gap-1.5 hover:opacity-80 transition-opacity">
