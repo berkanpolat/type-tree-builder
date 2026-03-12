@@ -58,8 +58,11 @@ serve(async (req) => {
     const donemBitis = abone.donem_bitis ? new Date(abone.donem_bitis) : null;
     const now = new Date();
 
-    // Check if PRO subscription has expired
-    if (paketSlug !== "ucretsiz" && donemBitis && donemBitis < now) {
+    // Skip expiry check for admin-assigned packages (no stripe_subscription_id, periyot=sinursiz)
+    const isManualAssignment = !abone.stripe_subscription_id && abone.periyot === "sinursiz";
+
+    // Check if PRO subscription has expired (only for payment-based subscriptions)
+    if (paketSlug !== "ucretsiz" && donemBitis && donemBitis < now && !isManualAssignment) {
       if (abone.durum === "iptal_bekliyor" || abone.durum === "aktif") {
         logStep("PRO subscription expired, downgrading to free", {
           donemBitis: donemBitis.toISOString(),
