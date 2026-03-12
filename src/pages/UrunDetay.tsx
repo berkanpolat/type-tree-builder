@@ -585,8 +585,7 @@ export default function UrunDetay() {
             </div>
 
             {urun.aciklama && (
-              <Card className="p-6">
-                <h2 className="text-lg font-bold text-foreground mb-3">Ürün Açıklaması</h2>
+              <Card className="p-6 -mt-6">
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{urun.aciklama}</p>
               </Card>
             )}
