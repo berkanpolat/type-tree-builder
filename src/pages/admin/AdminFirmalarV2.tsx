@@ -669,7 +669,7 @@ export default function AdminFirmalarV2() {
   const selectedCount = selectedIds.size;
 
   return (
-    <AdminLayout title="Firmalar (Tablo V2)">
+    <AdminLayout title="Firmalar">
       <div className="space-y-4">
         {/* Action Bar */}
         <div className="flex items-center justify-between gap-3">
