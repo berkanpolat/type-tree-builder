@@ -5,6 +5,7 @@ const FROM_EMAIL = "info@tekstilas.com";
 const SITE_URL = "https://tekstilas.com";
 
 const EMAIL_TEMPLATES: Record<string, number> = {
+  hosgeldiniz: 43889443,
   basvuru_onay: 43897478,
   basvuru_red: 43897477,
   ihale_onaylandi: 43898542,
@@ -455,7 +456,13 @@ Deno.serve(async (req) => {
             console.error("Recovery link generation failed:", e);
           }
 
-          // 3) Send Postmark approval email with recovery link
+          // 3) Send Hoşgeldiniz email (welcome + password creation link)
+          await sendPostmarkEmail("hosgeldiniz", authUser.email, {
+            firma_unvani: firma.firma_unvani,
+            sifre_olusturma_baglantisi: recoveryLink,
+          });
+
+          // Also send Başvuru Onay email
           await sendPostmarkEmail("basvuru_onay", authUser.email, {
             firma_unvani: firma.firma_unvani,
             sifre_olusturma_baglantisi: recoveryLink,
