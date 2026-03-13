@@ -521,6 +521,11 @@ export default function AdminFirmalarV2() {
       if (sortField === "created_at") {
         return sortDir === "asc" ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime() : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
+      if (sortField === "last_seen") {
+        const aTime = a.profile?.last_seen ? new Date(a.profile.last_seen).getTime() : 0;
+        const bTime = b.profile?.last_seen ? new Date(b.profile.last_seen).getTime() : 0;
+        return sortDir === "asc" ? aTime - bTime : bTime - aTime;
+      }
       const av = (a as any)[sortField];
       const bv = (b as any)[sortField];
       return sortDir === "asc" ? av - bv : bv - av;
