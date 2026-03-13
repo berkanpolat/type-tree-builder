@@ -30,6 +30,10 @@ const TEMPLATES: Record<string, number> = {
   urun_yayinlandi: 43898721,
   yeni_mesaj: 43898845,
   yeni_teklif: 43898667,
+  uzaklastirma: 43920861,
+  yasaklama: 43920862,
+  kisitlama: 43920940,
+  reklam_kampanya: 43920961,
 };
 
 interface EmailRequest {
