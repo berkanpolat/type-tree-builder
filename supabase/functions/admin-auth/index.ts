@@ -1465,8 +1465,19 @@ Deno.serve(async (req) => {
         .eq("id", ihaleId);
       if (error) return jsonResponse({ error: error.message }, 400);
 
-      // Notify user with rejection reason
+      // Notify user with rejection reason + send email
       if (ihaleInfo) {
+        const { data: { user: ihaleRejAuthUser } } = await supabase.auth.admin.getUserById(ihaleInfo.user_id);
+        const { data: ihaleRejFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", ihaleInfo.user_id).single();
+
+        if (ihaleRejAuthUser?.email) {
+          await sendPostmarkEmail("ihale_reddedildi", ihaleRejAuthUser.email, {
+            firma_unvani: ihaleRejFirma?.firma_unvani || "",
+            ihale_basligi: ihaleInfo.baslik,
+            reddedilme_sebebi: redSebebi,
+          });
+        }
+
         const msg = `${ihaleInfo.ihale_no} numaralı "${ihaleInfo.baslik}" başlıklı ihaleniz reddedilmiştir. Sebep: ${redSebebi}. İşlemi yapan: ${adminLabel}`;
         await supabase.from("notifications").insert({
           user_id: ihaleInfo.user_id,
