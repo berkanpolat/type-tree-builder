@@ -2417,20 +2417,23 @@ Deno.serve(async (req) => {
         updatePayload.ekstra_haklar = ekstraHaklar;
       }
 
-      // Use maybeSingle to avoid error when no row exists
-      const { data: existing, error: existingError } = await supabase
+      const { data: existingRows, error: existingError } = await supabase
         .from("kullanici_abonelikler")
         .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
+        .eq("user_id", userId);
 
-      console.log("[UPDATE-FIRMA-PAKET] Existing check", { existing: !!existing, existingError: existingError?.message });
+      if (existingError) {
+        console.error("[UPDATE-FIRMA-PAKET] Existing lookup error", existingError.message);
+        return jsonResponse({ error: existingError.message }, 500);
+      }
 
-      if (existing) {
+      console.log("[UPDATE-FIRMA-PAKET] Existing check", { existingCount: existingRows?.length || 0 });
+
+      if (existingRows && existingRows.length > 0) {
         const { error } = await supabase
           .from("kullanici_abonelikler")
           .update(updatePayload)
-          .eq("id", existing.id);
+          .eq("user_id", userId);
         if (error) {
           console.error("[UPDATE-FIRMA-PAKET] Update error", error.message);
           return jsonResponse({ error: error.message }, 500);
