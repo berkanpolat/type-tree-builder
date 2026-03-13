@@ -31,7 +31,7 @@ interface AdminUser {
   created_at: string;
 }
 
-const POZISYONLAR = ["Call Center", "Satış Sorumlusu", "Yönetici", "Destek Personel"];
+const POZISYONLAR = ["Saha Satış Personeli", "Saha Satış Yöneticisi", "Çağrı Merkezi Yönetici", "Çağrı Merkezi Personeli", "Kurumsal Satış Yönetimi", "Kurumsal Satış Personeli", "Destek Personeli"];
 const DEPARTMANLAR = ["Yönetim Kurulu", "Saha Satış", "Çağrı Merkezi", "Kurumsal Satış"];
 
 /* ── Hierarchical Permission Structure ── */
