@@ -1519,8 +1519,19 @@ Deno.serve(async (req) => {
         .single();
       if (error) return jsonResponse({ error: error.message }, 400);
 
-      // Notify owner
+      // Notify owner + send email
       if (data) {
+        const { data: { user: urunAuthUser } } = await supabase.auth.admin.getUserById(data.user_id);
+        const { data: urunFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", data.user_id).single();
+
+        if (urunAuthUser?.email) {
+          await sendPostmarkEmail("urun_yayinlandi", urunAuthUser.email, {
+            firma_unvani: urunFirma?.firma_unvani || "",
+            urun_basligi: data.baslik,
+            urun_linki: `${SITE_URL}/urun/${data.id}`,
+          });
+        }
+
         const msg = `${data.urun_no} numaralı "${data.baslik}" başlıklı ürününüz onaylanmış ve yayına alınmıştır. İşlemi yapan: ${adminLabel}`;
         await supabase.from("notifications").insert({
           user_id: data.user_id,
