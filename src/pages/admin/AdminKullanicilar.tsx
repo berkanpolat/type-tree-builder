@@ -25,12 +25,14 @@ interface AdminUser {
   email: string | null;
   telefon: string | null;
   pozisyon: string;
+  departman: string;
   is_primary: boolean;
   permissions: Record<string, boolean>;
   created_at: string;
 }
 
 const POZISYONLAR = ["Call Center", "Satış Sorumlusu", "Yönetici", "Destek Personel"];
+const DEPARTMANLAR = ["Yönetim Kurulu", "Saha Satış", "Çağrı Merkezi", "Kurumsal Satış"];
 
 /* ── Hierarchical Permission Structure ── */
 interface PermissionGroup {
