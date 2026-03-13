@@ -2999,17 +2999,29 @@ Deno.serve(async (req) => {
       const { data, error } = await supabase.from("firma_uzaklastirmalar").select("*").order("created_at", { ascending: false });
       if (error) return jsonResponse({ error: error.message }, 500);
 
-      const enriched = [];
-      for (const u of (data || [])) {
-        const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", u.user_id).single();
-        const { data: profile } = await supabase.from("profiles").select("ad, soyad, iletisim_email").eq("user_id", u.user_id).single();
-        enriched.push({
+      // Batch-fetch firma & profile info instead of N+1
+      const uzUserIds = [...new Set((data || []).map((u: any) => u.user_id))];
+      const [uzFirmalarRes, uzProfilesRes] = uzUserIds.length > 0
+        ? await Promise.all([
+            supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", uzUserIds),
+            supabase.from("profiles").select("user_id, ad, soyad, iletisim_email").in("user_id", uzUserIds),
+          ])
+        : [{ data: [] }, { data: [] }];
+
+      const uzFirmaMap = new Map<string, string>();
+      for (const f of (uzFirmalarRes.data || [])) uzFirmaMap.set(f.user_id, f.firma_unvani);
+      const uzProfileMap = new Map<string, { ad: string; soyad: string; email: string }>();
+      for (const p of (uzProfilesRes.data || [])) uzProfileMap.set(p.user_id, { ad: p.ad, soyad: p.soyad, email: p.iletisim_email });
+
+      const enriched = (data || []).map((u: any) => {
+        const profile = uzProfileMap.get(u.user_id);
+        return {
           ...u,
-          firma_unvani: firma?.firma_unvani || "—",
+          firma_unvani: uzFirmaMap.get(u.user_id) || "—",
           kullanici_ad: profile ? `${profile.ad} ${profile.soyad}` : "—",
-          kullanici_email: profile?.iletisim_email || "—",
-        });
-      }
+          kullanici_email: profile?.email || "—",
+        };
+      });
       return jsonResponse({ uzaklastirmalar: enriched });
     }
 
