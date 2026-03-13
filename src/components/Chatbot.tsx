@@ -145,12 +145,11 @@ export default function Chatbot() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-[9999] w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-105"
+          className="fixed bottom-5 right-5 z-[9999] w-16 h-16 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-105 overflow-hidden bg-background border border-border"
           aria-label="Yardım"
         >
-          <MessageSquare className="w-6 h-6 transition-transform group-hover:scale-110" />
-          {/* Pulse ring */}
-          <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping pointer-events-none" style={{ animationDuration: "3s" }} />
+          <img src={tekbotAvatar} alt="TekBot" className="w-14 h-14 object-contain" />
+          <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping pointer-events-none" style={{ animationDuration: "3s" }} />
         </button>
       )}
 
