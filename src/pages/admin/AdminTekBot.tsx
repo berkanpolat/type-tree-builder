@@ -131,7 +131,7 @@ function Inner() {
   // Delete bilgi
   const deleteBilgi = async (id: string) => {
     try {
-      await adminAction("delete_chatbot_bilgi", { id });
+      await adminAction("delete-chatbot-bilgi", { id });
       toast({ title: "Silindi" });
       fetchData();
     } catch (e: any) {
