@@ -8,6 +8,7 @@ import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import RouteStateManager from "./components/RouteStateManager";
 import RoutePreloader from "./components/RoutePreloader";
 import AuthRedirectHandler from "./components/AuthRedirectHandler";
+import Chatbot from "./components/Chatbot";
 
 // Only GirisKayit is eagerly loaded (auth gate)
 import GirisKayit from "./pages/GirisKayit";
@@ -165,6 +166,7 @@ const App = () => (
           </Routes>
         </Suspense>
       </BrowserRouter>
+      <Chatbot />
     </TooltipProvider>
   </QueryClientProvider>
 );

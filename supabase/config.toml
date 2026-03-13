@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.send-password-reset]
 verify_jwt = false
+
+[functions.chatbot]
+verify_jwt = false
