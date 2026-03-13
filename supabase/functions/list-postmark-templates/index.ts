@@ -93,6 +93,30 @@ serve(async (req) => {
       });
     }
 
+    // Update a single template's HTML/Text/Subject
+    if (action === "update_template") {
+      const { templateId, name, subject, htmlBody, textBody } = body;
+      const putRes = await fetch(`https://api.postmarkapp.com/templates/${templateId}`, {
+        method: "PUT",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+        },
+        body: JSON.stringify({
+          Name: name,
+          Subject: subject,
+          HtmlBody: htmlBody,
+          TextBody: textBody,
+        }),
+      });
+      const putData = await putRes.json();
+      return new Response(JSON.stringify(putData), {
+        status: putRes.ok ? 200 : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "update_all") {
       // Template ID -> placeholder mapping
       const templateMappings: Record<number, Record<string, string>> = {
