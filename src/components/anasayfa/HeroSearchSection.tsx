@@ -62,7 +62,7 @@ const HeroSearchSection = ({
   }, []);
 
   return (
-    <div className="relative rounded-xl z-30">
+    <div className="relative rounded-xl z-30 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[hsl(224,60%,8%)] via-[hsl(224,55%,14%)] to-[hsl(224,50%,22%)]" />
       {/* Decorative circles */}
