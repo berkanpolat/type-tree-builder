@@ -125,7 +125,8 @@ export default function ProfilAyarlari() {
       toast({ title: "Başarılı", description: "Şifreniz başarıyla değiştirildi." });
       // Send "Şifre Değiştirildi" email
       try {
-        const { data: myFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", session?.user?.id || "").single();
+        const { data: { user: pwUser } } = await supabase.auth.getUser();
+        const { data: myFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", pwUser?.id || "").single();
         await supabase.functions.invoke("send-email", {
           body: {
             type: "sifre_degistirildi",
