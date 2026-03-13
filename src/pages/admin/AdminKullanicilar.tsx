@@ -149,6 +149,7 @@ export default function AdminKullanicilar() {
     email: "",
     telefon: "",
     pozisyon: "Call Center",
+    departman: "Çağrı Merkezi",
     permissions: { ...DEFAULT_PERMISSIONS },
   });
 
