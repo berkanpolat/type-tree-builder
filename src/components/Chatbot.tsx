@@ -180,7 +180,7 @@ export default function Chatbot() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <p className="text-sm font-semibold text-primary-foreground">TekBot</p>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                 </div>
                 <p className="text-[11px] text-primary-foreground/70">Tekstil A.Ş. Yapay Zeka Asistanı</p>
               </div>
