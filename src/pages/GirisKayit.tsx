@@ -674,7 +674,7 @@ const GirisKayit = () => {
                         }
                         setRegisterStep(3);
                       }}
-                      disabled={!ad || !soyad || !email || !isValidEmail(email) || emailDuplicate || !kvkkAccepted || !emailConsentAccepted}
+                      disabled={!ad || !soyad || !email || !isValidEmail(email) || emailDuplicate || !kvkkAccepted}
                     >
                       Devam Et
                     </Button>
