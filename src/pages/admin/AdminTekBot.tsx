@@ -104,7 +104,7 @@ function Inner() {
     if (!newSoru.trim() || !newCevap.trim()) return;
     setSaving(true);
     try {
-      await adminAction("add_chatbot_bilgi", { soru: newSoru, cevap: newCevap, kategori: newKategori });
+      await adminAction("add-chatbot-bilgi", { soru: newSoru, cevap: newCevap, kategori: newKategori });
       setNewSoru(""); setNewCevap(""); setNewKategori("Genel"); setShowAdd(false);
       toast({ title: "Eklendi", description: "Soru-cevap başarıyla eklendi." });
       fetchData();
