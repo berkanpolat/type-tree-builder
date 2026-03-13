@@ -1422,8 +1422,12 @@ Deno.serve(async (req) => {
         if (cats) catMap = Object.fromEntries(cats.map((c: any) => [c.id, c.name]));
       }
 
+      // Build Map for O(1) lookups
+      const firmaMapU = new Map<string, { firma_unvani: string; logo_url: string | null }>();
+      for (const f of (firmalar || [])) firmaMapU.set(f.user_id, { firma_unvani: f.firma_unvani, logo_url: f.logo_url });
+
       const enriched = (urunler || []).map((u: any) => {
-        const firma = (firmalar || []).find((f: any) => f.user_id === u.user_id);
+        const firma = firmaMapU.get(u.user_id);
         const uk = u.urun_kategori_id ? catMap[u.urun_kategori_id] : "";
         const ug = u.urun_grup_id ? catMap[u.urun_grup_id] : "";
         const ut = u.urun_tur_id ? catMap[u.urun_tur_id] : "";
