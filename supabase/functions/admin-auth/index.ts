@@ -407,10 +407,11 @@ Deno.serve(async (req) => {
       // Get user phone for SMS
       const { data: profile } = await supabase
         .from("profiles")
-        .select("iletisim_numarasi")
+        .select("iletisim_numarasi, ad, soyad")
         .eq("user_id", firma.user_id)
         .single();
       const userPhone = profile?.iletisim_numarasi;
+      const adSoyad = profile ? `${profile.ad} ${profile.soyad}` : firma.firma_unvani;
 
       // Get user email from auth
       const { data: { user: authUser } } = await supabase.auth.admin.getUserById(firma.user_id);
