@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone
+  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone, Bot
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -31,6 +31,7 @@ const menuItems = [
   { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: "paket_detay_goruntule" as const },
   { label: "Destek Talepleri", path: "/yonetim/destek", icon: HeadphonesIcon, permission: "destek_goruntule" as const },
   { label: "Reklam", path: "/yonetim/reklam", icon: Megaphone, permission: null, primaryOnly: true },
+  { label: "TekBot", path: "/yonetim/tekbot", icon: Bot, permission: null, primaryOnly: true },
 ];
 
 export default function AdminLayout({ children, title }: AdminLayoutProps) {

@@ -160,6 +160,63 @@ export type Database = {
         }
         Relationships: []
       }
+      chatbot_bilgi: {
+        Row: {
+          aktif: boolean
+          cevap: string
+          created_at: string
+          id: string
+          kategori: string
+          sira: number
+          soru: string
+          updated_at: string
+        }
+        Insert: {
+          aktif?: boolean
+          cevap: string
+          created_at?: string
+          id?: string
+          kategori?: string
+          sira?: number
+          soru: string
+          updated_at?: string
+        }
+        Update: {
+          aktif?: boolean
+          cevap?: string
+          created_at?: string
+          id?: string
+          kategori?: string
+          sira?: number
+          soru?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      chatbot_config: {
+        Row: {
+          aciklama: string | null
+          anahtar: string
+          deger: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          aciklama?: string | null
+          anahtar: string
+          deger: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          aciklama?: string | null
+          anahtar?: string
+          deger?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string

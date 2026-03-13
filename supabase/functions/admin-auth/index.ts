@@ -3329,6 +3329,46 @@ Deno.serve(async (req) => {
       return jsonResponse({ activities });
     }
 
+    // ─── CHATBOT: ADD BILGI ───
+    if (action === "add-chatbot-bilgi") {
+      const payload = verifyToken(body.token);
+      const { soru, cevap, kategori } = body;
+      const { error } = await supabase.from("chatbot_bilgi").insert({ soru, cevap, kategori: kategori || "Genel" });
+      if (error) return jsonResponse({ error: error.message }, 400);
+      await logActivity(supabase, payload, "chatbot_bilgi_ekledi", { target_type: "chatbot", target_label: soru });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── CHATBOT: UPDATE BILGI ───
+    if (action === "update-chatbot-bilgi") {
+      const payload = verifyToken(body.token);
+      const { id, soru, cevap, kategori, aktif } = body;
+      const { error } = await supabase.from("chatbot_bilgi").update({ soru, cevap, kategori, aktif, updated_at: new Date().toISOString() }).eq("id", id);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      await logActivity(supabase, payload, "chatbot_bilgi_guncelledi", { target_type: "chatbot", target_id: id, target_label: soru });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── CHATBOT: DELETE BILGI ───
+    if (action === "delete-chatbot-bilgi") {
+      const payload = verifyToken(body.token);
+      const { id } = body;
+      const { error } = await supabase.from("chatbot_bilgi").delete().eq("id", id);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      await logActivity(supabase, payload, "chatbot_bilgi_sildi", { target_type: "chatbot", target_id: id });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── CHATBOT: UPDATE CONFIG ───
+    if (action === "update-chatbot-config") {
+      const payload = verifyToken(body.token);
+      const { anahtar, deger } = body;
+      const { error } = await supabase.from("chatbot_config").update({ deger, updated_at: new Date().toISOString() }).eq("anahtar", anahtar);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      await logActivity(supabase, payload, "chatbot_config_guncelledi", { target_type: "chatbot_config", target_label: anahtar });
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {

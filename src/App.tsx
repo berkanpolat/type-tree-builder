@@ -67,6 +67,7 @@ const AdminPaketler = lazy(() => import("./pages/admin/AdminPaketler"));
 const AdminIslemler = lazy(() => import("./pages/admin/AdminIslemler"));
 const AdminKisitlamalar = lazy(() => import("./pages/admin/AdminKisitlamalar"));
 const AdminReklam = lazy(() => import("./pages/admin/AdminReklam"));
+const AdminTekBot = lazy(() => import("./pages/admin/AdminTekBot"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -158,6 +159,7 @@ const App = () => (
             <Route path="/yonetim/islemler" element={<AdminRoute><AdminIslemler /></AdminRoute>} />
             <Route path="/yonetim/kisitlamalar" element={<AdminRoute><AdminKisitlamalar /></AdminRoute>} />
             <Route path="/yonetim/reklam" element={<AdminRoute><AdminReklam /></AdminRoute>} />
+            <Route path="/yonetim/tekbot" element={<AdminRoute><AdminTekBot /></AdminRoute>} />
 
             {/* Catch-all: try firma slug at root level */}
             <Route path="/:slug" element={<FirmaDetay />} />
