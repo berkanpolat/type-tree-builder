@@ -177,8 +177,8 @@ export default function Chatbot() {
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                  <Bot className="w-7 h-7 text-primary" />
+                <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center mb-3">
+                  <img src={tekbotAvatar} alt="TekBot" className="w-16 h-16 object-contain" />
                 </div>
                 <p className="text-sm font-medium text-foreground mb-1">
                   Merhaba! 👋
