@@ -504,16 +504,29 @@ export default function AdminKullanicilar() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label style={sMuted}>Pozisyon *</Label>
-              <Select value={form.pozisyon} onValueChange={(v) => setForm({ ...form, pozisyon: v })}>
-                <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
-                <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
-                  {POZISYONLAR.map((p) => (
-                    <SelectItem key={p} value={p} style={sText}>{p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label style={sMuted}>Departman *</Label>
+                <Select value={form.departman} onValueChange={(v) => setForm({ ...form, departman: v })}>
+                  <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
+                  <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+                    {DEPARTMANLAR.map((d) => (
+                      <SelectItem key={d} value={d} style={sText}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label style={sMuted}>Pozisyon *</Label>
+                <Select value={form.pozisyon} onValueChange={(v) => setForm({ ...form, pozisyon: v })}>
+                  <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
+                  <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+                    {POZISYONLAR.map((p) => (
+                      <SelectItem key={p} value={p} style={sText}>{p}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-3">
