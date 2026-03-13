@@ -130,7 +130,12 @@ export default function SifreSifirla() {
           <p className="text-sm text-muted-foreground mt-2">Lütfen yeni şifrenizi giriniz.</p>
         </div>
 
-        {!validSession ? (
+        {verifying ? (
+          <div className="text-center space-y-4">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+            <p className="text-sm text-muted-foreground">Bağlantı doğrulanıyor...</p>
+          </div>
+        ) : !validSession ? (
           <div className="text-center space-y-4">
             <p className="text-sm text-muted-foreground">Geçersiz veya süresi dolmuş bağlantı. Lütfen yeniden şifre sıfırlama talebinde bulununuz.</p>
             <Button className="w-full" onClick={() => navigate("/giris-kayit")}>
