@@ -117,6 +117,73 @@ serve(async (req) => {
       });
     }
 
+    // Replace a hardcoded logo URL inside selected templates
+    if (action === "replace_logo_url") {
+      const { templateIds, oldLogoUrl, logoUrl } = body;
+
+      if (!Array.isArray(templateIds) || templateIds.length === 0 || !oldLogoUrl || !logoUrl) {
+        return new Response(JSON.stringify({ error: "templateIds, oldLogoUrl ve logoUrl zorunludur" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const results: Array<{ templateId: number; name: string; status: string; replaced: boolean }> = [];
+
+      for (const templateId of templateIds) {
+        const getRes = await fetch(`https://api.postmarkapp.com/templates/${templateId}`, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+            "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+          },
+        });
+
+        const template = await getRes.json();
+        if (!getRes.ok) {
+          results.push({
+            templateId,
+            name: "unknown",
+            status: `error: ${template?.Message || "template alınamadı"}`,
+            replaced: false,
+          });
+          continue;
+        }
+
+        const htmlBody = template.HtmlBody || "";
+        const updatedHtmlBody = htmlBody.replaceAll(oldLogoUrl, logoUrl);
+        const replaced = updatedHtmlBody !== htmlBody;
+
+        const putRes = await fetch(`https://api.postmarkapp.com/templates/${templateId}`, {
+          method: "PUT",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+          },
+          body: JSON.stringify({
+            Name: template.Name,
+            Subject: template.Subject,
+            HtmlBody: updatedHtmlBody,
+            TextBody: template.TextBody,
+          }),
+        });
+
+        const putData = await putRes.json();
+        results.push({
+          templateId,
+          name: template.Name,
+          status: putRes.ok ? "updated" : `error: ${putData?.Message || "güncellenemedi"}`,
+          replaced,
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, results }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "update_all") {
       // Template ID -> placeholder mapping
       const templateMappings: Record<number, Record<string, string>> = {
