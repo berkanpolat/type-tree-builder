@@ -661,8 +661,8 @@ const GirisKayit = () => {
                           toast({ title: "Hata", description: "Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
                           return;
                         }
-                        if (!kvkkAccepted || !emailConsentAccepted) {
-                          toast({ title: "Hata", description: "Devam etmek için tüm onay kutularını işaretlemeniz gerekmektedir.", variant: "destructive" });
+                        if (!kvkkAccepted) {
+                          toast({ title: "Hata", description: "KVKK Aydınlatma Metni'ni kabul etmeniz gerekmektedir.", variant: "destructive" });
                           return;
                         }
                         // Final server-side email check via RPC
