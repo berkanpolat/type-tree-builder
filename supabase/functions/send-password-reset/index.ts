@@ -98,6 +98,7 @@ serve(async (req) => {
         TemplateModel: {
           sifre_sifirlama_baglantisi: recoveryLink,
           platform_adi: "Tekstil A.Ş.",
+          logo_url: `${siteUrl}/images/logo-tekstilas-seffaf.png`,
           destek_email: "destek@tekstilas.com",
           yil: new Date().getFullYear().toString(),
           site_url: siteUrl,
