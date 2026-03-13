@@ -293,6 +293,7 @@ export default function AdminFirmalarV2() {
     setPaketDialogOpen(true);
     setPaketDialogLoading(true);
     setSelectedPaketId(firma.abonelik?.paket_id || "");
+    setSelectedPeriyot(firma.abonelik?.periyot || "sinursiz");
     setEkstraHaklar({});
     try {
       const [quotaRes, paketlerRes] = await Promise.all([
