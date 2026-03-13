@@ -719,6 +719,9 @@ export default function AdminFirmalarV2() {
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("ihale_sayisi")}>
                     <span className="flex items-center gap-1 text-xs" style={s.muted}>İhale <SortIcon field="ihale_sayisi" /></span>
                   </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("teklif_sayisi")}>
+                    <span className="flex items-center gap-1 text-xs" style={s.muted}>Teklif <SortIcon field="teklif_sayisi" /></span>
+                  </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("urun_sayisi")}>
                     <span className="flex items-center gap-1 text-xs" style={s.muted}>Ürün <SortIcon field="urun_sayisi" /></span>
                   </TableHead>
@@ -727,6 +730,9 @@ export default function AdminFirmalarV2() {
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("created_at")}>
                     <span className="flex items-center gap-1 text-xs" style={s.muted}>Kayıt <SortIcon field="created_at" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("last_seen")}>
+                    <span className="flex items-center gap-1 text-xs" style={s.muted}>Son Hareket <SortIcon field="last_seen" /></span>
                   </TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
