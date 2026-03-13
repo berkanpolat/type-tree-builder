@@ -1,6 +1,51 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const POSTMARK_API_URL = "https://api.postmarkapp.com/email";
+const POSTMARK_API_URL = "https://api.postmarkapp.com/email/withTemplate";
+const FROM_EMAIL = "info@tekstilas.com";
+const SITE_URL = "https://type-tree-builder.lovable.app";
+
+const EMAIL_TEMPLATES: Record<string, number> = {
+  basvuru_onay: 43897478,
+  basvuru_red: 43897477,
+  ihale_onaylandi: 43898542,
+  ihale_reddedildi: 43898543,
+  urun_yayinlandi: 43898721,
+  urun_reddedildi: 43898843,
+};
+
+async function sendPostmarkEmail(templateKey: string, to: string, model: Record<string, string>) {
+  const POSTMARK_SERVER_TOKEN = Deno.env.get("POSTMARK_SERVER_TOKEN");
+  if (!POSTMARK_SERVER_TOKEN) { console.error("[EMAIL] No POSTMARK_SERVER_TOKEN"); return; }
+  const templateId = EMAIL_TEMPLATES[templateKey];
+  if (!templateId) { console.error(`[EMAIL] Unknown template: ${templateKey}`); return; }
+  try {
+    const res = await fetch(POSTMARK_API_URL, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+      },
+      body: JSON.stringify({
+        From: FROM_EMAIL,
+        To: to,
+        TemplateId: templateId,
+        TemplateModel: {
+          ...model,
+          platform_adi: "Tekstil A.Ş.",
+          destek_email: "info@manufixo.com",
+          yil: new Date().getFullYear().toString(),
+          site_url: SITE_URL,
+        },
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) console.error(`[EMAIL] Postmark error ${templateKey}:`, data.Message);
+    else console.log(`[EMAIL] Sent ${templateKey} to ${to}, ID: ${data.MessageID}`);
+  } catch (e) {
+    console.error(`[EMAIL] Failed ${templateKey}:`, e);
+  }
+}
 
 function generateRandomPassword(length = 10): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
