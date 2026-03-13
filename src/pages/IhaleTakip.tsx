@@ -286,7 +286,6 @@ export default function IhaleTakip() {
 
   // Handle teklif kabul
   const handleKabulEt = async (teklifId: string) => {
-    // Update teklif status to kabul_edildi
     const { error } = await supabase
       .from("ihale_teklifler")
       .update({ durum: "kabul_edildi" } as any)
@@ -297,11 +296,54 @@ export default function IhaleTakip() {
       return;
     }
 
-    // Update ihale status to tamamlandi (accepting a bid completes the tender per doc)
     await supabase.from("ihaleler").update({ durum: "tamamlandi" } as any).eq("id", id);
 
     toast({ title: "Teklif kabul edildi", description: "İhale tamamlandı olarak işaretlendi." });
     fetchData();
+
+    // Send teklif_kabul email to bidder
+    try {
+      const teklif = teklifler.find(t => t.id === teklifId);
+      if (teklif && ihale) {
+        const { data: bidderFirma } = await supabase
+          .from("firmalar")
+          .select("firma_unvani")
+          .eq("user_id", teklif.teklif_veren_user_id)
+          .single();
+
+        supabase.functions.invoke("send-email", {
+          body: {
+            type: "teklif_kabul",
+            userId: teklif.teklif_veren_user_id,
+            templateModel: {
+              firma_unvani: bidderFirma?.firma_unvani || "",
+              ihale_basligi: ihale.baslik,
+              ihale_linki: `${window.location.origin}/tekihale/${ihale.id}`,
+            },
+          },
+        }).catch(console.error);
+
+        // Send ihale_tamamlandi email to ihale owner
+        const { data: ownerFirma } = await supabase
+          .from("firmalar")
+          .select("firma_unvani")
+          .eq("user_id", ihale.user_id)
+          .single();
+
+        supabase.functions.invoke("send-email", {
+          body: {
+            type: "ihale_tamamlandi",
+            userId: ihale.user_id,
+            templateModel: {
+              firma_unvani: ownerFirma?.firma_unvani || "",
+              ihale_basligi: ihale.baslik,
+            },
+          },
+        }).catch(console.error);
+      }
+    } catch (e) {
+      console.error("[IhaleTakip] Email notification error:", e);
+    }
   };
 
   // Handle teklif red
@@ -318,6 +360,32 @@ export default function IhaleTakip() {
 
     toast({ title: "Teklif reddedildi" });
     fetchData();
+
+    // Send teklif_red email to bidder
+    try {
+      const teklif = teklifler.find(t => t.id === teklifId);
+      if (teklif && ihale) {
+        const { data: bidderFirma } = await supabase
+          .from("firmalar")
+          .select("firma_unvani")
+          .eq("user_id", teklif.teklif_veren_user_id)
+          .single();
+
+        supabase.functions.invoke("send-email", {
+          body: {
+            type: "teklif_red",
+            userId: teklif.teklif_veren_user_id,
+            templateModel: {
+              firma_unvani: bidderFirma?.firma_unvani || "",
+              ihale_basligi: ihale.baslik,
+              ihale_linki: `${window.location.origin}/tekihale/${ihale.id}`,
+            },
+          },
+        }).catch(console.error);
+      }
+    } catch (e) {
+      console.error("[IhaleTakip] Email notification error:", e);
+    }
   };
 
   // Handle ihale iptal

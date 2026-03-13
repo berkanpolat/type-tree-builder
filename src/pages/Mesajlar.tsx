@@ -453,6 +453,37 @@ export default function Mesajlar() {
       console.error("[Mesajlar] Conversation update error:", updateError);
     }
 
+    // Send email notification to recipient
+    try {
+      const recipientUserId = selectedConv.other_user_id;
+      const { data: senderFirma } = await supabase
+        .from("firmalar")
+        .select("firma_unvani")
+        .eq("user_id", currentUserId)
+        .single();
+      const { data: recipientFirma } = await supabase
+        .from("firmalar")
+        .select("firma_unvani")
+        .eq("user_id", recipientUserId)
+        .single();
+
+      if (recipientFirma) {
+        supabase.functions.invoke("send-email", {
+          body: {
+            type: "yeni_mesaj",
+            userId: recipientUserId,
+            templateModel: {
+              firma_unvani: recipientFirma.firma_unvani || "",
+              gonderen_firma_unvani: senderFirma?.firma_unvani || "Bir kullanıcı",
+              mesaj_linki: `${window.location.origin}/mesajlar?conv=${selectedConv.id}`,
+            },
+          },
+        }).catch(console.error);
+      }
+    } catch (e) {
+      console.error("[Mesajlar] Email notification error:", e);
+    }
+
     setUploading(false);
   };
 
