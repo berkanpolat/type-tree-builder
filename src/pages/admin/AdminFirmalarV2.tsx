@@ -174,6 +174,7 @@ export default function AdminFirmalarV2() {
   const [paketDialogQuota, setPaketDialogQuota] = useState<any>(null);
   const [allPaketler, setAllPaketler] = useState<any[]>([]);
   const [selectedPaketId, setSelectedPaketId] = useState<string>("");
+  const [selectedPeriyot, setSelectedPeriyot] = useState<string>("sinursiz");
   const [paketSaving, setPaketSaving] = useState(false);
   const [ekstraHaklar, setEkstraHaklar] = useState<Record<string, number>>({});
   const [ekstraSaving, setEkstraSaving] = useState(false);
