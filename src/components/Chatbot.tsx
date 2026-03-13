@@ -158,8 +158,8 @@ export default function Chatbot() {
         <div className="fixed bottom-5 right-5 z-[9999] w-[370px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-6rem)] flex flex-col rounded-2xl border border-border bg-background shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-300">
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 bg-primary text-primary-foreground shrink-0">
-            <div className="w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-              <Bot className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-primary-foreground/20 flex items-center justify-center">
+              <img src={tekbotAvatar} alt="TekBot" className="w-8 h-8 object-contain" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold">TekBot</p>
