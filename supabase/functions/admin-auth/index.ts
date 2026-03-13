@@ -431,29 +431,30 @@ Deno.serve(async (req) => {
             console.error("Failed to set random password:", e);
           }
 
-          // 2) Send recovery email via existing email system (Lovable hook)
+          // 2) Generate recovery link via admin API (no Supabase email sent)
           const siteUrl = req.headers.get("origin") || Deno.env.get("SITE_URL") || SITE_URL;
-          const recoveryLink = `${siteUrl}/sifre-sifirla`;
+          let recoveryLink = `${siteUrl}/sifre-sifirla`;
           try {
-            const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-            const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-            await fetch(`${supabaseUrl}/auth/v1/recover`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'apikey': supabaseAnonKey,
+            const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+              type: "recovery",
+              email: authUser.email,
+              options: {
+                redirectTo: `${siteUrl}/sifre-sifirla`,
               },
-              body: JSON.stringify({
-                email: authUser.email,
-                redirect_to: recoveryLink,
-              }),
             });
-            console.log("Recovery email sent to:", authUser.email);
+            if (linkError) {
+              console.error("generateLink error:", linkError);
+            } else if (linkData?.properties?.hashed_token) {
+              recoveryLink = `${siteUrl}/sifre-sifirla#access_token=${linkData.properties.hashed_token}&type=recovery`;
+            } else if (linkData?.properties?.action_link) {
+              recoveryLink = linkData.properties.action_link;
+            }
+            console.log("Recovery link generated for:", authUser.email);
           } catch (e) {
-            console.error("Recovery email failed:", e);
+            console.error("Recovery link generation failed:", e);
           }
 
-          // 3) Send Postmark approval email
+          // 3) Send Postmark approval email with recovery link
           await sendPostmarkEmail("basvuru_onay", authUser.email, {
             firma_unvani: firma.firma_unvani,
             sifre_olusturma_baglantisi: recoveryLink,
