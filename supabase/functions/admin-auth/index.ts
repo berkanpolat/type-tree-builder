@@ -3096,22 +3096,35 @@ Deno.serve(async (req) => {
       const payload = verifyToken(body.token);
       if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 403);
 
-      const limit = 500;
+      // Helper: fetch all rows bypassing 1000-row default limit
+      async function fetchAllRows(table: string, select: string, orderCol = "created_at") {
+        const PAGE_SIZE = 1000;
+        let allRows: any[] = [];
+        let from = 0;
+        while (true) {
+          const { data, error } = await supabase.from(table).select(select).order(orderCol, { ascending: false }).range(from, from + PAGE_SIZE - 1);
+          if (error || !data || data.length === 0) break;
+          allRows = allRows.concat(data);
+          if (data.length < PAGE_SIZE) break;
+          from += PAGE_SIZE;
+        }
+        return allRows;
+      }
 
       const [
-        { data: ihalelerData },
-        { data: tekliflerData },
-        { data: urunlerData },
-        { data: sikayetlerData },
-        { data: destekData },
-        { data: firmalarData },
+        ihalelerData,
+        tekliflerData,
+        urunlerData,
+        sikayetlerData,
+        destekData,
+        firmalarData,
       ] = await Promise.all([
-        supabase.from("ihaleler").select("id, ihale_no, baslik, durum, user_id, created_at, updated_at").order("created_at", { ascending: false }).limit(limit),
-        supabase.from("ihale_teklifler").select("id, ihale_id, teklif_veren_user_id, tutar, durum, created_at, ihaleler(ihale_no, baslik)").order("created_at", { ascending: false }).limit(limit),
-        supabase.from("urunler").select("id, urun_no, baslik, durum, user_id, created_at").order("created_at", { ascending: false }).limit(limit),
-        supabase.from("sikayetler").select("id, sikayet_no, tur, sebep, durum, bildiren_user_id, created_at").order("created_at", { ascending: false }).limit(limit),
-        supabase.from("destek_talepleri").select("id, talep_no, konu, departman, durum, user_id, created_at").order("created_at", { ascending: false }).limit(limit),
-        supabase.from("firmalar").select("id, firma_unvani, user_id, onay_durumu, created_at, slug").order("created_at", { ascending: false }).limit(limit),
+        fetchAllRows("ihaleler", "id, ihale_no, baslik, durum, user_id, created_at, updated_at"),
+        fetchAllRows("ihale_teklifler", "id, ihale_id, teklif_veren_user_id, tutar, durum, created_at, ihaleler(ihale_no, baslik)"),
+        fetchAllRows("urunler", "id, urun_no, baslik, durum, user_id, created_at"),
+        fetchAllRows("sikayetler", "id, sikayet_no, tur, sebep, durum, bildiren_user_id, created_at"),
+        fetchAllRows("destek_talepleri", "id, talep_no, konu, departman, durum, user_id, created_at"),
+        fetchAllRows("firmalar", "id, firma_unvani, user_id, onay_durumu, created_at, slug"),
       ]);
 
       // Collect all unique user_ids
