@@ -3176,7 +3176,7 @@ Deno.serve(async (req) => {
         });
       });
 
-      tekliflerData?.forEach(t => {
+      tekliflerData.forEach(t => {
         const u = profileMap[t.teklif_veren_user_id];
         const ihale = t.ihaleler as any;
         activities.push({
