@@ -1633,6 +1633,21 @@ Deno.serve(async (req) => {
           message: msg,
           link: "/manupazar",
         });
+
+        // Send urun approval SMS
+        try {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+            body: JSON.stringify({
+              type: "urun_yayinlandi",
+              userId: data.user_id,
+              firmaUnvani: urunFirma?.firma_unvani || "",
+              urunBasligi: data.baslik,
+              urunLinki: `${SITE_URL}/urun/${data.id}`,
+            }),
+          });
+        } catch (smsErr) { console.error("Urun approval SMS failed:", smsErr); }
       }
 
       return jsonResponse({ success: true, urun: data });
