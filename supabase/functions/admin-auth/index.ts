@@ -276,11 +276,12 @@ Deno.serve(async (req) => {
       // Helper: .in() with batching for arrays > 1000
       async function fetchIn(table: string, select: string, column: string, ids: string[]) {
         if (ids.length === 0) return [];
-        const BATCH = 1000;
+        const BATCH = 500;
         let allRows: any[] = [];
         for (let i = 0; i < ids.length; i += BATCH) {
           const batch = ids.slice(i, i + BATCH);
-          const { data } = await supabase.from(table).select(select).in(column, batch);
+          const { data, error } = await supabase.from(table).select(select).in(column, batch).limit(5000);
+          if (error) console.error(`[fetchIn] ${table} error:`, error.message);
           if (data) allRows = allRows.concat(data);
         }
         return allRows;
