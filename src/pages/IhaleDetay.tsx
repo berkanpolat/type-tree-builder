@@ -749,6 +749,35 @@ export default function IhaleDetay() {
       toast({ title: "Başarılı", description: "Teklifiniz başarıyla gönderildi." });
       setConfirmOpen(false);
       fetchIhale();
+
+      // Send email to ihale owner about new bid
+      try {
+        const { data: bidderFirma } = await supabase
+          .from("firmalar")
+          .select("firma_unvani")
+          .eq("user_id", currentUserId)
+          .single();
+        const { data: ownerFirma } = await supabase
+          .from("firmalar")
+          .select("firma_unvani")
+          .eq("user_id", ihale.user_id)
+          .single();
+
+        supabase.functions.invoke("send-email", {
+          body: {
+            type: "yeni_teklif",
+            userId: ihale.user_id,
+            templateModel: {
+              firma_unvani: ownerFirma?.firma_unvani || "",
+              ihale_basligi: ihale.baslik,
+              teklif_veren_firma_unvani: bidderFirma?.firma_unvani || "Bir firma",
+              teklif_linki: `${window.location.origin}/manuihale/takip/${ihale.id}`,
+            },
+          },
+        }).catch(console.error);
+      } catch (e) {
+        console.error("[IhaleDetay] Email notification error:", e);
+      }
     }
     setSubmitting(false);
   };
