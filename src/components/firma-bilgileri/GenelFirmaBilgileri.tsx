@@ -169,7 +169,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
 
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await supabase.from("firmalar").update({
+    const updatePayload: Record<string, any> = {
       firma_olcegi_id: firmaOlcegiId || null,
       kurulus_tarihi: kurulusTarihi || null,
       kurulus_il_id: kurulusIlId || null,
@@ -186,7 +186,18 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
       logo_url: logoUrl || null,
       kapak_fotografi_url: kapakUrl || null,
       firma_hakkinda: firmaHakkinda || null,
-    } as any).eq("user_id", userId);
+    };
+
+    // Admin mode: also save locked fields
+    if (isAdminMode) {
+      updatePayload.firma_turu_id = firmaTuruId;
+      updatePayload.firma_tipi_id = firmaTipiId;
+      updatePayload.firma_unvani = firmaUnvani;
+      updatePayload.vergi_numarasi = vergiNumarasi || null;
+      updatePayload.vergi_dairesi = vergiDairesi || null;
+    }
+
+    const { error } = await supabase.from("firmalar").update(updatePayload as any).eq("user_id", userId);
 
     if (error) {
       toast({ title: "Hata", description: "Bilgiler kaydedilemedi.", variant: "destructive" });
