@@ -1490,6 +1490,21 @@ Deno.serve(async (req) => {
           message: msg,
           link: "/manuihale/takip/" + data.id,
         });
+
+        // Send ihale approval SMS
+        try {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+            body: JSON.stringify({
+              type: "ihale_onaylandi",
+              userId: data.user_id,
+              firmaUnvani: ihaleFirma?.firma_unvani || "",
+              ihaleBasligi: data.baslik,
+              ihaleDetayLinki: `${SITE_URL}/tekihale/${data.id}`,
+            }),
+          });
+        } catch (smsErr) { console.error("Ihale approval SMS failed:", smsErr); }
       }
 
       return jsonResponse({ success: true, ihale: data });
