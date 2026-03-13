@@ -19,7 +19,50 @@ serve(async (req) => {
   }
 
   try {
-    const { action } = await req.json();
+    const body = await req.json();
+    const { action } = body;
+
+    // Get a single template
+    if (action === "get_template") {
+      const { templateId } = body;
+      const getRes = await fetch(`https://api.postmarkapp.com/templates/${templateId}`, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+          "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+        },
+      });
+      const template = await getRes.json();
+      return new Response(JSON.stringify(template), {
+        status: getRes.ok ? 200 : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Create a new template
+    if (action === "create_template") {
+      const { name, subject, htmlBody, textBody } = body;
+      const createRes = await fetch("https://api.postmarkapp.com/templates", {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+        },
+        body: JSON.stringify({
+          Name: name,
+          Subject: subject,
+          HtmlBody: htmlBody,
+          TextBody: textBody,
+          TemplateType: "Standard",
+        }),
+      });
+      const createData = await createRes.json();
+      return new Response(JSON.stringify(createData), {
+        status: createRes.ok ? 200 : 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (action === "update_all") {
       // Template ID -> placeholder mapping
