@@ -19,16 +19,22 @@ serve(async (req) => {
   }
 
   try {
-    const response = await fetch("https://api.postmarkapp.com/templates?count=100&offset=0", {
-      method: "GET",
-      headers: {
-        "Accept": "application/json",
-        "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
-      },
-    });
+    const { templateIds } = await req.json();
+    
+    const results = await Promise.all(
+      templateIds.map(async (id: number) => {
+        const response = await fetch(`https://api.postmarkapp.com/templates/${id}`, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json",
+            "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+          },
+        });
+        return response.json();
+      })
+    );
 
-    const data = await response.json();
-    return new Response(JSON.stringify(data), {
+    return new Response(JSON.stringify(results), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
