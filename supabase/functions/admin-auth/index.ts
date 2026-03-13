@@ -276,7 +276,7 @@ Deno.serve(async (req) => {
       // Helper: .in() with batching for arrays > 1000
       async function fetchIn(table: string, select: string, column: string, ids: string[]) {
         if (ids.length === 0) return [];
-        const BATCH = 500;
+        const BATCH = 100;
         let allRows: any[] = [];
         for (let i = 0; i < ids.length; i += BATCH) {
           const batch = ids.slice(i, i + BATCH);
