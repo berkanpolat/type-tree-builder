@@ -2876,6 +2876,23 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true, publicUrl });
     }
 
+    // ─── GET URUN DETAIL (for admin viewing product pages) ───
+    if (action === "get-urun-detail") {
+      const payload = verifyToken(body.token);
+      const { urunId } = body;
+      if (!urunId) return jsonResponse({ error: "urunId gerekli" }, 400);
+
+      const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(urunId);
+      const { data: urun, error: urunErr } = await supabase
+        .from("urunler")
+        .select("*")
+        .eq(isId ? "id" : "slug", urunId)
+        .single();
+
+      if (urunErr || !urun) return jsonResponse({ error: "Ürün bulunamadı" }, 404);
+      return jsonResponse({ urun });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
