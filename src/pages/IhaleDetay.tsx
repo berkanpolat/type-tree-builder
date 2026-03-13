@@ -749,6 +749,8 @@ export default function IhaleDetay() {
       toast({ title: "Başarılı", description: "Teklifiniz başarıyla gönderildi." });
       setConfirmOpen(false);
       fetchIhale();
+      // Update last seen on action
+      import("@/hooks/use-last-seen").then(m => m.updateLastSeen());
 
       // Send email to ihale owner about new bid
       try {
