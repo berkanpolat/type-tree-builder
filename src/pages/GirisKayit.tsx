@@ -299,15 +299,28 @@ const GirisKayit = () => {
 
       // Send welcome email via Postmark
       try {
-        await supabase.functions.invoke("send-welcome-email", {
+        await supabase.functions.invoke("send-email", {
           body: {
+            type: "hosgeldiniz",
             to: email,
-            adSoyad: `${ad} ${soyad}`,
-            firmaUnvani,
+            templateModel: { firma_unvani: firmaUnvani },
           },
         });
       } catch (emailErr) {
         console.error("Welcome email failed:", emailErr);
+      }
+
+      // Send "Başvurunuzu Aldık" email
+      try {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            type: "basvuru_alindi",
+            to: email,
+            templateModel: { firma_unvani: firmaUnvani },
+          },
+        });
+      } catch (emailErr) {
+        console.error("Application received email failed:", emailErr);
       }
 
       // Send registration SMS notification
