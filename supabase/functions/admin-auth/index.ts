@@ -3195,25 +3195,31 @@ Deno.serve(async (req) => {
       destekData.forEach(d => userIds.add(d.user_id));
       firmalarData.forEach(f => userIds.add(f.user_id));
 
-      // Fetch profiles and firma names for all users
-      const userIdArr = [...userIds];
+      // Fetch ALL profiles and firmalar in parallel (already fetched firmalar above)
       const profileMap: Record<string, { ad: string; soyad: string; firma_unvani: string }> = {};
 
-      if (userIdArr.length > 0) {
-        const batchSize = 50;
-        for (let i = 0; i < userIdArr.length; i += batchSize) {
-          const batch = userIdArr.slice(i, i + batchSize);
-          const [{ data: profiles }, { data: firmalar }] = await Promise.all([
-            supabase.from("profiles").select("user_id, ad, soyad").in("user_id", batch),
-            supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", batch),
-          ]);
-          profiles?.forEach(p => {
-            profileMap[p.user_id] = { ad: p.ad, soyad: p.soyad, firma_unvani: "" };
-          });
-          firmalar?.forEach(f => {
-            if (profileMap[f.user_id]) profileMap[f.user_id].firma_unvani = f.firma_unvani;
-            else profileMap[f.user_id] = { ad: "", soyad: "", firma_unvani: f.firma_unvani };
-          });
+      // firmalarData already has user_id + firma_unvani, build map from it
+      const firmaNameMap = new Map<string, string>();
+      for (const f of firmalarData) firmaNameMap.set(f.user_id, f.firma_unvani);
+
+      // Fetch all profiles in one paginated call
+      const PAGE_SZ = 1000;
+      let allProfiles: any[] = [];
+      let pfFrom = 0;
+      while (true) {
+        const { data: pBatch } = await supabase.from("profiles").select("user_id, ad, soyad").range(pfFrom, pfFrom + PAGE_SZ - 1);
+        if (!pBatch || pBatch.length === 0) break;
+        allProfiles = allProfiles.concat(pBatch);
+        if (pBatch.length < PAGE_SZ) break;
+        pfFrom += PAGE_SZ;
+      }
+      for (const p of allProfiles) {
+        profileMap[p.user_id] = { ad: p.ad, soyad: p.soyad, firma_unvani: firmaNameMap.get(p.user_id) || "" };
+      }
+      // Also add users who have firma but no profile entry
+      for (const f of firmalarData) {
+        if (!profileMap[f.user_id]) {
+          profileMap[f.user_id] = { ad: "", soyad: "", firma_unvani: f.firma_unvani };
         }
       }
 
