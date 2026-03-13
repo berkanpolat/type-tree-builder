@@ -469,7 +469,7 @@ export default function TekRehber() {
             onFilterChange={setFirmaFilterState}
           />
 
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 min-w-0 space-y-4">
             <p className="text-sm text-muted-foreground">
               <span className="font-semibold text-foreground">{totalCount}</span> firma bulundu
               {totalPages > 1 && (
