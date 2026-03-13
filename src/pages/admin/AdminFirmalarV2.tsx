@@ -316,6 +316,44 @@ export default function AdminFirmalarV2() {
     try {
       const res = await callApi("update-firma-paket", { token, userId: paketDialogFirma.user_id, paketId: selectedPaketId, ekstraHaklar, periyot: selectedPeriyot });
       if (res.error) throw new Error(res.error);
+
+      const secilenPaket = allPaketler.find((p: any) => p.id === selectedPaketId);
+      const nowIso = new Date().toISOString();
+
+      setFirmalar((prev) =>
+        prev.map((f) =>
+          f.user_id === paketDialogFirma.user_id
+            ? {
+                ...f,
+                abonelik: {
+                  paket_id: selectedPaketId,
+                  paket_ad: secilenPaket?.ad || "—",
+                  paket_slug: secilenPaket?.slug || "",
+                  periyot: selectedPeriyot || "sinursiz",
+                  donem_baslangic: nowIso,
+                  donem_bitis: f.abonelik?.donem_bitis || nowIso,
+                  durum: "aktif",
+                  limits: f.abonelik?.limits || null,
+                },
+              }
+            : f,
+        ),
+      );
+
+      setPaketDialogQuota((prev: any) =>
+        prev
+          ? {
+              ...prev,
+              abonelik: {
+                ...prev.abonelik,
+                paket_ad: secilenPaket?.ad || prev.abonelik?.paket_ad,
+                paket_slug: secilenPaket?.slug || prev.abonelik?.paket_slug,
+                periyot: selectedPeriyot || prev.abonelik?.periyot || "sinursiz",
+              },
+            }
+          : prev,
+      );
+
       toast({ title: "Başarılı", description: "Paket güncellendi." });
       setPaketDialogOpen(false);
       fetchData();
