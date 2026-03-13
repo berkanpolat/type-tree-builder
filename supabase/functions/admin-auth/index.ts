@@ -659,7 +659,7 @@ Deno.serve(async (req) => {
     if (action === "impersonate") {
       const { token, userId } = body;
       const payload = verifyToken(token);
-      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+      // All authenticated admin users can impersonate
 
       const { data: { user: targetUser } } = await supabase.auth.admin.getUserById(userId);
       if (!targetUser || !targetUser.email) return jsonResponse({ error: "Kullanıcı bulunamadı" }, 404);
