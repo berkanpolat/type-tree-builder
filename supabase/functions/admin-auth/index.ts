@@ -432,10 +432,11 @@ Deno.serve(async (req) => {
           }
 
           // 2) Send recovery email via existing email system (Lovable hook)
+          const siteUrl = req.headers.get("origin") || Deno.env.get("SITE_URL") || SITE_URL;
+          const recoveryLink = `${siteUrl}/sifre-sifirla`;
           try {
             const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
             const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-            const siteUrl = req.headers.get("origin") || Deno.env.get("SITE_URL") || "https://type-tree-builder.lovable.app";
             await fetch(`${supabaseUrl}/auth/v1/recover`, {
               method: 'POST',
               headers: {
@@ -444,13 +445,19 @@ Deno.serve(async (req) => {
               },
               body: JSON.stringify({
                 email: authUser.email,
-                redirect_to: `${siteUrl}/sifre-sifirla`,
+                redirect_to: recoveryLink,
               }),
             });
             console.log("Recovery email sent to:", authUser.email);
           } catch (e) {
             console.error("Recovery email failed:", e);
           }
+
+          // 3) Send Postmark approval email
+          await sendPostmarkEmail("basvuru_onay", authUser.email, {
+            firma_unvani: firma.firma_unvani,
+            sifre_olusturma_linki: recoveryLink,
+          });
 
           const message = `${firma.firma_unvani} firmanızın başvurusu onaylanmıştır. Şifre belirleme bağlantısı e-posta adresinize gönderilmiştir.`;
           await supabase.from("notifications").insert({
