@@ -203,10 +203,12 @@ async function fetchDynamicContext(): Promise<string> {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const [firmalarRes, ihalelerRes, paketlerRes] = await Promise.all([
+    const [firmalarRes, ihalelerRes, paketlerRes, bilgiRes, configRes] = await Promise.all([
       supabase.from("firmalar").select("id", { count: "exact", head: true }),
       supabase.from("ihaleler").select("id", { count: "exact", head: true }).eq("durum", "devam_ediyor"),
       supabase.from("paketler").select("ad, slug, fiyat_aylik, fiyat_yillik, aktif_urun_limiti, ihale_acma_limiti, teklif_verme_limiti, mesaj_limiti, profil_goruntuleme_limiti"),
+      supabase.from("chatbot_bilgi").select("soru, cevap, kategori").eq("aktif", true).order("sira"),
+      supabase.from("chatbot_config").select("anahtar, deger"),
     ]);
 
     let context = "\n\n## DİNAMİK VERİLER (Güncel)\n";
@@ -217,6 +219,35 @@ async function fetchDynamicContext(): Promise<string> {
       context += "\n### Veritabanından Güncel Paket Bilgileri:\n";
       for (const p of paketlerRes.data) {
         context += `- **${p.ad}** (${p.slug}): Aylık ${p.fiyat_aylik ?? "Ücretsiz"}$, Yıllık ${p.fiyat_yillik ?? "-"}$, Aktif Ürün: ${p.aktif_urun_limiti}, İhale Açma: ${p.ihale_acma_limiti ?? "Sınırsız"}, Teklif Verme: ${p.teklif_verme_limiti ?? "Sınırsız"}, Mesaj: ${p.mesaj_limiti ?? "Sınırsız"}, Profil Görüntüleme: ${p.profil_goruntuleme_limiti ?? "Sınırsız"}\n`;
+      }
+    }
+
+    // Admin-managed knowledge base
+    if (bilgiRes.data && bilgiRes.data.length > 0) {
+      context += "\n\n## YÖNETİCİ TARAFINDAN EKLENEN BİLGİ BANKASI\nAşağıdaki soru-cevaplar öncelikli bilgi kaynağıdır. Bu sorularla eşleşen kullanıcı sorularında bu cevapları kullan:\n\n";
+      const byKat: Record<string, typeof bilgiRes.data> = {};
+      for (const b of bilgiRes.data) {
+        if (!byKat[b.kategori]) byKat[b.kategori] = [];
+        byKat[b.kategori].push(b);
+      }
+      for (const [kat, items] of Object.entries(byKat)) {
+        context += `### ${kat}\n`;
+        for (const item of items) {
+          context += `S: ${item.soru}\nC: ${item.cevap}\n\n`;
+        }
+      }
+    }
+
+    // Admin-managed config overrides
+    if (configRes.data) {
+      const configMap: Record<string, string> = {};
+      for (const c of configRes.data) configMap[c.anahtar] = c.deger;
+
+      if (configMap["sistem_talimatlari"]?.trim()) {
+        context += `\n\n## EK YÖNETİCİ TALİMATLARI\n${configMap["sistem_talimatlari"]}\n`;
+      }
+      if (configMap["yasak_konular"]?.trim()) {
+        context += `\n\n## YASAK KONULAR (Bu konularda KESİNLİKLE cevap verme)\n${configMap["yasak_konular"]}\n`;
       }
     }
 
