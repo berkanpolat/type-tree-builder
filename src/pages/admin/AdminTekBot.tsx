@@ -141,7 +141,7 @@ function Inner() {
 
   // Toggle active
   const toggleAktif = async (item: Bilgi) => {
-    await adminAction("update_chatbot_bilgi", { id: item.id, soru: item.soru, cevap: item.cevap, kategori: item.kategori, aktif: !item.aktif });
+    await adminAction("update-chatbot-bilgi", { id: item.id, soru: item.soru, cevap: item.cevap, kategori: item.kategori, aktif: !item.aktif });
     fetchData();
   };
 
