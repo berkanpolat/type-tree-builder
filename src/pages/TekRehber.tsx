@@ -469,7 +469,7 @@ export default function TekRehber() {
             onFilterChange={setFirmaFilterState}
           />
 
-          <div className="flex-1 space-y-4">
+          <div className="flex-1 min-w-0 space-y-4">
             <p className="text-sm text-muted-foreground">
               <span className="font-semibold text-foreground">{totalCount}</span> firma bulundu
               {totalPages > 1 && (
@@ -494,7 +494,7 @@ export default function TekRehber() {
                     className="p-4 sm:p-5 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => navigate(`/${firma.slug || firma.id}`)}
                   >
-                    <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="flex items-start gap-3 sm:gap-4 overflow-hidden">
                       <div className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
                         {firma.logo_url ? (
                           <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
@@ -503,7 +503,7 @@ export default function TekRehber() {
                         )}
                       </div>
 
-                      <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-foreground text-base sm:text-lg leading-tight flex items-center gap-1.5 truncate">
                             {firma.firma_unvani}
