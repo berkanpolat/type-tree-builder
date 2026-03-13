@@ -244,6 +244,7 @@ export default function AdminKullanicilar() {
             email: form.email,
             telefon: form.telefon,
             pozisyon: form.pozisyon,
+            departman: form.departman,
             permissions: form.permissions,
           },
         });
