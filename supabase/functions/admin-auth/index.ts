@@ -3129,12 +3129,12 @@ Deno.serve(async (req) => {
 
       // Collect all unique user_ids
       const userIds = new Set<string>();
-      ihalelerData?.forEach(i => userIds.add(i.user_id));
-      tekliflerData?.forEach(t => userIds.add(t.teklif_veren_user_id));
-      urunlerData?.forEach(u => userIds.add(u.user_id));
-      sikayetlerData?.forEach(s => userIds.add(s.bildiren_user_id));
-      destekData?.forEach(d => userIds.add(d.user_id));
-      firmalarData?.forEach(f => userIds.add(f.user_id));
+      ihalelerData.forEach(i => userIds.add(i.user_id));
+      tekliflerData.forEach(t => userIds.add(t.teklif_veren_user_id));
+      urunlerData.forEach(u => userIds.add(u.user_id));
+      sikayetlerData.forEach(s => userIds.add(s.bildiren_user_id));
+      destekData.forEach(d => userIds.add(d.user_id));
+      firmalarData.forEach(f => userIds.add(f.user_id));
 
       // Fetch profiles and firma names for all users
       const userIdArr = [...userIds];
