@@ -166,6 +166,7 @@ const App = () => (
           </Routes>
         </Suspense>
       </BrowserRouter>
+      <Chatbot />
     </TooltipProvider>
   </QueryClientProvider>
 );
