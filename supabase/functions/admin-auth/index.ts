@@ -456,7 +456,7 @@ Deno.serve(async (req) => {
           // 3) Send Postmark approval email
           await sendPostmarkEmail("basvuru_onay", authUser.email, {
             firma_unvani: firma.firma_unvani,
-            sifre_olusturma_linki: recoveryLink,
+            sifre_olusturma_baglantisi: recoveryLink,
           });
 
           const message = `${firma.firma_unvani} firmanızın başvurusu onaylanmıştır. Şifre belirleme bağlantısı e-posta adresinize gönderilmiştir.`;
