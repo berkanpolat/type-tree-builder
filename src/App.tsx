@@ -148,6 +148,7 @@ const App = () => (
             <Route path="/yonetim/panel" element={<AdminRoute><AdminPanel /></AdminRoute>} />
             <Route path="/yonetim/kullanicilar" element={<AdminRoute><AdminKullanicilar /></AdminRoute>} />
             <Route path="/yonetim/firmalar" element={<AdminRoute><AdminFirmalar /></AdminRoute>} />
+            <Route path="/yonetim/firmalar-v2" element={<AdminRoute><AdminFirmalarV2 /></AdminRoute>} />
             <Route path="/yonetim/ihaleler" element={<AdminRoute><AdminIhaleler /></AdminRoute>} />
             <Route path="/yonetim/urunler" element={<AdminRoute><AdminUrunler /></AdminRoute>} />
             <Route path="/yonetim/sikayetler" element={<AdminRoute><AdminSikayetler /></AdminRoute>} />
