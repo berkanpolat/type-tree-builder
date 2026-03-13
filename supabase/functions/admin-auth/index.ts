@@ -939,10 +939,14 @@ Deno.serve(async (req) => {
         if (cats) catMap = Object.fromEntries(cats.map((c: any) => [c.id, c.name]));
       }
 
-      const enriched = (ihaleler || []).map((i: any) => {
-        const firma = (firmalar || []).find((f: any) => f.user_id === i.user_id);
-        const teklifCount = (teklifler || []).filter((t: any) => t.ihale_id === i.id).length;
+      // Build Maps for O(1) lookups
+      const firmaMap2 = new Map<string, string>();
+      for (const f of (firmalar || [])) firmaMap2.set(f.user_id, f.firma_unvani);
+      
+      const teklifCountMap = new Map<string, number>();
+      for (const t of (teklifler || [])) teklifCountMap.set(t.ihale_id, (teklifCountMap.get(t.ihale_id) || 0) + 1);
 
+      const enriched = (ihaleler || []).map((i: any) => {
         // Determine category label
         let kategoriLabel = "";
         if (i.ihale_turu === "hizmet") {
@@ -958,8 +962,8 @@ Deno.serve(async (req) => {
 
         return {
           ...i,
-          firma_unvani: firma?.firma_unvani || "—",
-          teklif_sayisi: teklifCount,
+          firma_unvani: firmaMap2.get(i.user_id) || "—",
+          teklif_sayisi: teklifCountMap.get(i.id) || 0,
           kategori_label: kategoriLabel || "—",
         };
       });
@@ -1418,8 +1422,12 @@ Deno.serve(async (req) => {
         if (cats) catMap = Object.fromEntries(cats.map((c: any) => [c.id, c.name]));
       }
 
+      // Build Map for O(1) lookups
+      const firmaMapU = new Map<string, { firma_unvani: string; logo_url: string | null }>();
+      for (const f of (firmalar || [])) firmaMapU.set(f.user_id, { firma_unvani: f.firma_unvani, logo_url: f.logo_url });
+
       const enriched = (urunler || []).map((u: any) => {
-        const firma = (firmalar || []).find((f: any) => f.user_id === u.user_id);
+        const firma = firmaMapU.get(u.user_id);
         const uk = u.urun_kategori_id ? catMap[u.urun_kategori_id] : "";
         const ug = u.urun_grup_id ? catMap[u.urun_grup_id] : "";
         const ut = u.urun_tur_id ? catMap[u.urun_tur_id] : "";
@@ -1889,37 +1897,63 @@ Deno.serve(async (req) => {
         }
       }
 
-      // For each sikayet, try to resolve the referenced entity's owner firma and user_id
-      const enriched = await Promise.all((sikayetler || []).map(async (s: any) => {
+      // Batch-resolve referenced entities instead of N+1 queries
+      const profilRefIds = (sikayetler || []).filter((s: any) => s.tur === "profil").map((s: any) => s.referans_id);
+      const ihaleRefIds = (sikayetler || []).filter((s: any) => s.tur === "ihale").map((s: any) => s.referans_id);
+      const urunRefIds = (sikayetler || []).filter((s: any) => s.tur === "urun").map((s: any) => s.referans_id);
+      const mesajRefIds = (sikayetler || []).filter((s: any) => s.tur === "mesaj").map((s: any) => s.referans_id);
+
+      const [profilFirmalar, ihaleFirmalar, urunFirmalar, mesajSenders] = await Promise.all([
+        profilRefIds.length > 0
+          ? supabase.from("firmalar").select("id, user_id, firma_unvani").in("id", profilRefIds).then(r => r.data || [])
+          : Promise.resolve([]),
+        ihaleRefIds.length > 0
+          ? supabase.from("ihaleler").select("id, user_id").in("id", ihaleRefIds).then(r => r.data || [])
+          : Promise.resolve([]),
+        urunRefIds.length > 0
+          ? supabase.from("urunler").select("id, user_id").in("id", urunRefIds).then(r => r.data || [])
+          : Promise.resolve([]),
+        mesajRefIds.length > 0
+          ? supabase.from("messages").select("id, sender_id").in("id", mesajRefIds).then(r => r.data || [])
+          : Promise.resolve([]),
+      ]);
+
+      // Collect all user_ids from resolved entities to batch-fetch firma names
+      const resolvedUserIds = new Set<string>();
+      const ihaleUserMap = new Map<string, string>();
+      for (const i of ihaleFirmalar) { ihaleUserMap.set(i.id, i.user_id); resolvedUserIds.add(i.user_id); }
+      const urunUserMap = new Map<string, string>();
+      for (const u of urunFirmalar) { urunUserMap.set(u.id, u.user_id); resolvedUserIds.add(u.user_id); }
+      const mesajSenderMap = new Map<string, string>();
+      for (const m of mesajSenders) { mesajSenderMap.set(m.id, m.sender_id); resolvedUserIds.add(m.sender_id); }
+      const profilFirmaMap = new Map<string, { user_id: string; firma_unvani: string }>();
+      for (const f of profilFirmalar) { profilFirmaMap.set(f.id, { user_id: f.user_id, firma_unvani: f.firma_unvani }); }
+
+      // Batch-fetch firma names for ihale/urun/mesaj owners
+      const resolvedArr = [...resolvedUserIds];
+      const resolvedFirmaMap = new Map<string, string>();
+      if (resolvedArr.length > 0) {
+        const { data: rFirmalar } = await supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", resolvedArr);
+        for (const f of (rFirmalar || [])) resolvedFirmaMap.set(f.user_id, f.firma_unvani);
+      }
+
+      const enriched = (sikayetler || []).map((s: any) => {
         let sikayet_edilen_firma = "-";
         let sikayet_edilen_user_id: string | null = null;
-        try {
-          if (s.tur === "profil") {
-            const { data: f } = await supabase.from("firmalar").select("firma_unvani, user_id").eq("id", s.referans_id).single();
-            if (f) { sikayet_edilen_firma = f.firma_unvani; sikayet_edilen_user_id = f.user_id; }
-          } else if (s.tur === "ihale") {
-            const { data: i } = await supabase.from("ihaleler").select("user_id").eq("id", s.referans_id).single();
-            if (i) {
-              sikayet_edilen_user_id = i.user_id;
-              const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", i.user_id).single();
-              if (f) sikayet_edilen_firma = f.firma_unvani;
-            }
-          } else if (s.tur === "urun") {
-            const { data: u } = await supabase.from("urunler").select("user_id").eq("id", s.referans_id).single();
-            if (u) {
-              sikayet_edilen_user_id = u.user_id;
-              const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", u.user_id).single();
-              if (f) sikayet_edilen_firma = f.firma_unvani;
-            }
-          } else if (s.tur === "mesaj") {
-            const { data: m } = await supabase.from("messages").select("conversation_id, sender_id").eq("id", s.referans_id).single();
-            if (m) {
-              sikayet_edilen_user_id = m.sender_id;
-              const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", m.sender_id).single();
-              if (f) sikayet_edilen_firma = f.firma_unvani;
-            }
-          }
-        } catch {}
+
+        if (s.tur === "profil") {
+          const pf = profilFirmaMap.get(s.referans_id);
+          if (pf) { sikayet_edilen_firma = pf.firma_unvani; sikayet_edilen_user_id = pf.user_id; }
+        } else if (s.tur === "ihale") {
+          const uid = ihaleUserMap.get(s.referans_id);
+          if (uid) { sikayet_edilen_user_id = uid; sikayet_edilen_firma = resolvedFirmaMap.get(uid) || "-"; }
+        } else if (s.tur === "urun") {
+          const uid = urunUserMap.get(s.referans_id);
+          if (uid) { sikayet_edilen_user_id = uid; sikayet_edilen_firma = resolvedFirmaMap.get(uid) || "-"; }
+        } else if (s.tur === "mesaj") {
+          const uid = mesajSenderMap.get(s.referans_id);
+          if (uid) { sikayet_edilen_user_id = uid; sikayet_edilen_firma = resolvedFirmaMap.get(uid) || "-"; }
+        }
 
         return {
           ...s,
@@ -1927,7 +1961,7 @@ Deno.serve(async (req) => {
           sikayet_edilen_firma,
           sikayet_edilen_user_id,
         };
-      }));
+      });
 
       return jsonResponse({ sikayetler: enriched });
     }
@@ -2877,18 +2911,29 @@ Deno.serve(async (req) => {
 
       if (error) return jsonResponse({ error: error.message }, 500);
 
-      // Enrich with firma & profile info
-      const enriched = [];
-      for (const k of (data || [])) {
-        const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", k.user_id).single();
-        const { data: profile } = await supabase.from("profiles").select("ad, soyad, iletisim_email").eq("user_id", k.user_id).single();
-        enriched.push({
+      // Batch-fetch firma & profile info instead of N+1
+      const kUserIds = [...new Set((data || []).map((k: any) => k.user_id))];
+      const [kFirmalarRes, kProfilesRes] = kUserIds.length > 0
+        ? await Promise.all([
+            supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", kUserIds),
+            supabase.from("profiles").select("user_id, ad, soyad, iletisim_email").in("user_id", kUserIds),
+          ])
+        : [{ data: [] }, { data: [] }];
+
+      const kFirmaMap = new Map<string, string>();
+      for (const f of (kFirmalarRes.data || [])) kFirmaMap.set(f.user_id, f.firma_unvani);
+      const kProfileMap = new Map<string, { ad: string; soyad: string; email: string }>();
+      for (const p of (kProfilesRes.data || [])) kProfileMap.set(p.user_id, { ad: p.ad, soyad: p.soyad, email: p.iletisim_email });
+
+      const enriched = (data || []).map((k: any) => {
+        const profile = kProfileMap.get(k.user_id);
+        return {
           ...k,
-          firma_unvani: firma?.firma_unvani || "—",
+          firma_unvani: kFirmaMap.get(k.user_id) || "—",
           kullanici_ad: profile ? `${profile.ad} ${profile.soyad}` : "—",
-          kullanici_email: profile?.iletisim_email || "—",
-        });
-      }
+          kullanici_email: profile?.email || "—",
+        };
+      });
 
       return jsonResponse({ kisitlamalar: enriched });
     }
@@ -2934,16 +2979,22 @@ Deno.serve(async (req) => {
         .ilike("firma_unvani", `%${query}%`)
         .limit(10);
 
-      const results = [];
-      for (const f of (firmalar || [])) {
-        const { data: profile } = await supabase.from("profiles").select("ad, soyad, iletisim_email").eq("user_id", f.user_id).single();
-        results.push({
+      const searchUserIds = (firmalar || []).map((f: any) => f.user_id);
+      let searchProfileMap = new Map<string, { ad: string; soyad: string; email: string }>();
+      if (searchUserIds.length > 0) {
+        const { data: profiles } = await supabase.from("profiles").select("user_id, ad, soyad, iletisim_email").in("user_id", searchUserIds);
+        for (const p of (profiles || [])) searchProfileMap.set(p.user_id, { ad: p.ad, soyad: p.soyad, email: p.iletisim_email });
+      }
+
+      const results = (firmalar || []).map((f: any) => {
+        const profile = searchProfileMap.get(f.user_id);
+        return {
           user_id: f.user_id,
           firma_unvani: f.firma_unvani,
           kullanici_ad: profile ? `${profile.ad} ${profile.soyad}` : "—",
-          kullanici_email: profile?.iletisim_email || "—",
-        });
-      }
+          kullanici_email: profile?.email || "—",
+        };
+      });
 
       return jsonResponse({ users: results });
     }
@@ -2954,17 +3005,29 @@ Deno.serve(async (req) => {
       const { data, error } = await supabase.from("firma_uzaklastirmalar").select("*").order("created_at", { ascending: false });
       if (error) return jsonResponse({ error: error.message }, 500);
 
-      const enriched = [];
-      for (const u of (data || [])) {
-        const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", u.user_id).single();
-        const { data: profile } = await supabase.from("profiles").select("ad, soyad, iletisim_email").eq("user_id", u.user_id).single();
-        enriched.push({
+      // Batch-fetch firma & profile info instead of N+1
+      const uzUserIds = [...new Set((data || []).map((u: any) => u.user_id))];
+      const [uzFirmalarRes, uzProfilesRes] = uzUserIds.length > 0
+        ? await Promise.all([
+            supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", uzUserIds),
+            supabase.from("profiles").select("user_id, ad, soyad, iletisim_email").in("user_id", uzUserIds),
+          ])
+        : [{ data: [] }, { data: [] }];
+
+      const uzFirmaMap = new Map<string, string>();
+      for (const f of (uzFirmalarRes.data || [])) uzFirmaMap.set(f.user_id, f.firma_unvani);
+      const uzProfileMap = new Map<string, { ad: string; soyad: string; email: string }>();
+      for (const p of (uzProfilesRes.data || [])) uzProfileMap.set(p.user_id, { ad: p.ad, soyad: p.soyad, email: p.iletisim_email });
+
+      const enriched = (data || []).map((u: any) => {
+        const profile = uzProfileMap.get(u.user_id);
+        return {
           ...u,
-          firma_unvani: firma?.firma_unvani || "—",
+          firma_unvani: uzFirmaMap.get(u.user_id) || "—",
           kullanici_ad: profile ? `${profile.ad} ${profile.soyad}` : "—",
-          kullanici_email: profile?.iletisim_email || "—",
-        });
-      }
+          kullanici_email: profile?.email || "—",
+        };
+      });
       return jsonResponse({ uzaklastirmalar: enriched });
     }
 
@@ -3138,25 +3201,31 @@ Deno.serve(async (req) => {
       destekData.forEach(d => userIds.add(d.user_id));
       firmalarData.forEach(f => userIds.add(f.user_id));
 
-      // Fetch profiles and firma names for all users
-      const userIdArr = [...userIds];
+      // Fetch ALL profiles and firmalar in parallel (already fetched firmalar above)
       const profileMap: Record<string, { ad: string; soyad: string; firma_unvani: string }> = {};
 
-      if (userIdArr.length > 0) {
-        const batchSize = 50;
-        for (let i = 0; i < userIdArr.length; i += batchSize) {
-          const batch = userIdArr.slice(i, i + batchSize);
-          const [{ data: profiles }, { data: firmalar }] = await Promise.all([
-            supabase.from("profiles").select("user_id, ad, soyad").in("user_id", batch),
-            supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", batch),
-          ]);
-          profiles?.forEach(p => {
-            profileMap[p.user_id] = { ad: p.ad, soyad: p.soyad, firma_unvani: "" };
-          });
-          firmalar?.forEach(f => {
-            if (profileMap[f.user_id]) profileMap[f.user_id].firma_unvani = f.firma_unvani;
-            else profileMap[f.user_id] = { ad: "", soyad: "", firma_unvani: f.firma_unvani };
-          });
+      // firmalarData already has user_id + firma_unvani, build map from it
+      const firmaNameMap = new Map<string, string>();
+      for (const f of firmalarData) firmaNameMap.set(f.user_id, f.firma_unvani);
+
+      // Fetch all profiles in one paginated call
+      const PAGE_SZ = 1000;
+      let allProfiles: any[] = [];
+      let pfFrom = 0;
+      while (true) {
+        const { data: pBatch } = await supabase.from("profiles").select("user_id, ad, soyad").range(pfFrom, pfFrom + PAGE_SZ - 1);
+        if (!pBatch || pBatch.length === 0) break;
+        allProfiles = allProfiles.concat(pBatch);
+        if (pBatch.length < PAGE_SZ) break;
+        pfFrom += PAGE_SZ;
+      }
+      for (const p of allProfiles) {
+        profileMap[p.user_id] = { ad: p.ad, soyad: p.soyad, firma_unvani: firmaNameMap.get(p.user_id) || "" };
+      }
+      // Also add users who have firma but no profile entry
+      for (const f of firmalarData) {
+        if (!profileMap[f.user_id]) {
+          profileMap[f.user_id] = { ad: "", soyad: "", firma_unvani: f.firma_unvani };
         }
       }
 
