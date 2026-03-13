@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { MessageSquare, X, Send, Bot, User, Loader2 } from "lucide-react";
+import { X, Send, User, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import ReactMarkdown from "react-markdown";
+import tekbotAvatar from "@/assets/tekbot-avatar.png";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -144,12 +145,11 @@ export default function Chatbot() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-5 right-5 z-[9999] w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-105"
+          className="fixed bottom-5 right-5 z-[9999] w-16 h-16 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group hover:scale-105 overflow-hidden bg-background border border-border"
           aria-label="Yardım"
         >
-          <MessageSquare className="w-6 h-6 transition-transform group-hover:scale-110" />
-          {/* Pulse ring */}
-          <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping pointer-events-none" style={{ animationDuration: "3s" }} />
+          <img src={tekbotAvatar} alt="TekBot" className="w-14 h-14 object-contain" />
+          <span className="absolute inset-0 rounded-full bg-primary/20 animate-ping pointer-events-none" style={{ animationDuration: "3s" }} />
         </button>
       )}
 
@@ -158,8 +158,8 @@ export default function Chatbot() {
         <div className="fixed bottom-5 right-5 z-[9999] w-[370px] max-w-[calc(100vw-2rem)] h-[520px] max-h-[calc(100vh-6rem)] flex flex-col rounded-2xl border border-border bg-background shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-300">
           {/* Header */}
           <div className="flex items-center gap-3 px-4 py-3 bg-primary text-primary-foreground shrink-0">
-            <div className="w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-              <Bot className="w-5 h-5" />
+            <div className="w-9 h-9 rounded-full overflow-hidden bg-primary-foreground/20 flex items-center justify-center">
+              <img src={tekbotAvatar} alt="TekBot" className="w-8 h-8 object-contain" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold">TekBot</p>
@@ -177,8 +177,8 @@ export default function Chatbot() {
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                  <Bot className="w-7 h-7 text-primary" />
+                <div className="w-16 h-16 rounded-full overflow-hidden flex items-center justify-center mb-3">
+                  <img src={tekbotAvatar} alt="TekBot" className="w-16 h-16 object-contain" />
                 </div>
                 <p className="text-sm font-medium text-foreground mb-1">
                   Merhaba! 👋
@@ -246,8 +246,8 @@ export default function Chatbot() {
                 )}
               >
                 {msg.role === "assistant" && (
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <Bot className="w-4 h-4 text-primary" />
+                  <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 mt-0.5">
+                    <img src={tekbotAvatar} alt="TekBot" className="w-7 h-7 object-contain" />
                   </div>
                 )}
                 <div
@@ -276,8 +276,8 @@ export default function Chatbot() {
 
             {loading && messages[messages.length - 1]?.role === "user" && (
               <div className="flex gap-2 justify-start">
-                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Bot className="w-4 h-4 text-primary" />
+                <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0">
+                  <img src={tekbotAvatar} alt="TekBot" className="w-7 h-7 object-contain" />
                 </div>
                 <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
