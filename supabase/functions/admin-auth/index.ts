@@ -507,23 +507,19 @@ Deno.serve(async (req) => {
             link: null,
           });
 
-          // Send rejection SMS
-          if (userPhone) {
-            try {
-              await fetch("http://194.62.55.240:3000/api/send-sms", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  messages: [{
-                    msg: `${firma.firma_unvani}, Tekstil A.S. basvurunuz ne yazik ki red ile sonuclandi. Detaylari ogrenmek icin mailinizi kontrol ediniz. Gerekli duzeltmelerden sonra yeniden basvuru yapabilirsiniz.`,
-                    dest: userPhone,
-                    id: "1",
-                  }],
-                }),
-              });
-            } catch (smsErr) {
-              console.error("Rejection SMS failed:", smsErr);
-            }
+          // Send rejection SMS via send-notification-sms
+          try {
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+              body: JSON.stringify({
+                type: "basvuru_reddedildi",
+                telefon: userPhone,
+                firmaUnvani: firma.firma_unvani,
+              }),
+            });
+          } catch (smsErr) {
+            console.error("Rejection SMS failed:", smsErr);
           }
         }
       }
