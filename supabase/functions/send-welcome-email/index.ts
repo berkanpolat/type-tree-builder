@@ -45,7 +45,7 @@ serve(async (req) => {
         "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
       },
       body: JSON.stringify({
-        From: "info@tekstilas.com",
+        From: "Tekstil A.Ş. <info@tekstilas.com>",
         To: to,
         TemplateId: 43889443,
         TemplateModel: {

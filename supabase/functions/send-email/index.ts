@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const POSTMARK_API_URL = "https://api.postmarkapp.com/email/withTemplate";
-const FROM_EMAIL = "info@tekstilas.com";
+const FROM_EMAIL = "Tekstil A.Ş. <info@tekstilas.com>";
 const SITE_URL = "https://type-tree-builder.lovable.app";
 
 // Template ID mapping
