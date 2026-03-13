@@ -303,6 +303,7 @@ Deno.serve(async (req) => {
       // Get profiles for all users
       const userIds = firmalar.map((f: any) => f.user_id);
       const profiles = await fetchIn("profiles", "user_id, ad, soyad, iletisim_email, iletisim_numarasi, last_seen", "user_id", userIds);
+      console.log(`[list-firmalar] firmalar: ${firmalar.length}, userIds: ${userIds.length}, profiles: ${profiles.length}, profiles_with_last_seen: ${profiles.filter((p:any) => p.last_seen).length}`);
 
       // Get counts per firma
       const ihaleCounts = await fetchIn("ihaleler", "user_id", "user_id", userIds);
