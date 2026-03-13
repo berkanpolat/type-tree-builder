@@ -276,8 +276,8 @@ export default function Chatbot() {
 
             {loading && messages[messages.length - 1]?.role === "user" && (
               <div className="flex gap-2 justify-start">
-                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <Bot className="w-4 h-4 text-primary" />
+                <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0">
+                  <img src={tekbotAvatar} alt="TekBot" className="w-7 h-7 object-contain" />
                 </div>
                 <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-3">
                   <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
