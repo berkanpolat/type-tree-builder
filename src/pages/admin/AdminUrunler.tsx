@@ -751,7 +751,7 @@ export default function AdminUrunler() {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {hasPermission("urun_inceleyebilir") && (
                         <Button
-                          onClick={() => window.open(`/urun/${urun.id}`, "_blank")}
+                          onClick={() => window.open(`/urunler/${urun.slug || urun.id}`, "_blank")}
                           variant="outline" size="sm"
                           className="text-xs h-7 px-2.5 gap-1.5"
                           style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
