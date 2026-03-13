@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
       const payload = verifyToken(body.token);
       const { data } = await supabase
         .from("admin_users")
-        .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
+        .select("id, username, ad, soyad, email, telefon, pozisyon, departman, is_primary, permissions, created_at")
         .order("created_at", { ascending: true });
       return jsonResponse({ users: data });
     }
