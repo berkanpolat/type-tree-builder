@@ -77,13 +77,13 @@ function Inner() {
   }, [testMessages]);
 
   const adminAction = async (action: string, payload: Record<string, unknown>) => {
-    const adminToken = sessionStorage.getItem("admin_token");
-    const res = await supabase.functions.invoke("admin-auth", {
-      body: { action, admin_token: adminToken, ...payload },
+    const token = localStorage.getItem("admin_token");
+    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, {
+      body: { token, ...payload },
     });
-    if (res.error) throw new Error(res.error.message);
-    if (res.data?.error) throw new Error(res.data.error);
-    return res.data;
+    if (error) throw new Error(error.message);
+    if (data?.error) throw new Error(data.error);
+    return data;
   };
 
   // Save config
