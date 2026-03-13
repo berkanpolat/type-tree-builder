@@ -328,8 +328,44 @@ Deno.serve(async (req) => {
         "x_twitter", "tiktok", "logo_url", "kapak_fotografi_url", "firma_hakkinda",
       ];
 
-      // Get subscription/package info for each user
-      const abonelikler = await fetchIn("kullanici_abonelikler", "user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, stripe_subscription_id", "user_id", userIds);
+      // Get subscription/package info for each user (deterministic latest/active row)
+      const abonelikler = await fetchIn(
+        "kullanici_abonelikler",
+        "id, user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, stripe_subscription_id, created_at, updated_at",
+        "user_id",
+        userIds,
+      );
+
+      const getTs = (value?: string | null) => {
+        if (!value) return 0;
+        const ts = Date.parse(value);
+        return Number.isNaN(ts) ? 0 : ts;
+      };
+
+      const getDurumPriority = (durum?: string | null) => {
+        if (durum === "aktif") return 3;
+        if (durum === "iptal_bekliyor") return 2;
+        return 1;
+      };
+
+      const sortedAbonelikler = [...abonelikler].sort((a: any, b: any) => {
+        const durumDiff = getDurumPriority(b.durum) - getDurumPriority(a.durum);
+        if (durumDiff !== 0) return durumDiff;
+
+        const updatedDiff =
+          getTs(b.updated_at || b.created_at || b.donem_baslangic) -
+          getTs(a.updated_at || a.created_at || a.donem_baslangic);
+        if (updatedDiff !== 0) return updatedDiff;
+
+        return getTs(b.donem_bitis) - getTs(a.donem_bitis);
+      });
+
+      const abonelikByUser = new Map<string, any>();
+      for (const row of sortedAbonelikler) {
+        if (!abonelikByUser.has(row.user_id)) {
+          abonelikByUser.set(row.user_id, row);
+        }
+      }
 
       const { data: paketler } = await supabase
         .from("paketler")
@@ -352,7 +388,7 @@ Deno.serve(async (req) => {
         }
         const profilDoluluk = Math.round((filled / FIRMA_FIELDS.length) * 100);
 
-        const abonelik = abonelikler.find((a: any) => a.user_id === f.user_id);
+        const abonelik = abonelikByUser.get(f.user_id) || null;
         const paket = abonelik ? paketMap[abonelik.paket_id] || null : null;
 
         return {
@@ -2381,20 +2417,23 @@ Deno.serve(async (req) => {
         updatePayload.ekstra_haklar = ekstraHaklar;
       }
 
-      // Use maybeSingle to avoid error when no row exists
-      const { data: existing, error: existingError } = await supabase
+      const { data: existingRows, error: existingError } = await supabase
         .from("kullanici_abonelikler")
         .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
+        .eq("user_id", userId);
 
-      console.log("[UPDATE-FIRMA-PAKET] Existing check", { existing: !!existing, existingError: existingError?.message });
+      if (existingError) {
+        console.error("[UPDATE-FIRMA-PAKET] Existing lookup error", existingError.message);
+        return jsonResponse({ error: existingError.message }, 500);
+      }
 
-      if (existing) {
+      console.log("[UPDATE-FIRMA-PAKET] Existing check", { existingCount: existingRows?.length || 0 });
+
+      if (existingRows && existingRows.length > 0) {
         const { error } = await supabase
           .from("kullanici_abonelikler")
           .update(updatePayload)
-          .eq("id", existing.id);
+          .eq("user_id", userId);
         if (error) {
           console.error("[UPDATE-FIRMA-PAKET] Update error", error.message);
           return jsonResponse({ error: error.message }, 500);
@@ -2475,11 +2514,16 @@ Deno.serve(async (req) => {
       const { token, userId } = body;
       verifyToken(token);
 
-      const { data: abonelik } = await supabase
+      const { data: abonelikRows, error: abonelikError } = await supabase
         .from("kullanici_abonelikler")
         .select("*, paketler(*)")
         .eq("user_id", userId)
-        .single();
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      if (abonelikError) return jsonResponse({ error: abonelikError.message }, 500);
+
+      const abonelik = abonelikRows?.[0];
 
       if (!abonelik) return jsonResponse({ usage: null, abonelik: null });
 
