@@ -5,6 +5,7 @@ const FROM_EMAIL = "info@tekstilas.com";
 const SITE_URL = "https://tekstilas.com";
 
 const EMAIL_TEMPLATES: Record<string, number> = {
+  hosgeldiniz: 43889443,
   basvuru_onay: 43897478,
   basvuru_red: 43897477,
   ihale_onaylandi: 43898542,
