@@ -33,7 +33,7 @@ async function sendPostmarkEmail(templateKey: string, to: string, model: Record<
         TemplateModel: {
           ...model,
           platform_adi: "Tekstil A.Ş.",
-          destek_email: "info@manufixo.com",
+          destek_email: "destek@tekstilas.com",
           yil: new Date().getFullYear().toString(),
           site_url: SITE_URL,
         },
