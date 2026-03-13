@@ -57,6 +57,7 @@ const AdminGiris = lazy(() => import("./pages/admin/AdminGiris"));
 const AdminPanel = lazy(() => import("./pages/admin/AdminPanel"));
 const AdminKullanicilar = lazy(() => import("./pages/admin/AdminKullanicilar"));
 const AdminFirmalar = lazy(() => import("./pages/admin/AdminFirmalar"));
+const AdminFirmalarV2 = lazy(() => import("./pages/admin/AdminFirmalarV2"));
 const AdminIhaleler = lazy(() => import("./pages/admin/AdminIhaleler"));
 const AdminUrunler = lazy(() => import("./pages/admin/AdminUrunler"));
 const AdminSikayetler = lazy(() => import("./pages/admin/AdminSikayetler"));
@@ -147,6 +148,7 @@ const App = () => (
             <Route path="/yonetim/panel" element={<AdminRoute><AdminPanel /></AdminRoute>} />
             <Route path="/yonetim/kullanicilar" element={<AdminRoute><AdminKullanicilar /></AdminRoute>} />
             <Route path="/yonetim/firmalar" element={<AdminRoute><AdminFirmalar /></AdminRoute>} />
+            <Route path="/yonetim/firmalar-v2" element={<AdminRoute><AdminFirmalarV2 /></AdminRoute>} />
             <Route path="/yonetim/ihaleler" element={<AdminRoute><AdminIhaleler /></AdminRoute>} />
             <Route path="/yonetim/urunler" element={<AdminRoute><AdminUrunler /></AdminRoute>} />
             <Route path="/yonetim/sikayetler" element={<AdminRoute><AdminSikayetler /></AdminRoute>} />

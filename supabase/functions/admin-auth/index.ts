@@ -2778,6 +2778,18 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── SET BELGE ONAYLI (bulk verify) ───
+    if (action === "set-belge-onayli") {
+      const payload = verifyToken(body.token);
+      const { firmaId, belge_onayli } = body;
+      const { error } = await supabase.from("firmalar").update({ belge_onayli: !!belge_onayli }).eq("id", firmaId);
+      if (error) return jsonResponse({ error: error.message }, 500);
+      await logActivity(supabase, payload, belge_onayli ? "firma-dogrulandi" : "firma-dogrulama-kaldirildi", {
+        target_type: "firma", target_id: firmaId,
+      });
+      return jsonResponse({ success: true });
+    }
+
     // ─── GET SIGNED URL FOR BELGE ───
     if (action === "get-belge-url") {
       const payload = verifyToken(body.token);
