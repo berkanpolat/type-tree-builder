@@ -25,12 +25,14 @@ interface AdminUser {
   email: string | null;
   telefon: string | null;
   pozisyon: string;
+  departman: string;
   is_primary: boolean;
   permissions: Record<string, boolean>;
   created_at: string;
 }
 
 const POZISYONLAR = ["Call Center", "Satış Sorumlusu", "Yönetici", "Destek Personel"];
+const DEPARTMANLAR = ["Yönetim Kurulu", "Saha Satış", "Çağrı Merkezi", "Kurumsal Satış"];
 
 /* ── Hierarchical Permission Structure ── */
 interface PermissionGroup {
@@ -147,6 +149,7 @@ export default function AdminKullanicilar() {
     email: "",
     telefon: "",
     pozisyon: "Call Center",
+    departman: "Çağrı Merkezi",
     permissions: { ...DEFAULT_PERMISSIONS },
   });
 
@@ -176,6 +179,7 @@ export default function AdminKullanicilar() {
     setForm({
       username: "", password: "", ad: "", soyad: "",
       email: "", telefon: "", pozisyon: "Call Center",
+      departman: "Çağrı Merkezi",
       permissions: { ...DEFAULT_PERMISSIONS },
     });
     setEditingUser(null);
@@ -196,6 +200,7 @@ export default function AdminKullanicilar() {
       email: u.email || "",
       telefon: u.telefon || "",
       pozisyon: u.pozisyon,
+      departman: u.departman || "Çağrı Merkezi",
       permissions: { ...DEFAULT_PERMISSIONS, ...u.permissions },
     });
     setDialogOpen(true);
@@ -218,6 +223,7 @@ export default function AdminKullanicilar() {
             email: form.email,
             telefon: form.telefon,
             pozisyon: form.pozisyon,
+            departman: form.departman,
             permissions: form.permissions,
             ...(form.password ? { password: form.password } : {}),
           },
@@ -238,6 +244,7 @@ export default function AdminKullanicilar() {
             email: form.email,
             telefon: form.telefon,
             pozisyon: form.pozisyon,
+            departman: form.departman,
             permissions: form.permissions,
           },
         });
@@ -355,13 +362,14 @@ export default function AdminKullanicilar() {
               <Table>
                 <TableHeader>
                   <TableRow style={{ borderColor: "hsl(var(--admin-border))" }} className="hover:bg-transparent">
-                    <TableHead style={sMuted}>Kullanıcı</TableHead>
-                    <TableHead style={sMuted} className="hidden md:table-cell">Kullanıcı No</TableHead>
-                    <TableHead style={sMuted}>Pozisyon</TableHead>
-                    <TableHead style={sMuted} className="hidden lg:table-cell">E-posta</TableHead>
-                    <TableHead style={sMuted} className="hidden lg:table-cell">Telefon</TableHead>
-                    <TableHead style={sMuted}>Rol</TableHead>
-                    {canManage && <TableHead style={sMuted} className="text-right">İşlemler</TableHead>}
+                     <TableHead style={sMuted}>Kullanıcı</TableHead>
+                     <TableHead style={sMuted} className="hidden md:table-cell">Kullanıcı No</TableHead>
+                     <TableHead style={sMuted}>Departman</TableHead>
+                     <TableHead style={sMuted}>Pozisyon</TableHead>
+                     <TableHead style={sMuted} className="hidden lg:table-cell">E-posta</TableHead>
+                     <TableHead style={sMuted} className="hidden lg:table-cell">Telefon</TableHead>
+                     <TableHead style={sMuted}>Rol</TableHead>
+                     {canManage && <TableHead style={sMuted} className="text-right">İşlemler</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -377,11 +385,14 @@ export default function AdminKullanicilar() {
                           <span className="truncate">{u.ad} {u.soyad}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="font-mono hidden md:table-cell" style={sMuted}>{u.username}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>{u.pozisyon}</Badge>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell" style={sMuted}>{u.email || "—"}</TableCell>
+                       <TableCell className="font-mono hidden md:table-cell" style={sMuted}>{u.username}</TableCell>
+                       <TableCell>
+                         <Badge variant="outline" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>{u.departman || "—"}</Badge>
+                       </TableCell>
+                       <TableCell>
+                         <Badge variant="outline" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>{u.pozisyon}</Badge>
+                       </TableCell>
+                       <TableCell className="hidden lg:table-cell" style={sMuted}>{u.email || "—"}</TableCell>
                       <TableCell className="hidden lg:table-cell" style={sMuted}>{u.telefon || "—"}</TableCell>
                       <TableCell>
                         {u.is_primary ? (
@@ -494,16 +505,29 @@ export default function AdminKullanicilar() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label style={sMuted}>Pozisyon *</Label>
-              <Select value={form.pozisyon} onValueChange={(v) => setForm({ ...form, pozisyon: v })}>
-                <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
-                <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
-                  {POZISYONLAR.map((p) => (
-                    <SelectItem key={p} value={p} style={sText}>{p}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label style={sMuted}>Departman *</Label>
+                <Select value={form.departman} onValueChange={(v) => setForm({ ...form, departman: v })}>
+                  <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
+                  <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+                    {DEPARTMANLAR.map((d) => (
+                      <SelectItem key={d} value={d} style={sText}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label style={sMuted}>Pozisyon *</Label>
+                <Select value={form.pozisyon} onValueChange={(v) => setForm({ ...form, pozisyon: v })}>
+                  <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
+                  <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+                    {POZISYONLAR.map((p) => (
+                      <SelectItem key={p} value={p} style={sText}>{p}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-3">

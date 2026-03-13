@@ -67,6 +67,7 @@ export type Database = {
           ad: string
           created_at: string
           created_by: string | null
+          departman: string
           email: string | null
           id: string
           is_primary: boolean
@@ -82,6 +83,7 @@ export type Database = {
           ad: string
           created_at?: string
           created_by?: string | null
+          departman?: string
           email?: string | null
           id?: string
           is_primary?: boolean
@@ -97,6 +99,7 @@ export type Database = {
           ad?: string
           created_at?: string
           created_by?: string | null
+          departman?: string
           email?: string | null
           id?: string
           is_primary?: boolean

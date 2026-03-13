@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_users ADD COLUMN departman text NOT NULL DEFAULT 'Çağrı Merkezi';

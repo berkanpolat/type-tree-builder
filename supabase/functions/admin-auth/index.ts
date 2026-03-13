@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
         const payload = verifyToken(token);
         const { data } = await supabase
           .from("admin_users")
-          .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
+          .select("id, username, ad, soyad, email, telefon, pozisyon, departman, is_primary, permissions, created_at")
           .eq("id", payload.id)
           .single();
         if (!data) return jsonResponse({ error: "Kullanıcı bulunamadı" }, 401);
@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
       const payload = verifyToken(body.token);
       const { data } = await supabase
         .from("admin_users")
-        .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
+        .select("id, username, ad, soyad, email, telefon, pozisyon, departman, is_primary, permissions, created_at")
         .order("created_at", { ascending: true });
       return jsonResponse({ users: data });
     }
@@ -192,10 +192,11 @@ Deno.serve(async (req) => {
           email: newUser.email || null,
           telefon: newUser.telefon || null,
           pozisyon: newUser.pozisyon,
+          departman: newUser.departman || "Çağrı Merkezi",
           permissions: newUser.permissions,
           created_by: payload.id,
         })
-        .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
+        .select("id, username, ad, soyad, email, telefon, pozisyon, departman, is_primary, permissions, created_at")
         .single();
 
       if (error) return jsonResponse({ error: error.message }, 400);
@@ -215,6 +216,7 @@ Deno.serve(async (req) => {
         email: updates.email || null,
         telefon: updates.telefon || null,
         pozisyon: updates.pozisyon,
+        departman: updates.departman || "Çağrı Merkezi",
         permissions: updates.permissions,
         updated_at: new Date().toISOString(),
       };
@@ -230,7 +232,7 @@ Deno.serve(async (req) => {
         .from("admin_users")
         .update(updateData)
         .eq("id", userId)
-        .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
+        .select("id, username, ad, soyad, email, telefon, pozisyon, departman, is_primary, permissions, created_at")
         .single();
 
       if (error) return jsonResponse({ error: error.message }, 400);
