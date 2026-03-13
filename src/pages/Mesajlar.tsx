@@ -443,6 +443,7 @@ export default function Mesajlar() {
     }
 
     console.log("[Mesajlar] Message inserted successfully");
+    import("@/hooks/use-last-seen").then(m => m.updateLastSeen());
 
     const { error: updateError } = await supabase
       .from("conversations")

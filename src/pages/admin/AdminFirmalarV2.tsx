@@ -112,7 +112,7 @@ interface FirmaDetail {
   email: string | null;
 }
 
-type SortField = "firma_unvani" | "ihale_sayisi" | "teklif_sayisi" | "urun_sayisi" | "profil_doluluk" | "created_at";
+type SortField = "firma_unvani" | "ihale_sayisi" | "teklif_sayisi" | "urun_sayisi" | "profil_doluluk" | "created_at" | "last_seen";
 type SortDir = "asc" | "desc";
 
 const ITEMS_PER_PAGE = 20;
@@ -521,6 +521,11 @@ export default function AdminFirmalarV2() {
       if (sortField === "created_at") {
         return sortDir === "asc" ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime() : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       }
+      if (sortField === "last_seen") {
+        const aTime = a.profile?.last_seen ? new Date(a.profile.last_seen).getTime() : 0;
+        const bTime = b.profile?.last_seen ? new Date(b.profile.last_seen).getTime() : 0;
+        return sortDir === "asc" ? aTime - bTime : bTime - aTime;
+      }
       const av = (a as any)[sortField];
       const bv = (b as any)[sortField];
       return sortDir === "asc" ? av - bv : bv - av;
@@ -558,6 +563,18 @@ export default function AdminFirmalarV2() {
   };
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+
+  const formatRelativeTime = (d: string) => {
+    const diff = Date.now() - new Date(d).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Şimdi";
+    if (mins < 60) return `${mins}dk`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}sa`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}g`;
+    return formatDate(d);
+  };
 
   // Selection helpers
   const allPageSelected = paginatedFirmalar.length > 0 && paginatedFirmalar.every(f => selectedIds.has(f.id));
@@ -719,6 +736,9 @@ export default function AdminFirmalarV2() {
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("ihale_sayisi")}>
                     <span className="flex items-center gap-1 text-xs" style={s.muted}>İhale <SortIcon field="ihale_sayisi" /></span>
                   </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("teklif_sayisi")}>
+                    <span className="flex items-center gap-1 text-xs" style={s.muted}>Teklif <SortIcon field="teklif_sayisi" /></span>
+                  </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("urun_sayisi")}>
                     <span className="flex items-center gap-1 text-xs" style={s.muted}>Ürün <SortIcon field="urun_sayisi" /></span>
                   </TableHead>
@@ -727,6 +747,9 @@ export default function AdminFirmalarV2() {
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("created_at")}>
                     <span className="flex items-center gap-1 text-xs" style={s.muted}>Kayıt <SortIcon field="created_at" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("last_seen")}>
+                    <span className="flex items-center gap-1 text-xs" style={s.muted}>Son Hareket <SortIcon field="last_seen" /></span>
                   </TableHead>
                   <TableHead className="w-10" />
                 </TableRow>
@@ -789,6 +812,9 @@ export default function AdminFirmalarV2() {
                         <span className="text-xs font-medium" style={{ color: getValueColor(firma.ihale_sayisi) }}>{firma.ihale_sayisi}</span>
                       </TableCell>
                       <TableCell>
+                        <span className="text-xs font-medium" style={{ color: getValueColor(firma.teklif_sayisi) }}>{firma.teklif_sayisi}</span>
+                      </TableCell>
+                      <TableCell>
                         <span className="text-xs font-medium" style={{ color: getValueColor(firma.urun_sayisi) }}>{firma.urun_sayisi}</span>
                       </TableCell>
                       <TableCell>
@@ -796,6 +822,13 @@ export default function AdminFirmalarV2() {
                       </TableCell>
                       <TableCell>
                         <span className="text-xs" style={s.muted}>{formatDate(firma.created_at)}</span>
+                      </TableCell>
+                      <TableCell>
+                        {firma.profile?.last_seen ? (
+                          <span className="text-xs" style={s.muted}>{formatRelativeTime(firma.profile.last_seen)}</span>
+                        ) : (
+                          <span className="text-xs opacity-40" style={s.muted}>—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
