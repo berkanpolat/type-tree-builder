@@ -69,10 +69,12 @@ const AdminReklam = lazy(() => import("./pages/admin/AdminReklam"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 min - avoid refetching unchanged data
-      gcTime: 10 * 60 * 1000,   // 10 min garbage collection
+      staleTime: 10 * 60 * 1000, // 10 min - reduce unnecessary refetches
+      gcTime: 30 * 60 * 1000,    // 30 min garbage collection
       retry: 1,
       refetchOnWindowFocus: false,
+      refetchOnMount: false,      // Don't refetch if data is still fresh
+      refetchOnReconnect: false,  // Prevent refetch storms on reconnect
     },
   },
 });
