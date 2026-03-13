@@ -19,23 +19,198 @@ serve(async (req) => {
   }
 
   try {
-    const { templateIds } = await req.json();
-    
-    const results = await Promise.all(
-      templateIds.map(async (id: number) => {
-        const response = await fetch(`https://api.postmarkapp.com/templates/${id}`, {
+    const { action } = await req.json();
+
+    if (action === "update_all") {
+      // Template ID -> placeholder mapping
+      const templateMappings: Record<number, Record<string, string>> = {
+        43889443: { // Hoşgeldiniz
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+        },
+        43896400: { // Başvurunuzu Aldık
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+        },
+        43897478: { // Başvuru Onay
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[Şifre Oluşturma Linki]": "{{sifre_olusturma_linki}}",
+          "[sifre_olusturma_linki]": "{{sifre_olusturma_linki}}",
+        },
+        43897477: { // Başvuru Red
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+        },
+        43898501: { // İhaleniz İnceleniyor
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[İhale Başlığı]": "{{ihale_basligi}}",
+          "[ihale_basligi]": "{{ihale_basligi}}",
+        },
+        43898542: { // İhale Onaylandı
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[İhale Başlığı]": "{{ihale_basligi}}",
+          "[ihale_basligi]": "{{ihale_basligi}}",
+          "[İhale Linki]": "{{ihale_linki}}",
+          "[ihale_linki]": "{{ihale_linki}}",
+        },
+        43898543: { // İhale Reddedildi
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[İhale Başlığı]": "{{ihale_basligi}}",
+          "[ihale_basligi]": "{{ihale_basligi}}",
+          "[Reddedilme Sebebi]": "{{reddedilme_sebebi}}",
+          "[reddedilme_sebebi]": "{{reddedilme_sebebi}}",
+        },
+        43898544: { // İhale Süresi Doldu
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[İhale Başlığı]": "{{ihale_basligi}}",
+          "[ihale_basligi]": "{{ihale_basligi}}",
+          "[İhale Takip Linki]": "{{ihale_takip_linki}}",
+          "[ihale_takip_linki]": "{{ihale_takip_linki}}",
+        },
+        43898714: { // İhale Tamamlandı
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[İhale Başlığı]": "{{ihale_basligi}}",
+          "[ihale_basligi]": "{{ihale_basligi}}",
+        },
+        43898480: { // Şifre Değiştirildi
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+        },
+        43898675: { // Teklif Kabul Edildi
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[İhale Başlığı]": "{{ihale_basligi}}",
+          "[ihale_basligi]": "{{ihale_basligi}}",
+          "[İhale Linki]": "{{ihale_linki}}",
+          "[ihale_linki]": "{{ihale_linki}}",
+        },
+        43898681: { // Teklif Reddedildi
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[İhale Başlığı]": "{{ihale_basligi}}",
+          "[ihale_basligi]": "{{ihale_basligi}}",
+          "[İhale Linki]": "{{ihale_linki}}",
+          "[ihale_linki]": "{{ihale_linki}}",
+        },
+        43898683: { // Ürün Değerlendiriliyor
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[Ürün Başlığı]": "{{urun_basligi}}",
+          "[urun_basligi]": "{{urun_basligi}}",
+        },
+        43898843: { // Ürün Reddedildi
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[Ürün Başlığı]": "{{urun_basligi}}",
+          "[urun_basligi]": "{{urun_basligi}}",
+          "[Reddedilme Sebebi]": "{{reddedilme_sebebi}}",
+          "[reddedilme_sebebi]": "{{reddedilme_sebebi}}",
+        },
+        43898721: { // Ürün Yayınlandı
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[Ürün Başlığı]": "{{urun_basligi}}",
+          "[urun_basligi]": "{{urun_basligi}}",
+          "[Ürün Linki]": "{{urun_linki}}",
+          "[urun_linki]": "{{urun_linki}}",
+        },
+        43898845: { // Yeni Mesajınız Var
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[Gönderen Firma Ünvanı]": "{{gonderen_firma_unvani}}",
+          "[gonderen_firma_unvani]": "{{gonderen_firma_unvani}}",
+          "[Mesaj Linki]": "{{mesaj_linki}}",
+          "[mesaj_linki]": "{{mesaj_linki}}",
+        },
+        43898667: { // Yeni Teklif Geldi
+          "[Firma Ünvanı]": "{{firma_unvani}}",
+          "[firma_unvani]": "{{firma_unvani}}",
+          "[İhale Başlığı]": "{{ihale_basligi}}",
+          "[ihale_basligi]": "{{ihale_basligi}}",
+          "[Teklif Veren Firma Ünvanı]": "{{teklif_veren_firma_unvani}}",
+          "[teklif_veren_firma_unvani]": "{{teklif_veren_firma_unvani}}",
+          "[Teklif Linki]": "{{teklif_linki}}",
+          "[teklif_linki]": "{{teklif_linki}}",
+        },
+      };
+
+      const results: Array<{ templateId: number; name: string; status: string; replacements: number }> = [];
+
+      for (const [idStr, replacements] of Object.entries(templateMappings)) {
+        const templateId = parseInt(idStr);
+        
+        // Fetch template
+        const getRes = await fetch(`https://api.postmarkapp.com/templates/${templateId}`, {
           method: "GET",
           headers: {
             "Accept": "application/json",
             "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
           },
         });
-        return response.json();
-      })
-    );
+        const template = await getRes.json();
 
-    return new Response(JSON.stringify(results), {
-      status: 200,
+        let htmlBody = template.HtmlBody || "";
+        let textBody = template.TextBody || "";
+        let subject = template.Subject || "";
+        let replacementCount = 0;
+
+        // Apply replacements
+        for (const [search, replace] of Object.entries(replacements)) {
+          const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+          
+          const hBefore = htmlBody;
+          const tBefore = textBody;
+          const sBefore = subject;
+          
+          htmlBody = htmlBody.replace(regex, replace);
+          textBody = textBody.replace(regex, replace);
+          subject = subject.replace(regex, replace);
+          
+          if (hBefore !== htmlBody) replacementCount++;
+          if (tBefore !== textBody) replacementCount++;
+          if (sBefore !== subject) replacementCount++;
+        }
+
+        // Update template
+        const putRes = await fetch(`https://api.postmarkapp.com/templates/${templateId}`, {
+          method: "PUT",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+          },
+          body: JSON.stringify({
+            Name: template.Name,
+            Subject: subject,
+            HtmlBody: htmlBody,
+            TextBody: textBody,
+          }),
+        });
+
+        const putData = await putRes.json();
+
+        results.push({
+          templateId,
+          name: template.Name,
+          status: putRes.ok ? "updated" : `error: ${putData.Message}`,
+          replacements: replacementCount,
+        });
+      }
+
+      return new Response(JSON.stringify({ success: true, results }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: "Unknown action" }), {
+      status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
