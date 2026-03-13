@@ -390,7 +390,7 @@ export default function AdminKullanicilar() {
                          <Badge variant="outline" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>{u.departman || "—"}</Badge>
                        </TableCell>
                        <TableCell>
-                      </TableCell>
+                         <Badge variant="outline" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>{u.pozisyon}</Badge>
                       <TableCell className="hidden lg:table-cell" style={sMuted}>{u.email || "—"}</TableCell>
                       <TableCell className="hidden lg:table-cell" style={sMuted}>{u.telefon || "—"}</TableCell>
                       <TableCell>
