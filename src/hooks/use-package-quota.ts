@@ -203,33 +203,19 @@ export function usePackageQuota(): PackageInfo {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Realtime: re-fetch usage when relevant tables change
+  // Single realtime channel for all quota-related tables
   useEffect(() => {
-    const channels = [
-      supabase
-        .channel('quota-profil')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'profil_goruntulemeler' }, () => fetchData())
-        .subscribe(),
-      supabase
-        .channel('quota-teklifler')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'ihale_teklifler' }, () => fetchData())
-        .subscribe(),
-      supabase
-        .channel('quota-urunler')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'urunler' }, () => fetchData())
-        .subscribe(),
-      supabase
-        .channel('quota-conversations')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => fetchData())
-        .subscribe(),
-      supabase
-        .channel('quota-abonelik')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'kullanici_abonelikler' }, () => fetchData())
-        .subscribe(),
-    ];
+    const channel = supabase
+      .channel('quota-all')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profil_goruntulemeler' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'ihale_teklifler' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'urunler' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'kullanici_abonelikler' }, () => fetchData())
+      .subscribe();
 
     return () => {
-      channels.forEach(ch => supabase.removeChannel(ch));
+      supabase.removeChannel(channel);
     };
   }, [fetchData]);
 
