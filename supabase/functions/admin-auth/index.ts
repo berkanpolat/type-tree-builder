@@ -336,6 +336,7 @@ Deno.serve(async (req) => {
         "user_id",
         userIds,
       );
+      console.log(`[list-firmalar] firmalar: ${firmalar.length}, profiles: ${profiles.length}, abonelikler: ${abonelikler.length}`);
 
       const getTs = (value?: string | null) => {
         if (!value) return 0;
