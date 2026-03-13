@@ -67,6 +67,7 @@ const AdminPaketler = lazy(() => import("./pages/admin/AdminPaketler"));
 const AdminIslemler = lazy(() => import("./pages/admin/AdminIslemler"));
 const AdminKisitlamalar = lazy(() => import("./pages/admin/AdminKisitlamalar"));
 const AdminReklam = lazy(() => import("./pages/admin/AdminReklam"));
+const AdminTekBot = lazy(() => import("./pages/admin/AdminTekBot"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
