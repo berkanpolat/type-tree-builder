@@ -9,7 +9,7 @@ const corsHeaders = {
 const POSTMARK_API_URL = "https://api.postmarkapp.com/email/withTemplate";
 const FROM_EMAIL = "info@tekstilas.com";
 const SITE_URL = "https://type-tree-builder.lovable.app";
-const TEMPLATE_ID = 43898480; // sifre_degistirildi
+const TEMPLATE_ID = 43920203; // sifre_sifirlama (new dedicated template)
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -82,9 +82,9 @@ serve(async (req) => {
         To: targetUser.email,
         TemplateId: TEMPLATE_ID,
         TemplateModel: {
-          sifre_olusturma_baglantisi: recoveryLink,
+          sifre_sifirlama_baglantisi: recoveryLink,
           platform_adi: "Tekstil A.Ş.",
-          destek_email: "info@manufixo.com",
+          destek_email: "destek@tekstilas.com",
           yil: new Date().getFullYear().toString(),
           site_url: siteUrl,
         },
