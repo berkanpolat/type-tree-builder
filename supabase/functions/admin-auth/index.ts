@@ -2979,16 +2979,22 @@ Deno.serve(async (req) => {
         .ilike("firma_unvani", `%${query}%`)
         .limit(10);
 
-      const results = [];
-      for (const f of (firmalar || [])) {
-        const { data: profile } = await supabase.from("profiles").select("ad, soyad, iletisim_email").eq("user_id", f.user_id).single();
-        results.push({
+      const searchUserIds = (firmalar || []).map((f: any) => f.user_id);
+      let searchProfileMap = new Map<string, { ad: string; soyad: string; email: string }>();
+      if (searchUserIds.length > 0) {
+        const { data: profiles } = await supabase.from("profiles").select("user_id, ad, soyad, iletisim_email").in("user_id", searchUserIds);
+        for (const p of (profiles || [])) searchProfileMap.set(p.user_id, { ad: p.ad, soyad: p.soyad, email: p.iletisim_email });
+      }
+
+      const results = (firmalar || []).map((f: any) => {
+        const profile = searchProfileMap.get(f.user_id);
+        return {
           user_id: f.user_id,
           firma_unvani: f.firma_unvani,
           kullanici_ad: profile ? `${profile.ad} ${profile.soyad}` : "—",
-          kullanici_email: profile?.iletisim_email || "—",
-        });
-      }
+          kullanici_email: profile?.email || "—",
+        };
+      });
 
       return jsonResponse({ users: results });
     }
