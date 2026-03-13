@@ -503,7 +503,7 @@ export default function TekRehber() {
                         )}
                       </div>
 
-                      <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-foreground text-base sm:text-lg leading-tight flex items-center gap-1.5 truncate">
                             {firma.firma_unvani}
