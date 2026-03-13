@@ -1995,19 +1995,20 @@ Deno.serve(async (req) => {
           .join(", ");
 
         const smsBitis = new Date(bitisTarihi).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
-        const smsTarih = new Date().toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
-        const kisitId = kisitlamaData?.id?.slice(0, 8)?.toUpperCase() || "-";
+
+        // Get firma unvani for SMS
+        const { data: kisitFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", userId).single();
 
         try {
-          await fetch("http://194.62.55.240:3000/api/send-sms", {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
             body: JSON.stringify({
-              messages: [{
-                msg: `${smsTarih} tarihinde ${kisitId} ID numarali kisitlama geregince ${smsAlanlar} haklariniz ${smsBitis} tarihine kadar askiya alinmistir. Detaylari ogrenmek ve itirazda bulunmak icin destek@tekstilas.com adresinden veya 0850 242 5700 numarasindan iletisim kurabilirsiniz.`,
-                dest: kisitProfile.iletisim_numarasi,
-                id: "1",
-              }],
+              type: "kisitlama",
+              telefon: kisitProfile.iletisim_numarasi,
+              firmaUnvani: kisitFirma?.firma_unvani || "",
+              kisitlamaAlanlari: smsAlanlar,
+              kisitlamaBitis: smsBitis,
             }),
           });
         } catch (smsErr) {
