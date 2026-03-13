@@ -2514,11 +2514,16 @@ Deno.serve(async (req) => {
       const { token, userId } = body;
       verifyToken(token);
 
-      const { data: abonelik } = await supabase
+      const { data: abonelikRows, error: abonelikError } = await supabase
         .from("kullanici_abonelikler")
         .select("*, paketler(*)")
         .eq("user_id", userId)
-        .single();
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      if (abonelikError) return jsonResponse({ error: abonelikError.message }, 500);
+
+      const abonelik = abonelikRows?.[0];
 
       if (!abonelik) return jsonResponse({ usage: null, abonelik: null });
 
