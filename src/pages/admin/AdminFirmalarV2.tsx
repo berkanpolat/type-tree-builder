@@ -112,7 +112,7 @@ interface FirmaDetail {
   email: string | null;
 }
 
-type SortField = "firma_unvani" | "ihale_sayisi" | "teklif_sayisi" | "urun_sayisi" | "profil_doluluk" | "created_at";
+type SortField = "firma_unvani" | "ihale_sayisi" | "teklif_sayisi" | "urun_sayisi" | "profil_doluluk" | "created_at" | "last_seen";
 type SortDir = "asc" | "desc";
 
 const ITEMS_PER_PAGE = 20;
