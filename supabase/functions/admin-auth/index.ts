@@ -939,10 +939,14 @@ Deno.serve(async (req) => {
         if (cats) catMap = Object.fromEntries(cats.map((c: any) => [c.id, c.name]));
       }
 
-      const enriched = (ihaleler || []).map((i: any) => {
-        const firma = (firmalar || []).find((f: any) => f.user_id === i.user_id);
-        const teklifCount = (teklifler || []).filter((t: any) => t.ihale_id === i.id).length;
+      // Build Maps for O(1) lookups
+      const firmaMap2 = new Map<string, string>();
+      for (const f of (firmalar || [])) firmaMap2.set(f.user_id, f.firma_unvani);
+      
+      const teklifCountMap = new Map<string, number>();
+      for (const t of (teklifler || [])) teklifCountMap.set(t.ihale_id, (teklifCountMap.get(t.ihale_id) || 0) + 1);
 
+      const enriched = (ihaleler || []).map((i: any) => {
         // Determine category label
         let kategoriLabel = "";
         if (i.ihale_turu === "hizmet") {
@@ -958,8 +962,8 @@ Deno.serve(async (req) => {
 
         return {
           ...i,
-          firma_unvani: firma?.firma_unvani || "—",
-          teklif_sayisi: teklifCount,
+          firma_unvani: firmaMap2.get(i.user_id) || "—",
+          teklif_sayisi: teklifCountMap.get(i.id) || 0,
           kategori_label: kategoriLabel || "—",
         };
       });
