@@ -200,6 +200,7 @@ export default function AdminKullanicilar() {
       email: u.email || "",
       telefon: u.telefon || "",
       pozisyon: u.pozisyon,
+      departman: u.departman || "Çağrı Merkezi",
       permissions: { ...DEFAULT_PERMISSIONS, ...u.permissions },
     });
     setDialogOpen(true);
