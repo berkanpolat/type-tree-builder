@@ -123,6 +123,18 @@ export default function ProfilAyarlari() {
       toast({ title: "Hata", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Başarılı", description: "Şifreniz başarıyla değiştirildi." });
+      // Send "Şifre Değiştirildi" email
+      try {
+        const { data: { user: pwUser } } = await supabase.auth.getUser();
+        const { data: myFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", pwUser?.id || "").single();
+        await supabase.functions.invoke("send-email", {
+          body: {
+            type: "sifre_degistirildi",
+            to: authEmail,
+            templateModel: { firma_unvani: myFirma?.firma_unvani || "" },
+          },
+        });
+      } catch (e) { console.error("Password change email failed:", e); }
       setPasswordOpen(false);
       setCurrentPassword("");
       setNewPassword("");

@@ -1369,7 +1369,26 @@ export default function IhaleDetay() {
                         <AlertDialogHeader><AlertDialogTitle>İhaleyi Onaya Göndermek İstediğinize Emin Misiniz?</AlertDialogTitle><AlertDialogDescription>İhaleniz süper admin onayına gönderilecektir.</AlertDialogDescription></AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>İptal</AlertDialogCancel>
-                          <AlertDialogAction onClick={async () => { await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id); toast({ title: "İhale onaya gönderildi!" }); navigate("/ihalelerim"); }}>Evet, Gönder</AlertDialogAction>
+                          <AlertDialogAction onClick={async () => {
+                            await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihale.id);
+                            // Send "İhaleniz İnceleniyor" email
+                            try {
+                              const { data: { user } } = await supabase.auth.getUser();
+                              const { data: myFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", user?.id || "").single();
+                              await supabase.functions.invoke("send-email", {
+                                body: {
+                                  type: "ihale_inceleniyor",
+                                  userId: user?.id,
+                                  templateModel: {
+                                    firma_unvani: myFirma?.firma_unvani || "",
+                                    ihale_basligi: ihale.baslik,
+                                  },
+                                },
+                              });
+                            } catch (e) { console.error("Ihale review email failed:", e); }
+                            toast({ title: "İhale onaya gönderildi!" });
+                            navigate("/ihalelerim");
+                          }}>Evet, Gönder</AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>

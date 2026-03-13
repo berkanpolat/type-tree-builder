@@ -1,6 +1,51 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const POSTMARK_API_URL = "https://api.postmarkapp.com/email";
+const POSTMARK_API_URL = "https://api.postmarkapp.com/email/withTemplate";
+const FROM_EMAIL = "info@tekstilas.com";
+const SITE_URL = "https://type-tree-builder.lovable.app";
+
+const EMAIL_TEMPLATES: Record<string, number> = {
+  basvuru_onay: 43897478,
+  basvuru_red: 43897477,
+  ihale_onaylandi: 43898542,
+  ihale_reddedildi: 43898543,
+  urun_yayinlandi: 43898721,
+  urun_reddedildi: 43898843,
+};
+
+async function sendPostmarkEmail(templateKey: string, to: string, model: Record<string, string>) {
+  const POSTMARK_SERVER_TOKEN = Deno.env.get("POSTMARK_SERVER_TOKEN");
+  if (!POSTMARK_SERVER_TOKEN) { console.error("[EMAIL] No POSTMARK_SERVER_TOKEN"); return; }
+  const templateId = EMAIL_TEMPLATES[templateKey];
+  if (!templateId) { console.error(`[EMAIL] Unknown template: ${templateKey}`); return; }
+  try {
+    const res = await fetch(POSTMARK_API_URL, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+      },
+      body: JSON.stringify({
+        From: FROM_EMAIL,
+        To: to,
+        TemplateId: templateId,
+        TemplateModel: {
+          ...model,
+          platform_adi: "Tekstil A.Ş.",
+          destek_email: "info@manufixo.com",
+          yil: new Date().getFullYear().toString(),
+          site_url: SITE_URL,
+        },
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) console.error(`[EMAIL] Postmark error ${templateKey}:`, data.Message);
+    else console.log(`[EMAIL] Sent ${templateKey} to ${to}, ID: ${data.MessageID}`);
+  } catch (e) {
+    console.error(`[EMAIL] Failed ${templateKey}:`, e);
+  }
+}
 
 function generateRandomPassword(length = 10): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#';
@@ -387,10 +432,11 @@ Deno.serve(async (req) => {
           }
 
           // 2) Send recovery email via existing email system (Lovable hook)
+          const siteUrl = req.headers.get("origin") || Deno.env.get("SITE_URL") || SITE_URL;
+          const recoveryLink = `${siteUrl}/sifre-sifirla`;
           try {
             const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
             const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-            const siteUrl = req.headers.get("origin") || Deno.env.get("SITE_URL") || "https://type-tree-builder.lovable.app";
             await fetch(`${supabaseUrl}/auth/v1/recover`, {
               method: 'POST',
               headers: {
@@ -399,13 +445,19 @@ Deno.serve(async (req) => {
               },
               body: JSON.stringify({
                 email: authUser.email,
-                redirect_to: `${siteUrl}/sifre-sifirla`,
+                redirect_to: recoveryLink,
               }),
             });
             console.log("Recovery email sent to:", authUser.email);
           } catch (e) {
             console.error("Recovery email failed:", e);
           }
+
+          // 3) Send Postmark approval email
+          await sendPostmarkEmail("basvuru_onay", authUser.email, {
+            firma_unvani: firma.firma_unvani,
+            sifre_olusturma_linki: recoveryLink,
+          });
 
           const message = `${firma.firma_unvani} firmanızın başvurusu onaylanmıştır. Şifre belirleme bağlantısı e-posta adresinize gönderilmiştir.`;
           await supabase.from("notifications").insert({
@@ -434,6 +486,11 @@ Deno.serve(async (req) => {
             }
           }
         } else {
+          // Send Postmark rejection email
+          await sendPostmarkEmail("basvuru_red", authUser.email, {
+            firma_unvani: firma.firma_unvani,
+          });
+
           const message = `${firma.firma_unvani} firmanızın başvurusu reddedilmiştir. Detaylı bilgi için bizimle iletişime geçebilirsiniz.`;
           await supabase.from("notifications").insert({
             user_id: firma.user_id,
@@ -1347,8 +1404,20 @@ Deno.serve(async (req) => {
         .single();
       if (error) return jsonResponse({ error: error.message }, 400);
 
-      // Notify owner
+      // Notify owner + send email
       if (data) {
+        // Get user email for Postmark
+        const { data: { user: ihaleAuthUser } } = await supabase.auth.admin.getUserById(data.user_id);
+        const { data: ihaleFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", data.user_id).single();
+
+        if (ihaleAuthUser?.email) {
+          await sendPostmarkEmail("ihale_onaylandi", ihaleAuthUser.email, {
+            firma_unvani: ihaleFirma?.firma_unvani || "",
+            ihale_basligi: data.baslik,
+            ihale_linki: `${SITE_URL}/tekihale/${data.id}`,
+          });
+        }
+
         const msg = `${data.ihale_no} numaralı "${data.baslik}" başlıklı ihaleniz onaylanmış ve yayına alınmıştır. İşlemi yapan: ${adminLabel}`;
         await supabase.from("notifications").insert({
           user_id: data.user_id,
@@ -1396,8 +1465,19 @@ Deno.serve(async (req) => {
         .eq("id", ihaleId);
       if (error) return jsonResponse({ error: error.message }, 400);
 
-      // Notify user with rejection reason
+      // Notify user with rejection reason + send email
       if (ihaleInfo) {
+        const { data: { user: ihaleRejAuthUser } } = await supabase.auth.admin.getUserById(ihaleInfo.user_id);
+        const { data: ihaleRejFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", ihaleInfo.user_id).single();
+
+        if (ihaleRejAuthUser?.email) {
+          await sendPostmarkEmail("ihale_reddedildi", ihaleRejAuthUser.email, {
+            firma_unvani: ihaleRejFirma?.firma_unvani || "",
+            ihale_basligi: ihaleInfo.baslik,
+            reddedilme_sebebi: redSebebi,
+          });
+        }
+
         const msg = `${ihaleInfo.ihale_no} numaralı "${ihaleInfo.baslik}" başlıklı ihaleniz reddedilmiştir. Sebep: ${redSebebi}. İşlemi yapan: ${adminLabel}`;
         await supabase.from("notifications").insert({
           user_id: ihaleInfo.user_id,
@@ -1439,8 +1519,19 @@ Deno.serve(async (req) => {
         .single();
       if (error) return jsonResponse({ error: error.message }, 400);
 
-      // Notify owner
+      // Notify owner + send email
       if (data) {
+        const { data: { user: urunAuthUser } } = await supabase.auth.admin.getUserById(data.user_id);
+        const { data: urunFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", data.user_id).single();
+
+        if (urunAuthUser?.email) {
+          await sendPostmarkEmail("urun_yayinlandi", urunAuthUser.email, {
+            firma_unvani: urunFirma?.firma_unvani || "",
+            urun_basligi: data.baslik,
+            urun_linki: `${SITE_URL}/urun/${data.id}`,
+          });
+        }
+
         const msg = `${data.urun_no} numaralı "${data.baslik}" başlıklı ürününüz onaylanmış ve yayına alınmıştır. İşlemi yapan: ${adminLabel}`;
         await supabase.from("notifications").insert({
           user_id: data.user_id,
@@ -1488,8 +1579,19 @@ Deno.serve(async (req) => {
         .eq("id", urunId);
       if (error) return jsonResponse({ error: error.message }, 400);
 
-      // Notify user with rejection reason
+      // Notify user with rejection reason + send email
       if (urunInfo) {
+        const { data: { user: urunRejAuthUser } } = await supabase.auth.admin.getUserById(urunInfo.user_id);
+        const { data: urunRejFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", urunInfo.user_id).single();
+
+        if (urunRejAuthUser?.email) {
+          await sendPostmarkEmail("urun_reddedildi", urunRejAuthUser.email, {
+            firma_unvani: urunRejFirma?.firma_unvani || "",
+            urun_basligi: urunInfo.baslik,
+            reddedilme_sebebi: redSebebi,
+          });
+        }
+
         const msg = `${urunInfo.urun_no} numaralı "${urunInfo.baslik}" başlıklı ürününüz reddedilmiştir. Sebep: ${redSebebi}. İşlemi yapan: ${adminLabel}`;
         await supabase.from("notifications").insert({
           user_id: urunInfo.user_id,

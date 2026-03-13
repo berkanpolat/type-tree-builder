@@ -848,6 +848,21 @@ export default function UrunDetay() {
                       className="flex-1 gap-2"
                       onClick={async () => {
                         await supabase.from("urunler").update({ durum: "onay_bekliyor" } as any).eq("id", urun.id);
+                        // Send "Ürün Değerlendiriliyor" email
+                        try {
+                          const { data: { user } } = await supabase.auth.getUser();
+                          const { data: myFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", user?.id || "").single();
+                          await supabase.functions.invoke("send-email", {
+                            body: {
+                              type: "urun_inceleniyor",
+                              userId: user?.id,
+                              templateModel: {
+                                firma_unvani: myFirma?.firma_unvani || "",
+                                urun_basligi: urun.baslik,
+                              },
+                            },
+                          });
+                        } catch (e) { console.error("Urun review email failed:", e); }
                         toast({ title: "Ürün onaya gönderildi!" });
                         navigate("/manupazar");
                       }}
