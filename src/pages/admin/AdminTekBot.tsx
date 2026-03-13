@@ -118,7 +118,7 @@ function Inner() {
   const updateBilgi = async (item: Bilgi) => {
     setSaving(true);
     try {
-      await adminAction("update_chatbot_bilgi", { id: item.id, soru: item.soru, cevap: item.cevap, kategori: item.kategori, aktif: item.aktif });
+      await adminAction("update-chatbot-bilgi", { id: item.id, soru: item.soru, cevap: item.cevap, kategori: item.kategori, aktif: item.aktif });
       toast({ title: "Güncellendi" });
       setEditItem(null);
       fetchData();
