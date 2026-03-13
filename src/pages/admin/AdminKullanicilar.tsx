@@ -362,13 +362,14 @@ export default function AdminKullanicilar() {
               <Table>
                 <TableHeader>
                   <TableRow style={{ borderColor: "hsl(var(--admin-border))" }} className="hover:bg-transparent">
-                    <TableHead style={sMuted}>Kullanıcı</TableHead>
-                    <TableHead style={sMuted} className="hidden md:table-cell">Kullanıcı No</TableHead>
-                    <TableHead style={sMuted}>Pozisyon</TableHead>
-                    <TableHead style={sMuted} className="hidden lg:table-cell">E-posta</TableHead>
-                    <TableHead style={sMuted} className="hidden lg:table-cell">Telefon</TableHead>
-                    <TableHead style={sMuted}>Rol</TableHead>
-                    {canManage && <TableHead style={sMuted} className="text-right">İşlemler</TableHead>}
+                     <TableHead style={sMuted}>Kullanıcı</TableHead>
+                     <TableHead style={sMuted} className="hidden md:table-cell">Kullanıcı No</TableHead>
+                     <TableHead style={sMuted}>Departman</TableHead>
+                     <TableHead style={sMuted}>Pozisyon</TableHead>
+                     <TableHead style={sMuted} className="hidden lg:table-cell">E-posta</TableHead>
+                     <TableHead style={sMuted} className="hidden lg:table-cell">Telefon</TableHead>
+                     <TableHead style={sMuted}>Rol</TableHead>
+                     {canManage && <TableHead style={sMuted} className="text-right">İşlemler</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
