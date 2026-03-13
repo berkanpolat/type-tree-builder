@@ -484,11 +484,11 @@ const GirisKayit = () => {
                     }
                     setForgotLoading(true);
                     try {
-                      const { error } = await supabase.auth.resetPasswordForEmail(loginEmail, {
-                        redirectTo: `${window.location.origin}/sifre-sifirla`,
+                      const { data, error: fnError } = await supabase.functions.invoke("send-password-reset", {
+                        body: { email: loginEmail, redirectUrl: window.location.origin },
                       });
-                      console.log("[ForgotPassword] result:", error);
-                      if (error) throw error;
+                      console.log("[ForgotPassword] result:", data, fnError);
+                      if (fnError) throw fnError;
                       setForgotSent(true);
                       toast({ title: "Başarılı", description: "Şifre sıfırlama bağlantısı e-posta adresinize gönderildi." });
                     } catch (err: any) {
