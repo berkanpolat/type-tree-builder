@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
         const payload = verifyToken(token);
         const { data } = await supabase
           .from("admin_users")
-          .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
+          .select("id, username, ad, soyad, email, telefon, pozisyon, departman, is_primary, permissions, created_at")
           .eq("id", payload.id)
           .single();
         if (!data) return jsonResponse({ error: "Kullanıcı bulunamadı" }, 401);
