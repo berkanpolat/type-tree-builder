@@ -323,6 +323,17 @@ export default function IhaleTakip() {
           },
         }).catch(console.error);
 
+        // Send teklif_kabul SMS to bidder
+        supabase.functions.invoke("send-notification-sms", {
+          body: {
+            type: "teklif_kabul",
+            userId: teklif.teklif_veren_user_id,
+            firmaUnvani: bidderFirma?.firma_unvani || "",
+            ihaleBasligi: ihale.baslik,
+            ihaleDetayLinki: `${window.location.origin}/tekihale/${ihale.id}`,
+          },
+        }).catch(console.error);
+
         // Send ihale_tamamlandi email to ihale owner
         const { data: ownerFirma } = await supabase
           .from("firmalar")
@@ -342,7 +353,7 @@ export default function IhaleTakip() {
         }).catch(console.error);
       }
     } catch (e) {
-      console.error("[IhaleTakip] Email notification error:", e);
+      console.error("[IhaleTakip] Notification error:", e);
     }
   };
 

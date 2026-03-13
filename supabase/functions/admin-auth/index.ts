@@ -478,23 +478,20 @@ Deno.serve(async (req) => {
             link: null,
           });
 
-          // Send approval SMS
-          if (userPhone) {
-            try {
-              await fetch("http://194.62.55.240:3000/api/send-sms", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  messages: [{
-                    msg: `${firma.firma_unvani}, Tekstil A.S. basvurunuz onaylandi! E-postaniza gonderilen baglanti uzerinden sifrenizi belirleyerek giris yapabilirsiniz. Aramiza hos geldiniz!`,
-                    dest: userPhone,
-                    id: "1",
-                  }],
-                }),
-              });
-            } catch (smsErr) {
-              console.error("Approval SMS failed:", smsErr);
-            }
+          // Send approval SMS via send-notification-sms
+          try {
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+              body: JSON.stringify({
+                type: "basvuru_onaylandi",
+                telefon: userPhone,
+                firmaUnvani: firma.firma_unvani,
+                sifreLink: recoveryLink,
+              }),
+            });
+          } catch (smsErr) {
+            console.error("Approval SMS failed:", smsErr);
           }
         } else {
           // Send Postmark rejection email
@@ -510,23 +507,19 @@ Deno.serve(async (req) => {
             link: null,
           });
 
-          // Send rejection SMS
-          if (userPhone) {
-            try {
-              await fetch("http://194.62.55.240:3000/api/send-sms", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  messages: [{
-                    msg: `${firma.firma_unvani}, Tekstil A.S. basvurunuz ne yazik ki red ile sonuclandi. Detaylari ogrenmek icin mailinizi kontrol ediniz. Gerekli duzeltmelerden sonra yeniden basvuru yapabilirsiniz.`,
-                    dest: userPhone,
-                    id: "1",
-                  }],
-                }),
-              });
-            } catch (smsErr) {
-              console.error("Rejection SMS failed:", smsErr);
-            }
+          // Send rejection SMS via send-notification-sms
+          try {
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+              body: JSON.stringify({
+                type: "basvuru_reddedildi",
+                telefon: userPhone,
+                firmaUnvani: firma.firma_unvani,
+              }),
+            });
+          } catch (smsErr) {
+            console.error("Rejection SMS failed:", smsErr);
           }
         }
       }
@@ -1497,6 +1490,21 @@ Deno.serve(async (req) => {
           message: msg,
           link: "/manuihale/takip/" + data.id,
         });
+
+        // Send ihale approval SMS
+        try {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+            body: JSON.stringify({
+              type: "ihale_onaylandi",
+              userId: data.user_id,
+              firmaUnvani: ihaleFirma?.firma_unvani || "",
+              ihaleBasligi: data.baslik,
+              ihaleDetayLinki: `${SITE_URL}/tekihale/${data.id}`,
+            }),
+          });
+        } catch (smsErr) { console.error("Ihale approval SMS failed:", smsErr); }
       }
 
       return jsonResponse({ success: true, ihale: data });
@@ -1557,6 +1565,20 @@ Deno.serve(async (req) => {
           message: msg,
           link: "/ihale/" + ihaleId,
         });
+
+        // Send ihale rejection SMS
+        try {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+            body: JSON.stringify({
+              type: "ihale_reddedildi",
+              userId: ihaleInfo.user_id,
+              firmaUnvani: ihaleRejFirma?.firma_unvani || "",
+              reddedilmeSebebi: redSebebi,
+            }),
+          });
+        } catch (smsErr) { console.error("Ihale rejection SMS failed:", smsErr); }
       }
 
       return jsonResponse({ success: true });
@@ -1611,6 +1633,21 @@ Deno.serve(async (req) => {
           message: msg,
           link: "/manupazar",
         });
+
+        // Send urun approval SMS
+        try {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+            body: JSON.stringify({
+              type: "urun_yayinlandi",
+              userId: data.user_id,
+              firmaUnvani: urunFirma?.firma_unvani || "",
+              urunBasligi: data.baslik,
+              urunLinki: `${SITE_URL}/urun/${data.id}`,
+            }),
+          });
+        } catch (smsErr) { console.error("Urun approval SMS failed:", smsErr); }
       }
 
       return jsonResponse({ success: true, urun: data });
@@ -1671,6 +1708,21 @@ Deno.serve(async (req) => {
           message: msg,
           link: "/urun/" + urunId,
         });
+
+        // Send urun rejection SMS
+        try {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+            body: JSON.stringify({
+              type: "urun_reddedildi",
+              userId: urunInfo.user_id,
+              firmaUnvani: urunRejFirma?.firma_unvani || "",
+              urunBasligi: urunInfo.baslik,
+              reddedilmeSebebi: redSebebi,
+            }),
+          });
+        } catch (smsErr) { console.error("Urun rejection SMS failed:", smsErr); }
       }
 
       return jsonResponse({ success: true });
@@ -1943,19 +1995,20 @@ Deno.serve(async (req) => {
           .join(", ");
 
         const smsBitis = new Date(bitisTarihi).toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
-        const smsTarih = new Date().toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit", year: "numeric" });
-        const kisitId = kisitlamaData?.id?.slice(0, 8)?.toUpperCase() || "-";
+
+        // Get firma unvani for SMS
+        const { data: kisitFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", userId).single();
 
         try {
-          await fetch("http://194.62.55.240:3000/api/send-sms", {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
             body: JSON.stringify({
-              messages: [{
-                msg: `${smsTarih} tarihinde ${kisitId} ID numarali kisitlama geregince ${smsAlanlar} haklariniz ${smsBitis} tarihine kadar askiya alinmistir. Detaylari ogrenmek ve itirazda bulunmak icin destek@tekstilas.com adresinden veya 0850 242 5700 numarasindan iletisim kurabilirsiniz.`,
-                dest: kisitProfile.iletisim_numarasi,
-                id: "1",
-              }],
+              type: "kisitlama",
+              telefon: kisitProfile.iletisim_numarasi,
+              firmaUnvani: kisitFirma?.firma_unvani || "",
+              kisitlamaAlanlari: smsAlanlar,
+              kisitlamaBitis: smsBitis,
             }),
           });
         } catch (smsErr) {

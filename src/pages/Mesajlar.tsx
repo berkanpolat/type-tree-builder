@@ -479,9 +479,20 @@ export default function Mesajlar() {
             },
           },
         }).catch(console.error);
+
+        // Send SMS notification to recipient
+        supabase.functions.invoke("send-notification-sms", {
+          body: {
+            type: "yeni_mesaj",
+            userId: recipientUserId,
+            firmaUnvani: recipientFirma.firma_unvani || "",
+            gonderenAdi: senderFirma?.firma_unvani || "Bir kullanıcı",
+            mesajLinki: `${window.location.origin}/mesajlar?conv=${selectedConv.id}`,
+          },
+        }).catch(console.error);
       }
     } catch (e) {
-      console.error("[Mesajlar] Email notification error:", e);
+      console.error("[Mesajlar] Notification error:", e);
     }
 
     setUploading(false);
