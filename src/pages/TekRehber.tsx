@@ -494,7 +494,7 @@ export default function TekRehber() {
                     className="p-4 sm:p-5 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => navigate(`/${firma.slug || firma.id}`)}
                   >
-                    <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="flex items-start gap-3 sm:gap-4 overflow-hidden">
                       <div className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
                         {firma.logo_url ? (
                           <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
