@@ -2601,19 +2601,34 @@ Deno.serve(async (req) => {
       const { token } = body;
       const payload = verifyToken(token);
       const now = new Date();
-      const onlineThreshold = new Date(now.getTime() - 15 * 60 * 1000);
+      const onlineThreshold = new Date(now.getTime() - 5 * 60 * 1000); // 5 min for active users
+
+      // Helper: fetch all rows bypassing 1000-row default limit
+      async function fetchAllPaged(table: string, select: string) {
+        const PAGE_SIZE = 1000;
+        let allRows: any[] = [];
+        let from = 0;
+        while (true) {
+          const { data } = await supabase.from(table).select(select).range(from, from + PAGE_SIZE - 1);
+          if (!data || data.length === 0) break;
+          allRows = allRows.concat(data);
+          if (data.length < PAGE_SIZE) break;
+          from += PAGE_SIZE;
+        }
+        return allRows;
+      }
 
       // ── Firma Stats ──
-      const { data: allFirmalar } = await supabase.from("firmalar").select("id, firma_turu_id, firma_tipi_id, onay_durumu, created_at");
+      const allFirmalar = await fetchAllPaged("firmalar", "id, firma_turu_id, firma_tipi_id, onay_durumu, created_at, user_id");
       const { data: turler } = await supabase.from("firma_turleri").select("id, name");
       const { data: tipler } = await supabase.from("firma_tipleri").select("id, name, firma_turu_id");
       const { count: onlineCount } = await supabase.from("profiles").select("*", { count: "exact", head: true }).gte("last_seen", onlineThreshold.toISOString());
 
       const firmaStats = {
-        toplam: (allFirmalar || []).length,
-        onay_bekleyen: (allFirmalar || []).filter((f: any) => f.onay_durumu === "onay_bekliyor").length,
+        toplam: allFirmalar.length,
+        onay_bekleyen: allFirmalar.filter((f: any) => f.onay_durumu === "onay_bekliyor").length,
         online: onlineCount || 0,
-        items: allFirmalar || [],
+        items: allFirmalar,
         turler: turler || [],
         tipler: tipler || [],
       };
@@ -2665,6 +2680,16 @@ Deno.serve(async (req) => {
         sikayet: sikayetStats,
         kategoriMap,
       });
+    }
+
+    // ─── ONLINE COUNT (lightweight polling endpoint) ───
+    if (action === "online-count") {
+      const { token } = body;
+      verifyToken(token);
+      const now = new Date();
+      const onlineThreshold = new Date(now.getTime() - 5 * 60 * 1000);
+      const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true }).gte("last_seen", onlineThreshold.toISOString());
+      return jsonResponse({ online: count || 0 });
     }
 
     // ─── LIST ACTIVITY LOG ───
