@@ -3091,6 +3091,160 @@ Deno.serve(async (req) => {
       return jsonResponse({ urun });
     }
 
+    // ─── LIST USER ACTIVITY ───
+    if (action === "list-user-activity") {
+      const payload = verifyToken(body.token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 403);
+
+      const limit = 500;
+
+      const [
+        { data: ihalelerData },
+        { data: tekliflerData },
+        { data: urunlerData },
+        { data: sikayetlerData },
+        { data: destekData },
+        { data: firmalarData },
+      ] = await Promise.all([
+        supabase.from("ihaleler").select("id, ihale_no, baslik, durum, user_id, created_at, updated_at").order("created_at", { ascending: false }).limit(limit),
+        supabase.from("ihale_teklifler").select("id, ihale_id, teklif_veren_user_id, tutar, durum, created_at, ihaleler(ihale_no, baslik)").order("created_at", { ascending: false }).limit(limit),
+        supabase.from("urunler").select("id, urun_no, baslik, durum, user_id, created_at").order("created_at", { ascending: false }).limit(limit),
+        supabase.from("sikayetler").select("id, sikayet_no, tur, sebep, durum, bildiren_user_id, created_at").order("created_at", { ascending: false }).limit(limit),
+        supabase.from("destek_talepleri").select("id, talep_no, konu, departman, durum, user_id, created_at").order("created_at", { ascending: false }).limit(limit),
+        supabase.from("firmalar").select("id, firma_unvani, user_id, onay_durumu, created_at, slug").order("created_at", { ascending: false }).limit(limit),
+      ]);
+
+      // Collect all unique user_ids
+      const userIds = new Set<string>();
+      ihalelerData?.forEach(i => userIds.add(i.user_id));
+      tekliflerData?.forEach(t => userIds.add(t.teklif_veren_user_id));
+      urunlerData?.forEach(u => userIds.add(u.user_id));
+      sikayetlerData?.forEach(s => userIds.add(s.bildiren_user_id));
+      destekData?.forEach(d => userIds.add(d.user_id));
+      firmalarData?.forEach(f => userIds.add(f.user_id));
+
+      // Fetch profiles and firma names for all users
+      const userIdArr = [...userIds];
+      const profileMap: Record<string, { ad: string; soyad: string; firma_unvani: string }> = {};
+
+      if (userIdArr.length > 0) {
+        const batchSize = 50;
+        for (let i = 0; i < userIdArr.length; i += batchSize) {
+          const batch = userIdArr.slice(i, i + batchSize);
+          const [{ data: profiles }, { data: firmalar }] = await Promise.all([
+            supabase.from("profiles").select("user_id, ad, soyad").in("user_id", batch),
+            supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", batch),
+          ]);
+          profiles?.forEach(p => {
+            profileMap[p.user_id] = { ad: p.ad, soyad: p.soyad, firma_unvani: "" };
+          });
+          firmalar?.forEach(f => {
+            if (profileMap[f.user_id]) profileMap[f.user_id].firma_unvani = f.firma_unvani;
+            else profileMap[f.user_id] = { ad: "", soyad: "", firma_unvani: f.firma_unvani };
+          });
+        }
+      }
+
+      // Build unified activity list
+      const activities: any[] = [];
+
+      ihalelerData?.forEach(i => {
+        const u = profileMap[i.user_id];
+        activities.push({
+          id: `ihale-${i.id}`,
+          type: "ihale",
+          action: "ihale_olusturdu",
+          user_id: i.user_id,
+          user_name: u ? `${u.ad} ${u.soyad}` : "—",
+          firma_unvani: u?.firma_unvani || "—",
+          label: `${i.ihale_no} - ${i.baslik}`,
+          details: { durum: i.durum, ihale_no: i.ihale_no },
+          created_at: i.created_at,
+        });
+      });
+
+      tekliflerData?.forEach(t => {
+        const u = profileMap[t.teklif_veren_user_id];
+        const ihale = t.ihaleler as any;
+        activities.push({
+          id: `teklif-${t.id}`,
+          type: "teklif",
+          action: "teklif_verdi",
+          user_id: t.teklif_veren_user_id,
+          user_name: u ? `${u.ad} ${u.soyad}` : "—",
+          firma_unvani: u?.firma_unvani || "—",
+          label: ihale ? `${ihale.ihale_no} - ${ihale.baslik}` : t.ihale_id,
+          details: { tutar: t.tutar, durum: t.durum },
+          created_at: t.created_at,
+        });
+      });
+
+      urunlerData?.forEach(ur => {
+        const u = profileMap[ur.user_id];
+        activities.push({
+          id: `urun-${ur.id}`,
+          type: "urun",
+          action: "urun_ekledi",
+          user_id: ur.user_id,
+          user_name: u ? `${u.ad} ${u.soyad}` : "—",
+          firma_unvani: u?.firma_unvani || "—",
+          label: `${ur.urun_no} - ${ur.baslik}`,
+          details: { durum: ur.durum, urun_no: ur.urun_no },
+          created_at: ur.created_at,
+        });
+      });
+
+      sikayetlerData?.forEach(sk => {
+        const u = profileMap[sk.bildiren_user_id];
+        activities.push({
+          id: `sikayet-${sk.id}`,
+          type: "sikayet",
+          action: "sikayet_bildirdi",
+          user_id: sk.bildiren_user_id,
+          user_name: u ? `${u.ad} ${u.soyad}` : "—",
+          firma_unvani: u?.firma_unvani || "—",
+          label: `${sk.sikayet_no} - ${sk.sebep}`,
+          details: { tur: sk.tur, durum: sk.durum, sebep: sk.sebep },
+          created_at: sk.created_at,
+        });
+      });
+
+      destekData?.forEach(d => {
+        const u = profileMap[d.user_id];
+        activities.push({
+          id: `destek-${d.id}`,
+          type: "destek",
+          action: "destek_talebi_olusturdu",
+          user_id: d.user_id,
+          user_name: u ? `${u.ad} ${u.soyad}` : "—",
+          firma_unvani: u?.firma_unvani || "—",
+          label: `${d.talep_no} - ${d.konu}`,
+          details: { departman: d.departman, durum: d.durum },
+          created_at: d.created_at,
+        });
+      });
+
+      firmalarData?.forEach(f => {
+        const u = profileMap[f.user_id];
+        activities.push({
+          id: `firma-${f.id}`,
+          type: "firma",
+          action: "firma_kayit",
+          user_id: f.user_id,
+          user_name: u ? `${u.ad} ${u.soyad}` : "—",
+          firma_unvani: f.firma_unvani,
+          label: f.firma_unvani,
+          details: { onay_durumu: f.onay_durumu },
+          created_at: f.created_at,
+        });
+      });
+
+      // Sort by date descending
+      activities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      return jsonResponse({ activities: activities.slice(0, 1000) });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
