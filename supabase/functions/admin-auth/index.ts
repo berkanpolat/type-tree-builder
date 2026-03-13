@@ -2342,24 +2342,40 @@ Deno.serve(async (req) => {
 
     // ─── UPDATE FIRMA PACKAGE ───
     if (action === "update-firma-paket") {
-      const { token, userId, paketId, ekstraHaklar } = body;
+      const { token, userId, paketId, ekstraHaklar, periyot } = body;
       const payload = verifyToken(token);
 
-      console.log("[UPDATE-FIRMA-PAKET] Starting", { userId, paketId });
+      console.log("[UPDATE-FIRMA-PAKET] Starting", { userId, paketId, periyot });
 
-      // When admin assigns a package, set unlimited duration (100 years)
-      const unlimitedDate = new Date();
-      unlimitedDate.setFullYear(unlimitedDate.getFullYear() + 100);
+      // Calculate dates based on selected period
+      const now = new Date();
+      let donemBitis: Date;
+      let periyotValue: string;
+
+      if (periyot === "aylik") {
+        donemBitis = new Date(now);
+        donemBitis.setMonth(donemBitis.getMonth() + 1);
+        periyotValue = "aylik";
+      } else if (periyot === "yillik") {
+        donemBitis = new Date(now);
+        donemBitis.setFullYear(donemBitis.getFullYear() + 1);
+        periyotValue = "yillik";
+      } else {
+        // sinursiz (default for admin assignments)
+        donemBitis = new Date(now);
+        donemBitis.setFullYear(donemBitis.getFullYear() + 100);
+        periyotValue = "sinursiz";
+      }
 
       const updatePayload: any = {
         paket_id: paketId,
-        donem_baslangic: new Date().toISOString(),
-        donem_bitis: unlimitedDate.toISOString(),
+        donem_baslangic: now.toISOString(),
+        donem_bitis: donemBitis.toISOString(),
         durum: "aktif",
-        periyot: "sinursiz",
+        periyot: periyotValue,
         stripe_subscription_id: null,
         stripe_customer_id: null,
-        updated_at: new Date().toISOString(),
+        updated_at: now.toISOString(),
       };
       if (ekstraHaklar !== undefined) {
         updatePayload.ekstra_haklar = ekstraHaklar;
@@ -2378,7 +2394,7 @@ Deno.serve(async (req) => {
         const { error } = await supabase
           .from("kullanici_abonelikler")
           .update(updatePayload)
-          .eq("user_id", userId);
+          .eq("id", existing.id);
         if (error) {
           console.error("[UPDATE-FIRMA-PAKET] Update error", error.message);
           return jsonResponse({ error: error.message }, 500);
@@ -2397,10 +2413,11 @@ Deno.serve(async (req) => {
 
       // Notify user
       const { data: paket } = await supabase.from("paketler").select("ad").eq("id", paketId).single();
+      const periyotLabel = periyotValue === "sinursiz" ? "Sınırsız" : periyotValue === "yillik" ? "Yıllık" : "Aylık";
       await supabase.from("notifications").insert({
         user_id: userId,
         type: "paket_degisikligi",
-        message: `Paketiniz ${paket?.ad || ""} olarak güncellenmiştir.`,
+        message: `Paketiniz ${paket?.ad || ""} (${periyotLabel}) olarak güncellenmiştir.`,
         link: "/dashboard",
       });
 
@@ -2409,7 +2426,7 @@ Deno.serve(async (req) => {
         target_type: "kullanici",
         target_id: userId,
         target_label: paket?.ad || paketId,
-        details: { paketId, periyot: "sinursiz" },
+        details: { paketId, periyot: periyotValue },
       });
 
       return jsonResponse({ success: true });
