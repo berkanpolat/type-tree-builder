@@ -3207,7 +3207,7 @@ Deno.serve(async (req) => {
         });
       });
 
-      sikayetlerData?.forEach(sk => {
+      sikayetlerData.forEach(sk => {
         const u = profileMap[sk.bildiren_user_id];
         activities.push({
           id: `sikayet-${sk.id}`,
