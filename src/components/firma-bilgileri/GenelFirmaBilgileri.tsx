@@ -211,18 +211,25 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
 
         {/* Form grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
-          {/* Kayıt sırasında alınan alanlar – salt okunur */}
-          <div className="col-span-1 md:col-span-2 bg-muted/30 border border-border rounded-lg p-4 space-y-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Lock className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">Bu alanlar yalnızca yönetici tarafından değiştirilebilir.</span>
-            </div>
+          {/* Kayıt sırasında alınan alanlar – admin modda düzenlenebilir */}
+          <div className={`col-span-1 md:col-span-2 ${isAdminMode ? '' : 'bg-muted/30'} border border-border rounded-lg p-4 space-y-4`}>
+            {!isAdminMode && (
+              <div className="flex items-center gap-2 mb-1">
+                <Lock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">Bu alanlar yalnızca yönetici tarafından değiştirilebilir.</span>
+              </div>
+            )}
+            {isAdminMode && (
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs text-primary font-medium">🔓 Yönetici modu – tüm alanlar düzenlenebilir</span>
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
               {/* Firma Türü */}
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium text-foreground">Firma Türü</Label>
-                <Select value={firmaTuruId} disabled>
-                  <SelectTrigger className="bg-muted/50 opacity-70">
+                <Select value={firmaTuruId} disabled={!isAdminMode} onValueChange={(val) => { setFirmaTuruId(val); setFirmaTipiId(""); onFirmaTuruChange?.(val); }}>
+                  <SelectTrigger className={isAdminMode ? "bg-muted/50" : "bg-muted/50 opacity-70"}>
                     <SelectValue placeholder="Firma Türü" />
                   </SelectTrigger>
                   <SelectContent>
@@ -236,8 +243,8 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
               {/* Firma Tipi */}
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium text-foreground">Firma Tipi</Label>
-                <Select value={firmaTipiId} disabled>
-                  <SelectTrigger className="bg-muted/50 opacity-70">
+                <Select value={firmaTipiId} disabled={!isAdminMode} onValueChange={setFirmaTipiId}>
+                  <SelectTrigger className={isAdminMode ? "bg-muted/50" : "bg-muted/50 opacity-70"}>
                     <SelectValue placeholder="Firma Tipi" />
                   </SelectTrigger>
                   <SelectContent>
@@ -251,19 +258,19 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
               {/* Firma Ünvanı */}
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium text-foreground">Firma Ünvanı</Label>
-                <Input value={firmaUnvani} disabled className="bg-muted/50 opacity-70" />
+                <Input value={firmaUnvani} disabled={!isAdminMode} onChange={e => setFirmaUnvani(e.target.value)} className={isAdminMode ? "bg-muted/50" : "bg-muted/50 opacity-70"} />
               </div>
 
               {/* Vergi Numarası */}
               <div className="space-y-1.5">
                 <Label className="text-sm font-medium text-foreground">Vergi Numarası</Label>
-                <Input value={vergiNumarasi} disabled className="bg-muted/50 opacity-70" />
+                <Input value={vergiNumarasi} disabled={!isAdminMode} onChange={e => setVergiNumarasi(e.target.value)} className={isAdminMode ? "bg-muted/50" : "bg-muted/50 opacity-70"} />
               </div>
 
               {/* Vergi Dairesi */}
               <div className="space-y-1.5 md:col-span-2">
                 <Label className="text-sm font-medium text-foreground">Vergi Dairesi</Label>
-                <Input value={vergiDairesi} disabled className="bg-muted/50 opacity-70" />
+                <Input value={vergiDairesi} disabled={!isAdminMode} onChange={e => setVergiDairesi(e.target.value)} className={isAdminMode ? "bg-muted/50" : "bg-muted/50 opacity-70"} />
               </div>
             </div>
           </div>
