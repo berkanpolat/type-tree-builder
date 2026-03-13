@@ -90,7 +90,7 @@ function Inner() {
   const saveConfig = async (anahtar: string, deger: string) => {
     setSaving(true);
     try {
-      await adminAction("update_chatbot_config", { anahtar, deger });
+      await adminAction("update-chatbot-config", { anahtar, deger });
       toast({ title: "Kaydedildi", description: "Ayar başarıyla güncellendi." });
       fetchData();
     } catch (e: any) {
