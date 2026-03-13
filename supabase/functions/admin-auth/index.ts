@@ -1708,6 +1708,21 @@ Deno.serve(async (req) => {
           message: msg,
           link: "/urun/" + urunId,
         });
+
+        // Send urun rejection SMS
+        try {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+            body: JSON.stringify({
+              type: "urun_reddedildi",
+              userId: urunInfo.user_id,
+              firmaUnvani: urunRejFirma?.firma_unvani || "",
+              urunBasligi: urunInfo.baslik,
+              reddedilmeSebebi: redSebebi,
+            }),
+          });
+        } catch (smsErr) { console.error("Urun rejection SMS failed:", smsErr); }
       }
 
       return jsonResponse({ success: true });
