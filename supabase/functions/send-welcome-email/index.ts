@@ -45,9 +45,9 @@ serve(async (req) => {
         "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
       },
       body: JSON.stringify({
-        From: "info@manufixo.com",
+        From: "info@tekstilas.com",
         To: to,
-        TemplateId: 43896400,
+        TemplateId: 43889443,
         TemplateModel: {
           ad_soyad: adSoyad,
           firma_unvani: firmaUnvani || "",
