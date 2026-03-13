@@ -167,6 +167,9 @@ export default function AdminPanel() {
   // Firma tipi dağılımı için firma türü filtresi
   const [firmaTipTurFilter, setFirmaTipTurFilter] = useState<string>("all");
 
+  // Poll online count every 30 seconds
+  const [onlineCount, setOnlineCount] = useState(0);
+
   useEffect(() => {
     if (!token) return;
     (async () => {
@@ -174,11 +177,28 @@ export default function AdminPanel() {
         const { data: res, error } = await supabase.functions.invoke("admin-auth/panel-stats", {
           body: { token },
         });
-        if (!error && res) setData(res);
+        if (!error && res) {
+          setData(res);
+          setOnlineCount(res.firma?.online || 0);
+        }
       } finally {
         setLoading(false);
       }
     })();
+  }, [token]);
+
+  // Real-time online count polling
+  useEffect(() => {
+    if (!token) return;
+    const interval = setInterval(async () => {
+      try {
+        const { data: res } = await supabase.functions.invoke("admin-auth/online-count", {
+          body: { token },
+        });
+        if (res?.online !== undefined) setOnlineCount(res.online);
+      } catch {}
+    }, 30_000); // every 30 seconds
+    return () => clearInterval(interval);
   }, [token]);
 
   const firmaComputed = useMemo(() => {
@@ -188,16 +208,17 @@ export default function AdminPanel() {
       ? items
       : items.filter((f: any) => f.firma_turu_id === firmaTipTurFilter);
     return {
-      toplam: items.length,
+      toplam: data.firma.items.length, // Always total, not time-filtered
+      filtrelenmis: items.length,
       onay_bekleyen: items.filter((f: any) => f.onay_durumu === "onay_bekliyor").length,
-      online: data.firma.online || 0,
+      online: onlineCount,
       turDagilimi: (data.firma.turler || []).map((t: any) => ({ name: t.name, count: items.filter((f: any) => f.firma_turu_id === t.id).length })),
       tipDagilimi: (data.firma.tipler || []).map((t: any) => {
         if (firmaTipTurFilter !== "all" && t.firma_turu_id !== firmaTipTurFilter) return null;
         return { name: t.name, count: tipItems.filter((f: any) => f.firma_tipi_id === t.id).length };
       }).filter(Boolean) as { name: string; count: number }[],
     };
-  }, [data, firmaFilter, firmaDateRange, firmaTipTurFilter]);
+  }, [data, firmaFilter, firmaDateRange, firmaTipTurFilter, onlineCount]);
 
   const ihaleComputed = useMemo(() => {
     if (!data?.ihale) return null;
