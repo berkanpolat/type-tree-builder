@@ -1897,37 +1897,63 @@ Deno.serve(async (req) => {
         }
       }
 
-      // For each sikayet, try to resolve the referenced entity's owner firma and user_id
-      const enriched = await Promise.all((sikayetler || []).map(async (s: any) => {
+      // Batch-resolve referenced entities instead of N+1 queries
+      const profilRefIds = (sikayetler || []).filter((s: any) => s.tur === "profil").map((s: any) => s.referans_id);
+      const ihaleRefIds = (sikayetler || []).filter((s: any) => s.tur === "ihale").map((s: any) => s.referans_id);
+      const urunRefIds = (sikayetler || []).filter((s: any) => s.tur === "urun").map((s: any) => s.referans_id);
+      const mesajRefIds = (sikayetler || []).filter((s: any) => s.tur === "mesaj").map((s: any) => s.referans_id);
+
+      const [profilFirmalar, ihaleFirmalar, urunFirmalar, mesajSenders] = await Promise.all([
+        profilRefIds.length > 0
+          ? supabase.from("firmalar").select("id, user_id, firma_unvani").in("id", profilRefIds).then(r => r.data || [])
+          : Promise.resolve([]),
+        ihaleRefIds.length > 0
+          ? supabase.from("ihaleler").select("id, user_id").in("id", ihaleRefIds).then(r => r.data || [])
+          : Promise.resolve([]),
+        urunRefIds.length > 0
+          ? supabase.from("urunler").select("id, user_id").in("id", urunRefIds).then(r => r.data || [])
+          : Promise.resolve([]),
+        mesajRefIds.length > 0
+          ? supabase.from("messages").select("id, sender_id").in("id", mesajRefIds).then(r => r.data || [])
+          : Promise.resolve([]),
+      ]);
+
+      // Collect all user_ids from resolved entities to batch-fetch firma names
+      const resolvedUserIds = new Set<string>();
+      const ihaleUserMap = new Map<string, string>();
+      for (const i of ihaleFirmalar) { ihaleUserMap.set(i.id, i.user_id); resolvedUserIds.add(i.user_id); }
+      const urunUserMap = new Map<string, string>();
+      for (const u of urunFirmalar) { urunUserMap.set(u.id, u.user_id); resolvedUserIds.add(u.user_id); }
+      const mesajSenderMap = new Map<string, string>();
+      for (const m of mesajSenders) { mesajSenderMap.set(m.id, m.sender_id); resolvedUserIds.add(m.sender_id); }
+      const profilFirmaMap = new Map<string, { user_id: string; firma_unvani: string }>();
+      for (const f of profilFirmalar) { profilFirmaMap.set(f.id, { user_id: f.user_id, firma_unvani: f.firma_unvani }); }
+
+      // Batch-fetch firma names for ihale/urun/mesaj owners
+      const resolvedArr = [...resolvedUserIds];
+      const resolvedFirmaMap = new Map<string, string>();
+      if (resolvedArr.length > 0) {
+        const { data: rFirmalar } = await supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", resolvedArr);
+        for (const f of (rFirmalar || [])) resolvedFirmaMap.set(f.user_id, f.firma_unvani);
+      }
+
+      const enriched = (sikayetler || []).map((s: any) => {
         let sikayet_edilen_firma = "-";
         let sikayet_edilen_user_id: string | null = null;
-        try {
-          if (s.tur === "profil") {
-            const { data: f } = await supabase.from("firmalar").select("firma_unvani, user_id").eq("id", s.referans_id).single();
-            if (f) { sikayet_edilen_firma = f.firma_unvani; sikayet_edilen_user_id = f.user_id; }
-          } else if (s.tur === "ihale") {
-            const { data: i } = await supabase.from("ihaleler").select("user_id").eq("id", s.referans_id).single();
-            if (i) {
-              sikayet_edilen_user_id = i.user_id;
-              const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", i.user_id).single();
-              if (f) sikayet_edilen_firma = f.firma_unvani;
-            }
-          } else if (s.tur === "urun") {
-            const { data: u } = await supabase.from("urunler").select("user_id").eq("id", s.referans_id).single();
-            if (u) {
-              sikayet_edilen_user_id = u.user_id;
-              const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", u.user_id).single();
-              if (f) sikayet_edilen_firma = f.firma_unvani;
-            }
-          } else if (s.tur === "mesaj") {
-            const { data: m } = await supabase.from("messages").select("conversation_id, sender_id").eq("id", s.referans_id).single();
-            if (m) {
-              sikayet_edilen_user_id = m.sender_id;
-              const { data: f } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", m.sender_id).single();
-              if (f) sikayet_edilen_firma = f.firma_unvani;
-            }
-          }
-        } catch {}
+
+        if (s.tur === "profil") {
+          const pf = profilFirmaMap.get(s.referans_id);
+          if (pf) { sikayet_edilen_firma = pf.firma_unvani; sikayet_edilen_user_id = pf.user_id; }
+        } else if (s.tur === "ihale") {
+          const uid = ihaleUserMap.get(s.referans_id);
+          if (uid) { sikayet_edilen_user_id = uid; sikayet_edilen_firma = resolvedFirmaMap.get(uid) || "-"; }
+        } else if (s.tur === "urun") {
+          const uid = urunUserMap.get(s.referans_id);
+          if (uid) { sikayet_edilen_user_id = uid; sikayet_edilen_firma = resolvedFirmaMap.get(uid) || "-"; }
+        } else if (s.tur === "mesaj") {
+          const uid = mesajSenderMap.get(s.referans_id);
+          if (uid) { sikayet_edilen_user_id = uid; sikayet_edilen_firma = resolvedFirmaMap.get(uid) || "-"; }
+        }
 
         return {
           ...s,
@@ -1935,7 +1961,7 @@ Deno.serve(async (req) => {
           sikayet_edilen_firma,
           sikayet_edilen_user_id,
         };
-      }));
+      });
 
       return jsonResponse({ sikayetler: enriched });
     }
