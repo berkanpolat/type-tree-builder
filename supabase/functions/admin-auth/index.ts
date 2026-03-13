@@ -431,8 +431,8 @@ Deno.serve(async (req) => {
             console.error("Failed to set random password:", e);
           }
 
-          // 2) Generate recovery link via admin API (no Supabase email sent)
-          const siteUrl = req.headers.get("origin") || Deno.env.get("SITE_URL") || SITE_URL;
+          // 2) Generate recovery link via admin API — always use tekstilas.com
+          const siteUrl = SITE_URL;
           let recoveryLink = `${siteUrl}/sifre-sifirla`;
           try {
             const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
@@ -445,7 +445,7 @@ Deno.serve(async (req) => {
             if (linkError) {
               console.error("generateLink error:", linkError);
             } else if (linkData?.properties?.hashed_token) {
-              recoveryLink = `${siteUrl}/sifre-sifirla#access_token=${linkData.properties.hashed_token}&type=recovery`;
+              recoveryLink = `${siteUrl}/sifre-sifirla?token_hash=${linkData.properties.hashed_token}&type=recovery`;
             } else if (linkData?.properties?.action_link) {
               recoveryLink = linkData.properties.action_link;
             }
