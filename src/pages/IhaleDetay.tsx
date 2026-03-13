@@ -775,8 +775,20 @@ export default function IhaleDetay() {
             },
           },
         }).catch(console.error);
+
+        // Send SMS to ihale owner about new bid
+        supabase.functions.invoke("send-notification-sms", {
+          body: {
+            type: "yeni_teklif",
+            userId: ihale.user_id,
+            firmaUnvani: ownerFirma?.firma_unvani || "",
+            ihaleBasligi: ihale.baslik,
+            teklifVerenFirma: bidderFirma?.firma_unvani || "Bir firma",
+            ihaleTakipLinki: `${window.location.origin}/manuihale/takip/${ihale.id}`,
+          },
+        }).catch(console.error);
       } catch (e) {
-        console.error("[IhaleDetay] Email notification error:", e);
+        console.error("[IhaleDetay] Notification error:", e);
       }
     }
     setSubmitting(false);
