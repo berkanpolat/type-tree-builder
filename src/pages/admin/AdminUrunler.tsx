@@ -709,7 +709,7 @@ export default function AdminUrunler() {
             </div>
           )}
           {paginated.map((urun) => (
-            <div key={urun.id} style={s.card} className="overflow-hidden hover:shadow-md transition-shadow sm:h-[140px]">
+            <div key={urun.id} style={s.card} className="overflow-hidden hover:shadow-md transition-shadow sm:min-h-[140px]">
               <div className="flex flex-col sm:flex-row sm:h-full">
                 {/* Photo */}
                 <div className="w-full h-36 sm:w-[140px] sm:h-full flex-shrink-0 flex items-center justify-center" style={{ background: "hsl(var(--admin-hover))" }}>
