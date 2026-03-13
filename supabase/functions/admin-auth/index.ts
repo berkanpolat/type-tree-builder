@@ -2911,18 +2911,29 @@ Deno.serve(async (req) => {
 
       if (error) return jsonResponse({ error: error.message }, 500);
 
-      // Enrich with firma & profile info
-      const enriched = [];
-      for (const k of (data || [])) {
-        const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", k.user_id).single();
-        const { data: profile } = await supabase.from("profiles").select("ad, soyad, iletisim_email").eq("user_id", k.user_id).single();
-        enriched.push({
+      // Batch-fetch firma & profile info instead of N+1
+      const kUserIds = [...new Set((data || []).map((k: any) => k.user_id))];
+      const [kFirmalarRes, kProfilesRes] = kUserIds.length > 0
+        ? await Promise.all([
+            supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", kUserIds),
+            supabase.from("profiles").select("user_id, ad, soyad, iletisim_email").in("user_id", kUserIds),
+          ])
+        : [{ data: [] }, { data: [] }];
+
+      const kFirmaMap = new Map<string, string>();
+      for (const f of (kFirmalarRes.data || [])) kFirmaMap.set(f.user_id, f.firma_unvani);
+      const kProfileMap = new Map<string, { ad: string; soyad: string; email: string }>();
+      for (const p of (kProfilesRes.data || [])) kProfileMap.set(p.user_id, { ad: p.ad, soyad: p.soyad, email: p.iletisim_email });
+
+      const enriched = (data || []).map((k: any) => {
+        const profile = kProfileMap.get(k.user_id);
+        return {
           ...k,
-          firma_unvani: firma?.firma_unvani || "—",
+          firma_unvani: kFirmaMap.get(k.user_id) || "—",
           kullanici_ad: profile ? `${profile.ad} ${profile.soyad}` : "—",
-          kullanici_email: profile?.iletisim_email || "—",
-        });
-      }
+          kullanici_email: profile?.email || "—",
+        };
+      });
 
       return jsonResponse({ kisitlamalar: enriched });
     }
