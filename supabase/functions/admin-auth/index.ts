@@ -3161,7 +3161,7 @@ Deno.serve(async (req) => {
       // Build unified activity list
       const activities: any[] = [];
 
-      ihalelerData?.forEach(i => {
+      ihalelerData.forEach(i => {
         const u = profileMap[i.user_id];
         activities.push({
           id: `ihale-${i.id}`,
