@@ -1565,6 +1565,20 @@ Deno.serve(async (req) => {
           message: msg,
           link: "/ihale/" + ihaleId,
         });
+
+        // Send ihale rejection SMS
+        try {
+          await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+            body: JSON.stringify({
+              type: "ihale_reddedildi",
+              userId: ihaleInfo.user_id,
+              firmaUnvani: ihaleRejFirma?.firma_unvani || "",
+              reddedilmeSebebi: redSebebi,
+            }),
+          });
+        } catch (smsErr) { console.error("Ihale rejection SMS failed:", smsErr); }
       }
 
       return jsonResponse({ success: true });
