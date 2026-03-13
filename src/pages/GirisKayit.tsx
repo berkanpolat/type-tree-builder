@@ -617,6 +617,32 @@ const GirisKayit = () => {
                     )}
                   </div>
 
+                  {/* Consent checkboxes */}
+                  <div className="space-y-3 pt-1">
+                    <div className="flex items-start gap-2.5">
+                      <Checkbox
+                        id="kvkk"
+                        checked={kvkkAccepted}
+                        onCheckedChange={(v) => setKvkkAccepted(v === true)}
+                        className="mt-0.5"
+                      />
+                      <label htmlFor="kvkk" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
+                        <a href="/kvkk-aydinlatma" target="_blank" className="text-primary underline underline-offset-2 hover:text-primary/80">KVKK Aydınlatma Metni</a>'ni okudum ve kabul ediyorum. <span className="text-destructive">*</span>
+                      </label>
+                    </div>
+                    <div className="flex items-start gap-2.5">
+                      <Checkbox
+                        id="email-consent"
+                        checked={emailConsentAccepted}
+                        onCheckedChange={(v) => setEmailConsentAccepted(v === true)}
+                        className="mt-0.5"
+                      />
+                      <label htmlFor="email-consent" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
+                        E-posta ile bildirim ve haber bülteni almayı kabul ediyorum. <span className="text-destructive">*</span>
+                      </label>
+                    </div>
+                  </div>
+
                   <div className="flex gap-3">
                     <Button type="button" variant="outline" className="flex-1" onClick={() => setRegisterStep(1)}>Geri</Button>
                     <Button
@@ -635,6 +661,10 @@ const GirisKayit = () => {
                           toast({ title: "Hata", description: "Bu e-posta adresi ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
                           return;
                         }
+                        if (!kvkkAccepted || !emailConsentAccepted) {
+                          toast({ title: "Hata", description: "Devam etmek için tüm onay kutularını işaretlemeniz gerekmektedir.", variant: "destructive" });
+                          return;
+                        }
                         // Final server-side email check via RPC
                         const { data: dupResult } = await supabase.rpc("check_registration_duplicate", { p_email: email });
                         if (dupResult && (dupResult as any).email_exists) {
@@ -644,7 +674,7 @@ const GirisKayit = () => {
                         }
                         setRegisterStep(3);
                       }}
-                      disabled={!ad || !soyad || !email || !isValidEmail(email) || emailDuplicate}
+                      disabled={!ad || !soyad || !email || !isValidEmail(email) || emailDuplicate || !kvkkAccepted || !emailConsentAccepted}
                     >
                       Devam Et
                     </Button>
