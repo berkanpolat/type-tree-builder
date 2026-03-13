@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 const SMS_API_URL = "http://194.62.55.240:3000/api/send-sms";
-const SITE_URL = "https://type-tree-builder.lovable.app";
+const SITE_URL = "https://tekstilas.com";
 
 interface SmsRequest {
   type:
@@ -16,19 +16,40 @@ interface SmsRequest {
     | "basvuru_reddedildi"
     | "odeme_basarili"
     | "kota_uyari"
-    | "kisitlama";
+    | "kisitlama"
+    | "sifre_degistirildi"
+    | "ihale_onaylandi"
+    | "ihale_reddedildi"
+    | "yeni_teklif"
+    | "teklif_kabul"
+    | "urun_yayinlandi"
+    | "urun_reddedildi"
+    | "yeni_mesaj";
   telefon?: string;
   userId?: string;
   firmaUnvani?: string;
-  // kota_uyari specific
+  // basvuru_onaylandi
+  sifreLink?: string;
+  // kota_uyari
   paketAd?: string;
   ozellikAd?: string;
   kalanSayi?: number;
-  // kisitlama specific
-  kisitlamaId?: string;
+  // kisitlama
   kisitlamaAlanlari?: string;
-  kisitlamaTarihi?: string;
   kisitlamaBitis?: string;
+  // ihale
+  ihaleBasligi?: string;
+  ihaleDetayLinki?: string;
+  ihaleTakipLinki?: string;
+  reddedilmeSebebi?: string;
+  // teklif
+  teklifVerenFirma?: string;
+  // urun
+  urunBasligi?: string;
+  urunLinki?: string;
+  // mesaj
+  gonderenAdi?: string;
+  mesajLinki?: string;
 }
 
 async function sendSms(telefon: string, msg: string): Promise<boolean> {
@@ -79,8 +100,8 @@ Deno.serve(async (req) => {
       if (authHeader) {
         try {
           const token = authHeader.replace("Bearer ", "");
-          const { data: claimsData } = await supabase.auth.getClaims(token);
-          userId = claimsData?.claims?.sub as string;
+          const { data: { user } } = await supabase.auth.getUser(token);
+          userId = user?.id;
         } catch {}
       }
     }
@@ -115,37 +136,68 @@ Deno.serve(async (req) => {
       });
     }
 
+    const firma = firmaUnvani || "Firma";
     let message = "";
 
     switch (type) {
       case "kayit_alindi":
-        message = `${firmaUnvani || "Firma"}, Tekstil A.Ş. başvurunuz alındı. Ekiplerimiz en kısa süre içerisinde sizlere dönüş sağlayacaktır.`;
+        message = `${firma}, Tekstil A.S. basvurunuz alindi. Ekiplerimiz en kisa sure icerisinde sizlere donus saglayacaktir. B038`;
         break;
 
       case "basvuru_onaylandi":
-        message = `${firmaUnvani || "Firma"}, Tekstil A.Ş. başvurunuz onaylandı! E-postanıza gönderilen bağlantı üzerinden şifrenizi oluşturarak dijital dünyaya ilk adımınızı atabilirsiniz. Aramıza hoş geldiniz!`;
+        message = `${firma}, Tekstil A.S. basvurunuz onaylandi! ${body.sifreLink || SITE_URL + "/sifre-sifirla"} adresinden sifrenizi olusturarak tekstil sektorune ozel is platformuna katilabilirsiniz. Aramiza hos geldiniz! B038`;
         break;
 
       case "basvuru_reddedildi":
-        message = `${firmaUnvani || "Firma"}, Tekstil A.Ş. başvurunuz ne yazık ki red ile sonuçlandı. Detayları öğrenmek için mailinizi kontrol ediniz. Gerekli düzeltmelerden sonra yeniden başvuru yapabilirsiniz.`;
+        message = `${firma}, Tekstil A.S. basvurunuz onaylanmamistir. Detaylari e-postanizdan inceleyerek tekrar basvurabilirsiniz. B038`;
         break;
 
       case "odeme_basarili":
-        message = `${firmaUnvani || "Firma"}, ödemeniz onaylandı. Tekstil A.Ş. ayrıcalıklarından faydalanmaya hazırsınız.`;
+        message = `${firma}, Tekstil A.S. odemeniz basariyla gerceklesmistir. Paketiniz aktiftir, faturaniz e-postaniza iletilecektir. B038`;
         break;
 
       case "kota_uyari":
-        message = `${body.paketAd || "Paket"} paketinizin ${body.ozellikAd || "özellik"} özelliğinden kalan hakkınız ${body.kalanSayi ?? 0}. Paketinizi yükseltmek için tıklayın: ${SITE_URL}/paketim`;
+        message = `${firma}, Tekstil A.S. ${body.paketAd || "Paket"} paketinizdeki ${body.ozellikAd || "ozellik"} hakkiniz ${body.kalanSayi ?? 0} kalmistir. Bir ust pakete gecmek icin: ${SITE_URL}/paketim B038`;
         break;
 
       case "kisitlama": {
-        const tarih = body.kisitlamaTarihi || new Date().toLocaleDateString("tr-TR");
         const bitis = body.kisitlamaBitis || "-";
         const alanlar = body.kisitlamaAlanlari || "-";
-        const kid = body.kisitlamaId || "-";
-        message = `${tarih} tarihinde ${kid} ID numaralı kısıtlama gereğince ${alanlar} haklarınız ${bitis} tarihine kadar askıya alınmıştır. Detayları öğrenmek ve itirazda bulunmak için destek@tekstilas.com adresinden veya 0850 242 5700 numarasından iletişim kurabilirsiniz.`;
+        message = `${firma}, Tekstil A.S. ${alanlar} haklariniz ${bitis} tarihine dek kisitlanmistir. Bilgi icin: 08502425700 B038`;
         break;
       }
+
+      case "sifre_degistirildi":
+        message = `${firma}, Tekstil A.S. sifreniz guncellenmistir. Islem size ait degilse: 08502425700 veya destek@tekstilas.com B038`;
+        break;
+
+      case "ihale_onaylandi":
+        message = `${firma}, Tekstil A.S. ${body.ihaleBasligi || "Ihale"}, ihaleniz yayina alinmistir. Incelemek icin: ${body.ihaleDetayLinki || SITE_URL} B038`;
+        break;
+
+      case "ihale_reddedildi":
+        message = `${firma}, Tekstil A.S. ihale talebiniz ${body.reddedilmeSebebi || ""} nedeniyle onaylanmamistir. Lutfen panelden duzenleyiniz. B038`;
+        break;
+
+      case "yeni_teklif":
+        message = `${firma}, Tekstil A.S. ${body.ihaleBasligi || "Ihale"} ihaleniz icin ${body.teklifVerenFirma || "Bir firma"} yeni teklif verdi: ${body.ihaleTakipLinki || SITE_URL} B038`;
+        break;
+
+      case "teklif_kabul":
+        message = `${firma}, Tekstil A.S. ${body.ihaleBasligi || "Ihale"} ihalesi icin teklifiniz kabul edildi! Detaylar: ${body.ihaleDetayLinki || SITE_URL} B038`;
+        break;
+
+      case "urun_yayinlandi":
+        message = `${firma}, Tekstil A.S. ${body.urunBasligi || "Urun"} ürününüz yayinda! Inceleyin: ${body.urunLinki || SITE_URL} B038`;
+        break;
+
+      case "urun_reddedildi":
+        message = `${firma}, Tekstil A.S. ${body.urunBasligi || "Urun"} urununuz onaylanmadi. Neden: ${body.reddedilmeSebebi || "-"}. B038`;
+        break;
+
+      case "yeni_mesaj":
+        message = `${firma}, Tekstil A.S.'de ${body.gonderenAdi || "Bir kullanici"} size mesaj gonderdi: ${body.mesajLinki || SITE_URL + "/mesajlar"} B038`;
+        break;
 
       default:
         return new Response(JSON.stringify({ error: "Bilinmeyen type" }), {
@@ -154,7 +206,7 @@ Deno.serve(async (req) => {
         });
     }
 
-    const sent = await sendSms(telefon, message + " B038");
+    const sent = await sendSms(telefon, message);
     console.log(`[NOTIFICATION-SMS] type=${type}, phone=${telefon.slice(0, 4)}****, sent=${sent}`);
 
     return new Response(JSON.stringify({ success: sent }), {
