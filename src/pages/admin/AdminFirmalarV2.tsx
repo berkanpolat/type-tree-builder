@@ -954,8 +954,17 @@ export default function AdminFirmalarV2() {
             <div className="space-y-4">
               <div>
                 <Label className="text-xs mb-2 block" style={s.muted}>Mevcut Paket</Label>
-                <div className="p-3 rounded-lg" style={{ background: "hsl(var(--admin-hover))" }}>
+                <div className="p-3 rounded-lg flex items-center justify-between" style={{ background: "hsl(var(--admin-hover))" }}>
                   <span className="font-semibold text-sm" style={s.text}>{paketDialogQuota?.abonelik?.paket_ad || "Paket Yok"}</span>
+                  {paketDialogFirma?.abonelik?.periyot && (
+                    <Badge className="text-[10px]" style={{
+                      background: paketDialogFirma.abonelik.periyot === "sinursiz" ? "rgba(34,197,94,0.15)" : "rgba(234,179,8,0.15)",
+                      color: paketDialogFirma.abonelik.periyot === "sinursiz" ? "#22c55e" : "#eab308",
+                      borderColor: paketDialogFirma.abonelik.periyot === "sinursiz" ? "rgba(34,197,94,0.3)" : "rgba(234,179,8,0.3)",
+                    }}>
+                      {paketDialogFirma.abonelik.periyot === "sinursiz" ? "Sınırsız" : paketDialogFirma.abonelik.periyot === "yillik" ? "Yıllık" : "Aylık"}
+                    </Badge>
+                  )}
                 </div>
               </div>
               {paketDialogQuota?.usage && paketDialogQuota?.abonelik?.limits && (
@@ -986,7 +995,7 @@ export default function AdminFirmalarV2() {
               <div>
                 <Label className="text-xs mb-2 block" style={s.muted}>Paket Değiştir</Label>
                 <Select value={selectedPaketId} onValueChange={setSelectedPaketId}>
-                  <SelectTrigger style={s.input}><SelectValue placeholder="Seçin" /></SelectTrigger>
+                  <SelectTrigger style={s.input}><SelectValue placeholder="Paket seçin" /></SelectTrigger>
                   <SelectContent style={{ ...s.card, padding: "0.25rem", zIndex: 250 }}>
                     {allPaketler.map((p: any) => (
                       <SelectItem key={p.id} value={p.id} className="text-xs">{p.ad}</SelectItem>
@@ -994,12 +1003,35 @@ export default function AdminFirmalarV2() {
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <Label className="text-xs mb-2 block" style={s.muted}>Süre</Label>
+                <div className="flex gap-2">
+                  {[
+                    { value: "aylik", label: "Aylık", color: "#94a3b8" },
+                    { value: "yillik", label: "Yıllık", color: "#eab308" },
+                    { value: "sinursiz", label: "Sınırsız", color: "#22c55e" },
+                  ].map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setSelectedPeriyot(opt.value)}
+                      className="flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all border"
+                      style={{
+                        background: selectedPeriyot === opt.value ? `${opt.color}15` : "hsl(var(--admin-input-bg))",
+                        borderColor: selectedPeriyot === opt.value ? `${opt.color}50` : "hsl(var(--admin-border))",
+                        color: selectedPeriyot === opt.value ? opt.color : "hsl(var(--admin-muted))",
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
           <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setPaketDialogOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
             <Button onClick={handleChangePaket} disabled={paketSaving || !selectedPaketId} className="bg-amber-500 hover:bg-amber-600 text-white">
-              {paketSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Güncelle
+              {paketSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Paketi Güncelle
             </Button>
           </DialogFooter>
         </DialogContent>
