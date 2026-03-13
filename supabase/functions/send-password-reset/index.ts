@@ -44,7 +44,7 @@ serve(async (req) => {
       );
     }
 
-    // Generate recovery link
+    // Generate recovery link using token_hash to avoid email client pre-fetch consuming the token
     const siteUrl = redirectUrl || SITE_URL;
     let recoveryLink = `${siteUrl}/sifre-sifirla`;
 
@@ -56,6 +56,11 @@ serve(async (req) => {
 
     if (linkError) {
       console.error("[SEND-PASSWORD-RESET] generateLink error:", linkError);
+    } else if (linkData?.properties?.hashed_token) {
+      // Use token_hash approach: link goes directly to the app, not Supabase's /verify endpoint
+      // This prevents email clients (Gmail etc.) from pre-fetching and consuming the one-time token
+      recoveryLink = `${siteUrl}/sifre-sifirla?token_hash=${linkData.properties.hashed_token}&type=recovery`;
+      console.log("[SEND-PASSWORD-RESET] Using token_hash link for:", targetUser.email);
     } else if (linkData?.properties?.action_link) {
       recoveryLink = linkData.properties.action_link;
     }

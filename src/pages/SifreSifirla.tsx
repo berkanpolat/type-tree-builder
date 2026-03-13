@@ -1,32 +1,53 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import logoImg from "@/assets/tekstil-as-logo.png";
-import { Lock, CheckCircle2 } from "lucide-react";
+import { Lock, CheckCircle2, Loader2 } from "lucide-react";
 
 export default function SifreSifirla() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [validSession, setValidSession] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   useEffect(() => {
-    // Check recovery hash (synchronous, before Supabase clears it)
+    const tokenHash = searchParams.get("token_hash");
+    const type = searchParams.get("type");
+
+    // 1. If token_hash is in URL, verify it via Supabase OTP verification
+    if (tokenHash && type === "recovery") {
+      setVerifying(true);
+      supabase.auth.verifyOtp({ token_hash: tokenHash, type: "recovery" })
+        .then(({ data, error }) => {
+          if (error) {
+            console.error("[SifreSifirla] verifyOtp error:", error.message);
+            setValidSession(false);
+          } else if (data?.session) {
+            setValidSession(true);
+          }
+        })
+        .finally(() => setVerifying(false));
+      return;
+    }
+
+    // 2. Check recovery hash (legacy flow)
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    const type = hashParams.get("type");
+    const hashType = hashParams.get("type");
     
-    if (type === "recovery") {
+    if (hashType === "recovery") {
       setValidSession(true);
     }
 
-    // Also check active session + must_set_password
+    // 3. Check active session + must_set_password
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (user) {
         setValidSession(true);
@@ -40,7 +61,7 @@ export default function SifreSifirla() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,7 +130,12 @@ export default function SifreSifirla() {
           <p className="text-sm text-muted-foreground mt-2">Lütfen yeni şifrenizi giriniz.</p>
         </div>
 
-        {!validSession ? (
+        {verifying ? (
+          <div className="text-center space-y-4">
+            <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" />
+            <p className="text-sm text-muted-foreground">Bağlantı doğrulanıyor...</p>
+          </div>
+        ) : !validSession ? (
           <div className="text-center space-y-4">
             <p className="text-sm text-muted-foreground">Geçersiz veya süresi dolmuş bağlantı. Lütfen yeniden şifre sıfırlama talebinde bulununuz.</p>
             <Button className="w-full" onClick={() => navigate("/giris-kayit")}>
