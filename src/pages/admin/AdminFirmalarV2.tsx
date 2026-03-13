@@ -795,6 +795,9 @@ export default function AdminFirmalarV2() {
                         <span className="text-xs font-medium" style={{ color: getValueColor(firma.ihale_sayisi) }}>{firma.ihale_sayisi}</span>
                       </TableCell>
                       <TableCell>
+                        <span className="text-xs font-medium" style={{ color: getValueColor(firma.teklif_sayisi) }}>{firma.teklif_sayisi}</span>
+                      </TableCell>
+                      <TableCell>
                         <span className="text-xs font-medium" style={{ color: getValueColor(firma.urun_sayisi) }}>{firma.urun_sayisi}</span>
                       </TableCell>
                       <TableCell>
@@ -802,6 +805,13 @@ export default function AdminFirmalarV2() {
                       </TableCell>
                       <TableCell>
                         <span className="text-xs" style={s.muted}>{formatDate(firma.created_at)}</span>
+                      </TableCell>
+                      <TableCell>
+                        {firma.profile?.last_seen ? (
+                          <span className="text-xs" style={s.muted}>{formatRelativeTime(firma.profile.last_seen)}</span>
+                        ) : (
+                          <span className="text-xs opacity-40" style={s.muted}>—</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
