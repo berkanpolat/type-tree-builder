@@ -478,23 +478,20 @@ Deno.serve(async (req) => {
             link: null,
           });
 
-          // Send approval SMS
-          if (userPhone) {
-            try {
-              await fetch("http://194.62.55.240:3000/api/send-sms", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  messages: [{
-                    msg: `${firma.firma_unvani}, Tekstil A.S. basvurunuz onaylandi! E-postaniza gonderilen baglanti uzerinden sifrenizi belirleyerek giris yapabilirsiniz. Aramiza hos geldiniz!`,
-                    dest: userPhone,
-                    id: "1",
-                  }],
-                }),
-              });
-            } catch (smsErr) {
-              console.error("Approval SMS failed:", smsErr);
-            }
+          // Send approval SMS via send-notification-sms
+          try {
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+              body: JSON.stringify({
+                type: "basvuru_onaylandi",
+                telefon: userPhone,
+                firmaUnvani: firma.firma_unvani,
+                sifreLink: recoveryLink,
+              }),
+            });
+          } catch (smsErr) {
+            console.error("Approval SMS failed:", smsErr);
           }
         } else {
           // Send Postmark rejection email
