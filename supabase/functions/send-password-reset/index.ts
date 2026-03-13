@@ -17,8 +17,10 @@ serve(async (req) => {
   }
 
   try {
-    const { email, redirectUrl } = await req.json();
-    if (!email) {
+    const { email } = await req.json();
+    const normalizedEmail = typeof email === "string" ? email.trim().toLowerCase() : "";
+
+    if (!normalizedEmail) {
       return new Response(
         JSON.stringify({ success: false, error: "E-posta adresi gerekli" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -30,39 +32,46 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Check if user exists
-    const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers();
-    if (listErr) throw listErr;
-    const targetUser = users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
-    
-    // Always return success to prevent email enumeration
-    if (!targetUser) {
-      console.log("[SEND-PASSWORD-RESET] User not found:", email);
-      return new Response(
-        JSON.stringify({ success: true }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // Always use tekstilas.com regardless of where the request came from
     const siteUrl = SITE_URL;
     let recoveryLink = `${siteUrl}/sifre-sifirla`;
 
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
       type: "recovery",
-      email: targetUser.email!,
+      email: normalizedEmail,
       options: { redirectTo: `${siteUrl}/sifre-sifirla` },
     });
 
+    // Do not reveal whether user exists
     if (linkError) {
+      const errorMessage = (linkError.message || "").toLowerCase();
+      const isUserNotFound =
+        errorMessage.includes("user") && errorMessage.includes("not found");
+
+      if (isUserNotFound) {
+        console.log("[SEND-PASSWORD-RESET] User not found:", normalizedEmail);
+        return new Response(
+          JSON.stringify({ success: true }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       console.error("[SEND-PASSWORD-RESET] generateLink error:", linkError);
-    } else if (linkData?.properties?.hashed_token) {
-      // Use token_hash approach: link goes directly to the app, not Supabase's /verify endpoint
-      // This prevents email clients (Gmail etc.) from pre-fetching and consuming the one-time token
+      throw linkError;
+    }
+
+    if (linkData?.properties?.hashed_token) {
+      // Use token_hash approach: link goes directly to the app, not verify endpoint
       recoveryLink = `${siteUrl}/sifre-sifirla?token_hash=${linkData.properties.hashed_token}&type=recovery`;
-      console.log("[SEND-PASSWORD-RESET] Using token_hash link for:", targetUser.email);
+      console.log("[SEND-PASSWORD-RESET] Using token_hash link for:", normalizedEmail);
     } else if (linkData?.properties?.action_link) {
       recoveryLink = linkData.properties.action_link;
+    } else {
+      console.log("[SEND-PASSWORD-RESET] No recovery link generated for:", normalizedEmail);
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // Send via Postmark
@@ -84,7 +93,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         From: FROM_EMAIL,
-        To: targetUser.email,
+        To: normalizedEmail,
         TemplateId: TEMPLATE_ID,
         TemplateModel: {
           sifre_sifirlama_baglantisi: recoveryLink,
@@ -105,7 +114,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[SEND-PASSWORD-RESET] Sent to ${targetUser.email}, messageId=${data.MessageID}`);
+    console.log(`[SEND-PASSWORD-RESET] Sent to ${normalizedEmail}, messageId=${data.MessageID}`);
     return new Response(
       JSON.stringify({ success: true }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
