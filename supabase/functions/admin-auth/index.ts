@@ -700,7 +700,68 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ─── FIRMA STATS (for summary cards) ───
+    // ─── SEND PASSWORD RESET (manual trigger) ───
+    if (action === "send-password-reset") {
+      const { token, email } = body;
+      const payload = verifyToken(token);
+
+      // Find user by email
+      const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers();
+      if (listErr) return jsonResponse({ error: listErr.message }, 500);
+      const targetUser = users?.find((u: any) => u.email?.toLowerCase() === email?.toLowerCase());
+      if (!targetUser) return jsonResponse({ error: "Kullanıcı bulunamadı" }, 404);
+
+      const siteUrl = SITE_URL;
+      let recoveryLink = `${siteUrl}/sifre-sifirla`;
+      
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+        type: "recovery",
+        email: targetUser.email!,
+        options: { redirectTo: `${siteUrl}/sifre-sifirla` },
+      });
+
+      if (linkError) {
+        console.error("generateLink error:", linkError);
+      } else if (linkData?.properties?.action_link) {
+        recoveryLink = linkData.properties.action_link;
+      }
+
+      // Send via send-email edge function (sifre_degistirildi template or direct Postmark)
+      const POSTMARK_SERVER_TOKEN = Deno.env.get("POSTMARK_SERVER_TOKEN");
+      if (POSTMARK_SERVER_TOKEN) {
+        try {
+          await fetch(POSTMARK_API_URL, {
+            method: "POST",
+            headers: {
+              "Accept": "application/json",
+              "Content-Type": "application/json",
+              "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+            },
+            body: JSON.stringify({
+              From: FROM_EMAIL,
+              To: targetUser.email,
+              TemplateId: 43898480, // sifre_degistirildi
+              TemplateModel: {
+                sifre_olusturma_baglantisi: recoveryLink,
+                platform_adi: "Tekstil A.Ş.",
+                destek_email: "info@manufixo.com",
+                yil: new Date().getFullYear().toString(),
+                site_url: siteUrl,
+              },
+            }),
+          });
+          console.log("Password reset email sent to:", targetUser.email);
+        } catch (e) {
+          console.error("Password reset email failed:", e);
+          return jsonResponse({ error: "E-posta gönderilemedi" }, 500);
+        }
+      }
+
+      await logActivity(supabase, payload, "send-password-reset", { target_type: "user", target_id: targetUser.id, target_label: targetUser.email });
+
+      return jsonResponse({ success: true, message: `Şifre sıfırlama linki ${targetUser.email} adresine gönderildi.` });
+    }
+
     if (action === "firma-stats") {
       const { token, days } = body;
       const payload = verifyToken(token);
