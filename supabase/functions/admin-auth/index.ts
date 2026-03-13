@@ -1579,8 +1579,19 @@ Deno.serve(async (req) => {
         .eq("id", urunId);
       if (error) return jsonResponse({ error: error.message }, 400);
 
-      // Notify user with rejection reason
+      // Notify user with rejection reason + send email
       if (urunInfo) {
+        const { data: { user: urunRejAuthUser } } = await supabase.auth.admin.getUserById(urunInfo.user_id);
+        const { data: urunRejFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", urunInfo.user_id).single();
+
+        if (urunRejAuthUser?.email) {
+          await sendPostmarkEmail("urun_reddedildi", urunRejAuthUser.email, {
+            firma_unvani: urunRejFirma?.firma_unvani || "",
+            urun_basligi: urunInfo.baslik,
+            reddedilme_sebebi: redSebebi,
+          });
+        }
+
         const msg = `${urunInfo.urun_no} numaralı "${urunInfo.baslik}" başlıklı ürününüz reddedilmiştir. Sebep: ${redSebebi}. İşlemi yapan: ${adminLabel}`;
         await supabase.from("notifications").insert({
           user_id: urunInfo.user_id,
