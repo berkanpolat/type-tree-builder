@@ -2,7 +2,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const POSTMARK_API_URL = "https://api.postmarkapp.com/email/withTemplate";
 const FROM_EMAIL = "info@tekstilas.com";
-const SITE_URL = "https://type-tree-builder.lovable.app";
+const SITE_URL = "https://tekstilas.com";
 
 const EMAIL_TEMPLATES: Record<string, number> = {
   basvuru_onay: 43897478,
