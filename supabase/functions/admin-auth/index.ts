@@ -486,6 +486,11 @@ Deno.serve(async (req) => {
             }
           }
         } else {
+          // Send Postmark rejection email
+          await sendPostmarkEmail("basvuru_red", authUser.email, {
+            firma_unvani: firma.firma_unvani,
+          });
+
           const message = `${firma.firma_unvani} firmanızın başvurusu reddedilmiştir. Detaylı bilgi için bizimle iletişime geçebilirsiniz.`;
           await supabase.from("notifications").insert({
             user_id: firma.user_id,
