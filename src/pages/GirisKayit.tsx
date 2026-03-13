@@ -638,7 +638,7 @@ const GirisKayit = () => {
                         className="mt-0.5"
                       />
                       <label htmlFor="email-consent" className="text-xs text-muted-foreground leading-relaxed cursor-pointer select-none">
-                        E-posta ile bildirim ve haber bülteni almayı kabul ediyorum. <span className="text-destructive">*</span>
+                        E-posta ile bildirim ve haber bülteni almayı kabul ediyorum.
                       </label>
                     </div>
                   </div>
