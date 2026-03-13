@@ -49,7 +49,7 @@ export function useProfileCompletion() {
       }
 
       // Check related tables for at least 1 record each
-      const tabQueries = [
+      const [urunHizmet, uretimSatis, tesisler, referanslar, sertifikalar, galeri, belgeler] = await Promise.all([
         supabase.from("firma_urun_hizmet_secimler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
         supabase.from("firma_uretim_satis").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
         supabase.from("firma_tesisler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
@@ -57,18 +57,17 @@ export function useProfileCompletion() {
         supabase.from("firma_sertifikalar").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
         supabase.from("firma_galeri").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
         supabase.from("firma_belgeler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
-      ];
+      ]);
+
+      const tabCounts = [urunHizmet, uretimSatis, tesisler, referanslar, sertifikalar, galeri, belgeler];
 
       if (hasMakine) {
-        tabQueries.push(
-          supabase.from("firma_makineler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId)
-        );
+        const makineler = await supabase.from("firma_makineler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId);
+        tabCounts.push(makineler);
       }
 
-      const results = await Promise.all(tabQueries);
-
       let filledTabs = 0;
-      for (const res of results) {
+      for (const res of tabCounts) {
         if ((res.count ?? 0) > 0) filledTabs++;
       }
 
