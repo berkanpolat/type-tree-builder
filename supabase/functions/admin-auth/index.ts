@@ -407,10 +407,11 @@ Deno.serve(async (req) => {
       // Get user phone for SMS
       const { data: profile } = await supabase
         .from("profiles")
-        .select("iletisim_numarasi")
+        .select("iletisim_numarasi, ad, soyad")
         .eq("user_id", firma.user_id)
         .single();
       const userPhone = profile?.iletisim_numarasi;
+      const adSoyad = profile ? `${profile.ad} ${profile.soyad}` : firma.firma_unvani;
 
       // Get user email from auth
       const { data: { user: authUser } } = await supabase.auth.admin.getUserById(firma.user_id);
@@ -457,7 +458,11 @@ Deno.serve(async (req) => {
           // 3) Send Postmark approval email with recovery link
           await sendPostmarkEmail("basvuru_onay", authUser.email, {
             firma_unvani: firma.firma_unvani,
+            ad_soyad: adSoyad,
             sifre_olusturma_baglantisi: recoveryLink,
+            giris_linki: `${SITE_URL}/giris-kayit`,
+            profil_linki: `${SITE_URL}/firma-bilgilerim`,
+            website_linki: SITE_URL,
           });
 
           const message = `${firma.firma_unvani} firmanızın başvurusu onaylanmıştır. Şifre belirleme bağlantısı e-posta adresinize gönderilmiştir.`;
