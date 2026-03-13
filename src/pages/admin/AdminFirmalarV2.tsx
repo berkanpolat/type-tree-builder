@@ -314,7 +314,7 @@ export default function AdminFirmalarV2() {
     if (!paketDialogFirma || !selectedPaketId) return;
     setPaketSaving(true);
     try {
-      const res = await callApi("update-firma-paket", { token, userId: paketDialogFirma.user_id, paketId: selectedPaketId, ekstraHaklar });
+      const res = await callApi("update-firma-paket", { token, userId: paketDialogFirma.user_id, paketId: selectedPaketId, ekstraHaklar, periyot: selectedPeriyot });
       if (res.error) throw new Error(res.error);
       toast({ title: "Başarılı", description: "Paket güncellendi." });
       setPaketDialogOpen(false);
