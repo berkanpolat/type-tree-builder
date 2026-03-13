@@ -44,8 +44,8 @@ serve(async (req) => {
       );
     }
 
-    // Generate recovery link using token_hash to avoid email client pre-fetch consuming the token
-    const siteUrl = redirectUrl || SITE_URL;
+    // Always use tekstilas.com regardless of where the request came from
+    const siteUrl = SITE_URL;
     let recoveryLink = `${siteUrl}/sifre-sifirla`;
 
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
