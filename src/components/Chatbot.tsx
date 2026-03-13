@@ -246,8 +246,8 @@ export default function Chatbot() {
                 )}
               >
                 {msg.role === "assistant" && (
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                    <Bot className="w-4 h-4 text-primary" />
+                  <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 mt-0.5">
+                    <img src={tekbotAvatar} alt="TekBot" className="w-7 h-7 object-contain" />
                   </div>
                 )}
                 <div
