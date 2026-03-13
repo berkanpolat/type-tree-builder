@@ -21,7 +21,7 @@ interface AdminLayoutProps {
 
 const menuItems = [
   { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null, primaryOnly: false },
-  { label: "Firmalar", path: "/yonetim/firmalar", icon: Building2, permission: null, primaryOnly: false },
+  { label: "Firmalar", path: "/yonetim/firmalar-v2", icon: Building2, permission: null, primaryOnly: false },
   { label: "Yaptırımlar", path: "/yonetim/kisitlamalar", icon: Shield, permission: "sikayet_kisitlama" as const },
   { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: null, primaryOnly: true },
   { label: "İşlemler", path: "/yonetim/islemler", icon: Activity, permission: null, primaryOnly: true },
@@ -151,11 +151,11 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   return (
     <AdminThemeContext.Provider value={lightMode}>
-      <div className={cn("min-h-screen flex", t ? "admin-light" : "admin-dark")}>
+      <div className={cn("h-screen flex overflow-hidden", t ? "admin-light" : "admin-dark")}>
         {/* Desktop Sidebar */}
         {!isMobile && (
           <aside
-            className="w-64 border-r flex flex-col shrink-0"
+            className="w-64 border-r flex flex-col shrink-0 h-full"
             style={{
               background: `hsl(var(--admin-sidebar))`,
               borderColor: `hsl(var(--admin-border))`,
@@ -166,7 +166,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         )}
 
         {/* Main */}
-        <div className="flex-1 flex flex-col min-w-0" style={{ background: `hsl(var(--admin-bg))` }}>
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ background: `hsl(var(--admin-bg))` }}>
           <header
             className="h-14 flex items-center border-b px-4 md:px-6 gap-3 shrink-0"
             style={{
