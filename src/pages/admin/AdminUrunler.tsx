@@ -77,6 +77,7 @@ interface UrunItem {
   urun_grup_id: string | null;
   urun_tur_id: string | null;
   goruntuleme_sayisi?: number;
+  slug?: string | null;
 }
 
 const DURUM_LABELS: Record<string, string> = {
