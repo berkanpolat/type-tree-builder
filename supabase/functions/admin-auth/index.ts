@@ -3237,7 +3237,7 @@ Deno.serve(async (req) => {
         });
       });
 
-      firmalarData?.forEach(f => {
+      firmalarData.forEach(f => {
         const u = profileMap[f.user_id];
         activities.push({
           id: `firma-${f.id}`,
