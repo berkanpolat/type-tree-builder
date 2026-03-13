@@ -3096,32 +3096,45 @@ Deno.serve(async (req) => {
       const payload = verifyToken(body.token);
       if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 403);
 
-      const limit = 500;
+      // Helper: fetch all rows bypassing 1000-row default limit
+      async function fetchAllRows(table: string, select: string, orderCol = "created_at") {
+        const PAGE_SIZE = 1000;
+        let allRows: any[] = [];
+        let from = 0;
+        while (true) {
+          const { data, error } = await supabase.from(table).select(select).order(orderCol, { ascending: false }).range(from, from + PAGE_SIZE - 1);
+          if (error || !data || data.length === 0) break;
+          allRows = allRows.concat(data);
+          if (data.length < PAGE_SIZE) break;
+          from += PAGE_SIZE;
+        }
+        return allRows;
+      }
 
       const [
-        { data: ihalelerData },
-        { data: tekliflerData },
-        { data: urunlerData },
-        { data: sikayetlerData },
-        { data: destekData },
-        { data: firmalarData },
+        ihalelerData,
+        tekliflerData,
+        urunlerData,
+        sikayetlerData,
+        destekData,
+        firmalarData,
       ] = await Promise.all([
-        supabase.from("ihaleler").select("id, ihale_no, baslik, durum, user_id, created_at, updated_at").order("created_at", { ascending: false }).limit(limit),
-        supabase.from("ihale_teklifler").select("id, ihale_id, teklif_veren_user_id, tutar, durum, created_at, ihaleler(ihale_no, baslik)").order("created_at", { ascending: false }).limit(limit),
-        supabase.from("urunler").select("id, urun_no, baslik, durum, user_id, created_at").order("created_at", { ascending: false }).limit(limit),
-        supabase.from("sikayetler").select("id, sikayet_no, tur, sebep, durum, bildiren_user_id, created_at").order("created_at", { ascending: false }).limit(limit),
-        supabase.from("destek_talepleri").select("id, talep_no, konu, departman, durum, user_id, created_at").order("created_at", { ascending: false }).limit(limit),
-        supabase.from("firmalar").select("id, firma_unvani, user_id, onay_durumu, created_at, slug").order("created_at", { ascending: false }).limit(limit),
+        fetchAllRows("ihaleler", "id, ihale_no, baslik, durum, user_id, created_at, updated_at"),
+        fetchAllRows("ihale_teklifler", "id, ihale_id, teklif_veren_user_id, tutar, durum, created_at, ihaleler(ihale_no, baslik)"),
+        fetchAllRows("urunler", "id, urun_no, baslik, durum, user_id, created_at"),
+        fetchAllRows("sikayetler", "id, sikayet_no, tur, sebep, durum, bildiren_user_id, created_at"),
+        fetchAllRows("destek_talepleri", "id, talep_no, konu, departman, durum, user_id, created_at"),
+        fetchAllRows("firmalar", "id, firma_unvani, user_id, onay_durumu, created_at, slug"),
       ]);
 
       // Collect all unique user_ids
       const userIds = new Set<string>();
-      ihalelerData?.forEach(i => userIds.add(i.user_id));
-      tekliflerData?.forEach(t => userIds.add(t.teklif_veren_user_id));
-      urunlerData?.forEach(u => userIds.add(u.user_id));
-      sikayetlerData?.forEach(s => userIds.add(s.bildiren_user_id));
-      destekData?.forEach(d => userIds.add(d.user_id));
-      firmalarData?.forEach(f => userIds.add(f.user_id));
+      ihalelerData.forEach(i => userIds.add(i.user_id));
+      tekliflerData.forEach(t => userIds.add(t.teklif_veren_user_id));
+      urunlerData.forEach(u => userIds.add(u.user_id));
+      sikayetlerData.forEach(s => userIds.add(s.bildiren_user_id));
+      destekData.forEach(d => userIds.add(d.user_id));
+      firmalarData.forEach(f => userIds.add(f.user_id));
 
       // Fetch profiles and firma names for all users
       const userIdArr = [...userIds];
@@ -3148,7 +3161,7 @@ Deno.serve(async (req) => {
       // Build unified activity list
       const activities: any[] = [];
 
-      ihalelerData?.forEach(i => {
+      ihalelerData.forEach(i => {
         const u = profileMap[i.user_id];
         activities.push({
           id: `ihale-${i.id}`,
@@ -3163,7 +3176,7 @@ Deno.serve(async (req) => {
         });
       });
 
-      tekliflerData?.forEach(t => {
+      tekliflerData.forEach(t => {
         const u = profileMap[t.teklif_veren_user_id];
         const ihale = t.ihaleler as any;
         activities.push({
@@ -3179,7 +3192,7 @@ Deno.serve(async (req) => {
         });
       });
 
-      urunlerData?.forEach(ur => {
+      urunlerData.forEach(ur => {
         const u = profileMap[ur.user_id];
         activities.push({
           id: `urun-${ur.id}`,
@@ -3194,7 +3207,7 @@ Deno.serve(async (req) => {
         });
       });
 
-      sikayetlerData?.forEach(sk => {
+      sikayetlerData.forEach(sk => {
         const u = profileMap[sk.bildiren_user_id];
         activities.push({
           id: `sikayet-${sk.id}`,
@@ -3209,7 +3222,7 @@ Deno.serve(async (req) => {
         });
       });
 
-      destekData?.forEach(d => {
+      destekData.forEach(d => {
         const u = profileMap[d.user_id];
         activities.push({
           id: `destek-${d.id}`,
@@ -3224,7 +3237,7 @@ Deno.serve(async (req) => {
         });
       });
 
-      firmalarData?.forEach(f => {
+      firmalarData.forEach(f => {
         const u = profileMap[f.user_id];
         activities.push({
           id: `firma-${f.id}`,
@@ -3242,7 +3255,7 @@ Deno.serve(async (req) => {
       // Sort by date descending
       activities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-      return jsonResponse({ activities: activities.slice(0, 1000) });
+      return jsonResponse({ activities });
     }
 
     return jsonResponse({ error: "Geçersiz istek" }, 400);
