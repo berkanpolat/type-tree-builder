@@ -3192,7 +3192,7 @@ Deno.serve(async (req) => {
         });
       });
 
-      urunlerData?.forEach(ur => {
+      urunlerData.forEach(ur => {
         const u = profileMap[ur.user_id];
         activities.push({
           id: `urun-${ur.id}`,
