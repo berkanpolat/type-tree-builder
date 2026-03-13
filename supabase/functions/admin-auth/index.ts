@@ -192,10 +192,11 @@ Deno.serve(async (req) => {
           email: newUser.email || null,
           telefon: newUser.telefon || null,
           pozisyon: newUser.pozisyon,
+          departman: newUser.departman || "Çağrı Merkezi",
           permissions: newUser.permissions,
           created_by: payload.id,
         })
-        .select("id, username, ad, soyad, email, telefon, pozisyon, is_primary, permissions, created_at")
+        .select("id, username, ad, soyad, email, telefon, pozisyon, departman, is_primary, permissions, created_at")
         .single();
 
       if (error) return jsonResponse({ error: error.message }, 400);
