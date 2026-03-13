@@ -8,7 +8,7 @@ const corsHeaders = {
 
 const POSTMARK_API_URL = "https://api.postmarkapp.com/email/withTemplate";
 const FROM_EMAIL = "info@tekstilas.com";
-const SITE_URL = "https://type-tree-builder.lovable.app";
+const SITE_URL = "https://tekstilas.com";
 const TEMPLATE_ID = 43920203; // sifre_sifirlama (new dedicated template)
 
 serve(async (req) => {
@@ -44,8 +44,8 @@ serve(async (req) => {
       );
     }
 
-    // Generate recovery link using token_hash to avoid email client pre-fetch consuming the token
-    const siteUrl = redirectUrl || SITE_URL;
+    // Always use tekstilas.com regardless of where the request came from
+    const siteUrl = SITE_URL;
     let recoveryLink = `${siteUrl}/sifre-sifirla`;
 
     const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
