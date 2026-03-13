@@ -456,7 +456,13 @@ Deno.serve(async (req) => {
             console.error("Recovery link generation failed:", e);
           }
 
-          // 3) Send Postmark approval email with recovery link
+          // 3) Send Hoşgeldiniz email (welcome + password creation link)
+          await sendPostmarkEmail("hosgeldiniz", authUser.email, {
+            firma_unvani: firma.firma_unvani,
+            sifre_olusturma_baglantisi: recoveryLink,
+          });
+
+          // Also send Başvuru Onay email
           await sendPostmarkEmail("basvuru_onay", authUser.email, {
             firma_unvani: firma.firma_unvani,
             sifre_olusturma_baglantisi: recoveryLink,

@@ -297,18 +297,7 @@ const GirisKayit = () => {
       });
       if (rpcError) throw rpcError;
 
-      // Send welcome email via Postmark
-      try {
-        await supabase.functions.invoke("send-email", {
-          body: {
-            type: "hosgeldiniz",
-            to: email,
-            templateModel: { firma_unvani: firmaUnvani },
-          },
-        });
-      } catch (emailErr) {
-        console.error("Welcome email failed:", emailErr);
-      }
+      // Hoşgeldiniz email is now sent after admin approval (via admin-auth)
 
       // Send "Başvurunuzu Aldık" email
       try {
