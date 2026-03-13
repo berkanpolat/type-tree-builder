@@ -179,6 +179,7 @@ export default function AdminKullanicilar() {
     setForm({
       username: "", password: "", ad: "", soyad: "",
       email: "", telefon: "", pozisyon: "Call Center",
+      departman: "Çağrı Merkezi",
       permissions: { ...DEFAULT_PERMISSIONS },
     });
     setEditingUser(null);
