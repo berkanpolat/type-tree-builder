@@ -82,9 +82,9 @@ serve(async (req) => {
         To: targetUser.email,
         TemplateId: TEMPLATE_ID,
         TemplateModel: {
-          sifre_olusturma_baglantisi: recoveryLink,
+          sifre_sifirlama_baglantisi: recoveryLink,
           platform_adi: "Tekstil A.Ş.",
-          destek_email: "info@manufixo.com",
+          destek_email: "destek@tekstilas.com",
           yil: new Date().getFullYear().toString(),
           site_url: siteUrl,
         },

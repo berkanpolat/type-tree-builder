@@ -22,6 +22,7 @@ const TEMPLATES: Record<string, number> = {
   ihale_suresi_doldu: 43898544,
   ihale_tamamlandi: 43898714,
   sifre_degistirildi: 43898480,
+  sifre_sifirlama: 43920203,
   teklif_kabul: 43898675,
   teklif_red: 43898681,
   urun_inceleniyor: 43898683,
