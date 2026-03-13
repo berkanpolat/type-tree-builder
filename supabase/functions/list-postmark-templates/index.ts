@@ -64,6 +64,35 @@ serve(async (req) => {
       });
     }
 
+    // Update logo in all templates
+    if (action === "update_logo") {
+      const { logoUrl, templateIds } = body;
+      const results: Array<{ templateId: number; name: string; status: string }> = [];
+      for (const templateId of templateIds) {
+        const getRes = await fetch(`https://api.postmarkapp.com/templates/${templateId}`, {
+          method: "GET",
+          headers: { "Accept": "application/json", "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN },
+        });
+        const template = await getRes.json();
+        let htmlBody = template.HtmlBody || "";
+        htmlBody = htmlBody.replace(/LOGO_URL_BURAYA/g, logoUrl);
+        const putRes = await fetch(`https://api.postmarkapp.com/templates/${templateId}`, {
+          method: "PUT",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+          },
+          body: JSON.stringify({ Name: template.Name, Subject: template.Subject, HtmlBody: htmlBody, TextBody: template.TextBody }),
+        });
+        const putData = await putRes.json();
+        results.push({ templateId, name: template.Name, status: putRes.ok ? "updated" : `error: ${putData.Message}` });
+      }
+      return new Response(JSON.stringify({ success: true, results }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (action === "update_all") {
       // Template ID -> placeholder mapping
       const templateMappings: Record<number, Record<string, string>> = {
