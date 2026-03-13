@@ -9,7 +9,7 @@ const corsHeaders = {
 const POSTMARK_API_URL = "https://api.postmarkapp.com/email/withTemplate";
 const FROM_EMAIL = "info@tekstilas.com";
 const SITE_URL = "https://type-tree-builder.lovable.app";
-const TEMPLATE_ID = 43898480; // sifre_degistirildi
+const TEMPLATE_ID = 43920203; // sifre_sifirlama (new dedicated template)
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
