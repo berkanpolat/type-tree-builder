@@ -3255,7 +3255,7 @@ Deno.serve(async (req) => {
       // Sort by date descending
       activities.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-      return jsonResponse({ activities: activities.slice(0, 1000) });
+      return jsonResponse({ activities });
     }
 
     return jsonResponse({ error: "Geçersiz istek" }, 400);

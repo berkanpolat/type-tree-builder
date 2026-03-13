@@ -683,7 +683,7 @@ export default function Mesajlar() {
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-foreground text-sm">{selectedConv.firma_unvani}</p>
-                  <p className="text-xs text-emerald-500">Çevrimiçi</p>
+                  
                 </div>
                 <div className="flex items-center gap-1 ml-auto">
                   <DropdownMenu>
