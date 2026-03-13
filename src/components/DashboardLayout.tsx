@@ -12,10 +12,10 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
   useLastSeen();
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="h-screen flex w-full overflow-hidden">
         <AppSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center border-b bg-background px-4 md:px-6">
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <header className="h-14 flex items-center border-b bg-background px-4 md:px-6 shrink-0">
             <SidebarTrigger className="mr-4" />
             {title && (
               <h1 className="text-lg font-bold text-foreground">{title}</h1>
