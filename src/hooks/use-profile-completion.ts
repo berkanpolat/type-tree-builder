@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Fields that contribute to profile completion (excluding zero-weight fields)
-// Zero-weight (excluded): firma_unvani, firma_turu_id, firma_tipi_id, vergi_numarasi, vergi_dairesi,
-//   instagram, facebook, linkedin, x_twitter, tiktok, youtube
+// Genel Firma Bilgileri fields (excluding zero-weight: firma_unvani, firma_turu_id,
+// firma_tipi_id, vergi_numarasi, vergi_dairesi, social media)
 const FIRMA_FIELDS = [
   "firma_olcegi_id",
   "kurulus_tarihi",
@@ -17,6 +16,9 @@ const FIRMA_FIELDS = [
   "firma_hakkinda",
 ] as const;
 
+// Firma types that have Makine Parkuru tab
+const FIRMA_TYPES_WITH_MAKINE = ["Hazır Giyim Üreticisi", "Fason Atölye"];
+
 export function useProfileCompletion() {
   const [percentage, setPercentage] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -26,22 +28,54 @@ export function useProfileCompletion() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
 
+      // Fetch firma + firma türü name in parallel
       const { data: firma } = await supabase
         .from("firmalar")
-        .select("*")
+        .select("*, firma_turleri(name)")
         .eq("user_id", user.id)
         .single();
 
       if (!firma) { setLoading(false); return; }
 
-      const total = FIRMA_FIELDS.length;
-      let filled = 0;
+      const firmaId = firma.id;
+      const firmaTuruName = (firma.firma_turleri as any)?.name || "";
+      const hasMakine = FIRMA_TYPES_WITH_MAKINE.includes(firmaTuruName);
+
+      // Count filled genel fields
+      let filledGenel = 0;
       for (const field of FIRMA_FIELDS) {
         const val = (firma as Record<string, unknown>)[field];
-        if (val !== null && val !== undefined && val !== "") {
-          filled++;
-        }
+        if (val !== null && val !== undefined && val !== "") filledGenel++;
       }
+
+      // Check related tables for at least 1 record each
+      const tabQueries = [
+        supabase.from("firma_urun_hizmet_secimler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
+        supabase.from("firma_uretim_satis").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
+        supabase.from("firma_tesisler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
+        supabase.from("firma_referanslar").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
+        supabase.from("firma_sertifikalar").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
+        supabase.from("firma_galeri").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
+        supabase.from("firma_belgeler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
+      ];
+
+      if (hasMakine) {
+        tabQueries.push(
+          supabase.from("firma_makineler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId)
+        );
+      }
+
+      const results = await Promise.all(tabQueries);
+
+      let filledTabs = 0;
+      for (const res of results) {
+        if ((res.count ?? 0) > 0) filledTabs++;
+      }
+
+      const totalFields = FIRMA_FIELDS.length; // 10
+      const totalTabs = hasMakine ? 8 : 7; // tab sections
+      const total = totalFields + totalTabs;
+      const filled = filledGenel + filledTabs;
 
       setPercentage(Math.round((filled / total) * 100));
       setLoading(false);
