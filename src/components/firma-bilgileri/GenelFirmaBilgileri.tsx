@@ -27,6 +27,7 @@ const KATEGORI_IDS = {
 
 export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props) {
   const { toast } = useToast();
+  const isAdminMode = !!localStorage.getItem("admin_token");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
