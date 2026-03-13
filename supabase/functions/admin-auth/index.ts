@@ -216,7 +216,7 @@ Deno.serve(async (req) => {
         email: updates.email || null,
         telefon: updates.telefon || null,
         pozisyon: updates.pozisyon,
-        permissions: updates.permissions,
+        departman: updates.departman || "Çağrı Merkezi",
         updated_at: new Date().toISOString(),
       };
 
