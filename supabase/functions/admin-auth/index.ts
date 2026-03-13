@@ -3222,7 +3222,7 @@ Deno.serve(async (req) => {
         });
       });
 
-      destekData?.forEach(d => {
+      destekData.forEach(d => {
         const u = profileMap[d.user_id];
         activities.push({
           id: `destek-${d.id}`,
