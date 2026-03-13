@@ -559,6 +559,18 @@ export default function AdminFirmalarV2() {
 
   const formatDate = (d: string) => new Date(d).toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
 
+  const formatRelativeTime = (d: string) => {
+    const diff = Date.now() - new Date(d).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return "Şimdi";
+    if (mins < 60) return `${mins}dk`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}sa`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}g`;
+    return formatDate(d);
+  };
+
   // Selection helpers
   const allPageSelected = paginatedFirmalar.length > 0 && paginatedFirmalar.every(f => selectedIds.has(f.id));
   const somePageSelected = paginatedFirmalar.some(f => selectedIds.has(f.id));
