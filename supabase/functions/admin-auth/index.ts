@@ -1404,8 +1404,20 @@ Deno.serve(async (req) => {
         .single();
       if (error) return jsonResponse({ error: error.message }, 400);
 
-      // Notify owner
+      // Notify owner + send email
       if (data) {
+        // Get user email for Postmark
+        const { data: { user: ihaleAuthUser } } = await supabase.auth.admin.getUserById(data.user_id);
+        const { data: ihaleFirma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", data.user_id).single();
+
+        if (ihaleAuthUser?.email) {
+          await sendPostmarkEmail("ihale_onaylandi", ihaleAuthUser.email, {
+            firma_unvani: ihaleFirma?.firma_unvani || "",
+            ihale_basligi: data.baslik,
+            ihale_linki: `${SITE_URL}/tekihale/${data.id}`,
+          });
+        }
+
         const msg = `${data.ihale_no} numaralı "${data.baslik}" başlıklı ihaleniz onaylanmış ve yayına alınmıştır. İşlemi yapan: ${adminLabel}`;
         await supabase.from("notifications").insert({
           user_id: data.user_id,
