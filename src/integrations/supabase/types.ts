@@ -247,6 +247,7 @@ export type Database = {
           iptal_sebebi: string | null
           notlar: string | null
           planlanan_tarih: string
+          sira: number
           updated_at: string
         }
         Insert: {
@@ -258,6 +259,7 @@ export type Database = {
           iptal_sebebi?: string | null
           notlar?: string | null
           planlanan_tarih: string
+          sira?: number
           updated_at?: string
         }
         Update: {
@@ -269,6 +271,7 @@ export type Database = {
           iptal_sebebi?: string | null
           notlar?: string | null
           planlanan_tarih?: string
+          sira?: number
           updated_at?: string
         }
         Relationships: [

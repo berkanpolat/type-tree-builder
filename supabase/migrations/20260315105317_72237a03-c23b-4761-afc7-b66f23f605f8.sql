@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_ziyaret_planlari ADD COLUMN sira integer NOT NULL DEFAULT 0;
