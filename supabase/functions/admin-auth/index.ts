@@ -3419,8 +3419,9 @@ Deno.serve(async (req) => {
     // ─── AKSIYONLAR: CREATE ───
     if (action === "create-aksiyon") {
       const payload = verifyToken(body.token);
-      const { firmaId, baslik, aciklama, tur, tarih, yetkiliId } = body;
+      const { firmaId, baslik, aciklama, tur, tarih, yetkiliId, sonuc, sonucNeden, sonucPaketId } = body;
       if (!firmaId || !baslik) return jsonResponse({ error: "Firma ve başlık zorunlu" }, 400);
+      if (!sonuc) return jsonResponse({ error: "Aksiyon sonucu zorunlu" }, 400);
       
       const { data, error } = await supabase.from("admin_aksiyonlar").insert({
         firma_id: firmaId,
@@ -3431,11 +3432,14 @@ Deno.serve(async (req) => {
         tarih: tarih || new Date().toISOString(),
         durum: "yapilacak",
         yetkili_id: yetkiliId || null,
+        sonuc: sonuc || null,
+        sonuc_neden: sonucNeden || null,
+        sonuc_paket_id: sonucPaketId || null,
       }).select().single();
       if (error) return jsonResponse({ error: error.message }, 400);
       
       const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
-      await logActivity(supabase, payload, "aksiyon_ekledi", { target_type: "firma", target_id: firmaId, target_label: firma?.firma_unvani || "", details: { baslik, tur } });
+      await logActivity(supabase, payload, "aksiyon_ekledi", { target_type: "firma", target_id: firmaId, target_label: firma?.firma_unvani || "", details: { baslik, tur, sonuc } });
       return jsonResponse({ success: true, aksiyon: data });
     }
 
