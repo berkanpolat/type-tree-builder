@@ -204,6 +204,7 @@ export default function AdminFirmalarV2() {
   const [expandedFirmaId, setExpandedFirmaId] = useState<string | null>(null);
   const [expandedAksiyonlar, setExpandedAksiyonlar] = useState<any[]>([]);
   const [expandedLoading, setExpandedLoading] = useState(false);
+  const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
