@@ -106,7 +106,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   const filterItem = (item: MenuItem) => {
     const checkUser = originalUser || user;
     if (item.primaryOnly) return checkUser?.is_primary ?? false;
-    if (item.permission) return hasPermission(item.permission);
+    if (item.permission) return hasPermission(item.permission as any);
     return true;
   };
 
