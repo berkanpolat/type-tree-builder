@@ -3500,6 +3500,87 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── YETKİLİ KİŞİ: CREATE ───
+    if (action === "create-yetkili") {
+      const payload = verifyToken(body.token);
+      const { firmaId, ad, soyad, pozisyon, email, telefon, dahili_no, il, ilce, linkedin, aciklama } = body;
+      if (!firmaId || !ad || !soyad) return jsonResponse({ error: "Firma, ad ve soyad zorunlu" }, 400);
+      
+      const { data, error } = await supabase.from("firma_yetkililer").insert({
+        firma_id: firmaId,
+        admin_id: payload.id,
+        ad: ad.trim(),
+        soyad: soyad.trim(),
+        pozisyon: pozisyon?.trim() || null,
+        email: email?.trim() || null,
+        telefon: telefon?.trim() || null,
+        dahili_no: dahili_no?.trim() || null,
+        il: il?.trim() || null,
+        ilce: ilce?.trim() || null,
+        linkedin: linkedin?.trim() || null,
+        aciklama: aciklama?.trim() || null,
+      }).select().single();
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
+      await logActivity(supabase, payload, "yetkili_ekledi", { target_type: "firma", target_id: firmaId, target_label: firma?.firma_unvani || "", details: { ad, soyad, pozisyon } });
+      return jsonResponse({ success: true, yetkili: data });
+    }
+
+    // ─── YETKİLİ KİŞİ: LIST ───
+    if (action === "list-yetkililer") {
+      verifyToken(body.token);
+      const { firmaId } = body;
+      if (!firmaId) return jsonResponse({ error: "Firma ID zorunlu" }, 400);
+      
+      const { data, error } = await supabase.from("firma_yetkililer").select("*").eq("firma_id", firmaId).order("created_at", { ascending: false });
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      // Enrich with admin names
+      const adminIds = [...new Set((data || []).map((y: any) => y.admin_id))];
+      const { data: admins } = adminIds.length > 0 ? await supabase.from("admin_users").select("id, ad, soyad").in("id", adminIds) : { data: [] };
+      const adminMap = new Map((admins || []).map((a: any) => [a.id, `${a.ad} ${a.soyad}`]));
+      
+      const enriched = (data || []).map((y: any) => ({ ...y, admin_ad: adminMap.get(y.admin_id) || "—" }));
+      return jsonResponse({ yetkililer: enriched });
+    }
+
+    // ─── YETKİLİ KİŞİ: UPDATE ───
+    if (action === "update-yetkili") {
+      const payload = verifyToken(body.token);
+      const { yetkiliId, updates } = body;
+      if (!yetkiliId) return jsonResponse({ error: "Yetkili ID zorunlu" }, 400);
+      
+      const allowedFields = ["ad", "soyad", "pozisyon", "email", "telefon", "dahili_no", "il", "ilce", "linkedin", "aciklama"];
+      const safeUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
+      for (const key of allowedFields) {
+        if (updates[key] !== undefined) safeUpdates[key] = updates[key];
+      }
+      
+      const { error } = await supabase.from("firma_yetkililer").update(safeUpdates).eq("id", yetkiliId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
+    // ─── YETKİLİ KİŞİ: DELETE ───
+    if (action === "delete-yetkili") {
+      const payload = verifyToken(body.token);
+      const { yetkiliId } = body;
+      if (!yetkiliId) return jsonResponse({ error: "Yetkili ID zorunlu" }, 400);
+      
+      // Get yetkili info for logging
+      const { data: yetkili } = await supabase.from("firma_yetkililer").select("ad, soyad, firma_id").eq("id", yetkiliId).single();
+      
+      const { error } = await supabase.from("firma_yetkililer").delete().eq("id", yetkiliId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      if (yetkili) {
+        const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", yetkili.firma_id).single();
+        await logActivity(supabase, payload, "yetkili_sildi", { target_type: "firma", target_id: yetkili.firma_id, target_label: firma?.firma_unvani || "", details: { ad: yetkili.ad, soyad: yetkili.soyad } });
+      }
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
