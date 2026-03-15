@@ -1283,6 +1283,33 @@ export default function AdminFirmalarV2() {
                 <Input value={yeniFirma.vergi_dairesi} onChange={e => setYeniFirma(p => ({ ...p, vergi_dairesi: e.target.value }))} style={s.input} className="text-xs h-8" />
               </div>
             </div>
+          <div className="space-y-1">
+              <Label className="text-xs" style={s.muted}>Cep Telefonu *</Label>
+              <div className="flex gap-2">
+                <div className="flex items-center justify-center h-8 px-2 rounded-md text-xs font-medium shrink-0" style={{ ...s.input, border: "1px solid hsl(var(--admin-border))" }}>
+                  🇹🇷 +90
+                </div>
+                <Input
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="5XX XXX XX XX"
+                  value={(() => {
+                    const d = (yeniFirma as any).cep_telefonu || "";
+                    const digits = d.replace(/\D/g, "").replace(/^0+/, "");
+                    if (digits.length <= 3) return digits;
+                    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+                    if (digits.length <= 8) return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+                    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
+                  })()}
+                  onChange={e => {
+                    const digits = e.target.value.replace(/\D/g, "").replace(/^0+/, "").slice(0, 10);
+                    setYeniFirma(p => ({ ...p, cep_telefonu: digits } as any));
+                  }}
+                  style={s.input}
+                  className="text-xs h-8 flex-1"
+                />
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs" style={s.muted}>Firma Türü *</Label>

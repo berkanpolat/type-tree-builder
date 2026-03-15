@@ -3,6 +3,12 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const PASSWORD_PAGE = "/sifre-sifirla";
+const PHONE_VERIFY_PAGE = "/telefon-dogrulama";
+
+// Pages that should be excluded from phone verification redirect
+const EXCLUDED_PATHS = [PASSWORD_PAGE, PHONE_VERIFY_PAGE, "/giris-kayit", "/sifre-sifirla"];
+// Admin paths should also be excluded
+const isAdminPath = (path: string) => path.startsWith("/yonetim");
 
 const isRecoveryHash = () => {
   try {
@@ -17,6 +23,7 @@ const isRecoveryHash = () => {
 /**
  * Bulletproof guard: any user with must_set_password=true OR
  * arriving via a recovery link is forced to /sifre-sifirla.
+ * Also forces phone verification for unverified users.
  */
 const AuthRedirectHandler = () => {
   const navigate = useNavigate();
@@ -29,14 +36,38 @@ const AuthRedirectHandler = () => {
     }
   };
 
+  const goToPhoneVerify = () => {
+    if (window.location.pathname !== PHONE_VERIFY_PAGE) {
+      navigate(PHONE_VERIFY_PAGE, { replace: true });
+    }
+  };
+
   // Fresh server check — not cached session
-  const checkMustSetPassword = async () => {
+  const checkUserStatus = async () => {
     if (checking.current) return;
     checking.current = true;
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user?.user_metadata?.must_set_password === true) {
+      if (!user) return;
+
+      // Password check first (higher priority)
+      if (user.user_metadata?.must_set_password === true) {
         goToPassword();
+        return;
+      }
+
+      // Phone verification check (skip for excluded paths and admin paths)
+      const currentPath = window.location.pathname;
+      if (EXCLUDED_PATHS.includes(currentPath) || isAdminPath(currentPath)) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("telefon_dogrulandi")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profile && profile.telefon_dogrulandi === false) {
+        goToPhoneVerify();
       }
     } catch {
       // not logged in — ignore
@@ -52,8 +83,8 @@ const AuthRedirectHandler = () => {
       return;
     }
 
-    // 2. Server-side metadata check
-    checkMustSetPassword();
+    // 2. Server-side metadata + phone check
+    checkUserStatus();
 
     // 3. Listen for auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -68,6 +99,13 @@ const AuthRedirectHandler = () => {
           session?.user?.user_metadata?.must_set_password === true
         ) {
           goToPassword();
+          return;
+        }
+
+        // On sign in, check phone verification
+        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+          // Small delay to let profile data be available
+          setTimeout(() => checkUserStatus(), 500);
         }
       }
     );
