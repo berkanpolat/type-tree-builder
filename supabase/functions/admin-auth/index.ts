@@ -2798,6 +2798,8 @@ Deno.serve(async (req) => {
       }
 
       // Admin tarafından eklenen firmalara paket atanmaz (Paket Yok durumu)
+      // DB trigger auto_assign_free_package otomatik ücretsiz paket atar, onu silelim
+      await supabase.from("kullanici_abonelikler").delete().eq("user_id", userId);
 
       await logActivity(supabase, payload, "create-firma", {
         target_type: "firma",
