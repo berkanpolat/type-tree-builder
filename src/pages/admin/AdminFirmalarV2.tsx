@@ -93,6 +93,11 @@ interface FirmaItem {
     durum: string;
     limits: any;
   } | null;
+  portfolyo: {
+    admin_id: string;
+    admin_ad: string;
+    admin_soyad: string;
+  } | null;
 }
 
 interface FirmaStats {
