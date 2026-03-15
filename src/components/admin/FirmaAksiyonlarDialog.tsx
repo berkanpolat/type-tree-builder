@@ -41,6 +41,7 @@ interface FirmaAksiyonlarDialogProps {
 export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, firmaUnvani, callApi, token, onAddClick }: FirmaAksiyonlarDialogProps) {
   const [aksiyonlar, setAksiyonlar] = useState<Aksiyon[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
 
   const fetchAksiyonlar = async () => {
     setLoading(true);
