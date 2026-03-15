@@ -161,6 +161,12 @@ export default function AdminZiyaretPlanlari() {
   const [completeDayDigerTexts, setCompleteDayDigerTexts] = useState<Record<string, string>>({});
   const [completeDayLoading, setCompleteDayLoading] = useState(false);
 
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
     if (error) throw error;
