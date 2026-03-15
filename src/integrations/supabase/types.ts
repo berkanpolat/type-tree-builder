@@ -142,6 +142,101 @@ export type Database = {
           },
         ]
       }
+      admin_hedef_kademeleri: {
+        Row: {
+          created_at: string
+          hedef_id: string
+          id: string
+          kademe_yuzdesi: number
+          prim_tutari: number
+        }
+        Insert: {
+          created_at?: string
+          hedef_id: string
+          id?: string
+          kademe_yuzdesi: number
+          prim_tutari: number
+        }
+        Update: {
+          created_at?: string
+          hedef_id?: string
+          id?: string
+          kademe_yuzdesi?: number
+          prim_tutari?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_hedef_kademeleri_hedef_id_fkey"
+            columns: ["hedef_id"]
+            isOneToOne: false
+            referencedRelation: "admin_hedefler"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_hedefler: {
+        Row: {
+          aciklama: string | null
+          atayan_admin_id: string
+          baslangic_tarihi: string
+          baslik: string
+          bitis_tarihi: string
+          created_at: string
+          durum: string
+          gerceklesen_miktar: number
+          hedef_admin_id: string
+          hedef_miktar: number
+          hedef_turu: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          aciklama?: string | null
+          atayan_admin_id: string
+          baslangic_tarihi: string
+          baslik: string
+          bitis_tarihi: string
+          created_at?: string
+          durum?: string
+          gerceklesen_miktar?: number
+          hedef_admin_id: string
+          hedef_miktar: number
+          hedef_turu: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          aciklama?: string | null
+          atayan_admin_id?: string
+          baslangic_tarihi?: string
+          baslik?: string
+          bitis_tarihi?: string
+          created_at?: string
+          durum?: string
+          gerceklesen_miktar?: number
+          hedef_admin_id?: string
+          hedef_miktar?: number
+          hedef_turu?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_hedefler_atayan_admin_id_fkey"
+            columns: ["atayan_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_hedefler_hedef_admin_id_fkey"
+            columns: ["hedef_admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_portfolyo: {
         Row: {
           admin_id: string

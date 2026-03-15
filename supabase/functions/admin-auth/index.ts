@@ -3701,6 +3701,146 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── HEDEF: LİSTELE ───
+    if (action === "list-hedefler") {
+      const payload = verifyToken(body.token);
+      const { adminId, durum } = body;
+      
+      let query = supabase.from("admin_hedefler").select("*").order("created_at", { ascending: false });
+      if (adminId) query = query.eq("hedef_admin_id", adminId);
+      if (durum && durum !== "tumu") query = query.eq("durum", durum);
+      
+      const { data: hedeflerRaw, error } = await query;
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      // Enrich with admin names + kademeler
+      const hedefler = [];
+      for (const h of (hedeflerRaw || [])) {
+        const { data: adminUser } = await supabase.from("admin_users").select("ad, soyad, departman").eq("id", h.hedef_admin_id).single();
+        const { data: kademeler } = await supabase.from("admin_hedef_kademeleri").select("*").eq("hedef_id", h.id).order("kademe_yuzdesi");
+        
+        // Auto-calculate gerceklesen_miktar
+        let gerceklesen = 0;
+        const now = new Date().toISOString();
+        if (h.hedef_turu === "ziyaret") {
+          const { count } = await supabase.from("admin_ziyaret_planlari")
+            .select("*", { count: "exact", head: true })
+            .eq("admin_id", h.hedef_admin_id)
+            .eq("durum", "tamamlandi")
+            .gte("planlanan_tarih", h.baslangic_tarihi)
+            .lte("planlanan_tarih", h.bitis_tarihi);
+          gerceklesen = count || 0;
+        } else if (h.hedef_turu === "aksiyon") {
+          const { count } = await supabase.from("admin_aksiyonlar")
+            .select("*", { count: "exact", head: true })
+            .eq("admin_id", h.hedef_admin_id)
+            .gte("created_at", h.baslangic_tarihi)
+            .lte("created_at", h.bitis_tarihi);
+          gerceklesen = count || 0;
+        } else if (h.hedef_turu === "paket_satis") {
+          const { count } = await supabase.from("admin_aksiyonlar")
+            .select("*", { count: "exact", head: true })
+            .eq("admin_id", h.hedef_admin_id)
+            .eq("sonuc", "satis_yapildi")
+            .gte("created_at", h.baslangic_tarihi)
+            .lte("created_at", h.bitis_tarihi);
+          gerceklesen = count || 0;
+        } else if (h.hedef_turu === "firma_kaydi") {
+          // Count admin_aksiyonlar where tur = some registration action
+          const { count } = await supabase.from("admin_aksiyonlar")
+            .select("*", { count: "exact", head: true })
+            .eq("admin_id", h.hedef_admin_id)
+            .eq("tur", "kayit")
+            .gte("created_at", h.baslangic_tarihi)
+            .lte("created_at", h.bitis_tarihi);
+          gerceklesen = count || 0;
+        }
+        
+        // Update gerceklesen in DB
+        if (gerceklesen !== h.gerceklesen_miktar) {
+          await supabase.from("admin_hedefler").update({ gerceklesen_miktar: gerceklesen }).eq("id", h.id);
+        }
+        
+        // Auto-complete
+        let durum_final = h.durum;
+        if (h.durum === "aktif" && gerceklesen >= h.hedef_miktar) {
+          durum_final = "tamamlandi";
+          await supabase.from("admin_hedefler").update({ durum: "tamamlandi" }).eq("id", h.id);
+        }
+        
+        hedefler.push({
+          ...h,
+          gerceklesen_miktar: gerceklesen,
+          durum: durum_final,
+          hedef_admin_ad: adminUser?.ad,
+          hedef_admin_soyad: adminUser?.soyad,
+          hedef_admin_departman: adminUser?.departman,
+          kademeler: kademeler || [],
+        });
+      }
+      
+      return jsonResponse({ hedefler });
+    }
+
+    // ─── HEDEF: OLUŞTUR ───
+    if (action === "create-hedef") {
+      const payload = verifyToken(body.token);
+      const { hedefAdminId, hedefTuru, baslik, aciklama, hedefMiktar, baslangicTarihi, bitisTarihi, kademeler } = body;
+      
+      if (!hedefAdminId || !baslik || !hedefMiktar || !baslangicTarihi || !bitisTarihi) {
+        return jsonResponse({ error: "Zorunlu alanlar eksik" }, 400);
+      }
+      
+      const { data: hedef, error } = await supabase.from("admin_hedefler").insert({
+        atayan_admin_id: payload.id,
+        hedef_admin_id: hedefAdminId,
+        hedef_turu: hedefTuru || "ziyaret",
+        baslik,
+        aciklama: aciklama || null,
+        hedef_miktar: hedefMiktar,
+        baslangic_tarihi: baslangicTarihi,
+        bitis_tarihi: bitisTarihi,
+      }).select().single();
+      
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      // Insert kademeler
+      if (kademeler && Array.isArray(kademeler)) {
+        for (const k of kademeler) {
+          await supabase.from("admin_hedef_kademeleri").insert({
+            hedef_id: hedef.id,
+            kademe_yuzdesi: k.kademe_yuzdesi,
+            prim_tutari: k.prim_tutari,
+          });
+        }
+      }
+      
+      await logActivity(supabase, payload, "hedef_olusturuldu", {
+        target_type: "hedef", target_id: hedef.id, target_label: baslik,
+      });
+      
+      return jsonResponse({ success: true, hedef });
+    }
+
+    // ─── HEDEF: SİL ───
+    if (action === "delete-hedef") {
+      const payload = verifyToken(body.token);
+      const { hedefId } = body;
+      if (!hedefId) return jsonResponse({ error: "Hedef ID zorunlu" }, 400);
+      
+      const { error } = await supabase.from("admin_hedefler").delete().eq("id", hedefId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
+    // ─── ADMIN USERS LİSTELE ───
+    if (action === "list-admin-users") {
+      const payload = verifyToken(body.token);
+      const { data, error } = await supabase.from("admin_users").select("id, ad, soyad, departman, pozisyon").order("ad");
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ users: data });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
