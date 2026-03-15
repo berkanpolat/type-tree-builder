@@ -3420,9 +3420,10 @@ Deno.serve(async (req) => {
       // Only the owner can remove
       const { data: existing } = await supabase.from("admin_portfolyo").select("admin_id").eq("firma_id", firmaId).single();
       if (!existing) return jsonResponse({ error: "Bu firma portföyde değil" }, 400);
-      if (existing.admin_id !== payload.id) return jsonResponse({ error: "Bu firmayı sadece portföy sahibi çıkarabilir" }, 403);
+      const actingId = getActingId(payload, body);
+      if (existing.admin_id !== actingId && !payload.is_primary) return jsonResponse({ error: "Bu firmayı sadece portföy sahibi çıkarabilir" }, 403);
       
-      const { error } = await supabase.from("admin_portfolyo").delete().eq("firma_id", firmaId).eq("admin_id", payload.id);
+      const { error } = await supabase.from("admin_portfolyo").delete().eq("firma_id", firmaId).eq("admin_id", existing.admin_id);
       if (error) return jsonResponse({ error: error.message }, 400);
       
       const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
