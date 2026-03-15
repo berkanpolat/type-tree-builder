@@ -451,6 +451,26 @@ export default function AdminFirmalarV2() {
     }
   };
 
+  const handleAddPortfolyo = async (firma: FirmaItem) => {
+    try {
+      await callApi("add-portfolyo", { token, firmaId: firma.id });
+      toast({ title: "Başarılı", description: `${firma.firma_unvani} portföyünüze eklendi` });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    }
+  };
+
+  const handleRemovePortfolyo = async (firma: FirmaItem) => {
+    try {
+      await callApi("remove-portfolyo", { token, firmaId: firma.id });
+      toast({ title: "Başarılı", description: `${firma.firma_unvani} portföyünüzden çıkarıldı` });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    }
+  };
+
   // ── Bulk actions ──
   const handleBulkApprove = async () => {
     setBulkLoading(true);
