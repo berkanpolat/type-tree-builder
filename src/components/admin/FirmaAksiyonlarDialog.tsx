@@ -102,7 +102,7 @@ export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, fir
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={s.muted}>Yapılacak ({yapilacak.length})</p>
                 <div className="space-y-1.5">
-                  {yapilacak.map(a => <AksiyonRow key={a.id} aksiyon={a} onToggle={toggleDurum} onDelete={deleteAksiyon} />)}
+                  {yapilacak.map(a => <AksiyonRow key={a.id} aksiyon={a} onToggle={toggleDurum} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} />)}
                 </div>
               </div>
             )}
