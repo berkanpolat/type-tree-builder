@@ -66,6 +66,19 @@ function verifyToken(token: string) {
   return payload;
 }
 
+/**
+ * Returns the acting admin ID for data ownership operations.
+ * When a super admin (is_primary) impersonates another admin,
+ * the actingAdminId from the request body is used instead.
+ * Audit logging should still use payload.id (the real admin).
+ */
+function getActingId(payload: any, body: any): string {
+  if (body.actingAdminId && payload.is_primary) {
+    return body.actingAdminId;
+  }
+  return payload.id;
+}
+
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
