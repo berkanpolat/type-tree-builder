@@ -357,7 +357,7 @@ export default function AdminHedefler() {
                 <label className="text-sm font-medium mb-1 block" style={s.text}>Hedef Türü</label>
                 <Select value={formTur} onValueChange={setFormTur}>
                   <SelectTrigger style={s.input}><SelectValue /></SelectTrigger>
-                  <SelectContent style={s.card}>
+                   <SelectContent style={{ ...s.card, zIndex: 9999 }} position="popper" sideOffset={4}>
                     {HEDEF_TURLERI.map(t => (
                       <SelectItem key={t.value} value={t.value}>{t.icon} {t.label}</SelectItem>
                     ))}
