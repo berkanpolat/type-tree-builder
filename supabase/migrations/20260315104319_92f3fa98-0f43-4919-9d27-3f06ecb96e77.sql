@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_ziyaret_planlari ADD COLUMN IF NOT EXISTS iptal_sebebi text DEFAULT NULL;

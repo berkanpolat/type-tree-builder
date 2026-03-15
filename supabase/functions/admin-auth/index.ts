@@ -3664,13 +3664,14 @@ Deno.serve(async (req) => {
     // ─── ZİYARET PLANI: GÜNCELLE ───
     if (action === "update-ziyaret-plani") {
       const payload = verifyToken(body.token);
-      const { planId, durum, notlar, planlanenTarih } = body;
+      const { planId, durum, notlar, planlanenTarih, iptalSebebi } = body;
       if (!planId) return jsonResponse({ error: "Plan ID zorunlu" }, 400);
       
       const updates: Record<string, any> = { updated_at: new Date().toISOString() };
       if (durum !== undefined) updates.durum = durum;
       if (notlar !== undefined) updates.notlar = notlar;
       if (planlanenTarih !== undefined) updates.planlanan_tarih = planlanenTarih;
+      if (iptalSebebi !== undefined) updates.iptal_sebebi = iptalSebebi;
       
       const { error } = await supabase.from("admin_ziyaret_planlari").update(updates).eq("id", planId);
       if (error) return jsonResponse({ error: error.message }, 400);
