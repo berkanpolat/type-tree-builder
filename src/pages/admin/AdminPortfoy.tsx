@@ -167,6 +167,27 @@ export default function AdminPortfoy() {
     }
   };
 
+  const handleAddZiyaret = async () => {
+    if (!selectedFirma || !ziyaretTarih) return;
+    setZiyaretSaving(true);
+    try {
+      await callApi("add-ziyaret-plani", {
+        token,
+        firmaId: selectedFirma.id,
+        planlanenTarih: format(ziyaretTarih, "yyyy-MM-dd"),
+        notlar: ziyaretNotlar || null,
+      });
+      toast({ title: "Başarılı", description: `${selectedFirma.firma_unvani} ziyaret planına eklendi` });
+      setZiyaretDialogOpen(false);
+      setZiyaretTarih(undefined);
+      setZiyaretNotlar("");
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setZiyaretSaving(false);
+    }
+  };
+
   const handleRemovePortfolyo = async (firma: FirmaItem) => {
     try {
       await callApi("remove-portfolyo", { token, firmaId: firma.id });
