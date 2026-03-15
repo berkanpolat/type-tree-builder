@@ -134,6 +134,24 @@ export default function AdminPortfoy() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  const toggleExpandFirma = async (firmaId: string) => {
+    if (expandedFirmaId === firmaId) {
+      setExpandedFirmaId(null);
+      return;
+    }
+    setExpandedFirmaId(firmaId);
+    setExpandedLoading(true);
+    setExpandedAksiyonlar([]);
+    try {
+      const data = await callApi("list-firma-aksiyonlar", { token, firmaId });
+      setExpandedAksiyonlar(data.aksiyonlar || []);
+    } catch {
+      setExpandedAksiyonlar([]);
+    } finally {
+      setExpandedLoading(false);
+    }
+  };
+
   const handleRemovePortfolyo = async (firma: FirmaItem) => {
     try {
       await callApi("remove-portfolyo", { token, firmaId: firma.id });
