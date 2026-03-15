@@ -3613,6 +3613,81 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── ZİYARET PLANI: EKLE ───
+    if (action === "add-ziyaret-plani") {
+      const payload = verifyToken(body.token);
+      const { firmaId, planlanenTarih, notlar } = body;
+      if (!firmaId || !planlanenTarih) return jsonResponse({ error: "Firma ve tarih zorunlu" }, 400);
+      
+      const { error } = await supabase.from("admin_ziyaret_planlari").insert({
+        admin_id: payload.id,
+        firma_id: firmaId,
+        planlanan_tarih: planlanenTarih,
+        notlar: notlar || null,
+      });
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
+      await logActivity(supabase, payload, "ziyaret_plani_ekledi", { target_type: "firma", target_id: firmaId, target_label: firma?.firma_unvani || "" });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── ZİYARET PLANI: LİSTELE ───
+    if (action === "list-ziyaret-planlari") {
+      const payload = verifyToken(body.token);
+      const { adminId, durum, baslangic, bitis } = body;
+      
+      let query = supabase.from("admin_ziyaret_planlari").select("*").eq("admin_id", adminId || payload.id);
+      if (durum) query = query.eq("durum", durum);
+      if (baslangic) query = query.gte("planlanan_tarih", baslangic);
+      if (bitis) query = query.lte("planlanan_tarih", bitis);
+      query = query.order("planlanan_tarih", { ascending: true });
+      
+      const { data, error } = await query;
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      // Enrich with firma info
+      const firmaIds = [...new Set((data || []).map((z: any) => z.firma_id))];
+      const { data: firmalar } = firmaIds.length > 0
+        ? await supabase.from("firmalar").select("id, firma_unvani, logo_url, slug").in("id", firmaIds)
+        : { data: [] };
+      const firmaMap = new Map((firmalar || []).map((f: any) => [f.id, f]));
+      
+      const enriched = (data || []).map((z: any) => ({
+        ...z,
+        firma_unvani: firmaMap.get(z.firma_id)?.firma_unvani || "—",
+        firma_logo: firmaMap.get(z.firma_id)?.logo_url || null,
+      }));
+      return jsonResponse({ planlar: enriched });
+    }
+
+    // ─── ZİYARET PLANI: GÜNCELLE ───
+    if (action === "update-ziyaret-plani") {
+      const payload = verifyToken(body.token);
+      const { planId, durum, notlar, planlanenTarih } = body;
+      if (!planId) return jsonResponse({ error: "Plan ID zorunlu" }, 400);
+      
+      const updates: Record<string, any> = { updated_at: new Date().toISOString() };
+      if (durum !== undefined) updates.durum = durum;
+      if (notlar !== undefined) updates.notlar = notlar;
+      if (planlanenTarih !== undefined) updates.planlanan_tarih = planlanenTarih;
+      
+      const { error } = await supabase.from("admin_ziyaret_planlari").update(updates).eq("id", planId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
+    // ─── ZİYARET PLANI: SİL ───
+    if (action === "delete-ziyaret-plani") {
+      const payload = verifyToken(body.token);
+      const { planId } = body;
+      if (!planId) return jsonResponse({ error: "Plan ID zorunlu" }, 400);
+      
+      const { error } = await supabase.from("admin_ziyaret_planlari").delete().eq("id", planId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
