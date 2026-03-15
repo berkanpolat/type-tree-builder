@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
+import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
 
 const s = {
   text: { color: "hsl(var(--admin-text))" } as CSSProperties,
@@ -40,6 +41,7 @@ interface FirmaAksiyonlarDialogProps {
 export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, firmaUnvani, callApi, token, onAddClick }: FirmaAksiyonlarDialogProps) {
   const [aksiyonlar, setAksiyonlar] = useState<Aksiyon[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
 
   const fetchAksiyonlar = async () => {
     setLoading(true);
@@ -100,7 +102,7 @@ export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, fir
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={s.muted}>Yapılacak ({yapilacak.length})</p>
                 <div className="space-y-1.5">
-                  {yapilacak.map(a => <AksiyonRow key={a.id} aksiyon={a} onToggle={toggleDurum} onDelete={deleteAksiyon} />)}
+                  {yapilacak.map(a => <AksiyonRow key={a.id} aksiyon={a} onToggle={toggleDurum} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} />)}
                 </div>
               </div>
             )}
@@ -108,27 +110,28 @@ export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, fir
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={s.muted}>Tamamlanan ({yapildi.length})</p>
                 <div className="space-y-1.5">
-                  {yapildi.map(a => <AksiyonRow key={a.id} aksiyon={a} onToggle={toggleDurum} onDelete={deleteAksiyon} />)}
+                  {yapildi.map(a => <AksiyonRow key={a.id} aksiyon={a} onToggle={toggleDurum} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} />)}
                 </div>
               </div>
             )}
           </div>
         )}
       </DialogContent>
+      <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
     </Dialog>
   );
 }
 
-function AksiyonRow({ aksiyon, onToggle, onDelete }: { aksiyon: Aksiyon; onToggle: (a: Aksiyon) => void; onDelete: (id: string) => void }) {
+function AksiyonRow({ aksiyon, onToggle, onDelete, onClick }: { aksiyon: Aksiyon; onToggle: (a: Aksiyon) => void; onDelete: (id: string) => void; onClick: () => void }) {
   const turConfig = TUR_CONFIG[aksiyon.tur] || TUR_CONFIG.diger;
   const Icon = turConfig.icon;
   const isDone = aksiyon.durum === "yapildi";
   const isPast = new Date(aksiyon.tarih) < new Date() && !isDone;
 
   return (
-    <div className="flex items-start gap-2.5 p-2.5 rounded-lg transition-colors" style={{ background: "hsl(var(--admin-hover))", opacity: isDone ? 0.6 : 1 }}>
+    <div className="flex items-start gap-2.5 p-2.5 rounded-lg transition-colors cursor-pointer hover:brightness-95" style={{ background: "hsl(var(--admin-hover))", opacity: isDone ? 0.6 : 1 }} onClick={onClick}>
       <button
-        onClick={() => onToggle(aksiyon)}
+        onClick={(e) => { e.stopPropagation(); onToggle(aksiyon); }}
         className="mt-0.5 rounded border flex items-center justify-center flex-shrink-0 transition-colors"
         style={{ borderColor: isDone ? "#22c55e" : "hsl(var(--admin-border))", background: isDone ? "rgba(34,197,94,0.15)" : "transparent", width: 18, height: 18 }}
       >
@@ -148,7 +151,7 @@ function AksiyonRow({ aksiyon, onToggle, onDelete }: { aksiyon: Aksiyon; onToggl
           <span className="text-[10px]" style={{ color: "hsl(var(--admin-muted))" }}>• {aksiyon.admin_ad}</span>
         </div>
       </div>
-      <button onClick={() => onDelete(aksiyon.id)} className="mt-0.5 opacity-40 hover:opacity-100 transition-opacity">
+      <button onClick={(e) => { e.stopPropagation(); onDelete(aksiyon.id); }} className="mt-0.5 opacity-40 hover:opacity-100 transition-opacity">
         <Trash2 className="w-3 h-3 text-red-400" />
       </button>
     </div>

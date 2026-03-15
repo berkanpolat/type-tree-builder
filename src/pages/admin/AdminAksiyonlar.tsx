@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Loader2, Search, Trash2, ClipboardList } from "lucide-react";
 import { TUR_CONFIG, AKSIYON_TURLERI } from "@/lib/aksiyon-config";
+import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
 
 const s = {
   card: {
@@ -45,6 +46,7 @@ export default function AdminAksiyonlar() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTur, setFilterTur] = useState<string>("all");
+  const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
@@ -130,23 +132,24 @@ export default function AdminAksiyonlar() {
               <div key={date}>
                 <p className="text-[10px] font-medium mb-1.5 px-1" style={s.muted}>{date}</p>
                 <div className="space-y-1.5">
-                  {items.map(a => <AksiyonCard key={a.id} aksiyon={a} onDelete={deleteAksiyon} />)}
+                  {items.map(a => <AksiyonCard key={a.id} aksiyon={a} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} />)}
                 </div>
               </div>
             ))}
           </div>
         )}
+      <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
       </div>
     </AdminLayout>
   );
 }
 
-function AksiyonCard({ aksiyon, onDelete }: { aksiyon: Aksiyon; onDelete: (id: string) => void }) {
+function AksiyonCard({ aksiyon, onDelete, onClick }: { aksiyon: Aksiyon; onDelete: (id: string) => void; onClick: () => void }) {
   const turConfig = TUR_CONFIG[aksiyon.tur] || TUR_CONFIG.diger;
   const Icon = turConfig.icon;
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl transition-colors" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+    <div className="flex items-start gap-3 p-3 rounded-xl transition-colors cursor-pointer hover:brightness-95" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }} onClick={onClick}>
       <div className="mt-0.5 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${turConfig.color}15`, width: 20, height: 20 }}>
         <Icon className="w-3 h-3" style={{ color: turConfig.color }} />
       </div>
@@ -161,7 +164,7 @@ function AksiyonCard({ aksiyon, onDelete }: { aksiyon: Aksiyon; onDelete: (id: s
           <span className="text-[10px]" style={{ color: "hsl(var(--admin-muted))" }}>{format(new Date(aksiyon.tarih), "dd MMM HH:mm", { locale: tr })}</span>
         </div>
       </div>
-      <button onClick={() => onDelete(aksiyon.id)} className="mt-0.5 opacity-30 hover:opacity-100 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
+      <button onClick={(e) => { e.stopPropagation(); onDelete(aksiyon.id); }} className="mt-0.5 opacity-30 hover:opacity-100 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
     </div>
   );
 }
