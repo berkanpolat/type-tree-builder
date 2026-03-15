@@ -3488,6 +3488,7 @@ Deno.serve(async (req) => {
       
       const enriched = (data || []).map((a: any) => ({ ...a, admin_ad: adminMap.get(a.admin_id) || "—" }));
       return jsonResponse({ aksiyonlar: enriched });
+    }
 
     // ─── AKSIYONLAR: UPDATE (durum, baslik, etc.) ───
     if (action === "update-aksiyon") {
