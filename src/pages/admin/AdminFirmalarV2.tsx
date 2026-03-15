@@ -149,6 +149,7 @@ export default function AdminFirmalarV2() {
   const [yeniFirma, setYeniFirma] = useState({
     email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "",
     firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "",
+    cep_telefonu: "",
   });
 
   const [filterTuru, setFilterTuru] = useState<string>("all");
