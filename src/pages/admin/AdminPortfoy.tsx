@@ -558,6 +558,43 @@ export default function AdminPortfoy() {
           </>
         )}
         <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
+
+        {/* Ziyaret Planı Dialog */}
+        <Dialog open={ziyaretDialogOpen} onOpenChange={setZiyaretDialogOpen}>
+          <DialogContent style={s.card} className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle style={s.text}>Ziyaret Planı Ekle</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-xs" style={s.muted}>{selectedFirma?.firma_unvani}</p>
+              <div>
+                <label className="text-xs font-medium mb-1 block" style={s.text}>Ziyaret Tarihi *</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left text-sm", !ziyaretTarih && "text-muted-foreground")}
+                      style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))", background: "hsl(var(--admin-input-bg))" }}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {ziyaretTarih ? format(ziyaretTarih, "d MMMM yyyy", { locale: tr }) : "Tarih seçin"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={ziyaretTarih} onSelect={setZiyaretTarih} className={cn("p-3 pointer-events-auto")} disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <label className="text-xs font-medium mb-1 block" style={s.text}>Notlar</label>
+                <Textarea value={ziyaretNotlar} onChange={e => setZiyaretNotlar(e.target.value)} placeholder="Ziyaret ile ilgili notlar..." rows={3} style={s.input} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setZiyaretDialogOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
+              <Button size="sm" onClick={handleAddZiyaret} disabled={!ziyaretTarih || ziyaretSaving} className="bg-amber-500 hover:bg-amber-600 text-white">
+                {ziyaretSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ekle"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

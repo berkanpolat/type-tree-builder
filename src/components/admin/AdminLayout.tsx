@@ -24,6 +24,7 @@ const menuItems = [
   { label: "Firmalar", path: "/yonetim/firmalar-v2", icon: Building2, permission: null, primaryOnly: false },
   { label: "Portföyüm", path: "/yonetim/portfolyo", icon: Briefcase, permission: null, primaryOnly: false },
   { label: "Aksiyonlarım", path: "/yonetim/aksiyonlar", icon: ClipboardList, permission: null, primaryOnly: false },
+  { label: "Ziyaret Planları", path: "/yonetim/ziyaret-planlari", icon: MapPin, permission: null, primaryOnly: false },
   { label: "Yaptırımlar", path: "/yonetim/kisitlamalar", icon: Shield, permission: "sikayet_kisitlama" as const },
   { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: null, primaryOnly: true },
   { label: "İşlemler", path: "/yonetim/islemler", icon: Activity, permission: null, primaryOnly: true },
