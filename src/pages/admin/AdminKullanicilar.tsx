@@ -183,7 +183,7 @@ export default function AdminKullanicilar() {
   const resetForm = () => {
     setForm({
       username: "", password: "", ad: "", soyad: "",
-      email: "", telefon: "", pozisyon: "Call Center",
+      email: "", telefon: "", pozisyon: "Çağrı Merkezi Personeli",
       departman: "Çağrı Merkezi",
       permissions: { ...DEFAULT_PERMISSIONS },
     });
