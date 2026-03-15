@@ -216,14 +216,14 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-medium mb-1 block" style={s.muted}>Tarih</label>
-              <Popover>
+              <Popover modal={true}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className={cn("w-full justify-start text-left font-normal h-9 text-sm")} style={s.input}>
                     <CalendarIcon className="mr-2 h-3.5 w-3.5" />
                     {format(tarih, "dd MMM yyyy", { locale: tr })}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start" style={s.card}>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" style={{ ...s.card, zIndex: 9999 }}>
                   <Calendar
                     mode="single"
                     selected={tarih}
