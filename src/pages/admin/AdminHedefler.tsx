@@ -346,7 +346,7 @@ export default function AdminHedefler() {
                 <label className="text-sm font-medium mb-1 block" style={s.text}>Personel</label>
                 <Select value={formAdmin} onValueChange={setFormAdmin}>
                   <SelectTrigger style={s.input}><SelectValue placeholder="Personel seçin" /></SelectTrigger>
-                  <SelectContent style={s.card}>
+                   <SelectContent style={{ ...s.card, zIndex: 9999 }} position="popper" sideOffset={4}>
                     {adminUsers.map(u => (
                       <SelectItem key={u.id} value={u.id}>{u.ad} {u.soyad} ({u.departman})</SelectItem>
                     ))}
