@@ -15,10 +15,11 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Building2, Search, ExternalLink, Gavel, Package, CreditCard, Wifi,
   ArrowUpDown, ArrowUp, ArrowDown, Eye, Loader2, ShieldCheck,
-  MoreHorizontal, Briefcase, ClipboardList, Plus,
+  MoreHorizontal, Briefcase, ClipboardList, Plus, Users,
 } from "lucide-react";
 import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
 import FirmaAksiyonlarDialog from "@/components/admin/FirmaAksiyonlarDialog";
+import FirmaYetkililerDialog from "@/components/admin/FirmaYetkililerDialog";
 
 const s = {
   card: {
@@ -104,6 +105,7 @@ export default function AdminPortfoy() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
   const [aksiyonlarOpen, setAksiyonlarOpen] = useState(false);
+  const [yetkililerOpen, setYetkililerOpen] = useState(false);
   const [selectedFirma, setSelectedFirma] = useState<FirmaItem | null>(null);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
@@ -346,6 +348,9 @@ export default function AdminPortfoy() {
                             <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setAksiyonlarOpen(true); }} className="text-xs cursor-pointer">
                               <ClipboardList className="w-3.5 h-3.5 mr-2" /> Aksiyonları Gör
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setYetkililerOpen(true); }} className="text-xs cursor-pointer">
+                              <Users className="w-3.5 h-3.5 mr-2" /> Yetkili Kişiler
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
@@ -419,6 +424,14 @@ export default function AdminPortfoy() {
               callApi={callApi}
               token={token}
               onAddClick={() => { setAksiyonlarOpen(false); setAksiyonEkleOpen(true); }}
+            />
+            <FirmaYetkililerDialog
+              open={yetkililerOpen}
+              onOpenChange={setYetkililerOpen}
+              firmaId={selectedFirma.id}
+              firmaUnvani={selectedFirma.firma_unvani}
+              callApi={callApi}
+              token={token}
             />
           </>
         )}
