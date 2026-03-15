@@ -149,6 +149,7 @@ export default function AdminFirmalarV2() {
   const [yeniFirma, setYeniFirma] = useState({
     email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "",
     firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "",
+    cep_telefonu: "",
   });
 
   const [filterTuru, setFilterTuru] = useState<string>("all");
@@ -729,16 +730,17 @@ export default function AdminFirmalarV2() {
   };
 
   const handleCreateFirma = async () => {
-    if (!yeniFirma.email || !yeniFirma.password || !yeniFirma.ad || !yeniFirma.soyad || !yeniFirma.firma_unvani || !yeniFirma.vergi_numarasi || !yeniFirma.vergi_dairesi || !yeniFirma.firma_turu_id || !yeniFirma.firma_tipi_id) {
-      toast({ title: "Hata", description: "Zorunlu alanları doldurun", variant: "destructive" });
+    const cepDigits = ((yeniFirma as any).cep_telefonu || "").replace(/\D/g, "");
+    if (!yeniFirma.email || !yeniFirma.password || !yeniFirma.ad || !yeniFirma.soyad || !yeniFirma.firma_unvani || !yeniFirma.vergi_numarasi || !yeniFirma.vergi_dairesi || !yeniFirma.firma_turu_id || !yeniFirma.firma_tipi_id || cepDigits.length !== 10) {
+      toast({ title: "Hata", description: "Zorunlu alanları doldurun (cep telefonu 10 hane olmalı)", variant: "destructive" });
       return;
     }
     setYeniFirmaSaving(true);
     try {
-      await callApi("create-firma", { token, ...yeniFirma });
+      await callApi("create-firma", { token, ...yeniFirma, iletisim_numarasi: "+90" + cepDigits });
       toast({ title: "Başarılı", description: "Firma oluşturuldu" });
       setYeniFirmaOpen(false);
-      setYeniFirma({ email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "", firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "" });
+      setYeniFirma({ email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "", firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "", cep_telefonu: "" });
       fetchData();
     } catch (err: any) {
       toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
@@ -1281,6 +1283,33 @@ export default function AdminFirmalarV2() {
               <div className="space-y-1">
                 <Label className="text-xs" style={s.muted}>Vergi Dairesi *</Label>
                 <Input value={yeniFirma.vergi_dairesi} onChange={e => setYeniFirma(p => ({ ...p, vergi_dairesi: e.target.value }))} style={s.input} className="text-xs h-8" />
+              </div>
+            </div>
+          <div className="space-y-1">
+              <Label className="text-xs" style={s.muted}>Cep Telefonu *</Label>
+              <div className="flex gap-2">
+                <div className="flex items-center justify-center h-8 px-2 rounded-md text-xs font-medium shrink-0" style={{ ...s.input, border: "1px solid hsl(var(--admin-border))" }}>
+                  🇹🇷 +90
+                </div>
+                <Input
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="5XX XXX XX XX"
+                  value={(() => {
+                    const d = (yeniFirma as any).cep_telefonu || "";
+                    const digits = d.replace(/\D/g, "").replace(/^0+/, "");
+                    if (digits.length <= 3) return digits;
+                    if (digits.length <= 6) return `${digits.slice(0, 3)} ${digits.slice(3)}`;
+                    if (digits.length <= 8) return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}`;
+                    return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
+                  })()}
+                  onChange={e => {
+                    const digits = e.target.value.replace(/\D/g, "").replace(/^0+/, "").slice(0, 10);
+                    setYeniFirma(p => ({ ...p, cep_telefonu: digits } as any));
+                  }}
+                  style={s.input}
+                  className="text-xs h-8 flex-1"
+                />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">

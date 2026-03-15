@@ -300,6 +300,9 @@ const GirisKayit = () => {
       });
       if (rpcError) throw rpcError;
 
+      // Mark phone as verified (user already verified via SMS OTP during registration)
+      await supabase.from("profiles").update({ telefon_dogrulandi: true }).eq("user_id", userId);
+
       // Hoşgeldiniz email is now sent after admin approval (via admin-auth)
 
       // Send "Başvurunuzu Aldık" email

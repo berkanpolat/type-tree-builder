@@ -1,0 +1,2 @@
+-- Mark all existing users with a phone number as verified (they registered before this feature)
+UPDATE public.profiles SET telefon_dogrulandi = true WHERE iletisim_numarasi IS NOT NULL AND iletisim_numarasi != '';

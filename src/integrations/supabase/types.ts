@@ -2118,6 +2118,7 @@ export type Database = {
           iletisim_numarasi: string | null
           last_seen: string | null
           soyad: string
+          telefon_dogrulandi: boolean
           updated_at: string
           user_id: string
         }
@@ -2129,6 +2130,7 @@ export type Database = {
           iletisim_numarasi?: string | null
           last_seen?: string | null
           soyad: string
+          telefon_dogrulandi?: boolean
           updated_at?: string
           user_id: string
         }
@@ -2140,6 +2142,7 @@ export type Database = {
           iletisim_numarasi?: string | null
           last_seen?: string | null
           soyad?: string
+          telefon_dogrulandi?: boolean
           updated_at?: string
           user_id?: string
         }
