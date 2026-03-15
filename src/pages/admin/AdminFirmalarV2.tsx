@@ -806,6 +806,9 @@ export default function AdminFirmalarV2() {
               <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-7" onClick={() => setBulkAction("verify")}>
                 <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Toplu Doğrula
               </Button>
+              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-7" onClick={() => setBulkAction("portfolio")}>
+                <Briefcase className="w-3.5 h-3.5 mr-1" /> Toplu Portföye Ekle
+              </Button>
               <Button size="sm" variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-500/10 text-xs h-7" onClick={() => setBulkAction("delete")} style={{ borderColor: "hsl(var(--admin-border))" }}>
                 <Trash2 className="w-3.5 h-3.5 mr-1" /> Toplu Sil
               </Button>
