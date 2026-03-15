@@ -411,6 +411,20 @@ export default function AdminKullanicilar() {
                       {canManage && (
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
+                            {!u.is_primary && currentUser?.is_primary && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  impersonateAdmin(u as any);
+                                  navigate("/yonetim/panel");
+                                }}
+                                className="text-xs gap-1 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+                                title="Bu kullanıcı olarak paneli görüntüle"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> Hesaba Gir
+                              </Button>
+                            )}
                             <Button variant="ghost" size="icon" onClick={() => openEdit(u)} style={sMuted} className="hover:opacity-80">
                               <Pencil className="w-4 h-4" />
                             </Button>
