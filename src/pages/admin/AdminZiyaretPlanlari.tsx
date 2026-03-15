@@ -451,8 +451,12 @@ export default function AdminZiyaretPlanlari() {
       <Dialog open={completeDayDialogOpen} onOpenChange={(o) => { if (!o) setCompleteDayDialogOpen(false); }}>
         <DialogContent style={s.card} className="max-w-lg">
           <DialogHeader><DialogTitle style={s.text}>Günü Tamamla</DialogTitle></DialogHeader>
-          <p className="text-xs" style={s.muted}>Her ziyaret için durumu belirleyin. Tamamlanmayan ziyaretler için iptal sebebi seçin.</p>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+          <div className="rounded-lg p-3 text-xs space-y-1" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
+            <p style={s.text} className="font-medium">⚠️ Aşağıdaki planlarınız için aksiyon alınmamıştır.</p>
+            <p style={s.muted}>Günü bu şekilde tamamladığınızda bu planlar <span className="text-red-400 font-medium">iptal edildi</span> olarak gözükecektir. Aşağıda her biri için iptal sebebi seçiniz ya da vazgeçe tıklayıp tamamladığınız her bir ziyaret için aksiyon giriniz.</p>
+            <p style={s.muted} className="italic">Aksiyon girilmeyen ziyaretler iptal edildi gözükecektir.</p>
+          </div>
+          <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
             {completeDayPlans.map(plan => {
               const reason = completeDayReasons[plan.id] || "";
               return (
@@ -467,11 +471,8 @@ export default function AdminZiyaretPlanlari() {
                     setCompleteDayReasons(prev => ({ ...prev, [plan.id]: v }));
                     if (v !== "Diğer") setCompleteDayDigerTexts(prev => { const n = { ...prev }; delete n[plan.id]; return n; });
                   }}>
-                    <SelectTrigger style={s.input} className="text-xs h-8"><SelectValue placeholder="Durum seçin" /></SelectTrigger>
+                    <SelectTrigger style={s.input} className="text-xs h-8"><SelectValue placeholder="İptal sebebi seçin" /></SelectTrigger>
                     <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
-                      <SelectItem value="tamamlandi" className="text-xs">
-                        <span className="flex items-center gap-1.5"><CheckCircle className="w-3 h-3 text-emerald-500" /> Tamamlandı</span>
-                      </SelectItem>
                       {IPTAL_SEBEPLERI.map(sebep => (
                         <SelectItem key={sebep} value={sebep} className="text-xs">
                           <span className="flex items-center gap-1.5"><Clock className="w-3 h-3 text-red-400" /> {sebep}</span>
@@ -494,8 +495,8 @@ export default function AdminZiyaretPlanlari() {
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setCompleteDayDialogOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>Vazgeç</Button>
-            <Button size="sm" onClick={handleCompleteDayConfirm} disabled={completeDayLoading || !isCompleteDayValid()} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-              {completeDayLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Tamamla"}
+            <Button size="sm" onClick={handleCompleteDayConfirm} disabled={completeDayLoading || !isCompleteDayValid()} className="bg-red-600 hover:bg-red-700 text-white">
+              {completeDayLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "İptal Et ve Tamamla"}
             </Button>
           </DialogFooter>
         </DialogContent>
