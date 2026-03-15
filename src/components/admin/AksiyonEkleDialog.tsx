@@ -86,7 +86,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
           {/* Tür */}
           <div>
             <label className="text-xs font-medium mb-1 block" style={s.muted}>Aksiyon Türü</label>
-            <Select value={tur} onValueChange={setTur}>
+            <Select value={tur} onValueChange={setTur} modal={false}>
               <SelectTrigger className="h-9 text-sm" style={s.input}>
                 <SelectValue />
               </SelectTrigger>
