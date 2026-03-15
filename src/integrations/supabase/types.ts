@@ -71,6 +71,9 @@ export type Database = {
           durum: string
           firma_id: string
           id: string
+          sonuc: string | null
+          sonuc_neden: string | null
+          sonuc_paket_id: string | null
           tarih: string
           tur: string
           updated_at: string
@@ -84,6 +87,9 @@ export type Database = {
           durum?: string
           firma_id: string
           id?: string
+          sonuc?: string | null
+          sonuc_neden?: string | null
+          sonuc_paket_id?: string | null
           tarih?: string
           tur?: string
           updated_at?: string
@@ -97,6 +103,9 @@ export type Database = {
           durum?: string
           firma_id?: string
           id?: string
+          sonuc?: string | null
+          sonuc_neden?: string | null
+          sonuc_paket_id?: string | null
           tarih?: string
           tur?: string
           updated_at?: string
@@ -115,6 +124,13 @@ export type Database = {
             columns: ["firma_id"]
             isOneToOne: false
             referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_aksiyonlar_sonuc_paket_id_fkey"
+            columns: ["sonuc_paket_id"]
+            isOneToOne: false
+            referencedRelation: "paketler"
             referencedColumns: ["id"]
           },
           {
