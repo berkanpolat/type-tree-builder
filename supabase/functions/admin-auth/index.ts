@@ -3467,11 +3467,17 @@ Deno.serve(async (req) => {
       
       const firmaMap = new Map((firmaRes.data || []).map((f: any) => [f.id, f.firma_unvani]));
       const adminMap = new Map((adminRes.data || []).map((a: any) => [a.id, `${a.ad} ${a.soyad}`]));
+
+      // Enrich paket names
+      const paketIds = [...new Set((data || []).filter((a: any) => a.sonuc_paket_id).map((a: any) => a.sonuc_paket_id))];
+      const paketRes = paketIds.length > 0 ? await supabase.from("paketler").select("id, ad").in("id", paketIds) : { data: [] };
+      const paketMap = new Map((paketRes.data || []).map((p: any) => [p.id, p.ad]));
       
       const enriched = (data || []).map((a: any) => ({
         ...a,
         firma_unvani: firmaMap.get(a.firma_id) || "—",
         admin_ad: adminMap.get(a.admin_id) || "—",
+        sonuc_paket_ad: a.sonuc_paket_id ? paketMap.get(a.sonuc_paket_id) || null : null,
       }));
       
       return jsonResponse({ aksiyonlar: enriched });
