@@ -28,7 +28,7 @@ import {
   Building2, Users, Clock, AlertCircle, CheckCircle, XCircle,
   Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp,
   CreditCard, Wifi, ArrowUpDown, ArrowUp, ArrowDown, Infinity, Eye, MessageSquare, Loader2, Trash2, ShieldCheck, Download,
-  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList,
+  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList, KeyRound,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
@@ -301,8 +301,22 @@ export default function AdminFirmalarV2() {
     }
   };
 
-  const openPaketDialog = async (firma: FirmaItem) => {
-    setPaketDialogFirma(firma);
+  const handleSendPasswordReset = async (firma: FirmaItem) => {
+    const email = firma.profile?.iletisim_email;
+    if (!email) {
+      toast({ title: "Hata", description: "Bu firmaya ait kayıtlı e-posta adresi bulunamadı.", variant: "destructive" });
+      return;
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke("send-password-reset", { body: { email } });
+      if (error) throw error;
+      toast({ title: "Başarılı", description: `Şifre sıfırlama maili ${email} adresine gönderildi.` });
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "Mail gönderilemedi", variant: "destructive" });
+    }
+  };
+
+    const openPaketDialog = async (firma: FirmaItem) => {
     setPaketDialogOpen(true);
     setPaketDialogLoading(true);
     setSelectedPaketId(firma.abonelik?.paket_id || "");
@@ -990,6 +1004,12 @@ export default function AdminFirmalarV2() {
                                 <Briefcase className="w-3.5 h-3.5 mr-2" /> {firma.portfolyo.admin_ad} {firma.portfolyo.admin_soyad} portföyünde
                               </DropdownMenuItem>
                             )}
+                            <DropdownMenuItem
+                              onClick={() => handleSendPasswordReset(firma)}
+                              className="text-xs cursor-pointer"
+                            >
+                              <KeyRound className="w-3.5 h-3.5 mr-2" /> Şifre Gönder
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem
                               onClick={() => { setDeleteFirma(firma); setDeleteConfirmText(""); setDeleteDialogOpen(true); }}
