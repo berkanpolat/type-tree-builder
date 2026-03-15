@@ -200,11 +200,7 @@ export default function AdminFirmalar() {
   const [belgeActionLoading, setBelgeActionLoading] = useState<string | null>(null);
   const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({});
 
-  const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (error) throw error;
-    return data;
-  }, []);
+  const callApi = useAdminApi();
 
   const fetchData = useCallback(async () => {
     if (!token) return;

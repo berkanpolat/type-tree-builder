@@ -49,11 +49,7 @@ export default function AdminAksiyonlar() {
   const [filterTur, setFilterTur] = useState<string>("all");
   const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
 
-  const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (error) throw error;
-    return data;
-  }, []);
+  const callApi = useAdminApi();
 
   const fetchAksiyonlar = useCallback(async () => {
     if (!token || !adminUser) return;

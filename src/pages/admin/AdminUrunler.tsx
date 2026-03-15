@@ -159,11 +159,7 @@ export default function AdminUrunler() {
   const [removeDialog, setRemoveDialog] = useState<{ open: boolean; urunId: string; baslik: string }>({ open: false, urunId: "", baslik: "" });
   const [actionLoading, setActionLoading] = useState(false);
 
-  const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (error) throw error;
-    return data;
-  }, []);
+  const callApi = useAdminApi();
 
   // Derived: filtered groups based on selected categories
   const filteredGruplar = allSecenekler.filter(o =>

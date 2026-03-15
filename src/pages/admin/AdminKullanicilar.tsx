@@ -163,11 +163,7 @@ export default function AdminKullanicilar() {
     permissions: { ...DEFAULT_PERMISSIONS },
   });
 
-  const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (error) throw error;
-    return data;
-  }, []);
+  const callApi = useAdminApi();
 
   const fetchUsers = useCallback(async () => {
     if (!token) return;
