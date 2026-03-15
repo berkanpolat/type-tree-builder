@@ -2797,18 +2797,9 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: firmaError.message }, 400);
       }
 
-      // Auto-assign free package
-      const { data: freePaket } = await supabase.from("paketler").select("id").eq("slug", "ucretsiz").single();
-      if (freePaket) {
-        await supabase.from("kullanici_abonelikler").insert({
-          user_id: userId,
-          paket_id: freePaket.id,
-          periyot: "aylik",
-          donem_baslangic: new Date().toISOString(),
-          donem_bitis: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          durum: "aktif",
-        });
-      }
+      // Admin tarafından eklenen firmalara paket atanmaz (Paket Yok durumu)
+      // DB trigger auto_assign_free_package otomatik ücretsiz paket atar, onu silelim
+      await supabase.from("kullanici_abonelikler").delete().eq("user_id", userId);
 
       await logActivity(supabase, payload, "create-firma", {
         target_type: "firma",
