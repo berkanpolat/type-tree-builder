@@ -3440,7 +3440,7 @@ Deno.serve(async (req) => {
       
       const { data, error } = await supabase.from("admin_aksiyonlar").insert({
         firma_id: firmaId,
-        admin_id: payload.id,
+        admin_id: getActingId(payload, body),
         baslik,
         aciklama: aciklama || null,
         tur: tur || "diger",
