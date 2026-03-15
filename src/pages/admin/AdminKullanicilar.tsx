@@ -153,7 +153,7 @@ export default function AdminKullanicilar() {
     soyad: "",
     email: "",
     telefon: "",
-    pozisyon: "Call Center",
+    pozisyon: "Çağrı Merkezi Personeli",
     departman: "Çağrı Merkezi",
     permissions: { ...DEFAULT_PERMISSIONS },
   });
