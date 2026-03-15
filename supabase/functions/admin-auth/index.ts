@@ -3416,6 +3416,90 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── AKSIYONLAR: CREATE ───
+    if (action === "create-aksiyon") {
+      const payload = verifyToken(body.token);
+      const { firmaId, baslik, aciklama, tur, tarih } = body;
+      if (!firmaId || !baslik) return jsonResponse({ error: "Firma ve başlık zorunlu" }, 400);
+      
+      const { data, error } = await supabase.from("admin_aksiyonlar").insert({
+        firma_id: firmaId,
+        admin_id: payload.id,
+        baslik,
+        aciklama: aciklama || null,
+        tur: tur || "diger",
+        tarih: tarih || new Date().toISOString(),
+        durum: "yapilacak",
+      }).select().single();
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
+      await logActivity(supabase, payload, "aksiyon_ekledi", { target_type: "firma", target_id: firmaId, target_label: firma?.firma_unvani || "", details: { baslik, tur } });
+      return jsonResponse({ success: true, aksiyon: data });
+    }
+
+    // ─── AKSIYONLAR: LIST (by firma or by admin) ───
+    if (action === "list-aksiyonlar") {
+      const payload = verifyToken(body.token);
+      const { firmaId, adminId, durum } = body;
+      
+      let query = supabase.from("admin_aksiyonlar").select("*").order("tarih", { ascending: true });
+      if (firmaId) query = query.eq("firma_id", firmaId);
+      if (adminId) query = query.eq("admin_id", adminId);
+      if (durum) query = query.eq("durum", durum);
+      
+      const { data, error } = await query;
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      // Enrich with firma and admin names
+      const firmaIds = [...new Set((data || []).map((a: any) => a.firma_id))];
+      const adminIds = [...new Set((data || []).map((a: any) => a.admin_id))];
+      
+      const [firmaRes, adminRes] = await Promise.all([
+        firmaIds.length > 0 ? supabase.from("firmalar").select("id, firma_unvani").in("id", firmaIds) : { data: [] },
+        adminIds.length > 0 ? supabase.from("admin_users").select("id, ad, soyad").in("id", adminIds) : { data: [] },
+      ]);
+      
+      const firmaMap = new Map((firmaRes.data || []).map((f: any) => [f.id, f.firma_unvani]));
+      const adminMap = new Map((adminRes.data || []).map((a: any) => [a.id, `${a.ad} ${a.soyad}`]));
+      
+      const enriched = (data || []).map((a: any) => ({
+        ...a,
+        firma_unvani: firmaMap.get(a.firma_id) || "—",
+        admin_ad: adminMap.get(a.admin_id) || "—",
+      }));
+      
+      return jsonResponse({ aksiyonlar: enriched });
+    }
+
+    // ─── AKSIYONLAR: UPDATE (durum, baslik, etc.) ───
+    if (action === "update-aksiyon") {
+      const payload = verifyToken(body.token);
+      const { aksiyonId, updates } = body;
+      if (!aksiyonId) return jsonResponse({ error: "Aksiyon ID zorunlu" }, 400);
+      
+      const allowedFields = ["baslik", "aciklama", "tur", "tarih", "durum"];
+      const safeUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
+      for (const key of allowedFields) {
+        if (updates[key] !== undefined) safeUpdates[key] = updates[key];
+      }
+      
+      const { error } = await supabase.from("admin_aksiyonlar").update(safeUpdates).eq("id", aksiyonId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
+    // ─── AKSIYONLAR: DELETE ───
+    if (action === "delete-aksiyon") {
+      const payload = verifyToken(body.token);
+      const { aksiyonId } = body;
+      if (!aksiyonId) return jsonResponse({ error: "Aksiyon ID zorunlu" }, 400);
+      
+      const { error } = await supabase.from("admin_aksiyonlar").delete().eq("id", aksiyonId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
