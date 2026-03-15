@@ -298,7 +298,7 @@ export default function AdminHedefler() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span style={s.muted}>
-                        {h.gerceklesen_miktar} / {h.hedef_miktar} PKL
+                        {h.hedef_turu === "ciro" ? `${h.gerceklesen_miktar.toLocaleString("tr-TR")} ₺ / ${h.hedef_miktar.toLocaleString("tr-TR")} ₺` : `${h.gerceklesen_miktar} / ${h.hedef_miktar} PKL`}
                       </span>
                       <span className="font-bold" style={{ color: pklAsildi ? "#22c55e" : "hsl(var(--admin-text))" }}>
                         {pklAsildi ? "✅ PKL Aşıldı" : `%${yuzde}`}
