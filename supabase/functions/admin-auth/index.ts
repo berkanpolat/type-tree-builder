@@ -3403,7 +3403,8 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: `Bu firma zaten ${owner?.ad || ""} ${owner?.soyad || ""} portföyünde` }, 400);
       }
       
-      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: payload.id, firma_id: firmaId });
+      const actingId = getActingId(payload, body);
+      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: actingId, firma_id: firmaId });
       if (error) return jsonResponse({ error: error.message }, 400);
       
       const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
