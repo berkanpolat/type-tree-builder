@@ -150,6 +150,7 @@ const App = () => (
             <Route path="/kullanim-kosullari" element={<KullanimKosullari />} />
             <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
             <Route path="/sifre-sifirla" element={<SifreSifirla />} />
+            <Route path="/telefon-dogrulama" element={<TelefonDogrulama />} />
             
             {/* Admin Panel Routes */}
             <Route path="/yonetim" element={<AdminRoute><AdminGiris /></AdminRoute>} />
