@@ -301,7 +301,21 @@ export default function AdminFirmalarV2() {
     }
   };
 
-  const openPaketDialog = async (firma: FirmaItem) => {
+  const handleSendPasswordReset = async (firma: FirmaItem) => {
+    const email = firma.profile?.iletisim_email;
+    if (!email) {
+      toast({ title: "Hata", description: "Bu firmaya ait kayıtlı e-posta adresi bulunamadı.", variant: "destructive" });
+      return;
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke("send-password-reset", { body: { email } });
+      if (error) throw error;
+      toast({ title: "Başarılı", description: `Şifre sıfırlama maili ${email} adresine gönderildi.` });
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "Mail gönderilemedi", variant: "destructive" });
+    }
+  };
+
     setPaketDialogFirma(firma);
     setPaketDialogOpen(true);
     setPaketDialogLoading(true);
