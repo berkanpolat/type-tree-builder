@@ -423,7 +423,7 @@ export default function AdminPortfoy() {
                                   const turConfig = TUR_CONFIG[a.tur] || TUR_CONFIG.diger;
                                   const Icon = turConfig.icon;
                                   return (
-                                    <div key={a.id} className="flex items-start gap-2.5 p-2 rounded-lg" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                                    <div key={a.id} className="flex items-start gap-2.5 p-2 rounded-lg cursor-pointer hover:brightness-95 transition-all" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }} onClick={() => setDetayAksiyon(a)}>
                                       <div className="mt-0.5 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${turConfig.color}15`, width: 18, height: 18 }}>
                                         <Icon className="w-2.5 h-2.5" style={{ color: turConfig.color }} />
                                       </div>
