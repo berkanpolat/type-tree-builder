@@ -95,6 +95,8 @@ export default function AdminHedefler() {
   const [formMiktar, setFormMiktar] = useState("");
   const [formBaslangic, setFormBaslangic] = useState("");
   const [formBitis, setFormBitis] = useState("");
+  const [formPaketler, setFormPaketler] = useState<string[]>([]);
+  const [paketOptions, setPaketOptions] = useState<PaketOption[]>([]);
 
   // Prim Form
   const [primTutar, setPrimTutar] = useState("");
@@ -103,6 +105,16 @@ export default function AdminHedefler() {
   const isYK = user?.departman === "Yönetim Kurulu";
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
+    const res = await supabase.functions.invoke(`admin-auth/${action}`, { body });
+    if (res.error) throw new Error(res.error.message);
+    if (res.data?.error) throw new Error(res.data.error);
+    return res.data;
+  }, []);
+
+  const loadPaketler = useCallback(async () => {
+    const { data } = await supabase.from("paketler").select("id, ad, slug").eq("aktif", true).order("fiyat_aylik", { ascending: true });
+    setPaketOptions((data || []).map((p: any) => ({ id: p.id, ad: p.ad, slug: p.slug || "" })));
+  }, []);
     const res = await supabase.functions.invoke(`admin-auth/${action}`, { body });
     if (res.error) throw new Error(res.error.message);
     if (res.data?.error) throw new Error(res.data.error);
