@@ -3781,7 +3781,7 @@ Deno.serve(async (req) => {
       
       const { data, error } = await supabase.from("firma_yetkililer").insert({
         firma_id: firmaId,
-        admin_id: payload.id,
+        admin_id: getActingId(payload, body),
         ad: ad.trim(),
         soyad: soyad.trim(),
         pozisyon: pozisyon?.trim() || null,
