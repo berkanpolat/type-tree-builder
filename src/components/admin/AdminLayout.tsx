@@ -103,15 +103,38 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   if (!user) return null;
 
-  const visibleMenuItems = menuItems.filter((item) => {
-    // When impersonating, use original user's permissions (super admin sees all)
+  const filterItem = (item: MenuItem) => {
     const checkUser = originalUser || user;
     if (item.primaryOnly) return checkUser?.is_primary ?? false;
     if (item.permission) return hasPermission(item.permission);
     return true;
-  });
+  };
+
+  const visibleGroups = menuGroups
+    .map((g) => ({ ...g, items: g.items.filter(filterItem) }))
+    .filter((g) => g.items.length > 0);
 
   const t = lightMode;
+
+  const renderLink = (item: MenuItem) => {
+    const isActive = location.pathname === item.path;
+    return (
+      <Link
+        key={item.path}
+        to={item.path}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+          isActive && "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+        )}
+        style={!isActive ? { color: `hsl(var(--admin-muted))` } : undefined}
+        onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = `hsl(var(--admin-hover))`; }}
+        onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+      >
+        <item.icon className="w-4 h-4 shrink-0" />
+        {item.label}
+      </Link>
+    );
+  };
 
   const sidebarContent = (
     <>
@@ -128,29 +151,19 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       </div>
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {visibleMenuItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                isActive && "bg-amber-500/10 text-amber-600 border border-amber-500/20"
-              )}
-              style={!isActive ? { color: `hsl(var(--admin-muted))` } : undefined}
-              onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.background = `hsl(var(--admin-hover))`;
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.background = 'transparent';
-              }}
-            >
-              <item.icon className="w-4 h-4 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
+        {visibleGroups.map((group, gi) => (
+          <div key={gi}>
+            {group.groupLabel && (
+              <>
+                {gi > 0 && <div className="my-2 border-t" style={{ borderColor: `hsl(var(--admin-border))` }} />}
+                <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: `hsl(var(--admin-muted))` }}>
+                  {group.groupLabel}
+                </p>
+              </>
+            )}
+            {group.items.map(renderLink)}
+          </div>
+        ))}
       </nav>
 
       <div className="p-3 border-t space-y-3" style={{ borderColor: `hsl(var(--admin-border))` }}>
