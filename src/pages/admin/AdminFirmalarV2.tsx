@@ -922,6 +922,19 @@ export default function AdminFirmalarV2() {
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
                             </DropdownMenuItem>
+                            {!firma.portfolyo ? (
+                              <DropdownMenuItem onClick={() => handleAddPortfolyo(firma)} className="text-xs cursor-pointer">
+                                <Briefcase className="w-3.5 h-3.5 mr-2 text-amber-500" /> Portföyüme Ekle
+                              </DropdownMenuItem>
+                            ) : firma.portfolyo.admin_id === adminUser?.id ? (
+                              <DropdownMenuItem onClick={() => handleRemovePortfolyo(firma)} className="text-xs cursor-pointer">
+                                <Briefcase className="w-3.5 h-3.5 mr-2 text-red-400" /> Portföyden Çıkar
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem disabled className="text-xs opacity-50">
+                                <Briefcase className="w-3.5 h-3.5 mr-2" /> {firma.portfolyo.admin_ad} {firma.portfolyo.admin_soyad} portföyünde
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem
                               onClick={() => { setDeleteFirma(firma); setDeleteConfirmText(""); setDeleteDialogOpen(true); }}
