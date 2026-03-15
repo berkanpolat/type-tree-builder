@@ -4045,7 +4045,15 @@ Deno.serve(async (req) => {
         
         // PKL: Calculate earned bonus (over PKL threshold)
         const pklAsim = Math.max(0, gerceklesen - h.hedef_miktar);
-        const kazanilanPrim = pklAsim * (h.birim_basi_prim || 0);
+        const primBirimi = detay.prim_birimi || "tl";
+        let kazanilanPrim = 0;
+        if (primBirimi === "yuzde") {
+          // Percentage: pklAsim * (birim_basi_prim / 100)
+          kazanilanPrim = pklAsim * ((h.birim_basi_prim || 0) / 100);
+        } else {
+          // Fixed TL or USD: pklAsim * birim_basi_prim
+          kazanilanPrim = pklAsim * (h.birim_basi_prim || 0);
+        }
         
         hedefler.push({
           ...h,
