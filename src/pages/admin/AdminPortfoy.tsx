@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
 import FirmaAksiyonlarDialog from "@/components/admin/FirmaAksiyonlarDialog";
+import FirmaYetkililerDialog from "@/components/admin/FirmaYetkililerDialog";
 
 const s = {
   card: {
