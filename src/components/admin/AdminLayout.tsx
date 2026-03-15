@@ -22,6 +22,7 @@ interface AdminLayoutProps {
 const menuItems = [
   { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null, primaryOnly: false },
   { label: "Firmalar", path: "/yonetim/firmalar-v2", icon: Building2, permission: null, primaryOnly: false },
+  { label: "Portföyüm", path: "/yonetim/portfolyo", icon: Briefcase, permission: null, primaryOnly: false },
   { label: "Yaptırımlar", path: "/yonetim/kisitlamalar", icon: Shield, permission: "sikayet_kisitlama" as const },
   { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: null, primaryOnly: true },
   { label: "İşlemler", path: "/yonetim/islemler", icon: Activity, permission: null, primaryOnly: true },
