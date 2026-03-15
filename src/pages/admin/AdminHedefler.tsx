@@ -63,10 +63,10 @@ interface AdminUser {
 }
 
 const HEDEF_TURLERI = [
-  { value: "ziyaret", label: "Ziyaret Sayısı", icon: "📍" },
-  { value: "aksiyon", label: "Aksiyon Sayısı", icon: "📋" },
-  { value: "paket_satis", label: "Paket Satışı", icon: "💰" },
-  { value: "firma_kaydi", label: "Firma Kaydı", icon: "🏢" },
+  { value: "paket_uyeligi", label: "Paket Üyeliği", icon: "💳" },
+  { value: "ciro", label: "Ciro", icon: "💰" },
+  { value: "dis_arama", label: "Dış Arama", icon: "📞" },
+  { value: "ziyaret", label: "Ziyaret", icon: "📍" },
 ];
 
 const DURUM_BADGE: Record<string, { label: string; color: string }> = {
