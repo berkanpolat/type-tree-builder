@@ -279,7 +279,7 @@ export default function AdminKullanicilar() {
     }
   };
 
-  const canManage = currentUser?.is_primary;
+  const canManage = realUser?.is_primary;
 
   const totalPages = Math.max(1, Math.ceil(users.length / USERS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
