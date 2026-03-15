@@ -200,16 +200,12 @@ export default function AdminZiyaretPlanlari() {
     for (const plan of completeDayPlans) {
       const reason = completeDayReasons[plan.id];
       try {
-        if (reason === "tamamlandi") {
-          await callApi("update-ziyaret-plani", { token, planId: plan.id, durum: "tamamlandi" });
-        } else {
-          const finalReason = reason === "Diğer" ? (completeDayDigerTexts[plan.id] || "").trim() : reason;
-          await callApi("update-ziyaret-plani", { token, planId: plan.id, durum: "iptal", iptalSebebi: finalReason });
-        }
+        const finalReason = reason === "Diğer" ? (completeDayDigerTexts[plan.id] || "").trim() : reason;
+        await callApi("update-ziyaret-plani", { token, planId: plan.id, durum: "iptal", iptalSebebi: finalReason });
         success++;
       } catch { /* skip */ }
     }
-    toast({ title: "Günü Tamamla", description: `${success} ziyaret güncellendi` });
+    toast({ title: "Günü Tamamla", description: `${success} ziyaret iptal edildi` });
     setCompleteDayDialogOpen(false);
     setCompleteDayLoading(false);
     fetchPlanlar();
