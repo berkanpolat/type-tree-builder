@@ -313,7 +313,7 @@ export default function AdminZiyaretPlanlari() {
   const plansByDate = weekDays.map(day => ({
     date: day,
     dateKey: format(day, "yyyy-MM-dd"),
-    plans: filteredPlanlar.filter(p => isSameDay(new Date(p.planlanan_tarih), day)),
+    plans: filteredPlanlar.filter(p => isSameDay(new Date(p.planlanan_tarih), day)).sort((a, b) => a.sira - b.sira),
   }));
 
   return (
