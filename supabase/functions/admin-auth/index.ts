@@ -3438,9 +3438,235 @@ Deno.serve(async (req) => {
       }).select().single();
       if (error) return jsonResponse({ error: error.message }, 400);
       
-      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
-      await logActivity(supabase, payload, "aksiyon_ekledi", { target_type: "firma", target_id: firmaId, target_label: firma?.firma_unvani || "", details: { baslik, tur, sonuc } });
-      return jsonResponse({ success: true, aksiyon: data });
+      const { data: firmaData } = await supabase.from("firmalar").select("firma_unvani, user_id, firma_iletisim_email").eq("id", firmaId).single();
+      await logActivity(supabase, payload, "aksiyon_ekledi", { target_type: "firma", target_id: firmaId, target_label: firmaData?.firma_unvani || "", details: { baslik, tur, sonuc } });
+
+      let packageAssigned = false;
+      let paymentLinkSent = false;
+
+      // Handle package assignment when "Satış Kapatıldı"
+      if (sonuc === "satis_kapatildi" && sonucPaketId && firmaData?.user_id) {
+        const { data: paket } = await supabase.from("paketler").select("id, slug, ad").eq("id", sonucPaketId).single();
+
+        if (paket && (paket.slug === "ucretsiz" || paket.slug === "pro-ucretsiz")) {
+          // Auto-assign free or pro-free package
+          const now = new Date();
+          const donemBitis = new Date(now);
+          if (paket.slug === "pro-ucretsiz") {
+            donemBitis.setFullYear(donemBitis.getFullYear() + 100);
+          } else {
+            donemBitis.setMonth(donemBitis.getMonth() + 1);
+          }
+
+          const { data: existingSub } = await supabase.from("kullanici_abonelikler")
+            .select("id").eq("user_id", firmaData.user_id).single();
+
+          if (existingSub) {
+            await supabase.from("kullanici_abonelikler").update({
+              paket_id: sonucPaketId,
+              periyot: paket.slug === "pro-ucretsiz" ? "aylik" : "aylik",
+              donem_baslangic: now.toISOString(),
+              donem_bitis: donemBitis.toISOString(),
+              durum: "aktif",
+              updated_at: now.toISOString(),
+            }).eq("user_id", firmaData.user_id);
+          } else {
+            await supabase.from("kullanici_abonelikler").insert({
+              user_id: firmaData.user_id,
+              paket_id: sonucPaketId,
+              periyot: "aylik",
+              donem_baslangic: now.toISOString(),
+              donem_bitis: donemBitis.toISOString(),
+              durum: "aktif",
+            });
+          }
+          packageAssigned = true;
+          console.log(`[AKSIYON] Auto-assigned package ${paket.slug} to user ${firmaData.user_id}`);
+
+        } else if (paket?.slug === "pro") {
+          // Create PayTR payment link and send via email
+          const { periyot, odemeMail } = body;
+          if (periyot && odemeMail) {
+            try {
+              // Get exchange rate
+              const rateRes = await fetch("https://open.er-api.com/v6/latest/USD");
+              const rateData = await rateRes.json();
+              const usdTryRate = rateData?.rates?.TRY;
+              if (!usdTryRate) throw new Error("Döviz kuru alınamadı");
+
+              const PRO_PRICES: Record<string, number> = { aylik: 199, yillik: 1299 };
+              const usdPrice = PRO_PRICES[periyot as string];
+              if (!usdPrice) throw new Error("Geçersiz periyot");
+              const tlPrice = usdPrice * usdTryRate;
+              const kdvTutar = tlPrice * 0.20;
+              const toplamTl = tlPrice + kdvTutar;
+              const paymentAmountKurus = Math.round(toplamTl * 100);
+
+              const merchantId = Deno.env.get("PAYTR_MERCHANT_ID")!;
+              const merchantKey = Deno.env.get("PAYTR_MERCHANT_KEY")!;
+              const merchantSalt = Deno.env.get("PAYTR_MERCHANT_SALT")!;
+              if (!merchantId || !merchantKey || !merchantSalt) throw new Error("PayTR yapılandırması eksik");
+
+              // Get user info for PayTR
+              const { data: profile } = await supabase.from("profiles")
+                .select("ad, soyad, iletisim_numarasi").eq("user_id", firmaData.user_id).single();
+              const { data: authUserData } = await supabase.auth.admin.getUserById(firmaData.user_id);
+              const userEmail = authUserData?.user?.email || odemeMail;
+
+              const merchantOid = `${firmaData.user_id.replace(/-/g, "")}${periyot === "yillik" ? "Y" : "A"}${Date.now()}`;
+              const paymentAmount = paymentAmountKurus.toString();
+              const userName = `${profile?.ad || ""} ${profile?.soyad || ""}`.trim() || "Kullanıcı";
+              const userPhone = profile?.iletisim_numarasi || "05000000000";
+              const userAddress = firmaData.firma_unvani || "Türkiye";
+              const userIp = "127.0.0.1";
+
+              const periyotLabel = periyot === "yillik" ? "Yıllık" : "Aylık";
+              const basketLabel = `PRO Paket (${periyotLabel}) $${usdPrice} x ${usdTryRate.toFixed(2)} + %20 KDV`;
+              const basketPrice = (paymentAmountKurus / 100).toFixed(2);
+              const userBasket = btoa(JSON.stringify([[basketLabel, basketPrice, 1]]));
+
+              const noInstallment = "1";
+              const maxInstallment = "0";
+              const currency = "TL";
+              const testMode = Deno.env.get("PAYTR_TEST_MODE") === "1" ? "1" : "0";
+              const debugOn = Deno.env.get("PAYTR_DEBUG_ON") === "1" ? "1" : "0";
+
+              const siteUrl = Deno.env.get("PAYTR_SITE_URL") || "https://tekstilas.com";
+              const merchantOkUrl = `${siteUrl}/paketim?odeme=basarili`;
+              const merchantFailUrl = `${siteUrl}/paketim?odeme=basarisiz`;
+
+              // HMAC-SHA256 for PayTR token
+              const hashStr = merchantId + userIp + merchantOid + userEmail + paymentAmount + userBasket + noInstallment + maxInstallment + currency + testMode;
+              const enc = new TextEncoder();
+              const cryptoKey = await crypto.subtle.importKey("raw", enc.encode(merchantKey), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+              const sig = await crypto.subtle.sign("HMAC", cryptoKey, enc.encode(hashStr + merchantSalt));
+              const paytrToken = btoa(Array.from(new Uint8Array(sig), b => String.fromCharCode(b)).join(''));
+
+              const formData = new URLSearchParams();
+              formData.append("merchant_id", merchantId);
+              formData.append("user_ip", userIp);
+              formData.append("merchant_oid", merchantOid);
+              formData.append("email", userEmail);
+              formData.append("payment_amount", paymentAmount);
+              formData.append("paytr_token", paytrToken);
+              formData.append("user_basket", userBasket);
+              formData.append("debug_on", debugOn);
+              formData.append("no_installment", noInstallment);
+              formData.append("max_installment", maxInstallment);
+              formData.append("user_name", userName);
+              formData.append("user_address", userAddress);
+              formData.append("user_phone", userPhone);
+              formData.append("merchant_ok_url", merchantOkUrl);
+              formData.append("merchant_fail_url", merchantFailUrl);
+              formData.append("timeout_limit", "30");
+              formData.append("currency", currency);
+              formData.append("test_mode", testMode);
+              formData.append("lang", "tr");
+
+              console.log("[AKSIYON-PAYTR] Creating token for:", { merchantOid, userEmail, paymentAmount, periyot });
+
+              const paytrRes = await fetch("https://www.paytr.com/odeme/api/get-token", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: formData.toString(),
+              });
+              const paytrResult = await paytrRes.json();
+
+              if (paytrResult.status !== "success") {
+                throw new Error(`PayTR token alınamadı: ${paytrResult.reason || JSON.stringify(paytrResult)}`);
+              }
+
+              const iframeUrl = `https://www.paytr.com/odeme/guvenli/${paytrResult.token}`;
+
+              // Save payment record
+              await supabase.from("odeme_kayitlari").insert({
+                user_id: firmaData.user_id,
+                merchant_oid: merchantOid,
+                periyot: periyot as string,
+                tutar_kurus: paymentAmountKurus,
+                durum: "bekliyor",
+              });
+
+              // Send email with payment link
+              const POSTMARK_SERVER_TOKEN = Deno.env.get("POSTMARK_SERVER_TOKEN");
+              if (POSTMARK_SERVER_TOKEN) {
+                const toplamTlFormatted = toplamTl.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const htmlBody = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f5f5;">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;">
+    <div style="background:#1a1a2e;padding:30px;text-align:center;">
+      <img src="https://bctoawgovyyueifnmwhq.supabase.co/storage/v1/object/public/banners/email-logo-beyaz.png" width="180" alt="Tekstil A.Ş." style="display:inline-block;" />
+    </div>
+    <div style="padding:30px 30px 20px;">
+      <h2 style="color:#1a1a2e;margin:0 0 20px;font-size:20px;">PRO Paket Ödeme Bağlantınız</h2>
+      <p style="color:#333;font-size:14px;line-height:1.6;">Sayın <strong>${userName}</strong>,</p>
+      <p style="color:#333;font-size:14px;line-height:1.6;"><strong>${firmaData.firma_unvani}</strong> firmanız için <strong>${periyotLabel} PRO Paket</strong> ödeme bağlantınız hazırlanmıştır.</p>
+      <table style="width:100%;border-collapse:collapse;margin:20px 0;font-size:14px;">
+        <tr style="background:#f8f9fa;">
+          <td style="padding:10px 15px;color:#666;border:1px solid #eee;">Paket</td>
+          <td style="padding:10px 15px;color:#333;border:1px solid #eee;font-weight:600;">PRO — ${periyotLabel}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 15px;color:#666;border:1px solid #eee;">USD Fiyat</td>
+          <td style="padding:10px 15px;color:#333;border:1px solid #eee;">$${usdPrice}</td>
+        </tr>
+        <tr style="background:#f8f9fa;">
+          <td style="padding:10px 15px;color:#666;border:1px solid #eee;">Döviz Kuru</td>
+          <td style="padding:10px 15px;color:#333;border:1px solid #eee;">1 USD = ${usdTryRate.toFixed(2)} ₺</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 15px;color:#666;border:1px solid #eee;">KDV (%20)</td>
+          <td style="padding:10px 15px;color:#333;border:1px solid #eee;">${kdvTutar.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</td>
+        </tr>
+        <tr style="background:#fff8e1;">
+          <td style="padding:10px 15px;color:#333;border:1px solid #eee;font-weight:600;">Toplam (KDV Dahil)</td>
+          <td style="padding:10px 15px;color:#1a1a2e;border:1px solid #eee;font-weight:700;font-size:16px;">${toplamTlFormatted} ₺</td>
+        </tr>
+      </table>
+      <div style="text-align:center;margin:30px 0;">
+        <a href="${iframeUrl}" style="background:#f59e0b;color:#ffffff;padding:14px 40px;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px;display:inline-block;">Ödemeyi Yap</a>
+      </div>
+      <p style="color:#999;font-size:11px;text-align:center;">Bu ödeme bağlantısı güvenli PayTR altyapısı üzerinden işlenmektedir.</p>
+    </div>
+    <div style="background:#f5f5f5;padding:20px 30px;text-align:center;">
+      <p style="color:#999;font-size:11px;margin:0;">© ${new Date().getFullYear()} Tekstil A.Ş. — Tüm hakları saklıdır.</p>
+      <p style="color:#999;font-size:11px;margin:5px 0 0;">Sorularınız için: <a href="mailto:info@tekstilas.com" style="color:#f59e0b;">info@tekstilas.com</a></p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+                await fetch("https://api.postmarkapp.com/email", {
+                  method: "POST",
+                  headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+                  },
+                  body: JSON.stringify({
+                    From: "Tekstil A.Ş. <info@tekstilas.com>",
+                    To: odemeMail as string,
+                    Subject: `${periyotLabel} PRO Paket Ödeme Bağlantınız — Tekstil A.Ş.`,
+                    HtmlBody: htmlBody,
+                  }),
+                });
+                console.log(`[AKSIYON-PAYTR] Payment link email sent to ${odemeMail}`);
+              }
+
+              paymentLinkSent = true;
+              console.log(`[AKSIYON-PAYTR] Payment link created: ${merchantOid}`);
+            } catch (payErr: any) {
+              console.error("[AKSIYON-PAYTR] Error:", payErr?.message || payErr);
+              // Don't fail the aksiyon creation
+            }
+          }
+        }
+      }
+
+      return jsonResponse({ success: true, aksiyon: data, packageAssigned, paymentLinkSent });
     }
 
     // ─── AKSIYONLAR: LIST (by firma or by admin) ───
@@ -3888,6 +4114,30 @@ Deno.serve(async (req) => {
       });
 
       return jsonResponse({ konumlar: result });
+    }
+
+    // ─── GET FIRMA EMAIL ───
+    if (action === "get-firma-email") {
+      const payload = verifyToken(body.token);
+      const { firmaId } = body;
+      if (!firmaId) return jsonResponse({ error: "Firma ID zorunlu" }, 400);
+
+      const { data: firma } = await supabase.from("firmalar")
+        .select("firma_iletisim_email, user_id")
+        .eq("id", firmaId).single();
+
+      let email = firma?.firma_iletisim_email || "";
+      if (!email && firma?.user_id) {
+        const { data: authUser } = await supabase.auth.admin.getUserById(firma.user_id);
+        email = authUser?.user?.email || "";
+      }
+      if (!email && firma?.user_id) {
+        const { data: profile } = await supabase.from("profiles")
+          .select("iletisim_email").eq("user_id", firma.user_id).single();
+        email = profile?.iletisim_email || "";
+      }
+
+      return jsonResponse({ email });
     }
 
     return jsonResponse({ error: "Geçersiz istek" }, 400);
