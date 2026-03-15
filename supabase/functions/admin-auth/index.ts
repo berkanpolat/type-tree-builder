@@ -326,7 +326,7 @@ Deno.serve(async (req) => {
         });
       }
 
-
+      const sikayetCountMap = new Map<string, number>();
       for (const s of sikayetCounts) sikayetCountMap.set(s.bildiren_user_id, (sikayetCountMap.get(s.bildiren_user_id) || 0) + 1);
 
       // Get il/ilce names
