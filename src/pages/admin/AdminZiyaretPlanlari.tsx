@@ -16,12 +16,20 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   MapPin, CalendarIcon, Building2, Loader2, MoreHorizontal, Trash2, CheckCircle, Clock,
-  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown,
+  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown, GripVertical,
 } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isToday, isPast, isSameDay } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
+import {
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const s = {
   card: { background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.75rem" } as CSSProperties,
@@ -41,6 +49,7 @@ interface ZiyaretPlan {
   firma_unvani: string;
   firma_logo: string | null;
   iptal_sebebi?: string | null;
+  sira: number;
 }
 
 const DURUM_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -48,6 +57,72 @@ const DURUM_CONFIG: Record<string, { label: string; color: string; bg: string }>
   tamamlandi: { label: "Tamamlandı", color: "#22c55e", bg: "rgba(34,197,94,0.1)" },
   iptal: { label: "İptal", color: "#ef4444", bg: "rgba(239,68,68,0.1)" },
 };
+
+// Sortable plan item component
+function SortablePlanItem({ plan, onAksiyonEkle, onDurumChange, onIptal, onEditNote, onDelete }: {
+  plan: ZiyaretPlan;
+  onAksiyonEkle: (plan: ZiyaretPlan) => void;
+  onDurumChange: (id: string, durum: string) => void;
+  onIptal: (plan: ZiyaretPlan) => void;
+  onEditNote: (plan: ZiyaretPlan) => void;
+  onDelete: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: plan.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+  const durumC = DURUM_CONFIG[plan.durum] || DURUM_CONFIG.planli;
+
+  return (
+    <div ref={setNodeRef} style={{ ...style, background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }} className="rounded-lg p-3 group flex items-center gap-3" {...attributes}>
+      <div {...listeners} className="cursor-grab active:cursor-grabbing touch-none flex-shrink-0 p-1 -ml-1 rounded hover:bg-white/5">
+        <GripVertical className="w-4 h-4" style={{ color: "hsl(var(--admin-muted))" }} />
+      </div>
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: "hsl(var(--admin-card-bg))" }}>
+        {plan.firma_logo ? <img src={plan.firma_logo} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-4 h-4" style={{ color: "hsl(var(--admin-muted))" }} />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium" style={{ color: "hsl(var(--admin-text))" }}>{plan.firma_unvani}</p>
+        {plan.notlar && <p className="text-xs mt-0.5" style={{ color: "hsl(var(--admin-muted))" }}>{plan.notlar}</p>}
+        {plan.durum === "iptal" && plan.iptal_sebebi && (
+          <p className="text-[10px] mt-0.5 italic" style={{ color: "#ef4444" }}>İptal: {plan.iptal_sebebi}</p>
+        )}
+      </div>
+      <Badge className="text-[9px] px-2 py-0.5 flex-shrink-0" style={{ background: durumC.bg, color: durumC.color, borderColor: `${durumC.color}40` }}>{durumC.label}</Badge>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+            <MoreHorizontal className="w-4 h-4" style={{ color: "hsl(var(--admin-muted))" }} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.75rem" }} className="min-w-[160px]">
+          <DropdownMenuItem onClick={() => onAksiyonEkle(plan)} className="text-xs cursor-pointer">
+            <ClipboardList className="w-3.5 h-3.5 mr-2 text-amber-500" /> Aksiyon Ekle
+          </DropdownMenuItem>
+          {plan.durum === "planli" && (
+            <DropdownMenuItem onClick={() => onDurumChange(plan.id, "tamamlandi")} className="text-xs cursor-pointer">
+              <CheckCircle className="w-3.5 h-3.5 mr-2 text-emerald-500" /> Tamamlandı
+            </DropdownMenuItem>
+          )}
+          {plan.durum === "planli" && (
+            <DropdownMenuItem onClick={() => onIptal(plan)} className="text-xs cursor-pointer">
+              <Clock className="w-3.5 h-3.5 mr-2 text-red-500" /> İptal Et
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={() => onEditNote(plan)} className="text-xs cursor-pointer">
+            <CalendarIcon className="w-3.5 h-3.5 mr-2" /> Not Düzenle
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onDelete(plan.id)} className="text-xs cursor-pointer text-red-500 focus:text-red-500">
+            <Trash2 className="w-3.5 h-3.5 mr-2" /> Sil
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
 
 const IPTAL_SEBEPLERI = [
   "Müşteri erteledi.",
@@ -84,6 +159,12 @@ export default function AdminZiyaretPlanlari() {
   const [completeDayReasons, setCompleteDayReasons] = useState<Record<string, string>>({});
   const [completeDayDigerTexts, setCompleteDayDigerTexts] = useState<Record<string, string>>({});
   const [completeDayLoading, setCompleteDayLoading] = useState(false);
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
@@ -237,7 +318,7 @@ export default function AdminZiyaretPlanlari() {
   const plansByDate = weekDays.map(day => ({
     date: day,
     dateKey: format(day, "yyyy-MM-dd"),
-    plans: filteredPlanlar.filter(p => isSameDay(new Date(p.planlanan_tarih), day)),
+    plans: filteredPlanlar.filter(p => isSameDay(new Date(p.planlanan_tarih), day)).sort((a, b) => a.sira - b.sira),
   }));
 
   return (
@@ -319,9 +400,35 @@ export default function AdminZiyaretPlanlari() {
               const completedCount = plans.filter(p => p.durum === "tamamlandi").length;
               const cancelledCount = plans.filter(p => p.durum === "iptal").length;
 
+
+              const handleDragEnd = async (event: DragEndEvent) => {
+                const { active, over } = event;
+                if (!over || active.id === over.id) return;
+                const oldIndex = plans.findIndex(p => p.id === active.id);
+                const newIndex = plans.findIndex(p => p.id === over.id);
+                if (oldIndex === -1 || newIndex === -1) return;
+                const reordered = arrayMove(plans, oldIndex, newIndex);
+                // Optimistic update
+                const newPlanlar = planlar.map(p => {
+                  const idx = reordered.findIndex(r => r.id === p.id);
+                  if (idx !== -1) return { ...p, sira: idx };
+                  return p;
+                });
+                setPlanlar(newPlanlar);
+                // Persist
+                try {
+                  await callApi("reorder-ziyaret-planlari", {
+                    token,
+                    items: reordered.map((p, i) => ({ id: p.id, sira: i })),
+                  });
+                } catch {
+                  fetchPlanlar(); // rollback on error
+                }
+              };
+
               return (
                 <div className="rounded-xl p-5" style={{ ...s.card, ...(today ? { borderColor: "hsl(38 92% 50%)", borderWidth: 2 } : {}) }}>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                     <div className="flex items-center gap-3">
                       <div>
                         <div className="text-sm font-bold" style={today ? { color: "hsl(38 92% 50%)" } : s.text}>{format(date, "EEEE", { locale: tr })}</div>
@@ -348,54 +455,23 @@ export default function AdminZiyaretPlanlari() {
                   {plans.length === 0 ? (
                     <p className="text-sm text-center py-8" style={s.muted}>Bu gün için planlanmış ziyaret yok</p>
                   ) : (
-                    <div className="space-y-2">
-                      {plans.map(plan => {
-                        const durumC = DURUM_CONFIG[plan.durum] || DURUM_CONFIG.planli;
-                        return (
-                          <div key={plan.id} className="rounded-lg p-3 group flex items-center gap-3" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: "hsl(var(--admin-card-bg))" }}>
-                              {plan.firma_logo ? <img src={plan.firma_logo} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-4 h-4" style={s.muted} />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium" style={s.text}>{plan.firma_unvani}</p>
-                              {plan.notlar && <p className="text-xs mt-0.5" style={s.muted}>{plan.notlar}</p>}
-                              {plan.durum === "iptal" && plan.iptal_sebebi && (
-                                <p className="text-[10px] mt-0.5 italic" style={{ color: "#ef4444" }}>İptal: {plan.iptal_sebebi}</p>
-                              )}
-                            </div>
-                            <Badge className="text-[9px] px-2 py-0.5 flex-shrink-0" style={{ background: durumC.bg, color: durumC.color, borderColor: `${durumC.color}40` }}>{durumC.label}</Badge>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                                  <MoreHorizontal className="w-4 h-4" style={s.muted} />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" style={s.card} className="min-w-[160px]">
-                                <DropdownMenuItem onClick={() => handleAksiyonEkle(plan)} className="text-xs cursor-pointer">
-                                  <ClipboardList className="w-3.5 h-3.5 mr-2 text-amber-500" /> Aksiyon Ekle
-                                </DropdownMenuItem>
-                                {plan.durum === "planli" && (
-                                  <DropdownMenuItem onClick={() => handleDurumChange(plan.id, "tamamlandi")} className="text-xs cursor-pointer">
-                                    <CheckCircle className="w-3.5 h-3.5 mr-2 text-emerald-500" /> Tamamlandı
-                                  </DropdownMenuItem>
-                                )}
-                                {plan.durum === "planli" && (
-                                  <DropdownMenuItem onClick={() => openIptalDialog(plan)} className="text-xs cursor-pointer">
-                                    <Clock className="w-3.5 h-3.5 mr-2 text-red-500" /> İptal Et
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem onClick={() => { setEditPlan(plan); setEditNotlar(plan.notlar || ""); }} className="text-xs cursor-pointer">
-                                  <CalendarIcon className="w-3.5 h-3.5 mr-2" /> Not Düzenle
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDelete(plan.id)} className="text-xs cursor-pointer text-red-500 focus:text-red-500">
-                                  <Trash2 className="w-3.5 h-3.5 mr-2" /> Sil
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={plans.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-2">
+                          {plans.map(plan => (
+                            <SortablePlanItem
+                              key={plan.id}
+                              plan={plan}
+                              onAksiyonEkle={handleAksiyonEkle}
+                              onDurumChange={handleDurumChange}
+                              onIptal={openIptalDialog}
+                              onEditNote={(p) => { setEditPlan(p); setEditNotlar(p.notlar || ""); }}
+                              onDelete={handleDelete}
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
                   )}
                 </div>
               );

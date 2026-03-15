@@ -3641,7 +3641,7 @@ Deno.serve(async (req) => {
       if (durum) query = query.eq("durum", durum);
       if (baslangic) query = query.gte("planlanan_tarih", baslangic);
       if (bitis) query = query.lte("planlanan_tarih", bitis);
-      query = query.order("planlanan_tarih", { ascending: true });
+      query = query.order("planlanan_tarih", { ascending: true }).order("sira", { ascending: true });
       
       const { data, error } = await query;
       if (error) return jsonResponse({ error: error.message }, 400);
@@ -3686,6 +3686,18 @@ Deno.serve(async (req) => {
       
       const { error } = await supabase.from("admin_ziyaret_planlari").delete().eq("id", planId);
       if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
+    // ─── ZİYARET PLANI: SIRALA ───
+    if (action === "reorder-ziyaret-planlari") {
+      const payload = verifyToken(body.token);
+      const { items } = body; // [{id, sira}]
+      if (!items || !Array.isArray(items)) return jsonResponse({ error: "items zorunlu" }, 400);
+      
+      for (const item of items) {
+        await supabase.from("admin_ziyaret_planlari").update({ sira: item.sira }).eq("id", item.id);
+      }
       return jsonResponse({ success: true });
     }
 
