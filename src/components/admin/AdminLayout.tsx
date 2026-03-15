@@ -40,7 +40,7 @@ const menuItems = [
 ];
 
 export default function AdminLayout({ children, title }: AdminLayoutProps) {
-  const { user, loading, logout, hasPermission } = useAdminAuth();
+  const { user, loading, logout, hasPermission, isImpersonating, impersonatedUser, stopImpersonating, originalUser } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
