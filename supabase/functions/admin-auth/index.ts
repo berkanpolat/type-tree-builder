@@ -3387,6 +3387,44 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── PORTFOLIO: ADD ───
+    if (action === "add-portfolyo") {
+      const payload = verifyToken(body.token);
+      const { firmaId } = body;
+      
+      // Check if already assigned
+      const { data: existing } = await supabase.from("admin_portfolyo").select("admin_id").eq("firma_id", firmaId).single();
+      if (existing) {
+        const { data: owner } = await supabase.from("admin_users").select("ad, soyad").eq("id", existing.admin_id).single();
+        return jsonResponse({ error: `Bu firma zaten ${owner?.ad || ""} ${owner?.soyad || ""} portföyünde` }, 400);
+      }
+      
+      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: payload.id, firma_id: firmaId });
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
+      await logActivity(supabase, payload, "portfolyoye_ekledi", { target_type: "firma", target_id: firmaId, target_label: firma?.firma_unvani || "" });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── PORTFOLIO: REMOVE ───
+    if (action === "remove-portfolyo") {
+      const payload = verifyToken(body.token);
+      const { firmaId } = body;
+      
+      // Only the owner can remove
+      const { data: existing } = await supabase.from("admin_portfolyo").select("admin_id").eq("firma_id", firmaId).single();
+      if (!existing) return jsonResponse({ error: "Bu firma portföyde değil" }, 400);
+      if (existing.admin_id !== payload.id) return jsonResponse({ error: "Bu firmayı sadece portföy sahibi çıkarabilir" }, 403);
+      
+      const { error } = await supabase.from("admin_portfolyo").delete().eq("firma_id", firmaId).eq("admin_id", payload.id);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
+      await logActivity(supabase, payload, "portfolyoden_cikarildi", { target_type: "firma", target_id: firmaId, target_label: firma?.firma_unvani || "" });
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
