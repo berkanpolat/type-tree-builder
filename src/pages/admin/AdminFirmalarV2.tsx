@@ -1290,7 +1290,7 @@ export default function AdminFirmalarV2() {
               </div>
             </div>
           <div className="space-y-1">
-              <Label className="text-xs" style={s.muted}>Cep Telefonu *</Label>
+              <Label className="text-xs" style={s.muted}>Cep Telefonu</Label>
               <div className="flex gap-2">
                 <div className="flex items-center justify-center h-8 px-2 rounded-md text-xs font-medium shrink-0" style={{ ...s.input, border: "1px solid hsl(var(--admin-border))" }}>
                   🇹🇷 +90
