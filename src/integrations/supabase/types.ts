@@ -244,6 +244,7 @@ export type Database = {
           durum: string
           firma_id: string
           id: string
+          iptal_sebebi: string | null
           notlar: string | null
           planlanan_tarih: string
           updated_at: string
@@ -254,6 +255,7 @@ export type Database = {
           durum?: string
           firma_id: string
           id?: string
+          iptal_sebebi?: string | null
           notlar?: string | null
           planlanan_tarih: string
           updated_at?: string
@@ -264,6 +266,7 @@ export type Database = {
           durum?: string
           firma_id?: string
           id?: string
+          iptal_sebebi?: string | null
           notlar?: string | null
           planlanan_tarih?: string
           updated_at?: string
