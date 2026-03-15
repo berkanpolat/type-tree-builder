@@ -102,6 +102,9 @@ export default function AdminPortfoy() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
+  const [aksiyonlarOpen, setAksiyonlarOpen] = useState(false);
+  const [selectedFirma, setSelectedFirma] = useState<FirmaItem | null>(null);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
