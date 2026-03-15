@@ -145,9 +145,9 @@ export default function AdminCanliHarita() {
                     }}
                   />
                 ))}
-                {selectedAdmin && (
+                {selectedAdmin && selectedAdmin.lat != null && selectedAdmin.lng != null && (
                   <InfoWindow
-                    position={{ lat: selectedAdmin.lat, lng: selectedAdmin.lng }}
+                    position={{ lat: Number(selectedAdmin.lat), lng: Number(selectedAdmin.lng) }}
                     onCloseClick={() => setSelectedAdmin(null)}
                   >
                     <div className="p-1 text-sm text-gray-800">
