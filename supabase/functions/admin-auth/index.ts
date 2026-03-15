@@ -276,7 +276,7 @@ Deno.serve(async (req) => {
       }
 
       // Fetch all data in parallel - no .in() needed, just get everything
-      const [firmalar, profiles, ihaleCounts, teklifCounts, urunCounts, sikayetCounts, abonelikler, paketlerData] = await Promise.all([
+      const [firmalar, profiles, ihaleCounts, teklifCounts, urunCounts, sikayetCounts, abonelikler, paketlerData, portfolyoData, adminUsersForPortfolyo] = await Promise.all([
         fetchAll("firmalar", `
           id, firma_unvani, logo_url, created_at, updated_at, onay_durumu, user_id,
           firma_turu_id, firma_tipi_id, kurulus_il_id, kurulus_ilce_id,
@@ -294,6 +294,8 @@ Deno.serve(async (req) => {
         fetchAll("sikayetler", "bildiren_user_id"),
         fetchAll("kullanici_abonelikler", "id, user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, created_at, updated_at"),
         supabase.from("paketler").select("id, ad, slug, profil_goruntuleme_limiti, ihale_acma_limiti, teklif_verme_limiti, aktif_urun_limiti, mesaj_limiti"),
+        fetchAll("admin_portfolyo", "admin_id, firma_id"),
+        fetchAll("admin_users", "id, ad, soyad"),
       ]);
 
       console.log(`[list-firmalar] firmalar: ${firmalar.length}, profiles: ${profiles.length}, abonelikler: ${abonelikler.length}`);
@@ -311,7 +313,20 @@ Deno.serve(async (req) => {
       const urunCountMap = new Map<string, number>();
       for (const u of urunCounts) urunCountMap.set(u.user_id, (urunCountMap.get(u.user_id) || 0) + 1);
 
-      const sikayetCountMap = new Map<string, number>();
+      // Portfolio map: firma_id -> { admin_id, admin_ad, admin_soyad }
+      const adminNameMap = new Map<string, any>();
+      for (const a of adminUsersForPortfolyo) adminNameMap.set(a.id, a);
+      const portfolyoMap = new Map<string, { admin_id: string; admin_ad: string; admin_soyad: string }>();
+      for (const p of portfolyoData) {
+        const admin = adminNameMap.get(p.admin_id);
+        portfolyoMap.set(p.firma_id, {
+          admin_id: p.admin_id,
+          admin_ad: admin?.ad || "",
+          admin_soyad: admin?.soyad || "",
+        });
+      }
+
+
       for (const s of sikayetCounts) sikayetCountMap.set(s.bildiren_user_id, (sikayetCountMap.get(s.bildiren_user_id) || 0) + 1);
 
       // Get il/ilce names
@@ -398,6 +413,7 @@ Deno.serve(async (req) => {
               mesaj_limiti: paket.mesaj_limiti,
             } : null,
           } : null,
+          portfolyo: portfolyoMap.get(f.id) || null,
         };
       });
 
@@ -3368,6 +3384,44 @@ Deno.serve(async (req) => {
       const { error } = await supabase.from("chatbot_config").update({ deger, updated_at: new Date().toISOString() }).eq("anahtar", anahtar);
       if (error) return jsonResponse({ error: error.message }, 400);
       await logActivity(supabase, payload, "chatbot_config_guncelledi", { target_type: "chatbot_config", target_label: anahtar });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── PORTFOLIO: ADD ───
+    if (action === "add-portfolyo") {
+      const payload = verifyToken(body.token);
+      const { firmaId } = body;
+      
+      // Check if already assigned
+      const { data: existing } = await supabase.from("admin_portfolyo").select("admin_id").eq("firma_id", firmaId).single();
+      if (existing) {
+        const { data: owner } = await supabase.from("admin_users").select("ad, soyad").eq("id", existing.admin_id).single();
+        return jsonResponse({ error: `Bu firma zaten ${owner?.ad || ""} ${owner?.soyad || ""} portföyünde` }, 400);
+      }
+      
+      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: payload.id, firma_id: firmaId });
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
+      await logActivity(supabase, payload, "portfolyoye_ekledi", { target_type: "firma", target_id: firmaId, target_label: firma?.firma_unvani || "" });
+      return jsonResponse({ success: true });
+    }
+
+    // ─── PORTFOLIO: REMOVE ───
+    if (action === "remove-portfolyo") {
+      const payload = verifyToken(body.token);
+      const { firmaId } = body;
+      
+      // Only the owner can remove
+      const { data: existing } = await supabase.from("admin_portfolyo").select("admin_id").eq("firma_id", firmaId).single();
+      if (!existing) return jsonResponse({ error: "Bu firma portföyde değil" }, 400);
+      if (existing.admin_id !== payload.id) return jsonResponse({ error: "Bu firmayı sadece portföy sahibi çıkarabilir" }, 403);
+      
+      const { error } = await supabase.from("admin_portfolyo").delete().eq("firma_id", firmaId).eq("admin_id", payload.id);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
+      await logActivity(supabase, payload, "portfolyoden_cikarildi", { target_type: "firma", target_id: firmaId, target_label: firma?.firma_unvani || "" });
       return jsonResponse({ success: true });
     }
 

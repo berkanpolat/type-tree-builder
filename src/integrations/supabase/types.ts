@@ -62,6 +62,42 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_portfolyo: {
+        Row: {
+          admin_id: string
+          created_at: string
+          firma_id: string
+          id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          firma_id: string
+          id?: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          firma_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_portfolyo_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_portfolyo_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: true
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_users: {
         Row: {
           ad: string

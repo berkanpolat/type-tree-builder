@@ -27,7 +27,7 @@ import {
   Building2, Users, Clock, AlertCircle, CheckCircle, XCircle,
   Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp,
   CreditCard, Wifi, ArrowUpDown, ArrowUp, ArrowDown, Infinity, Eye, MessageSquare, Loader2, Trash2, ShieldCheck, Download,
-  MoreHorizontal, CheckCheck, ChevronDown,
+  MoreHorizontal, CheckCheck, ChevronDown, Briefcase,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -93,6 +93,11 @@ interface FirmaItem {
     durum: string;
     limits: any;
   } | null;
+  portfolyo: {
+    admin_id: string;
+    admin_ad: string;
+    admin_soyad: string;
+  } | null;
 }
 
 interface FirmaStats {
@@ -118,7 +123,7 @@ type SortDir = "asc" | "desc";
 const ITEMS_PER_PAGE = 20;
 
 export default function AdminFirmalarV2() {
-  const { token, hasPermission } = useAdminAuth();
+  const { token, hasPermission, user: adminUser } = useAdminAuth();
   const { toast } = useToast();
   const [firmalar, setFirmalar] = useState<FirmaItem[]>([]);
   const [stats, setStats] = useState<FirmaStats | null>(null);
@@ -443,6 +448,26 @@ export default function AdminFirmalarV2() {
       a.click();
     } catch {
       toast({ title: "Hata", description: "Dosya indirilemedi", variant: "destructive" });
+    }
+  };
+
+  const handleAddPortfolyo = async (firma: FirmaItem) => {
+    try {
+      await callApi("add-portfolyo", { token, firmaId: firma.id });
+      toast({ title: "Başarılı", description: `${firma.firma_unvani} portföyünüze eklendi` });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    }
+  };
+
+  const handleRemovePortfolyo = async (firma: FirmaItem) => {
+    try {
+      await callApi("remove-portfolyo", { token, firmaId: firma.id });
+      toast({ title: "Başarılı", description: `${firma.firma_unvani} portföyünüzden çıkarıldı` });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
     }
   };
 
@@ -825,6 +850,11 @@ export default function AdminFirmalarV2() {
                             <span className="text-[11px] truncate block max-w-[180px]" style={s.muted}>
                               {firma.profile?.ad} {firma.profile?.soyad}
                             </span>
+                            {firma.portfolyo && (
+                              <span className="text-[10px] flex items-center gap-1 mt-0.5" style={{ color: "hsl(38 92% 50%)" }}>
+                                <Briefcase className="w-3 h-3" /> {firma.portfolyo.admin_ad} {firma.portfolyo.admin_soyad}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </TableCell>
@@ -892,6 +922,19 @@ export default function AdminFirmalarV2() {
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
                             </DropdownMenuItem>
+                            {!firma.portfolyo ? (
+                              <DropdownMenuItem onClick={() => handleAddPortfolyo(firma)} className="text-xs cursor-pointer">
+                                <Briefcase className="w-3.5 h-3.5 mr-2 text-amber-500" /> Portföyüme Ekle
+                              </DropdownMenuItem>
+                            ) : firma.portfolyo.admin_id === adminUser?.id ? (
+                              <DropdownMenuItem onClick={() => handleRemovePortfolyo(firma)} className="text-xs cursor-pointer">
+                                <Briefcase className="w-3.5 h-3.5 mr-2 text-red-400" /> Portföyden Çıkar
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem disabled className="text-xs opacity-50">
+                                <Briefcase className="w-3.5 h-3.5 mr-2" /> {firma.portfolyo.admin_ad} {firma.portfolyo.admin_soyad} portföyünde
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem
                               onClick={() => { setDeleteFirma(firma); setDeleteConfirmText(""); setDeleteDialogOpen(true); }}
