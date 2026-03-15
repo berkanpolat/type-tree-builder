@@ -144,12 +144,12 @@ export default function AdminAksiyonlar() {
   );
 }
 
-function AksiyonCard({ aksiyon, onDelete }: { aksiyon: Aksiyon; onDelete: (id: string) => void }) {
+function AksiyonCard({ aksiyon, onDelete, onClick }: { aksiyon: Aksiyon; onDelete: (id: string) => void; onClick: () => void }) {
   const turConfig = TUR_CONFIG[aksiyon.tur] || TUR_CONFIG.diger;
   const Icon = turConfig.icon;
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl transition-colors" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+    <div className="flex items-start gap-3 p-3 rounded-xl transition-colors cursor-pointer hover:brightness-95" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }} onClick={onClick}>
       <div className="mt-0.5 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${turConfig.color}15`, width: 20, height: 20 }}>
         <Icon className="w-3 h-3" style={{ color: turConfig.color }} />
       </div>
@@ -164,7 +164,7 @@ function AksiyonCard({ aksiyon, onDelete }: { aksiyon: Aksiyon; onDelete: (id: s
           <span className="text-[10px]" style={{ color: "hsl(var(--admin-muted))" }}>{format(new Date(aksiyon.tarih), "dd MMM HH:mm", { locale: tr })}</span>
         </div>
       </div>
-      <button onClick={() => onDelete(aksiyon.id)} className="mt-0.5 opacity-30 hover:opacity-100 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
+      <button onClick={(e) => { e.stopPropagation(); onDelete(aksiyon.id); }} className="mt-0.5 opacity-30 hover:opacity-100 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
     </div>
   );
 }
