@@ -1133,6 +1133,75 @@ export type Database = {
           },
         ]
       }
+      firma_yetkililer: {
+        Row: {
+          aciklama: string | null
+          ad: string
+          admin_id: string
+          created_at: string
+          dahili_no: string | null
+          email: string | null
+          firma_id: string
+          id: string
+          il: string | null
+          ilce: string | null
+          linkedin: string | null
+          pozisyon: string | null
+          soyad: string
+          telefon: string | null
+          updated_at: string
+        }
+        Insert: {
+          aciklama?: string | null
+          ad: string
+          admin_id: string
+          created_at?: string
+          dahili_no?: string | null
+          email?: string | null
+          firma_id: string
+          id?: string
+          il?: string | null
+          ilce?: string | null
+          linkedin?: string | null
+          pozisyon?: string | null
+          soyad: string
+          telefon?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aciklama?: string | null
+          ad?: string
+          admin_id?: string
+          created_at?: string
+          dahili_no?: string | null
+          email?: string | null
+          firma_id?: string
+          id?: string
+          il?: string | null
+          ilce?: string | null
+          linkedin?: string | null
+          pozisyon?: string | null
+          soyad?: string
+          telefon?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "firma_yetkililer_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "firma_yetkililer_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       firmalar: {
         Row: {
           aylik_tedarik_birim_id: string | null
