@@ -199,6 +199,11 @@ export default function AdminFirmalarV2() {
   const [belgeActionLoading, setBelgeActionLoading] = useState<string | null>(null);
   const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({});
 
+  // Expandable row - aksiyon geçmişi
+  const [expandedFirmaId, setExpandedFirmaId] = useState<string | null>(null);
+  const [expandedAksiyonlar, setExpandedAksiyonlar] = useState<any[]>([]);
+  const [expandedLoading, setExpandedLoading] = useState(false);
+
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
     if (error) throw error;
