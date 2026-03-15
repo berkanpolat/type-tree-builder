@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone, Bot
+  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone, Bot, Briefcase
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
