@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { CalendarIcon, Loader2 } from "lucide-react";
+import { getAksiyonTurleriForDepartman } from "@/lib/aksiyon-config";
 
 const s = {
   card: {
@@ -25,15 +26,6 @@ const s = {
   } as CSSProperties,
 };
 
-const AKSIYON_TURLERI = [
-  { value: "arama", label: "Arama Yap" },
-  { value: "ziyaret", label: "Ziyaret Et" },
-  { value: "teklif", label: "Teklif Gönder" },
-  { value: "takip", label: "Takip Et" },
-  { value: "toplanti", label: "Toplantı" },
-  { value: "diger", label: "Diğer" },
-];
-
 interface AksiyonEkleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,30 +34,36 @@ interface AksiyonEkleDialogProps {
   onSuccess: () => void;
   callApi: (action: string, body: Record<string, unknown>) => Promise<any>;
   token: string;
+  adminDepartman: string;
+  adminIsPrimary: boolean;
 }
 
-export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUnvani, onSuccess, callApi, token }: AksiyonEkleDialogProps) {
+export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUnvani, onSuccess, callApi, token, adminDepartman, adminIsPrimary }: AksiyonEkleDialogProps) {
+  const turler = getAksiyonTurleriForDepartman(adminDepartman, adminIsPrimary);
   const [baslik, setBaslik] = useState("");
   const [aciklama, setAciklama] = useState("");
-  const [tur, setTur] = useState("arama");
+  const [tur, setTur] = useState<string>(turler[0]?.value || "diger");
+  const [digerText, setDigerText] = useState("");
   const [tarih, setTarih] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
-    if (!baslik.trim()) return;
+    const finalBaslik = tur === "diger" ? (digerText.trim() || baslik.trim()) : baslik.trim();
+    if (!finalBaslik) return;
     setLoading(true);
     try {
       await callApi("create-aksiyon", {
         token,
         firmaId,
-        baslik: baslik.trim(),
+        baslik: finalBaslik,
         aciklama: aciklama.trim() || null,
         tur,
         tarih: tarih.toISOString(),
       });
       setBaslik("");
       setAciklama("");
-      setTur("arama");
+      setDigerText("");
+      setTur(turler[0]?.value || "diger");
       setTarih(new Date());
       onOpenChange(false);
       onSuccess();
@@ -93,12 +91,26 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
                 <SelectValue />
               </SelectTrigger>
               <SelectContent style={s.card}>
-                {AKSIYON_TURLERI.map(t => (
+                {turler.map(t => (
                   <SelectItem key={t.value} value={t.value} className="text-sm">{t.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
+          {/* Diğer - serbest metin */}
+          {tur === "diger" && (
+            <div>
+              <label className="text-xs font-medium mb-1 block" style={s.muted}>Aksiyon Adı</label>
+              <Input
+                value={digerText}
+                onChange={e => setDigerText(e.target.value)}
+                placeholder="Aksiyonu yazın..."
+                className="h-9 text-sm"
+                style={s.input}
+              />
+            </div>
+          )}
 
           {/* Başlık */}
           <div>
@@ -146,7 +158,11 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
             </Popover>
           </div>
 
-          <Button onClick={handleSubmit} disabled={loading || !baslik.trim()} className="w-full bg-amber-500 hover:bg-amber-600 text-white h-9 text-sm">
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || (tur === "diger" ? !digerText.trim() && !baslik.trim() : !baslik.trim())}
+            className="w-full bg-amber-500 hover:bg-amber-600 text-white h-9 text-sm"
+          >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aksiyon Ekle"}
           </Button>
         </div>

@@ -38,6 +38,7 @@ interface AdminUser {
   soyad: string;
   email: string | null;
   telefon: string | null;
+  departman: string;
   pozisyon: string;
   is_primary: boolean;
   permissions: AdminPermissions;
