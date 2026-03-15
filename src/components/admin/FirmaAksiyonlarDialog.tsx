@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Check, Loader2, Plus, Trash2 } from "lucide-react";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
+import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
 
 const s = {
   text: { color: "hsl(var(--admin-text))" } as CSSProperties,
