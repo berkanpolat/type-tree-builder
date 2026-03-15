@@ -118,6 +118,10 @@ export default function AdminPortfoy() {
   const [aksiyonlarOpen, setAksiyonlarOpen] = useState(false);
   const [yetkililerOpen, setYetkililerOpen] = useState(false);
   const [selectedFirma, setSelectedFirma] = useState<FirmaItem | null>(null);
+  const [ziyaretDialogOpen, setZiyaretDialogOpen] = useState(false);
+  const [ziyaretTarih, setZiyaretTarih] = useState<Date | undefined>(undefined);
+  const [ziyaretNotlar, setZiyaretNotlar] = useState("");
+  const [ziyaretSaving, setZiyaretSaving] = useState(false);
 
   // Expandable row - aksiyon geçmişi
   const [expandedFirmaId, setExpandedFirmaId] = useState<string | null>(null);
