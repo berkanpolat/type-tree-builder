@@ -308,7 +308,7 @@ export default function AdminHedefler() {
                     {pklAsildi && (
                       <div className="flex items-center justify-between mt-1 px-2 py-1.5 rounded-lg" style={{ background: "hsl(var(--admin-input-bg))" }}>
                         <span className="text-xs" style={s.muted}>
-                          PKL üzeri: <strong className="text-emerald-400">{pklAsim}</strong> işlem × {h.birim_basi_prim || 0} ₺
+                          PKL üzeri: <strong className="text-emerald-400">{h.hedef_turu === "ciro" ? `${pklAsim.toLocaleString("tr-TR")} ₺` : `${pklAsim} işlem`}</strong> × {h.birim_basi_prim || 0} ₺
                         </span>
                         <span className="text-sm font-bold text-emerald-400">
                           🏆 {kazanilanPrim.toLocaleString("tr-TR")} ₺
