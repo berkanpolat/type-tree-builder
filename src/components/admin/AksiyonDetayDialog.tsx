@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Calendar, Clock, User, Building2, FileText, Tag } from "lucide-react";
+import { Calendar, Clock, User, Building2, FileText, Tag, CheckCircle, XCircle, Package } from "lucide-react";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
 
 const s = {
@@ -22,6 +22,10 @@ export interface AksiyonDetay {
   firma_unvani?: string;
   created_at?: string;
   yetkili_ad?: string;
+  sonuc?: string | null;
+  sonuc_neden?: string | null;
+  sonuc_paket_id?: string | null;
+  sonuc_paket_ad?: string | null;
 }
 
 interface AksiyonDetayDialogProps {
@@ -69,6 +73,20 @@ export default function AksiyonDetayDialog({ open, onOpenChange, aksiyon }: Aksi
     });
   }
 
+  // Sonuc row
+  const sonucLabel = aksiyon.sonuc === "satis_kapatildi" ? "Satış Kapatıldı" : aksiyon.sonuc === "satis_kapanmadi" ? "Satış Kapanmadı" : null;
+  if (sonucLabel) {
+    rows.push({ icon: aksiyon.sonuc === "satis_kapatildi" ? CheckCircle : XCircle, label: "Sonuç", value: sonucLabel });
+  }
+
+  if (aksiyon.sonuc === "satis_kapatildi" && aksiyon.sonuc_paket_ad) {
+    rows.push({ icon: Package, label: "Paket", value: aksiyon.sonuc_paket_ad });
+  }
+
+  if (aksiyon.sonuc === "satis_kapanmadi" && aksiyon.sonuc_neden) {
+    rows.push({ icon: XCircle, label: "Neden", value: aksiyon.sonuc_neden });
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -103,15 +121,7 @@ export default function AksiyonDetayDialog({ open, onOpenChange, aksiyon }: Aksi
 
         <div className="space-y-3 mt-2">
           {/* Detail rows */}
-          <div
-            className="rounded-lg divide-y"
-            style={{
-              background: "hsl(var(--admin-hover))",
-              borderColor: "hsl(var(--admin-border))",
-              // @ts-ignore
-              "--tw-divide-opacity": 1,
-            }}
-          >
+          <div className="rounded-lg divide-y" style={{ background: "hsl(var(--admin-hover))" }}>
             {rows.map((row, i) => {
               const RowIcon = row.icon;
               return (

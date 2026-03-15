@@ -9,8 +9,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { CalendarIcon, Clock, Loader2, Plus, UserPlus, User } from "lucide-react";
+import { CalendarIcon, Clock, Loader2, Plus, UserPlus } from "lucide-react";
 import { getAksiyonTurleriForDepartman } from "@/lib/aksiyon-config";
+import { supabase } from "@/integrations/supabase/client";
 
 const s = {
   card: {
@@ -26,11 +27,31 @@ const s = {
   } as CSSProperties,
 };
 
+const SATIS_KAPANMADI_NEDENLERI = [
+  "Düşünmek istiyor.",
+  "Fiyatı yüksek buldu.",
+  "İhtiyaç duymuyor.",
+  "İşine yaramayacağını düşünüyor.",
+  "Denemiş memnun kalmamış.",
+  "Yetkiliye ulaşılamadı.",
+  "Yönetim karar verecek.",
+  "Yönetim onaylamadı.",
+  "Telefona bakmadı.",
+  "Ücretsiz üyelikte kalmak istiyor.",
+  "Zamanlama uygun değil.",
+  "Diğer",
+];
+
 interface YetkiliOption {
   id: string;
   ad: string;
   soyad: string;
   pozisyon: string | null;
+}
+
+interface PaketOption {
+  id: string;
+  ad: string;
 }
 
 interface AksiyonEkleDialogProps {
@@ -56,6 +77,13 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
   const [not, setNot] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Sonuc fields
+  const [sonuc, setSonuc] = useState<string>("");
+  const [sonucPaketId, setSonucPaketId] = useState<string>("");
+  const [sonucNeden, setSonucNeden] = useState<string>("");
+  const [sonucNedenDiger, setSonucNedenDiger] = useState<string>("");
+  const [paketler, setPaketler] = useState<PaketOption[]>([]);
+
   // Yetkili list
   const [yetkililer, setYetkililer] = useState<YetkiliOption[]>([]);
   const [yetkililerLoading, setYetkililerLoading] = useState(false);
@@ -78,15 +106,25 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
     }
   };
 
+  const fetchPaketler = async () => {
+    const { data } = await supabase.from("paketler").select("id, ad").eq("aktif", true).order("fiyat_aylik", { ascending: true });
+    setPaketler((data || []).map((p: any) => ({ id: p.id, ad: p.ad })));
+  };
+
   useEffect(() => {
     if (open && firmaId) {
       fetchYetkililer();
+      fetchPaketler();
       const n = new Date();
       setTur(turler[0]?.value || "diger");
       setYetkiliId("none");
       setTarih(n);
       setSaat(format(n, "HH:mm"));
       setNot("");
+      setSonuc("");
+      setSonucPaketId("");
+      setSonucNeden("");
+      setSonucNedenDiger("");
       setShowYetkiliForm(false);
     }
   }, [open, firmaId]);
@@ -97,7 +135,6 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
     try {
       const res = await callApi("create-yetkili", { token, firmaId, ad: yetkiliAd.trim(), soyad: yetkiliSoyad.trim() });
       await fetchYetkililer();
-      // Auto-select the newly added yetkili
       if (res?.yetkili?.id) setYetkiliId(res.yetkili.id);
       setYetkiliAd("");
       setYetkiliSoyad("");
@@ -109,12 +146,25 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
     }
   };
 
+  const isFormValid = () => {
+    if (!sonuc) return false;
+    if (sonuc === "satis_kapatildi" && !sonucPaketId) return false;
+    if (sonuc === "satis_kapanmadi" && !sonucNeden) return false;
+    if (sonuc === "satis_kapanmadi" && sonucNeden === "Diğer" && !sonucNedenDiger.trim()) return false;
+    return true;
+  };
+
   const handleSubmit = async () => {
+    if (!isFormValid()) return;
+
     const turLabel = turler.find(t => t.value === tur)?.label || tur;
-    // Combine date + time
     const [h, m] = saat.split(":").map(Number);
     const combined = new Date(tarih);
     combined.setHours(h || 0, m || 0, 0, 0);
+
+    const finalNeden = sonuc === "satis_kapanmadi"
+      ? (sonucNeden === "Diğer" ? sonucNedenDiger.trim() : sonucNeden)
+      : null;
 
     setLoading(true);
     try {
@@ -126,6 +176,9 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
         tur,
         tarih: combined.toISOString(),
         yetkiliId: yetkiliId !== "none" ? yetkiliId : null,
+        sonuc,
+        sonucNeden: finalNeden,
+        sonucPaketId: sonuc === "satis_kapatildi" ? sonucPaketId : null,
       });
       onOpenChange(false);
       onSuccess();
@@ -138,7 +191,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold" style={s.text}>Aksiyon Ekle</DialogTitle>
           <p className="text-xs" style={s.muted}>{firmaUnvani}</p>
@@ -249,6 +302,64 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
             </div>
           </div>
 
+          {/* Aksiyon Sonucu */}
+          <div>
+            <label className="text-xs font-medium mb-1 block" style={s.muted}>Aksiyon Sonucu *</label>
+            <Select value={sonuc} onValueChange={(v) => { setSonuc(v); setSonucPaketId(""); setSonucNeden(""); setSonucNedenDiger(""); }}>
+              <SelectTrigger className={cn("h-9 text-sm", !sonuc && "text-muted-foreground")} style={s.input}>
+                <SelectValue placeholder="Seçiniz..." />
+              </SelectTrigger>
+              <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
+                <SelectItem value="satis_kapatildi" className="text-sm">Satış Kapatıldı</SelectItem>
+                <SelectItem value="satis_kapanmadi" className="text-sm">Satış Kapanmadı</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Satış Kapatıldı → Paket Seçimi */}
+          {sonuc === "satis_kapatildi" && (
+            <div>
+              <label className="text-xs font-medium mb-1 block" style={s.muted}>Paket *</label>
+              <Select value={sonucPaketId} onValueChange={setSonucPaketId}>
+                <SelectTrigger className={cn("h-9 text-sm", !sonucPaketId && "text-muted-foreground")} style={s.input}>
+                  <SelectValue placeholder="Paket seçiniz..." />
+                </SelectTrigger>
+                <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
+                  {paketler.map(p => (
+                    <SelectItem key={p.id} value={p.id} className="text-sm">{p.ad}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* Satış Kapanmadı → Neden */}
+          {sonuc === "satis_kapanmadi" && (
+            <div>
+              <label className="text-xs font-medium mb-1 block" style={s.muted}>Nedeni *</label>
+              <Select value={sonucNeden} onValueChange={(v) => { setSonucNeden(v); if (v !== "Diğer") setSonucNedenDiger(""); }}>
+                <SelectTrigger className={cn("h-9 text-sm", !sonucNeden && "text-muted-foreground")} style={s.input}>
+                  <SelectValue placeholder="Neden seçiniz..." />
+                </SelectTrigger>
+                <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto max-h-[200px]">
+                  {SATIS_KAPANMADI_NEDENLERI.map(n => (
+                    <SelectItem key={n} value={n} className="text-sm">{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {sonucNeden === "Diğer" && (
+                <Input
+                  value={sonucNedenDiger}
+                  onChange={e => setSonucNedenDiger(e.target.value)}
+                  placeholder="Nedeni yazınız..."
+                  className="h-9 text-sm mt-2"
+                  style={s.input}
+                />
+              )}
+            </div>
+          )}
+
           {/* Aksiyon Notu */}
           <div>
             <label className="text-xs font-medium mb-1 block" style={s.muted}>Aksiyon Notu (opsiyonel)</label>
@@ -263,7 +374,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
 
           <Button
             onClick={handleSubmit}
-            disabled={loading}
+            disabled={loading || !isFormValid()}
             className="w-full bg-amber-500 hover:bg-amber-600 text-white h-9 text-sm"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aksiyon Ekle"}
