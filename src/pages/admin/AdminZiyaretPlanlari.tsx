@@ -49,6 +49,7 @@ interface ZiyaretPlan {
   firma_unvani: string;
   firma_logo: string | null;
   iptal_sebebi?: string | null;
+  sira: number;
 }
 
 const DURUM_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -56,6 +57,73 @@ const DURUM_CONFIG: Record<string, { label: string; color: string; bg: string }>
   tamamlandi: { label: "Tamamlandı", color: "#22c55e", bg: "rgba(34,197,94,0.1)" },
   iptal: { label: "İptal", color: "#ef4444", bg: "rgba(239,68,68,0.1)" },
 };
+
+// Sortable plan item component
+function SortablePlanItem({ plan, onAksiyonEkle, onDurumChange, onIptal, onEditNote, onDelete }: {
+  plan: ZiyaretPlan;
+  onAksiyonEkle: (plan: ZiyaretPlan) => void;
+  onDurumChange: (id: string, durum: string) => void;
+  onIptal: (plan: ZiyaretPlan) => void;
+  onEditNote: (plan: ZiyaretPlan) => void;
+  onDelete: (id: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: plan.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 10 : undefined,
+  };
+  const durumC = DURUM_CONFIG[plan.durum] || DURUM_CONFIG.planli;
+
+  return (
+    <div ref={setNodeRef} style={style} className="rounded-lg p-3 group flex items-center gap-3" {...attributes}
+      data-style-bg="hsl(var(--admin-hover))" data-style-border="1px solid hsl(var(--admin-border))">
+      <div {...listeners} className="cursor-grab active:cursor-grabbing touch-none flex-shrink-0 p-1 -ml-1 rounded hover:bg-white/5">
+        <GripVertical className="w-4 h-4" style={{ color: "hsl(var(--admin-muted))" }} />
+      </div>
+      <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: "hsl(var(--admin-card-bg))" }}>
+        {plan.firma_logo ? <img src={plan.firma_logo} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-4 h-4" style={{ color: "hsl(var(--admin-muted))" }} />}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium" style={{ color: "hsl(var(--admin-text))" }}>{plan.firma_unvani}</p>
+        {plan.notlar && <p className="text-xs mt-0.5" style={{ color: "hsl(var(--admin-muted))" }}>{plan.notlar}</p>}
+        {plan.durum === "iptal" && plan.iptal_sebebi && (
+          <p className="text-[10px] mt-0.5 italic" style={{ color: "#ef4444" }}>İptal: {plan.iptal_sebebi}</p>
+        )}
+      </div>
+      <Badge className="text-[9px] px-2 py-0.5 flex-shrink-0" style={{ background: durumC.bg, color: durumC.color, borderColor: `${durumC.color}40` }}>{durumC.label}</Badge>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+            <MoreHorizontal className="w-4 h-4" style={{ color: "hsl(var(--admin-muted))" }} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.75rem" }} className="min-w-[160px]">
+          <DropdownMenuItem onClick={() => onAksiyonEkle(plan)} className="text-xs cursor-pointer">
+            <ClipboardList className="w-3.5 h-3.5 mr-2 text-amber-500" /> Aksiyon Ekle
+          </DropdownMenuItem>
+          {plan.durum === "planli" && (
+            <DropdownMenuItem onClick={() => onDurumChange(plan.id, "tamamlandi")} className="text-xs cursor-pointer">
+              <CheckCircle className="w-3.5 h-3.5 mr-2 text-emerald-500" /> Tamamlandı
+            </DropdownMenuItem>
+          )}
+          {plan.durum === "planli" && (
+            <DropdownMenuItem onClick={() => onIptal(plan)} className="text-xs cursor-pointer">
+              <Clock className="w-3.5 h-3.5 mr-2 text-red-500" /> İptal Et
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem onClick={() => onEditNote(plan)} className="text-xs cursor-pointer">
+            <CalendarIcon className="w-3.5 h-3.5 mr-2" /> Not Düzenle
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onDelete(plan.id)} className="text-xs cursor-pointer text-red-500 focus:text-red-500">
+            <Trash2 className="w-3.5 h-3.5 mr-2" /> Sil
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
 
 const IPTAL_SEBEPLERI = [
   "Müşteri erteledi.",
