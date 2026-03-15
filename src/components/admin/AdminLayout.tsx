@@ -81,7 +81,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   if (!user) return null;
 
   const visibleMenuItems = menuItems.filter((item) => {
-    if (item.primaryOnly) return user.is_primary;
+    // When impersonating, use original user's permissions (super admin sees all)
+    const checkUser = originalUser || user;
+    if (item.primaryOnly) return checkUser?.is_primary ?? false;
     if (item.permission) return hasPermission(item.permission);
     return true;
   });
