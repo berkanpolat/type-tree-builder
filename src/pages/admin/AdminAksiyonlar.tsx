@@ -132,7 +132,7 @@ export default function AdminAksiyonlar() {
               <div key={date}>
                 <p className="text-[10px] font-medium mb-1.5 px-1" style={s.muted}>{date}</p>
                 <div className="space-y-1.5">
-                  {items.map(a => <AksiyonCard key={a.id} aksiyon={a} onDelete={deleteAksiyon} />)}
+                  {items.map(a => <AksiyonCard key={a.id} aksiyon={a} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} />)}
                 </div>
               </div>
             ))}
