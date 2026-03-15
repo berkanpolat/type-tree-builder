@@ -731,13 +731,17 @@ export default function AdminFirmalarV2() {
 
   const handleCreateFirma = async () => {
     const cepDigits = ((yeniFirma as any).cep_telefonu || "").replace(/\D/g, "");
-    if (!yeniFirma.email || !yeniFirma.password || !yeniFirma.ad || !yeniFirma.soyad || !yeniFirma.firma_unvani || !yeniFirma.vergi_numarasi || !yeniFirma.vergi_dairesi || !yeniFirma.firma_turu_id || !yeniFirma.firma_tipi_id || cepDigits.length !== 10) {
-      toast({ title: "Hata", description: "Zorunlu alanları doldurun (cep telefonu 10 hane olmalı)", variant: "destructive" });
+    if (!yeniFirma.email || !yeniFirma.password || !yeniFirma.ad || !yeniFirma.soyad || !yeniFirma.firma_unvani || !yeniFirma.vergi_numarasi || !yeniFirma.vergi_dairesi || !yeniFirma.firma_turu_id || !yeniFirma.firma_tipi_id) {
+      toast({ title: "Hata", description: "Zorunlu alanları doldurun", variant: "destructive" });
+      return;
+    }
+    if (cepDigits.length > 0 && cepDigits.length !== 10) {
+      toast({ title: "Hata", description: "Cep telefonu 10 hane olmalı", variant: "destructive" });
       return;
     }
     setYeniFirmaSaving(true);
     try {
-      await callApi("create-firma", { token, ...yeniFirma, iletisim_numarasi: "+90" + cepDigits });
+      await callApi("create-firma", { token, ...yeniFirma, iletisim_numarasi: cepDigits.length === 10 ? "+90" + cepDigits : "" });
       toast({ title: "Başarılı", description: "Firma oluşturuldu" });
       setYeniFirmaOpen(false);
       setYeniFirma({ email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "", firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "", cep_telefonu: "" });
