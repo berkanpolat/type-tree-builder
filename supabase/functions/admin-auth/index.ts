@@ -276,7 +276,7 @@ Deno.serve(async (req) => {
       }
 
       // Fetch all data in parallel - no .in() needed, just get everything
-      const [firmalar, profiles, ihaleCounts, teklifCounts, urunCounts, sikayetCounts, abonelikler, paketlerData] = await Promise.all([
+      const [firmalar, profiles, ihaleCounts, teklifCounts, urunCounts, sikayetCounts, abonelikler, paketlerData, portfolyoData, adminUsersForPortfolyo] = await Promise.all([
         fetchAll("firmalar", `
           id, firma_unvani, logo_url, created_at, updated_at, onay_durumu, user_id,
           firma_turu_id, firma_tipi_id, kurulus_il_id, kurulus_ilce_id,
@@ -294,6 +294,8 @@ Deno.serve(async (req) => {
         fetchAll("sikayetler", "bildiren_user_id"),
         fetchAll("kullanici_abonelikler", "id, user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, created_at, updated_at"),
         supabase.from("paketler").select("id, ad, slug, profil_goruntuleme_limiti, ihale_acma_limiti, teklif_verme_limiti, aktif_urun_limiti, mesaj_limiti"),
+        fetchAll("admin_portfolyo", "admin_id, firma_id"),
+        fetchAll("admin_users", "id, ad, soyad"),
       ]);
 
       console.log(`[list-firmalar] firmalar: ${firmalar.length}, profiles: ${profiles.length}, abonelikler: ${abonelikler.length}`);
