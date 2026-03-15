@@ -1436,6 +1436,26 @@ export default function AdminFirmalarV2() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bulk Portfolio */}
+      <AlertDialog open={bulkAction === "portfolio"} onOpenChange={(open) => { if (!open) setBulkAction(null); }}>
+        <AlertDialogContent style={s.card}>
+          <AlertDialogHeader>
+            <AlertDialogTitle style={s.text}>Toplu Portföye Ekle</AlertDialogTitle>
+            <AlertDialogDescription style={s.muted}>
+              Seçilen <strong>{selectedCount}</strong> firmayı portföyünüze eklemek istediğinize emin misiniz?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkLoading}>İptal</AlertDialogCancel>
+            <Button onClick={handleBulkPortfolio} disabled={bulkLoading} className="bg-amber-500 hover:bg-amber-600 text-white">
+              {bulkLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {selectedCount} Firmayı Ekle
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
     </AdminLayout>
   );
