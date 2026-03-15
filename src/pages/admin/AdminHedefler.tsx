@@ -146,6 +146,10 @@ export default function AdminHedefler() {
       toast({ title: "Hata", description: "Tüm alanları doldurun.", variant: "destructive" });
       return;
     }
+    if (formTur === "paket_uyeligi" && formPaketler.length === 0) {
+      toast({ title: "Hata", description: "En az bir paket seçmelisiniz.", variant: "destructive" });
+      return;
+    }
     setSaving(true);
     try {
       await callApi("create-hedef", {
@@ -154,9 +158,10 @@ export default function AdminHedefler() {
         hedefTuru: formTur,
         baslik: formBaslik,
         aciklama: formAciklama || null,
-        hedefMiktar: parseInt(formMiktar),
+        hedefMiktar: formTur === "ciro" ? parseFloat(formMiktar) : parseInt(formMiktar),
         baslangicTarihi: formBaslangic,
         bitisTarihi: formBitis,
+        hedefDetay: formTur === "paket_uyeligi" ? { paket_ids: formPaketler } : {},
       });
       toast({ title: "Başarılı", description: "PKL oluşturuldu." });
       setShowCreate(false);
