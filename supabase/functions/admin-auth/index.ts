@@ -3689,6 +3689,18 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── ZİYARET PLANI: SIRALA ───
+    if (action === "reorder-ziyaret-planlari") {
+      const payload = verifyToken(body.token);
+      const { items } = body; // [{id, sira}]
+      if (!items || !Array.isArray(items)) return jsonResponse({ error: "items zorunlu" }, 400);
+      
+      for (const item of items) {
+        await supabase.from("admin_ziyaret_planlari").update({ sira: item.sira }).eq("id", item.id);
+      }
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
