@@ -19,24 +19,47 @@ interface AdminLayoutProps {
   title?: string;
 }
 
-const menuItems = [
-  { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null, primaryOnly: false },
-  { label: "Firmalar", path: "/yonetim/firmalar-v2", icon: Building2, permission: null, primaryOnly: false },
-  { label: "Portföyüm", path: "/yonetim/portfolyo", icon: Briefcase, permission: null, primaryOnly: false },
-  { label: "Aksiyonlarım", path: "/yonetim/aksiyonlar", icon: ClipboardList, permission: null, primaryOnly: false },
-  { label: "Ziyaret Planları", path: "/yonetim/ziyaret-planlari", icon: MapPin, permission: null, primaryOnly: false },
-  { label: "PKL & Primler", path: "/yonetim/hedefler", icon: Target, permission: null, primaryOnly: false },
-  { label: "Canlı Harita", path: "/yonetim/canli-harita", icon: Map, permission: null, primaryOnly: false },
-  { label: "Yaptırımlar", path: "/yonetim/kisitlamalar", icon: Shield, permission: "sikayet_kisitlama" as const },
-  { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: null, primaryOnly: true },
-  { label: "İşlemler", path: "/yonetim/islemler", icon: Activity, permission: null, primaryOnly: true },
-  { label: "Şikayetler", path: "/yonetim/sikayetler", icon: MessageSquareWarning, permission: "sikayet_goruntule" as const },
-  { label: "İhaleler", path: "/yonetim/ihaleler", icon: Gavel, permission: "ihale_goruntule" as const },
-  { label: "Ürünler", path: "/yonetim/urunler", icon: Package, permission: "urun_goruntule" as const },
-  { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: "paket_detay_goruntule" as const },
-  { label: "Destek Talepleri", path: "/yonetim/destek", icon: HeadphonesIcon, permission: "destek_goruntule" as const },
-  { label: "Reklam", path: "/yonetim/reklam", icon: Megaphone, permission: null, primaryOnly: true },
-  { label: "TekBot", path: "/yonetim/tekbot", icon: Bot, permission: null, primaryOnly: true },
+type MenuItem = { label: string; path: string; icon: React.ElementType; permission: string | null; primaryOnly: boolean };
+type MenuGroup = { groupLabel: string | null; items: MenuItem[] };
+
+const menuGroups: MenuGroup[] = [
+  {
+    groupLabel: null, // Top-level, always visible
+    items: [
+      { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null, primaryOnly: false },
+      { label: "Firmalar", path: "/yonetim/firmalar-v2", icon: Building2, permission: null, primaryOnly: false },
+    ],
+  },
+  {
+    groupLabel: "Web Site",
+    items: [
+      { label: "İhaleler", path: "/yonetim/ihaleler", icon: Gavel, permission: "ihale_goruntule" as const, primaryOnly: false },
+      { label: "Ürünler", path: "/yonetim/urunler", icon: Package, permission: "urun_goruntule" as const, primaryOnly: false },
+      { label: "Destek Talepleri", path: "/yonetim/destek", icon: HeadphonesIcon, permission: "destek_goruntule" as const, primaryOnly: false },
+      { label: "Şikayetler", path: "/yonetim/sikayetler", icon: MessageSquareWarning, permission: "sikayet_goruntule" as const, primaryOnly: false },
+      { label: "Yaptırımlar", path: "/yonetim/kisitlamalar", icon: Shield, permission: "sikayet_kisitlama" as const, primaryOnly: false },
+    ],
+  },
+  {
+    groupLabel: "CRM",
+    items: [
+      { label: "Portföyüm", path: "/yonetim/portfolyo", icon: Briefcase, permission: null, primaryOnly: false },
+      { label: "Aksiyonlarım", path: "/yonetim/aksiyonlar", icon: ClipboardList, permission: null, primaryOnly: false },
+      { label: "Ziyaret Planları", path: "/yonetim/ziyaret-planlari", icon: MapPin, permission: null, primaryOnly: false },
+      { label: "PKL & Primler", path: "/yonetim/hedefler", icon: Target, permission: null, primaryOnly: false },
+    ],
+  },
+  {
+    groupLabel: "Yönetim",
+    items: [
+      { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: null, primaryOnly: true },
+      { label: "İşlemler", path: "/yonetim/islemler", icon: Activity, permission: null, primaryOnly: true },
+      { label: "Canlı Harita", path: "/yonetim/canli-harita", icon: Map, permission: null, primaryOnly: false },
+      { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: "paket_detay_goruntule" as const, primaryOnly: false },
+      { label: "Reklam", path: "/yonetim/reklam", icon: Megaphone, permission: null, primaryOnly: true },
+      { label: "TekBot", path: "/yonetim/tekbot", icon: Bot, permission: null, primaryOnly: true },
+    ],
+  },
 ];
 
 export default function AdminLayout({ children, title }: AdminLayoutProps) {
@@ -80,15 +103,38 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   if (!user) return null;
 
-  const visibleMenuItems = menuItems.filter((item) => {
-    // When impersonating, use original user's permissions (super admin sees all)
+  const filterItem = (item: MenuItem) => {
     const checkUser = originalUser || user;
     if (item.primaryOnly) return checkUser?.is_primary ?? false;
-    if (item.permission) return hasPermission(item.permission);
+    if (item.permission) return hasPermission(item.permission as any);
     return true;
-  });
+  };
+
+  const visibleGroups = menuGroups
+    .map((g) => ({ ...g, items: g.items.filter(filterItem) }))
+    .filter((g) => g.items.length > 0);
 
   const t = lightMode;
+
+  const renderLink = (item: MenuItem) => {
+    const isActive = location.pathname === item.path;
+    return (
+      <Link
+        key={item.path}
+        to={item.path}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
+          isActive && "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+        )}
+        style={!isActive ? { color: `hsl(var(--admin-muted))` } : undefined}
+        onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = `hsl(var(--admin-hover))`; }}
+        onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+      >
+        <item.icon className="w-4 h-4 shrink-0" />
+        {item.label}
+      </Link>
+    );
+  };
 
   const sidebarContent = (
     <>
@@ -105,29 +151,19 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       </div>
 
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {visibleMenuItems.map((item) => {
-          const isActive = location.pathname === item.path;
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                isActive && "bg-amber-500/10 text-amber-600 border border-amber-500/20"
-              )}
-              style={!isActive ? { color: `hsl(var(--admin-muted))` } : undefined}
-              onMouseEnter={(e) => {
-                if (!isActive) e.currentTarget.style.background = `hsl(var(--admin-hover))`;
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive) e.currentTarget.style.background = 'transparent';
-              }}
-            >
-              <item.icon className="w-4 h-4 shrink-0" />
-              {item.label}
-            </Link>
-          );
-        })}
+        {visibleGroups.map((group, gi) => (
+          <div key={gi}>
+            {group.groupLabel && (
+              <>
+                {gi > 0 && <div className="my-2 border-t" style={{ borderColor: `hsl(var(--admin-border))` }} />}
+                <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: `hsl(var(--admin-muted))` }}>
+                  {group.groupLabel}
+                </p>
+              </>
+            )}
+            {group.items.map(renderLink)}
+          </div>
+        ))}
       </nav>
 
       <div className="p-3 border-t space-y-3" style={{ borderColor: `hsl(var(--admin-border))` }}>
