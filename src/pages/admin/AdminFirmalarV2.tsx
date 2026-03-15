@@ -139,7 +139,7 @@ export default function AdminFirmalarV2() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Bulk action states
-  const [bulkAction, setBulkAction] = useState<"delete" | "approve" | "verify" | null>(null);
+  const [bulkAction, setBulkAction] = useState<"delete" | "approve" | "verify" | "portfolio" | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState("");
 
