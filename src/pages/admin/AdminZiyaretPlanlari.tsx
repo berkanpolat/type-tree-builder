@@ -401,11 +401,6 @@ export default function AdminZiyaretPlanlari() {
               const completedCount = plans.filter(p => p.durum === "tamamlandi").length;
               const cancelledCount = plans.filter(p => p.durum === "iptal").length;
 
-              const sensors = useSensors(
-                useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-                useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
-                useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-              );
 
               const handleDragEnd = async (event: DragEndEvent) => {
                 const { active, over } = event;
