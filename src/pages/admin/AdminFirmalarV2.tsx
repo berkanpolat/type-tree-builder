@@ -850,6 +850,11 @@ export default function AdminFirmalarV2() {
                             <span className="text-[11px] truncate block max-w-[180px]" style={s.muted}>
                               {firma.profile?.ad} {firma.profile?.soyad}
                             </span>
+                            {firma.portfolyo && (
+                              <span className="text-[10px] flex items-center gap-1 mt-0.5" style={{ color: "hsl(38 92% 50%)" }}>
+                                <Briefcase className="w-3 h-3" /> {firma.portfolyo.admin_ad} {firma.portfolyo.admin_soyad}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </TableCell>
