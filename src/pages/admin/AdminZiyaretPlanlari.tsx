@@ -395,9 +395,40 @@ export default function AdminZiyaretPlanlari() {
               const completedCount = plans.filter(p => p.durum === "tamamlandi").length;
               const cancelledCount = plans.filter(p => p.durum === "iptal").length;
 
+              const sensors = useSensors(
+                useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+                useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+                useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+              );
+
+              const handleDragEnd = async (event: DragEndEvent) => {
+                const { active, over } = event;
+                if (!over || active.id === over.id) return;
+                const oldIndex = plans.findIndex(p => p.id === active.id);
+                const newIndex = plans.findIndex(p => p.id === over.id);
+                if (oldIndex === -1 || newIndex === -1) return;
+                const reordered = arrayMove(plans, oldIndex, newIndex);
+                // Optimistic update
+                const newPlanlar = planlar.map(p => {
+                  const idx = reordered.findIndex(r => r.id === p.id);
+                  if (idx !== -1) return { ...p, sira: idx };
+                  return p;
+                });
+                setPlanlar(newPlanlar);
+                // Persist
+                try {
+                  await callApi("reorder-ziyaret-planlari", {
+                    token,
+                    items: reordered.map((p, i) => ({ id: p.id, sira: i })),
+                  });
+                } catch {
+                  fetchPlanlar(); // rollback on error
+                }
+              };
+
               return (
                 <div className="rounded-xl p-5" style={{ ...s.card, ...(today ? { borderColor: "hsl(38 92% 50%)", borderWidth: 2 } : {}) }}>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
                     <div className="flex items-center gap-3">
                       <div>
                         <div className="text-sm font-bold" style={today ? { color: "hsl(38 92% 50%)" } : s.text}>{format(date, "EEEE", { locale: tr })}</div>
@@ -424,54 +455,23 @@ export default function AdminZiyaretPlanlari() {
                   {plans.length === 0 ? (
                     <p className="text-sm text-center py-8" style={s.muted}>Bu gün için planlanmış ziyaret yok</p>
                   ) : (
-                    <div className="space-y-2">
-                      {plans.map(plan => {
-                        const durumC = DURUM_CONFIG[plan.durum] || DURUM_CONFIG.planli;
-                        return (
-                          <div key={plan.id} className="rounded-lg p-3 group flex items-center gap-3" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
-                            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: "hsl(var(--admin-card-bg))" }}>
-                              {plan.firma_logo ? <img src={plan.firma_logo} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-4 h-4" style={s.muted} />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium" style={s.text}>{plan.firma_unvani}</p>
-                              {plan.notlar && <p className="text-xs mt-0.5" style={s.muted}>{plan.notlar}</p>}
-                              {plan.durum === "iptal" && plan.iptal_sebebi && (
-                                <p className="text-[10px] mt-0.5 italic" style={{ color: "#ef4444" }}>İptal: {plan.iptal_sebebi}</p>
-                              )}
-                            </div>
-                            <Badge className="text-[9px] px-2 py-0.5 flex-shrink-0" style={{ background: durumC.bg, color: durumC.color, borderColor: `${durumC.color}40` }}>{durumC.label}</Badge>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                                  <MoreHorizontal className="w-4 h-4" style={s.muted} />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" style={s.card} className="min-w-[160px]">
-                                <DropdownMenuItem onClick={() => handleAksiyonEkle(plan)} className="text-xs cursor-pointer">
-                                  <ClipboardList className="w-3.5 h-3.5 mr-2 text-amber-500" /> Aksiyon Ekle
-                                </DropdownMenuItem>
-                                {plan.durum === "planli" && (
-                                  <DropdownMenuItem onClick={() => handleDurumChange(plan.id, "tamamlandi")} className="text-xs cursor-pointer">
-                                    <CheckCircle className="w-3.5 h-3.5 mr-2 text-emerald-500" /> Tamamlandı
-                                  </DropdownMenuItem>
-                                )}
-                                {plan.durum === "planli" && (
-                                  <DropdownMenuItem onClick={() => openIptalDialog(plan)} className="text-xs cursor-pointer">
-                                    <Clock className="w-3.5 h-3.5 mr-2 text-red-500" /> İptal Et
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem onClick={() => { setEditPlan(plan); setEditNotlar(plan.notlar || ""); }} className="text-xs cursor-pointer">
-                                  <CalendarIcon className="w-3.5 h-3.5 mr-2" /> Not Düzenle
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleDelete(plan.id)} className="text-xs cursor-pointer text-red-500 focus:text-red-500">
-                                  <Trash2 className="w-3.5 h-3.5 mr-2" /> Sil
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={plans.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                        <div className="space-y-2">
+                          {plans.map(plan => (
+                            <SortablePlanItem
+                              key={plan.id}
+                              plan={plan}
+                              onAksiyonEkle={handleAksiyonEkle}
+                              onDurumChange={handleDurumChange}
+                              onIptal={openIptalDialog}
+                              onEditNote={(p) => { setEditPlan(p); setEditNotlar(p.notlar || ""); }}
+                              onDelete={handleDelete}
+                            />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
                   )}
                 </div>
               );
