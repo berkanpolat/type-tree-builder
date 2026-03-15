@@ -348,6 +348,9 @@ export default function AdminPortfoy() {
                             <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setAksiyonlarOpen(true); }} className="text-xs cursor-pointer">
                               <ClipboardList className="w-3.5 h-3.5 mr-2" /> Aksiyonları Gör
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setYetkililerOpen(true); }} className="text-xs cursor-pointer">
+                              <Users className="w-3.5 h-3.5 mr-2" /> Yetkili Kişiler
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
