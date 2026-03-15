@@ -4079,7 +4079,7 @@ Deno.serve(async (req) => {
       }
       
       const { data: hedef, error } = await supabase.from("admin_hedefler").insert({
-        atayan_admin_id: payload.id,
+        atayan_admin_id: getActingId(payload, body),
         hedef_admin_id: hedefAdminId,
         hedef_turu: hedefTuru || "paket_uyeligi",
         baslik,
