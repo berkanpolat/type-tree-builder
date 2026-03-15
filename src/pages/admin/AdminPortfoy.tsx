@@ -15,8 +15,9 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Building2, Search, ExternalLink, Gavel, Package, CreditCard, Wifi,
   ArrowUpDown, ArrowUp, ArrowDown, Eye, Loader2, ShieldCheck,
-  MoreHorizontal, Briefcase, ClipboardList, Plus, Users,
+  MoreHorizontal, Briefcase, ClipboardList, Plus, Users, ChevronUp, ChevronDown,
 } from "lucide-react";
+import { TUR_CONFIG } from "@/lib/aksiyon-config";
 import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
 import FirmaAksiyonlarDialog from "@/components/admin/FirmaAksiyonlarDialog";
 import FirmaYetkililerDialog from "@/components/admin/FirmaYetkililerDialog";
