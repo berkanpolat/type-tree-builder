@@ -4003,22 +4003,31 @@ Deno.serve(async (req) => {
     // ─── PKL: OLUŞTUR ───
     if (action === "create-hedef") {
       const payload = verifyToken(body.token);
-      const { hedefAdminId, hedefTuru, baslik, aciklama, hedefMiktar, baslangicTarihi, bitisTarihi } = body;
+      const { hedefAdminId, hedefTuru, baslik, aciklama, hedefMiktar, baslangicTarihi, bitisTarihi, hedefDetay } = body;
       
       if (!hedefAdminId || !baslik || !hedefMiktar || !baslangicTarihi || !bitisTarihi) {
         return jsonResponse({ error: "Zorunlu alanlar eksik" }, 400);
+      }
+
+      // Validate paket_uyeligi requires paket_ids
+      if (hedefTuru === "paket_uyeligi") {
+        const detay = hedefDetay || {};
+        if (!detay.paket_ids || !Array.isArray(detay.paket_ids) || detay.paket_ids.length === 0) {
+          return jsonResponse({ error: "Paket Üyeliği türünde en az bir paket seçilmelidir" }, 400);
+        }
       }
       
       const { data: hedef, error } = await supabase.from("admin_hedefler").insert({
         atayan_admin_id: payload.id,
         hedef_admin_id: hedefAdminId,
-        hedef_turu: hedefTuru || "ziyaret",
+        hedef_turu: hedefTuru || "paket_uyeligi",
         baslik,
         aciklama: aciklama || null,
         hedef_miktar: hedefMiktar,
         baslangic_tarihi: baslangicTarihi,
         bitis_tarihi: bitisTarihi,
         birim_basi_prim: 0,
+        hedef_detay: hedefDetay || {},
       }).select().single();
       
       if (error) return jsonResponse({ error: error.message }, 400);
