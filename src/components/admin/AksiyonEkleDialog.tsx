@@ -90,7 +90,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
               <SelectTrigger className="h-9 text-sm" style={s.input}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent style={s.card}>
+              <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
                 {turler.map(t => (
                   <SelectItem key={t.value} value={t.value} className="text-sm">{t.label}</SelectItem>
                 ))}
