@@ -77,8 +77,7 @@ function SortablePlanItem({ plan, onAksiyonEkle, onDurumChange, onIptal, onEditN
   const durumC = DURUM_CONFIG[plan.durum] || DURUM_CONFIG.planli;
 
   return (
-    <div ref={setNodeRef} style={style} className="rounded-lg p-3 group flex items-center gap-3" {...attributes}
-      data-style-bg="hsl(var(--admin-hover))" data-style-border="1px solid hsl(var(--admin-border))">
+    <div ref={setNodeRef} style={{ ...style, background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }} className="rounded-lg p-3 group flex items-center gap-3" {...attributes}>
       <div {...listeners} className="cursor-grab active:cursor-grabbing touch-none flex-shrink-0 p-1 -ml-1 rounded hover:bg-white/5">
         <GripVertical className="w-4 h-4" style={{ color: "hsl(var(--admin-muted))" }} />
       </div>
