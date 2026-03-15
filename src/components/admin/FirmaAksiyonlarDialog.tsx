@@ -117,6 +117,7 @@ export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, fir
           </div>
         )}
       </DialogContent>
+      <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
     </Dialog>
   );
 }
