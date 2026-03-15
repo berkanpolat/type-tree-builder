@@ -5,6 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 } from "@/components/ui/table";
@@ -15,8 +21,11 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Building2, Search, ExternalLink, Gavel, Package, CreditCard, Wifi,
   ArrowUpDown, ArrowUp, ArrowDown, Eye, Loader2, ShieldCheck,
-  MoreHorizontal, Briefcase, ClipboardList, Plus, Users, ChevronUp, ChevronDown,
+  MoreHorizontal, Briefcase, ClipboardList, Plus, Users, ChevronUp, ChevronDown, MapPin, CalendarIcon,
 } from "lucide-react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
 import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
 import FirmaAksiyonlarDialog from "@/components/admin/FirmaAksiyonlarDialog";
@@ -109,6 +118,10 @@ export default function AdminPortfoy() {
   const [aksiyonlarOpen, setAksiyonlarOpen] = useState(false);
   const [yetkililerOpen, setYetkililerOpen] = useState(false);
   const [selectedFirma, setSelectedFirma] = useState<FirmaItem | null>(null);
+  const [ziyaretDialogOpen, setZiyaretDialogOpen] = useState(false);
+  const [ziyaretTarih, setZiyaretTarih] = useState<Date | undefined>(undefined);
+  const [ziyaretNotlar, setZiyaretNotlar] = useState("");
+  const [ziyaretSaving, setZiyaretSaving] = useState(false);
 
   // Expandable row - aksiyon geçmişi
   const [expandedFirmaId, setExpandedFirmaId] = useState<string | null>(null);
@@ -151,6 +164,27 @@ export default function AdminPortfoy() {
       setExpandedAksiyonlar([]);
     } finally {
       setExpandedLoading(false);
+    }
+  };
+
+  const handleAddZiyaret = async () => {
+    if (!selectedFirma || !ziyaretTarih) return;
+    setZiyaretSaving(true);
+    try {
+      await callApi("add-ziyaret-plani", {
+        token,
+        firmaId: selectedFirma.id,
+        planlanenTarih: format(ziyaretTarih, "yyyy-MM-dd"),
+        notlar: ziyaretNotlar || null,
+      });
+      toast({ title: "Başarılı", description: `${selectedFirma.firma_unvani} ziyaret planına eklendi` });
+      setZiyaretDialogOpen(false);
+      setZiyaretTarih(undefined);
+      setZiyaretNotlar("");
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setZiyaretSaving(false);
     }
   };
 
@@ -388,6 +422,9 @@ export default function AdminPortfoy() {
                             <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setYetkililerOpen(true); }} className="text-xs cursor-pointer">
                               <Users className="w-3.5 h-3.5 mr-2" /> Yetkili Kişiler
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setZiyaretTarih(undefined); setZiyaretNotlar(""); setZiyaretDialogOpen(true); }} className="text-xs cursor-pointer">
+                              <MapPin className="w-3.5 h-3.5 mr-2" /> Ziyaret Planıma Ekle
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
@@ -521,6 +558,43 @@ export default function AdminPortfoy() {
           </>
         )}
         <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
+
+        {/* Ziyaret Planı Dialog */}
+        <Dialog open={ziyaretDialogOpen} onOpenChange={setZiyaretDialogOpen}>
+          <DialogContent style={s.card} className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle style={s.text}>Ziyaret Planı Ekle</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-xs" style={s.muted}>{selectedFirma?.firma_unvani}</p>
+              <div>
+                <label className="text-xs font-medium mb-1 block" style={s.text}>Ziyaret Tarihi *</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className={cn("w-full justify-start text-left text-sm", !ziyaretTarih && "text-muted-foreground")}
+                      style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))", background: "hsl(var(--admin-input-bg))" }}>
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {ziyaretTarih ? format(ziyaretTarih, "d MMMM yyyy", { locale: tr }) : "Tarih seçin"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={ziyaretTarih} onSelect={setZiyaretTarih} className={cn("p-3 pointer-events-auto")} disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))} />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <div>
+                <label className="text-xs font-medium mb-1 block" style={s.text}>Notlar</label>
+                <Textarea value={ziyaretNotlar} onChange={e => setZiyaretNotlar(e.target.value)} placeholder="Ziyaret ile ilgili notlar..." rows={3} style={s.input} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setZiyaretDialogOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
+              <Button size="sm" onClick={handleAddZiyaret} disabled={!ziyaretTarih || ziyaretSaving} className="bg-amber-500 hover:bg-amber-600 text-white">
+                {ziyaretSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ekle"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );

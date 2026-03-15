@@ -237,6 +237,54 @@ export type Database = {
           },
         ]
       }
+      admin_ziyaret_planlari: {
+        Row: {
+          admin_id: string
+          created_at: string
+          durum: string
+          firma_id: string
+          id: string
+          notlar: string | null
+          planlanan_tarih: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          durum?: string
+          firma_id: string
+          id?: string
+          notlar?: string | null
+          planlanan_tarih: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          durum?: string
+          firma_id?: string
+          id?: string
+          notlar?: string | null
+          planlanan_tarih?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_ziyaret_planlari_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_ziyaret_planlari_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       banners: {
         Row: {
           aktif: boolean
