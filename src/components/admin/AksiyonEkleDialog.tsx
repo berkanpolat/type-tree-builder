@@ -9,9 +9,10 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { CalendarIcon, Clock, Loader2, Plus, UserPlus } from "lucide-react";
+import { CalendarIcon, Clock, Loader2, Plus, UserPlus, Mail, CreditCard } from "lucide-react";
 import { getAksiyonTurleriForDepartman } from "@/lib/aksiyon-config";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const s = {
   card: {
@@ -52,6 +53,7 @@ interface YetkiliOption {
 interface PaketOption {
   id: string;
   ad: string;
+  slug: string;
 }
 
 interface AksiyonEkleDialogProps {
@@ -84,6 +86,12 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
   const [sonucNedenDiger, setSonucNedenDiger] = useState<string>("");
   const [paketler, setPaketler] = useState<PaketOption[]>([]);
 
+  // PRO package specific fields
+  const [proPeriod, setProPeriod] = useState<string>("aylik");
+  const [emailSecim, setEmailSecim] = useState<string>("default");
+  const [customEmail, setCustomEmail] = useState("");
+  const [firmaEmail, setFirmaEmail] = useState("");
+
   // Yetkili list
   const [yetkililer, setYetkililer] = useState<YetkiliOption[]>([]);
   const [yetkililerLoading, setYetkililerLoading] = useState(false);
@@ -107,14 +115,24 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
   };
 
   const fetchPaketler = async () => {
-    const { data } = await supabase.from("paketler").select("id, ad").eq("aktif", true).order("fiyat_aylik", { ascending: true });
-    setPaketler((data || []).map((p: any) => ({ id: p.id, ad: p.ad })));
+    const { data } = await supabase.from("paketler").select("id, ad, slug").eq("aktif", true).order("fiyat_aylik", { ascending: true });
+    setPaketler((data || []).map((p: any) => ({ id: p.id, ad: p.ad, slug: p.slug || "" })));
+  };
+
+  const fetchFirmaEmail = async () => {
+    try {
+      const data = await callApi("get-firma-email", { token, firmaId });
+      setFirmaEmail(data.email || "");
+    } catch {
+      setFirmaEmail("");
+    }
   };
 
   useEffect(() => {
     if (open && firmaId) {
       fetchYetkililer();
       fetchPaketler();
+      fetchFirmaEmail();
       const n = new Date();
       setTur(turler[0]?.value || "diger");
       setYetkiliId("none");
@@ -125,6 +143,9 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       setSonucPaketId("");
       setSonucNeden("");
       setSonucNedenDiger("");
+      setProPeriod("aylik");
+      setEmailSecim("default");
+      setCustomEmail("");
       setShowYetkiliForm(false);
     }
   }, [open, firmaId]);
@@ -146,9 +167,22 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
     }
   };
 
+  const selectedPaket = paketler.find(p => p.id === sonucPaketId);
+  const isProPaket = selectedPaket?.slug === "pro";
+
+  const getOdemeMail = () => {
+    if (emailSecim === "default") return firmaEmail;
+    return customEmail.trim();
+  };
+
   const isFormValid = () => {
     if (!sonuc) return false;
     if (sonuc === "satis_kapatildi" && !sonucPaketId) return false;
+    if (sonuc === "satis_kapatildi" && isProPaket) {
+      if (!proPeriod) return false;
+      const mail = getOdemeMail();
+      if (!mail || !mail.includes("@")) return false;
+    }
     if (sonuc === "satis_kapanmadi" && !sonucNeden) return false;
     if (sonuc === "satis_kapanmadi" && sonucNeden === "Diğer" && !sonucNedenDiger.trim()) return false;
     return true;
@@ -168,7 +202,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
 
     setLoading(true);
     try {
-      await callApi("create-aksiyon", {
+      const payload: Record<string, unknown> = {
         token,
         firmaId,
         baslik: turLabel,
@@ -179,11 +213,27 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
         sonuc,
         sonucNeden: finalNeden,
         sonucPaketId: sonuc === "satis_kapatildi" ? sonucPaketId : null,
-      });
+      };
+
+      // Add PRO-specific fields
+      if (sonuc === "satis_kapatildi" && isProPaket) {
+        payload.periyot = proPeriod;
+        payload.odemeMail = getOdemeMail();
+      }
+
+      const result = await callApi("create-aksiyon", payload);
+
+      if (result?.paymentLinkSent) {
+        toast.success(`Ödeme linki ${getOdemeMail()} adresine gönderildi`);
+      } else if (result?.packageAssigned) {
+        toast.success(`${selectedPaket?.ad} paketi firmaya atandı`);
+      }
+
       onOpenChange(false);
       onSuccess();
     } catch (err: any) {
       console.error(err);
+      toast.error("Aksiyon eklenirken hata oluştu");
     } finally {
       setLoading(false);
     }
@@ -320,7 +370,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
           {sonuc === "satis_kapatildi" && (
             <div>
               <label className="text-xs font-medium mb-1 block" style={s.muted}>Paket *</label>
-              <Select value={sonucPaketId} onValueChange={setSonucPaketId}>
+              <Select value={sonucPaketId} onValueChange={(v) => { setSonucPaketId(v); setProPeriod("aylik"); setEmailSecim("default"); setCustomEmail(""); }}>
                 <SelectTrigger className={cn("h-9 text-sm", !sonucPaketId && "text-muted-foreground")} style={s.input}>
                   <SelectValue placeholder="Paket seçiniz..." />
                 </SelectTrigger>
@@ -330,6 +380,63 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {/* PRO Paket → Periyot & Email */}
+          {sonuc === "satis_kapatildi" && isProPaket && (
+            <div className="space-y-3 p-3 rounded-lg" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
+              <div className="flex items-center gap-2 mb-1">
+                <CreditCard className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-xs font-medium" style={s.text}>Ödeme Detayları</span>
+              </div>
+
+              {/* Periyot */}
+              <div>
+                <label className="text-[11px] font-medium mb-1 block" style={s.muted}>Periyot *</label>
+                <Select value={proPeriod} onValueChange={setProPeriod}>
+                  <SelectTrigger className="h-9 text-sm" style={s.input}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
+                    <SelectItem value="aylik" className="text-sm">Aylık — $199/ay</SelectItem>
+                    <SelectItem value="yillik" className="text-sm">Yıllık — $1.299/yıl</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="text-[11px] font-medium mb-1 block" style={s.muted}>
+                  <Mail className="w-3 h-3 inline mr-1" />
+                  Ödeme Linki Gönderilecek E-posta *
+                </label>
+                <Select value={emailSecim} onValueChange={(v) => { setEmailSecim(v); if (v === "default") setCustomEmail(""); }}>
+                  <SelectTrigger className="h-9 text-sm" style={s.input}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
+                    <SelectItem value="default" className="text-sm">
+                      {firmaEmail || "Firma e-postası yükleniyor..."}
+                    </SelectItem>
+                    <SelectItem value="diger" className="text-sm">Diğer</SelectItem>
+                  </SelectContent>
+                </Select>
+                {emailSecim === "diger" && (
+                  <Input
+                    type="email"
+                    value={customEmail}
+                    onChange={e => setCustomEmail(e.target.value)}
+                    placeholder="E-posta adresi yazınız..."
+                    className="h-9 text-sm mt-2"
+                    style={s.input}
+                  />
+                )}
+              </div>
+
+              <p className="text-[10px] leading-relaxed" style={s.muted}>
+                Ödeme linki seçilen e-posta adresine gönderilecek. Ödeme tamamlandığında paket otomatik olarak aktifleştirilecektir.
+              </p>
             </div>
           )}
 
@@ -377,7 +484,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
             disabled={loading || !isFormValid()}
             className="w-full bg-amber-500 hover:bg-amber-600 text-white h-9 text-sm"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Aksiyon Ekle"}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isProPaket && sonuc === "satis_kapatildi" ? "Aksiyon Ekle & Ödeme Linki Gönder" : "Aksiyon Ekle"}
           </Button>
         </div>
       </DialogContent>
