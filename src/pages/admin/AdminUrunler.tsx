@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, CSSProperties, useRef } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

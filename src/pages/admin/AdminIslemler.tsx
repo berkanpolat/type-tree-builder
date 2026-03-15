@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, CSSProperties } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Users } from "lucide-react";
 import AdminLogPanel from "@/components/admin/AdminLogPanel";
