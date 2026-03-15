@@ -74,6 +74,7 @@ export type Database = {
           tarih: string
           tur: string
           updated_at: string
+          yetkili_id: string | null
         }
         Insert: {
           aciklama?: string | null
@@ -86,6 +87,7 @@ export type Database = {
           tarih?: string
           tur?: string
           updated_at?: string
+          yetkili_id?: string | null
         }
         Update: {
           aciklama?: string | null
@@ -98,6 +100,7 @@ export type Database = {
           tarih?: string
           tur?: string
           updated_at?: string
+          yetkili_id?: string | null
         }
         Relationships: [
           {
@@ -112,6 +115,13 @@ export type Database = {
             columns: ["firma_id"]
             isOneToOne: false
             referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_aksiyonlar_yetkili_id_fkey"
+            columns: ["yetkili_id"]
+            isOneToOne: false
+            referencedRelation: "firma_yetkililer"
             referencedColumns: ["id"]
           },
         ]

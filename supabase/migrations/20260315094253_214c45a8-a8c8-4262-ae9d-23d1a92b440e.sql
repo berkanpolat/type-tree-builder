@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_aksiyonlar ADD COLUMN yetkili_id uuid REFERENCES public.firma_yetkililer(id) ON DELETE SET NULL DEFAULT NULL;

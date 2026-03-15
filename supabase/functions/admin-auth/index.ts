@@ -3419,7 +3419,7 @@ Deno.serve(async (req) => {
     // ─── AKSIYONLAR: CREATE ───
     if (action === "create-aksiyon") {
       const payload = verifyToken(body.token);
-      const { firmaId, baslik, aciklama, tur, tarih } = body;
+      const { firmaId, baslik, aciklama, tur, tarih, yetkiliId } = body;
       if (!firmaId || !baslik) return jsonResponse({ error: "Firma ve başlık zorunlu" }, 400);
       
       const { data, error } = await supabase.from("admin_aksiyonlar").insert({
@@ -3430,6 +3430,7 @@ Deno.serve(async (req) => {
         tur: tur || "diger",
         tarih: tarih || new Date().toISOString(),
         durum: "yapilacak",
+        yetkili_id: yetkiliId || null,
       }).select().single();
       if (error) return jsonResponse({ error: error.message }, 400);
       
