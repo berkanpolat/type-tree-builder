@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Shield, UserCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Shield, UserCircle, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface AdminUser {
   id: string;
