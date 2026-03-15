@@ -70,6 +70,7 @@ const AdminReklam = lazy(() => import("./pages/admin/AdminReklam"));
 const AdminTekBot = lazy(() => import("./pages/admin/AdminTekBot"));
 const AdminPortfoy = lazy(() => import("./pages/admin/AdminPortfoy"));
 const AdminAksiyonlar = lazy(() => import("./pages/admin/AdminAksiyonlar"));
+const AdminZiyaretPlanlari = lazy(() => import("./pages/admin/AdminZiyaretPlanlari"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
