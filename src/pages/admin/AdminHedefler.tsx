@@ -465,7 +465,7 @@ export default function AdminHedefler() {
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block" style={s.text}>PKL Türü</label>
-                <Select value={formTur} onValueChange={setFormTur}>
+                <Select value={formTur} onValueChange={(v) => { setFormTur(v); setFormPaketler([]); }}>
                   <SelectTrigger style={s.input}><SelectValue /></SelectTrigger>
                   <SelectContent style={{ ...s.card, zIndex: 9999 }} position="popper" sideOffset={4}>
                     {HEDEF_TURLERI.map(t => (
@@ -474,6 +474,57 @@ export default function AdminHedefler() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Paket Üyeliği → Çoklu Paket Seçimi */}
+              {formTur === "paket_uyeligi" && (
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block" style={s.text}>Hedeflenen Paketler *</label>
+                  <div className="p-3 rounded-lg space-y-2" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                    {paketOptions.map(p => (
+                      <label key={p.id} className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={formPaketler.includes(p.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) setFormPaketler(prev => [...prev, p.id]);
+                            else setFormPaketler(prev => prev.filter(id => id !== p.id));
+                          }}
+                        />
+                        <span className="text-sm" style={s.text}>{p.ad}</span>
+                      </label>
+                    ))}
+                    {paketOptions.length === 0 && <p className="text-xs" style={s.muted}>Paket bulunamadı.</p>}
+                  </div>
+                  <p className="text-xs mt-1" style={s.muted}>Seçilen paketlerle kapanan satışlar bu PKL'ye işlenecektir.</p>
+                </div>
+              )}
+
+              {/* Ciro bilgi notu */}
+              {formTur === "ciro" && (
+                <div className="p-3 rounded-lg text-xs" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <p style={s.muted}>
+                    💡 Ciro hedefinde, PRO üyelik satışlarından elde edilen KDV'siz tutar otomatik olarak PKL'ye işlenir.
+                  </p>
+                </div>
+              )}
+
+              {/* Dış Arama bilgi notu */}
+              {formTur === "dis_arama" && (
+                <div className="p-3 rounded-lg text-xs" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <p style={s.muted}>
+                    💡 "Dış Arama (İlk)" ve "Dış Arama (Tekrar)" aksiyon türleri bu PKL'ye sayılacaktır.
+                  </p>
+                </div>
+              )}
+
+              {/* Ziyaret bilgi notu */}
+              {formTur === "ziyaret" && (
+                <div className="p-3 rounded-lg text-xs" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <p style={s.muted}>
+                    💡 "Ziyaret (İlk)" ve "Ziyaret (Tekrar)" aksiyon türleri bu PKL'ye sayılacaktır.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="text-sm font-medium mb-1 block" style={s.text}>Başlık</label>
                 <Input value={formBaslik} onChange={e => setFormBaslik(e.target.value)} placeholder="Örn: Mart ayı dış arama PKL" style={s.input} />
@@ -484,8 +535,10 @@ export default function AdminHedefler() {
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-sm font-medium mb-1 block" style={s.text}>PKL Limiti</label>
-                  <Input type="number" value={formMiktar} onChange={e => setFormMiktar(e.target.value)} placeholder="100" style={s.input} />
+                  <label className="text-sm font-medium mb-1 block" style={s.text}>
+                    {formTur === "ciro" ? "Ciro Hedefi (₺)" : "PKL Limiti"}
+                  </label>
+                  <Input type="number" value={formMiktar} onChange={e => setFormMiktar(e.target.value)} placeholder={formTur === "ciro" ? "50000" : "100"} style={s.input} />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block" style={s.text}>Başlangıç</label>
@@ -499,6 +552,7 @@ export default function AdminHedefler() {
               <div className="p-3 rounded-lg text-xs" style={{ background: "hsl(var(--admin-input-bg))" }}>
                 <p style={s.muted}>
                   💡 PKL oluşturduktan sonra kartın üzerindeki <strong>"Prim"</strong> butonuyla birim başı prim tutarını tanımlayabilirsiniz.
+                  {formTur === "ciro" && " Ciro hedefinde prim, PKL üzeri ciro tutarı × birim başı prim oranı ile hesaplanır."}
                 </p>
               </div>
             </div>
