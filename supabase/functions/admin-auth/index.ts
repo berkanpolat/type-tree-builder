@@ -3473,6 +3473,23 @@ Deno.serve(async (req) => {
       return jsonResponse({ aksiyonlar: enriched });
     }
 
+    // ─── AKSIYONLAR: LIST BY FIRMA (alias) ───
+    if (action === "list-firma-aksiyonlar") {
+      const payload = verifyToken(body.token);
+      const { firmaId } = body;
+      if (!firmaId) return jsonResponse({ error: "Firma ID zorunlu" }, 400);
+      
+      const { data, error } = await supabase.from("admin_aksiyonlar").select("*").eq("firma_id", firmaId).order("tarih", { ascending: false });
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      const adminIds = [...new Set((data || []).map((a: any) => a.admin_id))];
+      const adminRes = adminIds.length > 0 ? await supabase.from("admin_users").select("id, ad, soyad").in("id", adminIds) : { data: [] };
+      const adminMap = new Map((adminRes.data || []).map((a: any) => [a.id, `${a.ad} ${a.soyad}`]));
+      
+      const enriched = (data || []).map((a: any) => ({ ...a, admin_ad: adminMap.get(a.admin_id) || "—" }));
+      return jsonResponse({ aksiyonlar: enriched });
+    }
+
     // ─── AKSIYONLAR: UPDATE (durum, baslik, etc.) ───
     if (action === "update-aksiyon") {
       const payload = verifyToken(body.token);

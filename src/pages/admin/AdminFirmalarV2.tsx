@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, CSSProperties } from "react";
+import { useState, useEffect, useCallback, CSSProperties, Fragment } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
+import { TUR_CONFIG } from "@/lib/aksiyon-config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +28,7 @@ import {
   Building2, Users, Clock, AlertCircle, CheckCircle, XCircle,
   Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp,
   CreditCard, Wifi, ArrowUpDown, ArrowUp, ArrowDown, Infinity, Eye, MessageSquare, Loader2, Trash2, ShieldCheck, Download,
-  MoreHorizontal, CheckCheck, ChevronDown, Briefcase,
+  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -197,6 +198,11 @@ export default function AdminFirmalarV2() {
   const [belgeler, setBelgeler] = useState<any[]>([]);
   const [belgeActionLoading, setBelgeActionLoading] = useState<string | null>(null);
   const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({});
+
+  // Expandable row - aksiyon geçmişi
+  const [expandedFirmaId, setExpandedFirmaId] = useState<string | null>(null);
+  const [expandedAksiyonlar, setExpandedAksiyonlar] = useState<any[]>([]);
+  const [expandedLoading, setExpandedLoading] = useState(false);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
@@ -470,8 +476,25 @@ export default function AdminFirmalarV2() {
       toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
     }
   };
+  const toggleExpandFirma = async (firmaId: string) => {
+    if (expandedFirmaId === firmaId) {
+      setExpandedFirmaId(null);
+      return;
+    }
+    setExpandedFirmaId(firmaId);
+    setExpandedLoading(true);
+    setExpandedAksiyonlar([]);
+    try {
+      const data = await callApi("list-firma-aksiyonlar", { token, firmaId });
+      setExpandedAksiyonlar(data.aksiyonlar || []);
+    } catch {
+      setExpandedAksiyonlar([]);
+    } finally {
+      setExpandedLoading(false);
+    }
+  };
 
-  // ── Bulk actions ──
+
   const handleBulkApprove = async () => {
     setBulkLoading(true);
     let success = 0;
@@ -823,13 +846,20 @@ export default function AdminFirmalarV2() {
                 {paginatedFirmalar.map((firma) => {
                   const isSelected = selectedIds.has(firma.id);
                   const isOnline = firma.profile?.last_seen && new Date(firma.profile.last_seen) >= new Date(Date.now() - 15 * 60 * 1000);
+                  const isExpanded = expandedFirmaId === firma.id;
                   return (
+                    <Fragment key={firma.id}>
                     <TableRow
-                      key={firma.id}
-                      className={`transition-colors ${isSelected ? "bg-amber-500/5" : ""}`}
+                      className={`transition-colors cursor-pointer ${isSelected ? "bg-amber-500/5" : ""} ${isExpanded ? "border-b-0" : ""}`}
                       style={{ borderColor: "hsl(var(--admin-border))" }}
+                      onClick={(e) => {
+                        // Don't expand when clicking checkbox, dropdown, or badge
+                        const target = e.target as HTMLElement;
+                        if (target.closest('button') || target.closest('[role="checkbox"]') || target.closest('[role="menuitem"]') || target.closest('.badge-click')) return;
+                        toggleExpandFirma(firma.id);
+                      }}
                     >
-                      <TableCell>
+                      <TableCell onClick={e => e.stopPropagation()}>
                         <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(firma.id)} />
                       </TableCell>
                       <TableCell>
@@ -846,6 +876,7 @@ export default function AdminFirmalarV2() {
                               <span className="text-sm font-medium truncate max-w-[180px]" style={s.text}>{firma.firma_unvani}</span>
                               {isOnline && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 flex-shrink-0" />}
                               {firma.belge_onayli && <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" />}
+                              {isExpanded ? <ChevronUp className="w-3 h-3 flex-shrink-0" style={s.muted} /> : <ChevronDown className="w-3 h-3 flex-shrink-0 opacity-0 group-hover:opacity-100" style={s.muted} />}
                             </div>
                             <span className="text-[11px] truncate block max-w-[180px]" style={s.muted}>
                               {firma.profile?.ad} {firma.profile?.soyad}
@@ -865,9 +896,9 @@ export default function AdminFirmalarV2() {
                           <div className="truncate max-w-[120px] text-[10px]" style={s.muted}>{firma.firma_tipi_name || "—"}</div>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={e => e.stopPropagation()}>
                         <Badge
-                          className="text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80"
+                          className="badge-click text-[10px] px-1.5 py-0 cursor-pointer hover:opacity-80"
                           style={{
                             background: firma.abonelik?.paket_slug === "pro" ? "rgba(234,179,8,0.15)" : "rgba(100,116,139,0.15)",
                             color: firma.abonelik?.paket_slug === "pro" ? "#eab308" : "#94a3b8",
@@ -900,7 +931,7 @@ export default function AdminFirmalarV2() {
                           <span className="text-xs opacity-40" style={s.muted}>—</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell onClick={e => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
@@ -946,6 +977,54 @@ export default function AdminFirmalarV2() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
+
+                    {/* Expanded aksiyon geçmişi row */}
+                    {isExpanded && (
+                      <TableRow style={{ borderColor: "hsl(var(--admin-border))" }}>
+                        <TableCell colSpan={13} className="p-0">
+                          <div className="px-4 py-3" style={{ background: "hsl(var(--admin-hover))" }}>
+                            <div className="flex items-center gap-2 mb-2">
+                              <ClipboardList className="w-3.5 h-3.5" style={{ color: "hsl(38 92% 50%)" }} />
+                              <span className="text-xs font-semibold" style={s.text}>Aksiyon Geçmişi</span>
+                              <span className="text-[10px]" style={s.muted}>({expandedAksiyonlar.length})</span>
+                            </div>
+                            {expandedLoading ? (
+                              <div className="flex items-center justify-center py-4">
+                                <Loader2 className="w-4 h-4 animate-spin text-amber-500" />
+                              </div>
+                            ) : expandedAksiyonlar.length === 0 ? (
+                              <p className="text-xs py-3 text-center" style={s.muted}>Bu firmaya ait aksiyon bulunamadı</p>
+                            ) : (
+                              <div className="space-y-1.5 max-h-[250px] overflow-y-auto pr-1">
+                                {expandedAksiyonlar.map((a: any) => {
+                                  const turConfig = TUR_CONFIG[a.tur] || TUR_CONFIG.diger;
+                                  const Icon = turConfig.icon;
+                                  return (
+                                    <div key={a.id} className="flex items-start gap-2.5 p-2 rounded-lg" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                                      <div className="mt-0.5 rounded flex items-center justify-center flex-shrink-0" style={{ background: `${turConfig.color}15`, width: 18, height: 18 }}>
+                                        <Icon className="w-2.5 h-2.5" style={{ color: turConfig.color }} />
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs font-medium truncate" style={s.text}>{a.baslik}</span>
+                                          <Badge className="text-[8px] px-1 py-0 flex-shrink-0" style={{ background: `${turConfig.color}20`, color: turConfig.color, borderColor: `${turConfig.color}40` }}>{turConfig.label}</Badge>
+                                          <span className="text-[10px] ml-auto flex-shrink-0" style={s.muted}>
+                                            {new Date(a.tarih).toLocaleDateString("tr-TR", { day: "2-digit", month: "short" })} {new Date(a.tarih).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                                          </span>
+                                        </div>
+                                        {a.aciklama && <p className="text-[11px] mt-0.5 line-clamp-1" style={s.muted}>{a.aciklama}</p>}
+                                        {a.admin_ad && <span className="text-[10px]" style={s.muted}>— {a.admin_ad}</span>}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    </Fragment>
                   );
                 })}
               </TableBody>
