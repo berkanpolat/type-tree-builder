@@ -3943,17 +3943,61 @@ Deno.serve(async (req) => {
       for (const h of (hedeflerRaw || [])) {
         const { data: adminUser } = await supabase.from("admin_users").select("ad, soyad, departman").eq("id", h.hedef_admin_id).single();
         
-        // Auto-calculate gerceklesen_miktar
+        // Auto-calculate gerceklesen_miktar based on hedef_turu
         let gerceklesen = 0;
-        if (h.hedef_turu === "ziyaret") {
-          const { count } = await supabase.from("admin_ziyaret_planlari")
+        const detay = h.hedef_detay || {};
+
+        if (h.hedef_turu === "paket_uyeligi") {
+          // Count aksiyonlar with sonuc=satis_kapatildi and sonuc_paket_id in the selected paket_ids
+          const paketIds = detay.paket_ids || [];
+          if (paketIds.length > 0) {
+            const { data: aksiyonlar } = await supabase.from("admin_aksiyonlar")
+              .select("id, sonuc_paket_id")
+              .eq("admin_id", h.hedef_admin_id)
+              .eq("sonuc", "satis_kapatildi")
+              .gte("created_at", h.baslangic_tarihi)
+              .lte("created_at", h.bitis_tarihi)
+              .in("sonuc_paket_id", paketIds);
+            gerceklesen = (aksiyonlar || []).length;
+          }
+        } else if (h.hedef_turu === "ciro") {
+          // Sum KDV-siz revenue from PRO package sales where payment was successful
+          // Get PRO paket id
+          const { data: proPaket } = await supabase.from("paketler").select("id, fiyat_aylik, fiyat_yillik").eq("slug", "pro").single();
+          if (proPaket) {
+            const { data: aksiyonlar } = await supabase.from("admin_aksiyonlar")
+              .select("id, sonuc_paket_id, created_at")
+              .eq("admin_id", h.hedef_admin_id)
+              .eq("sonuc", "satis_kapatildi")
+              .eq("sonuc_paket_id", proPaket.id)
+              .gte("created_at", h.baslangic_tarihi)
+              .lte("created_at", h.bitis_tarihi);
+            // Each PRO sale contributes the KDV-siz price
+            // We use the package base price (USD converted prices are in paketler table)
+            const count = (aksiyonlar || []).length;
+            // Use fiyat_aylik as base KDV-siz revenue per sale
+            gerceklesen = count * (proPaket.fiyat_aylik || 0);
+          }
+        } else if (h.hedef_turu === "dis_arama") {
+          // Count dis_arama_ilk + dis_arama_tekrar aksiyonlar
+          const { count } = await supabase.from("admin_aksiyonlar")
             .select("*", { count: "exact", head: true })
             .eq("admin_id", h.hedef_admin_id)
-            .eq("durum", "tamamlandi")
-            .gte("planlanan_tarih", h.baslangic_tarihi)
-            .lte("planlanan_tarih", h.bitis_tarihi);
+            .in("tur", ["dis_arama_ilk", "dis_arama_tekrar"])
+            .gte("created_at", h.baslangic_tarihi)
+            .lte("created_at", h.bitis_tarihi);
+          gerceklesen = count || 0;
+        } else if (h.hedef_turu === "ziyaret") {
+          // Count ziyaret_ilk + ziyaret_tekrar aksiyonlar
+          const { count } = await supabase.from("admin_aksiyonlar")
+            .select("*", { count: "exact", head: true })
+            .eq("admin_id", h.hedef_admin_id)
+            .in("tur", ["ziyaret_ilk", "ziyaret_tekrar"])
+            .gte("created_at", h.baslangic_tarihi)
+            .lte("created_at", h.bitis_tarihi);
           gerceklesen = count || 0;
         } else if (h.hedef_turu === "aksiyon") {
+          // Legacy: count all aksiyonlar
           const { count } = await supabase.from("admin_aksiyonlar")
             .select("*", { count: "exact", head: true })
             .eq("admin_id", h.hedef_admin_id)
@@ -3961,14 +4005,16 @@ Deno.serve(async (req) => {
             .lte("created_at", h.bitis_tarihi);
           gerceklesen = count || 0;
         } else if (h.hedef_turu === "paket_satis") {
+          // Legacy
           const { count } = await supabase.from("admin_aksiyonlar")
             .select("*", { count: "exact", head: true })
             .eq("admin_id", h.hedef_admin_id)
-            .eq("sonuc", "satis_yapildi")
+            .eq("sonuc", "satis_kapatildi")
             .gte("created_at", h.baslangic_tarihi)
             .lte("created_at", h.bitis_tarihi);
           gerceklesen = count || 0;
         } else if (h.hedef_turu === "firma_kaydi") {
+          // Legacy
           const { count } = await supabase.from("admin_aksiyonlar")
             .select("*", { count: "exact", head: true })
             .eq("admin_id", h.hedef_admin_id)
