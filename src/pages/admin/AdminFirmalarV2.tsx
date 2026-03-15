@@ -990,6 +990,12 @@ export default function AdminFirmalarV2() {
                                 <Briefcase className="w-3.5 h-3.5 mr-2" /> {firma.portfolyo.admin_ad} {firma.portfolyo.admin_soyad} portföyünde
                               </DropdownMenuItem>
                             )}
+                            <DropdownMenuItem
+                              onClick={() => handleSendPasswordReset(firma)}
+                              className="text-xs cursor-pointer"
+                            >
+                              <KeyRound className="w-3.5 h-3.5 mr-2" /> Şifre Gönder
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem
                               onClick={() => { setDeleteFirma(firma); setDeleteConfirmText(""); setDeleteDialogOpen(true); }}
