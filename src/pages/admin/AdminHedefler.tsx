@@ -206,8 +206,8 @@ export default function AdminHedefler() {
   };
 
   const resetForm = () => {
-    setFormAdmin(""); setFormTur("ziyaret"); setFormBaslik(""); setFormAciklama("");
-    setFormMiktar(""); setFormBaslangic(""); setFormBitis("");
+    setFormAdmin(""); setFormTur("paket_uyeligi"); setFormBaslik(""); setFormAciklama("");
+    setFormMiktar(""); setFormBaslangic(""); setFormBitis(""); setFormPaketler([]);
   };
 
   return (
