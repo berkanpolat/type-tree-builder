@@ -189,7 +189,6 @@ export default function AdminZiyaretPlanlari() {
     return completeDayPlans.every(p => {
       const reason = completeDayReasons[p.id];
       if (!reason) return false;
-      if (reason === "tamamlandi") return true;
       if (reason === "Diğer") return (completeDayDigerTexts[p.id] || "").trim().length > 0;
       return true;
     });
