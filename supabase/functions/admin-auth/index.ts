@@ -4045,7 +4045,15 @@ Deno.serve(async (req) => {
         
         // PKL: Calculate earned bonus (over PKL threshold)
         const pklAsim = Math.max(0, gerceklesen - h.hedef_miktar);
-        const kazanilanPrim = pklAsim * (h.birim_basi_prim || 0);
+        const primBirimi = detay.prim_birimi || "tl";
+        let kazanilanPrim = 0;
+        if (primBirimi === "yuzde") {
+          // Percentage: pklAsim * (birim_basi_prim / 100)
+          kazanilanPrim = pklAsim * ((h.birim_basi_prim || 0) / 100);
+        } else {
+          // Fixed TL or USD: pklAsim * birim_basi_prim
+          kazanilanPrim = pklAsim * (h.birim_basi_prim || 0);
+        }
         
         hedefler.push({
           ...h,
@@ -4103,14 +4111,23 @@ Deno.serve(async (req) => {
     // ─── PKL: PRİM GÜNCELLE ───
     if (action === "update-pkl-prim") {
       const payload = verifyToken(body.token);
-      const { hedefId, birimBasiPrim } = body;
+      const { hedefId, birimBasiPrim, primBirimi } = body;
       if (!hedefId || birimBasiPrim === undefined) return jsonResponse({ error: "Zorunlu alanlar eksik" }, 400);
       
-      const { error } = await supabase.from("admin_hedefler").update({ birim_basi_prim: birimBasiPrim }).eq("id", hedefId);
+      // Get existing hedef_detay to merge prim_birimi
+      const { data: existingHedef } = await supabase.from("admin_hedefler").select("hedef_detay").eq("id", hedefId).single();
+      const existingDetay = existingHedef?.hedef_detay || {};
+      const updatedDetay = { ...existingDetay, prim_birimi: primBirimi || "tl" };
+      
+      const { error } = await supabase.from("admin_hedefler").update({ 
+        birim_basi_prim: birimBasiPrim,
+        hedef_detay: updatedDetay,
+      }).eq("id", hedefId);
       if (error) return jsonResponse({ error: error.message }, 400);
       
+      const birimiLabel = primBirimi === "usd" ? "$" : primBirimi === "yuzde" ? "%" : "₺";
       await logActivity(supabase, payload, "pkl_prim_guncellendi", {
-        target_type: "pkl", target_id: hedefId, target_label: `Birim başı prim: ${birimBasiPrim} ₺`,
+        target_type: "pkl", target_id: hedefId, target_label: `Birim başı prim: ${birimBasiPrim} ${birimiLabel}`,
       });
       
       return jsonResponse({ success: true });

@@ -53,6 +53,7 @@ interface Hedef {
   hedef_admin_departman?: string;
   pkl_asim?: number;
   kazanilan_prim?: number;
+  hedef_detay?: Record<string, any>;
 }
 
 interface AdminUser {
@@ -75,6 +76,30 @@ const DURUM_BADGE: Record<string, { label: string; color: string }> = {
   tamamlandi: { label: "Tamamlandı", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
   iptal: { label: "İptal", color: "bg-red-500/10 text-red-500 border-red-500/20" },
 };
+
+type PrimBirimi = "tl" | "usd" | "yuzde";
+
+function getPrimBirimi(h: Hedef): PrimBirimi {
+  return (h.hedef_detay?.prim_birimi as PrimBirimi) || "tl";
+}
+
+function primBirimiLabel(birimi: PrimBirimi): string {
+  if (birimi === "usd") return "$";
+  if (birimi === "yuzde") return "%";
+  return "₺";
+}
+
+function formatPrimValue(value: number, birimi: PrimBirimi): string {
+  if (birimi === "yuzde") return `${value.toLocaleString("tr-TR")} $`;
+  if (birimi === "usd") return `${value.toLocaleString("tr-TR")} $`;
+  return `${value.toLocaleString("tr-TR")} ₺`;
+}
+
+function formatPrimRate(rate: number, birimi: PrimBirimi): string {
+  if (birimi === "yuzde") return `%${rate}`;
+  if (birimi === "usd") return `${rate} $`;
+  return `${rate} ₺`;
+}
 
 export default function AdminHedefler() {
   const { user } = useAdminAuth();
@@ -101,6 +126,7 @@ export default function AdminHedefler() {
 
   // Prim Form
   const [primTutar, setPrimTutar] = useState("");
+  const [primBirimi, setPrimBirimi] = useState<PrimBirimi>("tl");
 
   const token = user ? localStorage.getItem("admin_token") || "" : "";
   const isYK = user?.departman === "Yönetim Kurulu";
@@ -189,10 +215,12 @@ export default function AdminHedefler() {
         token,
         hedefId: showPrim.id,
         birimBasiPrim: parseFloat(primTutar),
+        primBirimi,
       });
       toast({ title: "Başarılı", description: "Prim tutarı güncellendi." });
       setShowPrim(null);
       setPrimTutar("");
+      setPrimBirimi("tl");
       loadHedefler();
     } catch (e: any) {
       toast({ title: "Hata", description: e.message, variant: "destructive" });
@@ -257,6 +285,8 @@ export default function AdminHedefler() {
               const kazanilanPrim = h.kazanilan_prim || 0;
               const durumInfo = DURUM_BADGE[h.durum] || DURUM_BADGE.aktif;
               const turInfo = HEDEF_TURLERI.find(t => t.value === h.hedef_turu);
+              const isCiro = h.hedef_turu === "ciro";
+              const pb = getPrimBirimi(h);
               return (
                 <div key={h.id} className="p-4 rounded-xl" style={s.card}>
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -276,7 +306,7 @@ export default function AdminHedefler() {
                         <Button
                           variant="ghost" size="sm"
                           className="h-8 gap-1 text-amber-500 hover:text-amber-400 text-xs"
-                          onClick={() => { setShowPrim(h); setPrimTutar(String(h.birim_basi_prim || "")); }}
+                          onClick={() => { setShowPrim(h); setPrimTutar(String(h.birim_basi_prim || "")); setPrimBirimi(getPrimBirimi(h)); }}
                         >
                           <Coins className="w-3.5 h-3.5" /> Prim
                         </Button>
@@ -294,7 +324,9 @@ export default function AdminHedefler() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span style={s.muted}>
-                        {h.hedef_turu === "ciro" ? `${h.gerceklesen_miktar.toLocaleString("tr-TR")} ₺ / ${h.hedef_miktar.toLocaleString("tr-TR")} ₺` : `${h.gerceklesen_miktar} / ${h.hedef_miktar} PKL`}
+                        {isCiro
+                          ? `${h.gerceklesen_miktar.toLocaleString("tr-TR")} $ / ${h.hedef_miktar.toLocaleString("tr-TR")} $`
+                          : `${h.gerceklesen_miktar} / ${h.hedef_miktar} PKL`}
                       </span>
                       <span className="font-bold" style={{ color: pklAsildi ? "#22c55e" : "hsl(var(--admin-text))" }}>
                         {pklAsildi ? "✅ PKL Aşıldı" : `%${yuzde}`}
@@ -304,16 +336,16 @@ export default function AdminHedefler() {
                     {pklAsildi && (
                       <div className="flex items-center justify-between mt-1 px-2 py-1.5 rounded-lg" style={{ background: "hsl(var(--admin-input-bg))" }}>
                         <span className="text-xs" style={s.muted}>
-                          PKL üzeri: <strong className="text-emerald-400">{h.hedef_turu === "ciro" ? `${pklAsim.toLocaleString("tr-TR")} ₺` : `${pklAsim} işlem`}</strong> × {h.birim_basi_prim || 0} ₺
+                          PKL üzeri: <strong className="text-emerald-400">{isCiro ? `${pklAsim.toLocaleString("tr-TR")} $` : `${pklAsim} işlem`}</strong> × {formatPrimRate(h.birim_basi_prim || 0, pb)}
                         </span>
                         <span className="text-sm font-bold text-emerald-400">
-                          🏆 {kazanilanPrim.toLocaleString("tr-TR")} ₺
+                          🏆 {formatPrimValue(kazanilanPrim, pb)}
                         </span>
                       </div>
                     )}
                     {!pklAsildi && h.birim_basi_prim > 0 && (
                       <p className="text-xs" style={s.muted}>
-                        PKL sonrası her işlem için {h.birim_basi_prim} ₺ prim
+                        PKL sonrası her {isCiro ? "dolar" : "işlem"} için {formatPrimRate(h.birim_basi_prim, pb)} prim
                       </p>
                     )}
                   </div>
@@ -337,6 +369,8 @@ export default function AdminHedefler() {
               const pklAsim = h.pkl_asim || 0;
               const kazanilanPrim = h.kazanilan_prim || 0;
               const turInfo = HEDEF_TURLERI.find(t => t.value === h.hedef_turu);
+              const isCiro = h.hedef_turu === "ciro";
+              const pb = getPrimBirimi(h);
               return (
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
@@ -358,7 +392,11 @@ export default function AdminHedefler() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium" style={s.text}>{h.hedef_turu === "ciro" ? `${h.gerceklesen_miktar.toLocaleString("tr-TR")} ₺ / ${h.hedef_miktar.toLocaleString("tr-TR")} ₺` : `${h.gerceklesen_miktar} / ${h.hedef_miktar} PKL`}</span>
+                      <span className="text-sm font-medium" style={s.text}>
+                        {isCiro
+                          ? `${h.gerceklesen_miktar.toLocaleString("tr-TR")} $ / ${h.hedef_miktar.toLocaleString("tr-TR")} $`
+                          : `${h.gerceklesen_miktar} / ${h.hedef_miktar} PKL`}
+                      </span>
                       <span className="text-sm font-bold" style={{ color: pklAsildi ? "#22c55e" : "#f59e0b" }}>
                         {pklAsildi ? "PKL Aşıldı ✅" : `%${yuzde}`}
                       </span>
@@ -374,15 +412,15 @@ export default function AdminHedefler() {
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <span style={s.muted}>Birim başı prim:</span>
-                        <span style={s.text}>{h.birim_basi_prim || 0} ₺</span>
+                        <span style={s.text}>{formatPrimRate(h.birim_basi_prim || 0, pb)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span style={s.muted}>PKL üzeri işlem:</span>
-                        <span style={s.text}>{pklAsim}</span>
+                        <span style={s.muted}>PKL üzeri {isCiro ? "ciro" : "işlem"}:</span>
+                        <span style={s.text}>{isCiro ? `${pklAsim.toLocaleString("tr-TR")} $` : pklAsim}</span>
                       </div>
                       <div className="flex justify-between border-t pt-1" style={{ borderColor: "hsl(var(--admin-border))" }}>
                         <span className="font-semibold" style={s.text}>Toplam kazanılan:</span>
-                        <span className="font-bold text-emerald-400">{kazanilanPrim.toLocaleString("tr-TR")} ₺</span>
+                        <span className="font-bold text-emerald-400">{formatPrimValue(kazanilanPrim, pb)}</span>
                       </div>
                     </div>
                   </div>
@@ -393,7 +431,7 @@ export default function AdminHedefler() {
         </Dialog>
 
         {/* Prim Ayarla Dialog */}
-        <Dialog open={!!showPrim} onOpenChange={() => { setShowPrim(null); setPrimTutar(""); }}>
+        <Dialog open={!!showPrim} onOpenChange={() => { setShowPrim(null); setPrimTutar(""); setPrimBirimi("tl"); }}>
           <DialogContent style={s.card} className="max-w-sm">
             <DialogHeader>
               <DialogTitle style={s.text}>Prim Ayarla</DialogTitle>
@@ -406,30 +444,51 @@ export default function AdminHedefler() {
                 <div className="p-3 rounded-lg" style={{ background: "hsl(var(--admin-input-bg))" }}>
                   <p className="text-sm font-medium" style={s.text}>{showPrim.baslik}</p>
                   <p className="text-xs mt-1" style={s.muted}>
-                    PKL: {showPrim.hedef_miktar} {HEDEF_TURLERI.find(t => t.value === showPrim.hedef_turu)?.label}
+                    PKL: {showPrim.hedef_miktar}{showPrim.hedef_turu === "ciro" ? " $" : ""} {HEDEF_TURLERI.find(t => t.value === showPrim.hedef_turu)?.label}
                   </p>
                 </div>
                 <div>
+                  <label className="text-sm font-medium mb-1.5 block" style={s.text}>Prim Türü</label>
+                  <Select value={primBirimi} onValueChange={(v) => setPrimBirimi(v as PrimBirimi)}>
+                    <SelectTrigger style={s.input}><SelectValue /></SelectTrigger>
+                    <SelectContent style={{ ...s.card, zIndex: 9999 }} position="popper" sideOffset={4}>
+                      <SelectItem value="tl">₺ TL (Sabit)</SelectItem>
+                      <SelectItem value="usd">$ Dolar (Sabit)</SelectItem>
+                      <SelectItem value="yuzde">% Yüzdelik</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <label className="text-sm font-medium mb-1.5 block" style={s.text}>
-                    Birim Başı Prim (₺)
+                    {primBirimi === "yuzde" ? "Prim Yüzdesi (%)" : `Birim Başı Prim (${primBirimi === "usd" ? "$" : "₺"})`}
                   </label>
                   <Input
                     type="number"
                     value={primTutar}
                     onChange={e => setPrimTutar(e.target.value)}
-                    placeholder="Örn: 25"
+                    placeholder={primBirimi === "yuzde" ? "Örn: 10" : "Örn: 25"}
                     style={s.input}
                     min="0"
                     step="0.01"
                   />
                   <p className="text-xs mt-1.5" style={s.muted}>
-                    PKL ({showPrim.hedef_miktar}) aşıldıktan sonra her ek işlem bu tutarla ödüllendirilir.
+                    {primBirimi === "yuzde"
+                      ? `PKL (${showPrim.hedef_miktar}${showPrim.hedef_turu === "ciro" ? " $" : ""}) aşıldıktan sonraki ${showPrim.hedef_turu === "ciro" ? "ciro" : "işlem"} tutarı üzerinden %${primTutar || "0"} prim kazanılır.`
+                      : `PKL (${showPrim.hedef_miktar}${showPrim.hedef_turu === "ciro" ? " $" : ""}) aşıldıktan sonra her ek ${showPrim.hedef_turu === "ciro" ? "dolar" : "işlem"} bu tutarla ödüllendirilir.`
+                    }
                   </p>
+                  {primBirimi === "yuzde" && showPrim.hedef_turu === "ciro" && primTutar && (
+                    <div className="mt-2 p-2 rounded text-xs" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                      <p style={s.muted}>
+                        💡 Örnek: {(showPrim.hedef_miktar + 1000).toLocaleString("tr-TR")} $ ciro yapılırsa → PKL üzeri 1.000 $ × %{primTutar} = <strong className="text-emerald-400">{(1000 * parseFloat(primTutar) / 100).toLocaleString("tr-TR")} $</strong> prim
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
             <DialogFooter className="flex gap-2">
-              <Button variant="outline" onClick={() => { setShowPrim(null); setPrimTutar(""); }} style={s.input}>
+              <Button variant="outline" onClick={() => { setShowPrim(null); setPrimTutar(""); setPrimBirimi("tl"); }} style={s.input}>
                 Vazgeç
               </Button>
               <Button onClick={handlePrimKaydet} disabled={saving || !primTutar} className="bg-amber-600 hover:bg-amber-700 text-white">
@@ -498,7 +557,7 @@ export default function AdminHedefler() {
               {formTur === "ciro" && (
                 <div className="p-3 rounded-lg text-xs" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
                   <p style={s.muted}>
-                    💡 Ciro hedefinde, PRO üyelik satışlarından elde edilen KDV'siz tutar otomatik olarak PKL'ye işlenir.
+                    💡 Ciro hedefi <strong>dolar ($)</strong> bazlıdır. PRO üyelik satışlarından elde edilen KDV'siz tutar otomatik olarak PKL'ye işlenir.
                   </p>
                 </div>
               )}
@@ -532,9 +591,9 @@ export default function AdminHedefler() {
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="text-sm font-medium mb-1 block" style={s.text}>
-                    {formTur === "ciro" ? "Ciro Hedefi (₺)" : "PKL Limiti"}
+                    {formTur === "ciro" ? "Ciro Hedefi ($)" : "PKL Limiti"}
                   </label>
-                  <Input type="number" value={formMiktar} onChange={e => setFormMiktar(e.target.value)} placeholder={formTur === "ciro" ? "50000" : "100"} style={s.input} />
+                  <Input type="number" value={formMiktar} onChange={e => setFormMiktar(e.target.value)} placeholder={formTur === "ciro" ? "4000" : "100"} style={s.input} />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block" style={s.text}>Başlangıç</label>
@@ -547,8 +606,8 @@ export default function AdminHedefler() {
               </div>
               <div className="p-3 rounded-lg text-xs" style={{ background: "hsl(var(--admin-input-bg))" }}>
                 <p style={s.muted}>
-                  💡 PKL oluşturduktan sonra kartın üzerindeki <strong>"Prim"</strong> butonuyla birim başı prim tutarını tanımlayabilirsiniz.
-                  {formTur === "ciro" && " Ciro hedefinde prim, PKL üzeri ciro tutarı × birim başı prim oranı ile hesaplanır."}
+                  💡 PKL oluşturduktan sonra kartın üzerindeki <strong>"Prim"</strong> butonuyla birim başı prim tutarını (₺, $ veya %) tanımlayabilirsiniz.
+                  {formTur === "ciro" && " Ciro hedefinde PKL dolar bazlıdır ve yüzdelik prim de tanımlanabilir."}
                 </p>
               </div>
             </div>
