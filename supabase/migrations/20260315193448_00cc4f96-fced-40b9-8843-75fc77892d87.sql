@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_hedefler ADD COLUMN hedef_detay jsonb DEFAULT '{}'::jsonb;

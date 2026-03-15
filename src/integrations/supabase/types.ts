@@ -154,6 +154,7 @@ export type Database = {
           durum: string
           gerceklesen_miktar: number
           hedef_admin_id: string
+          hedef_detay: Json | null
           hedef_miktar: number
           hedef_turu: string
           id: string
@@ -170,6 +171,7 @@ export type Database = {
           durum?: string
           gerceklesen_miktar?: number
           hedef_admin_id: string
+          hedef_detay?: Json | null
           hedef_miktar: number
           hedef_turu: string
           id?: string
@@ -186,6 +188,7 @@ export type Database = {
           durum?: string
           gerceklesen_miktar?: number
           hedef_admin_id?: string
+          hedef_detay?: Json | null
           hedef_miktar?: number
           hedef_turu?: string
           id?: string

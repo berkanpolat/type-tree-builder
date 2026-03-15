@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
@@ -18,6 +19,12 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
+
+interface PaketOption {
+  id: string;
+  ad: string;
+  slug: string;
+}
 
 const s = {
   card: { background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.75rem" } as CSSProperties,
@@ -56,10 +63,10 @@ interface AdminUser {
 }
 
 const HEDEF_TURLERI = [
-  { value: "ziyaret", label: "Ziyaret Sayısı", icon: "📍" },
-  { value: "aksiyon", label: "Aksiyon Sayısı", icon: "📋" },
-  { value: "paket_satis", label: "Paket Satışı", icon: "💰" },
-  { value: "firma_kaydi", label: "Firma Kaydı", icon: "🏢" },
+  { value: "paket_uyeligi", label: "Paket Üyeliği", icon: "💳" },
+  { value: "ciro", label: "Ciro", icon: "💰" },
+  { value: "dis_arama", label: "Dış Arama", icon: "📞" },
+  { value: "ziyaret", label: "Ziyaret", icon: "📍" },
 ];
 
 const DURUM_BADGE: Record<string, { label: string; color: string }> = {
@@ -82,12 +89,14 @@ export default function AdminHedefler() {
 
   // Create Form
   const [formAdmin, setFormAdmin] = useState("");
-  const [formTur, setFormTur] = useState("ziyaret");
+  const [formTur, setFormTur] = useState("paket_uyeligi");
   const [formBaslik, setFormBaslik] = useState("");
   const [formAciklama, setFormAciklama] = useState("");
   const [formMiktar, setFormMiktar] = useState("");
   const [formBaslangic, setFormBaslangic] = useState("");
   const [formBitis, setFormBitis] = useState("");
+  const [formPaketler, setFormPaketler] = useState<string[]>([]);
+  const [paketOptions, setPaketOptions] = useState<PaketOption[]>([]);
 
   // Prim Form
   const [primTutar, setPrimTutar] = useState("");
@@ -100,6 +109,11 @@ export default function AdminHedefler() {
     if (res.error) throw new Error(res.error.message);
     if (res.data?.error) throw new Error(res.data.error);
     return res.data;
+  }, []);
+
+  const loadPaketler = useCallback(async () => {
+    const { data } = await supabase.from("paketler").select("id, ad, slug").eq("aktif", true).order("fiyat_aylik", { ascending: true });
+    setPaketOptions((data || []).map((p: any) => ({ id: p.id, ad: p.ad, slug: p.slug || "" })));
   }, []);
 
   const loadHedefler = useCallback(async () => {
@@ -125,10 +139,15 @@ export default function AdminHedefler() {
 
   useEffect(() => { loadHedefler(); }, [loadHedefler]);
   useEffect(() => { loadAdminUsers(); }, [loadAdminUsers]);
+  useEffect(() => { loadPaketler(); }, [loadPaketler]);
 
   const handleCreate = async () => {
     if (!formAdmin || !formBaslik || !formMiktar || !formBaslangic || !formBitis) {
       toast({ title: "Hata", description: "Tüm alanları doldurun.", variant: "destructive" });
+      return;
+    }
+    if (formTur === "paket_uyeligi" && formPaketler.length === 0) {
+      toast({ title: "Hata", description: "En az bir paket seçmelisiniz.", variant: "destructive" });
       return;
     }
     setSaving(true);
@@ -139,9 +158,10 @@ export default function AdminHedefler() {
         hedefTuru: formTur,
         baslik: formBaslik,
         aciklama: formAciklama || null,
-        hedefMiktar: parseInt(formMiktar),
+        hedefMiktar: formTur === "ciro" ? parseFloat(formMiktar) : parseInt(formMiktar),
         baslangicTarihi: formBaslangic,
         bitisTarihi: formBitis,
+        hedefDetay: formTur === "paket_uyeligi" ? { paket_ids: formPaketler } : {},
       });
       toast({ title: "Başarılı", description: "PKL oluşturuldu." });
       setShowCreate(false);
@@ -186,8 +206,8 @@ export default function AdminHedefler() {
   };
 
   const resetForm = () => {
-    setFormAdmin(""); setFormTur("ziyaret"); setFormBaslik(""); setFormAciklama("");
-    setFormMiktar(""); setFormBaslangic(""); setFormBitis("");
+    setFormAdmin(""); setFormTur("paket_uyeligi"); setFormBaslik(""); setFormAciklama("");
+    setFormMiktar(""); setFormBaslangic(""); setFormBitis(""); setFormPaketler([]);
   };
 
   return (
@@ -278,7 +298,7 @@ export default function AdminHedefler() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span style={s.muted}>
-                        {h.gerceklesen_miktar} / {h.hedef_miktar} PKL
+                        {h.hedef_turu === "ciro" ? `${h.gerceklesen_miktar.toLocaleString("tr-TR")} ₺ / ${h.hedef_miktar.toLocaleString("tr-TR")} ₺` : `${h.gerceklesen_miktar} / ${h.hedef_miktar} PKL`}
                       </span>
                       <span className="font-bold" style={{ color: pklAsildi ? "#22c55e" : "hsl(var(--admin-text))" }}>
                         {pklAsildi ? "✅ PKL Aşıldı" : `%${yuzde}`}
@@ -288,7 +308,7 @@ export default function AdminHedefler() {
                     {pklAsildi && (
                       <div className="flex items-center justify-between mt-1 px-2 py-1.5 rounded-lg" style={{ background: "hsl(var(--admin-input-bg))" }}>
                         <span className="text-xs" style={s.muted}>
-                          PKL üzeri: <strong className="text-emerald-400">{pklAsim}</strong> işlem × {h.birim_basi_prim || 0} ₺
+                          PKL üzeri: <strong className="text-emerald-400">{h.hedef_turu === "ciro" ? `${pklAsim.toLocaleString("tr-TR")} ₺` : `${pklAsim} işlem`}</strong> × {h.birim_basi_prim || 0} ₺
                         </span>
                         <span className="text-sm font-bold text-emerald-400">
                           🏆 {kazanilanPrim.toLocaleString("tr-TR")} ₺
@@ -342,7 +362,7 @@ export default function AdminHedefler() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-medium" style={s.text}>{h.gerceklesen_miktar} / {h.hedef_miktar} PKL</span>
+                      <span className="text-sm font-medium" style={s.text}>{h.hedef_turu === "ciro" ? `${h.gerceklesen_miktar.toLocaleString("tr-TR")} ₺ / ${h.hedef_miktar.toLocaleString("tr-TR")} ₺` : `${h.gerceklesen_miktar} / ${h.hedef_miktar} PKL`}</span>
                       <span className="text-sm font-bold" style={{ color: pklAsildi ? "#22c55e" : "#f59e0b" }}>
                         {pklAsildi ? "PKL Aşıldı ✅" : `%${yuzde}`}
                       </span>
@@ -445,7 +465,7 @@ export default function AdminHedefler() {
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block" style={s.text}>PKL Türü</label>
-                <Select value={formTur} onValueChange={setFormTur}>
+                <Select value={formTur} onValueChange={(v) => { setFormTur(v); setFormPaketler([]); }}>
                   <SelectTrigger style={s.input}><SelectValue /></SelectTrigger>
                   <SelectContent style={{ ...s.card, zIndex: 9999 }} position="popper" sideOffset={4}>
                     {HEDEF_TURLERI.map(t => (
@@ -454,6 +474,57 @@ export default function AdminHedefler() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Paket Üyeliği → Çoklu Paket Seçimi */}
+              {formTur === "paket_uyeligi" && (
+                <div>
+                  <label className="text-sm font-medium mb-1.5 block" style={s.text}>Hedeflenen Paketler *</label>
+                  <div className="p-3 rounded-lg space-y-2" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                    {paketOptions.map(p => (
+                      <label key={p.id} className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={formPaketler.includes(p.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) setFormPaketler(prev => [...prev, p.id]);
+                            else setFormPaketler(prev => prev.filter(id => id !== p.id));
+                          }}
+                        />
+                        <span className="text-sm" style={s.text}>{p.ad}</span>
+                      </label>
+                    ))}
+                    {paketOptions.length === 0 && <p className="text-xs" style={s.muted}>Paket bulunamadı.</p>}
+                  </div>
+                  <p className="text-xs mt-1" style={s.muted}>Seçilen paketlerle kapanan satışlar bu PKL'ye işlenecektir.</p>
+                </div>
+              )}
+
+              {/* Ciro bilgi notu */}
+              {formTur === "ciro" && (
+                <div className="p-3 rounded-lg text-xs" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <p style={s.muted}>
+                    💡 Ciro hedefinde, PRO üyelik satışlarından elde edilen KDV'siz tutar otomatik olarak PKL'ye işlenir.
+                  </p>
+                </div>
+              )}
+
+              {/* Dış Arama bilgi notu */}
+              {formTur === "dis_arama" && (
+                <div className="p-3 rounded-lg text-xs" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <p style={s.muted}>
+                    💡 "Dış Arama (İlk)" ve "Dış Arama (Tekrar)" aksiyon türleri bu PKL'ye sayılacaktır.
+                  </p>
+                </div>
+              )}
+
+              {/* Ziyaret bilgi notu */}
+              {formTur === "ziyaret" && (
+                <div className="p-3 rounded-lg text-xs" style={{ background: "hsl(var(--admin-input-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <p style={s.muted}>
+                    💡 "Ziyaret (İlk)" ve "Ziyaret (Tekrar)" aksiyon türleri bu PKL'ye sayılacaktır.
+                  </p>
+                </div>
+              )}
+
               <div>
                 <label className="text-sm font-medium mb-1 block" style={s.text}>Başlık</label>
                 <Input value={formBaslik} onChange={e => setFormBaslik(e.target.value)} placeholder="Örn: Mart ayı dış arama PKL" style={s.input} />
@@ -464,8 +535,10 @@ export default function AdminHedefler() {
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="text-sm font-medium mb-1 block" style={s.text}>PKL Limiti</label>
-                  <Input type="number" value={formMiktar} onChange={e => setFormMiktar(e.target.value)} placeholder="100" style={s.input} />
+                  <label className="text-sm font-medium mb-1 block" style={s.text}>
+                    {formTur === "ciro" ? "Ciro Hedefi (₺)" : "PKL Limiti"}
+                  </label>
+                  <Input type="number" value={formMiktar} onChange={e => setFormMiktar(e.target.value)} placeholder={formTur === "ciro" ? "50000" : "100"} style={s.input} />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block" style={s.text}>Başlangıç</label>
@@ -479,6 +552,7 @@ export default function AdminHedefler() {
               <div className="p-3 rounded-lg text-xs" style={{ background: "hsl(var(--admin-input-bg))" }}>
                 <p style={s.muted}>
                   💡 PKL oluşturduktan sonra kartın üzerindeki <strong>"Prim"</strong> butonuyla birim başı prim tutarını tanımlayabilirsiniz.
+                  {formTur === "ciro" && " Ciro hedefinde prim, PKL üzeri ciro tutarı × birim başı prim oranı ile hesaplanır."}
                 </p>
               </div>
             </div>
