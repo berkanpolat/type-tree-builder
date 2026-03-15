@@ -313,7 +313,20 @@ Deno.serve(async (req) => {
       const urunCountMap = new Map<string, number>();
       for (const u of urunCounts) urunCountMap.set(u.user_id, (urunCountMap.get(u.user_id) || 0) + 1);
 
-      const sikayetCountMap = new Map<string, number>();
+      // Portfolio map: firma_id -> { admin_id, admin_ad, admin_soyad }
+      const adminNameMap = new Map<string, any>();
+      for (const a of adminUsersForPortfolyo) adminNameMap.set(a.id, a);
+      const portfolyoMap = new Map<string, { admin_id: string; admin_ad: string; admin_soyad: string }>();
+      for (const p of portfolyoData) {
+        const admin = adminNameMap.get(p.admin_id);
+        portfolyoMap.set(p.firma_id, {
+          admin_id: p.admin_id,
+          admin_ad: admin?.ad || "",
+          admin_soyad: admin?.soyad || "",
+        });
+      }
+
+
       for (const s of sikayetCounts) sikayetCountMap.set(s.bildiren_user_id, (sikayetCountMap.get(s.bildiren_user_id) || 0) + 1);
 
       // Get il/ilce names
