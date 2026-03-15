@@ -556,6 +556,25 @@ export default function AdminFirmalarV2() {
     fetchData();
   };
 
+  const handleBulkPortfolio = async () => {
+    setBulkLoading(true);
+    let success = 0;
+    let fail = 0;
+    for (const id of selectedIds) {
+      try {
+        await callApi("add-portfolyo", { token, firmaId: id });
+        success++;
+      } catch {
+        fail++;
+      }
+    }
+    toast({ title: "Toplu Portföy", description: `${success} firma portföyünüze eklendi${fail > 0 ? `, ${fail} başarısız (zaten ekli olabilir)` : ""}` });
+    setSelectedIds(new Set());
+    setBulkAction(null);
+    setBulkLoading(false);
+    fetchData();
+  };
+
   // ── Filters ──
   const clearFilters = () => {
     setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all"); setFilterPaket("all");
