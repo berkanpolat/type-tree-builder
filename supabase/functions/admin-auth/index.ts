@@ -4043,17 +4043,51 @@ Deno.serve(async (req) => {
           await supabase.from("admin_hedefler").update({ gerceklesen_miktar: gerceklesen }).eq("id", h.id);
         }
         
-        // PKL: Calculate earned bonus (over PKL threshold)
+        // PKL: Calculate earned bonus using tiered system (kademeler)
         const pklAsim = Math.max(0, gerceklesen - h.hedef_miktar);
-        const primBirimi = detay.prim_birimi || "tl";
+        const kademeler = detay.kademeler || [];
         let kazanilanPrim = 0;
-        if (primBirimi === "yuzde") {
-          // Percentage: pklAsim * (birim_basi_prim / 100)
-          kazanilanPrim = pklAsim * ((h.birim_basi_prim || 0) / 100);
-        } else {
-          // Fixed TL or USD: pklAsim * birim_basi_prim
-          kazanilanPrim = pklAsim * (h.birim_basi_prim || 0);
+        let kazanilanPrimBirimi = "tl";
+        const kademeDetay: { kademe: number; miktar: number; prim: number }[] = [];
+
+        if (kademeler.length > 0) {
+          // Tiered calculation
+          for (let ki = 0; ki < kademeler.length; ki++) {
+            const k = kademeler[ki];
+            if (gerceklesen < k.alt) {
+              kademeDetay.push({ kademe: ki + 1, miktar: 0, prim: 0 });
+              continue;
+            }
+            const effectiveEnd = Math.min(gerceklesen, k.ust);
+            const unitsInTier = Math.max(0, effectiveEnd - k.alt + 1);
+            let tierPrim = 0;
+            if (k.birimi === "yuzde") {
+              tierPrim = unitsInTier * (k.oran / 100);
+              kazanilanPrimBirimi = "usd"; // percentage of dollars yields dollars
+            } else if (k.birimi === "usd") {
+              tierPrim = unitsInTier * k.oran;
+              kazanilanPrimBirimi = "usd";
+            } else {
+              tierPrim = unitsInTier * k.oran;
+              kazanilanPrimBirimi = "tl";
+            }
+            kazanilanPrim += tierPrim;
+            kademeDetay.push({ kademe: ki + 1, miktar: unitsInTier, prim: tierPrim });
+          }
+        } else if (h.birim_basi_prim > 0) {
+          // Legacy single-rate fallback
+          const primBirimi = detay.prim_birimi || "tl";
+          if (primBirimi === "yuzde") {
+            kazanilanPrim = pklAsim * ((h.birim_basi_prim || 0) / 100);
+            kazanilanPrimBirimi = "usd";
+          } else {
+            kazanilanPrim = pklAsim * (h.birim_basi_prim || 0);
+            kazanilanPrimBirimi = primBirimi;
+          }
         }
+
+        // Round to 2 decimal places
+        kazanilanPrim = Math.round(kazanilanPrim * 100) / 100;
         
         hedefler.push({
           ...h,
@@ -4063,6 +4097,8 @@ Deno.serve(async (req) => {
           hedef_admin_departman: adminUser?.departman,
           pkl_asim: pklAsim,
           kazanilan_prim: kazanilanPrim,
+          kazanilan_prim_birimi: kazanilanPrimBirimi,
+          kademe_detay: kademeDetay.length > 0 ? kademeDetay : undefined,
         });
       }
       
@@ -4108,26 +4144,41 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true, hedef });
     }
 
-    // ─── PKL: PRİM GÜNCELLE ───
+    // ─── PKL: PRİM GÜNCELLE (KADEMELER) ───
     if (action === "update-pkl-prim") {
       const payload = verifyToken(body.token);
-      const { hedefId, birimBasiPrim, primBirimi } = body;
-      if (!hedefId || birimBasiPrim === undefined) return jsonResponse({ error: "Zorunlu alanlar eksik" }, 400);
+      const { hedefId, kademeler, birimBasiPrim, primBirimi } = body;
+      if (!hedefId) return jsonResponse({ error: "PKL ID zorunlu" }, 400);
       
-      // Get existing hedef_detay to merge prim_birimi
+      // Get existing hedef_detay to merge
       const { data: existingHedef } = await supabase.from("admin_hedefler").select("hedef_detay").eq("id", hedefId).single();
       const existingDetay = existingHedef?.hedef_detay || {};
-      const updatedDetay = { ...existingDetay, prim_birimi: primBirimi || "tl" };
       
-      const { error } = await supabase.from("admin_hedefler").update({ 
-        birim_basi_prim: birimBasiPrim,
-        hedef_detay: updatedDetay,
-      }).eq("id", hedefId);
+      let updatedDetay = { ...existingDetay };
+      let updateData: any = {};
+      
+      if (kademeler && Array.isArray(kademeler) && kademeler.length > 0) {
+        // New tiered system
+        updatedDetay.kademeler = kademeler;
+        // Clear legacy fields
+        delete updatedDetay.prim_birimi;
+        updateData.birim_basi_prim = 0;
+      } else if (birimBasiPrim !== undefined) {
+        // Legacy single-rate
+        updatedDetay.prim_birimi = primBirimi || "tl";
+        delete updatedDetay.kademeler;
+        updateData.birim_basi_prim = birimBasiPrim;
+      }
+      
+      updateData.hedef_detay = updatedDetay;
+      
+      const { error } = await supabase.from("admin_hedefler").update(updateData).eq("id", hedefId);
       if (error) return jsonResponse({ error: error.message }, 400);
       
-      const birimiLabel = primBirimi === "usd" ? "$" : primBirimi === "yuzde" ? "%" : "₺";
+      const kademeCount = kademeler?.length || 0;
       await logActivity(supabase, payload, "pkl_prim_guncellendi", {
-        target_type: "pkl", target_id: hedefId, target_label: `Birim başı prim: ${birimBasiPrim} ${birimiLabel}`,
+        target_type: "pkl", target_id: hedefId, 
+        target_label: kademeCount > 0 ? `${kademeCount} kademeli prim tanımlandı` : `Birim başı prim: ${birimBasiPrim}`,
       });
       
       return jsonResponse({ success: true });
