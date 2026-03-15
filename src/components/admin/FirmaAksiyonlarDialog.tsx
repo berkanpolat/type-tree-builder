@@ -131,7 +131,7 @@ function AksiyonRow({ aksiyon, onToggle, onDelete, onClick }: { aksiyon: Aksiyon
   return (
     <div className="flex items-start gap-2.5 p-2.5 rounded-lg transition-colors cursor-pointer hover:brightness-95" style={{ background: "hsl(var(--admin-hover))", opacity: isDone ? 0.6 : 1 }} onClick={onClick}>
       <button
-        onClick={() => onToggle(aksiyon)}
+        onClick={(e) => { e.stopPropagation(); onToggle(aksiyon); }}
         className="mt-0.5 rounded border flex items-center justify-center flex-shrink-0 transition-colors"
         style={{ borderColor: isDone ? "#22c55e" : "hsl(var(--admin-border))", background: isDone ? "rgba(34,197,94,0.15)" : "transparent", width: 18, height: 18 }}
       >
