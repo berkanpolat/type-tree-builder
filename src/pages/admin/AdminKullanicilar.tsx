@@ -31,8 +31,13 @@ interface AdminUser {
   created_at: string;
 }
 
-const POZISYONLAR = ["Saha Satış Personeli", "Saha Satış Yöneticisi", "Çağrı Merkezi Yönetici", "Çağrı Merkezi Personeli", "Kurumsal Satış Yönetimi", "Kurumsal Satış Personeli", "Destek Personeli"];
-const DEPARTMANLAR = ["Yönetim Kurulu", "Saha Satış", "Çağrı Merkezi", "Kurumsal Satış"];
+const DEPARTMAN_POZISYON: Record<string, string[]> = {
+  "Saha Satış": ["Saha Satış Personeli", "Saha Satış Yöneticisi"],
+  "Çağrı Merkezi": ["Çağrı Merkezi Yönetici", "Çağrı Merkezi Personeli"],
+  "Kurumsal Satış": ["Kurumsal Satış Yöneticisi", "Kurumsal Satış Personeli"],
+  "Yönetim Kurulu": ["Yönetim Kurulu Üyesi"],
+};
+const DEPARTMANLAR = Object.keys(DEPARTMAN_POZISYON);
 
 /* ── Hierarchical Permission Structure ── */
 interface PermissionGroup {
@@ -148,7 +153,7 @@ export default function AdminKullanicilar() {
     soyad: "",
     email: "",
     telefon: "",
-    pozisyon: "Call Center",
+    pozisyon: "Çağrı Merkezi Personeli",
     departman: "Çağrı Merkezi",
     permissions: { ...DEFAULT_PERMISSIONS },
   });
@@ -178,7 +183,7 @@ export default function AdminKullanicilar() {
   const resetForm = () => {
     setForm({
       username: "", password: "", ad: "", soyad: "",
-      email: "", telefon: "", pozisyon: "Call Center",
+      email: "", telefon: "", pozisyon: "Çağrı Merkezi Personeli",
       departman: "Çağrı Merkezi",
       permissions: { ...DEFAULT_PERMISSIONS },
     });
@@ -508,7 +513,7 @@ export default function AdminKullanicilar() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label style={sMuted}>Departman *</Label>
-                <Select value={form.departman} onValueChange={(v) => setForm({ ...form, departman: v })}>
+                <Select value={form.departman} onValueChange={(v) => setForm({ ...form, departman: v, pozisyon: DEPARTMAN_POZISYON[v]?.[0] || "" })}>
                   <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
                   <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
                     {DEPARTMANLAR.map((d) => (
@@ -522,7 +527,7 @@ export default function AdminKullanicilar() {
                 <Select value={form.pozisyon} onValueChange={(v) => setForm({ ...form, pozisyon: v })}>
                   <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
                   <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
-                    {POZISYONLAR.map((p) => (
+                    {(DEPARTMAN_POZISYON[form.departman] || []).map((p) => (
                       <SelectItem key={p} value={p} style={sText}>{p}</SelectItem>
                     ))}
                   </SelectContent>
