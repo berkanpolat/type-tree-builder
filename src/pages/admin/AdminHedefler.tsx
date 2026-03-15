@@ -115,11 +115,6 @@ export default function AdminHedefler() {
     const { data } = await supabase.from("paketler").select("id, ad, slug").eq("aktif", true).order("fiyat_aylik", { ascending: true });
     setPaketOptions((data || []).map((p: any) => ({ id: p.id, ad: p.ad, slug: p.slug || "" })));
   }, []);
-    const res = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (res.error) throw new Error(res.error.message);
-    if (res.data?.error) throw new Error(res.data.error);
-    return res.data;
-  }, []);
 
   const loadHedefler = useCallback(async () => {
     if (!user) return;
