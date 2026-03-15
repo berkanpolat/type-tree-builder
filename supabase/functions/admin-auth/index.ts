@@ -4144,26 +4144,41 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true, hedef });
     }
 
-    // ─── PKL: PRİM GÜNCELLE ───
+    // ─── PKL: PRİM GÜNCELLE (KADEMELER) ───
     if (action === "update-pkl-prim") {
       const payload = verifyToken(body.token);
-      const { hedefId, birimBasiPrim, primBirimi } = body;
-      if (!hedefId || birimBasiPrim === undefined) return jsonResponse({ error: "Zorunlu alanlar eksik" }, 400);
+      const { hedefId, kademeler, birimBasiPrim, primBirimi } = body;
+      if (!hedefId) return jsonResponse({ error: "PKL ID zorunlu" }, 400);
       
-      // Get existing hedef_detay to merge prim_birimi
+      // Get existing hedef_detay to merge
       const { data: existingHedef } = await supabase.from("admin_hedefler").select("hedef_detay").eq("id", hedefId).single();
       const existingDetay = existingHedef?.hedef_detay || {};
-      const updatedDetay = { ...existingDetay, prim_birimi: primBirimi || "tl" };
       
-      const { error } = await supabase.from("admin_hedefler").update({ 
-        birim_basi_prim: birimBasiPrim,
-        hedef_detay: updatedDetay,
-      }).eq("id", hedefId);
+      let updatedDetay = { ...existingDetay };
+      let updateData: any = {};
+      
+      if (kademeler && Array.isArray(kademeler) && kademeler.length > 0) {
+        // New tiered system
+        updatedDetay.kademeler = kademeler;
+        // Clear legacy fields
+        delete updatedDetay.prim_birimi;
+        updateData.birim_basi_prim = 0;
+      } else if (birimBasiPrim !== undefined) {
+        // Legacy single-rate
+        updatedDetay.prim_birimi = primBirimi || "tl";
+        delete updatedDetay.kademeler;
+        updateData.birim_basi_prim = birimBasiPrim;
+      }
+      
+      updateData.hedef_detay = updatedDetay;
+      
+      const { error } = await supabase.from("admin_hedefler").update(updateData).eq("id", hedefId);
       if (error) return jsonResponse({ error: error.message }, 400);
       
-      const birimiLabel = primBirimi === "usd" ? "$" : primBirimi === "yuzde" ? "%" : "₺";
+      const kademeCount = kademeler?.length || 0;
       await logActivity(supabase, payload, "pkl_prim_guncellendi", {
-        target_type: "pkl", target_id: hedefId, target_label: `Birim başı prim: ${birimBasiPrim} ${birimiLabel}`,
+        target_type: "pkl", target_id: hedefId, 
+        target_label: kademeCount > 0 ? `${kademeCount} kademeli prim tanımlandı` : `Birim başı prim: ${birimBasiPrim}`,
       });
       
       return jsonResponse({ success: true });
