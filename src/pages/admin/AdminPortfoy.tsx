@@ -577,7 +577,7 @@ export default function AdminPortfoy() {
                       {ziyaretTarih ? format(ziyaretTarih, "d MMMM yyyy", { locale: tr }) : "Tarih seçin"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0" align="start" style={{ zIndex: 9999 }}>
                     <Calendar mode="single" selected={ziyaretTarih} onSelect={setZiyaretTarih} className={cn("p-3 pointer-events-auto")} disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))} />
                   </PopoverContent>
                 </Popover>

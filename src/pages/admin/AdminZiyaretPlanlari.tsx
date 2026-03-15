@@ -73,8 +73,9 @@ export default function AdminZiyaretPlanlari() {
         baslangic: format(selectedWeekStart, "yyyy-MM-dd"),
         bitis: format(weekEnd, "yyyy-MM-dd"),
       });
-      setPlanlar(data.planlar || []);
-    } catch {
+      setPlanlar(data?.planlar || []);
+    } catch (err) {
+      console.error("[ZiyaretPlanlari] fetch error:", err);
       toast({ title: "Hata", description: "Ziyaret planları yüklenemedi", variant: "destructive" });
     } finally {
       setLoading(false);
