@@ -3701,7 +3701,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
-    // ─── HEDEF: LİSTELE ───
+    // ─── PKL: LİSTELE ───
     if (action === "list-hedefler") {
       const payload = verifyToken(body.token);
       const { adminId, durum } = body;
@@ -3713,15 +3713,12 @@ Deno.serve(async (req) => {
       const { data: hedeflerRaw, error } = await query;
       if (error) return jsonResponse({ error: error.message }, 400);
       
-      // Enrich with admin names + kademeler
       const hedefler = [];
       for (const h of (hedeflerRaw || [])) {
         const { data: adminUser } = await supabase.from("admin_users").select("ad, soyad, departman").eq("id", h.hedef_admin_id).single();
-        const { data: kademeler } = await supabase.from("admin_hedef_kademeleri").select("*").eq("hedef_id", h.id).order("kademe_yuzdesi");
         
         // Auto-calculate gerceklesen_miktar
         let gerceklesen = 0;
-        const now = new Date().toISOString();
         if (h.hedef_turu === "ziyaret") {
           const { count } = await supabase.from("admin_ziyaret_planlari")
             .select("*", { count: "exact", head: true })
@@ -3746,7 +3743,6 @@ Deno.serve(async (req) => {
             .lte("created_at", h.bitis_tarihi);
           gerceklesen = count || 0;
         } else if (h.hedef_turu === "firma_kaydi") {
-          // Count admin_aksiyonlar where tur = some registration action
           const { count } = await supabase.from("admin_aksiyonlar")
             .select("*", { count: "exact", head: true })
             .eq("admin_id", h.hedef_admin_id)
@@ -3756,36 +3752,32 @@ Deno.serve(async (req) => {
           gerceklesen = count || 0;
         }
         
-        // Update gerceklesen in DB
         if (gerceklesen !== h.gerceklesen_miktar) {
           await supabase.from("admin_hedefler").update({ gerceklesen_miktar: gerceklesen }).eq("id", h.id);
         }
         
-        // Auto-complete
-        let durum_final = h.durum;
-        if (h.durum === "aktif" && gerceklesen >= h.hedef_miktar) {
-          durum_final = "tamamlandi";
-          await supabase.from("admin_hedefler").update({ durum: "tamamlandi" }).eq("id", h.id);
-        }
+        // PKL: Calculate earned bonus (over PKL threshold)
+        const pklAsim = Math.max(0, gerceklesen - h.hedef_miktar);
+        const kazanilanPrim = pklAsim * (h.birim_basi_prim || 0);
         
         hedefler.push({
           ...h,
           gerceklesen_miktar: gerceklesen,
-          durum: durum_final,
           hedef_admin_ad: adminUser?.ad,
           hedef_admin_soyad: adminUser?.soyad,
           hedef_admin_departman: adminUser?.departman,
-          kademeler: kademeler || [],
+          pkl_asim: pklAsim,
+          kazanilan_prim: kazanilanPrim,
         });
       }
       
       return jsonResponse({ hedefler });
     }
 
-    // ─── HEDEF: OLUŞTUR ───
+    // ─── PKL: OLUŞTUR ───
     if (action === "create-hedef") {
       const payload = verifyToken(body.token);
-      const { hedefAdminId, hedefTuru, baslik, aciklama, hedefMiktar, baslangicTarihi, bitisTarihi, kademeler } = body;
+      const { hedefAdminId, hedefTuru, baslik, aciklama, hedefMiktar, baslangicTarihi, bitisTarihi } = body;
       
       if (!hedefAdminId || !baslik || !hedefMiktar || !baslangicTarihi || !bitisTarihi) {
         return jsonResponse({ error: "Zorunlu alanlar eksik" }, 400);
@@ -3800,33 +3792,39 @@ Deno.serve(async (req) => {
         hedef_miktar: hedefMiktar,
         baslangic_tarihi: baslangicTarihi,
         bitis_tarihi: bitisTarihi,
+        birim_basi_prim: 0,
       }).select().single();
       
       if (error) return jsonResponse({ error: error.message }, 400);
       
-      // Insert kademeler
-      if (kademeler && Array.isArray(kademeler)) {
-        for (const k of kademeler) {
-          await supabase.from("admin_hedef_kademeleri").insert({
-            hedef_id: hedef.id,
-            kademe_yuzdesi: k.kademe_yuzdesi,
-            prim_tutari: k.prim_tutari,
-          });
-        }
-      }
-      
-      await logActivity(supabase, payload, "hedef_olusturuldu", {
-        target_type: "hedef", target_id: hedef.id, target_label: baslik,
+      await logActivity(supabase, payload, "pkl_olusturuldu", {
+        target_type: "pkl", target_id: hedef.id, target_label: baslik,
       });
       
       return jsonResponse({ success: true, hedef });
     }
 
-    // ─── HEDEF: SİL ───
+    // ─── PKL: PRİM GÜNCELLE ───
+    if (action === "update-pkl-prim") {
+      const payload = verifyToken(body.token);
+      const { hedefId, birimBasiPrim } = body;
+      if (!hedefId || birimBasiPrim === undefined) return jsonResponse({ error: "Zorunlu alanlar eksik" }, 400);
+      
+      const { error } = await supabase.from("admin_hedefler").update({ birim_basi_prim: birimBasiPrim }).eq("id", hedefId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      
+      await logActivity(supabase, payload, "pkl_prim_guncellendi", {
+        target_type: "pkl", target_id: hedefId, target_label: `Birim başı prim: ${birimBasiPrim} ₺`,
+      });
+      
+      return jsonResponse({ success: true });
+    }
+
+    // ─── PKL: SİL ───
     if (action === "delete-hedef") {
       const payload = verifyToken(body.token);
       const { hedefId } = body;
-      if (!hedefId) return jsonResponse({ error: "Hedef ID zorunlu" }, 400);
+      if (!hedefId) return jsonResponse({ error: "PKL ID zorunlu" }, 400);
       
       const { error } = await supabase.from("admin_hedefler").delete().eq("id", hedefId);
       if (error) return jsonResponse({ error: error.message }, 400);

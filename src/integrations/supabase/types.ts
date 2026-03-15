@@ -142,44 +142,13 @@ export type Database = {
           },
         ]
       }
-      admin_hedef_kademeleri: {
-        Row: {
-          created_at: string
-          hedef_id: string
-          id: string
-          kademe_yuzdesi: number
-          prim_tutari: number
-        }
-        Insert: {
-          created_at?: string
-          hedef_id: string
-          id?: string
-          kademe_yuzdesi: number
-          prim_tutari: number
-        }
-        Update: {
-          created_at?: string
-          hedef_id?: string
-          id?: string
-          kademe_yuzdesi?: number
-          prim_tutari?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admin_hedef_kademeleri_hedef_id_fkey"
-            columns: ["hedef_id"]
-            isOneToOne: false
-            referencedRelation: "admin_hedefler"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       admin_hedefler: {
         Row: {
           aciklama: string | null
           atayan_admin_id: string
           baslangic_tarihi: string
           baslik: string
+          birim_basi_prim: number | null
           bitis_tarihi: string
           created_at: string
           durum: string
@@ -195,6 +164,7 @@ export type Database = {
           atayan_admin_id: string
           baslangic_tarihi: string
           baslik: string
+          birim_basi_prim?: number | null
           bitis_tarihi: string
           created_at?: string
           durum?: string
@@ -210,6 +180,7 @@ export type Database = {
           atayan_admin_id?: string
           baslangic_tarihi?: string
           baslik?: string
+          birim_basi_prim?: number | null
           bitis_tarihi?: string
           created_at?: string
           durum?: string
