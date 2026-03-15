@@ -337,7 +337,7 @@ export default function AdminHedefler() {
 
         {/* Oluştur Dialog */}
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
-          <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent style={{ ...s.card, maxHeight: "90vh", overflowY: "auto" }} className="max-w-lg [&_[data-radix-popper-content-wrapper]]:!z-[9999]">
             <DialogHeader>
               <DialogTitle style={s.text}>Yeni Hedef Ata</DialogTitle>
             </DialogHeader>
@@ -346,7 +346,7 @@ export default function AdminHedefler() {
                 <label className="text-sm font-medium mb-1 block" style={s.text}>Personel</label>
                 <Select value={formAdmin} onValueChange={setFormAdmin}>
                   <SelectTrigger style={s.input}><SelectValue placeholder="Personel seçin" /></SelectTrigger>
-                  <SelectContent style={s.card}>
+                   <SelectContent style={{ ...s.card, zIndex: 9999 }} position="popper" sideOffset={4}>
                     {adminUsers.map(u => (
                       <SelectItem key={u.id} value={u.id}>{u.ad} {u.soyad} ({u.departman})</SelectItem>
                     ))}
@@ -357,7 +357,7 @@ export default function AdminHedefler() {
                 <label className="text-sm font-medium mb-1 block" style={s.text}>Hedef Türü</label>
                 <Select value={formTur} onValueChange={setFormTur}>
                   <SelectTrigger style={s.input}><SelectValue /></SelectTrigger>
-                  <SelectContent style={s.card}>
+                   <SelectContent style={{ ...s.card, zIndex: 9999 }} position="popper" sideOffset={4}>
                     {HEDEF_TURLERI.map(t => (
                       <SelectItem key={t.value} value={t.value}>{t.icon} {t.label}</SelectItem>
                     ))}
