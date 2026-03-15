@@ -430,7 +430,7 @@ export default function AdminKullanicilar() {
                             <Button variant="ghost" size="icon" onClick={() => openEdit(u)} style={sMuted} className="hover:opacity-80">
                               <Pencil className="w-4 h-4" />
                             </Button>
-                            {!u.is_primary && currentUser?.is_primary && (
+                            {!u.is_primary && realUser?.is_primary && (
                               <Button variant="ghost" size="icon" onClick={() => handleDelete(u)} className="text-red-400 hover:text-red-500 hover:bg-red-500/10">
                                 <Trash2 className="w-4 h-4" />
                               </Button>
