@@ -425,6 +425,14 @@ export default function AdminPortfoy() {
               token={token}
               onAddClick={() => { setAksiyonlarOpen(false); setAksiyonEkleOpen(true); }}
             />
+            <FirmaYetkililerDialog
+              open={yetkililerOpen}
+              onOpenChange={setYetkililerOpen}
+              firmaId={selectedFirma.id}
+              firmaUnvani={selectedFirma.firma_unvani}
+              callApi={callApi}
+              token={token}
+            />
           </>
         )}
       </div>
