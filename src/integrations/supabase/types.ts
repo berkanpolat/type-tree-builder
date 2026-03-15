@@ -208,6 +208,38 @@ export type Database = {
           },
         ]
       }
+      admin_konumlar: {
+        Row: {
+          admin_id: string
+          id: string
+          lat: number
+          lng: number
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          id?: string
+          lat: number
+          lng: number
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          id?: string
+          lat?: number
+          lng?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_konumlar_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: true
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_portfolyo: {
         Row: {
           admin_id: string

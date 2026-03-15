@@ -3839,6 +3839,57 @@ Deno.serve(async (req) => {
       return jsonResponse({ users: data });
     }
 
+    // ─── KONUM GÜNCELLE ───
+    if (action === "update-konum") {
+      const payload = verifyToken(body.token);
+      const { lat, lng } = body;
+      if (typeof lat !== "number" || typeof lng !== "number") {
+        return jsonResponse({ error: "lat ve lng zorunludur" }, 400);
+      }
+      const { error } = await supabase.from("admin_konumlar").upsert({
+        admin_id: payload.id,
+        lat,
+        lng,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: "admin_id" });
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
+
+    // ─── KONUMLARI LİSTELE ───
+    if (action === "list-konumlar") {
+      const payload = verifyToken(body.token);
+      const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+      const { data, error } = await supabase
+        .from("admin_konumlar")
+        .select("admin_id, lat, lng, updated_at")
+        .gte("updated_at", fiveMinAgo);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      // Get admin names
+      const adminIds = (data || []).map((d: any) => d.admin_id);
+      let admins: any[] = [];
+      if (adminIds.length > 0) {
+        const { data: aData } = await supabase
+          .from("admin_users")
+          .select("id, ad, soyad, pozisyon")
+          .in("id", adminIds);
+        admins = aData || [];
+      }
+
+      const result = (data || []).map((k: any) => {
+        const admin = admins.find((a: any) => a.id === k.admin_id);
+        return {
+          ...k,
+          admin_ad: admin?.ad || "",
+          admin_soyad: admin?.soyad || "",
+          admin_pozisyon: admin?.pozisyon || "",
+        };
+      });
+
+      return jsonResponse({ konumlar: result });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
