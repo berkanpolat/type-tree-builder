@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -16,11 +14,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import {
-  MapPin, CalendarIcon, Building2, Loader2, MoreHorizontal, Trash2, CheckCircle, Clock, Search, ChevronLeft, ChevronRight,
+  MapPin, CalendarIcon, Building2, Loader2, MoreHorizontal, Trash2, CheckCircle, Clock,
+  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown,
 } from "lucide-react";
-import { format, addDays, startOfWeek, endOfWeek, isToday, isTomorrow, isPast, isSameDay } from "date-fns";
+import { format, addDays, startOfWeek, endOfWeek, isToday, isPast, isSameDay } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
 
 const s = {
   card: { background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.75rem" } as CSSProperties,
@@ -56,6 +56,11 @@ export default function AdminZiyaretPlanlari() {
   const [selectedWeekStart, setSelectedWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [editPlan, setEditPlan] = useState<ZiyaretPlan | null>(null);
   const [editNotlar, setEditNotlar] = useState("");
+  const [expandedDate, setExpandedDate] = useState<string | null>(null);
+
+  // Aksiyon Ekle state
+  const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
+  const [aksiyonPlan, setAksiyonPlan] = useState<ZiyaretPlan | null>(null);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
@@ -116,6 +121,41 @@ export default function AdminZiyaretPlanlari() {
     }
   };
 
+  const handleCompleteDay = async (plans: ZiyaretPlan[]) => {
+    const pendingPlans = plans.filter(p => p.durum === "planli");
+    if (pendingPlans.length === 0) {
+      toast({ title: "Bilgi", description: "Tamamlanacak ziyaret yok" });
+      return;
+    }
+    let success = 0;
+    for (const plan of pendingPlans) {
+      try {
+        await callApi("update-ziyaret-plani", { token, planId: plan.id, durum: "tamamlandi" });
+        success++;
+      } catch { /* skip */ }
+    }
+    toast({ title: "Günü Tamamla", description: `${success} ziyaret tamamlandı olarak işaretlendi` });
+    fetchPlanlar();
+  };
+
+  const handleAksiyonEkle = (plan: ZiyaretPlan) => {
+    setAksiyonPlan(plan);
+    setAksiyonEkleOpen(true);
+  };
+
+  const handleAksiyonSuccess = async () => {
+    // Auto-mark visit as completed when an action is added
+    if (aksiyonPlan && aksiyonPlan.durum === "planli") {
+      try {
+        await callApi("update-ziyaret-plani", { token, planId: aksiyonPlan.id, durum: "tamamlandi" });
+      } catch { /* ignore */ }
+    }
+    setAksiyonEkleOpen(false);
+    setAksiyonPlan(null);
+    toast({ title: "Başarılı", description: "Aksiyon eklendi, ziyaret tamamlandı olarak işaretlendi" });
+    fetchPlanlar();
+  };
+
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(selectedWeekStart, i));
 
   const filteredPlanlar = planlar.filter(p =>
@@ -124,6 +164,7 @@ export default function AdminZiyaretPlanlari() {
 
   const plansByDate = weekDays.map(day => ({
     date: day,
+    dateKey: format(day, "yyyy-MM-dd"),
     plans: filteredPlanlar.filter(p => isSameDay(new Date(p.planlanan_tarih), day)),
   }));
 
@@ -177,62 +218,141 @@ export default function AdminZiyaretPlanlari() {
             <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
-            {plansByDate.map(({ date, plans }) => {
-              const today = isToday(date);
-              const past = isPast(date) && !today;
-              return (
-                <div key={date.toISOString()} className="rounded-xl p-3 min-h-[200px]"
-                  style={{
-                    ...s.card,
-                    ...(today ? { borderColor: "hsl(38 92% 50%)", borderWidth: 2 } : {}),
-                    opacity: past ? 0.6 : 1,
-                  }}>
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-xs font-semibold" style={today ? { color: "hsl(38 92% 50%)" } : s.text}>
-                        {format(date, "EEEE", { locale: tr })}
+          <div className="space-y-3">
+            {/* Compact row for non-expanded days */}
+            <div className={cn("grid gap-3", expandedDate ? "grid-cols-1 md:grid-cols-6" : "grid-cols-1 md:grid-cols-7")}>
+              {plansByDate.filter(d => d.dateKey !== expandedDate).map(({ date, dateKey, plans }) => {
+                const today = isToday(date);
+                const past = isPast(date) && !today;
+                const hasPending = plans.some(p => p.durum === "planli");
+                return (
+                  <div
+                    key={dateKey}
+                    className="rounded-xl p-3 min-h-[120px] cursor-pointer transition-all hover:scale-[1.02]"
+                    style={{
+                      ...s.card,
+                      ...(today ? { borderColor: "hsl(38 92% 50%)", borderWidth: 2 } : {}),
+                      opacity: past ? 0.6 : 1,
+                    }}
+                    onClick={() => setExpandedDate(dateKey)}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div>
+                        <div className="text-xs font-semibold" style={today ? { color: "hsl(38 92% 50%)" } : s.text}>
+                          {format(date, "EEEE", { locale: tr })}
+                        </div>
+                        <div className="text-[10px]" style={s.muted}>
+                          {format(date, "d MMMM", { locale: tr })}
+                        </div>
                       </div>
-                      <div className="text-[10px]" style={s.muted}>
-                        {format(date, "d MMMM", { locale: tr })}
+                      {plans.length > 0 && (
+                        <Badge className="text-[9px] px-1.5 py-0" style={{ background: hasPending ? "rgba(59,130,246,0.1)" : "rgba(34,197,94,0.1)", color: hasPending ? "#3b82f6" : "#22c55e", borderColor: hasPending ? "rgba(59,130,246,0.3)" : "rgba(34,197,94,0.3)" }}>
+                          {plans.length}
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      {plans.slice(0, 3).map(plan => {
+                        const durumC = DURUM_CONFIG[plan.durum] || DURUM_CONFIG.planli;
+                        return (
+                          <div key={plan.id} className="flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: durumC.color }} />
+                            <p className="text-[10px] truncate" style={s.text}>{plan.firma_unvani}</p>
+                          </div>
+                        );
+                      })}
+                      {plans.length > 3 && (
+                        <p className="text-[9px]" style={s.muted}>+{plans.length - 3} daha</p>
+                      )}
+                      {plans.length === 0 && (
+                        <p className="text-[10px] text-center py-2" style={s.muted}>—</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Expanded day detail */}
+            {expandedDate && (() => {
+              const dayData = plansByDate.find(d => d.dateKey === expandedDate);
+              if (!dayData) return null;
+              const { date, plans } = dayData;
+              const today = isToday(date);
+              const pendingCount = plans.filter(p => p.durum === "planli").length;
+              const completedCount = plans.filter(p => p.durum === "tamamlandi").length;
+
+              return (
+                <div className="rounded-xl p-5" style={{ ...s.card, ...(today ? { borderColor: "hsl(38 92% 50%)", borderWidth: 2 } : {}) }}>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="text-sm font-bold" style={today ? { color: "hsl(38 92% 50%)" } : s.text}>
+                          {format(date, "EEEE", { locale: tr })}
+                        </div>
+                        <div className="text-xs" style={s.muted}>
+                          {format(date, "d MMMM yyyy", { locale: tr })}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {pendingCount > 0 && (
+                          <Badge className="text-[10px]" style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", borderColor: "rgba(59,130,246,0.3)" }}>
+                            {pendingCount} bekleyen
+                          </Badge>
+                        )}
+                        {completedCount > 0 && (
+                          <Badge className="text-[10px]" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", borderColor: "rgba(34,197,94,0.3)" }}>
+                            {completedCount} tamamlandı
+                          </Badge>
+                        )}
                       </div>
                     </div>
-                    {plans.length > 0 && (
-                      <Badge className="text-[9px] px-1.5 py-0" style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", borderColor: "rgba(59,130,246,0.3)" }}>
-                        {plans.length}
-                      </Badge>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {pendingCount > 0 && (
+                        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7" onClick={() => handleCompleteDay(plans)}>
+                          <CheckCheck className="w-3.5 h-3.5 mr-1" /> Günü Tamamla
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" className="h-7 text-xs" style={s.muted} onClick={() => setExpandedDate(null)}>
+                        <ChevronDown className="w-3.5 h-3.5 mr-1 rotate-180" /> Kapat
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    {plans.map(plan => {
-                      const durumC = DURUM_CONFIG[plan.durum] || DURUM_CONFIG.planli;
-                      return (
-                        <div key={plan.id} className="rounded-lg p-2 group relative" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
-                          <div className="flex items-start gap-2">
-                            <div className="w-6 h-6 rounded flex items-center justify-center overflow-hidden flex-shrink-0 mt-0.5" style={{ background: "hsl(var(--admin-card-bg))" }}>
+                  {plans.length === 0 ? (
+                    <p className="text-sm text-center py-8" style={s.muted}>Bu gün için planlanmış ziyaret yok</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {plans.map(plan => {
+                        const durumC = DURUM_CONFIG[plan.durum] || DURUM_CONFIG.planli;
+                        return (
+                          <div key={plan.id} className="rounded-lg p-3 group flex items-center gap-3" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: "hsl(var(--admin-card-bg))" }}>
                               {plan.firma_logo ? (
                                 <img src={plan.firma_logo} alt="" className="w-full h-full object-cover" />
                               ) : (
-                                <Building2 className="w-3 h-3" style={s.muted} />
+                                <Building2 className="w-4 h-4" style={s.muted} />
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[11px] font-medium truncate" style={s.text}>{plan.firma_unvani}</p>
+                              <p className="text-sm font-medium" style={s.text}>{plan.firma_unvani}</p>
                               {plan.notlar && (
-                                <p className="text-[10px] mt-0.5 line-clamp-2" style={s.muted}>{plan.notlar}</p>
+                                <p className="text-xs mt-0.5" style={s.muted}>{plan.notlar}</p>
                               )}
-                              <Badge className="text-[8px] px-1 py-0 mt-1" style={{ background: durumC.bg, color: durumC.color, borderColor: `${durumC.color}40` }}>
-                                {durumC.label}
-                              </Badge>
                             </div>
+                            <Badge className="text-[9px] px-2 py-0.5 flex-shrink-0" style={{ background: durumC.bg, color: durumC.color, borderColor: `${durumC.color}40` }}>
+                              {durumC.label}
+                            </Badge>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <MoreHorizontal className="w-3 h-3" style={s.muted} />
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                                  <MoreHorizontal className="w-4 h-4" style={s.muted} />
                                 </Button>
                               </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" style={s.card} className="min-w-[140px]">
+                              <DropdownMenuContent align="end" style={s.card} className="min-w-[160px]">
+                                <DropdownMenuItem onClick={() => handleAksiyonEkle(plan)} className="text-xs cursor-pointer">
+                                  <ClipboardList className="w-3.5 h-3.5 mr-2 text-amber-500" /> Aksiyon Ekle
+                                </DropdownMenuItem>
                                 {plan.durum === "planli" && (
                                   <DropdownMenuItem onClick={() => handleDurumChange(plan.id, "tamamlandi")} className="text-xs cursor-pointer">
                                     <CheckCircle className="w-3.5 h-3.5 mr-2 text-emerald-500" /> Tamamlandı
@@ -252,16 +372,13 @@ export default function AdminZiyaretPlanlari() {
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
-                        </div>
-                      );
-                    })}
-                    {plans.length === 0 && (
-                      <p className="text-[10px] text-center py-4" style={s.muted}>—</p>
-                    )}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
-            })}
+            })()}
           </div>
         )}
       </div>
@@ -285,6 +402,21 @@ export default function AdminZiyaretPlanlari() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Aksiyon Ekle Dialog */}
+      {aksiyonPlan && token && adminUser && (
+        <AksiyonEkleDialog
+          open={aksiyonEkleOpen}
+          onOpenChange={(o) => { if (!o) { setAksiyonEkleOpen(false); setAksiyonPlan(null); } }}
+          firmaId={aksiyonPlan.firma_id}
+          firmaUnvani={aksiyonPlan.firma_unvani}
+          callApi={callApi}
+          token={token}
+          adminDepartman={adminUser.departman}
+          adminIsPrimary={adminUser.is_primary}
+          onSuccess={handleAksiyonSuccess}
+        />
+      )}
     </AdminLayout>
   );
 }
