@@ -105,6 +105,7 @@ export default function AdminPortfoy() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
   const [aksiyonlarOpen, setAksiyonlarOpen] = useState(false);
+  const [yetkililerOpen, setYetkililerOpen] = useState(false);
   const [selectedFirma, setSelectedFirma] = useState<FirmaItem | null>(null);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
