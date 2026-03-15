@@ -337,7 +337,7 @@ export default function AdminHedefler() {
 
         {/* Oluştur Dialog */}
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
-          <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent style={{ ...s.card, maxHeight: "90vh", overflowY: "auto" }} className="max-w-lg [&_[data-radix-popper-content-wrapper]]:!z-[9999]">
             <DialogHeader>
               <DialogTitle style={s.text}>Yeni Hedef Ata</DialogTitle>
             </DialogHeader>
