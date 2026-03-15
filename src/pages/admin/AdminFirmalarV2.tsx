@@ -476,8 +476,25 @@ export default function AdminFirmalarV2() {
       toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
     }
   };
+  const toggleExpandFirma = async (firmaId: string) => {
+    if (expandedFirmaId === firmaId) {
+      setExpandedFirmaId(null);
+      return;
+    }
+    setExpandedFirmaId(firmaId);
+    setExpandedLoading(true);
+    setExpandedAksiyonlar([]);
+    try {
+      const data = await callApi("list-firma-aksiyonlar", { token, firmaId });
+      setExpandedAksiyonlar(data.aksiyonlar || []);
+    } catch {
+      setExpandedAksiyonlar([]);
+    } finally {
+      setExpandedLoading(false);
+    }
+  };
 
-  // ── Bulk actions ──
+
   const handleBulkApprove = async () => {
     setBulkLoading(true);
     let success = 0;
