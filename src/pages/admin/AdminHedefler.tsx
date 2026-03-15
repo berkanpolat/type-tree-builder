@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, CSSProperties } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -104,12 +105,7 @@ export default function AdminHedefler() {
   const token = user ? localStorage.getItem("admin_token") || "" : "";
   const isYK = user?.departman === "Yönetim Kurulu";
 
-  const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const res = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (res.error) throw new Error(res.error.message);
-    if (res.data?.error) throw new Error(res.data.error);
-    return res.data;
-  }, []);
+  const callApi = useAdminApi();
 
   const loadPaketler = useCallback(async () => {
     const { data } = await supabase.from("paketler").select("id, ad, slug").eq("aktif", true).order("fiyat_aylik", { ascending: true });

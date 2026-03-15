@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, CSSProperties, Fragment } from "react
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
 import { Button } from "@/components/ui/button";
@@ -207,11 +208,7 @@ export default function AdminFirmalarV2() {
   const [expandedLoading, setExpandedLoading] = useState(false);
   const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
 
-  const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (error) throw error;
-    return data;
-  }, []);
+  const callApi = useAdminApi();
 
   const fetchData = useCallback(async () => {
     if (!token) return;

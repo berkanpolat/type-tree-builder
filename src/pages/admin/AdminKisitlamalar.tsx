@@ -3,6 +3,7 @@ import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -172,11 +173,10 @@ export default function AdminKisitlamalar() {
   const { token, user: adminUser } = useAdminAuth();
   const { toast } = useToast();
 
+  const baseCallApi = useAdminApi();
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body: { ...body, token } });
-    if (error) throw error;
-    return data;
-  }, [token]);
+    return baseCallApi(action, { ...body, token });
+  }, [baseCallApi, token]);
 
   const [activeTab, setActiveTab] = useState<TabType>("kisitlama");
   const [kisitlamalar, setKisitlamalar] = useState<Kisitlama[]>([]);

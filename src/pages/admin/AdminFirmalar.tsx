@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, CSSProperties } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -199,11 +200,7 @@ export default function AdminFirmalar() {
   const [belgeActionLoading, setBelgeActionLoading] = useState<string | null>(null);
   const [rejectReasons, setRejectReasons] = useState<Record<string, string>>({});
 
-  const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (error) throw error;
-    return data;
-  }, []);
+  const callApi = useAdminApi();
 
   const fetchData = useCallback(async () => {
     if (!token) return;

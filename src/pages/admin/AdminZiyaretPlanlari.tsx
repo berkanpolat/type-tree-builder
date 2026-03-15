@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, CSSProperties } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -166,11 +167,7 @@ export default function AdminZiyaretPlanlari() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (error) throw error;
-    return data;
-  }, []);
+  const callApi = useAdminApi();
 
   const fetchPlanlar = useCallback(async () => {
     if (!token || !adminUser) return;

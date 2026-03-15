@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, type CSSProperties } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -162,11 +163,7 @@ export default function AdminKullanicilar() {
     permissions: { ...DEFAULT_PERMISSIONS },
   });
 
-  const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (error) throw error;
-    return data;
-  }, []);
+  const callApi = useAdminApi();
 
   const fetchUsers = useCallback(async () => {
     if (!token) return;

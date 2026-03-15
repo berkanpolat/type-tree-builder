@@ -66,6 +66,19 @@ function verifyToken(token: string) {
   return payload;
 }
 
+/**
+ * Returns the acting admin ID for data ownership operations.
+ * When a super admin (is_primary) impersonates another admin,
+ * the actingAdminId from the request body is used instead.
+ * Audit logging should still use payload.id (the real admin).
+ */
+function getActingId(payload: any, body: any): string {
+  if (body.actingAdminId && payload.is_primary) {
+    return body.actingAdminId;
+  }
+  return payload.id;
+}
+
 function jsonResponse(data: unknown, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -3390,7 +3403,8 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: `Bu firma zaten ${owner?.ad || ""} ${owner?.soyad || ""} portföyünde` }, 400);
       }
       
-      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: payload.id, firma_id: firmaId });
+      const actingId = getActingId(payload, body);
+      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: actingId, firma_id: firmaId });
       if (error) return jsonResponse({ error: error.message }, 400);
       
       const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
@@ -3406,9 +3420,10 @@ Deno.serve(async (req) => {
       // Only the owner can remove
       const { data: existing } = await supabase.from("admin_portfolyo").select("admin_id").eq("firma_id", firmaId).single();
       if (!existing) return jsonResponse({ error: "Bu firma portföyde değil" }, 400);
-      if (existing.admin_id !== payload.id) return jsonResponse({ error: "Bu firmayı sadece portföy sahibi çıkarabilir" }, 403);
+      const actingId = getActingId(payload, body);
+      if (existing.admin_id !== actingId && !payload.is_primary) return jsonResponse({ error: "Bu firmayı sadece portföy sahibi çıkarabilir" }, 403);
       
-      const { error } = await supabase.from("admin_portfolyo").delete().eq("firma_id", firmaId).eq("admin_id", payload.id);
+      const { error } = await supabase.from("admin_portfolyo").delete().eq("firma_id", firmaId).eq("admin_id", existing.admin_id);
       if (error) return jsonResponse({ error: error.message }, 400);
       
       const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
@@ -3425,7 +3440,7 @@ Deno.serve(async (req) => {
       
       const { data, error } = await supabase.from("admin_aksiyonlar").insert({
         firma_id: firmaId,
-        admin_id: payload.id,
+        admin_id: getActingId(payload, body),
         baslik,
         aciklama: aciklama || null,
         tur: tur || "diger",
@@ -3766,7 +3781,7 @@ Deno.serve(async (req) => {
       
       const { data, error } = await supabase.from("firma_yetkililer").insert({
         firma_id: firmaId,
-        admin_id: payload.id,
+        admin_id: getActingId(payload, body),
         ad: ad.trim(),
         soyad: soyad.trim(),
         pozisyon: pozisyon?.trim() || null,
@@ -3846,7 +3861,7 @@ Deno.serve(async (req) => {
       if (!firmaId || !planlanenTarih) return jsonResponse({ error: "Firma ve tarih zorunlu" }, 400);
       
       const { error } = await supabase.from("admin_ziyaret_planlari").insert({
-        admin_id: payload.id,
+        admin_id: getActingId(payload, body),
         firma_id: firmaId,
         planlanan_tarih: planlanenTarih,
         notlar: notlar || null,
@@ -4064,7 +4079,7 @@ Deno.serve(async (req) => {
       }
       
       const { data: hedef, error } = await supabase.from("admin_hedefler").insert({
-        atayan_admin_id: payload.id,
+        atayan_admin_id: getActingId(payload, body),
         hedef_admin_id: hedefAdminId,
         hedef_turu: hedefTuru || "paket_uyeligi",
         baslik,
