@@ -139,6 +139,7 @@ export default function AdminHedefler() {
 
   useEffect(() => { loadHedefler(); }, [loadHedefler]);
   useEffect(() => { loadAdminUsers(); }, [loadAdminUsers]);
+  useEffect(() => { loadPaketler(); }, [loadPaketler]);
 
   const handleCreate = async () => {
     if (!formAdmin || !formBaslik || !formMiktar || !formBaslangic || !formBitis) {
