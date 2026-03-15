@@ -513,7 +513,7 @@ export default function AdminKullanicilar() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label style={sMuted}>Departman *</Label>
-                <Select value={form.departman} onValueChange={(v) => setForm({ ...form, departman: v })}>
+                <Select value={form.departman} onValueChange={(v) => setForm({ ...form, departman: v, pozisyon: DEPARTMAN_POZISYON[v]?.[0] || "" })}>
                   <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
                   <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
                     {DEPARTMANLAR.map((d) => (
@@ -527,7 +527,7 @@ export default function AdminKullanicilar() {
                 <Select value={form.pozisyon} onValueChange={(v) => setForm({ ...form, pozisyon: v })}>
                   <SelectTrigger style={sInput}><SelectValue /></SelectTrigger>
                   <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
-                    {POZISYONLAR.map((p) => (
+                    {(DEPARTMAN_POZISYON[form.departman] || []).map((p) => (
                       <SelectItem key={p} value={p} style={sText}>{p}</SelectItem>
                     ))}
                   </SelectContent>
