@@ -28,7 +28,7 @@ import {
   Building2, Users, Clock, AlertCircle, CheckCircle, XCircle,
   Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp,
   CreditCard, Wifi, ArrowUpDown, ArrowUp, ArrowDown, Infinity, Eye, MessageSquare, Loader2, Trash2, ShieldCheck, Download,
-  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList,
+  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList, KeyRound,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
