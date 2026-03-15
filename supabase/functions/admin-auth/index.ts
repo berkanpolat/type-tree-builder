@@ -3641,7 +3641,7 @@ Deno.serve(async (req) => {
       if (durum) query = query.eq("durum", durum);
       if (baslangic) query = query.gte("planlanan_tarih", baslangic);
       if (bitis) query = query.lte("planlanan_tarih", bitis);
-      query = query.order("planlanan_tarih", { ascending: true });
+      query = query.order("planlanan_tarih", { ascending: true }).order("sira", { ascending: true });
       
       const { data, error } = await query;
       if (error) return jsonResponse({ error: error.message }, 400);
