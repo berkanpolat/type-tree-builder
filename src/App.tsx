@@ -163,6 +163,7 @@ const App = () => (
             <Route path="/yonetim/reklam" element={<AdminRoute><AdminReklam /></AdminRoute>} />
             <Route path="/yonetim/tekbot" element={<AdminRoute><AdminTekBot /></AdminRoute>} />
             <Route path="/yonetim/portfolyo" element={<AdminRoute><AdminPortfoy /></AdminRoute>} />
+            <Route path="/yonetim/aksiyonlar" element={<AdminRoute><AdminAksiyonlar /></AdminRoute>} />
 
             {/* Catch-all: try firma slug at root level */}
             <Route path="/:slug" element={<FirmaDetay />} />
