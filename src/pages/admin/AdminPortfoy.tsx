@@ -408,6 +408,8 @@ export default function AdminPortfoy() {
               callApi={callApi}
               token={token}
               onSuccess={() => toast({ title: "Başarılı", description: "Aksiyon eklendi" })}
+              adminDepartman={adminUser?.pozisyon?.includes("Saha") ? "Saha Satış" : adminUser?.pozisyon?.includes("Çağrı") ? "Çağrı Merkezi" : adminUser?.pozisyon?.includes("Kurumsal") ? "Kurumsal Satış" : "Yönetim Kurulu"}
+              adminIsPrimary={adminUser?.is_primary || false}
             />
             <FirmaAksiyonlarDialog
               open={aksiyonlarOpen}
