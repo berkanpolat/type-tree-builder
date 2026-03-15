@@ -4116,6 +4116,30 @@ Deno.serve(async (req) => {
       return jsonResponse({ konumlar: result });
     }
 
+    // ─── GET FIRMA EMAIL ───
+    if (action === "get-firma-email") {
+      const payload = verifyToken(body.token);
+      const { firmaId } = body;
+      if (!firmaId) return jsonResponse({ error: "Firma ID zorunlu" }, 400);
+
+      const { data: firma } = await supabase.from("firmalar")
+        .select("firma_iletisim_email, user_id")
+        .eq("id", firmaId).single();
+
+      let email = firma?.firma_iletisim_email || "";
+      if (!email && firma?.user_id) {
+        const { data: authUser } = await supabase.auth.admin.getUserById(firma.user_id);
+        email = authUser?.user?.email || "";
+      }
+      if (!email && firma?.user_id) {
+        const { data: profile } = await supabase.from("profiles")
+          .select("iletisim_email").eq("user_id", firma.user_id).single();
+        email = profile?.iletisim_email || "";
+      }
+
+      return jsonResponse({ email });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
