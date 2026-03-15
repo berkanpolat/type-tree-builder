@@ -3861,7 +3861,7 @@ Deno.serve(async (req) => {
       if (!firmaId || !planlanenTarih) return jsonResponse({ error: "Firma ve tarih zorunlu" }, 400);
       
       const { error } = await supabase.from("admin_ziyaret_planlari").insert({
-        admin_id: payload.id,
+        admin_id: getActingId(payload, body),
         firma_id: firmaId,
         planlanan_tarih: planlanenTarih,
         notlar: notlar || null,
