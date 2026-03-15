@@ -413,7 +413,7 @@ export default function AdminKullanicilar() {
                       {canManage && (
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
-                            {!u.is_primary && currentUser?.is_primary && (
+                            {!u.is_primary && realUser?.is_primary && (
                               <Button
                                 variant="ghost"
                                 size="sm"
