@@ -151,7 +151,7 @@ function AksiyonRow({ aksiyon, onToggle, onDelete, onClick }: { aksiyon: Aksiyon
           <span className="text-[10px]" style={{ color: "hsl(var(--admin-muted))" }}>• {aksiyon.admin_ad}</span>
         </div>
       </div>
-      <button onClick={() => onDelete(aksiyon.id)} className="mt-0.5 opacity-40 hover:opacity-100 transition-opacity">
+      <button onClick={(e) => { e.stopPropagation(); onDelete(aksiyon.id); }} className="mt-0.5 opacity-40 hover:opacity-100 transition-opacity">
         <Trash2 className="w-3 h-3 text-red-400" />
       </button>
     </div>
