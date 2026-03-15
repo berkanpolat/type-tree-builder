@@ -52,6 +52,14 @@ interface AdminAuthContextType {
   login: (username: string, password: string) => Promise<{ error?: string }>;
   logout: () => void;
   hasPermission: (key: keyof AdminPermissions) => boolean;
+  // Impersonation
+  impersonatedUser: AdminUser | null;
+  originalUser: AdminUser | null;
+  impersonateAdmin: (targetUser: AdminUser) => void;
+  stopImpersonating: () => void;
+  isImpersonating: boolean;
+  /** Returns the effective user (impersonated or real) */
+  effectiveUser: AdminUser | null;
 }
 
 const AdminAuthContext = createContext<AdminAuthContextType | null>(null);
@@ -60,6 +68,15 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AdminUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Impersonation state
+  const [impersonatedUser, setImpersonatedUser] = useState<AdminUser | null>(null);
+  const [originalUser, setOriginalUser] = useState<AdminUser | null>(null);
+
+  const isImpersonating = !!impersonatedUser;
+  // When impersonating, the "user" seen by the rest of the app is the impersonated user
+  // but we keep all permissions of the original (super admin) user
+  const effectiveUser = impersonatedUser || user;
 
   const callEdgeFunction = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, {
@@ -76,6 +93,18 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
         .then((data) => {
           setUser(data.user);
           setToken(savedToken);
+
+          // Restore impersonation state if any
+          const savedImpersonation = sessionStorage.getItem("admin_impersonation");
+          if (savedImpersonation && data.user?.is_primary) {
+            try {
+              const parsed = JSON.parse(savedImpersonation);
+              setImpersonatedUser(parsed);
+              setOriginalUser(data.user);
+            } catch {
+              sessionStorage.removeItem("admin_impersonation");
+            }
+          }
         })
         .catch(() => {
           localStorage.removeItem("admin_token");
@@ -101,17 +130,48 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     setToken(null);
+    setImpersonatedUser(null);
+    setOriginalUser(null);
     localStorage.removeItem("admin_token");
+    sessionStorage.removeItem("admin_impersonation");
   };
 
   const hasPermission = (key: keyof AdminPermissions) => {
-    if (!user) return false;
-    if (user.is_primary) return true;
-    return !!user.permissions?.[key];
+    // When impersonating, super admin keeps all permissions
+    const checkUser = originalUser || user;
+    if (!checkUser) return false;
+    if (checkUser.is_primary) return true;
+    return !!checkUser.permissions?.[key];
+  };
+
+  const impersonateAdmin = (targetUser: AdminUser) => {
+    if (!user?.is_primary) return;
+    setOriginalUser(user);
+    setImpersonatedUser(targetUser);
+    sessionStorage.setItem("admin_impersonation", JSON.stringify(targetUser));
+  };
+
+  const stopImpersonating = () => {
+    setImpersonatedUser(null);
+    setOriginalUser(null);
+    sessionStorage.removeItem("admin_impersonation");
   };
 
   return (
-    <AdminAuthContext.Provider value={{ user, token, loading, login, logout, hasPermission }}>
+    <AdminAuthContext.Provider value={{
+      user: effectiveUser,
+      token,
+      loading,
+      login,
+      logout,
+      hasPermission,
+      impersonatedUser,
+      originalUser,
+      impersonateAdmin,
+      stopImpersonating,
+      isImpersonating,
+      effectiveUser,
+    }}>
       {children}
     </AdminAuthContext.Provider>
   );

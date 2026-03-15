@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Shield, UserCircle } from "lucide-react";
+import { Plus, Pencil, Trash2, Shield, UserCircle, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface AdminUser {
   id: string;
@@ -138,8 +139,11 @@ const DEFAULT_PERMISSIONS = Object.fromEntries(ALL_PERMISSION_KEYS.map(k => [k, 
 const USERS_PER_PAGE = 10;
 
 export default function AdminKullanicilar() {
-  const { token, user: currentUser } = useAdminAuth();
+  const { token, user: currentUser, impersonateAdmin, originalUser } = useAdminAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
+  // When impersonating, use original user for permission checks
+  const realUser = originalUser || currentUser;
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -275,7 +279,7 @@ export default function AdminKullanicilar() {
     }
   };
 
-  const canManage = currentUser?.is_primary;
+  const canManage = realUser?.is_primary;
 
   const totalPages = Math.max(1, Math.ceil(users.length / USERS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
@@ -409,10 +413,24 @@ export default function AdminKullanicilar() {
                       {canManage && (
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
+                            {!u.is_primary && realUser?.is_primary && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  impersonateAdmin(u as any);
+                                  navigate("/yonetim/panel");
+                                }}
+                                className="text-xs gap-1 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+                                title="Bu kullanıcı olarak paneli görüntüle"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> Hesaba Gir
+                              </Button>
+                            )}
                             <Button variant="ghost" size="icon" onClick={() => openEdit(u)} style={sMuted} className="hover:opacity-80">
                               <Pencil className="w-4 h-4" />
                             </Button>
-                            {!u.is_primary && currentUser?.is_primary && (
+                            {!u.is_primary && realUser?.is_primary && (
                               <Button variant="ghost" size="icon" onClick={() => handleDelete(u)} className="text-red-400 hover:text-red-500 hover:bg-red-500/10">
                                 <Trash2 className="w-4 h-4" />
                               </Button>

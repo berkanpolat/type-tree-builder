@@ -40,7 +40,7 @@ const menuItems = [
 ];
 
 export default function AdminLayout({ children, title }: AdminLayoutProps) {
-  const { user, loading, logout, hasPermission } = useAdminAuth();
+  const { user, loading, logout, hasPermission, isImpersonating, impersonatedUser, stopImpersonating, originalUser } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
@@ -81,7 +81,9 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   if (!user) return null;
 
   const visibleMenuItems = menuItems.filter((item) => {
-    if (item.primaryOnly) return user.is_primary;
+    // When impersonating, use original user's permissions (super admin sees all)
+    const checkUser = originalUser || user;
+    if (item.primaryOnly) return checkUser?.is_primary ?? false;
     if (item.permission) return hasPermission(item.permission);
     return true;
   });
@@ -173,6 +175,29 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
         {/* Main */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ background: `hsl(var(--admin-bg))` }}>
+          {/* Impersonation Banner */}
+          {isImpersonating && impersonatedUser && (
+            <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: "hsl(30 100% 50% / 0.15)", borderBottom: "1px solid hsl(30 100% 50% / 0.3)" }}>
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-amber-500" />
+                <span className="text-sm font-medium text-amber-500">
+                  {impersonatedUser.ad} {impersonatedUser.soyad} olarak görüntülüyorsunuz
+                </span>
+                <span className="text-xs" style={{ color: "hsl(var(--admin-muted))" }}>
+                  ({impersonatedUser.departman} — {impersonatedUser.pozisyon})
+                </span>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => { stopImpersonating(); navigate("/yonetim/kullanicilar"); }}
+                className="text-xs border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400"
+              >
+                Kendi Hesabıma Dön
+              </Button>
+            </div>
+          )}
+
           <header
             className="h-14 flex items-center border-b px-4 md:px-6 gap-3 shrink-0"
             style={{
