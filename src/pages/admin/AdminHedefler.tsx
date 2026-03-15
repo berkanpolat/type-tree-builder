@@ -89,7 +89,7 @@ export default function AdminHedefler() {
 
   // Create Form
   const [formAdmin, setFormAdmin] = useState("");
-  const [formTur, setFormTur] = useState("ziyaret");
+  const [formTur, setFormTur] = useState("paket_uyeligi");
   const [formBaslik, setFormBaslik] = useState("");
   const [formAciklama, setFormAciklama] = useState("");
   const [formMiktar, setFormMiktar] = useState("");
