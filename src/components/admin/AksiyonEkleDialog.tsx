@@ -42,7 +42,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
   const turler = getAksiyonTurleriForDepartman(adminDepartman, adminIsPrimary);
   const [baslik, setBaslik] = useState("");
   const [aciklama, setAciklama] = useState("");
-  const [tur, setTur] = useState(turler[0]?.value || "diger");
+  const [tur, setTur] = useState<string>(turler[0]?.value || "diger");
   const [digerText, setDigerText] = useState("");
   const [tarih, setTarih] = useState<Date>(new Date());
   const [loading, setLoading] = useState(false);
