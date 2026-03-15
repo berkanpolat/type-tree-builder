@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -39,6 +40,7 @@ interface ZiyaretPlan {
   created_at: string;
   firma_unvani: string;
   firma_logo: string | null;
+  iptal_sebebi?: string | null;
 }
 
 const DURUM_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -46,6 +48,13 @@ const DURUM_CONFIG: Record<string, { label: string; color: string; bg: string }>
   tamamlandi: { label: "Tamamlandı", color: "#22c55e", bg: "rgba(34,197,94,0.1)" },
   iptal: { label: "İptal", color: "#ef4444", bg: "rgba(239,68,68,0.1)" },
 };
+
+const IPTAL_SEBEPLERI = [
+  "Müşteri erteledi.",
+  "Müşteri iptal etti.",
+  "Zaman yetmedi.",
+  "Diğer",
+];
 
 export default function AdminZiyaretPlanlari() {
   const { token, user: adminUser } = useAdminAuth();
@@ -61,6 +70,20 @@ export default function AdminZiyaretPlanlari() {
   // Aksiyon Ekle state
   const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
   const [aksiyonPlan, setAksiyonPlan] = useState<ZiyaretPlan | null>(null);
+
+  // İptal reason state (single cancel)
+  const [iptalDialogOpen, setIptalDialogOpen] = useState(false);
+  const [iptalPlan, setIptalPlan] = useState<ZiyaretPlan | null>(null);
+  const [iptalSebep, setIptalSebep] = useState("");
+  const [iptalSebepDiger, setIptalSebepDiger] = useState("");
+  const [iptalLoading, setIptalLoading] = useState(false);
+
+  // Günü Tamamla flow state
+  const [completeDayDialogOpen, setCompleteDayDialogOpen] = useState(false);
+  const [completeDayPlans, setCompleteDayPlans] = useState<ZiyaretPlan[]>([]);
+  const [completeDayReasons, setCompleteDayReasons] = useState<Record<string, string>>({});
+  const [completeDayDigerTexts, setCompleteDayDigerTexts] = useState<Record<string, string>>({});
+  const [completeDayLoading, setCompleteDayLoading] = useState(false);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
@@ -89,9 +112,9 @@ export default function AdminZiyaretPlanlari() {
 
   useEffect(() => { setLoading(true); fetchPlanlar(); }, [fetchPlanlar]);
 
-  const handleDurumChange = async (planId: string, durum: string) => {
+  const handleDurumChange = async (planId: string, durum: string, iptalSebebiVal?: string) => {
     try {
-      await callApi("update-ziyaret-plani", { token, planId, durum });
+      await callApi("update-ziyaret-plani", { token, planId, durum, ...(iptalSebebiVal ? { iptalSebebi: iptalSebebiVal } : {}) });
       toast({ title: "Güncellendi" });
       fetchPlanlar();
     } catch {
@@ -121,20 +144,75 @@ export default function AdminZiyaretPlanlari() {
     }
   };
 
-  const handleCompleteDay = async (plans: ZiyaretPlan[]) => {
+  // Single cancel with reason
+  const openIptalDialog = (plan: ZiyaretPlan) => {
+    setIptalPlan(plan);
+    setIptalSebep("");
+    setIptalSebepDiger("");
+    setIptalDialogOpen(true);
+  };
+
+  const handleIptalConfirm = async () => {
+    if (!iptalPlan || !iptalSebep) return;
+    const finalSebep = iptalSebep === "Diğer" ? iptalSebepDiger.trim() : iptalSebep;
+    if (!finalSebep) return;
+    setIptalLoading(true);
+    try {
+      await callApi("update-ziyaret-plani", { token, planId: iptalPlan.id, durum: "iptal", iptalSebebi: finalSebep });
+      toast({ title: "Ziyaret iptal edildi" });
+      setIptalDialogOpen(false);
+      setIptalPlan(null);
+      fetchPlanlar();
+    } catch {
+      toast({ title: "Hata", variant: "destructive" });
+    } finally {
+      setIptalLoading(false);
+    }
+  };
+
+  // Complete day: if pending visits exist, ask reasons for each
+  const handleCompleteDay = (plans: ZiyaretPlan[]) => {
     const pendingPlans = plans.filter(p => p.durum === "planli");
     if (pendingPlans.length === 0) {
       toast({ title: "Bilgi", description: "Tamamlanacak ziyaret yok" });
       return;
     }
+    // Check if there are visits that have actions added (tamamlandi) vs still pending
+    // All pending ones need a cancel reason
+    setCompleteDayPlans(pendingPlans);
+    setCompleteDayReasons({});
+    setCompleteDayDigerTexts({});
+    setCompleteDayDialogOpen(true);
+  };
+
+  const isCompleteDayValid = () => {
+    return completeDayPlans.every(p => {
+      const reason = completeDayReasons[p.id];
+      if (!reason) return false;
+      if (reason === "tamamlandi") return true;
+      if (reason === "Diğer") return (completeDayDigerTexts[p.id] || "").trim().length > 0;
+      return true;
+    });
+  };
+
+  const handleCompleteDayConfirm = async () => {
+    setCompleteDayLoading(true);
     let success = 0;
-    for (const plan of pendingPlans) {
+    for (const plan of completeDayPlans) {
+      const reason = completeDayReasons[plan.id];
       try {
-        await callApi("update-ziyaret-plani", { token, planId: plan.id, durum: "tamamlandi" });
+        if (reason === "tamamlandi") {
+          await callApi("update-ziyaret-plani", { token, planId: plan.id, durum: "tamamlandi" });
+        } else {
+          const finalReason = reason === "Diğer" ? (completeDayDigerTexts[plan.id] || "").trim() : reason;
+          await callApi("update-ziyaret-plani", { token, planId: plan.id, durum: "iptal", iptalSebebi: finalReason });
+        }
         success++;
       } catch { /* skip */ }
     }
-    toast({ title: "Günü Tamamla", description: `${success} ziyaret tamamlandı olarak işaretlendi` });
+    toast({ title: "Günü Tamamla", description: `${success} ziyaret güncellendi` });
+    setCompleteDayDialogOpen(false);
+    setCompleteDayLoading(false);
     fetchPlanlar();
   };
 
@@ -144,7 +222,6 @@ export default function AdminZiyaretPlanlari() {
   };
 
   const handleAksiyonSuccess = async () => {
-    // Auto-mark visit as completed when an action is added
     if (aksiyonPlan && aksiyonPlan.durum === "planli") {
       try {
         await callApi("update-ziyaret-plani", { token, planId: aksiyonPlan.id, durum: "tamamlandi" });
@@ -176,34 +253,16 @@ export default function AdminZiyaretPlanlari() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
-              <Input
-                placeholder="Firma ara..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 w-56 h-9 text-sm"
-                style={s.input}
-              />
+              <Input placeholder="Firma ara..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 w-56 h-9 text-sm" style={s.input} />
             </div>
           </div>
-
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="h-8"
-              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
-              onClick={() => setSelectedWeekStart(prev => addDays(prev, -7))}>
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs font-medium min-w-[180px]"
-              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
-              onClick={() => setSelectedWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>
+            <Button variant="outline" size="sm" className="h-8" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }} onClick={() => setSelectedWeekStart(prev => addDays(prev, -7))}><ChevronLeft className="w-4 h-4" /></Button>
+            <Button variant="outline" size="sm" className="h-8 text-xs font-medium min-w-[180px]" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }} onClick={() => setSelectedWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}>
               {format(selectedWeekStart, "d MMM", { locale: tr })} — {format(addDays(selectedWeekStart, 6), "d MMM yyyy", { locale: tr })}
             </Button>
-            <Button variant="outline" size="sm" className="h-8"
-              style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
-              onClick={() => setSelectedWeekStart(prev => addDays(prev, 7))}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+            <Button variant="outline" size="sm" className="h-8" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }} onClick={() => setSelectedWeekStart(prev => addDays(prev, 7))}><ChevronRight className="w-4 h-4" /></Button>
           </div>
-
           <div className="flex items-center gap-2">
             <div className="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2" style={{ background: "hsl(var(--admin-hover))" }}>
               <MapPin className="w-3.5 h-3.5" style={{ color: "hsl(38 92% 50%)" }} />
@@ -214,36 +273,22 @@ export default function AdminZiyaretPlanlari() {
 
         {/* Weekly View */}
         {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
-          </div>
+          <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-amber-500" /></div>
         ) : (
           <div className="space-y-3">
-            {/* Compact row for non-expanded days */}
             <div className={cn("grid gap-3", expandedDate ? "grid-cols-1 md:grid-cols-6" : "grid-cols-1 md:grid-cols-7")}>
               {plansByDate.filter(d => d.dateKey !== expandedDate).map(({ date, dateKey, plans }) => {
                 const today = isToday(date);
                 const past = isPast(date) && !today;
                 const hasPending = plans.some(p => p.durum === "planli");
                 return (
-                  <div
-                    key={dateKey}
-                    className="rounded-xl p-3 min-h-[120px] cursor-pointer transition-all hover:scale-[1.02]"
-                    style={{
-                      ...s.card,
-                      ...(today ? { borderColor: "hsl(38 92% 50%)", borderWidth: 2 } : {}),
-                      opacity: past ? 0.6 : 1,
-                    }}
-                    onClick={() => setExpandedDate(dateKey)}
-                  >
+                  <div key={dateKey} className="rounded-xl p-3 min-h-[120px] cursor-pointer transition-all hover:scale-[1.02]"
+                    style={{ ...s.card, ...(today ? { borderColor: "hsl(38 92% 50%)", borderWidth: 2 } : {}), opacity: past ? 0.6 : 1 }}
+                    onClick={() => setExpandedDate(dateKey)}>
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <div className="text-xs font-semibold" style={today ? { color: "hsl(38 92% 50%)" } : s.text}>
-                          {format(date, "EEEE", { locale: tr })}
-                        </div>
-                        <div className="text-[10px]" style={s.muted}>
-                          {format(date, "d MMMM", { locale: tr })}
-                        </div>
+                        <div className="text-xs font-semibold" style={today ? { color: "hsl(38 92% 50%)" } : s.text}>{format(date, "EEEE", { locale: tr })}</div>
+                        <div className="text-[10px]" style={s.muted}>{format(date, "d MMMM", { locale: tr })}</div>
                       </div>
                       {plans.length > 0 && (
                         <Badge className="text-[9px] px-1.5 py-0" style={{ background: hasPending ? "rgba(59,130,246,0.1)" : "rgba(34,197,94,0.1)", color: hasPending ? "#3b82f6" : "#22c55e", borderColor: hasPending ? "rgba(59,130,246,0.3)" : "rgba(34,197,94,0.3)" }}>
@@ -261,12 +306,8 @@ export default function AdminZiyaretPlanlari() {
                           </div>
                         );
                       })}
-                      {plans.length > 3 && (
-                        <p className="text-[9px]" style={s.muted}>+{plans.length - 3} daha</p>
-                      )}
-                      {plans.length === 0 && (
-                        <p className="text-[10px] text-center py-2" style={s.muted}>—</p>
-                      )}
+                      {plans.length > 3 && <p className="text-[9px]" style={s.muted}>+{plans.length - 3} daha</p>}
+                      {plans.length === 0 && <p className="text-[10px] text-center py-2" style={s.muted}>—</p>}
                     </div>
                   </div>
                 );
@@ -281,30 +322,20 @@ export default function AdminZiyaretPlanlari() {
               const today = isToday(date);
               const pendingCount = plans.filter(p => p.durum === "planli").length;
               const completedCount = plans.filter(p => p.durum === "tamamlandi").length;
+              const cancelledCount = plans.filter(p => p.durum === "iptal").length;
 
               return (
                 <div className="rounded-xl p-5" style={{ ...s.card, ...(today ? { borderColor: "hsl(38 92% 50%)", borderWidth: 2 } : {}) }}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div>
-                        <div className="text-sm font-bold" style={today ? { color: "hsl(38 92% 50%)" } : s.text}>
-                          {format(date, "EEEE", { locale: tr })}
-                        </div>
-                        <div className="text-xs" style={s.muted}>
-                          {format(date, "d MMMM yyyy", { locale: tr })}
-                        </div>
+                        <div className="text-sm font-bold" style={today ? { color: "hsl(38 92% 50%)" } : s.text}>{format(date, "EEEE", { locale: tr })}</div>
+                        <div className="text-xs" style={s.muted}>{format(date, "d MMMM yyyy", { locale: tr })}</div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {pendingCount > 0 && (
-                          <Badge className="text-[10px]" style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", borderColor: "rgba(59,130,246,0.3)" }}>
-                            {pendingCount} bekleyen
-                          </Badge>
-                        )}
-                        {completedCount > 0 && (
-                          <Badge className="text-[10px]" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", borderColor: "rgba(34,197,94,0.3)" }}>
-                            {completedCount} tamamlandı
-                          </Badge>
-                        )}
+                        {pendingCount > 0 && <Badge className="text-[10px]" style={{ background: "rgba(59,130,246,0.1)", color: "#3b82f6", borderColor: "rgba(59,130,246,0.3)" }}>{pendingCount} bekleyen</Badge>}
+                        {completedCount > 0 && <Badge className="text-[10px]" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", borderColor: "rgba(34,197,94,0.3)" }}>{completedCount} tamamlandı</Badge>}
+                        {cancelledCount > 0 && <Badge className="text-[10px]" style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", borderColor: "rgba(239,68,68,0.3)" }}>{cancelledCount} iptal</Badge>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -328,21 +359,16 @@ export default function AdminZiyaretPlanlari() {
                         return (
                           <div key={plan.id} className="rounded-lg p-3 group flex items-center gap-3" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
                             <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: "hsl(var(--admin-card-bg))" }}>
-                              {plan.firma_logo ? (
-                                <img src={plan.firma_logo} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <Building2 className="w-4 h-4" style={s.muted} />
-                              )}
+                              {plan.firma_logo ? <img src={plan.firma_logo} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-4 h-4" style={s.muted} />}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium" style={s.text}>{plan.firma_unvani}</p>
-                              {plan.notlar && (
-                                <p className="text-xs mt-0.5" style={s.muted}>{plan.notlar}</p>
+                              {plan.notlar && <p className="text-xs mt-0.5" style={s.muted}>{plan.notlar}</p>}
+                              {plan.durum === "iptal" && plan.iptal_sebebi && (
+                                <p className="text-[10px] mt-0.5 italic" style={{ color: "#ef4444" }}>İptal: {plan.iptal_sebebi}</p>
                               )}
                             </div>
-                            <Badge className="text-[9px] px-2 py-0.5 flex-shrink-0" style={{ background: durumC.bg, color: durumC.color, borderColor: `${durumC.color}40` }}>
-                              {durumC.label}
-                            </Badge>
+                            <Badge className="text-[9px] px-2 py-0.5 flex-shrink-0" style={{ background: durumC.bg, color: durumC.color, borderColor: `${durumC.color}40` }}>{durumC.label}</Badge>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-7 w-7 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
@@ -359,7 +385,7 @@ export default function AdminZiyaretPlanlari() {
                                   </DropdownMenuItem>
                                 )}
                                 {plan.durum === "planli" && (
-                                  <DropdownMenuItem onClick={() => handleDurumChange(plan.id, "iptal")} className="text-xs cursor-pointer">
+                                  <DropdownMenuItem onClick={() => openIptalDialog(plan)} className="text-xs cursor-pointer">
                                     <Clock className="w-3.5 h-3.5 mr-2 text-red-500" /> İptal Et
                                   </DropdownMenuItem>
                                 )}
@@ -386,19 +412,96 @@ export default function AdminZiyaretPlanlari() {
       {/* Edit Note Dialog */}
       <Dialog open={!!editPlan} onOpenChange={(o) => !o && setEditPlan(null)}>
         <DialogContent style={s.card} className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle style={s.text}>Ziyaret Notu</DialogTitle>
-          </DialogHeader>
-          <Textarea
-            value={editNotlar}
-            onChange={e => setEditNotlar(e.target.value)}
-            placeholder="Ziyaret ile ilgili notlar..."
-            rows={4}
-            style={s.input}
-          />
+          <DialogHeader><DialogTitle style={s.text}>Ziyaret Notu</DialogTitle></DialogHeader>
+          <Textarea value={editNotlar} onChange={e => setEditNotlar(e.target.value)} placeholder="Ziyaret ile ilgili notlar..." rows={4} style={s.input} />
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => setEditPlan(null)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
             <Button size="sm" onClick={handleSaveNote} className="bg-amber-500 hover:bg-amber-600 text-white">Kaydet</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Single İptal Dialog */}
+      <Dialog open={iptalDialogOpen} onOpenChange={(o) => { if (!o) { setIptalDialogOpen(false); setIptalPlan(null); } }}>
+        <DialogContent style={s.card} className="max-w-sm">
+          <DialogHeader><DialogTitle style={s.text}>Ziyaret İptal Et</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs" style={s.muted}>{iptalPlan?.firma_unvani}</p>
+            <div>
+              <label className="text-xs font-medium mb-1 block" style={s.text}>İptal Sebebi *</label>
+              <Select value={iptalSebep} onValueChange={v => { setIptalSebep(v); if (v !== "Diğer") setIptalSebepDiger(""); }}>
+                <SelectTrigger style={s.input} className="text-sm"><SelectValue placeholder="Sebep seçin" /></SelectTrigger>
+                <SelectContent style={s.card}>
+                  {IPTAL_SEBEPLERI.map(sebep => <SelectItem key={sebep} value={sebep} className="text-xs">{sebep}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {iptalSebep === "Diğer" && (
+              <div>
+                <label className="text-xs font-medium mb-1 block" style={s.text}>Açıklama *</label>
+                <Textarea value={iptalSebepDiger} onChange={e => setIptalSebepDiger(e.target.value)} placeholder="İptal sebebini yazın..." rows={2} style={s.input} />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => { setIptalDialogOpen(false); setIptalPlan(null); }} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>Vazgeç</Button>
+            <Button size="sm" onClick={handleIptalConfirm} disabled={iptalLoading || !iptalSebep || (iptalSebep === "Diğer" && !iptalSebepDiger.trim())} className="bg-red-600 hover:bg-red-700 text-white">
+              {iptalLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "İptal Et"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Günü Tamamla Dialog */}
+      <Dialog open={completeDayDialogOpen} onOpenChange={(o) => { if (!o) setCompleteDayDialogOpen(false); }}>
+        <DialogContent style={s.card} className="max-w-lg">
+          <DialogHeader><DialogTitle style={s.text}>Günü Tamamla</DialogTitle></DialogHeader>
+          <p className="text-xs" style={s.muted}>Her ziyaret için durumu belirleyin. Tamamlanmayan ziyaretler için iptal sebebi seçin.</p>
+          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+            {completeDayPlans.map(plan => {
+              const reason = completeDayReasons[plan.id] || "";
+              return (
+                <div key={plan.id} className="rounded-lg p-3 space-y-2" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded flex items-center justify-center overflow-hidden flex-shrink-0" style={{ background: "hsl(var(--admin-card-bg))" }}>
+                      {plan.firma_logo ? <img src={plan.firma_logo} alt="" className="w-full h-full object-cover" /> : <Building2 className="w-3 h-3" style={s.muted} />}
+                    </div>
+                    <p className="text-xs font-medium flex-1" style={s.text}>{plan.firma_unvani}</p>
+                  </div>
+                  <Select value={reason} onValueChange={v => {
+                    setCompleteDayReasons(prev => ({ ...prev, [plan.id]: v }));
+                    if (v !== "Diğer") setCompleteDayDigerTexts(prev => { const n = { ...prev }; delete n[plan.id]; return n; });
+                  }}>
+                    <SelectTrigger style={s.input} className="text-xs h-8"><SelectValue placeholder="Durum seçin" /></SelectTrigger>
+                    <SelectContent style={s.card}>
+                      <SelectItem value="tamamlandi" className="text-xs">
+                        <span className="flex items-center gap-1.5"><CheckCircle className="w-3 h-3 text-emerald-500" /> Tamamlandı</span>
+                      </SelectItem>
+                      {IPTAL_SEBEPLERI.map(sebep => (
+                        <SelectItem key={sebep} value={sebep} className="text-xs">
+                          <span className="flex items-center gap-1.5"><Clock className="w-3 h-3 text-red-400" /> {sebep}</span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {reason === "Diğer" && (
+                    <Input
+                      value={completeDayDigerTexts[plan.id] || ""}
+                      onChange={e => setCompleteDayDigerTexts(prev => ({ ...prev, [plan.id]: e.target.value }))}
+                      placeholder="İptal sebebini yazın..."
+                      className="text-xs h-8"
+                      style={s.input}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setCompleteDayDialogOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>Vazgeç</Button>
+            <Button size="sm" onClick={handleCompleteDayConfirm} disabled={completeDayLoading || !isCompleteDayValid()} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+              {completeDayLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Tamamla"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
