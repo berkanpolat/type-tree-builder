@@ -413,6 +413,7 @@ Deno.serve(async (req) => {
               mesaj_limiti: paket.mesaj_limiti,
             } : null,
           } : null,
+          portfolyo: portfolyoMap.get(f.id) || null,
         };
       });
 
