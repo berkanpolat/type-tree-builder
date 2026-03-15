@@ -473,7 +473,7 @@ export default function AdminZiyaretPlanlari() {
                     if (v !== "Diğer") setCompleteDayDigerTexts(prev => { const n = { ...prev }; delete n[plan.id]; return n; });
                   }}>
                     <SelectTrigger style={s.input} className="text-xs h-8"><SelectValue placeholder="Durum seçin" /></SelectTrigger>
-                    <SelectContent style={s.card}>
+                    <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
                       <SelectItem value="tamamlandi" className="text-xs">
                         <span className="flex items-center gap-1.5"><CheckCircle className="w-3 h-3 text-emerald-500" /> Tamamlandı</span>
                       </SelectItem>
