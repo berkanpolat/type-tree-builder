@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { Loader2, Search, Trash2, ClipboardList } from "lucide-react";
 import { TUR_CONFIG, AKSIYON_TURLERI } from "@/lib/aksiyon-config";
+import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
 
 const s = {
   card: {

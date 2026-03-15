@@ -21,6 +21,7 @@ import { TUR_CONFIG } from "@/lib/aksiyon-config";
 import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
 import FirmaAksiyonlarDialog from "@/components/admin/FirmaAksiyonlarDialog";
 import FirmaYetkililerDialog from "@/components/admin/FirmaYetkililerDialog";
+import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
 
 const s = {
   card: {

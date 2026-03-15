@@ -31,6 +31,7 @@ import {
   MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
 
 // Shared style helpers
 const s = {
