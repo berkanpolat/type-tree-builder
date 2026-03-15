@@ -456,7 +456,7 @@ export default function AdminZiyaretPlanlari() {
                   {plans.length === 0 ? (
                     <p className="text-sm text-center py-8" style={s.muted}>Bu gün için planlanmış ziyaret yok</p>
                   ) : (
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                    <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                       <SortableContext items={plans.map(p => p.id)} strategy={verticalListSortingStrategy}>
                         <div className="space-y-2">
                           {plans.map(plan => (
