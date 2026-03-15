@@ -31,8 +31,13 @@ interface AdminUser {
   created_at: string;
 }
 
-const POZISYONLAR = ["Saha Satış Personeli", "Saha Satış Yöneticisi", "Çağrı Merkezi Yönetici", "Çağrı Merkezi Personeli", "Kurumsal Satış Yönetimi", "Kurumsal Satış Personeli", "Destek Personeli"];
-const DEPARTMANLAR = ["Yönetim Kurulu", "Saha Satış", "Çağrı Merkezi", "Kurumsal Satış"];
+const DEPARTMAN_POZISYON: Record<string, string[]> = {
+  "Saha Satış": ["Saha Satış Personeli", "Saha Satış Yöneticisi"],
+  "Çağrı Merkezi": ["Çağrı Merkezi Yönetici", "Çağrı Merkezi Personeli"],
+  "Kurumsal Satış": ["Kurumsal Satış Yöneticisi", "Kurumsal Satış Personeli"],
+  "Yönetim Kurulu": ["Yönetim Kurulu Üyesi"],
+};
+const DEPARTMANLAR = Object.keys(DEPARTMAN_POZISYON);
 
 /* ── Hierarchical Permission Structure ── */
 interface PermissionGroup {
