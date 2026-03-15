@@ -1414,6 +1414,7 @@ export default function AdminFirmalarV2() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
     </AdminLayout>
   );
 }

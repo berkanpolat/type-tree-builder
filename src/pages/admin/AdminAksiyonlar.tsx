@@ -138,6 +138,7 @@ export default function AdminAksiyonlar() {
             ))}
           </div>
         )}
+      <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
       </div>
     </AdminLayout>
   );
