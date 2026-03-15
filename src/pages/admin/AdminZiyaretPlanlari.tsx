@@ -16,12 +16,20 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   MapPin, CalendarIcon, Building2, Loader2, MoreHorizontal, Trash2, CheckCircle, Clock,
-  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown,
+  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown, GripVertical,
 } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isToday, isPast, isSameDay } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
+import {
+  DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const s = {
   card: { background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.75rem" } as CSSProperties,
