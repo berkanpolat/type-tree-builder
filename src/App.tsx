@@ -45,6 +45,7 @@ const KVKKAydinlatma = lazy(() => import("./pages/KVKKAydinlatma"));
 const KullanimKosullari = lazy(() => import("./pages/KullanimKosullari"));
 const MesafeliSatisSozlesmesi = lazy(() => import("./pages/MesafeliSatisSozlesmesi"));
 const SifreSifirla = lazy(() => import("./pages/SifreSifirla"));
+const TelefonDogrulama = lazy(() => import("./pages/TelefonDogrulama"));
 const Paketim = lazy(() => import("./pages/Paketim"));
 const DashboardDestek = lazy(() => import("./pages/DashboardDestek"));
 const DashboardDestekDetay = lazy(() => import("./pages/DashboardDestekDetay"));
