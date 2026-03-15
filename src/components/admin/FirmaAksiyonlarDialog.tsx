@@ -122,14 +122,14 @@ export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, fir
   );
 }
 
-function AksiyonRow({ aksiyon, onToggle, onDelete }: { aksiyon: Aksiyon; onToggle: (a: Aksiyon) => void; onDelete: (id: string) => void }) {
+function AksiyonRow({ aksiyon, onToggle, onDelete, onClick }: { aksiyon: Aksiyon; onToggle: (a: Aksiyon) => void; onDelete: (id: string) => void; onClick: () => void }) {
   const turConfig = TUR_CONFIG[aksiyon.tur] || TUR_CONFIG.diger;
   const Icon = turConfig.icon;
   const isDone = aksiyon.durum === "yapildi";
   const isPast = new Date(aksiyon.tarih) < new Date() && !isDone;
 
   return (
-    <div className="flex items-start gap-2.5 p-2.5 rounded-lg transition-colors" style={{ background: "hsl(var(--admin-hover))", opacity: isDone ? 0.6 : 1 }}>
+    <div className="flex items-start gap-2.5 p-2.5 rounded-lg transition-colors cursor-pointer hover:brightness-95" style={{ background: "hsl(var(--admin-hover))", opacity: isDone ? 0.6 : 1 }} onClick={onClick}>
       <button
         onClick={() => onToggle(aksiyon)}
         className="mt-0.5 rounded border flex items-center justify-center flex-shrink-0 transition-colors"
