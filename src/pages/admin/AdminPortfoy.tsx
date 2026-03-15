@@ -340,6 +340,13 @@ export default function AdminPortfoy() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" style={s.card} className="min-w-[160px]">
+                            <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setAksiyonEkleOpen(true); }} className="text-xs cursor-pointer">
+                              <Plus className="w-3.5 h-3.5 mr-2" /> Aksiyon Ekle
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setAksiyonlarOpen(true); }} className="text-xs cursor-pointer">
+                              <ClipboardList className="w-3.5 h-3.5 mr-2" /> Aksiyonları Gör
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
                             </DropdownMenuItem>
