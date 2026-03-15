@@ -139,7 +139,7 @@ export default function AdminFirmalarV2() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Bulk action states
-  const [bulkAction, setBulkAction] = useState<"delete" | "approve" | "verify" | null>(null);
+  const [bulkAction, setBulkAction] = useState<"delete" | "approve" | "verify" | "portfolio" | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState("");
 
@@ -556,6 +556,25 @@ export default function AdminFirmalarV2() {
     fetchData();
   };
 
+  const handleBulkPortfolio = async () => {
+    setBulkLoading(true);
+    let success = 0;
+    let fail = 0;
+    for (const id of selectedIds) {
+      try {
+        await callApi("add-portfolyo", { token, firmaId: id });
+        success++;
+      } catch {
+        fail++;
+      }
+    }
+    toast({ title: "Toplu Portföy", description: `${success} firma portföyünüze eklendi${fail > 0 ? `, ${fail} başarısız (zaten ekli olabilir)` : ""}` });
+    setSelectedIds(new Set());
+    setBulkAction(null);
+    setBulkLoading(false);
+    fetchData();
+  };
+
   // ── Filters ──
   const clearFilters = () => {
     setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all"); setFilterPaket("all");
@@ -786,6 +805,9 @@ export default function AdminFirmalarV2() {
               </Button>
               <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-7" onClick={() => setBulkAction("verify")}>
                 <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Toplu Doğrula
+              </Button>
+              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-7" onClick={() => setBulkAction("portfolio")}>
+                <Briefcase className="w-3.5 h-3.5 mr-1" /> Toplu Portföye Ekle
               </Button>
               <Button size="sm" variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-500/10 text-xs h-7" onClick={() => setBulkAction("delete")} style={{ borderColor: "hsl(var(--admin-border))" }}>
                 <Trash2 className="w-3.5 h-3.5 mr-1" /> Toplu Sil
@@ -1414,6 +1436,26 @@ export default function AdminFirmalarV2() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Bulk Portfolio */}
+      <AlertDialog open={bulkAction === "portfolio"} onOpenChange={(open) => { if (!open) setBulkAction(null); }}>
+        <AlertDialogContent style={s.card}>
+          <AlertDialogHeader>
+            <AlertDialogTitle style={s.text}>Toplu Portföye Ekle</AlertDialogTitle>
+            <AlertDialogDescription style={s.muted}>
+              Seçilen <strong>{selectedCount}</strong> firmayı portföyünüze eklemek istediğinize emin misiniz?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={bulkLoading}>İptal</AlertDialogCancel>
+            <Button onClick={handleBulkPortfolio} disabled={bulkLoading} className="bg-amber-500 hover:bg-amber-600 text-white">
+              {bulkLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              {selectedCount} Firmayı Ekle
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
     </AdminLayout>
   );
