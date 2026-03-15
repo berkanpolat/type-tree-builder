@@ -89,11 +89,7 @@ export default function AdminPaketler() {
   const [form, setForm] = useState(emptyPaket);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const callAdmin = useCallback(async (action: string, body: Record<string, unknown> = {}) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
-    if (error) throw error;
-    return data;
-  }, []);
+  const callAdmin = useAdminApi();
 
   const fetchData = useCallback(async () => {
     try {
