@@ -26,6 +26,7 @@ const menuItems = [
   { label: "Aksiyonlarım", path: "/yonetim/aksiyonlar", icon: ClipboardList, permission: null, primaryOnly: false },
   { label: "Ziyaret Planları", path: "/yonetim/ziyaret-planlari", icon: MapPin, permission: null, primaryOnly: false },
   { label: "PKL & Primler", path: "/yonetim/hedefler", icon: Target, permission: null, primaryOnly: false },
+  { label: "Canlı Harita", path: "/yonetim/canli-harita", icon: Map, permission: null, primaryOnly: false },
   { label: "Yaptırımlar", path: "/yonetim/kisitlamalar", icon: Shield, permission: "sikayet_kisitlama" as const },
   { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: null, primaryOnly: true },
   { label: "İşlemler", path: "/yonetim/islemler", icon: Activity, permission: null, primaryOnly: true },
