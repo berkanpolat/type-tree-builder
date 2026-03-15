@@ -62,6 +62,60 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_aksiyonlar: {
+        Row: {
+          aciklama: string | null
+          admin_id: string
+          baslik: string
+          created_at: string
+          durum: string
+          firma_id: string
+          id: string
+          tarih: string
+          tur: string
+          updated_at: string
+        }
+        Insert: {
+          aciklama?: string | null
+          admin_id: string
+          baslik: string
+          created_at?: string
+          durum?: string
+          firma_id: string
+          id?: string
+          tarih?: string
+          tur?: string
+          updated_at?: string
+        }
+        Update: {
+          aciklama?: string | null
+          admin_id?: string
+          baslik?: string
+          created_at?: string
+          durum?: string
+          firma_id?: string
+          id?: string
+          tarih?: string
+          tur?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_aksiyonlar_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_aksiyonlar_firma_id_fkey"
+            columns: ["firma_id"]
+            isOneToOne: false
+            referencedRelation: "firmalar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_portfolyo: {
         Row: {
           admin_id: string

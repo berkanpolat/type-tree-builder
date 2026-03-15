@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone, Bot, Briefcase
+  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone, Bot, Briefcase, ClipboardList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -23,6 +23,7 @@ const menuItems = [
   { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null, primaryOnly: false },
   { label: "Firmalar", path: "/yonetim/firmalar-v2", icon: Building2, permission: null, primaryOnly: false },
   { label: "Portföyüm", path: "/yonetim/portfolyo", icon: Briefcase, permission: null, primaryOnly: false },
+  { label: "Aksiyonlarım", path: "/yonetim/aksiyonlar", icon: ClipboardList, permission: null, primaryOnly: false },
   { label: "Yaptırımlar", path: "/yonetim/kisitlamalar", icon: Shield, permission: "sikayet_kisitlama" as const },
   { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: null, primaryOnly: true },
   { label: "İşlemler", path: "/yonetim/islemler", icon: Activity, permission: null, primaryOnly: true },

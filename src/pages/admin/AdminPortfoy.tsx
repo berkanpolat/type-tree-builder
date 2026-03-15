@@ -15,8 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Building2, Search, ExternalLink, Gavel, Package, CreditCard, Wifi,
   ArrowUpDown, ArrowUp, ArrowDown, Eye, Loader2, ShieldCheck,
-  MoreHorizontal, Briefcase,
+  MoreHorizontal, Briefcase, ClipboardList, Plus,
 } from "lucide-react";
+import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
+import FirmaAksiyonlarDialog from "@/components/admin/FirmaAksiyonlarDialog";
 
 const s = {
   card: {
@@ -100,6 +102,9 @@ export default function AdminPortfoy() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
+  const [aksiyonlarOpen, setAksiyonlarOpen] = useState(false);
+  const [selectedFirma, setSelectedFirma] = useState<FirmaItem | null>(null);
 
   const callApi = useCallback(async (action: string, body: Record<string, unknown>) => {
     const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, { body });
@@ -335,6 +340,13 @@ export default function AdminPortfoy() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" style={s.card} className="min-w-[160px]">
+                            <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setAksiyonEkleOpen(true); }} className="text-xs cursor-pointer">
+                              <Plus className="w-3.5 h-3.5 mr-2" /> Aksiyon Ekle
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setAksiyonlarOpen(true); }} className="text-xs cursor-pointer">
+                              <ClipboardList className="w-3.5 h-3.5 mr-2" /> Aksiyonları Gör
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
                             </DropdownMenuItem>
@@ -383,6 +395,30 @@ export default function AdminPortfoy() {
                 style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }} className="text-xs h-7">→</Button>
             </div>
           </div>
+        )}
+
+        {/* Aksiyon Dialogs */}
+        {selectedFirma && token && (
+          <>
+            <AksiyonEkleDialog
+              open={aksiyonEkleOpen}
+              onOpenChange={setAksiyonEkleOpen}
+              firmaId={selectedFirma.id}
+              firmaUnvani={selectedFirma.firma_unvani}
+              callApi={callApi}
+              token={token}
+              onSuccess={() => toast({ title: "Başarılı", description: "Aksiyon eklendi" })}
+            />
+            <FirmaAksiyonlarDialog
+              open={aksiyonlarOpen}
+              onOpenChange={setAksiyonlarOpen}
+              firmaId={selectedFirma.id}
+              firmaUnvani={selectedFirma.firma_unvani}
+              callApi={callApi}
+              token={token}
+              onAddClick={() => { setAksiyonlarOpen(false); setAksiyonEkleOpen(true); }}
+            />
+          </>
         )}
       </div>
     </AdminLayout>
