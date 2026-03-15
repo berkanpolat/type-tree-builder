@@ -396,6 +396,30 @@ export default function AdminPortfoy() {
             </div>
           </div>
         )}
+
+        {/* Aksiyon Dialogs */}
+        {selectedFirma && token && (
+          <>
+            <AksiyonEkleDialog
+              open={aksiyonEkleOpen}
+              onOpenChange={setAksiyonEkleOpen}
+              firmaId={selectedFirma.id}
+              firmaUnvani={selectedFirma.firma_unvani}
+              callApi={callApi}
+              token={token}
+              onSuccess={() => toast({ title: "Başarılı", description: "Aksiyon eklendi" })}
+            />
+            <FirmaAksiyonlarDialog
+              open={aksiyonlarOpen}
+              onOpenChange={setAksiyonlarOpen}
+              firmaId={selectedFirma.id}
+              firmaUnvani={selectedFirma.firma_unvani}
+              callApi={callApi}
+              token={token}
+              onAddClick={() => { setAksiyonlarOpen(false); setAksiyonEkleOpen(true); }}
+            />
+          </>
+        )}
       </div>
     </AdminLayout>
   );
