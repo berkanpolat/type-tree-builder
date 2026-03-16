@@ -56,6 +56,19 @@ interface PaketOption {
   slug: string;
 }
 
+export interface EditAksiyonData {
+  id: string;
+  baslik: string;
+  aciklama: string | null;
+  tur: string;
+  tarih: string;
+  durum: string;
+  sonuc: string | null;
+  sonuc_neden: string | null;
+  sonuc_paket_id: string | null;
+  yetkili_id?: string | null;
+}
+
 interface AksiyonEkleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -66,9 +79,11 @@ interface AksiyonEkleDialogProps {
   token: string;
   adminDepartman: string;
   adminIsPrimary: boolean;
+  editData?: EditAksiyonData | null;
 }
 
-export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUnvani, onSuccess, callApi, token, adminDepartman, adminIsPrimary }: AksiyonEkleDialogProps) {
+export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUnvani, onSuccess, callApi, token, adminDepartman, adminIsPrimary, editData }: AksiyonEkleDialogProps) {
+  const isEditMode = !!editData;
   const turler = getAksiyonTurleriForDepartman(adminDepartman, adminIsPrimary);
 
   const now = new Date();
