@@ -165,17 +165,22 @@ export default function RaporSatisKanali() {
   const successData = filteredData.filter((item) => SUCCESS_RESULTS.has(item.sonuc || "") || item.kaynak === "paket_atama");
   const failData = filteredData.filter((item) => item.sonuc === "satis_kapanmadi");
 
-  // ── Paket + Periyot birleşik dağılım
-  const paketPeriyotMap = new Map<string, number>();
+  // ── Paket dağılımı: her paket için toplam, aylık, yıllık, sınırsız, belirsiz
+  const paketDetailMap = new Map<string, { toplam: number; aylik: number; yillik: number; sinursiz: number; belirsiz: number }>();
   successData.forEach((item) => {
     const paket = item.sonucPaketAd || "Bilinmeyen";
-    const periyot = item.periyot ? (PERIYOT_LABELS[item.periyot] || item.periyot) : null;
-    const label = periyot ? `${paket} (${periyot})` : paket;
-    paketPeriyotMap.set(label, (paketPeriyotMap.get(label) || 0) + 1);
+    if (!paketDetailMap.has(paket)) paketDetailMap.set(paket, { toplam: 0, aylik: 0, yillik: 0, sinursiz: 0, belirsiz: 0 });
+    const entry = paketDetailMap.get(paket)!;
+    entry.toplam++;
+    if (item.periyot === "aylik") entry.aylik++;
+    else if (item.periyot === "yillik") entry.yillik++;
+    else if (item.periyot === "sinursiz") entry.sinursiz++;
+    else entry.belirsiz++;
   });
-  const paketPeriyotData = Array.from(paketPeriyotMap.entries())
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
+  const paketDetailData = Array.from(paketDetailMap.entries())
+    .map(([name, counts]) => ({ name, ...counts }))
+    .sort((a, b) => b.toplam - a.toplam);
+  const paketPieData = paketDetailData.map((d) => ({ name: d.name, value: d.toplam }));
 
   // ── Kapanmama nedenleri
   const nedenMap = new Map<string, number>();
