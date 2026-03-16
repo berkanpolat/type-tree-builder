@@ -632,7 +632,7 @@ function KisitlamaTable({ data, search, filterAktif, isExpired, onEdit, onDelete
           <TableHead style={s.muted}>Sebep</TableHead>
           <TableHead style={s.muted}>Bitiş</TableHead>
           <TableHead style={s.muted}>Durum</TableHead>
-          <TableHead style={s.muted}>İşlem</TableHead>
+          <TableHead style={s.muted} className="sticky-action-col">İşlem</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
