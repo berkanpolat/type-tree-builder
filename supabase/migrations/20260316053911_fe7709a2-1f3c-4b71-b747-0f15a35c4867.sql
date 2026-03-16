@@ -1,0 +1,1 @@
+ALTER TABLE public.admin_portfolyo ADD COLUMN IF NOT EXISTS atayan_admin_id uuid DEFAULT NULL;

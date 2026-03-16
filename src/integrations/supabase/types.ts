@@ -246,18 +246,21 @@ export type Database = {
       admin_portfolyo: {
         Row: {
           admin_id: string
+          atayan_admin_id: string | null
           created_at: string
           firma_id: string
           id: string
         }
         Insert: {
           admin_id: string
+          atayan_admin_id?: string | null
           created_at?: string
           firma_id: string
           id?: string
         }
         Update: {
           admin_id?: string
+          atayan_admin_id?: string | null
           created_at?: string
           firma_id?: string
           id?: string
