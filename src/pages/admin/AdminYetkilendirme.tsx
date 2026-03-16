@@ -8,12 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Shield, ShieldCheck, ChevronDown, ChevronRight, Save, Search,
+  Shield, ShieldCheck, ChevronDown, ChevronRight, Save, Search, Filter,
   Building2, Briefcase, ClipboardList, MapPin, Target, Gavel, Package,
-  MessageSquareWarning, HeadphonesIcon, Users, Activity, Map, Megaphone, Bot, CreditCard, ShieldAlert
+  MessageSquareWarning, HeadphonesIcon, Users, Activity, Map, Megaphone, Bot, CreditCard, ShieldAlert,
+  AlertTriangle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface AdminUser {
   id: string;
