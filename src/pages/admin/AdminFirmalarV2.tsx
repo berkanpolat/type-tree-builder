@@ -236,6 +236,7 @@ export default function AdminFirmalarV2() {
           filterTuru,
           filterTipi,
           filterIl,
+          filterIlce,
           filterDurum,
           filterPaket,
           activeStatCard,
