@@ -30,7 +30,6 @@ interface AksiyonRecord {
   sonuc: string | null;
   sonucNeden: string | null;
   sonucPaketAd: string | null;
-  kaynak: "aksiyon" | "paket_atama";
   periyot?: string | null;
 }
 
