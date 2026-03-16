@@ -37,7 +37,7 @@ export default function RaporSatisKanali() {
       // Fetch aksiyonlar and admin list via edge function (bypasses RLS)
       const [aksiyonData, adminData] = await Promise.all([
         callApi("list-aksiyonlar", { token }),
-        callApi("list-admins", { token }),
+        callApi("list-admin-users", { token }),
       ]);
 
       const allAksiyonlar = aksiyonData.aksiyonlar || [];

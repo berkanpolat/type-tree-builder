@@ -28,7 +28,7 @@ export default function RaporPersonelPerformans() {
       // Fetch all data via edge function (bypasses RLS)
       const [aksiyonData, adminData] = await Promise.all([
         callApi("list-aksiyonlar", { token }),
-        callApi("list-admins", { token }),
+        callApi("list-admin-users", { token }),
       ]);
 
       const allAksiyonlar = (aksiyonData.aksiyonlar || []).filter((a: any) => {
