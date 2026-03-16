@@ -1043,6 +1043,11 @@ export default function AdminFirmalarV2() {
                                 <Briefcase className="w-3.5 h-3.5 mr-2" /> {firma.portfolyo.admin_ad} {firma.portfolyo.admin_soyad} portföyünde
                               </DropdownMenuItem>
                             )}
+                            {(adminUser?.departman === "Yönetim Kurulu" || adminUser?.is_primary) && (
+                              <DropdownMenuItem onClick={() => openPortfolyoAta(firma)} className="text-xs cursor-pointer">
+                                <Users className="w-3.5 h-3.5 mr-2 text-blue-500" /> Portföy Ata
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               onClick={() => handleSendPasswordReset(firma)}
                               className="text-xs cursor-pointer"
