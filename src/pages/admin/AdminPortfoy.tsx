@@ -107,7 +107,7 @@ function durumBadge(durum: string) {
 }
 
 export default function AdminPortfoy() {
-  const { token, user: adminUser } = useAdminAuth();
+  const { token, user: adminUser, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [allFirmalar, setAllFirmalar] = useState<FirmaItem[]>([]);
   const [loading, setLoading] = useState(true);
