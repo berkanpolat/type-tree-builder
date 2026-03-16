@@ -444,6 +444,7 @@ Deno.serve(async (req) => {
         if (filterTuru !== "all") firmaQuery = firmaQuery.eq("firma_turu_id", filterTuru);
         if (filterTipi !== "all") firmaQuery = firmaQuery.eq("firma_tipi_id", filterTipi);
         if (filterIl !== "all") firmaQuery = firmaQuery.eq("kurulus_il_id", filterIl);
+        if (filterIlce !== "all") firmaQuery = firmaQuery.eq("kurulus_ilce_id", filterIlce);
         if (filterDurum !== "all") firmaQuery = firmaQuery.eq("onay_durumu", filterDurum);
         if (activeStatCard === "pending") firmaQuery = firmaQuery.eq("onay_durumu", "onay_bekliyor");
         if (activeStatCard === "recent") {
