@@ -20,6 +20,29 @@ async function sendPostmarkEmail(templateKey: string, to: string, model: Record<
   const templateId = EMAIL_TEMPLATES[templateKey];
   if (!templateId) { console.error(`[EMAIL] Unknown template: ${templateKey}`); return; }
   try {
+    const passwordLink =
+      model.sifre_olusturma_baglantisi ||
+      model.sifre_olusturma_linki ||
+      model.giris_url ||
+      model.giris_linki ||
+      "";
+
+    const templateModel = {
+      ...model,
+      ...(passwordLink
+        ? {
+            sifre_olusturma_baglantisi: passwordLink,
+            sifre_olusturma_linki: passwordLink,
+            giris_url: passwordLink,
+            giris_linki: passwordLink,
+          }
+        : {}),
+      platform_adi: "Tekstil A.Ş.",
+      destek_email: "destek@tekstilas.com",
+      yil: new Date().getFullYear().toString(),
+      site_url: SITE_URL,
+    };
+
     const res = await fetch(POSTMARK_API_URL, {
       method: "POST",
       headers: {
@@ -31,13 +54,7 @@ async function sendPostmarkEmail(templateKey: string, to: string, model: Record<
         From: FROM_EMAIL,
         To: to,
         TemplateId: templateId,
-        TemplateModel: {
-          ...model,
-          platform_adi: "Tekstil A.Ş.",
-          destek_email: "destek@tekstilas.com",
-          yil: new Date().getFullYear().toString(),
-          site_url: SITE_URL,
-        },
+        TemplateModel: templateModel,
       }),
     });
     const data = await res.json();
