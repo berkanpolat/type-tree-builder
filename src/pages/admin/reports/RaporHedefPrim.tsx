@@ -1,36 +1,47 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { startOfMonth } from "date-fns";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
-import { supabase } from "@/integrations/supabase/client";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { Target, TrendingUp, DollarSign, Award } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Progress } from "@/components/ui/progress";
 
 export default function RaporHedefPrim() {
+  const { token } = useAdminAuth();
+  const callApi = useAdminApi();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });
   const [hedefler, setHedefler] = useState<any[]>([]);
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, [dateRange]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!token) return;
     setLoading(true);
-    const [{ data: h }, { data: u }] = await Promise.all([
-      supabase.from("admin_hedefler")
-        .select("*")
-        .lte("baslangic_tarihi", dateRange.to.toISOString().split("T")[0])
-        .gte("bitis_tarihi", dateRange.from.toISOString().split("T")[0]),
-      supabase.from("admin_users").select("id, ad, soyad"),
-    ]);
-    setHedefler(h || []);
-    setAdminUsers(u || []);
-    setLoading(false);
-  };
+    try {
+      const [hedefData, adminData] = await Promise.all([
+        callApi("list-hedefler", { token }),
+        callApi("list-admin-users", { token }),
+      ]);
+
+      const allHedefler = (hedefData.hedefler || []).filter((h: any) => {
+        return h.baslangic_tarihi <= dateRange.to.toISOString().split("T")[0] &&
+               h.bitis_tarihi >= dateRange.from.toISOString().split("T")[0];
+      });
+
+      setHedefler(allHedefler);
+      setAdminUsers(adminData.users || []);
+    } catch {
+      setHedefler([]);
+      setAdminUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, dateRange, callApi]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
 
   const getAdminName = (id: string) => {
     const u = adminUsers.find((a: any) => a.id === id);
@@ -46,7 +57,6 @@ export default function RaporHedefPrim() {
     return acc;
   }, 0);
 
-  // Per-person chart
   const personMap = new Map<string, { hedef: number; gerceklesen: number }>();
   hedefler.forEach((h: any) => {
     const name = getAdminName(h.hedef_admin_id);
