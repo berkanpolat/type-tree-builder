@@ -62,6 +62,44 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_ajanda: {
+        Row: {
+          admin_id: string
+          created_at: string
+          icerik: string
+          id: string
+          renk: string
+          tarih: string
+          updated_at: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          icerik: string
+          id?: string
+          renk?: string
+          tarih: string
+          updated_at?: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          icerik?: string
+          id?: string
+          renk?: string
+          tarih?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_ajanda_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_aksiyonlar: {
         Row: {
           aciklama: string | null
