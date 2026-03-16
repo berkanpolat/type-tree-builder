@@ -817,7 +817,7 @@ export default function AdminFirmalarV2() {
         </div>
 
         {showFilters && (
-          <div style={s.card} className="p-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div style={s.card} className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <FilterSelect label="Durum" value={filterDurum} onChange={setFilterDurum}
               options={[{ value: "all", label: "Tümü" }, { value: "onay_bekliyor", label: "Bekliyor" }, { value: "onaylandi", label: "Onaylı" }, { value: "onaysiz", label: "Reddedildi" }]} />
             <FilterSelect label="Firma Türü" value={filterTuru} onChange={setFilterTuru}
@@ -826,6 +826,8 @@ export default function AdminFirmalarV2() {
               options={[{ value: "all", label: "Tümü" }, ...tipler.filter(tp => filterTuru === "all" || tp.firma_turu_id === filterTuru).map(tp => ({ value: tp.id, label: tp.name }))]} />
             <FilterSelect label="İl" value={filterIl} onChange={setFilterIl}
               options={[{ value: "all", label: "Tümü" }, ...iller.map(il => ({ value: il.id, label: il.name }))]} />
+            <FilterSelect label="İlçe" value={filterIlce} onChange={setFilterIlce}
+              options={[{ value: "all", label: "Tümü" }, ...(filterIl === "all" ? ilceler : ilceler.filter(ilce => ilce.parent_id === filterIl)).map(ilce => ({ value: ilce.id, label: ilce.name }))]} />
             <FilterSelect label="Paket" value={filterPaket} onChange={setFilterPaket}
               options={[{ value: "all", label: "Tümü" }, { value: "none", label: "Paket Yok" }, ...(stats?.paketDagilimi || []).map(p => ({ value: p.id, label: p.ad }))]} />
           </div>
