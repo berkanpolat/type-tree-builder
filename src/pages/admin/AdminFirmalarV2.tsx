@@ -821,15 +821,15 @@ export default function AdminFirmalarV2() {
           <div style={s.card} className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <FilterSelect label="Durum" value={filterDurum} onChange={setFilterDurum}
               options={[{ value: "all", label: "Tümü" }, { value: "onay_bekliyor", label: "Bekliyor" }, { value: "onaylandi", label: "Onaylı" }, { value: "onaysiz", label: "Reddedildi" }]} />
-            <FilterSelect label="Firma Türü" value={filterTuru} onChange={setFilterTuru}
+            <FilterSelect label="Firma Türü" value={filterTuru} onChange={setFilterTuru} searchable
               options={[{ value: "all", label: "Tümü" }, ...turler.map(t => ({ value: t.id, label: t.name }))]} />
-            <FilterSelect label="Firma Tipi" value={filterTipi} onChange={setFilterTipi}
+            <FilterSelect label="Firma Tipi" value={filterTipi} onChange={setFilterTipi} searchable
               options={[{ value: "all", label: "Tümü" }, ...tipler.filter(tp => filterTuru === "all" || tp.firma_turu_id === filterTuru).map(tp => ({ value: tp.id, label: tp.name }))]} />
-            <FilterSelect label="İl" value={filterIl} onChange={setFilterIl}
+            <FilterSelect label="İl" value={filterIl} onChange={setFilterIl} searchable
               options={[{ value: "all", label: "Tümü" }, ...iller.map(il => ({ value: il.id, label: il.name }))]} />
-            <FilterSelect label="İlçe" value={filterIlce} onChange={setFilterIlce}
-              options={[{ value: "all", label: "Tümü" }, ...(filterIl === "all" ? ilceler : ilceler.filter(ilce => ilce.parent_id === filterIl)).map(ilce => ({ value: ilce.id, label: ilce.name }))]} />
-            <FilterSelect label="Paket" value={filterPaket} onChange={setFilterPaket}
+            <FilterSelect label="İlçe" value={filterIlce} onChange={setFilterIlce} searchable disabled={filterIl === "all"}
+              options={[{ value: "all", label: "Tümü" }, ...(filterIl === "all" ? [] : ilceler.filter(ilce => ilce.parent_id === filterIl)).map(ilce => ({ value: ilce.id, label: ilce.name }))]} />
+            <FilterSelect label="Paket" value={filterPaket} onChange={setFilterPaket} searchable
               options={[{ value: "all", label: "Tümü" }, { value: "none", label: "Paket Yok" }, ...(stats?.paketDagilimi || []).map(p => ({ value: p.id, label: p.ad }))]} />
           </div>
         )}
