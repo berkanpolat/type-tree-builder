@@ -698,7 +698,7 @@ function UzaklastirmaTable({ data, search, filterAktif, isExpired, onEdit, onDel
           <TableHead style={s.muted}>Bitiş</TableHead>
           <TableHead style={s.muted}>Durum</TableHead>
           <TableHead style={s.muted}>Oluşturan</TableHead>
-          <TableHead style={s.muted}>İşlem</TableHead>
+          <TableHead style={s.muted} className="sticky-action-col">İşlem</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
