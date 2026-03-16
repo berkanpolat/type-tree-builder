@@ -1097,7 +1097,7 @@ export default function AdminFirmalarV2() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between pt-1">
-            <span className="text-xs" style={s.muted}>{sorted.length} firma, sayfa {safePage}/{totalPages}</span>
+            <span className="text-xs" style={s.muted}>{totalFirmalar} firma, sayfa {safePage}/{totalPages}</span>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setCurrentPage(safePage - 1)}
                 style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }} className="text-xs h-7">←</Button>
