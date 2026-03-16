@@ -136,7 +136,7 @@ export default function RaporHedefPrim() {
         </div>
 
         {/* Chart */}
-        <div className="rounded-xl border p-4" style={{ background: `hsl(var(--admin-card))`, borderColor: `hsl(var(--admin-border))` }}>
+        <div className="rounded-xl border p-4" style={{ background: `hsl(var(--admin-card-bg))`, borderColor: `hsl(var(--admin-border))` }}>
           <h3 className="text-sm font-semibold mb-4" style={{ color: `hsl(var(--admin-text))` }}>
             Personel Hedef Karşılaştırması {selectedDept !== "all" && `— ${selectedDept}`}
           </h3>
