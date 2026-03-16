@@ -211,6 +211,35 @@ export default function AdminPortfoy() {
     }
   };
 
+  const openSevkDialog = async (firma: FirmaItem) => {
+    setSevkSelectedFirma(firma);
+    setSevkTargetId("");
+    setSevkDialogOpen(true);
+    try {
+      const data = await callApi("list-admin-users", { token });
+      const others = (data.users || []).filter((u: any) => u.id !== adminUser?.id);
+      setSevkAdminList(others);
+    } catch {
+      setSevkAdminList([]);
+    }
+  };
+
+  const handleSevk = async () => {
+    if (!sevkSelectedFirma || !sevkTargetId) return;
+    setSevkSaving(true);
+    try {
+      await callApi("transfer-portfolyo", { token, firmaIds: [sevkSelectedFirma.id], targetAdminId: sevkTargetId });
+      const target = sevkAdminList.find(a => a.id === sevkTargetId);
+      toast({ title: "Başarılı", description: `${sevkSelectedFirma.firma_unvani} → ${target?.ad} ${target?.soyad} sevk edildi` });
+      setSevkDialogOpen(false);
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "Sevk başarısız", variant: "destructive" });
+    } finally {
+      setSevkSaving(false);
+    }
+  };
+
   // Filter only current admin's portfolio
   const portfolyoFirmalar = allFirmalar.filter(f => f.portfolyo?.admin_id === adminUser?.id);
 
