@@ -130,7 +130,7 @@ export default function RaporSatisKanali() {
     });
   }, [data, selectedDepartman, selectedPersonel]);
 
-  const successData = filteredData.filter((item) => SUCCESS_RESULTS.has(item.sonuc || "") || item.kaynak === "paket_atama");
+  const successData = filteredData.filter((item) => SUCCESS_RESULTS.has(item.sonuc || ""));
   const failData = filteredData.filter((item) => item.sonuc === "satis_kapanmadi");
 
   // ── Paket dağılımı: her paket için toplam, aylık, yıllık, sınırsız, belirsiz
