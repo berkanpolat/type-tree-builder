@@ -104,9 +104,9 @@ export default function RaporHedefPrim() {
             onClick={() => setSelectedDept("all")}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
             style={{
-              background: selectedDept === "all" ? "hsl(var(--admin-accent))" : "hsl(var(--admin-hover))",
+              background: selectedDept === "all" ? "#f59e0b" : "hsl(var(--admin-hover))",
               color: selectedDept === "all" ? "#fff" : "hsl(var(--admin-text))",
-              border: `1px solid ${selectedDept === "all" ? "hsl(var(--admin-accent))" : "hsl(var(--admin-border))"}`,
+              border: `1px solid ${selectedDept === "all" ? "#f59e0b" : "hsl(var(--admin-border))"}`,
             }}
           >
             Tümü
@@ -117,9 +117,9 @@ export default function RaporHedefPrim() {
               onClick={() => setSelectedDept(dept)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
               style={{
-                background: selectedDept === dept ? "hsl(var(--admin-accent))" : "hsl(var(--admin-hover))",
+                background: selectedDept === dept ? "#f59e0b" : "hsl(var(--admin-hover))",
                 color: selectedDept === dept ? "#fff" : "hsl(var(--admin-text))",
-                border: `1px solid ${selectedDept === dept ? "hsl(var(--admin-accent))" : "hsl(var(--admin-border))"}`,
+                border: `1px solid ${selectedDept === dept ? "#f59e0b" : "hsl(var(--admin-border))"}`,
               }}
             >
               {dept}
