@@ -1643,10 +1643,28 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
   );
 }
 
-function FilterSelect({ label, value, onChange, options }: {
+function FilterSelect({ label, value, onChange, options, searchable = false, disabled = false }: {
   label: string; value: string; onChange: (v: string) => void;
   options: { value: string; label: string }[];
+  searchable?: boolean;
+  disabled?: boolean;
 }) {
+  if (searchable) {
+    return (
+      <div className="space-y-1">
+        <Label className="text-xs" style={s.muted}>{label}</Label>
+        <SearchableSelect
+          value={value}
+          onValueChange={onChange}
+          options={options}
+          placeholder="Tümü"
+          searchPlaceholder="Ara..."
+          disabled={disabled}
+          triggerClassName="text-xs h-8"
+        />
+      </div>
+    );
+  }
   return (
     <div className="space-y-1">
       <Label className="text-xs" style={s.muted}>{label}</Label>
