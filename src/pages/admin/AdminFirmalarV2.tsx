@@ -263,25 +263,40 @@ export default function AdminFirmalarV2() {
       const dropdownData = await callApi("get-dropdown-options", { token });
       setTurler(dropdownData.turler || []);
       setTipler((dropdownData.tipler || []) as any);
-      const [ilKatId, ilceKatId] = await Promise.all([getIlKategoriId(), getIlceKategoriId()]);
-      const [{ data: il }, { data: ilce }] = await Promise.all([
-        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
-        supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilceKatId).order("name"),
-      ]);
-      setIller(il || []);
-      setIlceler((ilce || []) as any);
+      const ilKatId = await getIlKategoriId();
+      // Fetch all il/ilçe rows (may exceed 1000)
+      let allIlRows: any[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilKatId).order("name").range(from, from + PAGE - 1);
+        if (!data || data.length === 0) break;
+        allIlRows = allIlRows.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      setIller(allIlRows.filter((r: any) => !r.parent_id));
+      setIlceler(allIlRows.filter((r: any) => r.parent_id));
     } catch {
-      const [ilKatId, ilceKatId] = await Promise.all([getIlKategoriId(), getIlceKategoriId()]);
-      const [{ data: t }, { data: tp }, { data: il }, { data: ilce }] = await Promise.all([
+      const ilKatId = await getIlKategoriId();
+      const [{ data: t }, { data: tp }] = await Promise.all([
         supabase.from("firma_turleri").select("id, name").order("name"),
         supabase.from("firma_tipleri").select("id, name, firma_turu_id").order("name"),
-        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
-        supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilceKatId).order("name"),
       ]);
+      let allIlRows: any[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilKatId).order("name").range(from, from + PAGE - 1);
+        if (!data || data.length === 0) break;
+        allIlRows = allIlRows.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
       setTurler(sortFirmaTurleri(t || []));
       setTipler((tp || []) as any);
-      setIller(il || []);
-      setIlceler((ilce || []) as any);
+      setIller(allIlRows.filter((r: any) => !r.parent_id));
+      setIlceler(allIlRows.filter((r: any) => r.parent_id));
     }
   }, [token, callApi]);
 
