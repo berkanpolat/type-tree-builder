@@ -118,7 +118,7 @@ export default function RaporHedefPrim() {
           <div className="p-4 border-b" style={{ borderColor: `hsl(var(--admin-border))` }}>
             <h3 className="text-sm font-semibold" style={{ color: `hsl(var(--admin-text))` }}>Hedef Detayları</h3>
           </div>
-          <div className="overflow-x-auto">
+         <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr style={{ borderBottom: `1px solid hsl(var(--admin-border))` }}>
@@ -137,23 +137,37 @@ export default function RaporHedefPrim() {
                 ) : hedefler.length === 0 ? (
                   <tr><td colSpan={7} className="p-8 text-center" style={{ color: `hsl(var(--admin-muted))` }}>Veri bulunamadı</td></tr>
                 ) : (
-                  hedefler.map((h: any) => {
-                    const progress = h.hedef_miktar ? Math.min((h.gerceklesen_miktar / h.hedef_miktar) * 100, 100) : 0;
+                  sortedDepartments.map((dept) => {
+                    const deptHedefler = hedefler.filter((h: any) => getAdminDepartman(h.hedef_admin_id) === dept);
                     return (
-                      <tr key={h.id} style={{ borderBottom: `1px solid hsl(var(--admin-border))` }}>
-                        <td className="p-3 font-medium" style={{ color: `hsl(var(--admin-text))` }}>{getAdminName(h.hedef_admin_id)}</td>
-                        <td className="p-3" style={{ color: `hsl(var(--admin-text))` }}>{HEDEF_TURU_LABELS[h.hedef_turu] || h.hedef_turu}</td>
-                        <td className="p-3" style={{ color: `hsl(var(--admin-text))` }}>{h.baslik}</td>
-                        <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{h.hedef_miktar}</td>
-                        <td className="p-3 text-right font-semibold" style={{ color: `hsl(var(--admin-text))` }}>{h.gerceklesen_miktar}</td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <Progress value={progress} className="h-2 flex-1" />
-                            <span className="text-[10px] font-medium" style={{ color: `hsl(var(--admin-muted))` }}>{progress.toFixed(0)}%</span>
-                          </div>
-                        </td>
-                        <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{h.birim_basi_prim ? `$${h.birim_basi_prim}` : "-"}</td>
-                      </tr>
+                      <>
+                        <tr key={`dept-${dept}`}>
+                          <td colSpan={7} className="px-3 pt-4 pb-2">
+                            <span className="text-xs font-bold uppercase tracking-wider px-2 py-1 rounded" style={{ color: `hsl(var(--admin-text))`, background: `hsl(var(--admin-hover))` }}>
+                              {dept}
+                            </span>
+                          </td>
+                        </tr>
+                        {deptHedefler.map((h: any) => {
+                          const progress = h.hedef_miktar ? Math.min((h.gerceklesen_miktar / h.hedef_miktar) * 100, 100) : 0;
+                          return (
+                            <tr key={h.id} style={{ borderBottom: `1px solid hsl(var(--admin-border))` }}>
+                              <td className="p-3 font-medium" style={{ color: `hsl(var(--admin-text))` }}>{getAdminName(h.hedef_admin_id)}</td>
+                              <td className="p-3" style={{ color: `hsl(var(--admin-text))` }}>{HEDEF_TURU_LABELS[h.hedef_turu] || h.hedef_turu}</td>
+                              <td className="p-3" style={{ color: `hsl(var(--admin-text))` }}>{h.baslik}</td>
+                              <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{h.hedef_miktar}</td>
+                              <td className="p-3 text-right font-semibold" style={{ color: `hsl(var(--admin-text))` }}>{h.gerceklesen_miktar}</td>
+                              <td className="p-3">
+                                <div className="flex items-center gap-2">
+                                  <Progress value={progress} className="h-2 flex-1" />
+                                  <span className="text-[10px] font-medium" style={{ color: `hsl(var(--admin-muted))` }}>{progress.toFixed(0)}%</span>
+                                </div>
+                              </td>
+                              <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{h.birim_basi_prim ? `$${h.birim_basi_prim}` : "-"}</td>
+                            </tr>
+                          );
+                        })}
+                      </>
                     );
                   })
                 )}
