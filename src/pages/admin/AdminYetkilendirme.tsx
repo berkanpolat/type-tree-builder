@@ -8,12 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Shield, ShieldCheck, ChevronDown, ChevronRight, Save, Search,
+  Shield, ShieldCheck, ChevronDown, ChevronRight, Save, Search, Filter,
   Building2, Briefcase, ClipboardList, MapPin, Target, Gavel, Package,
-  MessageSquareWarning, HeadphonesIcon, Users, Activity, Map, Megaphone, Bot, CreditCard, ShieldAlert
+  MessageSquareWarning, HeadphonesIcon, Users, Activity, Map, Megaphone, Bot, CreditCard, ShieldAlert,
+  AlertTriangle
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface AdminUser {
   id: string;
@@ -239,6 +244,9 @@ export default function AdminYetkilendirme() {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [search, setSearch] = useState("");
+  const [permSearch, setPermSearch] = useState("");
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(PERMISSION_GROUPS.map(g => g.label)));
 
   const fetchUsers = useCallback(async () => {
@@ -255,10 +263,27 @@ export default function AdminYetkilendirme() {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
-  const selectUser = (u: AdminUser) => {
+  const trySelectUser = (u: AdminUser) => {
+    if (dirty && u.id !== selectedUserId) {
+      setPendingUserId(u.id);
+      setShowUnsavedDialog(true);
+      return;
+    }
+    doSelectUser(u.id);
+  };
+
+  const doSelectUser = (userId: string) => {
+    const u = users.find(x => x.id === userId);
+    if (!u) return;
     setSelectedUserId(u.id);
     setPerms({ ...DEFAULT_PERMS, ...u.permissions });
     setDirty(false);
+    setPendingUserId(null);
+  };
+
+  const handleDiscardAndSwitch = () => {
+    setShowUnsavedDialog(false);
+    if (pendingUserId) doSelectUser(pendingUserId);
   };
 
   const selectedUser = users.find(u => u.id === selectedUserId) || null;
@@ -331,6 +356,20 @@ export default function AdminYetkilendirme() {
   const sMuted: CSSProperties = { color: "hsl(var(--admin-muted))" };
   const sInput: CSSProperties = { background: "hsl(var(--admin-input-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" };
 
+  const filterItems = (items: PermissionItem[], query: string): PermissionItem[] => {
+    if (!query) return items;
+    return items.reduce<PermissionItem[]>((acc, item) => {
+      const matchesSelf = item.label.toLowerCase().includes(query);
+      const filteredChildren = item.children ? filterItems(item.children, query) : [];
+      if (matchesSelf || filteredChildren.length > 0) {
+        acc.push({ ...item, children: item.children ? (matchesSelf ? item.children : filteredChildren) : undefined });
+      }
+      return acc;
+    }, []);
+  };
+
+  const permQuery = permSearch.toLowerCase();
+
   const renderItems = (items: PermissionItem[], depth = 0): React.ReactNode => {
     return items.map(item => {
       const checked = perms[item.key];
@@ -387,7 +426,7 @@ export default function AdminYetkilendirme() {
                 return (
                   <button
                     key={u.id}
-                    onClick={() => selectUser(u)}
+                    onClick={() => trySelectUser(u)}
                     className={cn(
                       "w-full text-left p-3 rounded-xl transition-all duration-200 group",
                       isSelected
@@ -478,6 +517,19 @@ export default function AdminYetkilendirme() {
 
               {/* Permission Groups */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-b-xl" style={{ ...sCard, borderRadius: "0 0 0.75rem 0.75rem", borderTop: "none" }}>
+               {/* Permission Search */}
+               {!selectedUser.is_primary && (
+                 <div className="relative mb-3">
+                   <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={sMuted} />
+                   <Input
+                     placeholder="Yetki ara..."
+                     value={permSearch}
+                     onChange={e => setPermSearch(e.target.value)}
+                     className="pl-9 h-9 text-sm"
+                     style={sInput}
+                   />
+                 </div>
+               )}
                 {selectedUser.is_primary ? (
                   <div className="flex flex-col items-center justify-center py-16">
                     <ShieldAlert className="w-12 h-12 text-amber-500/40 mb-3" />
@@ -485,8 +537,16 @@ export default function AdminYetkilendirme() {
                     <p className="text-xs mt-1" style={sMuted}>Bu hesabın yetkileri değiştirilemez</p>
                   </div>
                 ) : (
-                  PERMISSION_GROUPS.map(group => {
-                    const expanded = expandedGroups.has(group.label);
+                  (() => {
+                    const filteredGroups = PERMISSION_GROUPS.map(group => ({
+                      ...group,
+                      filteredItems: filterItems(group.items, permQuery),
+                    })).filter(g => g.filteredItems.length > 0);
+
+                    return filteredGroups.length === 0 ? (
+                      <p className="text-sm text-center py-8" style={sMuted}>Eşleşen yetki bulunamadı</p>
+                    ) : filteredGroups.map(group => {
+                    const expanded = expandedGroups.has(group.label) || !!permQuery;
                     const { total, enabled } = countEnabled(perms, group.items);
                     const Icon = group.icon;
                     const allOn = enabled === total;
@@ -513,7 +573,7 @@ export default function AdminYetkilendirme() {
                         </button>
                         {expanded && (
                           <div className="px-3 pb-3 space-y-0.5">
-                            {canManage && (
+                            {canManage && !permQuery && (
                               <div className="flex gap-2 mb-2">
                                 <button
                                   onClick={() => toggleAllGroup(group, true)}
@@ -529,17 +589,44 @@ export default function AdminYetkilendirme() {
                                 </button>
                               </div>
                             )}
-                            {renderItems(group.items)}
+                            {renderItems(group.filteredItems)}
                           </div>
                         )}
                       </div>
                     );
-                  })
+                  });
+                  })()
                 )}
               </div>
             </div>
           )}
         </div>
+
+        {/* Unsaved changes dialog */}
+        <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+          <AlertDialogContent style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}>
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                Kaydedilmemiş Değişiklikler
+              </AlertDialogTitle>
+              <AlertDialogDescription style={{ color: "hsl(var(--admin-muted))" }}>
+                Yetki değişiklikleri henüz kaydedilmedi. Kaydetmeden devam ederseniz değişiklikler kaybolacak.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>
+                Geri Dön
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDiscardAndSwitch}
+                className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+              >
+                Kaydetmeden Geç
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
