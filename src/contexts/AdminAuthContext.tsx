@@ -2,6 +2,33 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { supabase } from "@/integrations/supabase/client";
 
 interface AdminPermissions {
+  // Firmalar
+  firma_goruntule: boolean;
+  firma_ekle: boolean;
+  firma_onayla: boolean;
+  firma_sil: boolean;
+  firma_belge_dogrula: boolean;
+  firma_paket_degistir: boolean;
+  firma_impersonate: boolean;
+  firma_sifre_sifirla: boolean;
+  firma_portfolyo_ata: boolean;
+  firma_portfolyo_sevk: boolean;
+  // Portföy / CRM
+  portfolyo_goruntule: boolean;
+  portfolyo_aksiyon_ekle: boolean;
+  portfolyo_ziyaret_ekle: boolean;
+  portfolyo_sevk: boolean;
+  portfolyo_cikar: boolean;
+  portfolyo_yetkili_yonet: boolean;
+  // Aksiyonlar
+  aksiyon_goruntule: boolean;
+  aksiyon_duzenle: boolean;
+  // Ziyaret Planları
+  ziyaret_goruntule: boolean;
+  ziyaret_duzenle: boolean;
+  // Hedefler / PKL
+  hedef_goruntule: boolean;
+  hedef_ata: boolean;
   // İhale
   ihale_goruntule: boolean;
   ihale_kaldirabilir: boolean;
@@ -29,6 +56,18 @@ interface AdminPermissions {
   // Destek
   destek_goruntule: boolean;
   destek_cevap: boolean;
+  // Yönetim
+  kullanici_goruntule: boolean;
+  kullanici_ekle: boolean;
+  kullanici_duzenle: boolean;
+  kullanici_sil: boolean;
+  islem_goruntule: boolean;
+  harita_goruntule: boolean;
+  reklam_goruntule: boolean;
+  reklam_duzenle: boolean;
+  tekbot_goruntule: boolean;
+  tekbot_duzenle: boolean;
+  yaptirim_goruntule: boolean;
 }
 
 interface AdminUser {

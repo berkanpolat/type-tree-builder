@@ -107,7 +107,7 @@ function durumBadge(durum: string) {
 }
 
 export default function AdminPortfoy() {
-  const { token, user: adminUser } = useAdminAuth();
+  const { token, user: adminUser, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [allFirmalar, setAllFirmalar] = useState<FirmaItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -445,26 +445,34 @@ export default function AdminPortfoy() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" style={s.card} className="min-w-[160px]">
-                            <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setAksiyonEkleOpen(true); }} className="text-xs cursor-pointer">
-                              <Plus className="w-3.5 h-3.5 mr-2" /> Aksiyon Ekle
-                            </DropdownMenuItem>
+                            {hasPermission("portfolyo_aksiyon_ekle") && (
+                              <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setAksiyonEkleOpen(true); }} className="text-xs cursor-pointer">
+                                <Plus className="w-3.5 h-3.5 mr-2" /> Aksiyon Ekle
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setAksiyonlarOpen(true); }} className="text-xs cursor-pointer">
                               <ClipboardList className="w-3.5 h-3.5 mr-2" /> Aksiyonları Gör
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setYetkililerOpen(true); }} className="text-xs cursor-pointer">
-                              <Users className="w-3.5 h-3.5 mr-2" /> Yetkili Kişiler
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setZiyaretTarih(undefined); setZiyaretNotlar(""); setZiyaretDialogOpen(true); }} className="text-xs cursor-pointer">
-                              <MapPin className="w-3.5 h-3.5 mr-2" /> Ziyaret Planıma Ekle
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openSevkDialog(firma)} className="text-xs cursor-pointer">
-                              <Send className="w-3.5 h-3.5 mr-2" /> Portföyü Sevk Et
-                            </DropdownMenuItem>
+                            {hasPermission("portfolyo_yetkili_yonet") && (
+                              <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setYetkililerOpen(true); }} className="text-xs cursor-pointer">
+                                <Users className="w-3.5 h-3.5 mr-2" /> Yetkili Kişiler
+                              </DropdownMenuItem>
+                            )}
+                            {hasPermission("portfolyo_ziyaret_ekle") && (
+                              <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setZiyaretTarih(undefined); setZiyaretNotlar(""); setZiyaretDialogOpen(true); }} className="text-xs cursor-pointer">
+                                <MapPin className="w-3.5 h-3.5 mr-2" /> Ziyaret Planıma Ekle
+                              </DropdownMenuItem>
+                            )}
+                            {hasPermission("portfolyo_sevk") && (
+                              <DropdownMenuItem onClick={() => openSevkDialog(firma)} className="text-xs cursor-pointer">
+                                <Send className="w-3.5 h-3.5 mr-2" /> Portföyü Sevk Et
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
                             </DropdownMenuItem>
-                            {(!firma.portfolyo?.atanmis || adminUser?.departman === "Yönetim Kurulu" || adminUser?.is_primary) && (
+                            {hasPermission("portfolyo_cikar") && (!firma.portfolyo?.atanmis || adminUser?.departman === "Yönetim Kurulu" || adminUser?.is_primary) && (
                               <>
                                 <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                                 <DropdownMenuItem onClick={() => handleRemovePortfolyo(firma)} className="text-xs cursor-pointer text-red-500 focus:text-red-500">
