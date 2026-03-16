@@ -141,21 +141,21 @@ export default function RaporHedefPrim() {
         </div>
 
         {/* Chart */}
-        <div className="rounded-xl border p-4" style={{ background: `hsl(var(--admin-card-bg))`, borderColor: `hsl(var(--admin-border))` }}>
-          <h3 className="text-sm font-semibold mb-4" style={{ color: `hsl(var(--admin-text))` }}>
+        <div className="rounded-xl border p-3" style={{ background: `hsl(var(--admin-card-bg))`, borderColor: `hsl(var(--admin-border))` }}>
+          <h3 className="text-xs font-semibold mb-2" style={{ color: `hsl(var(--admin-text))` }}>
             Personel Hedef Karşılaştırması {selectedDept !== "all" && `— ${selectedDept}`}
           </h3>
           {chartData.length === 0 ? (
-            <p className="text-center py-8 text-xs" style={{ color: `hsl(var(--admin-muted))` }}>Veri bulunamadı</p>
+            <p className="text-center py-4 text-xs" style={{ color: `hsl(var(--admin-muted))` }}>Veri bulunamadı</p>
           ) : (
-            <ResponsiveContainer width="100%" height={Math.max(180, chartData.length * 36)}>
-              <BarChart data={chartData} layout="vertical" barSize={14}>
-                <XAxis type="number" tick={{ fontSize: 10 }} />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={120} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="hedef" name="Hedef" fill="#1a2e5a" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="gerceklesen" name="Gerçekleşen" fill="#f59e0b" radius={[0, 4, 4, 0]} />
+            <ResponsiveContainer width="100%" height={Math.min(200, Math.max(100, chartData.length * 28))}>
+              <BarChart data={chartData} layout="vertical" barSize={10} margin={{ top: 0, right: 10, bottom: 0, left: 0 }}>
+                <XAxis type="number" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 9 }} width={100} axisLine={false} tickLine={false} />
+                <Tooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                <Legend wrapperStyle={{ fontSize: 10, paddingTop: 4 }} />
+                <Bar dataKey="hedef" name="Hedef" fill="#1a2e5a" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="gerceklesen" name="Gerçekleşen" fill="#f59e0b" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
