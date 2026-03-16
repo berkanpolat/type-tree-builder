@@ -258,19 +258,19 @@ export default function RaporSatisKanali() {
           <ReportKPICard title="Toplam Aksiyon" value={filteredData.length} icon={BarChart3} color="from-violet-500 to-purple-500" />
         </div>
 
-        {/* Charts Row 1: Paket+Periyot Dağılımı + Kapanmama Nedenleri */}
+        {/* Charts Row: Paket Dağılımı + Kapanmama Nedenleri */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-          {/* Paket + Periyot Dağılımı */}
+          {/* Paket Dağılımı */}
           <div className="rounded-xl border p-3" style={s.card}>
-            <h3 className="text-xs font-semibold mb-2" style={s.text}>Kapanan Satışlar — Paket & Periyot Dağılımı</h3>
-            {paketPeriyotData.length === 0 ? (
+            <h3 className="text-xs font-semibold mb-2" style={s.text}>Kapanan Satışlar — Paket Dağılımı</h3>
+            {paketPieData.length === 0 ? (
               <p className="text-xs py-6 text-center" style={s.muted}>Veri yok</p>
             ) : (
               <>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
-                    <Pie data={paketPeriyotData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} innerRadius={35} label={{ fontSize: 9 }}>
-                      {paketPeriyotData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    <Pie data={paketPieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} innerRadius={35} label={{ fontSize: 9 }}>
+                      {paketPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Pie>
                     <Tooltip contentStyle={{ fontSize: 11 }} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
@@ -280,26 +280,32 @@ export default function RaporSatisKanali() {
                   <table className="w-full text-xs">
                     <thead>
                       <tr style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
-                        <th className="text-left py-1.5 px-2 font-medium" style={s.muted}>Paket (Periyot)</th>
-                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Adet</th>
-                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Oran</th>
+                        <th className="text-left py-1.5 px-2 font-medium" style={s.muted}>Paket</th>
+                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Aylık</th>
+                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Yıllık</th>
+                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Sınırsız</th>
+                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Toplam</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {paketPeriyotData.map((item, i) => (
+                      {paketDetailData.map((item, i) => (
                         <tr key={item.name} style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
                           <td className="py-1.5 px-2 flex items-center gap-1.5" style={s.text}>
                             <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
                             {item.name}
                           </td>
-                          <td className="py-1.5 px-2 text-right font-semibold" style={s.text}>{item.value}</td>
-                          <td className="py-1.5 px-2 text-right" style={s.muted}>{totalSales > 0 ? ((item.value / totalSales) * 100).toFixed(1) : 0}%</td>
+                          <td className="py-1.5 px-2 text-right" style={s.text}>{item.aylik || "—"}</td>
+                          <td className="py-1.5 px-2 text-right" style={s.text}>{item.yillik || "—"}</td>
+                          <td className="py-1.5 px-2 text-right" style={s.text}>{item.sinursiz || "—"}</td>
+                          <td className="py-1.5 px-2 text-right font-bold" style={s.text}>{item.toplam}</td>
                         </tr>
                       ))}
                       <tr>
                         <td className="py-1.5 px-2 font-semibold" style={s.text}>Toplam</td>
+                        <td className="py-1.5 px-2 text-right font-semibold" style={s.text}>{paketDetailData.reduce((acc, d) => acc + d.aylik, 0) || "—"}</td>
+                        <td className="py-1.5 px-2 text-right font-semibold" style={s.text}>{paketDetailData.reduce((acc, d) => acc + d.yillik, 0) || "—"}</td>
+                        <td className="py-1.5 px-2 text-right font-semibold" style={s.text}>{paketDetailData.reduce((acc, d) => acc + d.sinursiz, 0) || "—"}</td>
                         <td className="py-1.5 px-2 text-right font-bold" style={s.text}>{totalSales}</td>
-                        <td className="py-1.5 px-2 text-right font-semibold" style={s.muted}>100%</td>
                       </tr>
                     </tbody>
                   </table>
@@ -314,14 +320,45 @@ export default function RaporSatisKanali() {
             {nedenData.length === 0 ? (
               <p className="text-xs py-6 text-center" style={s.muted}>Kapanmayan satış verisi yok</p>
             ) : (
-              <ResponsiveContainer width="100%" height={Math.min(280, Math.max(120, nedenData.length * 36))}>
-                <BarChart data={nedenData} layout="vertical" barSize={16} margin={{ top: 0, right: 10, bottom: 0, left: 0 }}>
-                  <XAxis type="number" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-                  <YAxis dataKey="name" type="category" tick={{ fontSize: 9 }} width={130} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="value" name="Adet" fill="#ef4444" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <>
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie data={nedenData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} innerRadius={35} label={{ fontSize: 9 }}>
+                      {nedenData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ fontSize: 11 }} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-3 border-t pt-2" style={{ borderColor: "hsl(var(--admin-border))" }}>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
+                        <th className="text-left py-1.5 px-2 font-medium" style={s.muted}>Neden</th>
+                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Adet</th>
+                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Oran</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {nedenData.map((item, i) => (
+                        <tr key={item.name} style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
+                          <td className="py-1.5 px-2 flex items-center gap-1.5" style={s.text}>
+                            <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                            {item.name}
+                          </td>
+                          <td className="py-1.5 px-2 text-right font-semibold" style={s.text}>{item.value}</td>
+                          <td className="py-1.5 px-2 text-right" style={s.muted}>{totalFail > 0 ? ((item.value / totalFail) * 100).toFixed(1) : 0}%</td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td className="py-1.5 px-2 font-semibold" style={s.text}>Toplam</td>
+                        <td className="py-1.5 px-2 text-right font-bold" style={s.text}>{totalFail}</td>
+                        <td className="py-1.5 px-2 text-right font-semibold" style={s.muted}>100%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
         </div>
