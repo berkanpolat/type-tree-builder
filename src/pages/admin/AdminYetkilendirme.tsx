@@ -594,7 +594,7 @@ export default function AdminYetkilendirme() {
                         )}
                       </div>
                     );
-                  }));
+                  });
                   })()
                 )}
               </div>
