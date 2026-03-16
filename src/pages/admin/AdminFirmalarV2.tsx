@@ -158,6 +158,7 @@ export default function AdminFirmalarV2() {
   const [filterTuru, setFilterTuru] = useState<string>("all");
   const [filterTipi, setFilterTipi] = useState<string>("all");
   const [filterIl, setFilterIl] = useState<string>("all");
+  const [filterIlce, setFilterIlce] = useState<string>("all");
   const [filterDurum, setFilterDurum] = useState<string>("all");
   const [filterPaket, setFilterPaket] = useState<string>("all");
 
