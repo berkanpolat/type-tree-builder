@@ -1701,7 +1701,3 @@ async function getIlKategoriId(): Promise<string> {
   return data?.id || "";
 }
 
-async function getIlceKategoriId(): Promise<string> {
-  const { data } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "İlçe").single();
-  return data?.id || "";
-}
