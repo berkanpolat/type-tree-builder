@@ -254,7 +254,7 @@ export default function AdminFirmalarV2() {
     } finally {
       setLoading(false);
     }
-  }, [token, currentPage, statsDays, searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, activeStatCard, abonePeriod, sortField, sortDir, callApi, toast]);
+  }, [token, currentPage, statsDays, searchTerm, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, activeStatCard, abonePeriod, sortField, sortDir, callApi, toast]);
 
   const fetchDropdowns = useCallback(async () => {
     if (!token) return;
