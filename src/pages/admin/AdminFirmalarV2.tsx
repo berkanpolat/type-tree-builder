@@ -887,7 +887,7 @@ export default function AdminFirmalarV2() {
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("last_seen")}>
                     <span className="flex items-center gap-1 text-xs" style={s.muted}>Son Hareket <SortIcon field="last_seen" /></span>
                   </TableHead>
-                  <TableHead className="w-10" />
+                  <TableHead className="w-10 sticky-action-col" />
                 </TableRow>
               </TableHeader>
               <TableBody>
