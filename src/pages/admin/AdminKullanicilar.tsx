@@ -408,7 +408,7 @@ export default function AdminKullanicilar() {
                         )}
                       </TableCell>
                       {canManage && (
-                        <TableCell className="text-right">
+                        <TableCell className="text-right sticky-action-col">
                           <div className="flex items-center justify-end gap-1">
                             {!u.is_primary && realUser?.is_primary && (
                               <Button

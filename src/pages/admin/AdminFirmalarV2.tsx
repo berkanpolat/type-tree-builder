@@ -979,7 +979,7 @@ export default function AdminFirmalarV2() {
                           <span className="text-xs opacity-40" style={s.muted}>—</span>
                         )}
                       </TableCell>
-                      <TableCell onClick={e => e.stopPropagation()}>
+                      <TableCell onClick={e => e.stopPropagation()} className="sticky-action-col">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
