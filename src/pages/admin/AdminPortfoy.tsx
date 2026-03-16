@@ -575,14 +575,15 @@ export default function AdminPortfoy() {
           <>
             <AksiyonEkleDialog
               open={aksiyonEkleOpen}
-              onOpenChange={setAksiyonEkleOpen}
+              onOpenChange={(o) => { setAksiyonEkleOpen(o); if (!o) setEditAksiyon(null); }}
               firmaId={selectedFirma.id}
               firmaUnvani={selectedFirma.firma_unvani}
               callApi={callApi}
               token={token}
-              onSuccess={() => toast({ title: "Başarılı", description: "Aksiyon eklendi" })}
+              onSuccess={() => { toast({ title: "Başarılı", description: editAksiyon ? "Aksiyon güncellendi" : "Aksiyon eklendi" }); setEditAksiyon(null); }}
               adminDepartman={adminUser?.departman || "Yönetim Kurulu"}
               adminIsPrimary={adminUser?.is_primary || false}
+              editData={editAksiyon}
             />
             <FirmaAksiyonlarDialog
               open={aksiyonlarOpen}
@@ -591,7 +592,10 @@ export default function AdminPortfoy() {
               firmaUnvani={selectedFirma.firma_unvani}
               callApi={callApi}
               token={token}
-              onAddClick={() => { setAksiyonlarOpen(false); setAksiyonEkleOpen(true); }}
+              onAddClick={() => { setAksiyonlarOpen(false); setEditAksiyon(null); setAksiyonEkleOpen(true); }}
+              onEditClick={(a) => { setAksiyonlarOpen(false); setEditAksiyon(a); setAksiyonEkleOpen(true); }}
+              currentAdminId={adminUser?.id}
+              isPrimary={adminUser?.is_primary || false}
             />
             <FirmaYetkililerDialog
               open={yetkililerOpen}
