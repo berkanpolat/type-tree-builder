@@ -4256,7 +4256,7 @@ Deno.serve(async (req) => {
       const payload = verifyToken(body.token);
       const { firmaId, adminId, durum } = body;
       
-      let query = supabase.from("admin_aksiyonlar").select("*").order("tarih", { ascending: true });
+      let query = supabase.from("admin_aksiyonlar").select("*").order("tarih", { ascending: false });
       if (firmaId) query = query.eq("firma_id", firmaId);
       if (adminId) query = query.eq("admin_id", adminId);
       if (durum) query = query.eq("durum", durum);

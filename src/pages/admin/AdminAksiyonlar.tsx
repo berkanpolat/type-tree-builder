@@ -73,6 +73,12 @@ export default function AdminAksiyonlar() {
 
   useEffect(() => { fetchAksiyonlar(); }, [fetchAksiyonlar]);
 
+  // Polling fallback: refresh every 10 seconds to catch new aksiyonlar
+  useEffect(() => {
+    const interval = setInterval(() => { fetchAksiyonlar(); }, 10000);
+    return () => clearInterval(interval);
+  }, [fetchAksiyonlar]);
+
   const deleteAksiyon = async (id: string) => {
     await callApi("delete-aksiyon", { token, aksiyonId: id });
     fetchAksiyonlar();
