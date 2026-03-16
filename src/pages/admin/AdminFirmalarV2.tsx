@@ -174,6 +174,7 @@ export default function AdminFirmalarV2() {
   const [turler, setTurler] = useState<{ id: string; name: string }[]>([]);
   const [tipler, setTipler] = useState<{ id: string; name: string; firma_turu_id: string }[]>([]);
   const [iller, setIller] = useState<{ id: string; name: string }[]>([]);
+  const [ilceler, setIlceler] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
 
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reviewDetail, setReviewDetail] = useState<FirmaDetail | null>(null);
