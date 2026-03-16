@@ -412,7 +412,7 @@ export default function AdminYetkilendirme() {
                 return (
                   <button
                     key={u.id}
-                    onClick={() => selectUser(u)}
+                    onClick={() => trySelectUser(u)}
                     className={cn(
                       "w-full text-left p-3 rounded-xl transition-all duration-200 group",
                       isSelected
