@@ -3431,6 +3431,35 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── PORTFOLIO: ASSIGN (Yönetim Kurulu) ───
+    if (action === "assign-portfolyo") {
+      const payload = verifyToken(body.token);
+      const { firmaId, targetAdminId } = body;
+      if (!firmaId || !targetAdminId) return jsonResponse({ error: "Firma ve hedef personel zorunlu" }, 400);
+
+      // Only Yönetim Kurulu or primary admin can assign
+      if (payload.departman !== "Yönetim Kurulu" && !payload.is_primary) {
+        return jsonResponse({ error: "Bu işlem için yetkiniz yok" }, 403);
+      }
+
+      // Remove existing assignment if any
+      await supabase.from("admin_portfolyo").delete().eq("firma_id", firmaId);
+
+      // Assign to target admin
+      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: targetAdminId, firma_id: firmaId });
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
+      const { data: targetAdmin } = await supabase.from("admin_users").select("ad, soyad").eq("id", targetAdminId).single();
+      await logActivity(supabase, payload, "portfolyo_atadi", {
+        target_type: "firma",
+        target_id: firmaId,
+        target_label: firma?.firma_unvani || "",
+        details: { atanan_admin: `${targetAdmin?.ad || ""} ${targetAdmin?.soyad || ""}`, atanan_admin_id: targetAdminId },
+      });
+      return jsonResponse({ success: true });
+    }
+
     // ─── AKSIYONLAR: CREATE ───
     if (action === "create-aksiyon") {
       const payload = verifyToken(body.token);
