@@ -188,6 +188,10 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       setEmailSecim("default");
       setCustomEmail("");
       setShowYetkiliForm(false);
+      setHatirlaticiAktif(false);
+      setHatirlaticiTarih(new Date(Date.now() + 7 * 86400000));
+      setHatirlaticiSaat("09:00");
+      setHatirlaticiNot("");
     }
   }, [open, firmaId]);
 
