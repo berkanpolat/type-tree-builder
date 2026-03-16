@@ -4239,9 +4239,9 @@ Deno.serve(async (req) => {
               // Don't fail the aksiyon creation
             }
           } else {
-              console.error("[AKSIYON-PRO] Missing periyot or odemeMail, cannot create PayTR link. periyot:", periyot, "odemeMail:", odemeMail);
-            }
+            console.error("[AKSIYON-PRO] Missing periyot or odemeMail, cannot create PayTR link. periyot:", periyot, "odemeMail:", odemeMail);
           }
+        }
         }
       }
 
