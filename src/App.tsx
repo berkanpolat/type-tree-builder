@@ -101,6 +101,8 @@ const PageLoader = () => (
   </div>
 );
 
+const VisitorTracker = () => { useVisitorSource(); return null; };
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
