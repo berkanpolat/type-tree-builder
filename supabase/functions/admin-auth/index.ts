@@ -4137,10 +4137,20 @@ Deno.serve(async (req) => {
     // ─── AKSIYONLAR: UPDATE (durum, baslik, etc.) ───
     if (action === "update-aksiyon") {
       const payload = verifyToken(body.token);
+      const actingId = getActingId(payload, body);
       const { aksiyonId, updates } = body;
       if (!aksiyonId) return jsonResponse({ error: "Aksiyon ID zorunlu" }, 400);
+
+      // Permission check: non-primary can only edit own aksiyonlar
+      if (!payload.is_primary) {
+        const { data: existing } = await supabase.from("admin_aksiyonlar").select("admin_id").eq("id", aksiyonId).single();
+        if (!existing) return jsonResponse({ error: "Aksiyon bulunamadı" }, 404);
+        if (existing.admin_id !== actingId) {
+          return jsonResponse({ error: "Bu aksiyonu düzenleme yetkiniz yok" }, 403);
+        }
+      }
       
-      const allowedFields = ["baslik", "aciklama", "tur", "tarih", "durum"];
+      const allowedFields = ["baslik", "aciklama", "tur", "tarih", "durum", "sonuc", "sonuc_neden", "sonuc_paket_id", "yetkili_id"];
       const safeUpdates: Record<string, any> = { updated_at: new Date().toISOString() };
       for (const key of allowedFields) {
         if (updates[key] !== undefined) safeUpdates[key] = updates[key];

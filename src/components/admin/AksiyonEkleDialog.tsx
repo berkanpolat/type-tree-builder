@@ -56,6 +56,20 @@ interface PaketOption {
   slug: string;
 }
 
+export interface EditAksiyonData {
+  id: string;
+  baslik: string;
+  aciklama: string | null;
+  tur: string;
+  tarih: string;
+  durum: string;
+  sonuc?: string | null;
+  sonuc_neden?: string | null;
+  sonuc_paket_id?: string | null;
+  yetkili_id?: string | null;
+  admin_id?: string;
+}
+
 interface AksiyonEkleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -66,9 +80,11 @@ interface AksiyonEkleDialogProps {
   token: string;
   adminDepartman: string;
   adminIsPrimary: boolean;
+  editData?: EditAksiyonData | null;
 }
 
-export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUnvani, onSuccess, callApi, token, adminDepartman, adminIsPrimary }: AksiyonEkleDialogProps) {
+export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUnvani, onSuccess, callApi, token, adminDepartman, adminIsPrimary, editData }: AksiyonEkleDialogProps) {
+  const isEditMode = !!editData;
   const turler = getAksiyonTurleriForDepartman(adminDepartman, adminIsPrimary);
 
   const now = new Date();
@@ -133,16 +149,35 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       fetchYetkililer();
       fetchPaketler();
       fetchFirmaEmail();
-      const n = new Date();
-      setTur(turler[0]?.value || "diger");
-      setYetkiliId("none");
-      setTarih(n);
-      setSaat(format(n, "HH:mm"));
-      setNot("");
-      setSonuc("");
-      setSonucPaketId("");
-      setSonucNeden("");
-      setSonucNedenDiger("");
+      if (editData) {
+        // Pre-fill from edit data
+        setTur(editData.tur || turler[0]?.value || "diger");
+        setYetkiliId(editData.yetkili_id || "none");
+        const editDate = new Date(editData.tarih);
+        setTarih(editDate);
+        setSaat(format(editDate, "HH:mm"));
+        setNot(editData.aciklama || "");
+        setSonuc(editData.sonuc || "");
+        setSonucPaketId(editData.sonuc_paket_id || "");
+        setSonucNeden(editData.sonuc_neden || "");
+        setSonucNedenDiger("");
+        // Check if sonuc_neden is a custom "Diğer" value
+        if (editData.sonuc === "satis_kapanmadi" && editData.sonuc_neden && !SATIS_KAPANMADI_NEDENLERI.includes(editData.sonuc_neden)) {
+          setSonucNeden("Diğer");
+          setSonucNedenDiger(editData.sonuc_neden);
+        }
+      } else {
+        const n = new Date();
+        setTur(turler[0]?.value || "diger");
+        setYetkiliId("none");
+        setTarih(n);
+        setSaat(format(n, "HH:mm"));
+        setNot("");
+        setSonuc("");
+        setSonucPaketId("");
+        setSonucNeden("");
+        setSonucNedenDiger("");
+      }
       setProPeriod("aylik");
       setEmailSecim("default");
       setCustomEmail("");
@@ -221,19 +256,38 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
         payload.odemeMail = getOdemeMail();
       }
 
-      const result = await callApi("create-aksiyon", payload);
+      if (isEditMode && editData) {
+        // Update existing aksiyon
+        await callApi("update-aksiyon", {
+          token,
+          aksiyonId: editData.id,
+          updates: {
+            baslik: turLabel,
+            aciklama: not.trim() || null,
+            tur,
+            tarih: combined.toISOString(),
+            yetkili_id: yetkiliId !== "none" ? yetkiliId : null,
+            sonuc,
+            sonuc_neden: finalNeden,
+            sonuc_paket_id: sonuc === "satis_kapatildi" ? sonucPaketId || null : null,
+          },
+        });
+        toast.success("Aksiyon güncellendi");
+      } else {
+        const result = await callApi("create-aksiyon", payload);
 
-      if (result?.paymentLinkSent) {
-        toast.success(`Ödeme linki ${getOdemeMail()} adresine gönderildi`);
-      } else if (result?.packageAssigned) {
-        toast.success(`${selectedPaket?.ad} paketi firmaya atandı`);
+        if (result?.paymentLinkSent) {
+          toast.success(`Ödeme linki ${getOdemeMail()} adresine gönderildi`);
+        } else if (result?.packageAssigned) {
+          toast.success(`${selectedPaket?.ad} paketi firmaya atandı`);
+        }
       }
 
       onOpenChange(false);
       onSuccess();
     } catch (err: any) {
       console.error(err);
-      toast.error("Aksiyon eklenirken hata oluştu");
+      toast.error(isEditMode ? "Aksiyon güncellenirken hata oluştu" : "Aksiyon eklenirken hata oluştu");
     } finally {
       setLoading(false);
     }
@@ -243,7 +297,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
         <DialogHeader>
-          <DialogTitle className="text-sm font-semibold" style={s.text}>Aksiyon Ekle</DialogTitle>
+          <DialogTitle className="text-sm font-semibold" style={s.text}>{isEditMode ? "Aksiyonu Düzenle" : "Aksiyon Ekle"}</DialogTitle>
           <p className="text-xs" style={s.muted}>{firmaUnvani}</p>
         </DialogHeader>
 
@@ -484,7 +538,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
             disabled={loading || !isFormValid()}
             className="w-full bg-amber-500 hover:bg-amber-600 text-white h-9 text-sm"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isProPaket && sonuc === "satis_kapatildi" ? "Aksiyon Ekle & Ödeme Linki Gönder" : "Aksiyon Ekle"}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isEditMode ? "Güncelle" : isProPaket && sonuc === "satis_kapatildi" ? "Aksiyon Ekle & Ödeme Linki Gönder" : "Aksiyon Ekle"}
           </Button>
         </div>
       </DialogContent>

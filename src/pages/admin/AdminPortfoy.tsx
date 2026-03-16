@@ -28,7 +28,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
-import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
+import AksiyonEkleDialog, { type EditAksiyonData } from "@/components/admin/AksiyonEkleDialog";
 import FirmaAksiyonlarDialog from "@/components/admin/FirmaAksiyonlarDialog";
 import FirmaYetkililerDialog from "@/components/admin/FirmaYetkililerDialog";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
@@ -118,6 +118,7 @@ export default function AdminPortfoy() {
   const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
   const [aksiyonlarOpen, setAksiyonlarOpen] = useState(false);
   const [yetkililerOpen, setYetkililerOpen] = useState(false);
+  const [editAksiyon, setEditAksiyon] = useState<EditAksiyonData | null>(null);
   const [selectedFirma, setSelectedFirma] = useState<FirmaItem | null>(null);
   const [ziyaretDialogOpen, setZiyaretDialogOpen] = useState(false);
   const [ziyaretTarih, setZiyaretTarih] = useState<Date | undefined>(undefined);
@@ -574,14 +575,15 @@ export default function AdminPortfoy() {
           <>
             <AksiyonEkleDialog
               open={aksiyonEkleOpen}
-              onOpenChange={setAksiyonEkleOpen}
+              onOpenChange={(o) => { setAksiyonEkleOpen(o); if (!o) setEditAksiyon(null); }}
               firmaId={selectedFirma.id}
               firmaUnvani={selectedFirma.firma_unvani}
               callApi={callApi}
               token={token}
-              onSuccess={() => toast({ title: "Başarılı", description: "Aksiyon eklendi" })}
+              onSuccess={() => { toast({ title: "Başarılı", description: editAksiyon ? "Aksiyon güncellendi" : "Aksiyon eklendi" }); setEditAksiyon(null); }}
               adminDepartman={adminUser?.departman || "Yönetim Kurulu"}
               adminIsPrimary={adminUser?.is_primary || false}
+              editData={editAksiyon}
             />
             <FirmaAksiyonlarDialog
               open={aksiyonlarOpen}
@@ -590,7 +592,10 @@ export default function AdminPortfoy() {
               firmaUnvani={selectedFirma.firma_unvani}
               callApi={callApi}
               token={token}
-              onAddClick={() => { setAksiyonlarOpen(false); setAksiyonEkleOpen(true); }}
+              onAddClick={() => { setAksiyonlarOpen(false); setEditAksiyon(null); setAksiyonEkleOpen(true); }}
+              onEditClick={(a) => { setAksiyonlarOpen(false); setEditAksiyon(a); setAksiyonEkleOpen(true); }}
+              currentAdminId={adminUser?.id}
+              isPrimary={adminUser?.is_primary || false}
             />
             <FirmaYetkililerDialog
               open={yetkililerOpen}

@@ -8,9 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Loader2, Search, Trash2, ClipboardList } from "lucide-react";
+import { Loader2, Pencil, Search, Trash2, ClipboardList } from "lucide-react";
 import { TUR_CONFIG, AKSIYON_TURLERI } from "@/lib/aksiyon-config";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
+import AksiyonEkleDialog, { type EditAksiyonData } from "@/components/admin/AksiyonEkleDialog";
 
 const s = {
   card: {
@@ -39,6 +40,10 @@ interface Aksiyon {
   admin_ad: string;
   admin_id: string;
   created_at: string;
+  sonuc?: string | null;
+  sonuc_neden?: string | null;
+  sonuc_paket_id?: string | null;
+  yetkili_id?: string | null;
 }
 
 export default function AdminAksiyonlar() {
@@ -48,6 +53,8 @@ export default function AdminAksiyonlar() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterTur, setFilterTur] = useState<string>("all");
   const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
+  const [editAksiyon, setEditAksiyon] = useState<EditAksiyonData | null>(null);
+  const [editFirma, setEditFirma] = useState<{ id: string; unvani: string } | null>(null);
 
   const callApi = useAdminApi();
 
@@ -69,6 +76,16 @@ export default function AdminAksiyonlar() {
   const deleteAksiyon = async (id: string) => {
     await callApi("delete-aksiyon", { token, aksiyonId: id });
     fetchAksiyonlar();
+  };
+
+  const canEdit = (aksiyon: Aksiyon) => {
+    if (adminUser?.is_primary) return true;
+    return aksiyon.admin_id === adminUser?.id;
+  };
+
+  const handleEdit = (aksiyon: Aksiyon) => {
+    setEditFirma({ id: aksiyon.firma_id, unvani: aksiyon.firma_unvani });
+    setEditAksiyon(aksiyon);
   };
 
   const filtered = aksiyonlar.filter(a => {
@@ -129,19 +146,33 @@ export default function AdminAksiyonlar() {
               <div key={date}>
                 <p className="text-[10px] font-medium mb-1.5 px-1" style={s.muted}>{date}</p>
                 <div className="space-y-1.5">
-                  {items.map(a => <AksiyonCard key={a.id} aksiyon={a} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} />)}
+                  {items.map(a => <AksiyonCard key={a.id} aksiyon={a} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} canEdit={canEdit(a)} onEdit={() => handleEdit(a)} />)}
                 </div>
               </div>
             ))}
           </div>
         )}
       <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
+      {editFirma && token && (
+        <AksiyonEkleDialog
+          open={!!editAksiyon}
+          onOpenChange={(o) => { if (!o) { setEditAksiyon(null); setEditFirma(null); } }}
+          firmaId={editFirma.id}
+          firmaUnvani={editFirma.unvani}
+          callApi={callApi}
+          token={token}
+          onSuccess={() => { setEditAksiyon(null); setEditFirma(null); fetchAksiyonlar(); }}
+          adminDepartman={adminUser?.departman || "Yönetim Kurulu"}
+          adminIsPrimary={adminUser?.is_primary || false}
+          editData={editAksiyon}
+        />
+      )}
       </div>
     </AdminLayout>
   );
 }
 
-function AksiyonCard({ aksiyon, onDelete, onClick }: { aksiyon: Aksiyon; onDelete: (id: string) => void; onClick: () => void }) {
+function AksiyonCard({ aksiyon, onDelete, onClick, canEdit, onEdit }: { aksiyon: Aksiyon; onDelete: (id: string) => void; onClick: () => void; canEdit: boolean; onEdit: () => void }) {
   const turConfig = TUR_CONFIG[aksiyon.tur] || TUR_CONFIG.diger;
   const Icon = turConfig.icon;
 
@@ -161,7 +192,16 @@ function AksiyonCard({ aksiyon, onDelete, onClick }: { aksiyon: Aksiyon; onDelet
           <span className="text-[10px]" style={{ color: "hsl(var(--admin-muted))" }}>{format(new Date(aksiyon.tarih), "dd MMM HH:mm", { locale: tr })}</span>
         </div>
       </div>
-      <button onClick={(e) => { e.stopPropagation(); onDelete(aksiyon.id); }} className="mt-0.5 opacity-30 hover:opacity-100 transition-opacity"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
+      <div className="flex items-center gap-0.5 mt-0.5">
+        {canEdit && (
+          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="opacity-30 hover:opacity-100 transition-opacity p-0.5">
+            <Pencil className="w-3.5 h-3.5 text-amber-400" />
+          </button>
+        )}
+        <button onClick={(e) => { e.stopPropagation(); onDelete(aksiyon.id); }} className="opacity-30 hover:opacity-100 transition-opacity p-0.5">
+          <Trash2 className="w-3.5 h-3.5 text-red-400" />
+        </button>
+      </div>
     </div>
   );
 }
