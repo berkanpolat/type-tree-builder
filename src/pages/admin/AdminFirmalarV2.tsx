@@ -664,7 +664,7 @@ export default function AdminFirmalarV2() {
     clearFilters();
   };
 
-  const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" || searchTerm || activeStatCard;
+  const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterIlce !== "all" || filterDurum !== "all" || filterPaket !== "all" || searchTerm || activeStatCard;
 
   const filtered = firmalar;
   const sorted = firmalar;
