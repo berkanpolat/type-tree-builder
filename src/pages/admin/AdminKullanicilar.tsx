@@ -223,7 +223,7 @@ const DEFAULT_PERMISSIONS = Object.fromEntries(ALL_PERMISSION_KEYS.map(k => [k, 
 const USERS_PER_PAGE = 10;
 
 export default function AdminKullanicilar() {
-  const { token, user: currentUser, impersonateAdmin, originalUser } = useAdminAuth();
+  const { token, user: currentUser, impersonateAdmin, originalUser, hasPermission } = useAdminAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   // When impersonating, use original user for permission checks
