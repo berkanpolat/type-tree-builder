@@ -4937,6 +4937,52 @@ Deno.serve(async (req) => {
       return jsonResponse({ email });
     }
 
+    // ─── AJANDA: LIST NOTES ───
+    if (action === "list-ajanda") {
+      const payload = verifyToken(body.token);
+      const adminId = body.actingAdminId || payload.id;
+      const { baslangic, bitis } = body;
+      let q = supabase.from("admin_ajanda").select("*").eq("admin_id", adminId).order("tarih", { ascending: true });
+      if (baslangic) q = q.gte("tarih", baslangic);
+      if (bitis) q = q.lte("tarih", bitis);
+      const { data, error } = await q;
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ notes: data });
+    }
+
+    // ─── AJANDA: CREATE NOTE ───
+    if (action === "create-ajanda") {
+      const payload = verifyToken(body.token);
+      const adminId = body.actingAdminId || payload.id;
+      const { tarih, icerik, renk } = body;
+      if (!tarih || !icerik) return jsonResponse({ error: "Tarih ve içerik zorunlu" }, 400);
+      const { data, error } = await supabase.from("admin_ajanda").insert({ admin_id: adminId, tarih, icerik, renk: renk || "blue" }).select().single();
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ note: data });
+    }
+
+    // ─── AJANDA: UPDATE NOTE ───
+    if (action === "update-ajanda") {
+      const payload = verifyToken(body.token);
+      const adminId = body.actingAdminId || payload.id;
+      const { noteId, updates } = body;
+      if (!noteId) return jsonResponse({ error: "Not ID zorunlu" }, 400);
+      const { data, error } = await supabase.from("admin_ajanda").update({ ...updates, updated_at: new Date().toISOString() }).eq("id", noteId).eq("admin_id", adminId).select().single();
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ note: data });
+    }
+
+    // ─── AJANDA: DELETE NOTE ───
+    if (action === "delete-ajanda") {
+      const payload = verifyToken(body.token);
+      const adminId = body.actingAdminId || payload.id;
+      const { noteId } = body;
+      if (!noteId) return jsonResponse({ error: "Not ID zorunlu" }, 400);
+      const { error } = await supabase.from("admin_ajanda").delete().eq("id", noteId).eq("admin_id", adminId);
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {

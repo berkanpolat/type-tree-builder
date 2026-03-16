@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone, Bot, Briefcase, ClipboardList, MapPin, Target, Map, BarChart3, FileBarChart
+  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone, Bot, Briefcase, ClipboardList, MapPin, Target, Map, BarChart3, FileBarChart, CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -47,6 +47,7 @@ const menuGroups: MenuGroup[] = [
       { label: "Aksiyonlarım", path: "/yonetim/aksiyonlar", icon: ClipboardList, permission: "aksiyon_goruntule", primaryOnly: false },
       { label: "Ziyaret Planları", path: "/yonetim/ziyaret-planlari", icon: MapPin, permission: "ziyaret_goruntule", primaryOnly: false },
       { label: "PKL & Primler", path: "/yonetim/hedefler", icon: Target, permission: "hedef_goruntule", primaryOnly: false },
+      { label: "Ajanda", path: "/yonetim/ajanda", icon: CalendarDays, permission: null, primaryOnly: false },
     ],
   },
   {

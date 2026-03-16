@@ -74,6 +74,7 @@ const AdminPortfoy = lazy(() => import("./pages/admin/AdminPortfoy"));
 const AdminAksiyonlar = lazy(() => import("./pages/admin/AdminAksiyonlar"));
 const AdminZiyaretPlanlari = lazy(() => import("./pages/admin/AdminZiyaretPlanlari"));
 const AdminHedefler = lazy(() => import("./pages/admin/AdminHedefler"));
+const AdminAjanda = lazy(() => import("./pages/admin/AdminAjanda"));
 const AdminCanliHarita = lazy(() => import("./pages/admin/AdminCanliHarita"));
 const AdminYetkilendirme = lazy(() => import("./pages/admin/AdminYetkilendirme"));
 const AdminKaynakRaporu = lazy(() => import("./pages/admin/AdminKaynakRaporu"));
@@ -183,6 +184,7 @@ const App = () => (
             <Route path="/yonetim/aksiyonlar" element={<AdminRoute><AdminAksiyonlar /></AdminRoute>} />
             <Route path="/yonetim/ziyaret-planlari" element={<AdminRoute><AdminZiyaretPlanlari /></AdminRoute>} />
             <Route path="/yonetim/hedefler" element={<AdminRoute><AdminHedefler /></AdminRoute>} />
+            <Route path="/yonetim/ajanda" element={<AdminRoute><AdminAjanda /></AdminRoute>} />
             <Route path="/yonetim/canli-harita" element={<AdminRoute><AdminCanliHarita /></AdminRoute>} />
             <Route path="/yonetim/yetkilendirme" element={<AdminRoute><AdminYetkilendirme /></AdminRoute>} />
             <Route path="/yonetim/kaynak-raporu" element={<AdminRoute><AdminKaynakRaporu /></AdminRoute>} />
