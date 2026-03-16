@@ -277,11 +277,14 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
         toast.success("Aksiyon güncellendi");
       } else {
         const result = await callApi("create-aksiyon", payload);
+        console.log("[AksiyonEkle] create-aksiyon result:", result);
 
         if (result?.paymentLinkSent) {
           toast.success(`Ödeme linki ${getOdemeMail()} adresine gönderildi`);
         } else if (result?.packageAssigned) {
           toast.success(`${selectedPaket?.ad} paketi firmaya atandı`);
+        } else if (sonuc === "satis_kapatildi") {
+          toast.success("Aksiyon eklendi");
         }
       }
 
