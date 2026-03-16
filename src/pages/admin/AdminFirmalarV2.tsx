@@ -158,6 +158,7 @@ export default function AdminFirmalarV2() {
   const [filterTuru, setFilterTuru] = useState<string>("all");
   const [filterTipi, setFilterTipi] = useState<string>("all");
   const [filterIl, setFilterIl] = useState<string>("all");
+  const [filterIlce, setFilterIlce] = useState<string>("all");
   const [filterDurum, setFilterDurum] = useState<string>("all");
   const [filterPaket, setFilterPaket] = useState<string>("all");
 
@@ -173,6 +174,7 @@ export default function AdminFirmalarV2() {
   const [turler, setTurler] = useState<{ id: string; name: string }[]>([]);
   const [tipler, setTipler] = useState<{ id: string; name: string; firma_turu_id: string }[]>([]);
   const [iller, setIller] = useState<{ id: string; name: string }[]>([]);
+  const [ilceler, setIlceler] = useState<{ id: string; name: string; parent_id: string | null }[]>([]);
 
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [reviewDetail, setReviewDetail] = useState<FirmaDetail | null>(null);
@@ -234,6 +236,7 @@ export default function AdminFirmalarV2() {
           filterTuru,
           filterTipi,
           filterIl,
+          filterIlce,
           filterDurum,
           filterPaket,
           activeStatCard,
@@ -251,7 +254,7 @@ export default function AdminFirmalarV2() {
     } finally {
       setLoading(false);
     }
-  }, [token, currentPage, statsDays, searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, activeStatCard, abonePeriod, sortField, sortDir, callApi, toast]);
+  }, [token, currentPage, statsDays, searchTerm, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, activeStatCard, abonePeriod, sortField, sortDir, callApi, toast]);
 
   const fetchDropdowns = useCallback(async () => {
     if (!token) return;
@@ -259,19 +262,25 @@ export default function AdminFirmalarV2() {
       const dropdownData = await callApi("get-dropdown-options", { token });
       setTurler(dropdownData.turler || []);
       setTipler((dropdownData.tipler || []) as any);
-      const ilKatId = await getIlKategoriId();
-      const { data: il } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name");
+      const [ilKatId, ilceKatId] = await Promise.all([getIlKategoriId(), getIlceKategoriId()]);
+      const [{ data: il }, { data: ilce }] = await Promise.all([
+        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
+        supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilceKatId).order("name"),
+      ]);
       setIller(il || []);
+      setIlceler((ilce || []) as any);
     } catch {
-      const ilKatId = await getIlKategoriId();
-      const [{ data: t }, { data: tp }, { data: il }] = await Promise.all([
+      const [ilKatId, ilceKatId] = await Promise.all([getIlKategoriId(), getIlceKategoriId()]);
+      const [{ data: t }, { data: tp }, { data: il }, { data: ilce }] = await Promise.all([
         supabase.from("firma_turleri").select("id, name").order("name"),
         supabase.from("firma_tipleri").select("id, name, firma_turu_id").order("name"),
         supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
+        supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilceKatId).order("name"),
       ]);
       setTurler(sortFirmaTurleri(t || []));
       setTipler((tp || []) as any);
       setIller(il || []);
+      setIlceler((ilce || []) as any);
     }
   }, [token, callApi]);
 
@@ -645,7 +654,7 @@ export default function AdminFirmalarV2() {
 
   // ── Filters ──
   const clearFilters = () => {
-    setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all"); setFilterPaket("all");
+    setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterIlce("all"); setFilterDurum("all"); setFilterPaket("all");
     setSearchTerm(""); setSortField(null); setActiveStatCard(null);
   };
 
@@ -655,7 +664,7 @@ export default function AdminFirmalarV2() {
     clearFilters();
   };
 
-  const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" || searchTerm || activeStatCard;
+  const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterIlce !== "all" || filterDurum !== "all" || filterPaket !== "all" || searchTerm || activeStatCard;
 
   const filtered = firmalar;
   const sorted = firmalar;
@@ -663,7 +672,10 @@ export default function AdminFirmalarV2() {
   const safePage = Math.min(currentPage, totalPages);
   const paginatedFirmalar = firmalar;
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, sortField, sortDir, activeStatCard, abonePeriod, statsDays]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, sortField, sortDir, activeStatCard, abonePeriod, statsDays]);
+
+  // İl değiştiğinde ilçeyi sıfırla
+  useEffect(() => { setFilterIlce("all"); }, [filterIl]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -805,7 +817,7 @@ export default function AdminFirmalarV2() {
         </div>
 
         {showFilters && (
-          <div style={s.card} className="p-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div style={s.card} className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <FilterSelect label="Durum" value={filterDurum} onChange={setFilterDurum}
               options={[{ value: "all", label: "Tümü" }, { value: "onay_bekliyor", label: "Bekliyor" }, { value: "onaylandi", label: "Onaylı" }, { value: "onaysiz", label: "Reddedildi" }]} />
             <FilterSelect label="Firma Türü" value={filterTuru} onChange={setFilterTuru}
@@ -814,6 +826,8 @@ export default function AdminFirmalarV2() {
               options={[{ value: "all", label: "Tümü" }, ...tipler.filter(tp => filterTuru === "all" || tp.firma_turu_id === filterTuru).map(tp => ({ value: tp.id, label: tp.name }))]} />
             <FilterSelect label="İl" value={filterIl} onChange={setFilterIl}
               options={[{ value: "all", label: "Tümü" }, ...iller.map(il => ({ value: il.id, label: il.name }))]} />
+            <FilterSelect label="İlçe" value={filterIlce} onChange={setFilterIlce}
+              options={[{ value: "all", label: "Tümü" }, ...(filterIl === "all" ? ilceler : ilceler.filter(ilce => ilce.parent_id === filterIl)).map(ilce => ({ value: ilce.id, label: ilce.name }))]} />
             <FilterSelect label="Paket" value={filterPaket} onChange={setFilterPaket}
               options={[{ value: "all", label: "Tümü" }, { value: "none", label: "Paket Yok" }, ...(stats?.paketDagilimi || []).map(p => ({ value: p.id, label: p.ad }))]} />
           </div>
@@ -1650,5 +1664,10 @@ function FilterSelect({ label, value, onChange, options }: {
 
 async function getIlKategoriId(): Promise<string> {
   const { data } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "İl").single();
+  return data?.id || "";
+}
+
+async function getIlceKategoriId(): Promise<string> {
+  const { data } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "İlçe").single();
   return data?.id || "";
 }

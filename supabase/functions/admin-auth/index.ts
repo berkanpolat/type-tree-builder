@@ -333,6 +333,7 @@ Deno.serve(async (req) => {
         const filterTuru = typeof body.filterTuru === "string" ? body.filterTuru : "all";
         const filterTipi = typeof body.filterTipi === "string" ? body.filterTipi : "all";
         const filterIl = typeof body.filterIl === "string" ? body.filterIl : "all";
+        const filterIlce = typeof body.filterIlce === "string" ? body.filterIlce : "all";
         const filterDurum = typeof body.filterDurum === "string" ? body.filterDurum : "all";
         const filterPaket = typeof body.filterPaket === "string" ? body.filterPaket : "all";
         const activeStatCard = typeof body.activeStatCard === "string" ? body.activeStatCard : null;
@@ -443,6 +444,7 @@ Deno.serve(async (req) => {
         if (filterTuru !== "all") firmaQuery = firmaQuery.eq("firma_turu_id", filterTuru);
         if (filterTipi !== "all") firmaQuery = firmaQuery.eq("firma_tipi_id", filterTipi);
         if (filterIl !== "all") firmaQuery = firmaQuery.eq("kurulus_il_id", filterIl);
+        if (filterIlce !== "all") firmaQuery = firmaQuery.eq("kurulus_ilce_id", filterIlce);
         if (filterDurum !== "all") firmaQuery = firmaQuery.eq("onay_durumu", filterDurum);
         if (activeStatCard === "pending") firmaQuery = firmaQuery.eq("onay_durumu", "onay_bekliyor");
         if (activeStatCard === "recent") {
