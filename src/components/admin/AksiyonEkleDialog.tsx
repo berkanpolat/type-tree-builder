@@ -294,6 +294,22 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
         }
       }
 
+      // Hatırlatıcı → ajandaya not ekle
+      if (hatirlaticiAktif && hatirlaticiNot.trim()) {
+        const hatirlaticiDateStr = format(hatirlaticiTarih, "yyyy-MM-dd");
+        try {
+          await callApi("create-ajanda", {
+            token,
+            tarih: hatirlaticiDateStr,
+            icerik: `⏰ ${hatirlaticiSaat} — ${firmaUnvani}: ${hatirlaticiNot.trim()}`,
+            renk: "amber",
+          });
+          toast.success("Hatırlatıcı ajandaya eklendi");
+        } catch {
+          toast.error("Hatırlatıcı eklenemedi");
+        }
+      }
+
       onOpenChange(false);
       onSuccess();
     } catch (err: any) {
