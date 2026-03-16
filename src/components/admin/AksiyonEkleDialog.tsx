@@ -124,7 +124,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
   const [hatirlaticiSaat, setHatirlaticiSaat] = useState("09:00");
   const [hatirlaticiNot, setHatirlaticiNot] = useState("");
 
-
+  const fetchYetkililer = async () => {
     setYetkililerLoading(true);
     try {
       const data = await callApi("list-yetkililer", { token, firmaId });
