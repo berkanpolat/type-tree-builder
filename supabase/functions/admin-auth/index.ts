@@ -3453,7 +3453,8 @@ Deno.serve(async (req) => {
       await supabase.from("admin_portfolyo").delete().eq("firma_id", firmaId);
 
       // Assign to target admin
-      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: targetAdminId, firma_id: firmaId });
+      const actingId = getActingId(payload, body);
+      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: targetAdminId, firma_id: firmaId, atayan_admin_id: actingId });
       if (error) return jsonResponse({ error: error.message }, 400);
 
       const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();
