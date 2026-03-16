@@ -68,6 +68,7 @@ interface AdminPermissions {
   tekbot_goruntule: boolean;
   tekbot_duzenle: boolean;
   yaptirim_goruntule: boolean;
+  rapor_goruntule: boolean;
 }
 
 interface AdminUser {

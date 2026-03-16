@@ -60,6 +60,7 @@ const menuGroups: MenuGroup[] = [
       { label: "Reklam", path: "/yonetim/reklam", icon: Megaphone, permission: "reklam_goruntule", primaryOnly: false },
       { label: "TekBot", path: "/yonetim/tekbot", icon: Bot, permission: "tekbot_goruntule", primaryOnly: false },
       { label: "Kaynak Raporu", path: "/yonetim/kaynak-raporu", icon: BarChart3, permission: null, primaryOnly: true },
+      { label: "Raporlar", path: "/yonetim/raporlar", icon: FileBarChart, permission: "rapor_goruntule", primaryOnly: false },
     ],
   },
 ];
