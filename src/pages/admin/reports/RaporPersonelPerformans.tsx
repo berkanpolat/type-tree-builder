@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserCheck, ClipboardList, MapPin, TrendingUp, Package } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
+const SUCCESS_RESULTS = new Set(["satis_kapatildi", "satis_kapandi"]);
+
 export default function RaporPersonelPerformans() {
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });
   const [aksiyonlar, setAksiyonlar] = useState<any[]>([]);
@@ -21,9 +23,10 @@ export default function RaporPersonelPerformans() {
 
   const fetchData = async () => {
     setLoading(true);
+
     const [{ data: a }, { data: z }, { data: u }, { data: p }] = await Promise.all([
       supabase.from("admin_aksiyonlar")
-        .select("admin_id, sonuc, tur, tarih")
+        .select("admin_id, sonuc, tur, tarih, sonuc_paket_id")
         .gte("tarih", dateRange.from.toISOString())
         .lte("tarih", dateRange.to.toISOString()),
       supabase.from("admin_ziyaret_planlari")
@@ -31,13 +34,13 @@ export default function RaporPersonelPerformans() {
         .gte("planlanan_tarih", dateRange.from.toISOString().split("T")[0])
         .lte("planlanan_tarih", dateRange.to.toISOString().split("T")[0]),
       supabase.from("admin_users").select("id, ad, soyad, departman, pozisyon"),
-      // Direct package assignments from activity log
       supabase.from("admin_activity_log")
-        .select("admin_id, created_at, target_label, details")
+        .select("admin_id, created_at, target_label")
         .eq("action", "update-firma-paket")
         .gte("created_at", dateRange.from.toISOString())
         .lte("created_at", dateRange.to.toISOString()),
     ]);
+
     setAksiyonlar(a || []);
     setZiyaretler(z || []);
     setAdminUsers(u || []);
@@ -45,28 +48,33 @@ export default function RaporPersonelPerformans() {
     setLoading(false);
   };
 
-  // Build per-person stats (include both aksiyonlar sales AND direct paket assignments)
-  const personStats = adminUsers.map((u: any) => {
-    const myAks = aksiyonlar.filter((a: any) => a.admin_id === u.id);
-    const myZiy = ziyaretler.filter((z: any) => z.admin_id === u.id);
-    const myPaket = paketAtamalar.filter((p: any) => p.admin_id === u.id);
-    const aksiyonSatislar = myAks.filter((a: any) => a.sonuc === "satis_kapandi").length;
-    const paketSatislar = myPaket.length;
-    return {
-      name: `${u.ad} ${u.soyad}`,
-      departman: u.departman,
-      aksiyonSayisi: myAks.length,
-      ziyaretSayisi: myZiy.length,
-      tamamlananZiyaret: myZiy.filter((z: any) => z.durum === "tamamlandi").length,
-      aksiyonSatisSayisi: aksiyonSatislar,
-      paketSatisSayisi: paketSatislar,
-      toplamSatis: aksiyonSatislar + paketSatislar,
-    };
-  }).filter(p => p.aksiyonSayisi > 0 || p.ziyaretSayisi > 0 || p.paketSatisSayisi > 0)
+  const successfulAksiyonlar = aksiyonlar.filter((item: any) => SUCCESS_RESULTS.has(item.sonuc) || !!item.sonuc_paket_id);
+
+  const personStats = adminUsers
+    .map((user: any) => {
+      const myAksiyonlar = aksiyonlar.filter((item: any) => item.admin_id === user.id);
+      const myZiyaretler = ziyaretler.filter((item: any) => item.admin_id === user.id);
+      const myPaketAtamalar = paketAtamalar.filter((item: any) => item.admin_id === user.id);
+      const aksiyonSatisSayisi = myAksiyonlar.filter((item: any) => SUCCESS_RESULTS.has(item.sonuc) || !!item.sonuc_paket_id).length;
+      const paketSatisSayisi = myPaketAtamalar.length;
+      const toplamSatis = aksiyonSatisSayisi + paketSatisSayisi;
+
+      return {
+        name: `${user.ad} ${user.soyad}`,
+        departman: user.departman,
+        aksiyonSayisi: myAksiyonlar.length,
+        ziyaretSayisi: myZiyaretler.length,
+        tamamlananZiyaret: myZiyaretler.filter((item: any) => item.durum === "tamamlandi").length,
+        aksiyonSatisSayisi,
+        paketSatisSayisi,
+        toplamSatis,
+      };
+    })
+    .filter((item) => item.aksiyonSayisi > 0 || item.ziyaretSayisi > 0 || item.toplamSatis > 0)
     .sort((a, b) => b.toplamSatis - a.toplamSatis);
 
   const topPerformer = personStats[0];
-  const totalAksiyonSatis = aksiyonlar.filter((a: any) => a.sonuc === "satis_kapandi").length;
+  const totalAksiyonSatis = successfulAksiyonlar.length;
   const totalPaketSatis = paketAtamalar.length;
   const totalSatis = totalAksiyonSatis + totalPaketSatis;
 
@@ -79,8 +87,8 @@ export default function RaporPersonelPerformans() {
           <ReportKPICard title="Toplam Aksiyon" value={aksiyonlar.length} icon={ClipboardList} color="from-violet-500 to-purple-500" />
           <ReportKPICard title="Toplam Ziyaret" value={ziyaretler.length} icon={MapPin} color="from-blue-500 to-cyan-500" />
           <ReportKPICard title="Toplam Satış" value={totalSatis} subtitle={`Aksiyon: ${totalAksiyonSatis} | Paket: ${totalPaketSatis}`} icon={TrendingUp} color="from-emerald-500 to-teal-500" />
-          <ReportKPICard title="Paket Tanımlama" value={totalPaketSatis} icon={Package} color="from-amber-500 to-orange-500" />
-          <ReportKPICard title="En İyi Personel" value={topPerformer?.name || "-"} subtitle={topPerformer ? `${topPerformer.toplamSatis} satış` : undefined} icon={UserCheck} color="from-orange-500 to-amber-500" />
+          <ReportKPICard title="Paket Tanımlama" value={totalPaketSatis} icon={Package} color="from-orange-500 to-amber-500" />
+          <ReportKPICard title="En İyi Personel" value={topPerformer?.name || "-"} subtitle={topPerformer ? `${topPerformer.toplamSatis} satış` : undefined} icon={UserCheck} color="from-rose-500 to-pink-500" />
         </div>
 
         <div className="rounded-xl border p-4" style={{ background: `hsl(var(--admin-card))`, borderColor: `hsl(var(--admin-border))` }}>
@@ -88,13 +96,13 @@ export default function RaporPersonelPerformans() {
           <ResponsiveContainer width="100%" height={Math.max(300, personStats.length * 40)}>
             <BarChart data={personStats} layout="vertical">
               <XAxis type="number" tick={{ fontSize: 11 }} />
-              <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={140} />
+              <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={150} />
               <Tooltip />
               <Legend />
-              <Bar dataKey="aksiyonSayisi" name="Aksiyon" fill="#8b5cf6" radius={[0,4,4,0]} />
-              <Bar dataKey="ziyaretSayisi" name="Ziyaret" fill="#3b82f6" radius={[0,4,4,0]} />
-              <Bar dataKey="aksiyonSatisSayisi" name="Aksiyon Satışı" fill="#10b981" radius={[0,4,4,0]} />
-              <Bar dataKey="paketSatisSayisi" name="Paket Tanımlama" fill="#f59e0b" radius={[0,4,4,0]} />
+              <Bar dataKey="aksiyonSayisi" name="Aksiyon" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="ziyaretSayisi" name="Ziyaret" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="aksiyonSatisSayisi" name="Aksiyon Satışı" fill="#10b981" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="paketSatisSayisi" name="Paket Tanımlama" fill="#f59e0b" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -124,18 +132,18 @@ export default function RaporPersonelPerformans() {
                 ) : personStats.length === 0 ? (
                   <tr><td colSpan={9} className="p-8 text-center" style={{ color: `hsl(var(--admin-muted))` }}>Veri bulunamadı</td></tr>
                 ) : (
-                  personStats.map((p, i) => (
-                    <tr key={i} style={{ borderBottom: `1px solid hsl(var(--admin-border))` }}>
-                      <td className="p-3 font-medium" style={{ color: `hsl(var(--admin-text))` }}>{p.name}</td>
-                      <td className="p-3" style={{ color: `hsl(var(--admin-text))` }}>{p.departman}</td>
-                      <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{p.aksiyonSayisi}</td>
-                      <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{p.ziyaretSayisi}</td>
-                      <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{p.tamamlananZiyaret}</td>
-                      <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{p.aksiyonSatisSayisi}</td>
-                      <td className="p-3 text-right font-semibold text-amber-400">{p.paketSatisSayisi}</td>
-                      <td className="p-3 text-right font-bold" style={{ color: `hsl(var(--admin-text))` }}>{p.toplamSatis}</td>
+                  personStats.map((item, index) => (
+                    <tr key={index} style={{ borderBottom: `1px solid hsl(var(--admin-border))` }}>
+                      <td className="p-3 font-medium" style={{ color: `hsl(var(--admin-text))` }}>{item.name}</td>
+                      <td className="p-3" style={{ color: `hsl(var(--admin-text))` }}>{item.departman}</td>
+                      <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{item.aksiyonSayisi}</td>
+                      <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{item.ziyaretSayisi}</td>
+                      <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{item.tamamlananZiyaret}</td>
+                      <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{item.aksiyonSatisSayisi}</td>
+                      <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>{item.paketSatisSayisi}</td>
+                      <td className="p-3 text-right font-semibold" style={{ color: `hsl(var(--admin-text))` }}>{item.toplamSatis}</td>
                       <td className="p-3 text-right" style={{ color: `hsl(var(--admin-text))` }}>
-                        {p.aksiyonSayisi ? ((p.toplamSatis / p.aksiyonSayisi) * 100).toFixed(1) + "%" : "-"}
+                        {item.aksiyonSayisi ? ((item.toplamSatis / item.aksiyonSayisi) * 100).toFixed(1) + "%" : "-"}
                       </td>
                     </tr>
                   ))
