@@ -377,7 +377,7 @@ export default function ManuPazar() {
 
         {/* Desktop Table View */}
         <Card className="hidden md:block">
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -387,7 +387,7 @@ export default function ManuPazar() {
                   <TableHead>Fiyat</TableHead>
                   <TableHead>Güncelleme</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead className="text-center">İşlemler</TableHead>
+                  <TableHead className="text-center sticky-action-col">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -447,7 +447,7 @@ export default function ManuPazar() {
                           </Badge>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="sticky-action-col">
                         <div className="flex items-center justify-center gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
                             <Pencil className="w-4 h-4" />

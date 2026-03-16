@@ -296,7 +296,7 @@ function PaketContent({
                 <TableHead style={mutedStyle} className="text-center"><MessageSquare className="w-4 h-4 inline mr-1" />Mesaj</TableHead>
                 <TableHead style={mutedStyle}>Aylık Fiyat</TableHead>
                 <TableHead style={mutedStyle}>Yıllık Fiyat</TableHead>
-                <TableHead style={mutedStyle} className="text-right">İşlemler</TableHead>
+                <TableHead style={mutedStyle} className="text-right sticky-action-col">İşlemler</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -327,7 +327,7 @@ function PaketContent({
                   <TableCell style={{ color: `hsl(var(--admin-text))` }}>
                     {p.fiyat_yillik != null ? `${p.fiyat_yillik} ${p.para_birimi}` : "-"}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right sticky-action-col">
                     <div className="flex items-center justify-end gap-1">
                       {hasPermission("paket_duzenleyebilir") && (
                         <Button size="icon" variant="ghost" onClick={() => openEditDialog(p)}

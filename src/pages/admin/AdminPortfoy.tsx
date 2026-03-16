@@ -328,6 +328,7 @@ export default function AdminPortfoy() {
           </div>
         ) : (
           <div className="rounded-xl overflow-hidden" style={s.card}>
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow style={{ borderColor: "hsl(var(--admin-border))" }}>
@@ -355,7 +356,7 @@ export default function AdminPortfoy() {
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("last_seen")}>
                     <span className="flex items-center gap-1 text-xs" style={s.muted}>Son Hareket <SortIcon field="last_seen" /></span>
                   </TableHead>
-                  <TableHead className="w-10" />
+                  <TableHead className="w-10 sticky-action-col" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -436,7 +437,7 @@ export default function AdminPortfoy() {
                           <span className="text-xs opacity-40" style={s.muted}>—</span>
                         )}
                       </TableCell>
-                      <TableCell onClick={e => e.stopPropagation()}>
+                      <TableCell onClick={e => e.stopPropagation()} className="sticky-action-col">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
@@ -535,6 +536,7 @@ export default function AdminPortfoy() {
                 })}
               </TableBody>
             </Table>
+            </div>
           </div>
         )}
 

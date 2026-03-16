@@ -851,6 +851,7 @@ export default function AdminFirmalarV2() {
           <div className="text-center py-12" style={s.muted}>Firma bulunamadı.</div>
         ) : (
           <div style={s.card} className="overflow-hidden">
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow style={{ borderColor: "hsl(var(--admin-border))" }}>
@@ -886,7 +887,7 @@ export default function AdminFirmalarV2() {
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort("last_seen")}>
                     <span className="flex items-center gap-1 text-xs" style={s.muted}>Son Hareket <SortIcon field="last_seen" /></span>
                   </TableHead>
-                  <TableHead className="w-10" />
+                  <TableHead className="w-10 sticky-action-col" />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -978,7 +979,7 @@ export default function AdminFirmalarV2() {
                           <span className="text-xs opacity-40" style={s.muted}>—</span>
                         )}
                       </TableCell>
-                      <TableCell onClick={e => e.stopPropagation()}>
+                      <TableCell onClick={e => e.stopPropagation()} className="sticky-action-col">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
@@ -1091,6 +1092,7 @@ export default function AdminFirmalarV2() {
                 })}
               </TableBody>
             </Table>
+            </div>
           </div>
         )}
 

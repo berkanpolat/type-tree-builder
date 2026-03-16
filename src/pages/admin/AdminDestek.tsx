@@ -332,7 +332,7 @@ const AdminDestek = () => {
                 <thead>
                   <tr className="border-b" style={{ borderColor: "hsl(var(--admin-border))" }}>
                     {["Talep No", "Tarih", "Departman", "Konu", "Firma", "İlgili Kişi", "Durum", "İşlem"].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 font-medium text-xs" style={s.muted}>
+                      <th key={h} className={`text-left px-4 py-3 font-medium text-xs${h === "İşlem" ? " sticky-action-col" : ""}`} style={s.muted}>
                         {h}
                       </th>
                     ))}
@@ -358,7 +358,7 @@ const AdminDestek = () => {
                         {talep.profile ? `${talep.profile.ad} ${talep.profile.soyad}` : "—"}
                       </td>
                       <td className="px-4 py-3">{renderDurumBadge(talep.durum)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 sticky-action-col">
                         <Button size="sm" variant="outline" onClick={() => openDetail(talep)} style={s.input}>
                           <Eye className="w-3 h-3 mr-1" /> Görüntüle
                         </Button>

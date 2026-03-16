@@ -375,7 +375,7 @@ export default function AdminKullanicilar() {
                      <TableHead style={sMuted} className="hidden lg:table-cell">E-posta</TableHead>
                      <TableHead style={sMuted} className="hidden lg:table-cell">Telefon</TableHead>
                      <TableHead style={sMuted}>Rol</TableHead>
-                     {canManage && <TableHead style={sMuted} className="text-right">İşlemler</TableHead>}
+                     {canManage && <TableHead style={sMuted} className="text-right sticky-action-col">İşlemler</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -408,7 +408,7 @@ export default function AdminKullanicilar() {
                         )}
                       </TableCell>
                       {canManage && (
-                        <TableCell className="text-right">
+                        <TableCell className="text-right sticky-action-col">
                           <div className="flex items-center justify-end gap-1">
                             {!u.is_primary && realUser?.is_primary && (
                               <Button

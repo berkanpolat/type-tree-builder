@@ -263,7 +263,7 @@ export default function AdminSikayetler() {
                 <thead>
                   <tr style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
                     {["Şikayet ID", "Şikayet Eden Firma", "Şikayet Edilen Firma", "Alan", "Sebep", "Tarih", "Durum", "Aksiyonlar"].map(h => (
-                      <th key={h} className="text-left px-4 py-3 text-xs font-medium" style={s.muted}>{h}</th>
+                      <th key={h} className={`text-left px-4 py-3 text-xs font-medium${h === "Aksiyonlar" ? " sticky-action-col" : ""}`} style={s.muted}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -290,7 +290,7 @@ export default function AdminSikayetler() {
                             {DURUM_LABELS[item.durum] || item.durum}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 sticky-action-col">
                           <div className="flex gap-1">
                             {hasPermission("sikayet_detay_goruntule") && (
                               <Button variant="ghost" size="sm" onClick={() => setViewItem(item)} className="h-7 w-7 p-0" title="Görüntüle">

@@ -137,6 +137,26 @@
   }
 }
 
+/* Sticky action column for horizontally scrollable tables */
+.sticky-action-col {
+  position: sticky !important;
+  right: 0;
+  z-index: 1;
+  background: hsl(var(--card));
+  box-shadow: -4px 0 8px -4px rgba(0,0,0,0.06);
+}
+.admin-dark .sticky-action-col {
+  background: hsl(var(--admin-card-bg));
+  box-shadow: -4px 0 8px -4px rgba(0,0,0,0.3);
+}
+.admin-light .sticky-action-col {
+  background: hsl(var(--admin-card-bg));
+  box-shadow: -4px 0 8px -4px rgba(0,0,0,0.08);
+}
+thead .sticky-action-col {
+  z-index: 2;
+}
+
 @keyframes floatBadge {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-6px); }

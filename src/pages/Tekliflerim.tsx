@@ -306,7 +306,7 @@ export default function Tekliflerim() {
 
         {/* Desktop Table View */}
         <Card className="hidden md:block">
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -316,7 +316,7 @@ export default function Tekliflerim() {
                   <TableHead className="text-center">Teklif Sıranız</TableHead>
                   <TableHead>Süreç</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead className="text-center">İşlemler</TableHead>
+                  <TableHead className="text-center sticky-action-col">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -359,7 +359,7 @@ export default function Tekliflerim() {
                       <TableCell>
                         <Badge variant="secondary" className={durumColors[teklif.durum] || ""}>{durumLabels[teklif.durum] || teklif.durum}</Badge>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="text-center sticky-action-col">
                         <Button size="sm" onClick={() => navigate(`/ihaleler/${teklif.ihale_slug || teklif.ihale_id}`)} className="gap-1">
                           <Plus className="w-3 h-3" />Yeni Teklif
                         </Button>

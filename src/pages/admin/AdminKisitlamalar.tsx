@@ -632,7 +632,7 @@ function KisitlamaTable({ data, search, filterAktif, isExpired, onEdit, onDelete
           <TableHead style={s.muted}>Sebep</TableHead>
           <TableHead style={s.muted}>Bitiş</TableHead>
           <TableHead style={s.muted}>Durum</TableHead>
-          <TableHead style={s.muted}>İşlem</TableHead>
+          <TableHead style={s.muted} className="sticky-action-col">İşlem</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -662,7 +662,7 @@ function KisitlamaTable({ data, search, filterAktif, isExpired, onEdit, onDelete
                   : expired ? <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">Süresi Dolmuş</Badge>
                   : <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Aktif</Badge>}
               </TableCell>
-              <TableCell>
+              <TableCell className="sticky-action-col">
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="icon" onClick={() => onEdit(k)} className="h-8 w-8 hover:bg-amber-500/10"><Pencil className="w-4 h-4 text-amber-500" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => onDelete(k)} className="h-8 w-8 hover:bg-red-500/10"><Trash2 className="w-4 h-4 text-red-500" /></Button>
@@ -698,7 +698,7 @@ function UzaklastirmaTable({ data, search, filterAktif, isExpired, onEdit, onDel
           <TableHead style={s.muted}>Bitiş</TableHead>
           <TableHead style={s.muted}>Durum</TableHead>
           <TableHead style={s.muted}>Oluşturan</TableHead>
-          <TableHead style={s.muted}>İşlem</TableHead>
+          <TableHead style={s.muted} className="sticky-action-col">İşlem</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -723,7 +723,7 @@ function UzaklastirmaTable({ data, search, filterAktif, isExpired, onEdit, onDel
                   : <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Aktif</Badge>}
               </TableCell>
               <TableCell><span className="text-xs" style={s.muted}>{u.created_by}</span></TableCell>
-              <TableCell>
+              <TableCell className="sticky-action-col">
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="icon" onClick={() => onEdit(u)} className="h-8 w-8 hover:bg-amber-500/10"><Pencil className="w-4 h-4 text-amber-500" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => onDelete(u)} className="h-8 w-8 hover:bg-red-500/10"><Trash2 className="w-4 h-4 text-red-500" /></Button>
@@ -757,7 +757,7 @@ function YasakTable({ data, search, onDelete }: {
           <TableHead style={s.muted}>Vergi No</TableHead>
           <TableHead style={s.muted}>Sebep</TableHead>
           <TableHead style={s.muted}>Tarih</TableHead>
-          <TableHead style={s.muted}>İşlem</TableHead>
+          <TableHead style={s.muted} className="sticky-action-col">İşlem</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -773,7 +773,7 @@ function YasakTable({ data, search, onDelete }: {
                 {format(new Date(y.created_at), "dd MMM yyyy", { locale: tr })}
               </div>
             </TableCell>
-            <TableCell>
+            <TableCell className="sticky-action-col">
               <Button variant="ghost" size="icon" onClick={() => onDelete(y)} className="h-8 w-8 hover:bg-red-500/10">
                 <Trash2 className="w-4 h-4 text-red-500" />
               </Button>

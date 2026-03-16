@@ -305,7 +305,7 @@ export default function ManuIhale() {
 
         {/* Desktop Table View */}
         <Card className="hidden md:block">
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -315,7 +315,7 @@ export default function ManuIhale() {
                   <TableHead className="text-center">En İyi Teklif</TableHead>
                   <TableHead>Süreç</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead className="text-center">İşlemler</TableHead>
+                  <TableHead className="text-center sticky-action-col">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -370,7 +370,7 @@ export default function ManuIhale() {
                         <TableCell>
                           <Badge variant="secondary" className={durumColors[ihale.durum] || ""}>{durumLabels[ihale.durum] || ihale.durum}</Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="sticky-action-col">
                           <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                             {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
                               <Button variant="ghost" size="icon" className="h-8 w-8" title="İhale Takip" onClick={() => navigate(`/ihalelerim/takip/${ihale.id}`)}>
