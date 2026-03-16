@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
-import { Target, TrendingUp, DollarSign, Award } from "lucide-react";
+import { Target, TrendingUp, DollarSign, Award, ArrowLeft } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Progress } from "@/components/ui/progress";
 
@@ -17,6 +18,7 @@ const HEDEF_TURU_LABELS: Record<string, string> = {
 };
 
 export default function RaporHedefPrim() {
+  const navigate = useNavigate();
   const { token } = useAdminAuth();
   const callApi = useAdminApi();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });
@@ -96,6 +98,9 @@ export default function RaporHedefPrim() {
   return (
     <AdminLayout title="Hedef & Prim Raporları">
       <div className="space-y-6">
+        <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
+          <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
+        </button>
         <ReportDateFilter value={dateRange} onChange={setDateRange} />
 
         {/* Department Tabs */}

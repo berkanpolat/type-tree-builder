@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
@@ -6,7 +7,7 @@ import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, CheckCircle, XCircle, BarChart3 } from "lucide-react";
+import { ClipboardList, CheckCircle, XCircle, BarChart3, ArrowLeft } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { AKSIYON_TURLERI, TUR_CONFIG } from "@/lib/aksiyon-config";
 
@@ -19,6 +20,7 @@ const TUR_LABELS: Record<string, string> = {};
 AKSIYON_TURLERI.forEach(t => { TUR_LABELS[t.value] = t.label; });
 
 export default function RaporAksiyonTuru() {
+  const navigate = useNavigate();
   const { token } = useAdminAuth();
   const callApi = useAdminApi();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });
@@ -85,6 +87,9 @@ export default function RaporAksiyonTuru() {
   return (
     <AdminLayout title="Aksiyon Türü Raporları">
       <div className="space-y-6">
+        <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
+          <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
+        </button>
         <ReportDateFilter value={dateRange} onChange={setDateRange} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

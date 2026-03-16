@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Users, Layers, TrendingUp } from "lucide-react";
+import { Building2, Users, Layers, TrendingUp, ArrowLeft } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
 
 export default function RaporMusteriTipi() {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });
   const [firmalar, setFirmalar] = useState<any[]>([]);
   const [turler, setTurler] = useState<any[]>([]);
@@ -56,6 +58,9 @@ export default function RaporMusteriTipi() {
   return (
     <AdminLayout title="Müşteri Tipi Raporları">
       <div className="space-y-6">
+        <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
+          <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
+        </button>
         <ReportDateFilter value={dateRange} onChange={setDateRange} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
