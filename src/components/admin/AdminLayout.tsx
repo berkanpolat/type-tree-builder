@@ -47,6 +47,7 @@ const menuGroups: MenuGroup[] = [
       { label: "Aksiyonlarım", path: "/yonetim/aksiyonlar", icon: ClipboardList, permission: "aksiyon_goruntule", primaryOnly: false },
       { label: "Ziyaret Planları", path: "/yonetim/ziyaret-planlari", icon: MapPin, permission: "ziyaret_goruntule", primaryOnly: false },
       { label: "PKL & Primler", path: "/yonetim/hedefler", icon: Target, permission: "hedef_goruntule", primaryOnly: false },
+      { label: "Ajanda", path: "/yonetim/ajanda", icon: CalendarDays, permission: null, primaryOnly: false },
     ],
   },
   {
