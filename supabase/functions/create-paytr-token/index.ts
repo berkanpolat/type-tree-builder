@@ -68,7 +68,7 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("Kullanıcı doğrulanamadı");
 
-    const { periyot, clientIp: rawClientIp } = await req.json();
+    const { periyot, clientIp: rawClientIp, forceTestMode = false } = await req.json();
     if (!periyot || !["aylik", "yillik"].includes(periyot)) {
       throw new Error("Geçersiz periyot");
     }
@@ -151,9 +151,9 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "";
     const referer = req.headers.get("referer") || "";
-    const isPreview = origin.includes("lovable.app") || origin.includes("localhost") || referer.includes("lovable.app");
+    const isPreview = Boolean(forceTestMode) || origin.includes("lovable.app") || origin.includes("localhost") || referer.includes("lovable.app");
 
-    console.log("[CREATE-PAYTR-TOKEN] Origin detection:", { origin, referer, isPreview });
+    console.log("[CREATE-PAYTR-TOKEN] Origin detection:", { origin, referer, forceTestMode, isPreview });
 
     // Preview/localhost = test mode, tekstilas.com = live mode
     const testMode = isPreview ? "1" : "0";
