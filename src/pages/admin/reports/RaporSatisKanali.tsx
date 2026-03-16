@@ -61,7 +61,7 @@ export default function RaporSatisKanali() {
             id: item.id,
             tarih: item.tarih,
             personel: item.admin_ad || adminNameMap.get(item.admin_id) || "Bilinmeyen",
-            departman: adminDepartmanMap.get(item.admin_id) || "Bilinmeyen",
+            departman: (adminDepartmanMap.get(item.admin_id) as string) || "Bilinmeyen",
             tur: TUR_CONFIG[item.tur]?.label || item.tur || "Diğer",
             baslik: item.baslik || "Satış",
             kaynak: "aksiyon",
