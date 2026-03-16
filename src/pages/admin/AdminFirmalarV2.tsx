@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
+import SearchableSelect from "@/components/ui/searchable-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -262,25 +263,40 @@ export default function AdminFirmalarV2() {
       const dropdownData = await callApi("get-dropdown-options", { token });
       setTurler(dropdownData.turler || []);
       setTipler((dropdownData.tipler || []) as any);
-      const [ilKatId, ilceKatId] = await Promise.all([getIlKategoriId(), getIlceKategoriId()]);
-      const [{ data: il }, { data: ilce }] = await Promise.all([
-        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
-        supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilceKatId).order("name"),
-      ]);
-      setIller(il || []);
-      setIlceler((ilce || []) as any);
+      const ilKatId = await getIlKategoriId();
+      // Fetch all il/ilçe rows (may exceed 1000)
+      let allIlRows: any[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilKatId).order("name").range(from, from + PAGE - 1);
+        if (!data || data.length === 0) break;
+        allIlRows = allIlRows.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      setIller(allIlRows.filter((r: any) => !r.parent_id));
+      setIlceler(allIlRows.filter((r: any) => r.parent_id));
     } catch {
-      const [ilKatId, ilceKatId] = await Promise.all([getIlKategoriId(), getIlceKategoriId()]);
-      const [{ data: t }, { data: tp }, { data: il }, { data: ilce }] = await Promise.all([
+      const ilKatId = await getIlKategoriId();
+      const [{ data: t }, { data: tp }] = await Promise.all([
         supabase.from("firma_turleri").select("id, name").order("name"),
         supabase.from("firma_tipleri").select("id, name, firma_turu_id").order("name"),
-        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
-        supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilceKatId).order("name"),
       ]);
+      let allIlRows: any[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilKatId).order("name").range(from, from + PAGE - 1);
+        if (!data || data.length === 0) break;
+        allIlRows = allIlRows.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
       setTurler(sortFirmaTurleri(t || []));
       setTipler((tp || []) as any);
-      setIller(il || []);
-      setIlceler((ilce || []) as any);
+      setIller(allIlRows.filter((r: any) => !r.parent_id));
+      setIlceler(allIlRows.filter((r: any) => r.parent_id));
     }
   }, [token, callApi]);
 
@@ -820,15 +836,15 @@ export default function AdminFirmalarV2() {
           <div style={s.card} className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             <FilterSelect label="Durum" value={filterDurum} onChange={setFilterDurum}
               options={[{ value: "all", label: "Tümü" }, { value: "onay_bekliyor", label: "Bekliyor" }, { value: "onaylandi", label: "Onaylı" }, { value: "onaysiz", label: "Reddedildi" }]} />
-            <FilterSelect label="Firma Türü" value={filterTuru} onChange={setFilterTuru}
+            <FilterSelect label="Firma Türü" value={filterTuru} onChange={setFilterTuru} searchable
               options={[{ value: "all", label: "Tümü" }, ...turler.map(t => ({ value: t.id, label: t.name }))]} />
-            <FilterSelect label="Firma Tipi" value={filterTipi} onChange={setFilterTipi}
+            <FilterSelect label="Firma Tipi" value={filterTipi} onChange={setFilterTipi} searchable
               options={[{ value: "all", label: "Tümü" }, ...tipler.filter(tp => filterTuru === "all" || tp.firma_turu_id === filterTuru).map(tp => ({ value: tp.id, label: tp.name }))]} />
-            <FilterSelect label="İl" value={filterIl} onChange={setFilterIl}
+            <FilterSelect label="İl" value={filterIl} onChange={setFilterIl} searchable
               options={[{ value: "all", label: "Tümü" }, ...iller.map(il => ({ value: il.id, label: il.name }))]} />
-            <FilterSelect label="İlçe" value={filterIlce} onChange={setFilterIlce}
-              options={[{ value: "all", label: "Tümü" }, ...(filterIl === "all" ? ilceler : ilceler.filter(ilce => ilce.parent_id === filterIl)).map(ilce => ({ value: ilce.id, label: ilce.name }))]} />
-            <FilterSelect label="Paket" value={filterPaket} onChange={setFilterPaket}
+            <FilterSelect label="İlçe" value={filterIlce} onChange={setFilterIlce} searchable disabled={filterIl === "all"}
+              options={[{ value: "all", label: "Tümü" }, ...(filterIl === "all" ? [] : ilceler.filter(ilce => ilce.parent_id === filterIl)).map(ilce => ({ value: ilce.id, label: ilce.name }))]} />
+            <FilterSelect label="Paket" value={filterPaket} onChange={setFilterPaket} searchable
               options={[{ value: "all", label: "Tümü" }, { value: "none", label: "Paket Yok" }, ...(stats?.paketDagilimi || []).map(p => ({ value: p.id, label: p.ad }))]} />
           </div>
         )}
@@ -1643,10 +1659,28 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
   );
 }
 
-function FilterSelect({ label, value, onChange, options }: {
+function FilterSelect({ label, value, onChange, options, searchable = false, disabled = false }: {
   label: string; value: string; onChange: (v: string) => void;
   options: { value: string; label: string }[];
+  searchable?: boolean;
+  disabled?: boolean;
 }) {
+  if (searchable) {
+    return (
+      <div className="space-y-1">
+        <Label className="text-xs" style={s.muted}>{label}</Label>
+        <SearchableSelect
+          value={value}
+          onValueChange={onChange}
+          options={options}
+          placeholder="Tümü"
+          searchPlaceholder="Ara..."
+          disabled={disabled}
+          triggerClassName="text-xs h-8"
+        />
+      </div>
+    );
+  }
   return (
     <div className="space-y-1">
       <Label className="text-xs" style={s.muted}>{label}</Label>
@@ -1667,7 +1701,3 @@ async function getIlKategoriId(): Promise<string> {
   return data?.id || "";
 }
 
-async function getIlceKategoriId(): Promise<string> {
-  const { data } = await supabase.from("firma_bilgi_kategorileri").select("id").eq("name", "İlçe").single();
-  return data?.id || "";
-}
