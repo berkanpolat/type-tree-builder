@@ -3920,6 +3920,7 @@ Deno.serve(async (req) => {
     if (action === "create-aksiyon") {
       const payload = verifyToken(body.token);
       const { firmaId, baslik, aciklama, tur, tarih, yetkiliId, sonuc, sonucNeden, sonucPaketId } = body;
+      console.log("[CREATE-AKSIYON] Started. sonuc:", sonuc, "sonucPaketId:", sonucPaketId, "periyot:", body.periyot, "odemeMail:", body.odemeMail);
       if (!firmaId || !baslik) return jsonResponse({ error: "Firma ve başlık zorunlu" }, 400);
       if (!sonuc) return jsonResponse({ error: "Aksiyon sonucu zorunlu" }, 400);
       
