@@ -148,16 +148,35 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       fetchYetkililer();
       fetchPaketler();
       fetchFirmaEmail();
-      const n = new Date();
-      setTur(turler[0]?.value || "diger");
-      setYetkiliId("none");
-      setTarih(n);
-      setSaat(format(n, "HH:mm"));
-      setNot("");
-      setSonuc("");
-      setSonucPaketId("");
-      setSonucNeden("");
-      setSonucNedenDiger("");
+      if (editData) {
+        // Pre-fill from edit data
+        setTur(editData.tur || turler[0]?.value || "diger");
+        setYetkiliId(editData.yetkili_id || "none");
+        const editDate = new Date(editData.tarih);
+        setTarih(editDate);
+        setSaat(format(editDate, "HH:mm"));
+        setNot(editData.aciklama || "");
+        setSonuc(editData.sonuc || "");
+        setSonucPaketId(editData.sonuc_paket_id || "");
+        setSonucNeden(editData.sonuc_neden || "");
+        setSonucNedenDiger("");
+        // Check if sonuc_neden is a custom "Diğer" value
+        if (editData.sonuc === "satis_kapanmadi" && editData.sonuc_neden && !SATIS_KAPANMADI_NEDENLERI.includes(editData.sonuc_neden)) {
+          setSonucNeden("Diğer");
+          setSonucNedenDiger(editData.sonuc_neden);
+        }
+      } else {
+        const n = new Date();
+        setTur(turler[0]?.value || "diger");
+        setYetkiliId("none");
+        setTarih(n);
+        setSaat(format(n, "HH:mm"));
+        setNot("");
+        setSonuc("");
+        setSonucPaketId("");
+        setSonucNeden("");
+        setSonucNedenDiger("");
+      }
       setProPeriod("aylik");
       setEmailSecim("default");
       setCustomEmail("");
