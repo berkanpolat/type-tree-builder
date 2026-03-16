@@ -92,6 +92,7 @@ export default function RaporSatisKanali() {
             sonucNeden: item.sonuc_neden,
             sonucPaketAd: item.sonuc_paket_ad || null,
             kaynak: "aksiyon",
+            periyot: item.periyot || null,
           });
         });
 
