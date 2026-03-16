@@ -28,7 +28,7 @@ import { format } from "date-fns";
 import { tr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
-import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
+import AksiyonEkleDialog, { type EditAksiyonData } from "@/components/admin/AksiyonEkleDialog";
 import FirmaAksiyonlarDialog from "@/components/admin/FirmaAksiyonlarDialog";
 import FirmaYetkililerDialog from "@/components/admin/FirmaYetkililerDialog";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
