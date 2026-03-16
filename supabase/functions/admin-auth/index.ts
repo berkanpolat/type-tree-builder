@@ -3920,6 +3920,7 @@ Deno.serve(async (req) => {
     if (action === "create-aksiyon") {
       const payload = verifyToken(body.token);
       const { firmaId, baslik, aciklama, tur, tarih, yetkiliId, sonuc, sonucNeden, sonucPaketId } = body;
+      console.log("[CREATE-AKSIYON] Started. sonuc:", sonuc, "sonucPaketId:", sonucPaketId, "periyot:", body.periyot, "odemeMail:", body.odemeMail);
       if (!firmaId || !baslik) return jsonResponse({ error: "Firma ve başlık zorunlu" }, 400);
       if (!sonuc) return jsonResponse({ error: "Aksiyon sonucu zorunlu" }, 400);
       
@@ -4060,6 +4061,7 @@ Deno.serve(async (req) => {
         } else if (paket?.slug === "pro") {
           // Create PayTR payment link and send via email
           const { periyot, odemeMail } = body;
+          console.log("[AKSIYON-PRO] PRO paket detected. periyot:", periyot, "odemeMail:", odemeMail, "body keys:", Object.keys(body));
           if (periyot && odemeMail) {
             try {
               // Get exchange rate
@@ -4236,6 +4238,8 @@ Deno.serve(async (req) => {
               console.error("[AKSIYON-PAYTR] Error:", payErr?.message || payErr);
               // Don't fail the aksiyon creation
             }
+          } else {
+            console.error("[AKSIYON-PRO] Missing periyot or odemeMail, cannot create PayTR link. periyot:", periyot, "odemeMail:", odemeMail);
           }
         }
       }
