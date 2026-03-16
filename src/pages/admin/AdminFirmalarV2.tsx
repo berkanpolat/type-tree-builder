@@ -208,6 +208,13 @@ export default function AdminFirmalarV2() {
   const [expandedLoading, setExpandedLoading] = useState(false);
   const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
 
+  // Portföy Ata dialog
+  const [portfolyoAtaOpen, setPortfolyoAtaOpen] = useState(false);
+  const [portfolyoAtaFirma, setPortfolyoAtaFirma] = useState<FirmaItem | null>(null);
+  const [portfolyoAtaAdminId, setPortfolyoAtaAdminId] = useState<string>("");
+  const [portfolyoAtaLoading, setPortfolyoAtaLoading] = useState(false);
+  const [adminUsersList, setAdminUsersList] = useState<{ id: string; ad: string; soyad: string; departman: string; pozisyon: string }[]>([]);
+
   const callApi = useAdminApi();
 
   const fetchData = useCallback(async () => {
@@ -490,6 +497,35 @@ export default function AdminFirmalarV2() {
       toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
     }
   };
+
+  const openPortfolyoAta = async (firma: FirmaItem) => {
+    setPortfolyoAtaFirma(firma);
+    setPortfolyoAtaAdminId("");
+    setPortfolyoAtaOpen(true);
+    if (adminUsersList.length === 0) {
+      try {
+        const data = await callApi("list-admin-users", { token });
+        setAdminUsersList(data.users || []);
+      } catch { /* ignore */ }
+    }
+  };
+
+  const handleAssignPortfolyo = async () => {
+    if (!portfolyoAtaFirma || !portfolyoAtaAdminId) return;
+    setPortfolyoAtaLoading(true);
+    try {
+      await callApi("assign-portfolyo", { token, firmaId: portfolyoAtaFirma.id, targetAdminId: portfolyoAtaAdminId });
+      const selectedAdmin = adminUsersList.find(a => a.id === portfolyoAtaAdminId);
+      toast({ title: "Başarılı", description: `${portfolyoAtaFirma.firma_unvani} → ${selectedAdmin?.ad || ""} ${selectedAdmin?.soyad || ""} portföyüne atandı` });
+      setPortfolyoAtaOpen(false);
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setPortfolyoAtaLoading(false);
+    }
+  };
+
   const toggleExpandFirma = async (firmaId: string) => {
     if (expandedFirmaId === firmaId) {
       setExpandedFirmaId(null);
@@ -1007,6 +1043,11 @@ export default function AdminFirmalarV2() {
                                 <Briefcase className="w-3.5 h-3.5 mr-2" /> {firma.portfolyo.admin_ad} {firma.portfolyo.admin_soyad} portföyünde
                               </DropdownMenuItem>
                             )}
+                            {(adminUser?.departman === "Yönetim Kurulu" || adminUser?.is_primary) && (
+                              <DropdownMenuItem onClick={() => openPortfolyoAta(firma)} className="text-xs cursor-pointer">
+                                <Users className="w-3.5 h-3.5 mr-2 text-blue-500" /> Portföy Ata
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem
                               onClick={() => handleSendPasswordReset(firma)}
                               className="text-xs cursor-pointer"
@@ -1507,6 +1548,48 @@ export default function AdminFirmalarV2() {
       </AlertDialog>
 
       <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
+
+      {/* Portföy Ata Dialog */}
+      <Dialog open={portfolyoAtaOpen} onOpenChange={setPortfolyoAtaOpen}>
+        <DialogContent style={s.card} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle style={s.text}>Portföy Ata</DialogTitle>
+            <DialogDescription style={s.muted}>
+              <span className="font-medium" style={s.text}>{portfolyoAtaFirma?.firma_unvani}</span> firmasını bir personele atayın.
+              {portfolyoAtaFirma?.portfolyo && (
+                <span className="block mt-1 text-xs" style={{ color: "#eab308" }}>
+                  Şu an {portfolyoAtaFirma.portfolyo.admin_ad} {portfolyoAtaFirma.portfolyo.admin_soyad} portföyünde — yeniden atanacak.
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <Label style={s.text}>Personel Seçin</Label>
+            <Select value={portfolyoAtaAdminId} onValueChange={setPortfolyoAtaAdminId}>
+              <SelectTrigger style={s.input}>
+                <SelectValue placeholder="Personel seçin" />
+              </SelectTrigger>
+              <SelectContent style={s.card}>
+                {adminUsersList.map(u => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.ad} {u.soyad} — {u.pozisyon}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setPortfolyoAtaOpen(false)} style={s.input}>İptal</Button>
+            <Button
+              onClick={handleAssignPortfolyo}
+              disabled={!portfolyoAtaAdminId || portfolyoAtaLoading}
+            >
+              {portfolyoAtaLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Ata
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
