@@ -7,7 +7,7 @@ import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { supabase } from "@/integrations/supabase/client";
-import { ClipboardList, CheckCircle, XCircle, BarChart3 } from "lucide-react";
+import { ClipboardList, CheckCircle, XCircle, BarChart3, ArrowLeft } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { AKSIYON_TURLERI, TUR_CONFIG } from "@/lib/aksiyon-config";
 

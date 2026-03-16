@@ -7,7 +7,7 @@ import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { supabase } from "@/integrations/supabase/client";
-import { UserCheck, ClipboardList, MapPin, TrendingUp, Package } from "lucide-react";
+import { UserCheck, ClipboardList, MapPin, TrendingUp, Package, ArrowLeft } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
 const SUCCESS_RESULTS = new Set(["satis_kapatildi", "satis_kapandi"]);

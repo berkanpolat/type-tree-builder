@@ -7,7 +7,7 @@ import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { supabase } from "@/integrations/supabase/client";
-import { TrendingUp, DollarSign, Users, BarChart3, Package } from "lucide-react";
+import { TrendingUp, DollarSign, Users, BarChart3, Package, ArrowLeft } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
 

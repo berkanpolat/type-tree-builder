@@ -6,7 +6,7 @@ import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDa
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
-import { Target, TrendingUp, DollarSign, Award } from "lucide-react";
+import { Target, TrendingUp, DollarSign, Award, ArrowLeft } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Progress } from "@/components/ui/progress";
 
