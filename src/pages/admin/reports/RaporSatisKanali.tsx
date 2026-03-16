@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { startOfMonth } from "date-fns";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
@@ -25,11 +25,7 @@ export default function RaporSatisKanali() {
   const [data, setData] = useState<SalesRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, [dateRange]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
 
     const [aksiyonRes, logRes, adminRes] = await Promise.all([
@@ -79,7 +75,27 @@ export default function RaporSatisKanali() {
     records.sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
     setData(records);
     setLoading(false);
-  };
+  }, [dateRange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("rapor-satis-kanali-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_aksiyonlar" }, () => {
+        fetchData();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_activity_log" }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
 
   const channelMap = new Map<string, number>();
   data.forEach((item) => {
