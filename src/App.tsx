@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { useVisitorSource } from "@/hooks/use-visitor-source";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -75,6 +76,7 @@ const AdminZiyaretPlanlari = lazy(() => import("./pages/admin/AdminZiyaretPlanla
 const AdminHedefler = lazy(() => import("./pages/admin/AdminHedefler"));
 const AdminCanliHarita = lazy(() => import("./pages/admin/AdminCanliHarita"));
 const AdminYetkilendirme = lazy(() => import("./pages/admin/AdminYetkilendirme"));
+const AdminKaynakRaporu = lazy(() => import("./pages/admin/AdminKaynakRaporu"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -99,12 +101,15 @@ const PageLoader = () => (
   </div>
 );
 
+const VisitorTracker = () => { useVisitorSource(); return null; };
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <VisitorTracker />
         <RouteStateManager />
         <RoutePreloader />
         <AuthRedirectHandler />
@@ -174,6 +179,7 @@ const App = () => (
             <Route path="/yonetim/hedefler" element={<AdminRoute><AdminHedefler /></AdminRoute>} />
             <Route path="/yonetim/canli-harita" element={<AdminRoute><AdminCanliHarita /></AdminRoute>} />
             <Route path="/yonetim/yetkilendirme" element={<AdminRoute><AdminYetkilendirme /></AdminRoute>} />
+            <Route path="/yonetim/kaynak-raporu" element={<AdminRoute><AdminKaynakRaporu /></AdminRoute>} />
 
             {/* Catch-all: try firma slug at root level */}
             <Route path="/:slug" element={<FirmaDetay />} />
