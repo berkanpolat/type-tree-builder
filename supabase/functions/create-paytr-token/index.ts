@@ -150,7 +150,10 @@ serve(async (req) => {
     const currency = "TL";
 
     const origin = req.headers.get("origin") || "";
-    const isPreview = origin.includes("lovable.app") || origin.includes("localhost");
+    const referer = req.headers.get("referer") || "";
+    const isPreview = origin.includes("lovable.app") || origin.includes("localhost") || referer.includes("lovable.app");
+
+    console.log("[CREATE-PAYTR-TOKEN] Origin detection:", { origin, referer, isPreview });
 
     // Preview/localhost = test mode, tekstilas.com = live mode
     const testMode = isPreview ? "1" : "0";
