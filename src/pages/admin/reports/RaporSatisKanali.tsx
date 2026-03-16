@@ -6,13 +6,18 @@ import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDa
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
-import { supabase } from "@/integrations/supabase/client";
-import { TrendingUp, DollarSign, Users, BarChart3, Package, ArrowLeft, XCircle, CheckCircle } from "lucide-react";
+import { TrendingUp, Users, BarChart3, ArrowLeft, XCircle, CheckCircle, RefreshCw } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
 
 const COLORS = ["#1a2e5a", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
 const SUCCESS_RESULTS = new Set(["satis_kapatildi", "satis_kapandi"]);
+
+const PERIYOT_LABELS: Record<string, string> = {
+  yillik: "Yıllık",
+  aylik: "Aylık",
+  sinursiz: "Sınırsız",
+};
 
 interface AksiyonRecord {
   id: string;
@@ -69,7 +74,6 @@ export default function RaporSatisKanali() {
 
       const records: AksiyonRecord[] = [];
 
-      // Include ALL aksiyonlar with a sonuc (not just successful ones)
       allAksiyonlar
         .filter((item: any) => {
           const t = new Date(item.tarih);
@@ -91,7 +95,6 @@ export default function RaporSatisKanali() {
           });
         });
 
-      // Fetch activity log for paket assignments with periyot info
       try {
         const logData = await callApi("list-activity-log", {
           token,
@@ -132,20 +135,6 @@ export default function RaporSatisKanali() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  useEffect(() => {
-    const interval = setInterval(fetchData, 15000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("rapor-satis-kanali-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "admin_aksiyonlar" }, () => fetchData())
-      .on("postgres_changes", { event: "*", schema: "public", table: "admin_activity_log" }, () => fetchData())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [fetchData]);
-
   // Departman list
   const departmanlar = useMemo(() => {
     const set = new Set(adminUsers.map((u: any) => u.departman || "Bilinmeyen"));
@@ -176,23 +165,17 @@ export default function RaporSatisKanali() {
   const successData = filteredData.filter((item) => SUCCESS_RESULTS.has(item.sonuc || "") || item.kaynak === "paket_atama");
   const failData = filteredData.filter((item) => item.sonuc === "satis_kapanmadi");
 
-  // ── Paket dağılımı (Ücretsiz vs PRO)
-  const paketDistMap = new Map<string, number>();
+  // ── Paket + Periyot birleşik dağılım
+  const paketPeriyotMap = new Map<string, number>();
   successData.forEach((item) => {
-    const label = item.sonucPaketAd || "Bilinmeyen";
-    paketDistMap.set(label, (paketDistMap.get(label) || 0) + 1);
+    const paket = item.sonucPaketAd || "Bilinmeyen";
+    const periyot = item.periyot ? (PERIYOT_LABELS[item.periyot] || item.periyot) : null;
+    const label = periyot ? `${paket} (${periyot})` : paket;
+    paketPeriyotMap.set(label, (paketPeriyotMap.get(label) || 0) + 1);
   });
-  const paketDistData = Array.from(paketDistMap.entries()).map(([name, value]) => ({ name, value }));
-
-  // ── Periyot dağılımı (Aylık vs Yıllık) - from activity log
-  const periyotMap = new Map<string, number>();
-  successData.forEach((item) => {
-    if (item.periyot) {
-      const label = item.periyot === "yillik" ? "Yıllık" : item.periyot === "aylik" ? "Aylık" : item.periyot === "sinursiz" ? "Sınırsız" : item.periyot;
-      periyotMap.set(label, (periyotMap.get(label) || 0) + 1);
-    }
-  });
-  const periyotData = Array.from(periyotMap.entries()).map(([name, value]) => ({ name, value }));
+  const paketPeriyotData = Array.from(paketPeriyotMap.entries())
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value);
 
   // ── Kapanmama nedenleri
   const nedenMap = new Map<string, number>();
@@ -215,9 +198,20 @@ export default function RaporSatisKanali() {
   return (
     <AdminLayout title="Satış Kanalı Raporları">
       <div className="space-y-4">
-        <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
-          <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
-        </button>
+        <div className="flex items-center justify-between">
+          <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
+            <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
+          </button>
+          <button
+            onClick={fetchData}
+            disabled={loading}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all hover:opacity-80 disabled:opacity-50"
+            style={{ background: "hsl(var(--admin-card))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+            Yenile
+          </button>
+        </div>
 
         <ReportDateFilter value={dateRange} onChange={setDateRange} />
 
@@ -259,18 +253,19 @@ export default function RaporSatisKanali() {
           <ReportKPICard title="Toplam Aksiyon" value={filteredData.length} icon={BarChart3} color="from-violet-500 to-purple-500" />
         </div>
 
-        {/* Charts Row 1: Paket Dağılımı + Periyot */}
+        {/* Charts Row 1: Paket+Periyot Dağılımı + Kapanmama Nedenleri */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          {/* Paket + Periyot Dağılımı */}
           <div className="rounded-xl border p-3" style={s.card}>
-            <h3 className="text-xs font-semibold mb-2" style={s.text}>Kapanan Satışlar — Paket Dağılımı</h3>
-            {paketDistData.length === 0 ? (
+            <h3 className="text-xs font-semibold mb-2" style={s.text}>Kapanan Satışlar — Paket & Periyot Dağılımı</h3>
+            {paketPeriyotData.length === 0 ? (
               <p className="text-xs py-6 text-center" style={s.muted}>Veri yok</p>
             ) : (
               <>
                 <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
-                    <Pie data={paketDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} innerRadius={35} label={{ fontSize: 10 }}>
-                      {paketDistData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    <Pie data={paketPeriyotData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} innerRadius={35} label={{ fontSize: 9 }}>
+                      {paketPeriyotData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                     </Pie>
                     <Tooltip contentStyle={{ fontSize: 11 }} />
                     <Legend wrapperStyle={{ fontSize: 10 }} />
@@ -280,13 +275,13 @@ export default function RaporSatisKanali() {
                   <table className="w-full text-xs">
                     <thead>
                       <tr style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
-                        <th className="text-left py-1.5 px-2 font-medium" style={s.muted}>Paket</th>
+                        <th className="text-left py-1.5 px-2 font-medium" style={s.muted}>Paket (Periyot)</th>
                         <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Adet</th>
                         <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Oran</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {paketDistData.map((item, i) => (
+                      {paketPeriyotData.map((item, i) => (
                         <tr key={item.name} style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
                           <td className="py-1.5 px-2 flex items-center gap-1.5" style={s.text}>
                             <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
@@ -308,40 +303,22 @@ export default function RaporSatisKanali() {
             )}
           </div>
 
+          {/* Kapanmama Nedenleri */}
           <div className="rounded-xl border p-3" style={s.card}>
-            <h3 className="text-xs font-semibold mb-2" style={s.text}>Paket Periyot Dağılımı (Aylık / Yıllık)</h3>
-            {periyotData.length === 0 ? (
-              <p className="text-xs py-6 text-center" style={s.muted}>Periyot verisi bulunamadı</p>
+            <h3 className="text-xs font-semibold mb-2" style={s.text}>Satış Kapanmama Nedenleri</h3>
+            {nedenData.length === 0 ? (
+              <p className="text-xs py-6 text-center" style={s.muted}>Kapanmayan satış verisi yok</p>
             ) : (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={periyotData} barSize={28} margin={{ top: 5, right: 10, bottom: 0, left: 0 }}>
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+              <ResponsiveContainer width="100%" height={Math.min(280, Math.max(120, nedenData.length * 36))}>
+                <BarChart data={nedenData} layout="vertical" barSize={16} margin={{ top: 0, right: 10, bottom: 0, left: 0 }}>
+                  <XAxis type="number" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
+                  <YAxis dataKey="name" type="category" tick={{ fontSize: 9 }} width={130} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="value" name="Adet" fill="#1a2e5a" radius={[6, 6, 0, 0]}>
-                    {periyotData.map((_, i) => <Cell key={i} fill={i === 0 ? "#f59e0b" : "#1a2e5a"} />)}
-                  </Bar>
+                  <Bar dataKey="value" name="Adet" fill="#ef4444" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
           </div>
-        </div>
-
-        {/* Chart Row 2: Kapanmama Nedenleri */}
-        <div className="rounded-xl border p-3" style={s.card}>
-          <h3 className="text-xs font-semibold mb-2" style={s.text}>Satış Kapanmama Nedenleri</h3>
-          {nedenData.length === 0 ? (
-            <p className="text-xs py-6 text-center" style={s.muted}>Kapanmayan satış verisi yok</p>
-          ) : (
-            <ResponsiveContainer width="100%" height={Math.min(200, Math.max(120, nedenData.length * 32))}>
-              <BarChart data={nedenData} layout="vertical" barSize={14} margin={{ top: 0, right: 10, bottom: 0, left: 0 }}>
-                <XAxis type="number" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 9 }} width={120} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={{ fontSize: 11 }} />
-                <Bar dataKey="value" name="Adet" fill="#ef4444" radius={[0, 6, 6, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
         </div>
 
         {/* Detail Table */}
@@ -358,14 +335,15 @@ export default function RaporSatisKanali() {
                   <th className="text-left p-2.5 font-medium" style={s.muted}>Tür</th>
                   <th className="text-left p-2.5 font-medium" style={s.muted}>Sonuç</th>
                   <th className="text-left p-2.5 font-medium" style={s.muted}>Paket</th>
+                  <th className="text-left p-2.5 font-medium" style={s.muted}>Periyot</th>
                   <th className="text-left p-2.5 font-medium" style={s.muted}>Neden</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={6} className="p-8 text-center" style={s.muted}>Yükleniyor...</td></tr>
+                  <tr><td colSpan={7} className="p-8 text-center" style={s.muted}>Yükleniyor...</td></tr>
                 ) : filteredData.length === 0 ? (
-                  <tr><td colSpan={6} className="p-8 text-center" style={s.muted}>Veri bulunamadı</td></tr>
+                  <tr><td colSpan={7} className="p-8 text-center" style={s.muted}>Veri bulunamadı</td></tr>
                 ) : (
                   filteredData.slice(0, 100).map((item) => {
                     const isSuccess = SUCCESS_RESULTS.has(item.sonuc || "") || item.kaynak === "paket_atama";
@@ -381,6 +359,7 @@ export default function RaporSatisKanali() {
                           </span>
                         </td>
                         <td className="p-2.5" style={s.text}>{item.sonucPaketAd || "—"}</td>
+                        <td className="p-2.5" style={s.text}>{item.periyot ? (PERIYOT_LABELS[item.periyot] || item.periyot) : "—"}</td>
                         <td className="p-2.5" style={s.text}>{item.sonucNeden ? (NEDEN_LABELS[item.sonucNeden] || item.sonucNeden) : "—"}</td>
                       </tr>
                     );
