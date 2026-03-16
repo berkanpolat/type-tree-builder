@@ -266,15 +266,45 @@ export default function RaporSatisKanali() {
             {paketDistData.length === 0 ? (
               <p className="text-xs py-6 text-center" style={s.muted}>Veri yok</p>
             ) : (
-              <ResponsiveContainer width="100%" height={180}>
-                <PieChart>
-                  <Pie data={paketDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} innerRadius={35} label={{ fontSize: 10 }}>
-                    {paketDistData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ fontSize: 11 }} />
-                  <Legend wrapperStyle={{ fontSize: 10 }} />
-                </PieChart>
-              </ResponsiveContainer>
+              <>
+                <ResponsiveContainer width="100%" height={180}>
+                  <PieChart>
+                    <Pie data={paketDistData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={65} innerRadius={35} label={{ fontSize: 10 }}>
+                      {paketDistData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip contentStyle={{ fontSize: 11 }} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="mt-3 border-t pt-2" style={{ borderColor: "hsl(var(--admin-border))" }}>
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
+                        <th className="text-left py-1.5 px-2 font-medium" style={s.muted}>Paket</th>
+                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Adet</th>
+                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Oran</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {paketDistData.map((item, i) => (
+                        <tr key={item.name} style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
+                          <td className="py-1.5 px-2 flex items-center gap-1.5" style={s.text}>
+                            <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
+                            {item.name}
+                          </td>
+                          <td className="py-1.5 px-2 text-right font-semibold" style={s.text}>{item.value}</td>
+                          <td className="py-1.5 px-2 text-right" style={s.muted}>{totalSales > 0 ? ((item.value / totalSales) * 100).toFixed(1) : 0}%</td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td className="py-1.5 px-2 font-semibold" style={s.text}>Toplam</td>
+                        <td className="py-1.5 px-2 text-right font-bold" style={s.text}>{totalSales}</td>
+                        <td className="py-1.5 px-2 text-right font-semibold" style={s.muted}>100%</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
 
