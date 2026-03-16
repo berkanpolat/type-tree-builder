@@ -537,7 +537,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
             disabled={loading || !isFormValid()}
             className="w-full bg-amber-500 hover:bg-amber-600 text-white h-9 text-sm"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isProPaket && sonuc === "satis_kapatildi" ? "Aksiyon Ekle & Ödeme Linki Gönder" : "Aksiyon Ekle"}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : isEditMode ? "Güncelle" : isProPaket && sonuc === "satis_kapatildi" ? "Aksiyon Ekle & Ödeme Linki Gönder" : "Aksiyon Ekle"}
           </Button>
         </div>
       </DialogContent>
