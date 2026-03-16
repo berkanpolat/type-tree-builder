@@ -150,10 +150,11 @@ serve(async (req) => {
     const currency = "TL";
 
     const origin = req.headers.get("origin") || "";
+    const isPreview = origin.includes("lovable.app") || origin.includes("localhost");
 
-    // Live varsayılan: 0 (isteğe bağlı PAYTR_TEST_MODE secret ile override edilebilir)
-    const testMode = Deno.env.get("PAYTR_TEST_MODE") === "1" ? "1" : "0";
-    const debugOn = Deno.env.get("PAYTR_DEBUG_ON") === "1" ? "1" : "0";
+    // Preview/localhost = test mode, tekstilas.com = live mode
+    const testMode = isPreview ? "1" : "0";
+    const debugOn = isPreview ? "1" : "0";
     const lang = "tr";
 
     // merchant_ok_url ve merchant_fail_url kullanıcının yönlendirileceği sayfalardır
