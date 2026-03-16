@@ -258,10 +258,27 @@ export default function AdminYetkilendirme() {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
-  const selectUser = (u: AdminUser) => {
+  const trySelectUser = (u: AdminUser) => {
+    if (dirty && u.id !== selectedUserId) {
+      setPendingUserId(u.id);
+      setShowUnsavedDialog(true);
+      return;
+    }
+    doSelectUser(u.id);
+  };
+
+  const doSelectUser = (userId: string) => {
+    const u = users.find(x => x.id === userId);
+    if (!u) return;
     setSelectedUserId(u.id);
     setPerms({ ...DEFAULT_PERMS, ...u.permissions });
     setDirty(false);
+    setPendingUserId(null);
+  };
+
+  const handleDiscardAndSwitch = () => {
+    setShowUnsavedDialog(false);
+    if (pendingUserId) doSelectUser(pendingUserId);
   };
 
   const selectedUser = users.find(u => u.id === selectedUserId) || null;
