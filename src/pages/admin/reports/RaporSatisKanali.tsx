@@ -283,7 +283,6 @@ export default function RaporSatisKanali() {
                         <th className="text-left py-1.5 px-2 font-medium" style={s.muted}>Paket</th>
                         <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Aylık</th>
                         <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Yıllık</th>
-                        <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Sınırsız</th>
                         <th className="text-right py-1.5 px-2 font-medium" style={s.muted}>Toplam</th>
                       </tr>
                     </thead>
@@ -296,7 +295,6 @@ export default function RaporSatisKanali() {
                           </td>
                           <td className="py-1.5 px-2 text-right" style={s.text}>{item.aylik || "—"}</td>
                           <td className="py-1.5 px-2 text-right" style={s.text}>{item.yillik || "—"}</td>
-                          <td className="py-1.5 px-2 text-right" style={s.text}>{item.sinursiz || "—"}</td>
                           <td className="py-1.5 px-2 text-right font-bold" style={s.text}>{item.toplam}</td>
                         </tr>
                       ))}
@@ -304,7 +302,6 @@ export default function RaporSatisKanali() {
                         <td className="py-1.5 px-2 font-semibold" style={s.text}>Toplam</td>
                         <td className="py-1.5 px-2 text-right font-semibold" style={s.text}>{paketDetailData.reduce((acc, d) => acc + d.aylik, 0) || "—"}</td>
                         <td className="py-1.5 px-2 text-right font-semibold" style={s.text}>{paketDetailData.reduce((acc, d) => acc + d.yillik, 0) || "—"}</td>
-                        <td className="py-1.5 px-2 text-right font-semibold" style={s.text}>{paketDetailData.reduce((acc, d) => acc + d.sinursiz, 0) || "—"}</td>
                         <td className="py-1.5 px-2 text-right font-bold" style={s.text}>{totalSales}</td>
                       </tr>
                     </tbody>
