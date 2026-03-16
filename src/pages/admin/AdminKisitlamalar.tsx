@@ -773,7 +773,7 @@ function YasakTable({ data, search, onDelete }: {
                 {format(new Date(y.created_at), "dd MMM yyyy", { locale: tr })}
               </div>
             </TableCell>
-            <TableCell>
+            <TableCell className="sticky-action-col">
               <Button variant="ghost" size="icon" onClick={() => onDelete(y)} className="h-8 w-8 hover:bg-red-500/10">
                 <Trash2 className="w-4 h-4 text-red-500" />
               </Button>
