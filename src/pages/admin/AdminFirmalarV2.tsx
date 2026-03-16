@@ -847,7 +847,7 @@ export default function AdminFirmalarV2() {
           <div className="flex items-center justify-center p-12">
             <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
           </div>
-        ) : sorted.length === 0 ? (
+        ) : firmalar.length === 0 ? (
           <div className="text-center py-12" style={s.muted}>Firma bulunamadı.</div>
         ) : (
           <div style={s.card} className="overflow-hidden">
