@@ -497,6 +497,35 @@ export default function AdminFirmalarV2() {
       toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
     }
   };
+
+  const openPortfolyoAta = async (firma: FirmaItem) => {
+    setPortfolyoAtaFirma(firma);
+    setPortfolyoAtaAdminId("");
+    setPortfolyoAtaOpen(true);
+    if (adminUsersList.length === 0) {
+      try {
+        const data = await callApi("list-admin-users", { token });
+        setAdminUsersList(data.users || []);
+      } catch { /* ignore */ }
+    }
+  };
+
+  const handleAssignPortfolyo = async () => {
+    if (!portfolyoAtaFirma || !portfolyoAtaAdminId) return;
+    setPortfolyoAtaLoading(true);
+    try {
+      await callApi("assign-portfolyo", { token, firmaId: portfolyoAtaFirma.id, targetAdminId: portfolyoAtaAdminId });
+      const selectedAdmin = adminUsersList.find(a => a.id === portfolyoAtaAdminId);
+      toast({ title: "Başarılı", description: `${portfolyoAtaFirma.firma_unvani} → ${selectedAdmin?.ad || ""} ${selectedAdmin?.soyad || ""} portföyüne atandı` });
+      setPortfolyoAtaOpen(false);
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setPortfolyoAtaLoading(false);
+    }
+  };
+
   const toggleExpandFirma = async (firmaId: string) => {
     if (expandedFirmaId === firmaId) {
       setExpandedFirmaId(null);
