@@ -4096,8 +4096,9 @@ Deno.serve(async (req) => {
               const userAddress = firmaData.firma_unvani || "Türkiye";
               const userIp = "127.0.0.1";
 
-              const periyotLabel = periyot === "yillik" ? "Yillik" : "Aylik";
-              const basketLabel = `PRO Paket (${periyotLabel}) $${usdPrice} x ${usdTryRate.toFixed(2)} + %20 KDV`;
+              const periyotLabelAscii = periyot === "yillik" ? "Yillik" : "Aylik";
+              const periyotLabel = periyot === "yillik" ? "Yıllık" : "Aylık";
+              const basketLabel = `PRO Paket (${periyotLabelAscii}) $${usdPrice} x ${usdTryRate.toFixed(2)} + %20 KDV`;
               const basketPrice = (paymentAmountKurus / 100).toFixed(2);
               const userBasket = btoa(JSON.stringify([[basketLabel, basketPrice, 1]]));
 
