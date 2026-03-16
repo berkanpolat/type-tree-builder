@@ -426,10 +426,22 @@ export default function AdminPortfoy() {
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
-                            <DropdownMenuItem onClick={() => handleRemovePortfolyo(firma)} className="text-xs cursor-pointer text-red-500 focus:text-red-500">
-                              <Briefcase className="w-3.5 h-3.5 mr-2" /> Portföyden Çıkar
-                            </DropdownMenuItem>
+                            {(!firma.portfolyo?.atanmis || adminUser?.departman === "Yönetim Kurulu" || adminUser?.is_primary) && (
+                              <>
+                                <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
+                                <DropdownMenuItem onClick={() => handleRemovePortfolyo(firma)} className="text-xs cursor-pointer text-red-500 focus:text-red-500">
+                                  <Briefcase className="w-3.5 h-3.5 mr-2" /> Portföyden Çıkar
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {firma.portfolyo?.atanmis && adminUser?.departman !== "Yönetim Kurulu" && !adminUser?.is_primary && (
+                              <>
+                                <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
+                                <DropdownMenuItem disabled className="text-xs opacity-50">
+                                  <Briefcase className="w-3.5 h-3.5 mr-2" /> Yönetim tarafından atandı
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
