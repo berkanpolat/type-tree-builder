@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Building2, Search, ExternalLink, Gavel, Package, CreditCard, Wifi,
   ArrowUpDown, ArrowUp, ArrowDown, Eye, Loader2, ShieldCheck,
-  MoreHorizontal, Briefcase, ClipboardList, Plus, Users, ChevronUp, ChevronDown, MapPin, CalendarIcon,
+  MoreHorizontal, Briefcase, ClipboardList, Plus, Users, ChevronUp, ChevronDown, MapPin, CalendarIcon, Send,
 } from "lucide-react";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -123,7 +123,11 @@ export default function AdminPortfoy() {
   const [ziyaretTarih, setZiyaretTarih] = useState<Date | undefined>(undefined);
   const [ziyaretNotlar, setZiyaretNotlar] = useState("");
   const [ziyaretSaving, setZiyaretSaving] = useState(false);
-
+  const [sevkDialogOpen, setSevkDialogOpen] = useState(false);
+  const [sevkAdminList, setSevkAdminList] = useState<{ id: string; ad: string; soyad: string; departman: string; pozisyon: string }[]>([]);
+  const [sevkTargetId, setSevkTargetId] = useState("");
+  const [sevkSaving, setSevkSaving] = useState(false);
+  const [sevkSelectedFirma, setSevkSelectedFirma] = useState<FirmaItem | null>(null);
   // Expandable row - aksiyon geçmişi
   const [expandedFirmaId, setExpandedFirmaId] = useState<string | null>(null);
   const [expandedAksiyonlar, setExpandedAksiyonlar] = useState<any[]>([]);
@@ -204,6 +208,35 @@ export default function AdminPortfoy() {
       }
     } catch (err: any) {
       toast({ title: "Hata", description: err?.message || "Giriş yapılamadı", variant: "destructive" });
+    }
+  };
+
+  const openSevkDialog = async (firma: FirmaItem) => {
+    setSevkSelectedFirma(firma);
+    setSevkTargetId("");
+    setSevkDialogOpen(true);
+    try {
+      const data = await callApi("list-admin-users", { token });
+      const others = (data.users || []).filter((u: any) => u.id !== adminUser?.id);
+      setSevkAdminList(others);
+    } catch {
+      setSevkAdminList([]);
+    }
+  };
+
+  const handleSevk = async () => {
+    if (!sevkSelectedFirma || !sevkTargetId) return;
+    setSevkSaving(true);
+    try {
+      await callApi("transfer-portfolyo", { token, firmaIds: [sevkSelectedFirma.id], targetAdminId: sevkTargetId });
+      const target = sevkAdminList.find(a => a.id === sevkTargetId);
+      toast({ title: "Başarılı", description: `${sevkSelectedFirma.firma_unvani} → ${target?.ad} ${target?.soyad} sevk edildi` });
+      setSevkDialogOpen(false);
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "Sevk başarısız", variant: "destructive" });
+    } finally {
+      setSevkSaving(false);
     }
   };
 
@@ -422,6 +455,9 @@ export default function AdminPortfoy() {
                             <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setZiyaretTarih(undefined); setZiyaretNotlar(""); setZiyaretDialogOpen(true); }} className="text-xs cursor-pointer">
                               <MapPin className="w-3.5 h-3.5 mr-2" /> Ziyaret Planıma Ekle
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openSevkDialog(firma)} className="text-xs cursor-pointer">
+                              <Send className="w-3.5 h-3.5 mr-2" /> Portföyü Sevk Et
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
@@ -600,6 +636,40 @@ export default function AdminPortfoy() {
               <Button variant="outline" size="sm" onClick={() => setZiyaretDialogOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
               <Button size="sm" onClick={handleAddZiyaret} disabled={!ziyaretTarih || ziyaretSaving} className="bg-amber-500 hover:bg-amber-600 text-white">
                 {ziyaretSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ekle"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Sevk Dialog */}
+        <Dialog open={sevkDialogOpen} onOpenChange={setSevkDialogOpen}>
+          <DialogContent style={s.card} className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle style={s.text}>Portföyü Sevk Et</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-xs" style={s.muted}>{sevkSelectedFirma?.firma_unvani}</p>
+              <div>
+                <label className="text-xs font-medium mb-1 block" style={s.text}>Hedef Personel *</label>
+                <select
+                  value={sevkTargetId}
+                  onChange={e => setSevkTargetId(e.target.value)}
+                  className="w-full h-10 rounded-md border px-3 text-sm"
+                  style={{ ...s.input, background: "hsl(var(--admin-input-bg))" }}
+                >
+                  <option value="">Personel seçin</option>
+                  {sevkAdminList.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.ad} {a.soyad} — {a.departman} / {a.pozisyon}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setSevkDialogOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
+              <Button size="sm" onClick={handleSevk} disabled={!sevkTargetId || sevkSaving} className="bg-amber-500 hover:bg-amber-600 text-white">
+                {sevkSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sevk Et"}
               </Button>
             </DialogFooter>
           </DialogContent>
