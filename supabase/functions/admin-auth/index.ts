@@ -4105,10 +4105,12 @@ Deno.serve(async (req) => {
               const noInstallment = "1";
               const maxInstallment = "0";
               const currency = "TL";
-              const testMode = Deno.env.get("PAYTR_TEST_MODE") === "1" ? "1" : "0";
-              const debugOn = Deno.env.get("PAYTR_DEBUG_ON") === "1" ? "1" : "0";
+              const clientOrigin = (body.clientOrigin as string) || "";
+              const isPreview = clientOrigin.includes("lovable.app") || clientOrigin.includes("localhost");
+              const testMode = isPreview ? "1" : "0";
+              const debugOn = isPreview ? "1" : "0";
 
-              const siteUrl = Deno.env.get("PAYTR_SITE_URL") || "https://tekstilas.com";
+              const siteUrl = isPreview ? clientOrigin : "https://tekstilas.com";
               const merchantOkUrl = `${siteUrl}/paketim?odeme=basarili`;
               const merchantFailUrl = `${siteUrl}/paketim?odeme=basarisiz`;
 
