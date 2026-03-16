@@ -356,6 +356,20 @@ export default function AdminYetkilendirme() {
   const sMuted: CSSProperties = { color: "hsl(var(--admin-muted))" };
   const sInput: CSSProperties = { background: "hsl(var(--admin-input-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" };
 
+  const filterItems = (items: PermissionItem[], query: string): PermissionItem[] => {
+    if (!query) return items;
+    return items.reduce<PermissionItem[]>((acc, item) => {
+      const matchesSelf = item.label.toLowerCase().includes(query);
+      const filteredChildren = item.children ? filterItems(item.children, query) : [];
+      if (matchesSelf || filteredChildren.length > 0) {
+        acc.push({ ...item, children: item.children ? (matchesSelf ? item.children : filteredChildren) : undefined });
+      }
+      return acc;
+    }, []);
+  };
+
+  const permQuery = permSearch.toLowerCase();
+
   const renderItems = (items: PermissionItem[], depth = 0): React.ReactNode => {
     return items.map(item => {
       const checked = perms[item.key];
