@@ -723,7 +723,7 @@ function UzaklastirmaTable({ data, search, filterAktif, isExpired, onEdit, onDel
                   : <Badge className="bg-red-500/10 text-red-500 border-red-500/20">Aktif</Badge>}
               </TableCell>
               <TableCell><span className="text-xs" style={s.muted}>{u.created_by}</span></TableCell>
-              <TableCell>
+              <TableCell className="sticky-action-col">
                 <div className="flex items-center gap-1">
                   <Button variant="ghost" size="icon" onClick={() => onEdit(u)} className="h-8 w-8 hover:bg-amber-500/10"><Pencil className="w-4 h-4 text-amber-500" /></Button>
                   <Button variant="ghost" size="icon" onClick={() => onDelete(u)} className="h-8 w-8 hover:bg-red-500/10"><Trash2 className="w-4 h-4 text-red-500" /></Button>
