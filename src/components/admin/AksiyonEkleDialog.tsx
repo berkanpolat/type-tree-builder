@@ -63,10 +63,11 @@ export interface EditAksiyonData {
   tur: string;
   tarih: string;
   durum: string;
-  sonuc: string | null;
-  sonuc_neden: string | null;
-  sonuc_paket_id: string | null;
+  sonuc?: string | null;
+  sonuc_neden?: string | null;
+  sonuc_paket_id?: string | null;
   yetkili_id?: string | null;
+  admin_id?: string;
 }
 
 interface AksiyonEkleDialogProps {
