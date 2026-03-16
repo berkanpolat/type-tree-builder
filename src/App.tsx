@@ -74,6 +74,7 @@ const AdminPortfoy = lazy(() => import("./pages/admin/AdminPortfoy"));
 const AdminAksiyonlar = lazy(() => import("./pages/admin/AdminAksiyonlar"));
 const AdminZiyaretPlanlari = lazy(() => import("./pages/admin/AdminZiyaretPlanlari"));
 const AdminHedefler = lazy(() => import("./pages/admin/AdminHedefler"));
+const AdminAjanda = lazy(() => import("./pages/admin/AdminAjanda"));
 const AdminCanliHarita = lazy(() => import("./pages/admin/AdminCanliHarita"));
 const AdminYetkilendirme = lazy(() => import("./pages/admin/AdminYetkilendirme"));
 const AdminKaynakRaporu = lazy(() => import("./pages/admin/AdminKaynakRaporu"));
