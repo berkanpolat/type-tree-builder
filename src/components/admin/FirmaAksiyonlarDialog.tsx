@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { Check, Loader2, Plus, Trash2 } from "lucide-react";
+import { Check, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
 
@@ -25,7 +25,12 @@ interface Aksiyon {
   tarih: string;
   durum: string;
   admin_ad: string;
+  admin_id: string;
   created_at: string;
+  sonuc?: string | null;
+  sonuc_neden?: string | null;
+  sonuc_paket_id?: string | null;
+  yetkili_id?: string | null;
 }
 
 interface FirmaAksiyonlarDialogProps {
@@ -36,9 +41,12 @@ interface FirmaAksiyonlarDialogProps {
   callApi: (action: string, body: Record<string, unknown>) => Promise<any>;
   token: string;
   onAddClick: () => void;
+  onEditClick?: (aksiyon: Aksiyon) => void;
+  currentAdminId?: string;
+  isPrimary?: boolean;
 }
 
-export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, firmaUnvani, callApi, token, onAddClick }: FirmaAksiyonlarDialogProps) {
+export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, firmaUnvani, callApi, token, onAddClick, onEditClick, currentAdminId, isPrimary }: FirmaAksiyonlarDialogProps) {
   const [aksiyonlar, setAksiyonlar] = useState<Aksiyon[]>([]);
   const [loading, setLoading] = useState(true);
   const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
@@ -68,6 +76,11 @@ export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, fir
   const deleteAksiyon = async (id: string) => {
     await callApi("delete-aksiyon", { token, aksiyonId: id });
     fetchAksiyonlar();
+  };
+
+  const canEdit = (aksiyon: Aksiyon) => {
+    if (isPrimary) return true;
+    return aksiyon.admin_id === currentAdminId;
   };
 
   const yapilacak = aksiyonlar.filter(a => a.durum === "yapilacak");
@@ -102,7 +115,7 @@ export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, fir
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={s.muted}>Yapılacak ({yapilacak.length})</p>
                 <div className="space-y-1.5">
-                  {yapilacak.map(a => <AksiyonRow key={a.id} aksiyon={a} onToggle={toggleDurum} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} />)}
+                  {yapilacak.map(a => <AksiyonRow key={a.id} aksiyon={a} onToggle={toggleDurum} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} onEdit={canEdit(a) && onEditClick ? () => onEditClick(a) : undefined} />)}
                 </div>
               </div>
             )}
@@ -110,7 +123,7 @@ export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, fir
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider mb-2" style={s.muted}>Tamamlanan ({yapildi.length})</p>
                 <div className="space-y-1.5">
-                  {yapildi.map(a => <AksiyonRow key={a.id} aksiyon={a} onToggle={toggleDurum} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} />)}
+                  {yapildi.map(a => <AksiyonRow key={a.id} aksiyon={a} onToggle={toggleDurum} onDelete={deleteAksiyon} onClick={() => setDetayAksiyon(a)} onEdit={canEdit(a) && onEditClick ? () => onEditClick(a) : undefined} />)}
                 </div>
               </div>
             )}
@@ -122,7 +135,7 @@ export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, fir
   );
 }
 
-function AksiyonRow({ aksiyon, onToggle, onDelete, onClick }: { aksiyon: Aksiyon; onToggle: (a: Aksiyon) => void; onDelete: (id: string) => void; onClick: () => void }) {
+function AksiyonRow({ aksiyon, onToggle, onDelete, onClick, onEdit }: { aksiyon: Aksiyon; onToggle: (a: Aksiyon) => void; onDelete: (id: string) => void; onClick: () => void; onEdit?: () => void }) {
   const turConfig = TUR_CONFIG[aksiyon.tur] || TUR_CONFIG.diger;
   const Icon = turConfig.icon;
   const isDone = aksiyon.durum === "yapildi";
@@ -151,9 +164,16 @@ function AksiyonRow({ aksiyon, onToggle, onDelete, onClick }: { aksiyon: Aksiyon
           <span className="text-[10px]" style={{ color: "hsl(var(--admin-muted))" }}>• {aksiyon.admin_ad}</span>
         </div>
       </div>
-      <button onClick={(e) => { e.stopPropagation(); onDelete(aksiyon.id); }} className="mt-0.5 opacity-40 hover:opacity-100 transition-opacity">
-        <Trash2 className="w-3 h-3 text-red-400" />
-      </button>
+      <div className="flex items-center gap-0.5 mt-0.5">
+        {onEdit && (
+          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="opacity-40 hover:opacity-100 transition-opacity p-0.5">
+            <Pencil className="w-3 h-3 text-amber-400" />
+          </button>
+        )}
+        <button onClick={(e) => { e.stopPropagation(); onDelete(aksiyon.id); }} className="opacity-40 hover:opacity-100 transition-opacity p-0.5">
+          <Trash2 className="w-3 h-3 text-red-400" />
+        </button>
+      </div>
     </div>
   );
 }
