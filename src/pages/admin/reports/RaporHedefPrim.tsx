@@ -18,6 +18,7 @@ const HEDEF_TURU_LABELS: Record<string, string> = {
 };
 
 export default function RaporHedefPrim() {
+  const navigate = useNavigate();
   const { token } = useAdminAuth();
   const callApi = useAdminApi();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });

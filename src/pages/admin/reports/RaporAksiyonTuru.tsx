@@ -20,6 +20,7 @@ const TUR_LABELS: Record<string, string> = {};
 AKSIYON_TURLERI.forEach(t => { TUR_LABELS[t.value] = t.label; });
 
 export default function RaporAksiyonTuru() {
+  const navigate = useNavigate();
   const { token } = useAdminAuth();
   const callApi = useAdminApi();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });

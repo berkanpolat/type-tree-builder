@@ -13,6 +13,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } fro
 const SUCCESS_RESULTS = new Set(["satis_kapatildi", "satis_kapandi"]);
 
 export default function RaporPersonelPerformans() {
+  const navigate = useNavigate();
   const { token } = useAdminAuth();
   const callApi = useAdminApi();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });

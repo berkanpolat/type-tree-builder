@@ -11,6 +11,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Ba
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
 
 export default function RaporMusteriTipi() {
+  const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });
   const [firmalar, setFirmalar] = useState<any[]>([]);
   const [turler, setTurler] = useState<any[]>([]);
