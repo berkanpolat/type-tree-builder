@@ -131,6 +131,9 @@ export default function RaporPersonelPerformans() {
   return (
     <AdminLayout title="Personel Performans Raporları">
       <div className="space-y-6">
+        <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
+          <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
+        </button>
         <ReportDateFilter value={dateRange} onChange={setDateRange} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">

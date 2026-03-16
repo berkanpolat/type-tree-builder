@@ -98,6 +98,9 @@ export default function RaporHedefPrim() {
   return (
     <AdminLayout title="Hedef & Prim Raporları">
       <div className="space-y-6">
+        <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
+          <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
+        </button>
         <ReportDateFilter value={dateRange} onChange={setDateRange} />
 
         {/* Department Tabs */}
