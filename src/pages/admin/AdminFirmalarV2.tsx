@@ -133,6 +133,7 @@ export default function AdminFirmalarV2() {
   const [stats, setStats] = useState<FirmaStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalFirmalar, setTotalFirmalar] = useState(0);
   const [statsDays, setStatsDays] = useState(7);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -220,19 +221,37 @@ export default function AdminFirmalarV2() {
 
   const fetchData = useCallback(async () => {
     if (!token) return;
+    setLoading(true);
     try {
       const [firmaData, statsData] = await Promise.all([
-        callApi("list-firmalar", { token }),
+        callApi("list-firmalar", {
+          token,
+          paginated: true,
+          page: currentPage,
+          perPage: ITEMS_PER_PAGE,
+          statsDays,
+          searchTerm,
+          filterTuru,
+          filterTipi,
+          filterIl,
+          filterDurum,
+          filterPaket,
+          activeStatCard,
+          abonePeriod,
+          sortField,
+          sortDir,
+        }),
         callApi("firma-stats", { token, days: statsDays }),
       ]);
       setFirmalar(firmaData.firmalar || []);
+      setTotalFirmalar(firmaData.total || 0);
       setStats(statsData);
     } catch {
       toast({ title: "Hata", description: "Veriler yüklenemedi", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [token, statsDays, callApi, toast]);
+  }, [token, currentPage, statsDays, searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, activeStatCard, abonePeriod, sortField, sortDir, callApi, toast]);
 
   const fetchDropdowns = useCallback(async () => {
     if (!token) return;
@@ -638,63 +657,13 @@ export default function AdminFirmalarV2() {
 
   const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" || searchTerm || activeStatCard;
 
-  const filtered = firmalar.filter((f) => {
-    if (activeStatCard === "pending" && f.onay_durumu !== "onay_bekliyor") return false;
-    if (activeStatCard === "recent") {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - statsDays);
-      if (new Date(f.created_at) < cutoff) return false;
-    }
-    if (activeStatCard === "online") {
-      if (!f.profile?.last_seen) return false;
-      const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
-      if (new Date(f.profile.last_seen) < fifteenMinAgo) return false;
-    }
-    if (activeStatCard === "yeniAbone") {
-      if (!f.abonelik) return false;
-      const cutoff = new Date();
-      if (abonePeriod === "son24saat") cutoff.setDate(cutoff.getDate() - 1);
-      else if (abonePeriod === "sonBirHafta") cutoff.setDate(cutoff.getDate() - 7);
-      else cutoff.setMonth(cutoff.getMonth() - 1);
-      if (new Date(f.abonelik.donem_baslangic) < cutoff) return false;
-    }
-    if (searchTerm && !f.firma_unvani.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    if (filterTuru !== "all" && f.firma_turu_id !== filterTuru) return false;
-    if (filterTipi !== "all" && f.firma_tipi_id !== filterTipi) return false;
-    if (filterIl !== "all" && f.kurulus_il_id !== filterIl) return false;
-    if (filterDurum !== "all" && f.onay_durumu !== filterDurum) return false;
-    if (filterPaket !== "all") {
-      if (filterPaket === "none" && f.abonelik) return false;
-      if (filterPaket !== "none" && f.abonelik?.paket_id !== filterPaket) return false;
-    }
-    return true;
-  });
-
-  const sorted = [...filtered];
-  if (sortField) {
-    sorted.sort((a, b) => {
-      if (sortField === "firma_unvani") {
-        return sortDir === "asc" ? a.firma_unvani.localeCompare(b.firma_unvani, "tr") : b.firma_unvani.localeCompare(a.firma_unvani, "tr");
-      }
-      if (sortField === "created_at") {
-        return sortDir === "asc" ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime() : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }
-      if (sortField === "last_seen") {
-        const aTime = a.profile?.last_seen ? new Date(a.profile.last_seen).getTime() : 0;
-        const bTime = b.profile?.last_seen ? new Date(b.profile.last_seen).getTime() : 0;
-        return sortDir === "asc" ? aTime - bTime : bTime - aTime;
-      }
-      const av = (a as any)[sortField];
-      const bv = (b as any)[sortField];
-      return sortDir === "asc" ? av - bv : bv - av;
-    });
-  }
-
-  const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
+  const filtered = firmalar;
+  const sorted = firmalar;
+  const totalPages = Math.max(1, Math.ceil(totalFirmalar / ITEMS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedFirmalar = sorted.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+  const paginatedFirmalar = firmalar;
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, sortField, sortDir, activeStatCard]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, sortField, sortDir, activeStatCard, abonePeriod, statsDays]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -878,7 +847,7 @@ export default function AdminFirmalarV2() {
           <div className="flex items-center justify-center p-12">
             <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
           </div>
-        ) : sorted.length === 0 ? (
+        ) : firmalar.length === 0 ? (
           <div className="text-center py-12" style={s.muted}>Firma bulunamadı.</div>
         ) : (
           <div style={s.card} className="overflow-hidden">
@@ -1128,7 +1097,7 @@ export default function AdminFirmalarV2() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between pt-1">
-            <span className="text-xs" style={s.muted}>{sorted.length} firma, sayfa {safePage}/{totalPages}</span>
+            <span className="text-xs" style={s.muted}>{totalFirmalar} firma, sayfa {safePage}/{totalPages}</span>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setCurrentPage(safePage - 1)}
                 style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }} className="text-xs h-7">←</Button>
