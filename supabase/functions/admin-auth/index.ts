@@ -4242,7 +4242,6 @@ Deno.serve(async (req) => {
             console.error("[AKSIYON-PRO] Missing periyot or odemeMail, cannot create PayTR link. periyot:", periyot, "odemeMail:", odemeMail);
           }
         }
-        }
       }
 
       return jsonResponse({ success: true, aksiyon: data, packageAssigned, paymentLinkSent });
