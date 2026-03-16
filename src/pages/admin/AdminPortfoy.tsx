@@ -73,7 +73,7 @@ interface FirmaItem {
   belge_onayli?: boolean;
   profile: { ad: string; soyad: string; iletisim_email: string; iletisim_numarasi: string | null; last_seen: string | null } | null;
   abonelik: { paket_id: string; paket_ad: string; paket_slug: string; periyot: string; durum: string } | null;
-  portfolyo: { admin_id: string; admin_ad: string; admin_soyad: string } | null;
+  portfolyo: { admin_id: string; admin_ad: string; admin_soyad: string; atanmis?: boolean } | null;
 }
 
 type SortField = "firma_unvani" | "ihale_sayisi" | "teklif_sayisi" | "urun_sayisi" | "profil_doluluk" | "created_at" | "last_seen";

@@ -100,6 +100,7 @@ interface FirmaItem {
     admin_id: string;
     admin_ad: string;
     admin_soyad: string;
+    atanmis?: boolean;
   } | null;
 }
 
