@@ -4060,6 +4060,7 @@ Deno.serve(async (req) => {
         } else if (paket?.slug === "pro") {
           // Create PayTR payment link and send via email
           const { periyot, odemeMail } = body;
+          console.log("[AKSIYON-PRO] PRO paket detected. periyot:", periyot, "odemeMail:", odemeMail, "body keys:", Object.keys(body));
           if (periyot && odemeMail) {
             try {
               // Get exchange rate
