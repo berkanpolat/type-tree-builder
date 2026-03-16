@@ -186,6 +186,12 @@ const App = () => (
             <Route path="/yonetim/canli-harita" element={<AdminRoute><AdminCanliHarita /></AdminRoute>} />
             <Route path="/yonetim/yetkilendirme" element={<AdminRoute><AdminYetkilendirme /></AdminRoute>} />
             <Route path="/yonetim/kaynak-raporu" element={<AdminRoute><AdminKaynakRaporu /></AdminRoute>} />
+            <Route path="/yonetim/raporlar" element={<AdminRoute><AdminRaporlar /></AdminRoute>} />
+            <Route path="/yonetim/raporlar/satis-kanali" element={<AdminRoute><RaporSatisKanali /></AdminRoute>} />
+            <Route path="/yonetim/raporlar/musteri-tipi" element={<AdminRoute><RaporMusteriTipi /></AdminRoute>} />
+            <Route path="/yonetim/raporlar/personel-performans" element={<AdminRoute><RaporPersonelPerformans /></AdminRoute>} />
+            <Route path="/yonetim/raporlar/aksiyon-turu" element={<AdminRoute><RaporAksiyonTuru /></AdminRoute>} />
+            <Route path="/yonetim/raporlar/hedef-prim" element={<AdminRoute><RaporHedefPrim /></AdminRoute>} />
 
             {/* Catch-all: try firma slug at root level */}
             <Route path="/:slug" element={<FirmaDetay />} />
