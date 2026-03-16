@@ -99,32 +99,37 @@ export default function RaporHedefPrim() {
         <ReportDateFilter value={dateRange} onChange={setDateRange} />
 
         {/* Department Tabs */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedDept("all")}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-            style={{
-              background: selectedDept === "all" ? "#f59e0b" : "hsl(var(--admin-hover))",
-              color: selectedDept === "all" ? "#fff" : "hsl(var(--admin-text))",
-              border: `1px solid ${selectedDept === "all" ? "#f59e0b" : "hsl(var(--admin-border))"}`,
-            }}
-          >
-            Tümü
-          </button>
-          {departments.map((dept) => (
-            <button
-              key={dept}
-              onClick={() => setSelectedDept(dept)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-              style={{
-                background: selectedDept === dept ? "#f59e0b" : "hsl(var(--admin-hover))",
-                color: selectedDept === dept ? "#fff" : "hsl(var(--admin-text))",
-                border: `1px solid ${selectedDept === dept ? "#f59e0b" : "hsl(var(--admin-border))"}`,
-              }}
-            >
-              {dept}
-            </button>
-          ))}
+        <div className="rounded-xl border p-1.5 flex flex-wrap gap-1.5" style={{ background: "hsl(var(--admin-hover))", borderColor: "hsl(var(--admin-border))" }}>
+          {["all", ...departments].map((dept) => {
+            const isActive = selectedDept === dept;
+            const label = dept === "all" ? "Tümü" : dept;
+            const count = dept === "all" ? hedefler.length : hedefler.filter((h: any) => getAdminDepartman(h.hedef_admin_id) === dept).length;
+            return (
+              <button
+                key={dept}
+                onClick={() => setSelectedDept(dept)}
+                className="px-4 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-2"
+                style={{
+                  background: isActive
+                    ? "linear-gradient(135deg, #1a2e5a, #2a4a8a)"
+                    : "transparent",
+                  color: isActive ? "#f59e0b" : "hsl(var(--admin-text))",
+                  boxShadow: isActive ? "0 2px 8px rgba(26,46,90,0.3)" : "none",
+                }}
+              >
+                {label}
+                <span
+                  className="text-[10px] px-1.5 py-0.5 rounded-full font-bold"
+                  style={{
+                    background: isActive ? "rgba(245,158,11,0.2)" : "hsl(var(--admin-border))",
+                    color: isActive ? "#f59e0b" : "hsl(var(--admin-muted))",
+                  }}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         {/* KPIs */}
@@ -143,14 +148,14 @@ export default function RaporHedefPrim() {
           {chartData.length === 0 ? (
             <p className="text-center py-8 text-xs" style={{ color: `hsl(var(--admin-muted))` }}>Veri bulunamadı</p>
           ) : (
-            <ResponsiveContainer width="100%" height={Math.max(250, chartData.length * 45)}>
-              <BarChart data={chartData} layout="vertical">
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis dataKey="name" type="category" tick={{ fontSize: 11 }} width={140} />
+            <ResponsiveContainer width="100%" height={Math.max(180, chartData.length * 36)}>
+              <BarChart data={chartData} layout="vertical" barSize={14}>
+                <XAxis type="number" tick={{ fontSize: 10 }} />
+                <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={120} />
                 <Tooltip />
-                <Legend />
-                <Bar dataKey="hedef" name="Hedef" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="gerceklesen" name="Gerçekleşen" fill="#10b981" radius={[0, 4, 4, 0]} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Bar dataKey="hedef" name="Hedef" fill="#1a2e5a" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="gerceklesen" name="Gerçekleşen" fill="#f59e0b" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           )}
