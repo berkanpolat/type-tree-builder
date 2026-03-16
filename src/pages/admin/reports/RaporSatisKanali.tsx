@@ -30,7 +30,6 @@ interface AksiyonRecord {
   sonuc: string | null;
   sonucNeden: string | null;
   sonucPaketAd: string | null;
-  kaynak: "aksiyon" | "paket_atama";
   periyot?: string | null;
 }
 
@@ -72,58 +71,26 @@ export default function RaporSatisKanali() {
       const from = dateRange.from;
       const to = dateRange.to;
 
-      const records: AksiyonRecord[] = [];
-
-      allAksiyonlar
+      const records: AksiyonRecord[] = allAksiyonlar
         .filter((item: any) => {
           const t = new Date(item.tarih);
           return t >= from && t <= to && item.sonuc;
         })
-        .forEach((item: any) => {
-          records.push({
-            id: item.id,
-            tarih: item.tarih,
-            personel: item.admin_ad || adminNameMap.get(item.admin_id) || "Bilinmeyen",
-            personelId: item.admin_id,
-            departman: (adminDepartmanMap.get(item.admin_id) as string) || "Bilinmeyen",
-            tur: TUR_CONFIG[item.tur]?.label || item.tur || "Diğer",
-            baslik: item.baslik || "—",
-            sonuc: item.sonuc,
-            sonucNeden: item.sonuc_neden,
-            sonucPaketAd: item.sonuc_paket_ad || null,
-            kaynak: "aksiyon",
-            periyot: item.periyot || null,
-          });
-        });
+        .map((item: any) => ({
+          id: item.id,
+          tarih: item.tarih,
+          personel: item.admin_ad || adminNameMap.get(item.admin_id) || "Bilinmeyen",
+          personelId: item.admin_id,
+          departman: (adminDepartmanMap.get(item.admin_id) as string) || "Bilinmeyen",
+          tur: TUR_CONFIG[item.tur]?.label || item.tur || "Diğer",
+          baslik: item.baslik || "—",
+          sonuc: item.sonuc,
+          sonucNeden: item.sonuc_neden,
+          sonucPaketAd: item.sonuc_paket_ad || null,
+          periyot: item.periyot || null,
+        }));
 
-      try {
-        const logData = await callApi("list-activity-log", {
-          token,
-          action: "update-firma-paket",
-          from: from.toISOString(),
-          to: to.toISOString(),
-        });
-        (logData.logs || []).forEach((item: any) => {
-          const details = typeof item.details === "string" ? JSON.parse(item.details) : item.details || {};
-          records.push({
-            id: item.id,
-            tarih: item.created_at,
-            personel: `${item.admin_ad || ""} ${item.admin_soyad || ""}`.trim() || "Bilinmeyen",
-            personelId: item.admin_id,
-            departman: (adminDepartmanMap.get(item.admin_id) as string) || "Bilinmeyen",
-            tur: "Paket Tanımlama",
-            baslik: `${item.target_label || "—"} paketi tanımlandı`,
-            sonuc: "satis_kapatildi",
-            sonucNeden: null,
-            sonucPaketAd: item.target_label || null,
-            kaynak: "paket_atama",
-            periyot: details.periyot || null,
-          });
-        });
-      } catch {
-        // skip
-      }
-
+      // Paket tanımlama activity log'ları ayrı satış değildir; periyot zaten list-aksiyonlar içinde zenginleştirilir.
       records.sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
       setData(records);
     } catch {
@@ -163,7 +130,7 @@ export default function RaporSatisKanali() {
     });
   }, [data, selectedDepartman, selectedPersonel]);
 
-  const successData = filteredData.filter((item) => SUCCESS_RESULTS.has(item.sonuc || "") || item.kaynak === "paket_atama");
+  const successData = filteredData.filter((item) => SUCCESS_RESULTS.has(item.sonuc || ""));
   const failData = filteredData.filter((item) => item.sonuc === "satis_kapanmadi");
 
   // ── Paket dağılımı: her paket için toplam, aylık, yıllık, sınırsız, belirsiz
@@ -389,7 +356,7 @@ export default function RaporSatisKanali() {
                   <tr><td colSpan={7} className="p-8 text-center" style={s.muted}>Veri bulunamadı</td></tr>
                 ) : (
                   filteredData.slice(0, 100).map((item) => {
-                    const isSuccess = SUCCESS_RESULTS.has(item.sonuc || "") || item.kaynak === "paket_atama";
+                    const isSuccess = SUCCESS_RESULTS.has(item.sonuc || "");
                     return (
                       <tr key={item.id} style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
                         <td className="p-2.5" style={s.text}>{new Date(item.tarih).toLocaleDateString("tr-TR")}</td>
