@@ -329,13 +329,14 @@ Deno.serve(async (req) => {
       // Portfolio map: firma_id -> { admin_id, admin_ad, admin_soyad }
       const adminNameMap = new Map<string, any>();
       for (const a of adminUsersForPortfolyo) adminNameMap.set(a.id, a);
-      const portfolyoMap = new Map<string, { admin_id: string; admin_ad: string; admin_soyad: string }>();
+      const portfolyoMap = new Map<string, { admin_id: string; admin_ad: string; admin_soyad: string; atanmis: boolean }>();
       for (const p of portfolyoData) {
         const admin = adminNameMap.get(p.admin_id);
         portfolyoMap.set(p.firma_id, {
           admin_id: p.admin_id,
           admin_ad: admin?.ad || "",
           admin_soyad: admin?.soyad || "",
+          atanmis: !!p.atayan_admin_id,
         });
       }
 
