@@ -200,6 +200,7 @@ const PERMISSION_GROUPS: PermissionGroup[] = [
         ],
       },
       { key: "yaptirim_goruntule", label: "Yaptırımlar" },
+      { key: "rapor_goruntule", label: "Raporlar" },
     ],
   },
 ];

@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone, Bot, Briefcase, ClipboardList, MapPin, Target, Map, BarChart3
+  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone, Bot, Briefcase, ClipboardList, MapPin, Target, Map, BarChart3, FileBarChart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -60,6 +60,7 @@ const menuGroups: MenuGroup[] = [
       { label: "Reklam", path: "/yonetim/reklam", icon: Megaphone, permission: "reklam_goruntule", primaryOnly: false },
       { label: "TekBot", path: "/yonetim/tekbot", icon: Bot, permission: "tekbot_goruntule", primaryOnly: false },
       { label: "Kaynak Raporu", path: "/yonetim/kaynak-raporu", icon: BarChart3, permission: null, primaryOnly: true },
+      { label: "Raporlar", path: "/yonetim/raporlar", icon: FileBarChart, permission: "rapor_goruntule", primaryOnly: false },
     ],
   },
 ];
