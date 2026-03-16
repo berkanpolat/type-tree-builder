@@ -455,6 +455,9 @@ export default function AdminPortfoy() {
                             <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setZiyaretTarih(undefined); setZiyaretNotlar(""); setZiyaretDialogOpen(true); }} className="text-xs cursor-pointer">
                               <MapPin className="w-3.5 h-3.5 mr-2" /> Ziyaret Planıma Ekle
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openSevkDialog(firma)} className="text-xs cursor-pointer">
+                              <Send className="w-3.5 h-3.5 mr-2" /> Portföyü Sevk Et
+                            </DropdownMenuItem>
                             <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
                             <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
                               <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
