@@ -7,7 +7,7 @@ import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { TrendingUp, Users, BarChart3, ArrowLeft, XCircle, CheckCircle, RefreshCw } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
 
 const COLORS = ["#1a2e5a", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
