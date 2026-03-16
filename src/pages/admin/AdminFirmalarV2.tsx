@@ -133,6 +133,7 @@ export default function AdminFirmalarV2() {
   const [stats, setStats] = useState<FirmaStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalFirmalar, setTotalFirmalar] = useState(0);
   const [statsDays, setStatsDays] = useState(7);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
