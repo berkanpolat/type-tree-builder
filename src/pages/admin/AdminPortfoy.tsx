@@ -328,6 +328,7 @@ export default function AdminPortfoy() {
           </div>
         ) : (
           <div className="rounded-xl overflow-hidden" style={s.card}>
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow style={{ borderColor: "hsl(var(--admin-border))" }}>
