@@ -75,6 +75,7 @@ const AdminZiyaretPlanlari = lazy(() => import("./pages/admin/AdminZiyaretPlanla
 const AdminHedefler = lazy(() => import("./pages/admin/AdminHedefler"));
 const AdminCanliHarita = lazy(() => import("./pages/admin/AdminCanliHarita"));
 const AdminYetkilendirme = lazy(() => import("./pages/admin/AdminYetkilendirme"));
+const AdminKaynakRaporu = lazy(() => import("./pages/admin/AdminKaynakRaporu"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
