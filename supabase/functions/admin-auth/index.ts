@@ -3469,6 +3469,44 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── PORTFOLIO: TRANSFER (Sevk Et) ───
+    if (action === "transfer-portfolyo") {
+      const payload = verifyToken(body.token);
+      const { firmaIds, targetAdminId } = body;
+      if (!firmaIds || !Array.isArray(firmaIds) || firmaIds.length === 0 || !targetAdminId) {
+        return jsonResponse({ error: "Firma listesi ve hedef personel zorunlu" }, 400);
+      }
+      const actingId = getActingId(payload, body);
+
+      // Check each firma belongs to the acting admin's portfolio
+      const { data: existing } = await supabase.from("admin_portfolyo").select("firma_id, admin_id, atayan_admin_id").in("firma_id", firmaIds);
+      const ownedFirmaIds = (existing || []).filter(e => e.admin_id === actingId).map(e => e.firma_id);
+      if (ownedFirmaIds.length === 0) return jsonResponse({ error: "Sevk edilecek firma bulunamadı" }, 400);
+
+      // Check if any are management-assigned and user is not management
+      const managementAssigned = (existing || []).filter(e => e.admin_id === actingId && e.atayan_admin_id && e.atayan_admin_id !== actingId);
+      if (managementAssigned.length > 0 && payload.departman !== "Yönetim Kurulu" && !payload.is_primary) {
+        return jsonResponse({ error: "Yönetim tarafından atanan firmalar sevk edilemez" }, 403);
+      }
+
+      // Delete existing assignments for these firms
+      await supabase.from("admin_portfolyo").delete().in("firma_id", ownedFirmaIds);
+
+      // Insert new assignments
+      const inserts = ownedFirmaIds.map(fId => ({ admin_id: targetAdminId, firma_id: fId, atayan_admin_id: null as string | null }));
+      const { error } = await supabase.from("admin_portfolyo").insert(inserts);
+      if (error) return jsonResponse({ error: error.message }, 400);
+
+      const { data: targetAdmin } = await supabase.from("admin_users").select("ad, soyad").eq("id", targetAdminId).single();
+      await logActivity(supabase, payload, "portfolyo_sevk_etti", {
+        target_type: "admin",
+        target_id: targetAdminId,
+        target_label: `${targetAdmin?.ad || ""} ${targetAdmin?.soyad || ""}`,
+        details: { firma_sayisi: ownedFirmaIds.length, firma_ids: ownedFirmaIds },
+      });
+      return jsonResponse({ success: true, count: ownedFirmaIds.length });
+    }
+
     // ─── AKSIYONLAR: CREATE ───
     if (action === "create-aksiyon") {
       const payload = verifyToken(body.token);
