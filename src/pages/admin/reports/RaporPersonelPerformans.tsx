@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { startOfMonth } from "date-fns";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
@@ -17,11 +17,7 @@ export default function RaporPersonelPerformans() {
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, [dateRange]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
 
     const [{ data: a }, { data: z }, { data: u }, { data: p }] = await Promise.all([
@@ -46,7 +42,30 @@ export default function RaporPersonelPerformans() {
     setAdminUsers(u || []);
     setPaketAtamalar(p || []);
     setLoading(false);
-  };
+  }, [dateRange]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("rapor-personel-performans-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_aksiyonlar" }, () => {
+        fetchData();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_ziyaret_planlari" }, () => {
+        fetchData();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_activity_log" }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchData]);
 
   const successfulAksiyonlar = aksiyonlar.filter((item: any) => SUCCESS_RESULTS.has(item.sonuc) || !!item.sonuc_paket_id);
 
