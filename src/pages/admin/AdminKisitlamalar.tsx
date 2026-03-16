@@ -757,7 +757,7 @@ function YasakTable({ data, search, onDelete }: {
           <TableHead style={s.muted}>Vergi No</TableHead>
           <TableHead style={s.muted}>Sebep</TableHead>
           <TableHead style={s.muted}>Tarih</TableHead>
-          <TableHead style={s.muted}>İşlem</TableHead>
+          <TableHead style={s.muted} className="sticky-action-col">İşlem</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
