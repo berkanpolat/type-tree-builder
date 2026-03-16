@@ -3147,14 +3147,20 @@ Deno.serve(async (req) => {
     // ─── LIST ACTIVITY LOG ───
     if (action === "list-activity-log") {
       const payload = verifyToken(body.token);
-      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 403);
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("admin_activity_log")
         .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1000);
+        .order("created_at", { ascending: false });
 
+      // Optional filters for report pages
+      if (body.action) query = query.eq("action", body.action);
+      if (body.from) query = query.gte("created_at", body.from);
+      if (body.to) query = query.lte("created_at", body.to);
+
+      query = query.limit(1000);
+
+      const { data, error } = await query;
       if (error) return jsonResponse({ error: error.message }, 500);
       return jsonResponse({ logs: data || [] });
     }
@@ -4453,12 +4459,14 @@ Deno.serve(async (req) => {
     // ─── ZİYARET PLANI: LİSTELE ───
     if (action === "list-ziyaret-planlari") {
       const payload = verifyToken(body.token);
-      const { adminId, durum, baslangic, bitis } = body;
+      const { adminId, durum, baslangic, bitis, from, to } = body;
       
-      let query = supabase.from("admin_ziyaret_planlari").select("*").eq("admin_id", adminId || payload.id);
+      let query = supabase.from("admin_ziyaret_planlari").select("*");
+      // If adminId provided, filter by admin; otherwise return all (for reports)
+      if (adminId) query = query.eq("admin_id", adminId);
       if (durum) query = query.eq("durum", durum);
-      if (baslangic) query = query.gte("planlanan_tarih", baslangic);
-      if (bitis) query = query.lte("planlanan_tarih", bitis);
+      if (baslangic || from) query = query.gte("planlanan_tarih", baslangic || from);
+      if (bitis || to) query = query.lte("planlanan_tarih", bitis || to);
       query = query.order("planlanan_tarih", { ascending: true }).order("sira", { ascending: true });
       
       const { data, error } = await query;

@@ -1,43 +1,64 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { startOfMonth } from "date-fns";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, CheckCircle, XCircle, BarChart3 } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis } from "recharts";
+import { AKSIYON_TURLERI, TUR_CONFIG } from "@/lib/aksiyon-config";
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
+const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16", "#a78bfa", "#0077b5", "#0a66c2"];
 
-const TUR_LABELS: Record<string, string> = {
-  dis_arama: "Dış Arama",
-  ziyaret: "Ziyaret",
-  toplanti: "Toplantı",
-  online_gorusme: "Online Görüşme",
-  whatsapp: "WhatsApp",
-  email: "E-posta",
-  diger: "Diğer",
-};
+const SUCCESS_RESULTS = new Set(["satis_kapatildi", "satis_kapandi"]);
+
+// Build label map from config
+const TUR_LABELS: Record<string, string> = {};
+AKSIYON_TURLERI.forEach(t => { TUR_LABELS[t.value] = t.label; });
 
 export default function RaporAksiyonTuru() {
+  const { token } = useAdminAuth();
+  const callApi = useAdminApi();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });
   const [aksiyonlar, setAksiyonlar] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchData();
-  }, [dateRange]);
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
+    if (!token) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("admin_aksiyonlar")
-      .select("tur, sonuc, sonuc_neden, tarih")
-      .gte("tarih", dateRange.from.toISOString())
-      .lte("tarih", dateRange.to.toISOString());
-    setAksiyonlar(data || []);
-    setLoading(false);
-  };
+    try {
+      // Use edge function to bypass RLS
+      const data = await callApi("list-aksiyonlar", { token });
+      const all = (data.aksiyonlar || []).filter((a: any) => {
+        const t = new Date(a.tarih);
+        return t >= dateRange.from && t <= dateRange.to;
+      });
+      setAksiyonlar(all);
+    } catch {
+      setAksiyonlar([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, dateRange, callApi]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Polling fallback
+  useEffect(() => {
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
+
+  // Realtime
+  useEffect(() => {
+    const channel = supabase
+      .channel("rapor-aksiyon-turu-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_aksiyonlar" }, () => fetchData())
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchData]);
 
   // Group by tur
   const turMap = new Map<string, { total: number; basarili: number; basarisiz: number }>();
@@ -45,21 +66,21 @@ export default function RaporAksiyonTuru() {
     const tur = a.tur || "diger";
     const existing = turMap.get(tur) || { total: 0, basarili: 0, basarisiz: 0 };
     existing.total++;
-    if (a.sonuc === "satis_kapandi") existing.basarili++;
-    if (a.sonuc === "kapanmadi") existing.basarisiz++;
+    if (SUCCESS_RESULTS.has(a.sonuc) || !!a.sonuc_paket_id) existing.basarili++;
+    if (a.sonuc === "satis_kapanmadi") existing.basarisiz++;
     turMap.set(tur, existing);
   });
 
   const turData = Array.from(turMap.entries()).map(([tur, stats]) => ({
-    name: TUR_LABELS[tur] || tur,
+    name: TUR_LABELS[tur] || TUR_CONFIG[tur]?.label || tur,
     tur,
     ...stats,
     basariOran: stats.total ? ((stats.basarili / stats.total) * 100).toFixed(1) : "0",
   })).sort((a, b) => b.total - a.total);
 
   const pieData = turData.map(d => ({ name: d.name, value: d.total }));
-  const totalBasarili = aksiyonlar.filter((a: any) => a.sonuc === "satis_kapandi").length;
-  const totalBasarisiz = aksiyonlar.filter((a: any) => a.sonuc === "kapanmadi").length;
+  const totalBasarili = aksiyonlar.filter((a: any) => SUCCESS_RESULTS.has(a.sonuc) || !!a.sonuc_paket_id).length;
+  const totalBasarisiz = aksiyonlar.filter((a: any) => a.sonuc === "satis_kapanmadi").length;
 
   return (
     <AdminLayout title="Aksiyon Türü Raporları">

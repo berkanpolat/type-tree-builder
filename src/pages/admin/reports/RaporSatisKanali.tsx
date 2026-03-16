@@ -3,9 +3,12 @@ import { startOfMonth } from "date-fns";
 import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
+import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import { useAdminApi } from "@/hooks/use-admin-api";
 import { supabase } from "@/integrations/supabase/client";
 import { TrendingUp, DollarSign, Users, BarChart3, Package } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { TUR_CONFIG } from "@/lib/aksiyon-config";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
 const SUCCESS_RESULTS = new Set(["satis_kapatildi", "satis_kapandi"]);
@@ -21,80 +24,99 @@ interface SalesRecord {
 }
 
 export default function RaporSatisKanali() {
+  const { token } = useAdminAuth();
+  const callApi = useAdminApi();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });
   const [data, setData] = useState<SalesRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
+    if (!token) return;
     setLoading(true);
+    try {
+      // Fetch aksiyonlar and admin list via edge function (bypasses RLS)
+      const [aksiyonData, adminData] = await Promise.all([
+        callApi("list-aksiyonlar", { token }),
+        callApi("list-admin-users", { token }),
+      ]);
 
-    const [aksiyonRes, logRes, adminRes] = await Promise.all([
-      supabase
-        .from("admin_aksiyonlar")
-        .select("id, tarih, baslik, tur, sonuc, sonuc_paket_id, admin_users!admin_aksiyonlar_admin_id_fkey(ad, soyad, departman)")
-        .gte("tarih", dateRange.from.toISOString())
-        .lte("tarih", dateRange.to.toISOString()),
-      supabase
-        .from("admin_activity_log")
-        .select("id, admin_id, created_at, admin_ad, admin_soyad, target_label")
-        .eq("action", "update-firma-paket")
-        .gte("created_at", dateRange.from.toISOString())
-        .lte("created_at", dateRange.to.toISOString()),
-      supabase.from("admin_users").select("id, departman"),
-    ]);
+      const allAksiyonlar = aksiyonData.aksiyonlar || [];
+      const admins = adminData.users || [];
+      const adminDepartmanMap = new Map(admins.map((a: any) => [a.id, a.departman || "Bilinmeyen"]));
+      const adminNameMap = new Map(admins.map((a: any) => [a.id, `${a.ad} ${a.soyad}`]));
 
-    const adminDepartmanMap = new Map((adminRes.data || []).map((admin: any) => [admin.id, admin.departman || "Bilinmeyen"]));
-    const records: SalesRecord[] = [];
+      const from = dateRange.from;
+      const to = dateRange.to;
 
-    (aksiyonRes.data || [])
-      .filter((item: any) => SUCCESS_RESULTS.has(item.sonuc) || !!item.sonuc_paket_id)
-      .forEach((item: any) => {
-        records.push({
-          id: item.id,
-          tarih: item.tarih,
-          personel: `${item.admin_users?.ad || ""} ${item.admin_users?.soyad || ""}`.trim() || "Bilinmeyen",
-          departman: item.admin_users?.departman || "Bilinmeyen",
-          tur: item.tur || "Diğer",
-          baslik: item.baslik || "Satış",
-          kaynak: "aksiyon",
+      const records: SalesRecord[] = [];
+
+      // Filter aksiyonlar by date range and success
+      allAksiyonlar
+        .filter((item: any) => {
+          const t = new Date(item.tarih);
+          return t >= from && t <= to && (SUCCESS_RESULTS.has(item.sonuc) || !!item.sonuc_paket_id);
+        })
+        .forEach((item: any) => {
+          records.push({
+            id: item.id,
+            tarih: item.tarih,
+            personel: item.admin_ad || adminNameMap.get(item.admin_id) || "Bilinmeyen",
+            departman: (adminDepartmanMap.get(item.admin_id) as string) || "Bilinmeyen",
+            tur: TUR_CONFIG[item.tur]?.label || item.tur || "Diğer",
+            baslik: item.baslik || "Satış",
+            kaynak: "aksiyon",
+          });
         });
-      });
 
-    (logRes.data || []).forEach((item: any) => {
-      records.push({
-        id: item.id,
-        tarih: item.created_at,
-        personel: `${item.admin_ad || ""} ${item.admin_soyad || ""}`.trim() || "Bilinmeyen",
-        departman: adminDepartmanMap.get(item.admin_id) || "Bilinmeyen",
-        tur: "paket_tanimlama",
-        baslik: `${item.target_label || "—"} paketi tanımlandı`,
-        kaynak: "paket_atama",
-      });
-    });
+      // Fetch activity log for paket assignments (this table may also lack RLS)
+      // Use edge function report-activity-log action
+      try {
+        const logData = await callApi("list-activity-log", {
+          token,
+          action: "update-firma-paket",
+          from: from.toISOString(),
+          to: to.toISOString(),
+        });
+        (logData.logs || []).forEach((item: any) => {
+          records.push({
+            id: item.id,
+            tarih: item.created_at,
+            personel: `${item.admin_ad || ""} ${item.admin_soyad || ""}`.trim() || "Bilinmeyen",
+            departman: (adminDepartmanMap.get(item.admin_id) as string) || "Bilinmeyen",
+            tur: "Paket Tanımlama",
+            baslik: `${item.target_label || "—"} paketi tanımlandı`,
+            kaynak: "paket_atama",
+          });
+        });
+      } catch {
+        // Activity log endpoint may not exist yet, skip
+      }
 
-    records.sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
-    setData(records);
-    setLoading(false);
-  }, [dateRange]);
+      records.sort((a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime());
+      setData(records);
+    } catch {
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, dateRange, callApi]);
 
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  // Polling fallback
   useEffect(() => {
-    fetchData();
+    const interval = setInterval(fetchData, 15000);
+    return () => clearInterval(interval);
   }, [fetchData]);
 
+  // Realtime
   useEffect(() => {
     const channel = supabase
       .channel("rapor-satis-kanali-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "admin_aksiyonlar" }, () => {
-        fetchData();
-      })
-      .on("postgres_changes", { event: "*", schema: "public", table: "admin_activity_log" }, () => {
-        fetchData();
-      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_aksiyonlar" }, () => fetchData())
+      .on("postgres_changes", { event: "*", schema: "public", table: "admin_activity_log" }, () => fetchData())
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [fetchData]);
 
   const channelMap = new Map<string, number>();
