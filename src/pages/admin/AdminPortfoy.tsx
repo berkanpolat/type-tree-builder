@@ -118,6 +118,7 @@ export default function AdminPortfoy() {
   const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
   const [aksiyonlarOpen, setAksiyonlarOpen] = useState(false);
   const [yetkililerOpen, setYetkililerOpen] = useState(false);
+  const [editAksiyon, setEditAksiyon] = useState<EditAksiyonData | null>(null);
   const [selectedFirma, setSelectedFirma] = useState<FirmaItem | null>(null);
   const [ziyaretDialogOpen, setZiyaretDialogOpen] = useState(false);
   const [ziyaretTarih, setZiyaretTarih] = useState<Date | undefined>(undefined);
