@@ -222,26 +222,28 @@ export default function RaporSatisKanali() {
         <ReportDateFilter value={dateRange} onChange={setDateRange} />
 
         {/* Departman & Personel Filters */}
-        <div className="flex flex-wrap gap-2">
-          <div className="flex items-center gap-2 rounded-lg border px-3 py-1.5" style={s.card}>
-            <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Departman</span>
+        <div className="flex flex-wrap gap-3">
+          <div className="flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 shadow-sm" style={{ background: "hsl(var(--admin-card))", borderColor: "hsl(var(--admin-border))" }}>
+            <Users className="w-3.5 h-3.5 shrink-0" style={{ color: "#1a2e5a" }} />
+            <span className="text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap" style={s.muted}>Departman</span>
             <select
               value={selectedDepartman}
               onChange={(e) => setSelectedDepartman(e.target.value)}
-              className="text-xs bg-transparent border-none outline-none cursor-pointer font-medium"
-              style={s.text}
+              className="text-xs border-none outline-none cursor-pointer font-semibold min-w-[100px] rounded-md px-2 py-1"
+              style={{ color: "hsl(var(--admin-text))", background: "hsl(var(--admin-bg))" }}
             >
               <option value="all">Tümü</option>
               {departmanlar.map((d) => <option key={d} value={d}>{d}</option>)}
             </select>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border px-3 py-1.5" style={s.card}>
-            <span className="text-[10px] font-medium uppercase tracking-wider" style={s.muted}>Personel</span>
+          <div className="flex items-center gap-2.5 rounded-xl border-2 px-4 py-2.5 shadow-sm" style={{ background: "hsl(var(--admin-card))", borderColor: "hsl(var(--admin-border))" }}>
+            <Users className="w-3.5 h-3.5 shrink-0" style={{ color: "#f59e0b" }} />
+            <span className="text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap" style={s.muted}>Personel</span>
             <select
               value={selectedPersonel}
               onChange={(e) => setSelectedPersonel(e.target.value)}
-              className="text-xs bg-transparent border-none outline-none cursor-pointer font-medium"
-              style={s.text}
+              className="text-xs border-none outline-none cursor-pointer font-semibold min-w-[100px] rounded-md px-2 py-1"
+              style={{ color: "hsl(var(--admin-text))", background: "hsl(var(--admin-bg))" }}
             >
               <option value="all">Tümü</option>
               {personelListesi.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
