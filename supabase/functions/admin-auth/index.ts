@@ -288,6 +288,319 @@ Deno.serve(async (req) => {
         return allRows;
       }
 
+      async function fetchAllByBuilder(builder: (from: number, to: number) => any, label: string) {
+        const PAGE_SIZE = 1000;
+        let allRows: any[] = [];
+        let from = 0;
+        while (true) {
+          const { data, error } = await builder(from, from + PAGE_SIZE - 1);
+          if (error) {
+            console.error(`[fetchAllByBuilder] ${label} error:`, error.message);
+            break;
+          }
+          if (!data || data.length === 0) break;
+          allRows = allRows.concat(data);
+          if (data.length < PAGE_SIZE) break;
+          from += PAGE_SIZE;
+        }
+        return allRows;
+      }
+
+      const paginated = body.paginated === true;
+      const unsupportedSorts = new Set(["ihale_sayisi", "teklif_sayisi", "urun_sayisi", "profil_doluluk", "last_seen"]);
+
+      if (paginated && !unsupportedSorts.has(body.sortField)) {
+        const page = Math.max(1, Number(body.page) || 1);
+        const perPage = Math.min(100, Math.max(1, Number(body.perPage) || 20));
+        const searchTerm = typeof body.searchTerm === "string" ? body.searchTerm.trim() : "";
+        const filterTuru = typeof body.filterTuru === "string" ? body.filterTuru : "all";
+        const filterTipi = typeof body.filterTipi === "string" ? body.filterTipi : "all";
+        const filterIl = typeof body.filterIl === "string" ? body.filterIl : "all";
+        const filterDurum = typeof body.filterDurum === "string" ? body.filterDurum : "all";
+        const filterPaket = typeof body.filterPaket === "string" ? body.filterPaket : "all";
+        const activeStatCard = typeof body.activeStatCard === "string" ? body.activeStatCard : null;
+        const abonePeriod = typeof body.abonePeriod === "string" ? body.abonePeriod : "sonBirHafta";
+        const statsDays = Math.max(1, Number(body.statsDays) || 7);
+        const sortField = body.sortField === "firma_unvani" || body.sortField === "created_at" ? body.sortField : "created_at";
+        const sortAscending = body.sortField === sortField ? body.sortDir === "asc" : false;
+        const getTs = (value?: string | null) => {
+          if (!value) return 0;
+          const ts = Date.parse(value);
+          return Number.isNaN(ts) ? 0 : ts;
+        };
+        const getDurumPriority = (durum?: string | null) => {
+          if (durum === "aktif") return 3;
+          if (durum === "iptal_bekliyor") return 2;
+          return 1;
+        };
+
+        const includeUserSets: Set<string>[] = [];
+        let excludedSubscribedUserIds: string[] = [];
+
+        if (filterPaket !== "all" || activeStatCard === "yeniAbone") {
+          const now = new Date();
+          const aboneCutoff = new Date(now);
+          if (abonePeriod === "son24saat") aboneCutoff.setDate(aboneCutoff.getDate() - 1);
+          else if (abonePeriod === "sonBirAy") aboneCutoff.setMonth(aboneCutoff.getMonth() - 1);
+          else aboneCutoff.setDate(aboneCutoff.getDate() - 7);
+
+          const abonelikRows = await fetchAllByBuilder((from, to) => {
+            let q = supabase
+              .from("kullanici_abonelikler")
+              .select("user_id, paket_id, donem_baslangic, durum, created_at, updated_at")
+              .range(from, to);
+
+            if (activeStatCard === "yeniAbone") {
+              q = q.eq("durum", "aktif").gte("donem_baslangic", aboneCutoff.toISOString());
+            } else {
+              q = q.in("durum", ["aktif", "iptal_bekliyor"]);
+            }
+
+            if (filterPaket !== "all" && filterPaket !== "none") {
+              q = q.eq("paket_id", filterPaket);
+            }
+
+            return q.order("updated_at", { ascending: false });
+          }, "kullanici_abonelikler");
+
+          const bestAbonelikByUser = new Map<string, any>();
+          const sortedAbonelikler = [...abonelikRows].sort((a: any, b: any) => {
+            const durumDiff = getDurumPriority(b.durum) - getDurumPriority(a.durum);
+            if (durumDiff !== 0) return durumDiff;
+            return getTs(b.updated_at || b.created_at) - getTs(a.updated_at || a.created_at);
+          });
+
+          for (const row of sortedAbonelikler) {
+            if (!bestAbonelikByUser.has(row.user_id)) bestAbonelikByUser.set(row.user_id, row);
+          }
+
+          if (filterPaket === "none") {
+            excludedSubscribedUserIds = Array.from(bestAbonelikByUser.keys());
+          } else if (filterPaket !== "all") {
+            includeUserSets.push(new Set(Array.from(bestAbonelikByUser.values()).map((row: any) => row.user_id)));
+          }
+
+          if (activeStatCard === "yeniAbone") {
+            includeUserSets.push(new Set(Array.from(bestAbonelikByUser.values()).map((row: any) => row.user_id)));
+          }
+        }
+
+        if (activeStatCard === "online") {
+          const onlineThreshold = new Date(Date.now() - 15 * 60 * 1000);
+          const onlineProfiles = await fetchAllByBuilder(
+            (from, to) => supabase.from("profiles").select("user_id").gte("last_seen", onlineThreshold.toISOString()).range(from, to),
+            "profiles-online",
+          );
+          includeUserSets.push(new Set(onlineProfiles.map((profile: any) => profile.user_id)));
+        }
+
+        let allowedUserIds: string[] | null = null;
+        if (includeUserSets.length > 0) {
+          const [firstSet, ...otherSets] = includeUserSets;
+          allowedUserIds = Array.from(firstSet).filter((userId) => otherSets.every((set) => set.has(userId)));
+          if (allowedUserIds.length === 0) {
+            return jsonResponse({ firmalar: [], total: 0, page, perPage });
+          }
+        }
+
+        if (allowedUserIds && excludedSubscribedUserIds.length > 0) {
+          const excludedSet = new Set(excludedSubscribedUserIds);
+          allowedUserIds = allowedUserIds.filter((userId) => !excludedSet.has(userId));
+          if (allowedUserIds.length === 0) {
+            return jsonResponse({ firmalar: [], total: 0, page, perPage });
+          }
+        }
+
+        let firmaQuery = supabase.from("firmalar").select(`
+          id, firma_unvani, logo_url, created_at, updated_at, onay_durumu, user_id,
+          firma_turu_id, firma_tipi_id, kurulus_il_id, kurulus_ilce_id,
+          firma_olcegi_id, vergi_numarasi, vergi_dairesi,
+          firma_iletisim_email, firma_iletisim_numarasi, web_sitesi,
+          instagram, facebook, linkedin, x_twitter, tiktok,
+          kapak_fotografi_url, firma_hakkinda, kurulus_tarihi, moq, aylik_uretim_kapasitesi, belge_onayli,
+          firma_turleri:firma_turu_id(id, name),
+          firma_tipleri:firma_tipi_id(id, name)
+        `, { count: "exact" });
+
+        if (searchTerm) firmaQuery = firmaQuery.ilike("firma_unvani", `%${searchTerm}%`);
+        if (filterTuru !== "all") firmaQuery = firmaQuery.eq("firma_turu_id", filterTuru);
+        if (filterTipi !== "all") firmaQuery = firmaQuery.eq("firma_tipi_id", filterTipi);
+        if (filterIl !== "all") firmaQuery = firmaQuery.eq("kurulus_il_id", filterIl);
+        if (filterDurum !== "all") firmaQuery = firmaQuery.eq("onay_durumu", filterDurum);
+        if (activeStatCard === "pending") firmaQuery = firmaQuery.eq("onay_durumu", "onay_bekliyor");
+        if (activeStatCard === "recent") {
+          const daysAgo = new Date();
+          daysAgo.setDate(daysAgo.getDate() - statsDays);
+          firmaQuery = firmaQuery.gte("created_at", daysAgo.toISOString());
+        }
+        if (allowedUserIds) firmaQuery = firmaQuery.in("user_id", allowedUserIds);
+        if (!allowedUserIds && filterPaket === "none" && excludedSubscribedUserIds.length > 0) {
+          firmaQuery = firmaQuery.not("user_id", "in", `(${excludedSubscribedUserIds.join(",")})`);
+        }
+
+        const offset = (page - 1) * perPage;
+        const { data: pageFirmalar, error: pageFirmalarError, count: totalCount } = await firmaQuery
+          .order(sortField, { ascending: sortAscending })
+          .range(offset, offset + perPage - 1);
+
+        if (pageFirmalarError) {
+          return jsonResponse({ error: pageFirmalarError.message }, 400);
+        }
+
+        const firmalar = pageFirmalar || [];
+        if (firmalar.length === 0) {
+          return jsonResponse({ firmalar: [], total: totalCount || 0, page, perPage });
+        }
+
+        const userIds = [...new Set(firmalar.map((firma: any) => firma.user_id))];
+        const firmaIds = firmalar.map((firma: any) => firma.id);
+        const ilIds = firmalar.map((firma: any) => firma.kurulus_il_id).filter(Boolean);
+        const ilceIds = firmalar.map((firma: any) => firma.kurulus_ilce_id).filter(Boolean);
+        const allLocationIds = [...new Set([...ilIds, ...ilceIds])];
+
+        const [profilesRes, ihaleCountsRes, teklifCountsRes, urunCountsRes, sikayetCountsRes, aboneliklerRes, paketlerData, portfolyoRes, locationsRes] = await Promise.all([
+          userIds.length > 0
+            ? supabase.from("profiles").select("user_id, ad, soyad, iletisim_email, iletisim_numarasi, last_seen").in("user_id", userIds)
+            : Promise.resolve({ data: [] }),
+          userIds.length > 0
+            ? supabase.from("ihaleler").select("user_id").in("user_id", userIds)
+            : Promise.resolve({ data: [] }),
+          userIds.length > 0
+            ? supabase.from("ihale_teklifler").select("teklif_veren_user_id").in("teklif_veren_user_id", userIds)
+            : Promise.resolve({ data: [] }),
+          userIds.length > 0
+            ? supabase.from("urunler").select("user_id").in("user_id", userIds)
+            : Promise.resolve({ data: [] }),
+          userIds.length > 0
+            ? supabase.from("sikayetler").select("bildiren_user_id").in("bildiren_user_id", userIds)
+            : Promise.resolve({ data: [] }),
+          userIds.length > 0
+            ? supabase.from("kullanici_abonelikler").select("id, user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, created_at, updated_at").in("user_id", userIds)
+            : Promise.resolve({ data: [] }),
+          supabase.from("paketler").select("id, ad, slug, profil_goruntuleme_limiti, ihale_acma_limiti, teklif_verme_limiti, aktif_urun_limiti, mesaj_limiti"),
+          firmaIds.length > 0
+            ? supabase.from("admin_portfolyo").select("admin_id, firma_id, atayan_admin_id").in("firma_id", firmaIds)
+            : Promise.resolve({ data: [] }),
+          allLocationIds.length > 0
+            ? supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", allLocationIds)
+            : Promise.resolve({ data: [] }),
+        ]);
+
+        const portfolyoData = portfolyoRes.data || [];
+        const adminIds = [...new Set(portfolyoData.map((item: any) => item.admin_id))];
+        let adminUsersForPortfolyo: any[] = [];
+        if (adminIds.length > 0) {
+          const { data: adminRows } = await supabase.from("admin_users").select("id, ad, soyad").in("id", adminIds);
+          adminUsersForPortfolyo = adminRows || [];
+        }
+
+        const profileMap = new Map<string, any>();
+        for (const profile of (profilesRes.data || [])) profileMap.set(profile.user_id, profile);
+
+        const ihaleCountMap = new Map<string, number>();
+        for (const ihale of (ihaleCountsRes.data || [])) ihaleCountMap.set(ihale.user_id, (ihaleCountMap.get(ihale.user_id) || 0) + 1);
+
+        const teklifCountMap = new Map<string, number>();
+        for (const teklif of (teklifCountsRes.data || [])) teklifCountMap.set(teklif.teklif_veren_user_id, (teklifCountMap.get(teklif.teklif_veren_user_id) || 0) + 1);
+
+        const urunCountMap = new Map<string, number>();
+        for (const urun of (urunCountsRes.data || [])) urunCountMap.set(urun.user_id, (urunCountMap.get(urun.user_id) || 0) + 1);
+
+        const sikayetCountMap = new Map<string, number>();
+        for (const sikayet of (sikayetCountsRes.data || [])) sikayetCountMap.set(sikayet.bildiren_user_id, (sikayetCountMap.get(sikayet.bildiren_user_id) || 0) + 1);
+
+        const abonelikByUser = new Map<string, any>();
+        const sortedAbonelikler = [...(aboneliklerRes.data || [])].sort((a: any, b: any) => {
+          const durumDiff = getDurumPriority(b.durum) - getDurumPriority(a.durum);
+          if (durumDiff !== 0) return durumDiff;
+          return getTs(b.updated_at || b.created_at) - getTs(a.updated_at || a.created_at);
+        });
+        for (const row of sortedAbonelikler) {
+          if (!abonelikByUser.has(row.user_id)) abonelikByUser.set(row.user_id, row);
+        }
+
+        const paketMap: Record<string, any> = {};
+        for (const paket of (paketlerData.data || [])) paketMap[paket.id] = paket;
+
+        const adminNameMap = new Map<string, any>();
+        for (const admin of adminUsersForPortfolyo) adminNameMap.set(admin.id, admin);
+
+        const portfolyoMap = new Map<string, { admin_id: string; admin_ad: string; admin_soyad: string; atanmis: boolean }>();
+        for (const portfolyo of portfolyoData) {
+          const admin = adminNameMap.get(portfolyo.admin_id);
+          portfolyoMap.set(portfolyo.firma_id, {
+            admin_id: portfolyo.admin_id,
+            admin_ad: admin?.ad || "",
+            admin_soyad: admin?.soyad || "",
+            atanmis: !!portfolyo.atayan_admin_id,
+          });
+        }
+
+        const locationMap = Object.fromEntries((locationsRes.data || []).map((location: any) => [location.id, location.name]));
+
+        const FIRMA_FIELDS = [
+          "firma_unvani", "firma_turu_id", "firma_tipi_id", "vergi_numarasi", "vergi_dairesi",
+          "firma_olcegi_id", "kurulus_tarihi", "kurulus_il_id", "kurulus_ilce_id", "web_sitesi",
+          "firma_iletisim_numarasi", "firma_iletisim_email", "instagram", "facebook", "linkedin",
+          "x_twitter", "tiktok", "logo_url", "kapak_fotografi_url", "firma_hakkinda",
+        ];
+
+        const enriched = firmalar.map((firma: any) => {
+          let filled = 0;
+          for (const field of FIRMA_FIELDS) {
+            const value = firma[field];
+            if (value !== null && value !== undefined && value !== "") filled++;
+          }
+
+          const abonelik = abonelikByUser.get(firma.user_id) || null;
+          const paket = abonelik ? paketMap[abonelik.paket_id] || null : null;
+
+          return {
+            id: firma.id,
+            firma_unvani: firma.firma_unvani,
+            logo_url: firma.logo_url,
+            created_at: firma.created_at,
+            updated_at: firma.updated_at,
+            onay_durumu: firma.onay_durumu,
+            user_id: firma.user_id,
+            firma_turu_id: firma.firma_turu_id,
+            firma_tipi_id: firma.firma_tipi_id,
+            kurulus_il_id: firma.kurulus_il_id,
+            kurulus_ilce_id: firma.kurulus_ilce_id,
+            belge_onayli: firma.belge_onayli,
+            profile: profileMap.get(firma.user_id) || null,
+            firma_turu_name: firma.firma_turleri?.name || null,
+            firma_tipi_name: firma.firma_tipleri?.name || null,
+            il_name: firma.kurulus_il_id ? locationMap[firma.kurulus_il_id] || null : null,
+            ilce_name: firma.kurulus_ilce_id ? locationMap[firma.kurulus_ilce_id] || null : null,
+            ihale_sayisi: ihaleCountMap.get(firma.user_id) || 0,
+            teklif_sayisi: teklifCountMap.get(firma.user_id) || 0,
+            urun_sayisi: urunCountMap.get(firma.user_id) || 0,
+            sikayet_sayisi: sikayetCountMap.get(firma.user_id) || 0,
+            profil_doluluk: Math.round((filled / FIRMA_FIELDS.length) * 100),
+            abonelik: abonelik ? {
+              paket_id: abonelik.paket_id,
+              paket_ad: paket?.ad || "—",
+              paket_slug: paket?.slug || "",
+              periyot: abonelik.periyot,
+              donem_baslangic: abonelik.donem_baslangic,
+              donem_bitis: abonelik.donem_bitis,
+              durum: abonelik.durum,
+              limits: paket ? {
+                profil_goruntuleme_limiti: paket.profil_goruntuleme_limiti,
+                ihale_acma_limiti: paket.ihale_acma_limiti,
+                teklif_verme_limiti: paket.teklif_verme_limiti,
+                aktif_urun_limiti: paket.aktif_urun_limiti,
+                mesaj_limiti: paket.mesaj_limiti,
+              } : null,
+            } : null,
+            portfolyo: portfolyoMap.get(firma.id) || null,
+          };
+        });
+
+        return jsonResponse({ firmalar: enriched, total: totalCount || 0, page, perPage });
+      }
+
       // Fetch all data in parallel - no .in() needed, just get everything
       const [firmalar, profiles, ihaleCounts, teklifCounts, urunCounts, sikayetCounts, abonelikler, paketlerData, portfolyoData, adminUsersForPortfolyo] = await Promise.all([
         fetchAll("firmalar", `
