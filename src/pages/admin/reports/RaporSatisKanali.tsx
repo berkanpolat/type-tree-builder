@@ -41,7 +41,7 @@ export default function RaporSatisKanali() {
       ]);
 
       const allAksiyonlar = aksiyonData.aksiyonlar || [];
-      const admins = adminData.admins || [];
+      const admins = adminData.users || [];
       const adminDepartmanMap = new Map(admins.map((a: any) => [a.id, a.departman || "Bilinmeyen"]));
       const adminNameMap = new Map(admins.map((a: any) => [a.id, `${a.ad} ${a.soyad}`]));
 

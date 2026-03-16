@@ -65,7 +65,7 @@ export default function RaporPersonelPerformans() {
 
       setAksiyonlar(allAksiyonlar);
       setZiyaretler(allZiyaretler);
-      setAdminUsers(adminData.admins || []);
+      setAdminUsers(adminData.users || []);
       setPaketAtamalar(allPaketAtamalar);
     } catch {
       setAksiyonlar([]);
