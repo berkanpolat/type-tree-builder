@@ -4,7 +4,7 @@ import { useAdminTheme } from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/use-toast";
 import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2, CalendarDays, X } from "lucide-react";
@@ -336,42 +336,59 @@ export default function AdminAjanda() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent style={{ background: `hsl(var(--admin-card))`, borderColor: `hsl(var(--admin-border))` }}>
+        <DialogContent className="max-w-md" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
           <DialogHeader>
-            <DialogTitle style={{ color: `hsl(var(--admin-text))` }}>
-              {editNote ? "Notu Düzenle" : "Yeni Not"} — {selDateObj.toLocaleDateString("tr-TR", { day: "numeric", month: "long" })}
+            <DialogTitle className="text-sm font-semibold" style={{ color: "hsl(var(--admin-text))" }}>
+              {editNote ? "Notu Düzenle" : "Yeni Not"}
             </DialogTitle>
+            <p className="text-xs" style={{ color: "hsl(var(--admin-muted))" }}>
+              {selDateObj.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
+            </p>
           </DialogHeader>
-          <div className="space-y-4">
-            <Textarea
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
-              placeholder="Notunuzu yazın..."
-              rows={3}
-              className="resize-none"
-              style={{ background: `hsl(var(--admin-bg))`, color: `hsl(var(--admin-text))`, borderColor: `hsl(var(--admin-border))` }}
-              autoFocus
-            />
+
+          <div className="space-y-3 mt-2">
+            {/* Not İçeriği */}
             <div>
-              <p className="text-xs mb-2" style={{ color: `hsl(var(--admin-muted))` }}>Renk</p>
+              <label className="text-xs font-medium mb-1 block" style={{ color: "hsl(var(--admin-muted))" }}>Not</label>
+              <Textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Notunuzu yazın..."
+                rows={3}
+                className="text-sm min-h-[60px] resize-none"
+                style={{ background: "hsl(var(--admin-input-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+                autoFocus
+              />
+            </div>
+
+            {/* Renk Seçimi */}
+            <div>
+              <label className="text-xs font-medium mb-1.5 block" style={{ color: "hsl(var(--admin-muted))" }}>Renk</label>
               <div className="flex gap-2">
                 {COLORS.map((c) => (
                   <button
                     key={c.value}
                     onClick={() => setNoteColor(c.value)}
-                    className={cn("w-7 h-7 rounded-full border-2 transition-all", c.dot, noteColor === c.value ? "ring-2 ring-offset-2 ring-amber-500 scale-110" : "opacity-60 hover:opacity-100")}
+                    className={cn(
+                      "w-7 h-7 rounded-full border-2 transition-all",
+                      c.dot,
+                      noteColor === c.value ? "ring-2 ring-offset-1 ring-amber-500 scale-110" : "opacity-50 hover:opacity-100"
+                    )}
                     style={{ borderColor: noteColor === c.value ? "hsl(var(--admin-text))" : "transparent" }}
                   />
                 ))}
               </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setDialogOpen(false)} style={{ color: `hsl(var(--admin-muted))` }}>İptal</Button>
-            <Button onClick={handleSave} disabled={saving || !noteText.trim()} className="bg-amber-500 hover:bg-amber-600 text-white">
-              {saving ? "Kaydediliyor..." : editNote ? "Güncelle" : "Ekle"}
+
+            {/* Submit Button */}
+            <Button
+              onClick={handleSave}
+              disabled={saving || !noteText.trim()}
+              className="w-full bg-amber-500 hover:bg-amber-600 text-white h-9 text-sm"
+            >
+              {saving ? "Kaydediliyor..." : editNote ? "Güncelle" : "Not Ekle"}
             </Button>
-          </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </AdminLayout>
