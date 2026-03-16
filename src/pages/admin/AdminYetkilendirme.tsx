@@ -517,6 +517,19 @@ export default function AdminYetkilendirme() {
 
               {/* Permission Groups */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3 rounded-b-xl" style={{ ...sCard, borderRadius: "0 0 0.75rem 0.75rem", borderTop: "none" }}>
+               {/* Permission Search */}
+               {!selectedUser.is_primary && (
+                 <div className="relative mb-3">
+                   <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={sMuted} />
+                   <Input
+                     placeholder="Yetki ara..."
+                     value={permSearch}
+                     onChange={e => setPermSearch(e.target.value)}
+                     className="pl-9 h-9 text-sm"
+                     style={sInput}
+                   />
+                 </div>
+               )}
                 {selectedUser.is_primary ? (
                   <div className="flex flex-col items-center justify-center py-16">
                     <ShieldAlert className="w-12 h-12 text-amber-500/40 mb-3" />
@@ -524,17 +537,15 @@ export default function AdminYetkilendirme() {
                     <p className="text-xs mt-1" style={sMuted}>Bu hesabın yetkileri değiştirilemez</p>
                   </div>
                 ) : (
-                  PERMISSION_GROUPS.map(group => {
-                    const expanded = expandedGroups.has(group.label);
-                    const { total, enabled } = countEnabled(perms, group.items);
-                    const Icon = group.icon;
-                    const allOn = enabled === total;
-                    return (
-                      <div key={group.label} className="rounded-xl overflow-hidden transition-all" style={{ background: "hsl(var(--admin-bg))", border: "1px solid hsl(var(--admin-border))" }}>
-                        <button
-                          onClick={() => toggleGroup(group.label)}
-                          className="w-full flex items-center gap-3 p-3 hover:bg-amber-500/5 transition-colors"
-                        >
+                  (() => {
+                    const filteredGroups = PERMISSION_GROUPS.map(group => ({
+                      ...group,
+                      filteredItems: filterItems(group.items, permQuery),
+                    })).filter(g => g.filteredItems.length > 0);
+
+                    return filteredGroups.length === 0 ? (
+                      <p className="text-sm text-center py-8" style={sMuted}>Eşleşen yetki bulunamadı</p>
+                    ) : filteredGroups.map(group => {
                           <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "hsl(30 100% 50% / 0.1)" }}>
                             <Icon className="w-4 h-4 text-amber-500" />
                           </div>
