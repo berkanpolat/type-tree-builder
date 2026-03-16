@@ -3925,8 +3925,8 @@ Deno.serve(async (req) => {
     // ─── AKSIYONLAR: CREATE ───
     if (action === "create-aksiyon") {
       const payload = verifyToken(body.token);
-      const { firmaId, baslik, aciklama, tur, tarih, yetkiliId, sonuc, sonucNeden, sonucPaketId } = body;
-      console.log("[CREATE-AKSIYON] Started. sonuc:", sonuc, "sonucPaketId:", sonucPaketId, "periyot:", body.periyot, "odemeMail:", body.odemeMail);
+      const { firmaId, baslik, aciklama, tur, tarih, yetkiliId, sonuc, sonucNeden, sonucPaketId, periyot } = body;
+      console.log("[CREATE-AKSIYON] Started. sonuc:", sonuc, "sonucPaketId:", sonucPaketId, "periyot:", periyot, "odemeMail:", body.odemeMail);
       if (!firmaId || !baslik) return jsonResponse({ error: "Firma ve başlık zorunlu" }, 400);
       if (!sonuc) return jsonResponse({ error: "Aksiyon sonucu zorunlu" }, 400);
       
@@ -3946,7 +3946,12 @@ Deno.serve(async (req) => {
       if (error) return jsonResponse({ error: error.message }, 400);
       
       const { data: firmaData } = await supabase.from("firmalar").select("firma_unvani, user_id, firma_iletisim_email").eq("id", firmaId).single();
-      await logActivity(supabase, payload, "aksiyon_ekledi", { target_type: "firma", target_id: firmaId, target_label: firmaData?.firma_unvani || "", details: { baslik, tur, sonuc } });
+      await logActivity(supabase, payload, "aksiyon_ekledi", {
+        target_type: "firma",
+        target_id: firmaId,
+        target_label: firmaData?.firma_unvani || "",
+        details: { baslik, tur, sonuc, periyot: periyot || null, sonuc_paket_id: sonucPaketId || null },
+      });
 
       let packageAssigned = false;
       let paymentLinkSent = false;
@@ -3959,6 +3964,7 @@ Deno.serve(async (req) => {
           // Auto-assign free or pro-free package
           const now = new Date();
           const donemBitis = new Date(now);
+          const assignedPeriyot = paket.slug === "pro-ucretsiz" ? "sinursiz" : "aylik";
           if (paket.slug === "pro-ucretsiz") {
             donemBitis.setFullYear(donemBitis.getFullYear() + 100);
           } else {
@@ -3971,7 +3977,7 @@ Deno.serve(async (req) => {
           if (existingSub) {
             await supabase.from("kullanici_abonelikler").update({
               paket_id: sonucPaketId,
-              periyot: paket.slug === "pro-ucretsiz" ? "aylik" : "aylik",
+              periyot: assignedPeriyot,
               donem_baslangic: now.toISOString(),
               donem_bitis: donemBitis.toISOString(),
               durum: "aktif",
@@ -3981,7 +3987,7 @@ Deno.serve(async (req) => {
             await supabase.from("kullanici_abonelikler").insert({
               user_id: firmaData.user_id,
               paket_id: sonucPaketId,
-              periyot: "aylik",
+              periyot: assignedPeriyot,
               donem_baslangic: now.toISOString(),
               donem_bitis: donemBitis.toISOString(),
               durum: "aktif",
