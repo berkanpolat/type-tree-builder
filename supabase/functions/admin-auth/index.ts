@@ -4295,63 +4295,58 @@ Deno.serve(async (req) => {
       const paketMap = new Map((paketRes.data || []).map((p: any) => [p.id, p.ad]));
       const paketSlugMap = new Map((paketRes.data || []).map((p: any) => [p.id, p.slug]));
 
-      // Enrich periyot: try activity log first, then fallback to paket slug inference
       const userIdsForPeriyot = [...new Set((firmaRes.data || []).map((f: any) => f.user_id).filter(Boolean))];
-      const [activityLogRes, abonelikRes] = await Promise.all([
+      const [paymentRes, activityLogRes] = await Promise.all([
         userIdsForPeriyot.length > 0
-          ? supabase.from("admin_activity_log")
-              .select("target_id, created_at, details")
-              .eq("action", "update-firma-paket")
-              .in("target_id", userIdsForPeriyot)
-              .order("created_at", { ascending: false })
+          ? supabase.from("odeme_kayitlari").select("user_id, created_at, periyot").in("user_id", userIdsForPeriyot).order("created_at", { ascending: false })
           : Promise.resolve({ data: [] }),
         userIdsForPeriyot.length > 0
-          ? supabase.from("kullanici_abonelikler")
-              .select("user_id, periyot")
-              .in("user_id", userIdsForPeriyot)
+          ? supabase.from("admin_activity_log").select("target_id, created_at, details").eq("action", "update-firma-paket").in("target_id", userIdsForPeriyot).order("created_at", { ascending: false })
           : Promise.resolve({ data: [] }),
       ]);
-      
-      // Build lookup: user_id → [{created_at, periyot}]
-      const periyotLookup = new Map<string, Array<{created_at: string, periyot: string}>>();
-      (activityLogRes.data || []).forEach((log: any) => {
-        const details = typeof log.details === "string" ? JSON.parse(log.details) : log.details || {};
-        if (!details.periyot) return;
-        const key = log.target_id;
-        if (!periyotLookup.has(key)) periyotLookup.set(key, []);
-        periyotLookup.get(key)!.push({ created_at: log.created_at, periyot: details.periyot });
+
+      const paymentPeriyotLookup = new Map<string, Array<{ created_at: string; periyot: string }>>();
+      (paymentRes.data || []).forEach((payment: any) => {
+        if (!payment?.periyot) return;
+        if (!paymentPeriyotLookup.has(payment.user_id)) paymentPeriyotLookup.set(payment.user_id, []);
+        paymentPeriyotLookup.get(payment.user_id)!.push({ created_at: payment.created_at, periyot: payment.periyot });
       });
 
-      // Fallback: current subscription periyot
-      const currentPeriyotMap = new Map((abonelikRes.data || []).map((a: any) => [a.user_id, a.periyot]));
+      const activityPeriyotLookup = new Map<string, Array<{ created_at: string; periyot: string }>>();
+      (activityLogRes.data || []).forEach((log: any) => {
+        const details = typeof log.details === "string" ? JSON.parse(log.details) : log.details || {};
+        if (!details?.periyot) return;
+        if (!activityPeriyotLookup.has(log.target_id)) activityPeriyotLookup.set(log.target_id, []);
+        activityPeriyotLookup.get(log.target_id)!.push({ created_at: log.created_at, periyot: details.periyot });
+      });
+
+      const findClosestPeriyot = (entries: Array<{ created_at: string; periyot: string }> | undefined, targetDate: string) => {
+        if (!entries || entries.length === 0) return null;
+        const targetTime = new Date(targetDate).getTime();
+        const maxMatchMs = 24 * 60 * 60 * 1000;
+        let closest: { created_at: string; periyot: string } | null = null;
+        let minDiff = Number.POSITIVE_INFINITY;
+        for (const entry of entries) {
+          const diff = Math.abs(new Date(entry.created_at).getTime() - targetTime);
+          if (diff < minDiff) {
+            closest = entry;
+            minDiff = diff;
+          }
+        }
+        return minDiff <= maxMatchMs ? closest?.periyot || null : null;
+      };
 
       const enriched = (data || []).map((a: any) => {
         const userId = firmaUserMap.get(a.firma_id);
+        const paketSlug = a.sonuc_paket_id ? paketSlugMap.get(a.sonuc_paket_id) || null : null;
         let periyot: string | null = null;
-        if (userId && a.sonuc_paket_id) {
-          // Strategy 1: Find closest activity log entry by time (user_id match only)
-          const entries = periyotLookup.get(userId);
-          if (entries && entries.length > 0) {
-            const aksiyonTime = new Date(a.tarih).getTime();
-            let closest = entries[0];
-            let minDiff = Math.abs(new Date(closest.created_at).getTime() - aksiyonTime);
-            for (const entry of entries) {
-              const diff = Math.abs(new Date(entry.created_at).getTime() - aksiyonTime);
-              if (diff < minDiff) { closest = entry; minDiff = diff; }
-            }
-            periyot = closest.periyot;
-          }
-          // Strategy 2: Infer from paket slug
-          if (!periyot) {
-            const slug = paketSlugMap.get(a.sonuc_paket_id);
-            if (slug === "ucretsiz") periyot = "aylik";
-            else if (slug === "pro-ucretsiz") periyot = "sinursiz";
-          }
-          // Strategy 3: Fallback to current subscription
-          if (!periyot && userId) {
-            periyot = currentPeriyotMap.get(userId) || null;
-          }
-        }
+
+        if (paketSlug === "ucretsiz") periyot = "aylik";
+        else if (paketSlug === "pro-ucretsiz") periyot = "sinursiz";
+        else if (paketSlug === "pro" && userId) periyot = findClosestPeriyot(paymentPeriyotLookup.get(userId), a.tarih);
+
+        if (!periyot && userId) periyot = findClosestPeriyot(activityPeriyotLookup.get(userId), a.tarih);
+
         return {
           ...a,
           firma_unvani: firmaMap.get(a.firma_id) || "—",
