@@ -2807,7 +2807,7 @@ Deno.serve(async (req) => {
       }
 
       // Notify user
-      const { data: paket } = await supabase.from("paketler").select("ad").eq("id", paketId).single();
+      const { data: paket } = await supabase.from("paketler").select("ad, slug").eq("id", paketId).single();
       const periyotLabel = periyotValue === "sinursiz" ? "Sınırsız" : periyotValue === "yillik" ? "Yıllık" : "Aylık";
       await supabase.from("notifications").insert({
         user_id: userId,
@@ -2815,6 +2815,67 @@ Deno.serve(async (req) => {
         message: `Paketiniz ${paket?.ad || ""} (${periyotLabel}) olarak güncellenmiştir.`,
         link: "/dashboard",
       });
+
+      // Send password creation email for PRO paid package assignments
+      if (paket?.slug === "pro") {
+        try {
+          const { data: { user: authUser } } = await supabase.auth.admin.getUserById(userId);
+          const userEmail = authUser?.email;
+          if (userEmail) {
+            const { data: firmaData } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", userId).single();
+            const { data: profileData } = await supabase.from("profiles").select("ad, soyad").eq("user_id", userId).single();
+            const adSoyad = profileData ? `${profileData.ad} ${profileData.soyad}` : "";
+
+            // Generate recovery link for password creation
+            const SITE_URL = "https://tekstilas.com";
+            const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+              type: "recovery",
+              email: userEmail,
+              options: { redirectTo: `${SITE_URL}/sifre-sifirla` },
+            });
+
+            let sifreLink = `${SITE_URL}/sifre-sifirla`;
+            if (!linkError && linkData?.properties?.hashed_token) {
+              sifreLink = `${SITE_URL}/sifre-sifirla?token_hash=${linkData.properties.hashed_token}&type=recovery`;
+            }
+
+            // Send hosgeldiniz (password creation) template via send-email
+            const POSTMARK_SERVER_TOKEN = Deno.env.get("POSTMARK_SERVER_TOKEN");
+            if (POSTMARK_SERVER_TOKEN) {
+              const emailRes = await fetch("https://api.postmarkapp.com/email/withTemplate", {
+                method: "POST",
+                headers: {
+                  "Accept": "application/json",
+                  "Content-Type": "application/json",
+                  "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+                },
+                body: JSON.stringify({
+                  From: "Tekstil A.Ş. <info@tekstilas.com>",
+                  To: userEmail,
+                  TemplateId: 43889443, // hosgeldiniz template
+                  TemplateModel: {
+                    ad_soyad: adSoyad,
+                    firma_unvani: firmaData?.firma_unvani || "",
+                    platform_adi: "Tekstil A.Ş.",
+                    giris_url: sifreLink,
+                    destek_email: "destek@tekstilas.com",
+                    yil: new Date().getFullYear().toString(),
+                    site_url: SITE_URL,
+                  },
+                }),
+              });
+              const emailData = await emailRes.json();
+              if (emailRes.ok) {
+                console.log(`[UPDATE-FIRMA-PAKET] Password creation email sent to ${userEmail}, messageId=${emailData.MessageID}`);
+              } else {
+                console.error(`[UPDATE-FIRMA-PAKET] Postmark error:`, JSON.stringify(emailData));
+              }
+            }
+          }
+        } catch (emailErr) {
+          console.error("[UPDATE-FIRMA-PAKET] Password creation email error:", emailErr);
+        }
+      }
 
       // Log activity
       await logActivity(supabase, payload, "update-firma-paket", {
