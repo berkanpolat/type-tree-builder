@@ -851,6 +851,7 @@ export default function AdminFirmalarV2() {
           <div className="text-center py-12" style={s.muted}>Firma bulunamadı.</div>
         ) : (
           <div style={s.card} className="overflow-hidden">
+            <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow style={{ borderColor: "hsl(var(--admin-border))" }}>
