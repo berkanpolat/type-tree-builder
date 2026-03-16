@@ -4459,12 +4459,14 @@ Deno.serve(async (req) => {
     // ─── ZİYARET PLANI: LİSTELE ───
     if (action === "list-ziyaret-planlari") {
       const payload = verifyToken(body.token);
-      const { adminId, durum, baslangic, bitis } = body;
+      const { adminId, durum, baslangic, bitis, from, to } = body;
       
-      let query = supabase.from("admin_ziyaret_planlari").select("*").eq("admin_id", adminId || payload.id);
+      let query = supabase.from("admin_ziyaret_planlari").select("*");
+      // If adminId provided, filter by admin; otherwise return all (for reports)
+      if (adminId) query = query.eq("admin_id", adminId);
       if (durum) query = query.eq("durum", durum);
-      if (baslangic) query = query.gte("planlanan_tarih", baslangic);
-      if (bitis) query = query.lte("planlanan_tarih", bitis);
+      if (baslangic || from) query = query.gte("planlanan_tarih", baslangic || from);
+      if (bitis || to) query = query.lte("planlanan_tarih", bitis || to);
       query = query.order("planlanan_tarih", { ascending: true }).order("sira", { ascending: true });
       
       const { data, error } = await query;
