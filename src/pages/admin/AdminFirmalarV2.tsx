@@ -1092,6 +1092,7 @@ export default function AdminFirmalarV2() {
                 })}
               </TableBody>
             </Table>
+            </div>
           </div>
         )}
 

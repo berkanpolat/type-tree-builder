@@ -536,6 +536,7 @@ export default function AdminPortfoy() {
                 })}
               </TableBody>
             </Table>
+            </div>
           </div>
         )}
 
