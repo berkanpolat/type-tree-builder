@@ -2834,10 +2834,25 @@ Deno.serve(async (req) => {
               options: { redirectTo: `${SITE_URL}/sifre-sifirla` },
             });
 
+            console.log("[UPDATE-FIRMA-PAKET] generateLink result:", JSON.stringify({ linkError, hasProperties: !!linkData?.properties, hashed_token: linkData?.properties?.hashed_token ? "exists" : "missing", action_link: linkData?.properties?.action_link ? "exists" : "missing" }));
+
             let sifreLink = `${SITE_URL}/sifre-sifirla`;
             if (!linkError && linkData?.properties?.hashed_token) {
               sifreLink = `${SITE_URL}/sifre-sifirla?token_hash=${linkData.properties.hashed_token}&type=recovery`;
+            } else if (!linkError && linkData?.properties?.action_link) {
+              // Fallback: extract token from action_link
+              try {
+                const actionUrl = new URL(linkData.properties.action_link);
+                const token = actionUrl.searchParams.get("token");
+                if (token) {
+                  sifreLink = `${SITE_URL}/sifre-sifirla?token_hash=${token}&type=recovery`;
+                  console.log("[UPDATE-FIRMA-PAKET] Used fallback token from action_link");
+                }
+              } catch (e) {
+                console.error("[UPDATE-FIRMA-PAKET] Failed to parse action_link:", e);
+              }
             }
+            console.log("[UPDATE-FIRMA-PAKET] Final sifreLink:", sifreLink);
 
             // Send hosgeldiniz (password creation) template via send-email
             const POSTMARK_SERVER_TOKEN = Deno.env.get("POSTMARK_SERVER_TOKEN");
