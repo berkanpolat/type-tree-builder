@@ -118,7 +118,13 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
   const [yetkiliSoyad, setYetkiliSoyad] = useState("");
   const [yetkiliSaving, setYetkiliSaving] = useState(false);
 
-  const fetchYetkililer = async () => {
+  // Hatırlatıcı fields
+  const [hatirlaticiAktif, setHatirlaticiAktif] = useState(false);
+  const [hatirlaticiTarih, setHatirlaticiTarih] = useState<Date>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+  const [hatirlaticiSaat, setHatirlaticiSaat] = useState("09:00");
+  const [hatirlaticiNot, setHatirlaticiNot] = useState("");
+
+
     setYetkililerLoading(true);
     try {
       const data = await callApi("list-yetkililer", { token, firmaId });
