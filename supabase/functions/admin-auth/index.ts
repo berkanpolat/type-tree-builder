@@ -3147,14 +3147,20 @@ Deno.serve(async (req) => {
     // ─── LIST ACTIVITY LOG ───
     if (action === "list-activity-log") {
       const payload = verifyToken(body.token);
-      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 403);
 
-      const { data, error } = await supabase
+      let query = supabase
         .from("admin_activity_log")
         .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1000);
+        .order("created_at", { ascending: false });
 
+      // Optional filters for report pages
+      if (body.action) query = query.eq("action", body.action);
+      if (body.from) query = query.gte("created_at", body.from);
+      if (body.to) query = query.lte("created_at", body.to);
+
+      query = query.limit(1000);
+
+      const { data, error } = await query;
       if (error) return jsonResponse({ error: error.message }, 500);
       return jsonResponse({ logs: data || [] });
     }
