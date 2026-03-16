@@ -387,7 +387,7 @@ export default function ManuPazar() {
                   <TableHead>Fiyat</TableHead>
                   <TableHead>Güncelleme</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead className="text-center">İşlemler</TableHead>
+                  <TableHead className="text-center sticky-action-col">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
