@@ -4296,44 +4296,51 @@ Deno.serve(async (req) => {
       const paketSlugMap = new Map((paketRes.data || []).map((p: any) => [p.id, p.slug]));
 
       const userIdsForPeriyot = [...new Set((firmaRes.data || []).map((f: any) => f.user_id).filter(Boolean))];
-      const [paymentRes, activityLogRes] = await Promise.all([
+      const [paymentRes, activityLogRes, aksiyonLogRes] = await Promise.all([
         userIdsForPeriyot.length > 0
           ? supabase.from("odeme_kayitlari").select("user_id, created_at, periyot").in("user_id", userIdsForPeriyot).order("created_at", { ascending: false })
           : Promise.resolve({ data: [] }),
         userIdsForPeriyot.length > 0
           ? supabase.from("admin_activity_log").select("target_id, created_at, details").eq("action", "update-firma-paket").in("target_id", userIdsForPeriyot).order("created_at", { ascending: false })
           : Promise.resolve({ data: [] }),
+        firmaIds.length > 0
+          ? supabase.from("admin_activity_log").select("target_id, created_at, details").eq("action", "aksiyon_ekledi").in("target_id", firmaIds).order("created_at", { ascending: false })
+          : Promise.resolve({ data: [] }),
       ]);
 
-      const paymentPeriyotLookup = new Map<string, Array<{ created_at: string; periyot: string }>>();
-      (paymentRes.data || []).forEach((payment: any) => {
-        if (!payment?.periyot) return;
-        if (!paymentPeriyotLookup.has(payment.user_id)) paymentPeriyotLookup.set(payment.user_id, []);
-        paymentPeriyotLookup.get(payment.user_id)!.push({ created_at: payment.created_at, periyot: payment.periyot });
+      type PeriyotEntry = { created_at: string; periyot: string };
+      const buildLookup = (entries: any[], keyFn: (e: any) => string | null, periyotFn: (e: any) => string | null) => {
+        const map = new Map<string, PeriyotEntry[]>();
+        entries.forEach((e) => {
+          const key = keyFn(e);
+          const p = periyotFn(e);
+          if (!key || !p) return;
+          if (!map.has(key)) map.set(key, []);
+          map.get(key)!.push({ created_at: e.created_at, periyot: p });
+        });
+        return map;
+      };
+
+      const paymentLookup = buildLookup(paymentRes.data || [], e => e.user_id, e => e.periyot);
+      const activityLookup = buildLookup(activityLogRes.data || [], e => e.target_id, e => {
+        const d = typeof e.details === "string" ? JSON.parse(e.details) : e.details || {};
+        return d.periyot || null;
+      });
+      const aksiyonLogLookup = buildLookup(aksiyonLogRes.data || [], e => e.target_id, e => {
+        const d = typeof e.details === "string" ? JSON.parse(e.details) : e.details || {};
+        return d.periyot || null;
       });
 
-      const activityPeriyotLookup = new Map<string, Array<{ created_at: string; periyot: string }>>();
-      (activityLogRes.data || []).forEach((log: any) => {
-        const details = typeof log.details === "string" ? JSON.parse(log.details) : log.details || {};
-        if (!details?.periyot) return;
-        if (!activityPeriyotLookup.has(log.target_id)) activityPeriyotLookup.set(log.target_id, []);
-        activityPeriyotLookup.get(log.target_id)!.push({ created_at: log.created_at, periyot: details.periyot });
-      });
-
-      const findClosestPeriyot = (entries: Array<{ created_at: string; periyot: string }> | undefined, targetDate: string) => {
+      const findClosest = (entries: PeriyotEntry[] | undefined, targetDate: string): string | null => {
         if (!entries || entries.length === 0) return null;
         const targetTime = new Date(targetDate).getTime();
-        const maxMatchMs = 24 * 60 * 60 * 1000;
-        let closest: { created_at: string; periyot: string } | null = null;
-        let minDiff = Number.POSITIVE_INFINITY;
+        let closest = entries[0];
+        let minDiff = Math.abs(new Date(closest.created_at).getTime() - targetTime);
         for (const entry of entries) {
           const diff = Math.abs(new Date(entry.created_at).getTime() - targetTime);
-          if (diff < minDiff) {
-            closest = entry;
-            minDiff = diff;
-          }
+          if (diff < minDiff) { closest = entry; minDiff = diff; }
         }
-        return minDiff <= maxMatchMs ? closest?.periyot || null : null;
+        return closest.periyot;
       };
 
       const enriched = (data || []).map((a: any) => {
@@ -4343,9 +4350,14 @@ Deno.serve(async (req) => {
 
         if (paketSlug === "ucretsiz") periyot = "aylik";
         else if (paketSlug === "pro-ucretsiz") periyot = "sinursiz";
-        else if (paketSlug === "pro" && userId) periyot = findClosestPeriyot(paymentPeriyotLookup.get(userId), a.tarih);
-
-        if (!periyot && userId) periyot = findClosestPeriyot(activityPeriyotLookup.get(userId), a.tarih);
+        else if (paketSlug === "pro" && userId) {
+          // 1st: odeme_kayitlari (most reliable for PRO)
+          periyot = findClosest(paymentLookup.get(userId), a.tarih);
+        }
+        // 2nd: aksiyon_ekledi log (stores periyot in details since recent update)
+        if (!periyot) periyot = findClosest(aksiyonLogLookup.get(a.firma_id), a.tarih);
+        // 3rd: update-firma-paket activity log
+        if (!periyot && userId) periyot = findClosest(activityLookup.get(userId), a.tarih);
 
         return {
           ...a,
