@@ -546,6 +546,16 @@ export default function AdminYetkilendirme() {
                     return filteredGroups.length === 0 ? (
                       <p className="text-sm text-center py-8" style={sMuted}>Eşleşen yetki bulunamadı</p>
                     ) : filteredGroups.map(group => {
+                    const expanded = expandedGroups.has(group.label) || !!permQuery;
+                    const { total, enabled } = countEnabled(perms, group.items);
+                    const Icon = group.icon;
+                    const allOn = enabled === total;
+                    return (
+                      <div key={group.label} className="rounded-xl overflow-hidden transition-all" style={{ background: "hsl(var(--admin-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                        <button
+                          onClick={() => toggleGroup(group.label)}
+                          className="w-full flex items-center gap-3 p-3 hover:bg-amber-500/5 transition-colors"
+                        >
                           <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "hsl(30 100% 50% / 0.1)" }}>
                             <Icon className="w-4 h-4 text-amber-500" />
                           </div>
@@ -563,7 +573,7 @@ export default function AdminYetkilendirme() {
                         </button>
                         {expanded && (
                           <div className="px-3 pb-3 space-y-0.5">
-                            {canManage && (
+                            {canManage && !permQuery && (
                               <div className="flex gap-2 mb-2">
                                 <button
                                   onClick={() => toggleAllGroup(group, true)}
@@ -579,17 +589,44 @@ export default function AdminYetkilendirme() {
                                 </button>
                               </div>
                             )}
-                            {renderItems(group.items)}
+                            {renderItems(group.filteredItems)}
                           </div>
                         )}
                       </div>
                     );
-                  })
+                  }));
+                  })()
                 )}
               </div>
             </div>
           )}
         </div>
+
+        {/* Unsaved changes dialog */}
+        <AlertDialog open={showUnsavedDialog} onOpenChange={setShowUnsavedDialog}>
+          <AlertDialogContent style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}>
+                <AlertTriangle className="w-5 h-5 text-amber-500" />
+                Kaydedilmemiş Değişiklikler
+              </AlertDialogTitle>
+              <AlertDialogDescription style={{ color: "hsl(var(--admin-muted))" }}>
+                Yetki değişiklikleri henüz kaydedilmedi. Kaydetmeden devam ederseniz değişiklikler kaybolacak.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>
+                Geri Dön
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDiscardAndSwitch}
+                className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white"
+              >
+                Kaydetmeden Geç
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AdminLayout>
   );
