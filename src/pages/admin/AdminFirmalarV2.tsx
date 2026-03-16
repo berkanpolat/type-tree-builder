@@ -262,19 +262,25 @@ export default function AdminFirmalarV2() {
       const dropdownData = await callApi("get-dropdown-options", { token });
       setTurler(dropdownData.turler || []);
       setTipler((dropdownData.tipler || []) as any);
-      const ilKatId = await getIlKategoriId();
-      const { data: il } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name");
+      const [ilKatId, ilceKatId] = await Promise.all([getIlKategoriId(), getIlceKategoriId()]);
+      const [{ data: il }, { data: ilce }] = await Promise.all([
+        supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
+        supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilceKatId).order("name"),
+      ]);
       setIller(il || []);
+      setIlceler((ilce || []) as any);
     } catch {
-      const ilKatId = await getIlKategoriId();
-      const [{ data: t }, { data: tp }, { data: il }] = await Promise.all([
+      const [ilKatId, ilceKatId] = await Promise.all([getIlKategoriId(), getIlceKategoriId()]);
+      const [{ data: t }, { data: tp }, { data: il }, { data: ilce }] = await Promise.all([
         supabase.from("firma_turleri").select("id, name").order("name"),
         supabase.from("firma_tipleri").select("id, name, firma_turu_id").order("name"),
         supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", ilKatId).order("name"),
+        supabase.from("firma_bilgi_secenekleri").select("id, name, parent_id").eq("kategori_id", ilceKatId).order("name"),
       ]);
       setTurler(sortFirmaTurleri(t || []));
       setTipler((tp || []) as any);
       setIller(il || []);
+      setIlceler((ilce || []) as any);
     }
   }, [token, callApi]);
 
