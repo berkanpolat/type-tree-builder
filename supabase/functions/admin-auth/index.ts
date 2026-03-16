@@ -307,7 +307,7 @@ Deno.serve(async (req) => {
         fetchAll("sikayetler", "bildiren_user_id"),
         fetchAll("kullanici_abonelikler", "id, user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, created_at, updated_at"),
         supabase.from("paketler").select("id, ad, slug, profil_goruntuleme_limiti, ihale_acma_limiti, teklif_verme_limiti, aktif_urun_limiti, mesaj_limiti"),
-        fetchAll("admin_portfolyo", "admin_id, firma_id"),
+        fetchAll("admin_portfolyo", "admin_id, firma_id, atayan_admin_id"),
         fetchAll("admin_users", "id, ad, soyad"),
       ]);
 
@@ -329,13 +329,14 @@ Deno.serve(async (req) => {
       // Portfolio map: firma_id -> { admin_id, admin_ad, admin_soyad }
       const adminNameMap = new Map<string, any>();
       for (const a of adminUsersForPortfolyo) adminNameMap.set(a.id, a);
-      const portfolyoMap = new Map<string, { admin_id: string; admin_ad: string; admin_soyad: string }>();
+      const portfolyoMap = new Map<string, { admin_id: string; admin_ad: string; admin_soyad: string; atanmis: boolean }>();
       for (const p of portfolyoData) {
         const admin = adminNameMap.get(p.admin_id);
         portfolyoMap.set(p.firma_id, {
           admin_id: p.admin_id,
           admin_ad: admin?.ad || "",
           admin_soyad: admin?.soyad || "",
+          atanmis: !!p.atayan_admin_id,
         });
       }
 
@@ -3417,11 +3418,18 @@ Deno.serve(async (req) => {
       const payload = verifyToken(body.token);
       const { firmaId } = body;
       
-      // Only the owner can remove
-      const { data: existing } = await supabase.from("admin_portfolyo").select("admin_id").eq("firma_id", firmaId).single();
+      const { data: existing } = await supabase.from("admin_portfolyo").select("admin_id, atayan_admin_id").eq("firma_id", firmaId).single();
       if (!existing) return jsonResponse({ error: "Bu firma portföyde değil" }, 400);
       const actingId = getActingId(payload, body);
-      if (existing.admin_id !== actingId && !payload.is_primary) return jsonResponse({ error: "Bu firmayı sadece portföy sahibi çıkarabilir" }, 403);
+
+      // If portfolio was assigned by Yönetim Kurulu, only Yönetim Kurulu or primary can remove
+      if (existing.atayan_admin_id && existing.atayan_admin_id !== actingId) {
+        if (payload.departman !== "Yönetim Kurulu" && !payload.is_primary) {
+          return jsonResponse({ error: "Atanmış portföyler yalnızca Yönetim Kurulu tarafından çıkarılabilir" }, 403);
+        }
+      } else if (existing.admin_id !== actingId && !payload.is_primary) {
+        return jsonResponse({ error: "Bu firmayı sadece portföy sahibi çıkarabilir" }, 403);
+      }
       
       const { error } = await supabase.from("admin_portfolyo").delete().eq("firma_id", firmaId).eq("admin_id", existing.admin_id);
       if (error) return jsonResponse({ error: error.message }, 400);
@@ -3446,7 +3454,8 @@ Deno.serve(async (req) => {
       await supabase.from("admin_portfolyo").delete().eq("firma_id", firmaId);
 
       // Assign to target admin
-      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: targetAdminId, firma_id: firmaId });
+      const actingId = getActingId(payload, body);
+      const { error } = await supabase.from("admin_portfolyo").insert({ admin_id: targetAdminId, firma_id: firmaId, atayan_admin_id: actingId });
       if (error) return jsonResponse({ error: error.message }, 400);
 
       const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("id", firmaId).single();

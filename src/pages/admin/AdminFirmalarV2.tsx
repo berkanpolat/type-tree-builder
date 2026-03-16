@@ -100,6 +100,7 @@ interface FirmaItem {
     admin_id: string;
     admin_ad: string;
     admin_soyad: string;
+    atanmis?: boolean;
   } | null;
 }
 
@@ -1034,9 +1035,13 @@ export default function AdminFirmalarV2() {
                               <DropdownMenuItem onClick={() => handleAddPortfolyo(firma)} className="text-xs cursor-pointer">
                                 <Briefcase className="w-3.5 h-3.5 mr-2 text-amber-500" /> Portföyüme Ekle
                               </DropdownMenuItem>
-                            ) : firma.portfolyo.admin_id === adminUser?.id ? (
+                            ) : firma.portfolyo.admin_id === adminUser?.id && !firma.portfolyo.atanmis ? (
                               <DropdownMenuItem onClick={() => handleRemovePortfolyo(firma)} className="text-xs cursor-pointer">
                                 <Briefcase className="w-3.5 h-3.5 mr-2 text-red-400" /> Portföyden Çıkar
+                              </DropdownMenuItem>
+                            ) : firma.portfolyo.admin_id === adminUser?.id && firma.portfolyo.atanmis ? (
+                              <DropdownMenuItem disabled className="text-xs opacity-50">
+                                <Briefcase className="w-3.5 h-3.5 mr-2" /> Yönetim tarafından atandı
                               </DropdownMenuItem>
                             ) : (
                               <DropdownMenuItem disabled className="text-xs opacity-50">
