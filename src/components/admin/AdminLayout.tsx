@@ -24,40 +24,40 @@ type MenuGroup = { groupLabel: string | null; items: MenuItem[] };
 
 const menuGroups: MenuGroup[] = [
   {
-    groupLabel: null, // Top-level, always visible
+    groupLabel: null,
     items: [
       { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null, primaryOnly: false },
-      { label: "Firmalar", path: "/yonetim/firmalar-v2", icon: Building2, permission: null, primaryOnly: false },
+      { label: "Firmalar", path: "/yonetim/firmalar-v2", icon: Building2, permission: "firma_goruntule", primaryOnly: false },
     ],
   },
   {
     groupLabel: "Web Site",
     items: [
-      { label: "İhaleler", path: "/yonetim/ihaleler", icon: Gavel, permission: "ihale_goruntule" as const, primaryOnly: false },
-      { label: "Ürünler", path: "/yonetim/urunler", icon: Package, permission: "urun_goruntule" as const, primaryOnly: false },
-      { label: "Destek Talepleri", path: "/yonetim/destek", icon: HeadphonesIcon, permission: "destek_goruntule" as const, primaryOnly: false },
-      { label: "Şikayetler", path: "/yonetim/sikayetler", icon: MessageSquareWarning, permission: "sikayet_goruntule" as const, primaryOnly: false },
-      { label: "Yaptırımlar", path: "/yonetim/kisitlamalar", icon: Shield, permission: "sikayet_kisitlama" as const, primaryOnly: false },
+      { label: "İhaleler", path: "/yonetim/ihaleler", icon: Gavel, permission: "ihale_goruntule", primaryOnly: false },
+      { label: "Ürünler", path: "/yonetim/urunler", icon: Package, permission: "urun_goruntule", primaryOnly: false },
+      { label: "Destek Talepleri", path: "/yonetim/destek", icon: HeadphonesIcon, permission: "destek_goruntule", primaryOnly: false },
+      { label: "Şikayetler", path: "/yonetim/sikayetler", icon: MessageSquareWarning, permission: "sikayet_goruntule", primaryOnly: false },
+      { label: "Yaptırımlar", path: "/yonetim/kisitlamalar", icon: Shield, permission: "yaptirim_goruntule", primaryOnly: false },
     ],
   },
   {
     groupLabel: "CRM",
     items: [
-      { label: "Portföyüm", path: "/yonetim/portfolyo", icon: Briefcase, permission: null, primaryOnly: false },
-      { label: "Aksiyonlarım", path: "/yonetim/aksiyonlar", icon: ClipboardList, permission: null, primaryOnly: false },
-      { label: "Ziyaret Planları", path: "/yonetim/ziyaret-planlari", icon: MapPin, permission: null, primaryOnly: false },
-      { label: "PKL & Primler", path: "/yonetim/hedefler", icon: Target, permission: null, primaryOnly: false },
+      { label: "Portföyüm", path: "/yonetim/portfolyo", icon: Briefcase, permission: "portfolyo_goruntule", primaryOnly: false },
+      { label: "Aksiyonlarım", path: "/yonetim/aksiyonlar", icon: ClipboardList, permission: "aksiyon_goruntule", primaryOnly: false },
+      { label: "Ziyaret Planları", path: "/yonetim/ziyaret-planlari", icon: MapPin, permission: "ziyaret_goruntule", primaryOnly: false },
+      { label: "PKL & Primler", path: "/yonetim/hedefler", icon: Target, permission: "hedef_goruntule", primaryOnly: false },
     ],
   },
   {
     groupLabel: "Yönetim",
     items: [
-      { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: null, primaryOnly: true },
-      { label: "İşlemler", path: "/yonetim/islemler", icon: Activity, permission: null, primaryOnly: true },
-      { label: "Canlı Harita", path: "/yonetim/canli-harita", icon: Map, permission: null, primaryOnly: false },
-      { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: "paket_detay_goruntule" as const, primaryOnly: false },
-      { label: "Reklam", path: "/yonetim/reklam", icon: Megaphone, permission: null, primaryOnly: true },
-      { label: "TekBot", path: "/yonetim/tekbot", icon: Bot, permission: null, primaryOnly: true },
+      { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: "kullanici_goruntule", primaryOnly: false },
+      { label: "İşlemler", path: "/yonetim/islemler", icon: Activity, permission: "islem_goruntule", primaryOnly: false },
+      { label: "Canlı Harita", path: "/yonetim/canli-harita", icon: Map, permission: "harita_goruntule", primaryOnly: false },
+      { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: "paket_detay_goruntule", primaryOnly: false },
+      { label: "Reklam", path: "/yonetim/reklam", icon: Megaphone, permission: "reklam_goruntule", primaryOnly: false },
+      { label: "TekBot", path: "/yonetim/tekbot", icon: Bot, permission: "tekbot_goruntule", primaryOnly: false },
     ],
   },
 ];

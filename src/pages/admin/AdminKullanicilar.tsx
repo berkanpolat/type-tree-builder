@@ -57,6 +57,61 @@ interface PermissionItem {
 
 const PERMISSION_GROUPS: PermissionGroup[] = [
   {
+    label: "Firmalar",
+    items: [
+      {
+        key: "firma_goruntule", label: "Firmalar menüsünü görüntüleyebilir", parent: true,
+        children: [
+          { key: "firma_ekle", label: "Yeni firma ekleyebilir" },
+          { key: "firma_onayla", label: "Firma onaylayabilir / reddedebilir" },
+          { key: "firma_sil", label: "Firma silebilir" },
+          { key: "firma_belge_dogrula", label: "Belge doğrulama yapabilir" },
+          { key: "firma_paket_degistir", label: "Paket değiştirebilir" },
+          { key: "firma_impersonate", label: "Firmayı yönetebilir (giriş)" },
+          { key: "firma_sifre_sifirla", label: "Şifre sıfırlama linki gönderebilir" },
+          { key: "firma_portfolyo_ata", label: "Firma portföye atayabilir" },
+          { key: "firma_portfolyo_sevk", label: "Portföy sevk edebilir" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Portföy / CRM",
+    items: [
+      {
+        key: "portfolyo_goruntule", label: "Portföyüm menüsünü görüntüleyebilir", parent: true,
+        children: [
+          { key: "portfolyo_aksiyon_ekle", label: "Aksiyon ekleyebilir" },
+          { key: "portfolyo_ziyaret_ekle", label: "Ziyaret planı ekleyebilir" },
+          { key: "portfolyo_sevk", label: "Portföy sevk edebilir" },
+          { key: "portfolyo_cikar", label: "Portföyden çıkarabilir" },
+          { key: "portfolyo_yetkili_yonet", label: "Yetkili kişileri yönetebilir" },
+        ],
+      },
+    ],
+  },
+  {
+    label: "Aksiyonlar",
+    items: [
+      { key: "aksiyon_goruntule", label: "Aksiyonlar menüsünü görüntüleyebilir" },
+      { key: "aksiyon_duzenle", label: "Aksiyon düzenleyebilir / silebilir" },
+    ],
+  },
+  {
+    label: "Ziyaret Planları",
+    items: [
+      { key: "ziyaret_goruntule", label: "Ziyaret planları menüsünü görüntüleyebilir" },
+      { key: "ziyaret_duzenle", label: "Ziyaret planı düzenleyebilir / silebilir" },
+    ],
+  },
+  {
+    label: "PKL & Primler",
+    items: [
+      { key: "hedef_goruntule", label: "Hedefler menüsünü görüntüleyebilir" },
+      { key: "hedef_ata", label: "Hedef atayabilir / düzenleyebilir" },
+    ],
+  },
+  {
     label: "İhale",
     items: [
       {
@@ -117,6 +172,34 @@ const PERMISSION_GROUPS: PermissionGroup[] = [
     items: [
       { key: "destek_goruntule", label: "Destek taleplerini görüntüleyebilir" },
       { key: "destek_cevap", label: "Destek taleplerine cevap verebilir" },
+    ],
+  },
+  {
+    label: "Yönetim",
+    items: [
+      {
+        key: "kullanici_goruntule", label: "Panel kullanıcılarını görüntüleyebilir", parent: true,
+        children: [
+          { key: "kullanici_ekle", label: "Kullanıcı ekleyebilir" },
+          { key: "kullanici_duzenle", label: "Kullanıcı düzenleyebilir" },
+          { key: "kullanici_sil", label: "Kullanıcı silebilir" },
+        ],
+      },
+      { key: "islem_goruntule", label: "İşlem loglarını görüntüleyebilir" },
+      { key: "harita_goruntule", label: "Canlı haritayı görüntüleyebilir" },
+      {
+        key: "reklam_goruntule", label: "Reklam menüsünü görüntüleyebilir", parent: true,
+        children: [
+          { key: "reklam_duzenle", label: "Banner düzenleyebilir" },
+        ],
+      },
+      {
+        key: "tekbot_goruntule", label: "TekBot menüsünü görüntüleyebilir", parent: true,
+        children: [
+          { key: "tekbot_duzenle", label: "TekBot içeriği düzenleyebilir" },
+        ],
+      },
+      { key: "yaptirim_goruntule", label: "Yaptırımlar menüsünü görüntüleyebilir" },
     ],
   },
 ];
