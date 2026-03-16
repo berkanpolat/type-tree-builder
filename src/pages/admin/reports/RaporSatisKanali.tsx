@@ -356,7 +356,7 @@ export default function RaporSatisKanali() {
                   <tr><td colSpan={7} className="p-8 text-center" style={s.muted}>Veri bulunamadı</td></tr>
                 ) : (
                   filteredData.slice(0, 100).map((item) => {
-                    const isSuccess = SUCCESS_RESULTS.has(item.sonuc || "") || item.kaynak === "paket_atama";
+                    const isSuccess = SUCCESS_RESULTS.has(item.sonuc || "");
                     return (
                       <tr key={item.id} style={{ borderBottom: "1px solid hsl(var(--admin-border))" }}>
                         <td className="p-2.5" style={s.text}>{new Date(item.tarih).toLocaleDateString("tr-TR")}</td>
