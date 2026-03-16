@@ -4275,24 +4275,34 @@ Deno.serve(async (req) => {
       const adminIds = [...new Set((data || []).map((a: any) => a.admin_id))];
       
       const [firmaRes, adminRes] = await Promise.all([
-        firmaIds.length > 0 ? supabase.from("firmalar").select("id, firma_unvani").in("id", firmaIds) : { data: [] },
+        firmaIds.length > 0 ? supabase.from("firmalar").select("id, firma_unvani, user_id").in("id", firmaIds) : { data: [] },
         adminIds.length > 0 ? supabase.from("admin_users").select("id, ad, soyad").in("id", adminIds) : { data: [] },
       ]);
       
       const firmaMap = new Map((firmaRes.data || []).map((f: any) => [f.id, f.firma_unvani]));
+      const firmaUserMap = new Map((firmaRes.data || []).map((f: any) => [f.id, f.user_id]));
       const adminMap = new Map((adminRes.data || []).map((a: any) => [a.id, `${a.ad} ${a.soyad}`]));
 
       // Enrich paket names
       const paketIds = [...new Set((data || []).filter((a: any) => a.sonuc_paket_id).map((a: any) => a.sonuc_paket_id))];
       const paketRes = paketIds.length > 0 ? await supabase.from("paketler").select("id, ad").in("id", paketIds) : { data: [] };
       const paketMap = new Map((paketRes.data || []).map((p: any) => [p.id, p.ad]));
+
+      // Enrich periyot from subscriptions
+      const userIdsForPeriyot = [...new Set((firmaRes.data || []).map((f: any) => f.user_id).filter(Boolean))];
+      const abonelikRes = userIdsForPeriyot.length > 0 ? await supabase.from("kullanici_abonelikler").select("user_id, periyot").in("user_id", userIdsForPeriyot) : { data: [] };
+      const userPeriyotMap = new Map((abonelikRes.data || []).map((a: any) => [a.user_id, a.periyot]));
       
-      const enriched = (data || []).map((a: any) => ({
-        ...a,
-        firma_unvani: firmaMap.get(a.firma_id) || "—",
-        admin_ad: adminMap.get(a.admin_id) || "—",
-        sonuc_paket_ad: a.sonuc_paket_id ? paketMap.get(a.sonuc_paket_id) || null : null,
-      }));
+      const enriched = (data || []).map((a: any) => {
+        const userId = firmaUserMap.get(a.firma_id);
+        return {
+          ...a,
+          firma_unvani: firmaMap.get(a.firma_id) || "—",
+          admin_ad: adminMap.get(a.admin_id) || "—",
+          sonuc_paket_ad: a.sonuc_paket_id ? paketMap.get(a.sonuc_paket_id) || null : null,
+          periyot: userId ? userPeriyotMap.get(userId) || null : null,
+        };
+      });
       
       return jsonResponse({ aksiyonlar: enriched });
     }
