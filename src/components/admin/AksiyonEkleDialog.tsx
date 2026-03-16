@@ -9,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { tr } from "date-fns/locale";
-import { CalendarIcon, Clock, Loader2, Plus, UserPlus, Mail, CreditCard } from "lucide-react";
+import { CalendarIcon, Clock, Loader2, Plus, UserPlus, Mail, CreditCard, Bell } from "lucide-react";
 import { getAksiyonTurleriForDepartman } from "@/lib/aksiyon-config";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
