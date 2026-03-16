@@ -208,6 +208,13 @@ export default function AdminFirmalarV2() {
   const [expandedLoading, setExpandedLoading] = useState(false);
   const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
 
+  // Portföy Ata dialog
+  const [portfolyoAtaOpen, setPortfolyoAtaOpen] = useState(false);
+  const [portfolyoAtaFirma, setPortfolyoAtaFirma] = useState<FirmaItem | null>(null);
+  const [portfolyoAtaAdminId, setPortfolyoAtaAdminId] = useState<string>("");
+  const [portfolyoAtaLoading, setPortfolyoAtaLoading] = useState(false);
+  const [adminUsersList, setAdminUsersList] = useState<{ id: string; ad: string; soyad: string; departman: string; pozisyon: string }[]>([]);
+
   const callApi = useAdminApi();
 
   const fetchData = useCallback(async () => {
