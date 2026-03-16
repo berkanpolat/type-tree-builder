@@ -370,7 +370,7 @@ export default function ManuIhale() {
                         <TableCell>
                           <Badge variant="secondary" className={durumColors[ihale.durum] || ""}>{durumLabels[ihale.durum] || ihale.durum}</Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="sticky-action-col">
                           <div className="flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                             {(ihale.durum === "devam_ediyor" || ihale.durum === "tamamlandi") && (
                               <Button variant="ghost" size="icon" className="h-8 w-8" title="İhale Takip" onClick={() => navigate(`/ihalelerim/takip/${ihale.id}`)}>
