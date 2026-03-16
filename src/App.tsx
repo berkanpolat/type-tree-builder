@@ -77,6 +77,12 @@ const AdminHedefler = lazy(() => import("./pages/admin/AdminHedefler"));
 const AdminCanliHarita = lazy(() => import("./pages/admin/AdminCanliHarita"));
 const AdminYetkilendirme = lazy(() => import("./pages/admin/AdminYetkilendirme"));
 const AdminKaynakRaporu = lazy(() => import("./pages/admin/AdminKaynakRaporu"));
+const AdminRaporlar = lazy(() => import("./pages/admin/AdminRaporlar"));
+const RaporSatisKanali = lazy(() => import("./pages/admin/reports/RaporSatisKanali"));
+const RaporMusteriTipi = lazy(() => import("./pages/admin/reports/RaporMusteriTipi"));
+const RaporPersonelPerformans = lazy(() => import("./pages/admin/reports/RaporPersonelPerformans"));
+const RaporAksiyonTuru = lazy(() => import("./pages/admin/reports/RaporAksiyonTuru"));
+const RaporHedefPrim = lazy(() => import("./pages/admin/reports/RaporHedefPrim"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
