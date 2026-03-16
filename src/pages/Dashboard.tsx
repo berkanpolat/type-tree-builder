@@ -110,7 +110,7 @@ const Dashboard = () => {
       } catch { /* fallback */ }
 
       const { data, error } = await supabase.functions.invoke("create-paytr-token", {
-        body: { periyot, clientIp },
+        body: { periyot, clientIp, forceTestMode: window.location.origin.includes("lovable.app") || window.location.origin.includes("localhost") },
       });
       if (error) throw error;
       if (data?.url) {
