@@ -374,10 +374,7 @@ export default function AdminAjanda() {
                       c.dot,
                       noteColor === c.value ? "ring-2 ring-offset-1 ring-amber-500 scale-110" : "opacity-50 hover:opacity-100"
                     )}
-                    style={{
-                      borderColor: noteColor === c.value ? "hsl(var(--admin-text))" : "transparent",
-                      ringOffsetColor: "hsl(var(--admin-card-bg))",
-                    }}
+                    style={{ borderColor: noteColor === c.value ? "hsl(var(--admin-text))" : "transparent" }}
                   />
                 ))}
               </div>
