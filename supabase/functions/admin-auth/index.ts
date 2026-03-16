@@ -333,6 +333,7 @@ Deno.serve(async (req) => {
         const filterTuru = typeof body.filterTuru === "string" ? body.filterTuru : "all";
         const filterTipi = typeof body.filterTipi === "string" ? body.filterTipi : "all";
         const filterIl = typeof body.filterIl === "string" ? body.filterIl : "all";
+        const filterIlce = typeof body.filterIlce === "string" ? body.filterIlce : "all";
         const filterDurum = typeof body.filterDurum === "string" ? body.filterDurum : "all";
         const filterPaket = typeof body.filterPaket === "string" ? body.filterPaket : "all";
         const activeStatCard = typeof body.activeStatCard === "string" ? body.activeStatCard : null;
