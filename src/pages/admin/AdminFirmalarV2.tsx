@@ -1548,6 +1548,48 @@ export default function AdminFirmalarV2() {
       </AlertDialog>
 
       <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
+
+      {/* Portföy Ata Dialog */}
+      <Dialog open={portfolyoAtaOpen} onOpenChange={setPortfolyoAtaOpen}>
+        <DialogContent style={s.card} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle style={s.text}>Portföy Ata</DialogTitle>
+            <DialogDescription style={s.muted}>
+              <span className="font-medium" style={s.text}>{portfolyoAtaFirma?.firma_unvani}</span> firmasını bir personele atayın.
+              {portfolyoAtaFirma?.portfolyo && (
+                <span className="block mt-1 text-xs" style={{ color: "#eab308" }}>
+                  Şu an {portfolyoAtaFirma.portfolyo.admin_ad} {portfolyoAtaFirma.portfolyo.admin_soyad} portföyünde — yeniden atanacak.
+                </span>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 mt-2">
+            <Label style={s.text}>Personel Seçin</Label>
+            <Select value={portfolyoAtaAdminId} onValueChange={setPortfolyoAtaAdminId}>
+              <SelectTrigger style={s.input}>
+                <SelectValue placeholder="Personel seçin" />
+              </SelectTrigger>
+              <SelectContent style={s.card}>
+                {adminUsersList.map(u => (
+                  <SelectItem key={u.id} value={u.id}>
+                    {u.ad} {u.soyad} — {u.pozisyon}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setPortfolyoAtaOpen(false)} style={s.input}>İptal</Button>
+            <Button
+              onClick={handleAssignPortfolyo}
+              disabled={!portfolyoAtaAdminId || portfolyoAtaLoading}
+            >
+              {portfolyoAtaLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Ata
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
