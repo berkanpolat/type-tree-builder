@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
+import SearchableSelect from "@/components/ui/searchable-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
