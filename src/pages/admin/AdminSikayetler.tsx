@@ -290,7 +290,7 @@ export default function AdminSikayetler() {
                             {DURUM_LABELS[item.durum] || item.durum}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 sticky-action-col">
                           <div className="flex gap-1">
                             {hasPermission("sikayet_detay_goruntule") && (
                               <Button variant="ghost" size="sm" onClick={() => setViewItem(item)} className="h-7 w-7 p-0" title="Görüntüle">

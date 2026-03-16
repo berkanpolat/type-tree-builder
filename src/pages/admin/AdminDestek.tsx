@@ -358,7 +358,7 @@ const AdminDestek = () => {
                         {talep.profile ? `${talep.profile.ad} ${talep.profile.soyad}` : "—"}
                       </td>
                       <td className="px-4 py-3">{renderDurumBadge(talep.durum)}</td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 sticky-action-col">
                         <Button size="sm" variant="outline" onClick={() => openDetail(talep)} style={s.input}>
                           <Eye className="w-3 h-3 mr-1" /> Görüntüle
                         </Button>
