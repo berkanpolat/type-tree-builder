@@ -25,6 +25,7 @@ interface SalesRecord {
 }
 
 export default function RaporSatisKanali() {
+  const navigate = useNavigate();
   const { token } = useAdminAuth();
   const callApi = useAdminApi();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });
