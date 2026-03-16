@@ -53,6 +53,7 @@ const menuGroups: MenuGroup[] = [
     groupLabel: "Yönetim",
     items: [
       { label: "Panel Kullanıcıları", path: "/yonetim/kullanicilar", icon: Users, permission: "kullanici_goruntule", primaryOnly: false },
+      { label: "Yetkilendirme", path: "/yonetim/yetkilendirme", icon: Shield, permission: "kullanici_goruntule", primaryOnly: false },
       { label: "İşlemler", path: "/yonetim/islemler", icon: Activity, permission: "islem_goruntule", primaryOnly: false },
       { label: "Canlı Harita", path: "/yonetim/canli-harita", icon: Map, permission: "harita_goruntule", primaryOnly: false },
       { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: "paket_detay_goruntule", primaryOnly: false },
