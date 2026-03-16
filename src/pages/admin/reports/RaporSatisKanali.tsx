@@ -82,7 +82,7 @@ export default function RaporSatisKanali() {
             id: item.id,
             tarih: item.created_at,
             personel: `${item.admin_ad || ""} ${item.admin_soyad || ""}`.trim() || "Bilinmeyen",
-            departman: adminDepartmanMap.get(item.admin_id) || "Bilinmeyen",
+            departman: (adminDepartmanMap.get(item.admin_id) as string) || "Bilinmeyen",
             tur: "Paket Tanımlama",
             baslik: `${item.target_label || "—"} paketi tanımlandı`,
             kaynak: "paket_atama",
