@@ -221,19 +221,37 @@ export default function AdminFirmalarV2() {
 
   const fetchData = useCallback(async () => {
     if (!token) return;
+    setLoading(true);
     try {
       const [firmaData, statsData] = await Promise.all([
-        callApi("list-firmalar", { token }),
+        callApi("list-firmalar", {
+          token,
+          paginated: true,
+          page: currentPage,
+          perPage: ITEMS_PER_PAGE,
+          statsDays,
+          searchTerm,
+          filterTuru,
+          filterTipi,
+          filterIl,
+          filterDurum,
+          filterPaket,
+          activeStatCard,
+          abonePeriod,
+          sortField,
+          sortDir,
+        }),
         callApi("firma-stats", { token, days: statsDays }),
       ]);
       setFirmalar(firmaData.firmalar || []);
+      setTotalFirmalar(firmaData.total || 0);
       setStats(statsData);
     } catch {
       toast({ title: "Hata", description: "Veriler yüklenemedi", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [token, statsDays, callApi, toast]);
+  }, [token, currentPage, statsDays, searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, activeStatCard, abonePeriod, sortField, sortDir, callApi, toast]);
 
   const fetchDropdowns = useCallback(async () => {
     if (!token) return;
