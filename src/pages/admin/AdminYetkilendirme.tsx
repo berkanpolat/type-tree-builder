@@ -239,6 +239,9 @@ export default function AdminYetkilendirme() {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [search, setSearch] = useState("");
+  const [permSearch, setPermSearch] = useState("");
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null);
+  const [showUnsavedDialog, setShowUnsavedDialog] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(PERMISSION_GROUPS.map(g => g.label)));
 
   const fetchUsers = useCallback(async () => {
