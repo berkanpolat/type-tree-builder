@@ -59,6 +59,7 @@ const menuGroups: MenuGroup[] = [
       { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: "paket_detay_goruntule", primaryOnly: false },
       { label: "Reklam", path: "/yonetim/reklam", icon: Megaphone, permission: "reklam_goruntule", primaryOnly: false },
       { label: "TekBot", path: "/yonetim/tekbot", icon: Bot, permission: "tekbot_goruntule", primaryOnly: false },
+      { label: "Kaynak Raporu", path: "/yonetim/kaynak-raporu", icon: BarChart3, permission: null, primaryOnly: true },
     ],
   },
 ];
