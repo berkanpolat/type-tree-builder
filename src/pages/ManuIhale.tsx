@@ -305,7 +305,7 @@ export default function ManuIhale() {
 
         {/* Desktop Table View */}
         <Card className="hidden md:block">
-          <CardContent className="p-0">
+          <CardContent className="p-0 overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
