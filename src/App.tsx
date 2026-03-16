@@ -109,6 +109,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <VisitorTracker />
         <RouteStateManager />
         <RoutePreloader />
         <AuthRedirectHandler />
