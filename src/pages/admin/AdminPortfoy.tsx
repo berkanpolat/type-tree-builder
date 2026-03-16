@@ -640,6 +640,40 @@ export default function AdminPortfoy() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Sevk Dialog */}
+        <Dialog open={sevkDialogOpen} onOpenChange={setSevkDialogOpen}>
+          <DialogContent style={s.card} className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle style={s.text}>Portföyü Sevk Et</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <p className="text-xs" style={s.muted}>{sevkSelectedFirma?.firma_unvani}</p>
+              <div>
+                <label className="text-xs font-medium mb-1 block" style={s.text}>Hedef Personel *</label>
+                <select
+                  value={sevkTargetId}
+                  onChange={e => setSevkTargetId(e.target.value)}
+                  className="w-full h-10 rounded-md border px-3 text-sm"
+                  style={{ ...s.input, background: "hsl(var(--admin-input-bg))" }}
+                >
+                  <option value="">Personel seçin</option>
+                  {sevkAdminList.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.ad} {a.soyad} — {a.departman} / {a.pozisyon}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setSevkDialogOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>İptal</Button>
+              <Button size="sm" onClick={handleSevk} disabled={!sevkTargetId || sevkSaving} className="bg-amber-500 hover:bg-amber-600 text-white">
+                {sevkSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sevk Et"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
