@@ -560,6 +560,80 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
             />
           </div>
 
+          {/* Hatırlatıcı */}
+          {!isEditMode && (
+            <div className="rounded-lg border p-3" style={{ borderColor: "hsl(var(--admin-border))", background: hatirlaticiAktif ? "hsl(var(--admin-hover))" : "transparent" }}>
+              <button
+                type="button"
+                onClick={() => setHatirlaticiAktif(!hatirlaticiAktif)}
+                className="flex items-center gap-2 w-full text-left"
+              >
+                <div className={cn("w-4 h-4 rounded border flex items-center justify-center transition-colors", hatirlaticiAktif ? "bg-amber-500 border-amber-500" : "")} style={!hatirlaticiAktif ? { borderColor: "hsl(var(--admin-border))" } : undefined}>
+                  {hatirlaticiAktif && <span className="text-white text-[10px]">✓</span>}
+                </div>
+                <Bell className="w-3.5 h-3.5" style={{ color: hatirlaticiAktif ? "hsl(35 100% 55%)" : "hsl(var(--admin-muted))" }} />
+                <span className="text-xs font-medium" style={s.muted}>Hatırlatıcı Ekle</span>
+              </button>
+
+              {hatirlaticiAktif && (
+                <div className="mt-3 space-y-2 pl-6">
+                  <div className="flex gap-2">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex-1 justify-start text-xs h-8 gap-1.5" style={s.input}>
+                          <CalendarIcon className="w-3 h-3" />
+                          {format(hatirlaticiTarih, "d MMM yyyy", { locale: tr })}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={hatirlaticiTarih}
+                          onSelect={(d) => d && setHatirlaticiTarih(d)}
+                          disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                          className="p-3 pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <Input
+                      type="time"
+                      value={hatirlaticiSaat}
+                      onChange={(e) => setHatirlaticiSaat(e.target.value)}
+                      className="w-24 text-xs h-8"
+                      style={s.input}
+                    />
+                  </div>
+                  <div className="flex gap-1 flex-wrap">
+                    {[
+                      { label: "Yarın", days: 1 },
+                      { label: "3 gün", days: 3 },
+                      { label: "1 hafta", days: 7 },
+                      { label: "2 hafta", days: 14 },
+                      { label: "1 ay", days: 30 },
+                    ].map((q) => (
+                      <button
+                        key={q.days}
+                        type="button"
+                        onClick={() => setHatirlaticiTarih(new Date(Date.now() + q.days * 86400000))}
+                        className="text-[10px] px-2 py-0.5 rounded-full border transition-colors hover:bg-amber-500/10 hover:border-amber-500/30"
+                        style={{ color: "hsl(var(--admin-muted))", borderColor: "hsl(var(--admin-border))" }}
+                      >
+                        {q.label}
+                      </button>
+                    ))}
+                  </div>
+                  <Input
+                    value={hatirlaticiNot}
+                    onChange={(e) => setHatirlaticiNot(e.target.value)}
+                    placeholder="Hatırlatma notu... (ör: Bu müşteriyi tekrar ara)"
+                    className="text-xs h-8"
+                    style={s.input}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
           <Button
             onClick={handleSubmit}
             disabled={loading || !isFormValid()}
