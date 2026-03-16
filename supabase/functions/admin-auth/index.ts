@@ -4283,38 +4283,48 @@ Deno.serve(async (req) => {
       const firmaUserMap = new Map((firmaRes.data || []).map((f: any) => [f.id, f.user_id]));
       const adminMap = new Map((adminRes.data || []).map((a: any) => [a.id, `${a.ad} ${a.soyad}`]));
 
-      // Enrich paket names
+      // Enrich paket names and slugs
       const paketIds = [...new Set((data || []).filter((a: any) => a.sonuc_paket_id).map((a: any) => a.sonuc_paket_id))];
-      const paketRes = paketIds.length > 0 ? await supabase.from("paketler").select("id, ad").in("id", paketIds) : { data: [] };
+      const paketRes = paketIds.length > 0 ? await supabase.from("paketler").select("id, ad, slug").in("id", paketIds) : { data: [] };
       const paketMap = new Map((paketRes.data || []).map((p: any) => [p.id, p.ad]));
+      const paketSlugMap = new Map((paketRes.data || []).map((p: any) => [p.id, p.slug]));
 
-      // Enrich periyot from activity log (historical, not current subscription)
+      // Enrich periyot: try activity log first, then fallback to paket slug inference
       const userIdsForPeriyot = [...new Set((firmaRes.data || []).map((f: any) => f.user_id).filter(Boolean))];
-      const activityLogRes = userIdsForPeriyot.length > 0
-        ? await supabase.from("admin_activity_log")
-            .select("admin_id, target_id, created_at, details")
-            .eq("action", "update-firma-paket")
-            .in("target_id", userIdsForPeriyot)
-            .order("created_at", { ascending: false })
-        : { data: [] };
+      const [activityLogRes, abonelikRes] = await Promise.all([
+        userIdsForPeriyot.length > 0
+          ? supabase.from("admin_activity_log")
+              .select("target_id, created_at, details")
+              .eq("action", "update-firma-paket")
+              .in("target_id", userIdsForPeriyot)
+              .order("created_at", { ascending: false })
+          : Promise.resolve({ data: [] }),
+        userIdsForPeriyot.length > 0
+          ? supabase.from("kullanici_abonelikler")
+              .select("user_id, periyot")
+              .in("user_id", userIdsForPeriyot)
+          : Promise.resolve({ data: [] }),
+      ]);
       
-      // Build lookup: admin_id + user_id → [{created_at, periyot}]
+      // Build lookup: user_id → [{created_at, periyot}]
       const periyotLookup = new Map<string, Array<{created_at: string, periyot: string}>>();
       (activityLogRes.data || []).forEach((log: any) => {
         const details = typeof log.details === "string" ? JSON.parse(log.details) : log.details || {};
         if (!details.periyot) return;
-        const key = `${log.admin_id}_${log.target_id}`;
+        const key = log.target_id;
         if (!periyotLookup.has(key)) periyotLookup.set(key, []);
         periyotLookup.get(key)!.push({ created_at: log.created_at, periyot: details.periyot });
       });
+
+      // Fallback: current subscription periyot
+      const currentPeriyotMap = new Map((abonelikRes.data || []).map((a: any) => [a.user_id, a.periyot]));
 
       const enriched = (data || []).map((a: any) => {
         const userId = firmaUserMap.get(a.firma_id);
         let periyot: string | null = null;
         if (userId && a.sonuc_paket_id) {
-          // Find closest activity log entry by time
-          const key = `${a.admin_id}_${userId}`;
-          const entries = periyotLookup.get(key);
+          // Strategy 1: Find closest activity log entry by time (user_id match only)
+          const entries = periyotLookup.get(userId);
           if (entries && entries.length > 0) {
             const aksiyonTime = new Date(a.tarih).getTime();
             let closest = entries[0];
@@ -4324,6 +4334,16 @@ Deno.serve(async (req) => {
               if (diff < minDiff) { closest = entry; minDiff = diff; }
             }
             periyot = closest.periyot;
+          }
+          // Strategy 2: Infer from paket slug
+          if (!periyot) {
+            const slug = paketSlugMap.get(a.sonuc_paket_id);
+            if (slug === "ucretsiz") periyot = "aylik";
+            else if (slug === "pro-ucretsiz") periyot = "sinursiz";
+          }
+          // Strategy 3: Fallback to current subscription
+          if (!periyot && userId) {
+            periyot = currentPeriyotMap.get(userId) || null;
           }
         }
         return {
