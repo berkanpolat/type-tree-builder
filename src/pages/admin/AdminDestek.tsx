@@ -332,7 +332,7 @@ const AdminDestek = () => {
                 <thead>
                   <tr className="border-b" style={{ borderColor: "hsl(var(--admin-border))" }}>
                     {["Talep No", "Tarih", "Departman", "Konu", "Firma", "İlgili Kişi", "Durum", "İşlem"].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 font-medium text-xs" style={s.muted}>
+                      <th key={h} className={`text-left px-4 py-3 font-medium text-xs${h === "İşlem" ? " sticky-action-col" : ""}`} style={s.muted}>
                         {h}
                       </th>
                     ))}
