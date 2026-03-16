@@ -4288,19 +4288,50 @@ Deno.serve(async (req) => {
       const paketRes = paketIds.length > 0 ? await supabase.from("paketler").select("id, ad").in("id", paketIds) : { data: [] };
       const paketMap = new Map((paketRes.data || []).map((p: any) => [p.id, p.ad]));
 
-      // Enrich periyot from subscriptions
+      // Enrich periyot from activity log (historical, not current subscription)
       const userIdsForPeriyot = [...new Set((firmaRes.data || []).map((f: any) => f.user_id).filter(Boolean))];
-      const abonelikRes = userIdsForPeriyot.length > 0 ? await supabase.from("kullanici_abonelikler").select("user_id, periyot").in("user_id", userIdsForPeriyot) : { data: [] };
-      const userPeriyotMap = new Map((abonelikRes.data || []).map((a: any) => [a.user_id, a.periyot]));
+      const activityLogRes = userIdsForPeriyot.length > 0
+        ? await supabase.from("admin_activity_log")
+            .select("admin_id, target_id, created_at, details")
+            .eq("action", "update-firma-paket")
+            .in("target_id", userIdsForPeriyot)
+            .order("created_at", { ascending: false })
+        : { data: [] };
       
+      // Build lookup: admin_id + user_id → [{created_at, periyot}]
+      const periyotLookup = new Map<string, Array<{created_at: string, periyot: string}>>();
+      (activityLogRes.data || []).forEach((log: any) => {
+        const details = typeof log.details === "string" ? JSON.parse(log.details) : log.details || {};
+        if (!details.periyot) return;
+        const key = `${log.admin_id}_${log.target_id}`;
+        if (!periyotLookup.has(key)) periyotLookup.set(key, []);
+        periyotLookup.get(key)!.push({ created_at: log.created_at, periyot: details.periyot });
+      });
+
       const enriched = (data || []).map((a: any) => {
         const userId = firmaUserMap.get(a.firma_id);
+        let periyot: string | null = null;
+        if (userId && a.sonuc_paket_id) {
+          // Find closest activity log entry by time
+          const key = `${a.admin_id}_${userId}`;
+          const entries = periyotLookup.get(key);
+          if (entries && entries.length > 0) {
+            const aksiyonTime = new Date(a.tarih).getTime();
+            let closest = entries[0];
+            let minDiff = Math.abs(new Date(closest.created_at).getTime() - aksiyonTime);
+            for (const entry of entries) {
+              const diff = Math.abs(new Date(entry.created_at).getTime() - aksiyonTime);
+              if (diff < minDiff) { closest = entry; minDiff = diff; }
+            }
+            periyot = closest.periyot;
+          }
+        }
         return {
           ...a,
           firma_unvani: firmaMap.get(a.firma_id) || "—",
           admin_ad: adminMap.get(a.admin_id) || "—",
           sonuc_paket_ad: a.sonuc_paket_id ? paketMap.get(a.sonuc_paket_id) || null : null,
-          periyot: userId ? userPeriyotMap.get(userId) || null : null,
+          periyot,
         };
       });
       
