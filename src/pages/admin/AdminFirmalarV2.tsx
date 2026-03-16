@@ -987,20 +987,26 @@ export default function AdminFirmalarV2() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" style={s.card} className="min-w-[160px]">
-                            {firma.onay_durumu === "onay_bekliyor" && (
+                            {firma.onay_durumu === "onay_bekliyor" && hasPermission("firma_onayla") && (
                               <DropdownMenuItem onClick={() => openReview(firma)} className="text-xs cursor-pointer">
                                 <AlertCircle className="w-3.5 h-3.5 mr-2 text-amber-500" /> Değerlendir
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem onClick={() => openBelgeDialog(firma)} className="text-xs cursor-pointer">
-                              <ShieldCheck className="w-3.5 h-3.5 mr-2" /> Doğrulama
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => openPaketDialog(firma)} className="text-xs cursor-pointer">
-                              <CreditCard className="w-3.5 h-3.5 mr-2" /> Paket Yönet
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
-                              <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
-                            </DropdownMenuItem>
+                            {hasPermission("firma_belge_dogrula") && (
+                              <DropdownMenuItem onClick={() => openBelgeDialog(firma)} className="text-xs cursor-pointer">
+                                <ShieldCheck className="w-3.5 h-3.5 mr-2" /> Doğrulama
+                              </DropdownMenuItem>
+                            )}
+                            {hasPermission("firma_paket_degistir") && (
+                              <DropdownMenuItem onClick={() => openPaketDialog(firma)} className="text-xs cursor-pointer">
+                                <CreditCard className="w-3.5 h-3.5 mr-2" /> Paket Yönet
+                              </DropdownMenuItem>
+                            )}
+                            {hasPermission("firma_impersonate") && (
+                              <DropdownMenuItem onClick={() => handleImpersonate(firma.user_id)} className="text-xs cursor-pointer">
+                                <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
+                              </DropdownMenuItem>
+                            )}
                             {!firma.portfolyo ? (
                               <DropdownMenuItem onClick={() => handleAddPortfolyo(firma)} className="text-xs cursor-pointer">
                                 <Briefcase className="w-3.5 h-3.5 mr-2 text-amber-500" /> Portföyüme Ekle
@@ -1018,24 +1024,30 @@ export default function AdminFirmalarV2() {
                                 <Briefcase className="w-3.5 h-3.5 mr-2" /> {firma.portfolyo.admin_ad} {firma.portfolyo.admin_soyad} portföyünde
                               </DropdownMenuItem>
                             )}
-                            {(adminUser?.departman === "Yönetim Kurulu" || adminUser?.is_primary) && (
+                            {hasPermission("firma_portfolyo_ata") && (
                               <DropdownMenuItem onClick={() => openPortfolyoAta(firma)} className="text-xs cursor-pointer">
                                 <Users className="w-3.5 h-3.5 mr-2 text-blue-500" /> Portföy Ata
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem
-                              onClick={() => handleSendPasswordReset(firma)}
-                              className="text-xs cursor-pointer"
-                            >
-                              <KeyRound className="w-3.5 h-3.5 mr-2" /> Şifre Gönder
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
-                            <DropdownMenuItem
-                              onClick={() => { setDeleteFirma(firma); setDeleteConfirmText(""); setDeleteDialogOpen(true); }}
-                              className="text-xs cursor-pointer text-red-500 focus:text-red-500"
-                            >
-                              <Trash2 className="w-3.5 h-3.5 mr-2" /> Sil
-                            </DropdownMenuItem>
+                            {hasPermission("firma_sifre_sifirla") && (
+                              <DropdownMenuItem
+                                onClick={() => handleSendPasswordReset(firma)}
+                                className="text-xs cursor-pointer"
+                              >
+                                <KeyRound className="w-3.5 h-3.5 mr-2" /> Şifre Gönder
+                              </DropdownMenuItem>
+                            )}
+                            {hasPermission("firma_sil") && (
+                              <>
+                                <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
+                                <DropdownMenuItem
+                                  onClick={() => { setDeleteFirma(firma); setDeleteConfirmText(""); setDeleteDialogOpen(true); }}
+                                  className="text-xs cursor-pointer text-red-500 focus:text-red-500"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 mr-2" /> Sil
+                                </DropdownMenuItem>
+                              </>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
