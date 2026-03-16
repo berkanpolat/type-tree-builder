@@ -3948,6 +3948,62 @@ Deno.serve(async (req) => {
           packageAssigned = true;
           console.log(`[AKSIYON] Auto-assigned package ${paket.slug} to user ${firmaData.user_id}`);
 
+          // Send password creation email for paid package assignments
+          try {
+            const { data: { user: authUser } } = await supabase.auth.admin.getUserById(firmaData.user_id);
+            const userEmail = authUser?.email;
+            if (userEmail) {
+              const { data: profileData } = await supabase.from("profiles").select("ad, soyad").eq("user_id", firmaData.user_id).single();
+              const adSoyad = profileData ? `${profileData.ad} ${profileData.soyad}` : "";
+
+              const SITE_URL = "https://tekstilas.com";
+              const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+                type: "recovery",
+                email: userEmail,
+                options: { redirectTo: `${SITE_URL}/sifre-sifirla` },
+              });
+
+              let sifreLink = `${SITE_URL}/sifre-sifirla`;
+              if (!linkError && linkData?.properties?.hashed_token) {
+                sifreLink = `${SITE_URL}/sifre-sifirla?token_hash=${linkData.properties.hashed_token}&type=recovery`;
+              }
+
+              const POSTMARK_SERVER_TOKEN = Deno.env.get("POSTMARK_SERVER_TOKEN");
+              if (POSTMARK_SERVER_TOKEN) {
+                const emailRes = await fetch("https://api.postmarkapp.com/email/withTemplate", {
+                  method: "POST",
+                  headers: {
+                    "Accept": "application/json",
+                    "Content-Type": "application/json",
+                    "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+                  },
+                  body: JSON.stringify({
+                    From: "Tekstil A.Ş. <info@tekstilas.com>",
+                    To: userEmail,
+                    TemplateId: 43889443,
+                    TemplateModel: {
+                      ad_soyad: adSoyad,
+                      firma_unvani: firmaData?.firma_unvani || "",
+                      platform_adi: "Tekstil A.Ş.",
+                      giris_url: sifreLink,
+                      destek_email: "destek@tekstilas.com",
+                      yil: new Date().getFullYear().toString(),
+                      site_url: SITE_URL,
+                    },
+                  }),
+                });
+                const emailData = await emailRes.json();
+                if (emailRes.ok) {
+                  console.log(`[AKSIYON] Password creation email sent to ${userEmail}`);
+                } else {
+                  console.error(`[AKSIYON] Postmark error:`, JSON.stringify(emailData));
+                }
+              }
+            }
+          } catch (emailErr) {
+            console.error("[AKSIYON] Password creation email error:", emailErr);
+          }
+
         } else if (paket?.slug === "pro") {
           // Create PayTR payment link and send via email
           const { periyot, odemeMail } = body;
