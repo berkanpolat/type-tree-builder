@@ -316,7 +316,7 @@ export default function Tekliflerim() {
                   <TableHead className="text-center">Teklif Sıranız</TableHead>
                   <TableHead>Süreç</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead className="text-center">İşlemler</TableHead>
+                  <TableHead className="text-center sticky-action-col">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

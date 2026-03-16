@@ -315,7 +315,7 @@ export default function ManuIhale() {
                   <TableHead className="text-center">En İyi Teklif</TableHead>
                   <TableHead>Süreç</TableHead>
                   <TableHead>Durum</TableHead>
-                  <TableHead className="text-center">İşlemler</TableHead>
+                  <TableHead className="text-center sticky-action-col">İşlemler</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
