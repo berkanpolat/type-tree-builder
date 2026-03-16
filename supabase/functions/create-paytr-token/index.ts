@@ -151,9 +151,10 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "";
     const referer = req.headers.get("referer") || "";
-    const isPreview = origin.includes("lovable.app") || origin.includes("localhost") || referer.includes("lovable.app");
+    const { forceTestMode } = await req.clone().json().catch(() => ({ forceTestMode: false }));
+    const isPreview = Boolean(forceTestMode) || origin.includes("lovable.app") || origin.includes("localhost") || referer.includes("lovable.app");
 
-    console.log("[CREATE-PAYTR-TOKEN] Origin detection:", { origin, referer, isPreview });
+    console.log("[CREATE-PAYTR-TOKEN] Origin detection:", { origin, referer, forceTestMode, isPreview });
 
     // Preview/localhost = test mode, tekstilas.com = live mode
     const testMode = isPreview ? "1" : "0";
