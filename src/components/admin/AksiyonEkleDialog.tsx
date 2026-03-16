@@ -255,19 +255,38 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
         payload.odemeMail = getOdemeMail();
       }
 
-      const result = await callApi("create-aksiyon", payload);
+      if (isEditMode && editData) {
+        // Update existing aksiyon
+        await callApi("update-aksiyon", {
+          token,
+          aksiyonId: editData.id,
+          updates: {
+            baslik: turLabel,
+            aciklama: not.trim() || null,
+            tur,
+            tarih: combined.toISOString(),
+            yetkili_id: yetkiliId !== "none" ? yetkiliId : null,
+            sonuc,
+            sonuc_neden: finalNeden,
+            sonuc_paket_id: sonuc === "satis_kapatildi" ? sonucPaketId || null : null,
+          },
+        });
+        toast.success("Aksiyon güncellendi");
+      } else {
+        const result = await callApi("create-aksiyon", payload);
 
-      if (result?.paymentLinkSent) {
-        toast.success(`Ödeme linki ${getOdemeMail()} adresine gönderildi`);
-      } else if (result?.packageAssigned) {
-        toast.success(`${selectedPaket?.ad} paketi firmaya atandı`);
+        if (result?.paymentLinkSent) {
+          toast.success(`Ödeme linki ${getOdemeMail()} adresine gönderildi`);
+        } else if (result?.packageAssigned) {
+          toast.success(`${selectedPaket?.ad} paketi firmaya atandı`);
+        }
       }
 
       onOpenChange(false);
       onSuccess();
     } catch (err: any) {
       console.error(err);
-      toast.error("Aksiyon eklenirken hata oluştu");
+      toast.error(isEditMode ? "Aksiyon güncellenirken hata oluştu" : "Aksiyon eklenirken hata oluştu");
     } finally {
       setLoading(false);
     }
@@ -277,7 +296,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
         <DialogHeader>
-          <DialogTitle className="text-sm font-semibold" style={s.text}>Aksiyon Ekle</DialogTitle>
+          <DialogTitle className="text-sm font-semibold" style={s.text}>{isEditMode ? "Aksiyonu Düzenle" : "Aksiyon Ekle"}</DialogTitle>
           <p className="text-xs" style={s.muted}>{firmaUnvani}</p>
         </DialogHeader>
 
