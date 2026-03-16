@@ -654,7 +654,7 @@ export default function AdminFirmalarV2() {
 
   // ── Filters ──
   const clearFilters = () => {
-    setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterDurum("all"); setFilterPaket("all");
+    setFilterTuru("all"); setFilterTipi("all"); setFilterIl("all"); setFilterIlce("all"); setFilterDurum("all"); setFilterPaket("all");
     setSearchTerm(""); setSortField(null); setActiveStatCard(null);
   };
 
