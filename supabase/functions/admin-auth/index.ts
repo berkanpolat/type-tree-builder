@@ -307,7 +307,7 @@ Deno.serve(async (req) => {
         fetchAll("sikayetler", "bildiren_user_id"),
         fetchAll("kullanici_abonelikler", "id, user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, created_at, updated_at"),
         supabase.from("paketler").select("id, ad, slug, profil_goruntuleme_limiti, ihale_acma_limiti, teklif_verme_limiti, aktif_urun_limiti, mesaj_limiti"),
-        fetchAll("admin_portfolyo", "admin_id, firma_id"),
+        fetchAll("admin_portfolyo", "admin_id, firma_id, atayan_admin_id"),
         fetchAll("admin_users", "id, ad, soyad"),
       ]);
 
