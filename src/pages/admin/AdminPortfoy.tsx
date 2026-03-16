@@ -123,7 +123,11 @@ export default function AdminPortfoy() {
   const [ziyaretTarih, setZiyaretTarih] = useState<Date | undefined>(undefined);
   const [ziyaretNotlar, setZiyaretNotlar] = useState("");
   const [ziyaretSaving, setZiyaretSaving] = useState(false);
-
+  const [sevkDialogOpen, setSevkDialogOpen] = useState(false);
+  const [sevkAdminList, setSevkAdminList] = useState<{ id: string; ad: string; soyad: string; departman: string; pozisyon: string }[]>([]);
+  const [sevkTargetId, setSevkTargetId] = useState("");
+  const [sevkSaving, setSevkSaving] = useState(false);
+  const [sevkSelectedFirma, setSevkSelectedFirma] = useState<FirmaItem | null>(null);
   // Expandable row - aksiyon geçmişi
   const [expandedFirmaId, setExpandedFirmaId] = useState<string | null>(null);
   const [expandedAksiyonlar, setExpandedAksiyonlar] = useState<any[]>([]);
