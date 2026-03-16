@@ -769,9 +769,11 @@ export default function AdminFirmalarV2() {
             <Badge variant="secondary" className="text-[10px]">V2 TEST</Badge>
             {stats && <span>{stats.total} firma kayıtlı</span>}
           </div>
-          <Button onClick={() => setYeniFirmaOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white" size="sm">
-            <Building2 className="w-4 h-4 mr-2" /> Yeni Firma
-          </Button>
+          {hasPermission("firma_ekle") && (
+            <Button onClick={() => setYeniFirmaOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white" size="sm">
+              <Building2 className="w-4 h-4 mr-2" /> Yeni Firma
+            </Button>
+          )}
         </div>
 
         {/* Summary Cards */}
