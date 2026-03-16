@@ -254,6 +254,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       if (sonuc === "satis_kapatildi" && isProPaket) {
         payload.periyot = proPeriod;
         payload.odemeMail = getOdemeMail();
+        payload.clientOrigin = window.location.origin;
       }
 
       if (isEditMode && editData) {
