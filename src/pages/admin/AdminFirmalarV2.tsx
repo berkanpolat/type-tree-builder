@@ -657,63 +657,13 @@ export default function AdminFirmalarV2() {
 
   const hasActiveFilters = filterTuru !== "all" || filterTipi !== "all" || filterIl !== "all" || filterDurum !== "all" || filterPaket !== "all" || searchTerm || activeStatCard;
 
-  const filtered = firmalar.filter((f) => {
-    if (activeStatCard === "pending" && f.onay_durumu !== "onay_bekliyor") return false;
-    if (activeStatCard === "recent") {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - statsDays);
-      if (new Date(f.created_at) < cutoff) return false;
-    }
-    if (activeStatCard === "online") {
-      if (!f.profile?.last_seen) return false;
-      const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000);
-      if (new Date(f.profile.last_seen) < fifteenMinAgo) return false;
-    }
-    if (activeStatCard === "yeniAbone") {
-      if (!f.abonelik) return false;
-      const cutoff = new Date();
-      if (abonePeriod === "son24saat") cutoff.setDate(cutoff.getDate() - 1);
-      else if (abonePeriod === "sonBirHafta") cutoff.setDate(cutoff.getDate() - 7);
-      else cutoff.setMonth(cutoff.getMonth() - 1);
-      if (new Date(f.abonelik.donem_baslangic) < cutoff) return false;
-    }
-    if (searchTerm && !f.firma_unvani.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    if (filterTuru !== "all" && f.firma_turu_id !== filterTuru) return false;
-    if (filterTipi !== "all" && f.firma_tipi_id !== filterTipi) return false;
-    if (filterIl !== "all" && f.kurulus_il_id !== filterIl) return false;
-    if (filterDurum !== "all" && f.onay_durumu !== filterDurum) return false;
-    if (filterPaket !== "all") {
-      if (filterPaket === "none" && f.abonelik) return false;
-      if (filterPaket !== "none" && f.abonelik?.paket_id !== filterPaket) return false;
-    }
-    return true;
-  });
-
-  const sorted = [...filtered];
-  if (sortField) {
-    sorted.sort((a, b) => {
-      if (sortField === "firma_unvani") {
-        return sortDir === "asc" ? a.firma_unvani.localeCompare(b.firma_unvani, "tr") : b.firma_unvani.localeCompare(a.firma_unvani, "tr");
-      }
-      if (sortField === "created_at") {
-        return sortDir === "asc" ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime() : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      }
-      if (sortField === "last_seen") {
-        const aTime = a.profile?.last_seen ? new Date(a.profile.last_seen).getTime() : 0;
-        const bTime = b.profile?.last_seen ? new Date(b.profile.last_seen).getTime() : 0;
-        return sortDir === "asc" ? aTime - bTime : bTime - aTime;
-      }
-      const av = (a as any)[sortField];
-      const bv = (b as any)[sortField];
-      return sortDir === "asc" ? av - bv : bv - av;
-    });
-  }
-
-  const totalPages = Math.max(1, Math.ceil(sorted.length / ITEMS_PER_PAGE));
+  const filtered = firmalar;
+  const sorted = firmalar;
+  const totalPages = Math.max(1, Math.ceil(totalFirmalar / ITEMS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedFirmalar = sorted.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
+  const paginatedFirmalar = firmalar;
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, sortField, sortDir, activeStatCard]);
+  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterDurum, filterPaket, sortField, sortDir, activeStatCard, abonePeriod, statsDays]);
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
