@@ -159,7 +159,7 @@ async function runAllTests(supabase: any): Promise<TestResult[]> {
       const uniqueNos = new Set(nos).size === nos.length;
       t({ group: "Ürün Sistemi", name: "Ürün No Benzersizlik", status: uniqueNos ? "pass" : "fail", detail: uniqueNos ? "Tüm ürün numaraları benzersiz" : "Tekrarlayan ürün numaraları var!", technicalDetail: !uniqueNos ? `[DUPLICATE_URUN_NO] Duplicate urun_no values found. Trigger generate_urun_no() uniqueness check may be failing.` : undefined });
 
-      const validDurumlar = ["duzenleniyor", "onay_bekliyor", "aktif", "reddedildi", "pasif"];
+      const validDurumlar = ["duzenleniyor", "onay_bekliyor", "aktif", "reddedildi", "pasif", "taslak"];
       const invalidUrunDurum = (urunler || []).filter((u: any) => !validDurumlar.includes(u.durum));
       t({ group: "Ürün Sistemi", name: "Ürün Durum Geçerliliği", status: invalidUrunDurum.length === 0 ? "pass" : "fail", detail: invalidUrunDurum.length === 0 ? "Tüm ürünlerin durumu geçerli" : `${invalidUrunDurum.length} ürün geçersiz durumda`, technicalDetail: invalidUrunDurum.length > 0 ? `[INVALID_PRODUCT_STATUS] Products with invalid durum: ${invalidUrunDurum.map((u: any) => `${u.urun_no}="${u.durum}"`).join(", ")}. Valid: ${validDurumlar.join(", ")}` : undefined });
     }
@@ -218,6 +218,7 @@ async function runAllTests(supabase: any): Promise<TestResult[]> {
         "urun_durum_degisti", "yeni_mesaj", "sikayet_alindi", "destek_cevaplandi",
         "destek_cozuldu", "odeme_basarili", "odeme_basarisiz", "kota_uyari",
         "kisitlama_eklendi", "uzaklastirma_eklendi", "yasak_eklendi",
+        "firma_onaylandi", "ihale_admin_duzenlendi", "urun_admin_kaldirildi",
       ];
       const types = data.map((d: any) => d.type);
       const invalidTypes = types.filter((t: string) => !validTypes.includes(t));
