@@ -138,16 +138,22 @@ export default function AdminPortfoy() {
   const callApi = useAdminApi();
 
   const fetchData = useCallback(async () => {
-    if (!token) return;
+    if (!token || !adminUser?.id) return;
     try {
-      const firmaData = await callApi("list-firmalar", { token });
+      const firmaData = await callApi("list-firmalar", {
+        token,
+        paginated: true,
+        page: 1,
+        perPage: 100,
+        filterPortfolyo: adminUser.id,
+      });
       setAllFirmalar(firmaData.firmalar || []);
     } catch {
       toast({ title: "Hata", description: "Veriler yüklenemedi", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [token, callApi, toast]);
+  }, [token, adminUser?.id, callApi, toast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
