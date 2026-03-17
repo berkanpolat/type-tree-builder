@@ -1582,7 +1582,11 @@ export default function IhaleDetay() {
               </Card>
             </div>
 
-            {/* İhale Sahibi Firma - desktop only */}
+            </div>
+            )}
+
+            {/* İhale Sahibi Firma - desktop only (only for logged-in users) */}
+            {currentUserId && (
             <div className="hidden lg:block">
               {ihale.firma_adi_gizle ? (
                 <Card className="p-6">
