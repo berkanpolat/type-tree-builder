@@ -640,9 +640,9 @@ export default function UrunDetay() {
               </Card>
             </div>
 
-            {/* Seller Info - MOBILE ONLY (order 4, after price) */}
+            {/* Seller Info - MOBILE ONLY (order 4, after price) - PRO only */}
             <div className="lg:hidden order-4">
-              {firma && (
+              {firma && packageInfo.paketSlug !== "ucretsiz" && currentUserId && currentUserId !== "public" && (
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Satıcı Bilgileri</h3>
                   <div className="flex items-center gap-4 mb-4">
@@ -665,6 +665,15 @@ export default function UrunDetay() {
                   </div>
                   <Button onClick={handleSaticiyaSor} className="w-full h-12 gap-2 text-base" disabled={urun.user_id === currentUserId}>
                     <MessageSquare className="w-5 h-5" /> Satıcıya Soru Sor
+                  </Button>
+                </Card>
+              )}
+              {firma && (packageInfo.paketSlug === "ucretsiz" || !currentUserId || currentUserId === "public") && (
+                <Card className="p-6 text-center">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Satıcı Bilgileri</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Satıcı bilgilerini görüntülemek için PRO pakete yükseltin.</p>
+                  <Button onClick={() => currentUserId && currentUserId !== "public" ? navigate("/paketim") : navigate("/giris-kayit")} className="gap-2">
+                    {currentUserId && currentUserId !== "public" ? "PRO Pakete Yükselt" : "Giriş Yap"}
                   </Button>
                 </Card>
               )}
