@@ -1009,7 +1009,7 @@ export default function IhaleDetay() {
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <ImageIcon className="w-16 h-16 text-muted-foreground/30" />
+                      <img src={ihaleDefaultCover} alt="" className="max-w-[60%] max-h-[60%] object-contain" />
                     </div>
                   )}
                   {!isZoomed && (
