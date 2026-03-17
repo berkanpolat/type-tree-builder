@@ -824,7 +824,7 @@ export default function AdminFirmalarV2() {
             <Input placeholder="Firma adı ile ara..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-9 text-sm" style={s.input} />
           </div>
           <Button variant="outline" size="sm" onClick={() => { fetchData(); }} disabled={loading} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
-            <RotateCcw className={cn("w-4 h-4", loading && "animate-spin")} />
+            <RotateCcw className={"w-4 h-4" + (loading ? " animate-spin" : "")} />
           </Button>
           <Button variant="outline" size="sm" onClick={() => setShowFilters(!showFilters)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
             <Filter className="w-4 h-4 mr-1.5" /> Filtreler
