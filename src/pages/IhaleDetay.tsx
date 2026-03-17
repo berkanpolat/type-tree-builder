@@ -316,11 +316,10 @@ export default function IhaleDetay() {
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      // Don't redirect to login if admin token exists
       if (!user) {
         const adminToken = localStorage.getItem("admin_token");
-        if (!adminToken) { navigate("/giris-kayit"); return; }
-        setIsAdminViewing(true);
+        if (adminToken) { setIsAdminViewing(true); }
+        // Allow anonymous users to view ihale details (no redirect)
         return;
       }
       setCurrentUserId(user.id);
@@ -333,8 +332,7 @@ export default function IhaleDetay() {
   const fetchIhale = useCallback(async () => {
     if (!slugParam) return;
     const adminToken = localStorage.getItem("admin_token");
-    // Allow fetch if user is logged in OR admin token exists
-    if (!currentUserId && !adminToken) return;
+    // Allow fetch for anonymous users too
     setLoading(true);
 
     let ihaleData: any = null;
@@ -1043,7 +1041,8 @@ export default function IhaleDetay() {
               </Card>
             )}
 
-            {/* MOBILE ONLY: Teklif Verme - order 4 */}
+            {/* MOBILE ONLY: Teklif Verme - order 4 (only for logged-in users) */}
+            {currentUserId && (
             <div className="lg:hidden order-4">
               <Card className="p-6">
                 <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
@@ -1102,8 +1101,10 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            )}
 
-            {/* MOBILE ONLY: Teklifler - order 5 */}
+            {/* MOBILE ONLY: Teklifler - order 5 (only for logged-in users) */}
+            {currentUserId && (
             <div className="lg:hidden order-5">
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -1135,6 +1136,8 @@ export default function IhaleDetay() {
                     <p className="font-bold text-foreground text-sm">{`${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`}</p>
                   </div>
                 )}
+                {isKapaliTeklif && !isOwner && <p className="text-xs text-muted-foreground text-center mb-4">Kapalı teklif usulünde yalnızca kendi teklifinizi görebilirsiniz.</p>}
+                {myRank && !isKapaliTeklif && <p className="text-sm text-center text-muted-foreground mb-4">Teklif sıranız: <strong className="text-foreground">{myRank}.</strong></p>}
                 {visibleTeklifler.length > 0 ? (
                   <div className="space-y-0">
                     <div className="grid grid-cols-3 text-[10px] uppercase tracking-wider text-muted-foreground font-medium py-2 border-b border-border">
@@ -1155,8 +1158,10 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            )}
 
-            {/* MOBILE ONLY: İhale Sahibi - order 6 */}
+            {/* MOBILE ONLY: İhale Sahibi - order 6 (only for logged-in users) */}
+            {currentUserId && (
             <div className="lg:hidden order-6">
               {ihale.firma_adi_gizle ? (
                 <Card className="p-6">
@@ -1183,6 +1188,7 @@ export default function IhaleDetay() {
                 </Card>
               )}
             </div>
+            )}
 
             {/* İhale Bilgileri - order 7 */}
             <Card className="p-6 order-7 lg:order-none">
@@ -1454,7 +1460,8 @@ export default function IhaleDetay() {
               </Card>
             )}
 
-            {/* Title & Countdown + Teklif Form - desktop only */}
+            {/* Title & Countdown + Teklif Form - desktop only (teklif only for logged-in) */}
+            {currentUserId && (
             <div className="hidden lg:block">
               <Card className="p-6">
                 <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
@@ -1513,15 +1520,16 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            )}
 
-            {/* Bildir button - only for logged-in users */}
             {currentUserId && !isOwner && (
               <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
                 <Flag className="w-4 h-4" /> İhaleyi Bildir
               </Button>
             )}
 
-            {/* Teklifler Card - desktop only */}
+            {/* Teklifler Card - desktop only (only for logged-in users) */}
+            {currentUserId && (
             <div className="hidden lg:block">
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -1573,8 +1581,9 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
-
-            {/* İhale Sahibi Firma - desktop only */}
+            )}
+            {/* İhale Sahibi Firma - desktop only (only for logged-in users) */}
+            {currentUserId && (
             <div className="hidden lg:block">
               {ihale.firma_adi_gizle ? (
                 <Card className="p-6">
@@ -1621,6 +1630,7 @@ export default function IhaleDetay() {
                 </Card>
               )}
             </div>
+            )}
 
             {/* Benzer İhaleler - desktop only */}
             <div className="hidden lg:block">
