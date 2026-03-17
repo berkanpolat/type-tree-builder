@@ -1520,8 +1520,8 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            )}
 
-            {/* Bildir button - only for logged-in users */}
             {currentUserId && !isOwner && (
               <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
                 <Flag className="w-4 h-4" /> İhaleyi Bildir
