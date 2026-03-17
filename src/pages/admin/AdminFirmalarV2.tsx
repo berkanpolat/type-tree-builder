@@ -792,7 +792,7 @@ export default function AdminFirmalarV2() {
     <AdminLayout title="Firmalar">
       <div className="space-y-4">
         {/* Action Bar */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 md:gap-3">
           <div className="flex items-center gap-2 text-xs" style={s.muted}>
             <Badge variant="secondary" className="text-[10px]">V2 TEST</Badge>
             {stats && <span>{stats.total} firma kayıtlı</span>}
@@ -806,7 +806,7 @@ export default function AdminFirmalarV2() {
 
         {/* Summary Cards */}
         {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <StatCard icon={Building2} label="Toplam" value={stats.total} color="text-blue-400" active={activeStatCard === "total"} onClick={() => handleStatCardClick("total")} />
             <StatCard icon={AlertCircle} label="Bekleyen" value={stats.pending} color="text-amber-400" active={activeStatCard === "pending"} onClick={() => handleStatCardClick("pending")} />
             <StatCard icon={Clock} label={statsDays === 1 ? "Son 24s" : `Son ${statsDays}g`} value={stats.recent} color="text-purple-400" active={activeStatCard === "recent"} onClick={() => handleStatCardClick("recent")} />
@@ -816,8 +816,8 @@ export default function AdminFirmalarV2() {
         )}
 
         {/* Search & Filters */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
             <Input placeholder="Firma adı ile ara..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-9 text-sm" style={s.input} />
           </div>
@@ -851,24 +851,26 @@ export default function AdminFirmalarV2() {
 
         {/* Bulk Action Toolbar */}
         {selectedCount > 0 && (
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
-            <CheckCheck className="w-4 h-4 text-amber-500" />
-            <span className="text-sm font-medium" style={s.text}>{selectedCount} firma seçildi</span>
-            <div className="flex items-center gap-2 ml-auto">
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7" onClick={() => setBulkAction("approve")}>
-                <CheckCircle className="w-3.5 h-3.5 mr-1" /> Toplu Onayla
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
+            <div className="flex items-center gap-2">
+              <CheckCheck className="w-4 h-4 text-amber-500" />
+              <span className="text-xs md:text-sm font-medium" style={s.text}>{selectedCount} firma seçildi</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 md:gap-2 ml-auto">
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] md:text-xs h-6 md:h-7 px-2 md:px-3" onClick={() => setBulkAction("approve")}>
+                <CheckCircle className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" /> Onayla
               </Button>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-7" onClick={() => setBulkAction("verify")}>
-                <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Toplu Doğrula
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] md:text-xs h-6 md:h-7 px-2 md:px-3" onClick={() => setBulkAction("verify")}>
+                <ShieldCheck className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" /> Doğrula
               </Button>
-              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-7" onClick={() => setBulkAction("portfolio")}>
-                <Briefcase className="w-3.5 h-3.5 mr-1" /> Toplu Portföye Ekle
+              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] md:text-xs h-6 md:h-7 px-2 md:px-3" onClick={() => setBulkAction("portfolio")}>
+                <Briefcase className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" /> Portföy
               </Button>
-              <Button size="sm" variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-500/10 text-xs h-7" onClick={() => setBulkAction("delete")} style={{ borderColor: "hsl(var(--admin-border))" }}>
-                <Trash2 className="w-3.5 h-3.5 mr-1" /> Toplu Sil
+              <Button size="sm" variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-500/10 text-[10px] md:text-xs h-6 md:h-7 px-2 md:px-3" onClick={() => setBulkAction("delete")} style={{ borderColor: "hsl(var(--admin-border))" }}>
+                <Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" /> Sil
               </Button>
-              <Button size="sm" variant="ghost" className="text-xs h-7" style={s.muted} onClick={() => setSelectedIds(new Set())}>
-                Seçimi Kaldır
+              <Button size="sm" variant="ghost" className="text-[10px] md:text-xs h-6 md:h-7" style={s.muted} onClick={() => setSelectedIds(new Set())}>
+                Kaldır
               </Button>
             </div>
           </div>
@@ -1142,7 +1144,7 @@ export default function AdminFirmalarV2() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
             <span className="text-xs" style={s.muted}>{totalFirmalar} firma, sayfa {safePage}/{totalPages}</span>
             <div className="flex items-center gap-1">
               <Button variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setCurrentPage(safePage - 1)}
