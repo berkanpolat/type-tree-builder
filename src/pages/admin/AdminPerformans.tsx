@@ -639,6 +639,51 @@ export default function AdminPerformans() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Fix Issues Dialog */}
+        <Dialog open={fixDialogOpen} onOpenChange={setFixDialogOpen}>
+          <DialogContent className="max-w-lg" style={{ background: "hsl(var(--admin-card))", borderColor: "hsl(var(--admin-border))" }}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}>
+                <Wrench className="w-5 h-5 text-amber-500" /> Sorun Giderme Raporu
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+              {fixing && fixResults.length === 0 && (
+                <div className="flex items-center justify-center py-8 gap-3">
+                  <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+                  <span className="text-sm" style={{ color: "hsl(var(--admin-muted))" }}>Sistem analiz ediliyor ve sorunlar gideriliyor...</span>
+                </div>
+              )}
+              {fixResults.map((fix, i) => {
+                const FixIcon = fix.status === "success" ? CheckCircle2 : fix.status === "warning" ? AlertTriangle : Info;
+                const iconColor = fix.status === "success" ? "text-emerald-400" : fix.status === "warning" ? "text-amber-400" : "text-blue-400";
+                const bgColor = fix.status === "success" ? "bg-emerald-500/5 border-emerald-500/20" : fix.status === "warning" ? "bg-amber-500/5 border-amber-500/20" : "bg-blue-500/5 border-blue-500/20";
+                return (
+                  <div key={i} className={`rounded-lg border p-3 ${bgColor}`}>
+                    <div className="flex items-start gap-2">
+                      <FixIcon className={`w-4 h-4 mt-0.5 shrink-0 ${iconColor}`} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium" style={{ color: "hsl(var(--admin-text))" }}>{fix.action}</p>
+                        <p className="text-xs mt-1" style={{ color: "hsl(var(--admin-muted))" }}>{fix.detail}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {!fixing && fixResults.length > 0 && (
+              <div className="flex justify-end gap-2 pt-2">
+                <Button size="sm" variant="outline" onClick={() => setFixDialogOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
+                  Kapat
+                </Button>
+                <Button size="sm" onClick={fixIssues} className="bg-amber-500 text-white hover:bg-amber-600">
+                  <RefreshCw className="w-3 h-3 mr-1" /> Tekrar Dene
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
