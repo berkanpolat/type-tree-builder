@@ -97,15 +97,15 @@ export default function FirmaAvatar({ firmaUnvani, logoUrl, size = "md", classNa
 
   if (hasRealLogo) {
     return (
-      <div className={cn("rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0", sizeClasses[size], className)}>
-        <img src={logoUrl} alt="" className="w-full h-full object-contain p-0.5" />
+      <div className={cn("rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0", sizeClasses[size], className)}>
+        <img src={logoUrl} alt="" className="w-full h-full object-cover" />
       </div>
     );
   }
 
   return (
     <div
-      className={cn("rounded-lg flex items-center justify-center shrink-0 font-bold select-none", sizeClasses[size], className)}
+      className={cn("rounded-full flex items-center justify-center shrink-0 font-bold select-none", sizeClasses[size], className)}
       style={{ backgroundColor: color.bg, color: color.fg }}
     >
       {initials}
