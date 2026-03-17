@@ -110,6 +110,7 @@ export default function AdminPortfoy() {
   const { token, user: adminUser, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [allFirmalar, setAllFirmalar] = useState<FirmaItem[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -140,14 +141,29 @@ export default function AdminPortfoy() {
   const fetchData = useCallback(async () => {
     if (!token || !adminUser?.id) return;
     try {
-      const firmaData = await callApi("list-firmalar", {
-        token,
-        paginated: true,
-        page: 1,
-        perPage: 100,
-        filterPortfolyo: adminUser.id,
-      });
-      setAllFirmalar(firmaData.firmalar || []);
+      // Fetch all portfolio firms using pagination to bypass limits
+      let allFirms: FirmaItem[] = [];
+      let page = 1;
+      const perPage = 500;
+      let hasMore = true;
+
+      while (hasMore) {
+        const firmaData = await callApi("list-firmalar", {
+          token,
+          paginated: true,
+          page,
+          perPage,
+          filterPortfolyo: adminUser.id,
+        });
+        const firms = firmaData.firmalar || [];
+        allFirms = allFirms.concat(firms);
+        const total = firmaData.total || 0;
+        setTotalCount(total);
+        hasMore = allFirms.length < total;
+        page++;
+      }
+
+      setAllFirmalar(allFirms);
     } catch {
       toast({ title: "Hata", description: "Veriler yüklenemedi", variant: "destructive" });
     } finally {

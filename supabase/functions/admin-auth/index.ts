@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
 
       if (paginated && !unsupportedSorts.has(body.sortField)) {
         const page = Math.max(1, Number(body.page) || 1);
-        const perPage = Math.min(100, Math.max(1, Number(body.perPage) || 20));
+        const perPage = Math.min(500, Math.max(1, Number(body.perPage) || 20));
         const searchTerm = typeof body.searchTerm === "string" ? body.searchTerm.trim() : "";
         const filterTuru = typeof body.filterTuru === "string" ? body.filterTuru : "all";
         const filterTipi = typeof body.filterTipi === "string" ? body.filterTipi : "all";
