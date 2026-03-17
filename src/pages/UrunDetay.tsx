@@ -641,13 +641,7 @@ export default function UrunDetay() {
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Satıcı Bilgileri</h3>
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
-                      {firma.logo_url ? (
-                        <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
-                      ) : (
-                        <span className="text-xl font-bold text-muted-foreground">{firma.firma_unvani.charAt(0)}</span>
-                      )}
-                    </div>
+                    <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={firma.logo_url} size="xl" className="w-16 h-16 text-xl border border-border" />
                     <div>
                       {firma.belge_onayli && (
                         <div className="flex items-center gap-2 mb-0.5">
