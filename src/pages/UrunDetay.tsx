@@ -1163,7 +1163,7 @@ export default function UrunDetay() {
                     </div>
                     <div className="p-3 flex flex-col flex-1">
                       <p className="text-sm font-medium text-foreground line-clamp-2 mb-2 min-h-[2.5rem]">{b.baslik}</p>
-                      {currentUserId && (
+                      {currentUserId && currentUserId !== "public" && packageInfo.paketSlug !== "ucretsiz" && (
                         <div className="flex items-center gap-2 mb-2">
                           <FirmaAvatar firmaUnvani={b.firma_unvani || ""} logoUrl={b.firma_logo_url} size="xs" className="rounded-full border border-border" />
                           <span className="text-xs text-muted-foreground truncate">{b.firma_unvani || ""}</span>
