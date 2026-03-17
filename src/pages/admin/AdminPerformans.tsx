@@ -254,6 +254,16 @@ export default function AdminPerformans() {
             <Button variant="outline" onClick={() => { loadHistory(); loadAlerts(); }} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
               <RefreshCw className="w-4 h-4 mr-2" /> Yenile
             </Button>
+            {latestTest && latestTest.system_status !== "healthy" && (
+              <Button
+                onClick={fixIssues}
+                disabled={fixing}
+                className="bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700"
+              >
+                {fixing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wrench className="w-4 h-4 mr-2" />}
+                {fixing ? "Analiz Ediliyor..." : "Sorunları Gider"}
+              </Button>
+            )}
           </div>
           {selectedTest && (
             <Button variant="outline" onClick={generatePdf} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
