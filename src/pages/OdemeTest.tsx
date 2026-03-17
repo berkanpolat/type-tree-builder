@@ -76,6 +76,7 @@ export default function OdemeTest() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(true);
+  const [currency, setCurrency] = useState<Currency>("USD");
 
   const expiryRef = useRef<HTMLInputElement>(null);
   const cvvRef = useRef<HTMLInputElement>(null);
