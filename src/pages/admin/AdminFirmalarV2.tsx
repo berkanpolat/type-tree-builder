@@ -772,18 +772,54 @@ export default function AdminFirmalarV2() {
   };
 
   const handleCreateFirma = async () => {
+    if (yeniFirmaSaving) return;
+
     const cepDigits = ((yeniFirma as any).cep_telefonu || "").replace(/\D/g, "");
-    if (!yeniFirma.email || !yeniFirma.password || !yeniFirma.ad || !yeniFirma.soyad || !yeniFirma.firma_unvani || !yeniFirma.vergi_numarasi || !yeniFirma.vergi_dairesi || !yeniFirma.firma_turu_id || !yeniFirma.firma_tipi_id) {
+    const emailTrimmed = yeniFirma.email.trim().toLowerCase();
+
+    if (!emailTrimmed || !yeniFirma.password || !yeniFirma.ad.trim() || !yeniFirma.soyad.trim() || !yeniFirma.firma_unvani.trim() || !yeniFirma.vergi_numarasi.trim() || !yeniFirma.vergi_dairesi.trim() || !yeniFirma.firma_turu_id || !yeniFirma.firma_tipi_id) {
       toast({ title: "Hata", description: "Zorunlu alanları doldurun", variant: "destructive" });
       return;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      toast({ title: "Hata", description: "Geçerli bir e-posta adresi girin (örn: ad@firma.com)", variant: "destructive" });
+      return;
+    }
+
+    if (yeniFirma.password.length < 6) {
+      toast({ title: "Hata", description: "Şifre en az 6 karakter olmalıdır", variant: "destructive" });
+      return;
+    }
+
     if (cepDigits.length > 0 && cepDigits.length !== 10) {
       toast({ title: "Hata", description: "Cep telefonu 10 hane olmalı", variant: "destructive" });
       return;
     }
+
+    const vergiDigits = yeniFirma.vergi_numarasi.trim().replace(/\D/g, "");
+    if (vergiDigits.length !== 10 && vergiDigits.length !== 11) {
+      toast({ title: "Hata", description: "Vergi numarası 10 veya 11 haneli olmalıdır", variant: "destructive" });
+      return;
+    }
+
     setYeniFirmaSaving(true);
     try {
-      const result = await callApi("create-firma", { token, ...yeniFirma, iletisim_numarasi: cepDigits.length === 10 ? "+90" + cepDigits : "" });
+      const result = await callApi("create-firma", {
+        token,
+        email: emailTrimmed,
+        password: yeniFirma.password,
+        ad: yeniFirma.ad.trim(),
+        soyad: yeniFirma.soyad.trim(),
+        iletisim_email: (yeniFirma.iletisim_email || emailTrimmed).trim(),
+        iletisim_numarasi: cepDigits.length === 10 ? "+90" + cepDigits : "",
+        firma_unvani: yeniFirma.firma_unvani.trim(),
+        vergi_numarasi: yeniFirma.vergi_numarasi.trim(),
+        vergi_dairesi: yeniFirma.vergi_dairesi.trim(),
+        firma_turu_id: yeniFirma.firma_turu_id,
+        firma_tipi_id: yeniFirma.firma_tipi_id,
+      });
       if (result?.error) {
         toast({ title: "Hata", description: result.error, variant: "destructive" });
         return;
@@ -793,7 +829,6 @@ export default function AdminFirmalarV2() {
       setYeniFirma({ email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "", firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "", cep_telefonu: "" });
       fetchData();
     } catch (err: any) {
-      // Extract actual error message from edge function response
       let errorMsg = "İşlem başarısız";
       try {
         if (err?.context) {
@@ -802,7 +837,7 @@ export default function AdminFirmalarV2() {
         } else if (err?.message && !err.message.includes("non-2xx")) {
           errorMsg = err.message;
         }
-      } catch { /* fallback to default */ }
+      } catch { /* fallback */ }
       console.error("[CreateFirma] Error:", err);
       toast({ title: "Hata", description: errorMsg, variant: "destructive" });
     } finally {

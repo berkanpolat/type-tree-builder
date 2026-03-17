@@ -3186,33 +3186,60 @@ Deno.serve(async (req) => {
       const { token, email, password, ad, soyad, iletisim_email, iletisim_numarasi, firma_unvani, vergi_numarasi, vergi_dairesi, firma_turu_id, firma_tipi_id } = body;
       const payload = verifyToken(token);
 
+      // Server-side validation
+      const trimmedEmail = (email || "").trim().toLowerCase();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+        return jsonResponse({ error: "Geçerli bir e-posta adresi girin." }, 400);
+      }
+      if (!password || password.length < 6) {
+        return jsonResponse({ error: "Şifre en az 6 karakter olmalıdır." }, 400);
+      }
+      if (!ad || !soyad || !firma_unvani || !vergi_numarasi || !vergi_dairesi || !firma_turu_id || !firma_tipi_id) {
+        return jsonResponse({ error: "Zorunlu alanlar eksik (Ad, Soyad, Firma Ünvanı, Vergi No, Vergi Dairesi, Firma Türü, Firma Tipi)." }, 400);
+      }
+
       // Create auth user with auto-confirm
-      console.log("Creating auth user for email:", email);
+      console.log("Creating auth user for email:", trimmedEmail);
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email,
+        email: trimmedEmail,
         password,
         email_confirm: true,
       });
 
       if (authError) {
         console.error("Auth user creation error:", authError.message);
-        return jsonResponse({ error: authError.message }, 400);
+        // Translate common errors to Turkish
+        let userMsg = authError.message;
+        if (authError.message.includes("already been registered")) {
+          userMsg = "Bu e-posta adresi ile zaten bir hesap bulunmaktadır.";
+        } else if (authError.message.includes("invalid format")) {
+          userMsg = "Geçersiz e-posta formatı.";
+        } else if (authError.message.includes("password")) {
+          userMsg = "Şifre gereksinimleri karşılanmıyor.";
+        }
+        return jsonResponse({ error: userMsg }, 400);
       }
       const userId = authData.user.id;
 
       // Create profile
       const { error: profileError } = await supabase.from("profiles").insert({
         user_id: userId,
-        ad,
-        soyad,
-        iletisim_email: iletisim_email || email,
+        ad: (ad || "").trim(),
+        soyad: (soyad || "").trim(),
+        iletisim_email: (iletisim_email || trimmedEmail).trim(),
         iletisim_numarasi: iletisim_numarasi || null,
       });
 
       if (profileError) {
+        console.error("Profile creation error:", profileError.message);
         // Rollback: delete auth user
         await supabase.auth.admin.deleteUser(userId);
-        return jsonResponse({ error: profileError.message }, 400);
+        let userMsg = profileError.message;
+        if (profileError.message.includes("zaten bir üyelik")) {
+          userMsg = profileError.message;
+        }
+        return jsonResponse({ error: userMsg }, 400);
       }
 
       // Create firma
@@ -3220,13 +3247,14 @@ Deno.serve(async (req) => {
         user_id: userId,
         firma_turu_id,
         firma_tipi_id,
-        firma_unvani,
-        vergi_numarasi,
-        vergi_dairesi,
+        firma_unvani: (firma_unvani || "").trim(),
+        vergi_numarasi: (vergi_numarasi || "").trim(),
+        vergi_dairesi: (vergi_dairesi || "").trim(),
         onay_durumu: "onaylandi",
       });
 
       if (firmaError) {
+        console.error("Firma creation error:", firmaError.message);
         await supabase.from("profiles").delete().eq("user_id", userId);
         await supabase.auth.admin.deleteUser(userId);
         return jsonResponse({ error: firmaError.message }, 400);
@@ -3239,7 +3267,7 @@ Deno.serve(async (req) => {
       await logActivity(supabase, payload, "create-firma", {
         target_type: "firma",
         target_label: firma_unvani,
-        details: { email, ad, soyad, firma_unvani, vergi_numarasi },
+        details: { email: trimmedEmail, ad, soyad, firma_unvani, vergi_numarasi },
       });
 
       return jsonResponse({ success: true });
