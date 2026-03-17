@@ -169,10 +169,15 @@ export default function OdemeTest() {
         <div className="flex-1 space-y-6">
           <div>
             <p className="text-sm text-white/60 mb-1">PRO Paket — {period === "aylik" ? "Aylık" : "Yıllık"}</p>
-            <h1 className="text-3xl font-bold">
-              ${fmt(usdPrice)}
-              <span className="text-base font-normal text-white/50">/{period === "aylik" ? "ay" : "yıl"}</span>
-            </h1>
+            {period === "yillik" ? (
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className="text-lg line-through text-white/40">${fmt(YILLIK_ORIGINAL)}</span>
+                <h1 className="text-3xl font-bold">${fmt(usdPrice)}<span className="text-base font-normal text-white/50">/yıl</span></h1>
+                <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded-full leading-none">%45</span>
+              </div>
+            ) : (
+              <h1 className="text-3xl font-bold">${fmt(usdPrice)}<span className="text-base font-normal text-white/50">/ay</span></h1>
+            )}
             {totalTry && !rateLoading && (
               <p className="text-sm text-white/50 mt-1 flex items-center gap-1">
                 ≈ ₺{fmt(usdPrice * exchangeRate!)}
