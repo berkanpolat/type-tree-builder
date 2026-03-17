@@ -332,8 +332,7 @@ export default function IhaleDetay() {
   const fetchIhale = useCallback(async () => {
     if (!slugParam) return;
     const adminToken = localStorage.getItem("admin_token");
-    // Allow fetch if user is logged in OR admin token exists
-    if (!currentUserId && !adminToken) return;
+    // Allow fetch for anonymous users too
     setLoading(true);
 
     let ihaleData: any = null;
