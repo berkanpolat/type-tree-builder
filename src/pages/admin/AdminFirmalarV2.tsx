@@ -367,6 +367,7 @@ export default function AdminFirmalarV2() {
   };
 
     const openPaketDialog = async (firma: FirmaItem) => {
+    setPaketDialogFirma(firma);
     setPaketDialogOpen(true);
     setPaketDialogLoading(true);
     setSelectedPaketId(firma.abonelik?.paket_id || "");
