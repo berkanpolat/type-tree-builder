@@ -99,17 +99,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(217 33% 12%)" }}>
-        <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  if (!user) return null;
-
   const visibleGroups = useMemo(() => {
+    if (!user) return [];
     const filterItem = (item: MenuItem) => {
       const checkUser = originalUser || user;
       if (item.primaryOnly) return checkUser?.is_primary ?? false;
@@ -120,6 +111,16 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       .map((g) => ({ ...g, items: g.items.filter(filterItem) }))
       .filter((g) => g.items.length > 0);
   }, [user, originalUser, hasPermission]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(217 33% 12%)" }}>
+        <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!user) return null;
 
   const t = lightMode;
 
