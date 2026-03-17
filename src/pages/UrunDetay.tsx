@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getSafeUser } from "@/lib/auth-session";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
@@ -196,14 +197,13 @@ export default function UrunDetay() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getSafeUser();
       if (!user) {
         const adminToken = localStorage.getItem("admin_token");
         if (adminToken) {
           setIsAdminViewing(true);
           setCurrentUserId("admin");
         } else {
-          // Allow public access - set a placeholder to trigger fetch
           setCurrentUserId("public");
         }
         return;

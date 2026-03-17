@@ -3,6 +3,7 @@ import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getSafeUser } from "@/lib/auth-session";
 import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
 import Footer from "@/components/Footer";
@@ -316,11 +317,10 @@ export default function IhaleDetay() {
   // Init user
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getSafeUser();
       if (!user) {
         const adminToken = localStorage.getItem("admin_token");
         if (adminToken) { setIsAdminViewing(true); }
-        // Allow anonymous users to view ihale details (no redirect)
         return;
       }
       setCurrentUserId(user.id);
