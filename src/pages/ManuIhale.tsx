@@ -418,7 +418,8 @@ export default function ManuIhale() {
             <AlertDialogCancel>Vazgeç</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { if (deleteId) handleDelete(deleteId); setDeleteId(null); }}
+              disabled={deleteLoading}
+              onClick={async () => { if (deleteId) { await handleDelete(deleteId); setDeleteId(null); } }}
             >
               Sil
             </AlertDialogAction>

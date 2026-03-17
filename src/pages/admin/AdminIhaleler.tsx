@@ -885,9 +885,9 @@ export default function AdminIhaleler() {
             <AlertDialogDescription style={s.muted}>{confirmDialog.desc}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel style={{ color: "hsl(var(--admin-muted))", borderColor: "hsl(var(--admin-border))" }}>Vazgeç</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDialog.action} className="bg-amber-500 hover:bg-amber-600 text-white">
-              Evet, Onayla
+            <AlertDialogCancel disabled={confirmLoading} style={{ color: "hsl(var(--admin-muted))", borderColor: "hsl(var(--admin-border))" }}>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDialog.action} disabled={confirmLoading} className="bg-amber-500 hover:bg-amber-600 text-white">
+              {confirmLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Evet, Onayla
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
