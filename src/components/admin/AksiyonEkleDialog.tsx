@@ -127,7 +127,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
   const fetchYetkililer = async () => {
     setYetkililerLoading(true);
     try {
-      const data = await callApi("list-yetkililer", { token, firmaId });
+      const data = await callApi("list-yetkililer", { token, firmaId, compact: true });
       setYetkililer((data.yetkililer || []).map((y: any) => ({ id: y.id, ad: y.ad, soyad: y.soyad, pozisyon: y.pozisyon })));
     } catch {
       setYetkililer([]);
@@ -139,15 +139,6 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
   const fetchPaketler = async () => {
     const { data } = await supabase.from("paketler").select("id, ad, slug").eq("aktif", true).order("fiyat_aylik", { ascending: true });
     setPaketler((data || []).map((p: any) => ({ id: p.id, ad: p.ad, slug: p.slug || "" })));
-  };
-
-  const fetchFirmaEmail = async () => {
-    try {
-      const data = await callApi("get-firma-email", { token, firmaId });
-      setFirmaEmail(data.email || "");
-    } catch {
-      setFirmaEmail("");
-    }
   };
 
   useEffect(() => {
