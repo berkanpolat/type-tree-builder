@@ -1633,7 +1633,7 @@ export default function IhaleDetay() {
                     {benzerIhaleler.map((b) => (
                       <div key={b.id} className="flex gap-3 cursor-pointer hover:bg-muted/50 rounded-lg p-2 -mx-2 transition-colors" onClick={() => navigate(`/ihaleler/${b.slug || b.id}`)}>
                         <div className="w-20 h-20 rounded-lg bg-muted flex items-center justify-center overflow-hidden shrink-0">
-                          {b.foto_url ? <img src={b.foto_url} alt="" className="w-full h-full object-contain" /> : <ImageIcon className="w-6 h-6 text-muted-foreground" />}
+                          {b.foto_url ? <img src={b.foto_url} alt="" className="w-full h-full object-contain" /> : <img src={ihaleDefaultCover} alt="" className="w-full h-full object-contain p-2" />}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground line-clamp-2">{b.baslik}</p>
