@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import FirmaAvatar from "@/components/FirmaAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
 import { useNavigate } from "react-router-dom";
@@ -500,13 +501,7 @@ export default function TekRehber() {
                     onClick={() => navigate(`/${firma.slug || firma.id}`)}
                   >
                     <div className="flex items-start gap-3 sm:gap-4 overflow-hidden">
-                      <div className="w-14 h-14 sm:w-[72px] sm:h-[72px] rounded-lg bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
-                        {firma.logo_url ? (
-                          <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
-                        ) : (
-                          <span className="text-lg sm:text-xl font-bold text-muted-foreground">{firma.firma_unvani.charAt(0)}</span>
-                        )}
-                      </div>
+                      <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={firma.logo_url} size="xl" className="w-14 h-14 sm:w-[72px] sm:h-[72px] sm:text-xl border border-border" />
 
                         <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
