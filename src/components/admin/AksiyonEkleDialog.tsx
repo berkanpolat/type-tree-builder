@@ -145,7 +145,6 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
     if (open && firmaId) {
       fetchYetkililer();
       fetchPaketler();
-      fetchFirmaEmail();
       if (editData) {
         // Pre-fill from edit data
         setTur(editData.tur || turler[0]?.value || "diger");
@@ -178,6 +177,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       setProPeriod("aylik");
       setEmailSecim("default");
       setCustomEmail("");
+      setFirmaEmail("");
       setShowYetkiliForm(false);
       setHatirlaticiAktif(false);
       setHatirlaticiTarih(new Date(Date.now() + 7 * 86400000));
@@ -185,6 +185,21 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       setHatirlaticiNot("");
     }
   }, [open, firmaId]);
+
+  useEffect(() => {
+    if (!open || !firmaId || !isProPaket || emailSecim !== "default" || firmaEmail) return;
+
+    const loadFirmaEmail = async () => {
+      try {
+        const data = await callApi("get-firma-email", { token, firmaId });
+        setFirmaEmail(data.email || "");
+      } catch {
+        setFirmaEmail("");
+      }
+    };
+
+    void loadFirmaEmail();
+  }, [open, firmaId, isProPaket, emailSecim, firmaEmail, callApi, token]);
 
   const handleAddYetkili = async () => {
     if (!yetkiliAd.trim() || !yetkiliSoyad.trim()) return;
