@@ -1069,8 +1069,8 @@ export default function IhaleDetay() {
                         {(ihale.teklif_usulu === "acik_artirma" || ihale.teklif_usulu === "kapali_zarf") && (
                           <div className="flex gap-2">
                             <Input type="number" placeholder="Teklif tutarınız" value={teklifTutar} onChange={(e) => setTeklifTutar(e.target.value)} className="flex-1" />
-                            <Button onClick={handleTeklifVer} disabled={teklifYukleniyor} className="gap-2 whitespace-nowrap">
-                              {teklifYukleniyor ? "Gönderiliyor..." : "Teklif Ver"}
+                            <Button onClick={handleTeklifSubmit} className="gap-2 whitespace-nowrap">
+                              Teklif Ver
                             </Button>
                           </div>
                         )}
