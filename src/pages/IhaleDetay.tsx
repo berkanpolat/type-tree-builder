@@ -1633,6 +1633,7 @@ export default function IhaleDetay() {
                 </Card>
               )}
             </div>
+            )}
 
             {/* Benzer İhaleler - desktop only */}
             <div className="hidden lg:block">
