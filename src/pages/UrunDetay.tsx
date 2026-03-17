@@ -471,7 +471,7 @@ export default function UrunDetay() {
   return (
     <div className="min-h-screen bg-muted/30 font-sans">
       {/* Header */}
-      <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
+      {currentUserId && currentUserId !== "public" ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
