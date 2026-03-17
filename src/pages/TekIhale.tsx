@@ -169,6 +169,7 @@ export default function TekIhale() {
         .from("ihaleler")
         .select("id, ihale_no, baslik, foto_url, ihale_turu, teklif_usulu, baslangic_fiyati, para_birimi, bitis_tarihi, user_id, firma_adi_gizle, urun_kategori_id, urun_grup_id, urun_tur_id, hizmet_kategori_id, hizmet_tur_id, odeme_secenekleri, odeme_vadesi, slug")
         .eq("durum", "devam_ediyor")
+        .gt("bitis_tarihi", new Date().toISOString())
         .order("created_at", { ascending: false });
 
       if (!ihaleData || ihaleData.length === 0) {

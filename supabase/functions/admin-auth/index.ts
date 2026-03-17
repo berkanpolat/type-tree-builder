@@ -3512,9 +3512,13 @@ Deno.serve(async (req) => {
       const { error } = await supabase.from("firma_uzaklastirmalar").delete().eq("id", uzaklastirmaId);
       if (error) return jsonResponse({ error: error.message }, 400);
 
-      // Restore firma status
+      // Restore firma status and reactivate ihaleler/urunler
       if (uzak) {
         await supabase.from("firmalar").update({ onay_durumu: "onaylandi" }).eq("user_id", uzak.user_id);
+        // Restore ihaleler that were iptal'd and still have time remaining
+        await supabase.from("ihaleler").update({ durum: "devam_ediyor" }).eq("user_id", uzak.user_id).eq("durum", "iptal").gt("bitis_tarihi", new Date().toISOString());
+        // Restore products
+        await supabase.from("urunler").update({ durum: "aktif" }).eq("user_id", uzak.user_id).eq("durum", "pasif");
       }
 
       await logActivity(supabase, payload, "Uzaklaştırma kaldırıldı", { target_type: "uzaklastirma", target_id: String(uzaklastirmaId) });
