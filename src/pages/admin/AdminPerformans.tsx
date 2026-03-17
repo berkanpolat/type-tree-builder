@@ -187,6 +187,7 @@ export default function AdminPerformans() {
     }
   };
 
+  const toggleSchedule = async (id: string, enabled: boolean) => {
     if (!token) return;
     try {
       await callPerfApi(token, "update-schedule", { schedule_id: id, enabled });
