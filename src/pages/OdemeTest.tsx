@@ -56,12 +56,14 @@ function validateExpiry(val: string): boolean {
 
 type Period = "aylik" | "yillik";
 
-const YILLIK_ORIGINAL = PRO_FIYATLAR.aylik.fiyat * 12; // 199 * 12 = 2388
-const YILLIK_INDIRIMLI = PRO_FIYATLAR.yillik.fiyat; // 1299
+const YILLIK_ORIGINAL = PRO_FIYATLAR.aylik.fiyat * 12;
+const YILLIK_INDIRIMLI = PRO_FIYATLAR.yillik.fiyat;
+const AYLIK_KARSILIK = Math.round((YILLIK_INDIRIMLI / 12) * 100) / 100;
 
 export default function OdemeTest() {
   const { toast } = useToast();
-  const [period, setPeriod] = useState<Period>("aylik");
+  const searchParams = new URLSearchParams(window.location.search);
+  const period: Period = searchParams.get("periyot") === "yillik" ? "yillik" : "aylik";
   const [cardNumber, setCardNumber] = useState("");
   const [cardHolder, setCardHolder] = useState("");
   const [expiry, setExpiry] = useState("");
