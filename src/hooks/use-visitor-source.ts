@@ -74,7 +74,7 @@ export function useVisitorSource() {
       return () => (window as any).cancelIdleCallback?.(idleId);
     }
 
-    const timeoutId = window.setTimeout(sendTracking, 1500);
-    return () => window.clearTimeout(timeoutId);
+    const timeoutId = globalThis.setTimeout(sendTracking, 1500);
+    return () => globalThis.clearTimeout(timeoutId);
   }, []);
 }

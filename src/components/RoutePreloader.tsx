@@ -40,7 +40,7 @@ const preloadRoutes = () => {
       if ("requestIdleCallback" in window) {
         (window as any).requestIdleCallback(loadNext, { timeout: 4000 });
       } else {
-        window.setTimeout(loadNext, 250);
+        globalThis.setTimeout(loadNext, 250);
       }
     });
   };
@@ -54,7 +54,7 @@ const RoutePreloader = () => {
 
     const startPreloading = () => preloadRoutes();
 
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       if ("requestIdleCallback" in window) {
         (window as any).requestIdleCallback(startPreloading, { timeout: 6000 });
       } else {
@@ -62,7 +62,7 @@ const RoutePreloader = () => {
       }
     }, 3500);
 
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, []);
 
   return null;
