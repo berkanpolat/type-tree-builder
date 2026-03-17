@@ -17,7 +17,7 @@ function FooterLink({ to, children }: { to: string; children: React.ReactNode })
 
 export default function Footer() {
   return (
-    <footer className="bg-primary mt-auto">
+    <footer className="bg-primary mt-auto min-h-[280px]">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Logo & Company Info */}

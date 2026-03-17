@@ -10,8 +10,8 @@ import RouteStateManager from "./components/RouteStateManager";
 import RoutePreloader from "./components/RoutePreloader";
 import AuthRedirectHandler from "./components/AuthRedirectHandler";
 
-// Only GirisKayit is eagerly loaded (auth gate)
-import GirisKayit from "./pages/GirisKayit";
+// GirisKayit is now also lazy-loaded
+const GirisKayit = lazy(() => import("./pages/GirisKayit"));
 
 // All pages lazy-loaded for optimal code splitting
 const LandingPage = lazy(() => import("./pages/LandingPage"));

@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import { X, Send, Loader2, Sparkles, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import ReactMarkdown from "react-markdown";
+const ReactMarkdown = lazy(() => import("react-markdown"));
 import tekbotAvatar from "@/assets/tekbot-avatar.png";
 
 type Msg = { role: "user" | "assistant"; content: string };
@@ -258,7 +258,7 @@ export default function Chatbot() {
                 >
                   {msg.role === "assistant" ? (
                     <div className="prose prose-sm max-w-none [&_p]:m-0 [&_p]:mb-1.5 [&_p:last-child]:mb-0 [&_ul]:my-1 [&_ol]:my-1 [&_li]:my-0.5 [&_a]:text-secondary [&_a]:underline [&_a]:underline-offset-2 [&_strong]:font-semibold [&_code]:text-[12px] [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      <Suspense fallback={<span>{msg.content}</span>}><ReactMarkdown>{msg.content}</ReactMarkdown></Suspense>
                     </div>
                   ) : (
                     <p className="whitespace-pre-wrap">{msg.content}</p>
