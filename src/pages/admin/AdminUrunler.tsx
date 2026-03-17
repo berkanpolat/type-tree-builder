@@ -765,6 +765,7 @@ export default function AdminUrunler() {
                       {(urun.durum === "aktif" || urun.durum === "pasif") && hasPermission("urun_onaylayabilir") && (
                         <Switch
                           checked={urun.durum === "aktif"}
+                          disabled={toggleLoadingId === urun.id}
                           onCheckedChange={() => handleToggle(urun.id, urun.durum)}
                           className="scale-[0.85]"
                         />
