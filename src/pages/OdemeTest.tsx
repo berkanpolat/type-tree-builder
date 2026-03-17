@@ -171,15 +171,14 @@ export default function OdemeTest() {
             <p className="text-sm text-white/60 mb-1">PRO Paket</p>
             {period === "yillik" ? (
               <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <span className="text-xl line-through text-white/40">${fmt(YILLIK_ORIGINAL)}</span>
-                  <h1 className="text-3xl font-bold">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-lg line-through text-white/40">${fmt(YILLIK_ORIGINAL)}</span>
+                  <h1 className="text-2xl font-bold">
                     ${fmt(YILLIK_INDIRIMLI)}
-                    <span className="text-base font-normal text-white/50">/yıl</span>
+                    <span className="text-sm font-normal text-white/50">/yıl</span>
                   </h1>
-                  <span className="text-xs font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">%45 indirim</span>
+                  <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded-full leading-none">%45</span>
                 </div>
-                <p className="text-xs text-white/40">(aylık ~${fmt(AYLIK_KARSILIK)})</p>
               </div>
             ) : (
               <h1 className="text-3xl font-bold">
