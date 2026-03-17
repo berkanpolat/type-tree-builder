@@ -25,6 +25,7 @@ export function useAdminApi() {
             { body: enrichedBody }
           );
           if (error) {
+            console.error(`[AdminAPI] ${action} error:`, error, "message:", error?.message, "status:", (error as any)?.status, "context:", JSON.stringify((error as any)?.context));
             // Retry on 503/504 (cold start timeouts)
             const status = (error as any)?.status || (error as any)?.context?.status;
             if ((status === 503 || status === 504 || String(error.message).includes("boot")) && attempt < maxRetries) {
@@ -33,6 +34,7 @@ export function useAdminApi() {
             }
             throw error;
           }
+          console.log(`[AdminAPI] ${action} success:`, typeof data, data ? Object.keys(data) : "null");
           return data;
         } catch (err: any) {
           if (attempt < maxRetries && (err?.message?.includes("Failed to fetch") || err?.message?.includes("network"))) {
