@@ -727,65 +727,63 @@ function buildPdfContent(test: TestResult, details: TestDetail[], alerts: Alert[
   const sc = statusConfig[test.system_status || "healthy"];
   const statusColor = test.system_status === "healthy" ? "#10b981" : test.system_status === "warning" ? "#f59e0b" : "#ef4444";
 
-  return `<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<title>Performans Raporu — ${new Date(test.created_at).toLocaleDateString("tr-TR")}</title>
-<style>
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 40px; color: #1a2e5a; max-width: 900px; margin: 0 auto; }
-h1 { color: #1a2e5a; border-bottom: 3px solid #f59e0b; padding-bottom: 10px; }
-h2 { color: #1a2e5a; margin-top: 30px; }
-.kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
-.kpi { border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
-.kpi .label { font-size: 12px; color: #6b7280; }
-.kpi .value { font-size: 28px; font-weight: bold; margin-top: 4px; }
-.status { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 14px; }
-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-th, td { padding: 10px 12px; border: 1px solid #e5e7eb; text-align: left; font-size: 13px; }
-th { background: #f9fafb; font-weight: 600; }
-.success { color: #10b981; } .fail { color: #ef4444; }
-.alert { padding: 12px; border-radius: 8px; margin: 8px 0; border-left: 4px solid; }
-.alert-critical { background: #fef2f2; border-color: #ef4444; }
-.alert-warning { background: #fffbeb; border-color: #f59e0b; }
-.footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #9ca3af; text-align: center; }
-@media print { body { padding: 20px; } }
-</style>
-</head>
-<body>
-<h1>🔍 Performans Test Raporu</h1>
-<p><strong>Tarih:</strong> ${new Date(test.created_at).toLocaleString("tr-TR")} · <strong>Tür:</strong> ${test.test_type === "manual" ? "Manuel" : "Otomatik"}</p>
+  const detailRows = details.map(d => {
+    const modLabel = (moduleLabels[d.module] || { label: d.module }).label;
+    const cls = d.success ? "success" : "fail";
+    const statusText = d.success ? "✓ Başarılı" : "✗ Başarısız";
+    const err = d.error_message || "—";
+    return "<tr><td>" + modLabel + "</td><td>" + d.endpoint + "</td><td>" + d.response_time + "</td><td class=\"" + cls + "\">" + statusText + "</td><td>" + err + "</td></tr>";
+  }).join("");
 
-<div class="kpi-grid">
-<div class="kpi"><div class="label">Performans Skoru</div><div class="value" style="color:${statusColor}">${test.overall_score}/100</div></div>
-<div class="kpi"><div class="label">Ort. Yanıt Süresi</div><div class="value">${test.avg_response_time}ms</div></div>
-<div class="kpi"><div class="label">Hata Oranı</div><div class="value">${test.error_rate}%</div></div>
-<div class="kpi"><div class="label">Maks. Yanıt Süresi</div><div class="value">${test.max_response_time}ms</div></div>
-<div class="kpi"><div class="label">Başarılı Endpoint</div><div class="value">${test.total_endpoints - test.failed_endpoints}/${test.total_endpoints}</div></div>
-<div class="kpi"><div class="label">Sistem Durumu</div><div class="value"><span class="status" style="background:${statusColor}20;color:${statusColor}">${sc.label}</span></div></div>
-</div>
+  const alertSection = alerts.length > 0
+    ? "<h2>⚠️ Uyarılar</h2>" + alerts.map(a => {
+        const label = a.severity === "critical" ? "🔴 Kritik" : "🟡 Uyarı";
+        return "<div class=\"alert alert-" + a.severity + "\"><strong>" + label + ":</strong> " + a.message + "</div>";
+      }).join("")
+    : "";
 
-<h2>📊 Endpoint Detayları</h2>
-<table>
-<thead><tr><th>Modül</th><th>Endpoint</th><th>Yanıt (ms)</th><th>Durum</th><th>Hata</th></tr></thead>
-<tbody>
-${details.map(d => `<tr>
-<td>${(moduleLabels[d.module] || { label: d.module }).label}</td>
-<td>${d.endpoint}</td>
-<td>${d.response_time}</td>
-<td class="${d.success ? "success" : "fail"}">${d.success ? "✓ Başarılı" : "✗ Başarısız"}</td>
-<td>${d.error_message || "—"}</td>
-</tr>`).join("")}
-</tbody>
-</table>
+  const recs = test.summary?.ai_analysis?.recommendations;
+  const aiSection = recs
+    ? "<h2>🤖 AI Önerileri</h2>" + recs.map((r: any) => {
+        const pLabel = r.priority === "high" ? "Yüksek" : r.priority === "medium" ? "Orta" : "Düşük";
+        return "<div class=\"alert alert-warning\"><strong>[" + pLabel + "] " + r.title + ":</strong> " + r.description + "<br><em>→ " + r.action + "</em></div>";
+      }).join("")
+    : "";
 
-${alerts.length > 0 ? `<h2>⚠️ Uyarılar</h2>
-${alerts.map(a => `<div class="alert alert-${a.severity}"><strong>${a.severity === "critical" ? "🔴 Kritik" : "🟡 Uyarı"}:</strong> ${a.message}</div>`).join("")}` : ""}
-
-${test.summary?.ai_analysis?.recommendations ? `<h2>🤖 AI Önerileri</h2>
-${test.summary.ai_analysis.recommendations.map((r: any) => `<div class="alert alert-warning"><strong>[${r.priority === "high" ? "Yüksek" : r.priority === "medium" ? "Orta" : "Düşük"}] ${r.title}:</strong> ${r.description}<br><em>→ ${r.action}</em></div>`).join("")}` : ""}
-
-<div class="footer">Bu rapor Tekstil A.Ş. Performans İzleme Sistemi tarafından otomatik oluşturulmuştur. · ${new Date().toLocaleString("tr-TR")}</div>
-</body>
-</html>`;
+  return "<!DOCTYPE html><html lang=\"tr\"><head><meta charset=\"UTF-8\"><title>Performans Raporu — " + new Date(test.created_at).toLocaleDateString("tr-TR") + "</title><style>"
+    + "body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:40px;color:#1a2e5a;max-width:900px;margin:0 auto}"
+    + "h1{color:#1a2e5a;border-bottom:3px solid #f59e0b;padding-bottom:10px}"
+    + "h2{color:#1a2e5a;margin-top:30px}"
+    + ".kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0}"
+    + ".kpi{border:1px solid #e5e7eb;border-radius:12px;padding:16px}"
+    + ".kpi .label{font-size:12px;color:#6b7280}.kpi .value{font-size:28px;font-weight:bold;margin-top:4px}"
+    + ".status{display:inline-block;padding:4px 12px;border-radius:20px;font-weight:600;font-size:14px}"
+    + "table{width:100%;border-collapse:collapse;margin:16px 0}"
+    + "th,td{padding:10px 12px;border:1px solid #e5e7eb;text-align:left;font-size:13px}"
+    + "th{background:#f9fafb;font-weight:600}"
+    + ".success{color:#10b981}.fail{color:#ef4444}"
+    + ".alert{padding:12px;border-radius:8px;margin:8px 0;border-left:4px solid}"
+    + ".alert-critical{background:#fef2f2;border-color:#ef4444}"
+    + ".alert-warning{background:#fffbeb;border-color:#f59e0b}"
+    + ".footer{margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:11px;color:#9ca3af;text-align:center}"
+    + "@media print{body{padding:20px}}"
+    + "</style></head><body>"
+    + "<h1>🔍 Performans Test Raporu</h1>"
+    + "<p><strong>Tarih:</strong> " + new Date(test.created_at).toLocaleString("tr-TR") + " · <strong>Tür:</strong> " + (test.test_type === "manual" ? "Manuel" : "Otomatik") + "</p>"
+    + "<div class=\"kpi-grid\">"
+    + "<div class=\"kpi\"><div class=\"label\">Performans Skoru</div><div class=\"value\" style=\"color:" + statusColor + "\">" + test.overall_score + "/100</div></div>"
+    + "<div class=\"kpi\"><div class=\"label\">Ort. Yanıt Süresi</div><div class=\"value\">" + test.avg_response_time + "ms</div></div>"
+    + "<div class=\"kpi\"><div class=\"label\">Hata Oranı</div><div class=\"value\">" + test.error_rate + "%</div></div>"
+    + "<div class=\"kpi\"><div class=\"label\">Maks. Yanıt Süresi</div><div class=\"value\">" + test.max_response_time + "ms</div></div>"
+    + "<div class=\"kpi\"><div class=\"label\">Başarılı Endpoint</div><div class=\"value\">" + (test.total_endpoints - test.failed_endpoints) + "/" + test.total_endpoints + "</div></div>"
+    + "<div class=\"kpi\"><div class=\"label\">Sistem Durumu</div><div class=\"value\"><span class=\"status\" style=\"background:" + statusColor + "20;color:" + statusColor + "\">" + sc.label + "</span></div></div>"
+    + "</div>"
+    + "<h2>📊 Endpoint Detayları</h2>"
+    + "<table><thead><tr><th>Modül</th><th>Endpoint</th><th>Yanıt (ms)</th><th>Durum</th><th>Hata</th></tr></thead><tbody>"
+    + detailRows
+    + "</tbody></table>"
+    + alertSection
+    + aiSection
+    + "<div class=\"footer\">Bu rapor Tekstil A.Ş. Performans İzleme Sistemi tarafından otomatik oluşturulmuştur. · " + new Date().toLocaleString("tr-TR") + "</div>"
+    + "</body></html>";
 }
