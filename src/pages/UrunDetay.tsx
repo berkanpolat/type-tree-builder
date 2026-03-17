@@ -1128,13 +1128,7 @@ export default function UrunDetay() {
                     <div className="p-3 flex flex-col flex-1">
                       <p className="text-sm font-medium text-foreground line-clamp-2 mb-2 min-h-[2.5rem]">{b.baslik}</p>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
-                          {b.firma_logo_url ? (
-                            <img src={b.firma_logo_url} alt="" className="w-full h-full object-contain" />
-                          ) : (
-                            <span className="text-[8px] font-bold text-muted-foreground">{b.firma_unvani?.charAt(0) || "?"}</span>
-                          )}
-                        </div>
+                        <FirmaAvatar firmaUnvani={b.firma_unvani || ""} logoUrl={b.firma_logo_url} size="xs" className="rounded-full border border-border" />
                         <span className="text-xs text-muted-foreground truncate">{b.firma_unvani || ""}</span>
                       </div>
                       <div className="mb-3">{bPrice}</div>

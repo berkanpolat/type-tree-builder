@@ -716,13 +716,7 @@ export default function AnaSayfa() {
         <div className="p-3 flex flex-col flex-1">
           <p className="text-sm font-medium text-foreground line-clamp-2 mb-2 min-h-[2.5rem]">{urun.baslik}</p>
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
-              {urun.firma_logo_url ? (
-                <img src={urun.firma_logo_url} alt="" className="w-full h-full object-contain" />
-              ) : (
-                <span className="text-[8px] font-bold text-muted-foreground">{urun.firma_unvani?.charAt(0) || "?"}</span>
-              )}
-            </div>
+            <FirmaAvatar firmaUnvani={urun.firma_unvani || ""} logoUrl={urun.firma_logo_url} size="xs" className="rounded-full border border-border" />
             <span className="text-xs text-muted-foreground truncate">{urun.firma_unvani || ""}</span>
             {(urun as any).belge_onayli && <VerifiedBadge />}
           </div>
