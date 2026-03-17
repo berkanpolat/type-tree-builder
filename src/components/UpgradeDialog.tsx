@@ -33,8 +33,14 @@ export default function UpgradeDialog({ open, onOpenChange, title, message }: Pr
   useEffect(() => {
     if (!open) return;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session?.user);
+    // Validate with server to catch stale sessions
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
+      if (error || !user) {
+        supabase.auth.signOut({ scope: "local" }).catch(() => {});
+        setIsLoggedIn(false);
+      } else {
+        setIsLoggedIn(true);
+      }
     });
   }, [open]);
 
