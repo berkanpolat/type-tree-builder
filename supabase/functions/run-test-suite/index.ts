@@ -30,7 +30,7 @@ async function runAllTests(supabase: any): Promise<TestResult[]> {
   const elapsed = (s: number) => Math.round(performance.now() - s);
 
   // ═══════════════════════════════════════════
-  // 1. VERİTABANI BAĞLANTISI & TABLOLAR
+  // 1. DATABASE TABLES
   // ═══════════════════════════════════════════
   const criticalTables = [
     "firmalar", "profiles", "ihaleler", "ihale_teklifler", "urunler",
@@ -54,14 +54,14 @@ async function runAllTests(supabase: any): Promise<TestResult[]> {
     const { error, count } = await supabase.from(table).select("*", { count: "exact", head: true });
     const ms = elapsed(s);
     if (error) {
-      t({ group: "Veritabanı Tabloları", name: `${table}`, status: "fail", detail: `Tablo erişilemedi`, technicalDetail: `SELECT error: ${error.message} (code: ${error.code})`, solution: `Tablonun var olduğunu ve RLS politikalarının doğru olduğunu kontrol edin. Service role ile test ediliyor, bu hata tablo yoksa oluşur.`, durationMs: ms });
+      t({ group: "Veritabanı Tabloları", name: `${table}`, status: "fail", detail: `Tablo erişilemedi`, technicalDetail: `[TABLE_ACCESS_ERROR] SELECT on "${table}" failed. Error: ${error.message} (code: ${error.code}). Query: supabase.from("${table}").select("*", {count:"exact", head:true})`, solution: `Check if table "${table}" exists. Verify RLS policies allow service_role access. Run: SELECT * FROM pg_tables WHERE tablename='${table}';`, durationMs: ms });
     } else {
-      t({ group: "Veritabanı Tabloları", name: `${table}`, status: ms > 2000 ? "warn" : "pass", detail: `${count ?? 0} kayıt, ${ms}ms`, technicalDetail: ms > 2000 ? `Yanıt süresi yüksek: ${ms}ms` : undefined, solution: ms > 2000 ? "Index eksik olabilir veya tablo çok büyük." : undefined, durationMs: ms });
+      t({ group: "Veritabanı Tabloları", name: `${table}`, status: ms > 2000 ? "warn" : "pass", detail: `${count ?? 0} kayıt, ${ms}ms`, technicalDetail: ms > 2000 ? `[SLOW_QUERY] Table "${table}" response time: ${ms}ms (threshold: 2000ms). Row count: ${count}. Possible missing index or large table scan.` : undefined, solution: ms > 2000 ? `Add index on frequently queried columns of "${table}". Check EXPLAIN ANALYZE for the table. Consider partitioning if row count > 100k.` : undefined, durationMs: ms });
     }
   }
 
   // ═══════════════════════════════════════════
-  // 2. VERİTABANI FONKSİYONLARI (RPC)
+  // 2. DATABASE FUNCTIONS (RPC)
   // ═══════════════════════════════════════════
   const rpcTests = [
     { name: "get_firma_user_counts", args: { p_user_ids: [] } },
@@ -77,152 +77,139 @@ async function runAllTests(supabase: any): Promise<TestResult[]> {
     const { error } = await supabase.rpc(rpc.name, rpc.args);
     const ms = elapsed(s);
     if (error) {
-      t({ group: "Veritabanı Fonksiyonları", name: rpc.name, status: "fail", detail: `RPC çalışmadı`, technicalDetail: `rpc("${rpc.name}") error: ${error.message}`, solution: `Fonksiyonun CREATE OR REPLACE ile güncel olduğundan ve parametre tiplerinin doğru olduğundan emin olun.`, durationMs: ms });
+      t({ group: "Veritabanı Fonksiyonları", name: rpc.name, status: "fail", detail: `RPC çalışmadı`, technicalDetail: `[RPC_ERROR] supabase.rpc("${rpc.name}", ${JSON.stringify(rpc.args)}) failed. Error: ${error.message} (code: ${error.code})`, solution: `Verify function exists: SELECT proname FROM pg_proc WHERE proname='${rpc.name}'. Check parameter types match. Re-deploy with CREATE OR REPLACE FUNCTION if needed.`, durationMs: ms });
     } else {
       t({ group: "Veritabanı Fonksiyonları", name: rpc.name, status: "pass", detail: `Başarılı (${ms}ms)`, durationMs: ms });
     }
   }
 
   // ═══════════════════════════════════════════
-  // 3. AUTH SİSTEMİ
+  // 3. AUTH SYSTEM
   // ═══════════════════════════════════════════
   {
     const s = start();
     const res = await fetch(`${SUPABASE_URL}/auth/v1/health`, { headers: { apikey: ANON_KEY } });
     const ms = elapsed(s);
     const body = await res.text();
-    t({ group: "Kimlik Doğrulama", name: "Auth Health Check", status: res.ok ? "pass" : "fail", detail: res.ok ? `Auth servisi çalışıyor (${ms}ms)` : "Auth servisi erişilemedi", technicalDetail: !res.ok ? `Status: ${res.status}, Body: ${body.substring(0, 200)}` : undefined, solution: !res.ok ? "Supabase Auth servisini kontrol edin." : undefined, durationMs: ms });
+    t({ group: "Kimlik Doğrulama", name: "Auth Health Check", status: res.ok ? "pass" : "fail", detail: res.ok ? `Auth servisi çalışıyor (${ms}ms)` : "Auth servisi erişilemedi", technicalDetail: !res.ok ? `[AUTH_HEALTH_FAIL] GET ${SUPABASE_URL}/auth/v1/health → HTTP ${res.status}. Response body: ${body.substring(0, 300)}` : undefined, solution: !res.ok ? `Auth service is unreachable. Check Supabase project status. Verify SUPABASE_URL and ANON_KEY environment variables.` : undefined, durationMs: ms });
   }
 
-  // Kayıt duplikasyon kontrolü
   {
     const s = start();
     const { data, error } = await supabase.rpc("check_registration_duplicate", { p_email: "test-nonexist@test.test", p_phone: "5559999999" });
     const ms = elapsed(s);
     if (error) {
-      t({ group: "Kimlik Doğrulama", name: "Duplikasyon Kontrolü", status: "fail", detail: "Kayıt duplikasyon kontrolü çalışmıyor", technicalDetail: error.message, solution: "check_registration_duplicate fonksiyonunu kontrol edin.", durationMs: ms });
+      t({ group: "Kimlik Doğrulama", name: "Duplikasyon Kontrolü", status: "fail", detail: "Kayıt duplikasyon kontrolü çalışmıyor", technicalDetail: `[DUPLICATE_CHECK_FAIL] rpc("check_registration_duplicate") error: ${error.message}`, solution: `Function check_registration_duplicate is missing or broken. Check: SELECT proname FROM pg_proc WHERE proname='check_registration_duplicate';`, durationMs: ms });
     } else {
       const isValid = data && typeof data.email_exists === "boolean" && typeof data.phone_exists === "boolean";
-      t({ group: "Kimlik Doğrulama", name: "Duplikasyon Kontrolü", status: isValid ? "pass" : "warn", detail: isValid ? `Çalışıyor (${ms}ms)` : "Beklenmeyen format", technicalDetail: !isValid ? `Dönen veri: ${JSON.stringify(data)}` : undefined, durationMs: ms });
+      t({ group: "Kimlik Doğrulama", name: "Duplikasyon Kontrolü", status: isValid ? "pass" : "warn", detail: isValid ? `Çalışıyor (${ms}ms)` : "Beklenmeyen format", technicalDetail: !isValid ? `[UNEXPECTED_RESPONSE] check_registration_duplicate returned: ${JSON.stringify(data)}. Expected: {email_exists: boolean, phone_exists: boolean}` : undefined, durationMs: ms });
     }
   }
 
   // ═══════════════════════════════════════════
-  // 4. İHALE SİSTEMİ
+  // 4. TENDER (İHALE) SYSTEM
   // ═══════════════════════════════════════════
   {
-    // İhale numarası benzersizliği
     const s = start();
     const { data, error } = await supabase.from("ihaleler").select("ihale_no").limit(100);
     const ms = elapsed(s);
     if (error) {
-      t({ group: "İhale Sistemi", name: "İhale Listesi Erişim", status: "fail", detail: "İhaleler tablosuna erişilemedi", technicalDetail: error.message, solution: "ihaleler tablosu RLS politikalarını kontrol edin.", durationMs: ms });
+      t({ group: "İhale Sistemi", name: "İhale Listesi Erişim", status: "fail", detail: "İhaleler tablosuna erişilemedi", technicalDetail: `[IHALE_ACCESS_ERROR] SELECT ihale_no FROM ihaleler LIMIT 100 failed. Error: ${error.message}`, solution: `Check RLS policies on ihaleler table. Service role should bypass RLS. Verify table exists.`, durationMs: ms });
     } else {
       const nos = data?.map((d: any) => d.ihale_no) || [];
       const unique = new Set(nos).size === nos.length;
-      t({ group: "İhale Sistemi", name: "İhale No Benzersizlik", status: unique ? "pass" : "fail", detail: unique ? `${nos.length} ihale numarası benzersiz` : "Tekrarlayan ihale numaraları var!", technicalDetail: !unique ? "generate_ihale_no trigger'ı kontrol edilmeli" : undefined, solution: !unique ? "generate_ihale_no() fonksiyonundaki UNIQUE kontrolünü gözden geçirin." : undefined, durationMs: ms });
+      t({ group: "İhale Sistemi", name: "İhale No Benzersizlik", status: unique ? "pass" : "fail", detail: unique ? `${nos.length} ihale numarası benzersiz` : "Tekrarlayan ihale numaraları var!", technicalDetail: !unique ? `[DUPLICATE_IHALE_NO] Found duplicate ihale_no values among ${nos.length} records. Trigger generate_ihale_no() is not enforcing uniqueness properly.` : undefined, solution: !unique ? `Fix: Check generate_ihale_no() trigger function. Verify UNIQUE constraint on ihaleler.ihale_no column. SQL: ALTER TABLE ihaleler ADD CONSTRAINT ihale_no_unique UNIQUE (ihale_no);` : undefined, durationMs: ms });
     }
   }
 
   {
-    // İhale durum geçişleri
     const { data: ihaleler } = await supabase.from("ihaleler").select("id, durum, baslangic_tarihi, bitis_tarihi, baslik, ihale_no, teklif_usulu").limit(50);
     const durumlar = ["duzenleniyor", "onay_bekliyor", "devam_ediyor", "tamamlandi", "reddedildi", "iptal"];
     const invalidDurum = (ihaleler || []).filter((i: any) => !durumlar.includes(i.durum));
-    t({ group: "İhale Sistemi", name: "Durum Geçerliliği", status: invalidDurum.length === 0 ? "pass" : "fail", detail: invalidDurum.length === 0 ? "Tüm ihalelerin durumu geçerli" : `${invalidDurum.length} ihale geçersiz durumda`, technicalDetail: invalidDurum.length > 0 ? `Geçersiz durumlar: ${invalidDurum.map((i: any) => `${i.ihale_no}:${i.durum}`).join(", ")}` : undefined, solution: invalidDurum.length > 0 ? "Manuel olarak durum düzeltmesi yapın." : undefined });
+    t({ group: "İhale Sistemi", name: "Durum Geçerliliği", status: invalidDurum.length === 0 ? "pass" : "fail", detail: invalidDurum.length === 0 ? "Tüm ihalelerin durumu geçerli" : `${invalidDurum.length} ihale geçersiz durumda`, technicalDetail: invalidDurum.length > 0 ? `[INVALID_STATUS] Tenders with invalid durum: ${invalidDurum.map((i: any) => `${i.ihale_no}="${i.durum}"`).join(", ")}. Valid values: ${durumlar.join(", ")}` : undefined, solution: invalidDurum.length > 0 ? `Manually fix durum column. SQL: UPDATE ihaleler SET durum='iptal' WHERE id IN (${invalidDurum.map((i: any) => `'${i.id}'`).join(",")});` : undefined });
 
-    // Süresi dolmuş ama hâlâ devam_ediyor
     const now = new Date().toISOString();
     const expired = (ihaleler || []).filter((i: any) => i.durum === "devam_ediyor" && i.bitis_tarihi && i.bitis_tarihi < now);
-    t({ group: "İhale Sistemi", name: "Süre Dolmuş İhaleler", status: expired.length === 0 ? "pass" : "warn", detail: expired.length === 0 ? "Süresi dolmuş aktif ihale yok" : `${expired.length} ihale süresi dolmuş ama hâlâ aktif`, technicalDetail: expired.length > 0 ? `İhale No'lar: ${expired.map((i: any) => i.ihale_no).join(", ")}` : undefined, solution: expired.length > 0 ? "check-ihale-expiry edge function'ı veya auto_complete_expired_ihaleler trigger'ını kontrol edin." : undefined });
+    t({ group: "İhale Sistemi", name: "Süre Dolmuş İhaleler", status: expired.length === 0 ? "pass" : "warn", detail: expired.length === 0 ? "Süresi dolmuş aktif ihale yok" : `${expired.length} ihale süresi dolmuş ama hâlâ aktif`, technicalDetail: expired.length > 0 ? `[EXPIRED_ACTIVE_TENDERS] ${expired.length} tenders have durum='devam_ediyor' but bitis_tarihi < NOW(). IDs: ${expired.map((i: any) => i.ihale_no).join(", ")}. The auto_complete_expired_ihaleler trigger or check-ihale-expiry edge function is not running.` : undefined, solution: expired.length > 0 ? `Run: UPDATE ihaleler SET durum='tamamlandi' WHERE durum='devam_ediyor' AND bitis_tarihi < NOW(); Also check check-ihale-expiry cron schedule.` : undefined });
   }
 
   {
-    // İhale teklif bütünlüğü
     const { data: teklifler } = await supabase.from("ihale_teklifler").select("id, ihale_id, tutar, teklif_veren_user_id").limit(100);
     const invalidTeklifler = (teklifler || []).filter((t: any) => !t.tutar || t.tutar <= 0);
-    t({ group: "İhale Sistemi", name: "Teklif Tutarları", status: invalidTeklifler.length === 0 ? "pass" : "fail", detail: invalidTeklifler.length === 0 ? "Tüm teklifler geçerli tutarda" : `${invalidTeklifler.length} teklif geçersiz tutarda`, technicalDetail: invalidTeklifler.length > 0 ? `IDs: ${invalidTeklifler.map((t: any) => t.id).join(", ")}` : undefined, solution: invalidTeklifler.length > 0 ? "Teklif validasyonunu frontend ve backend tarafında kontrol edin." : undefined });
+    t({ group: "İhale Sistemi", name: "Teklif Tutarları", status: invalidTeklifler.length === 0 ? "pass" : "fail", detail: invalidTeklifler.length === 0 ? "Tüm teklifler geçerli tutarda" : `${invalidTeklifler.length} teklif geçersiz tutarda`, technicalDetail: invalidTeklifler.length > 0 ? `[INVALID_BID_AMOUNT] ${invalidTeklifler.length} bids have tutar <= 0 or NULL. IDs: ${invalidTeklifler.map((t: any) => t.id).join(", ")}` : undefined, solution: invalidTeklifler.length > 0 ? `Add CHECK constraint: ALTER TABLE ihale_teklifler ADD CONSTRAINT tutar_positive CHECK (tutar > 0); Fix existing: DELETE FROM ihale_teklifler WHERE tutar <= 0;` : undefined });
   }
 
   // ═══════════════════════════════════════════
-  // 5. ÜRÜN SİSTEMİ
+  // 5. PRODUCT (ÜRÜN) SYSTEM
   // ═══════════════════════════════════════════
   {
     const s = start();
     const { data: urunler, error } = await supabase.from("urunler").select("id, durum, baslik, urun_no, slug").limit(100);
     const ms = elapsed(s);
     if (error) {
-      t({ group: "Ürün Sistemi", name: "Ürün Listesi Erişim", status: "fail", detail: "Ürünler tablosuna erişilemedi", technicalDetail: error.message, durationMs: ms });
+      t({ group: "Ürün Sistemi", name: "Ürün Listesi Erişim", status: "fail", detail: "Ürünler tablosuna erişilemedi", technicalDetail: `[URUN_ACCESS_ERROR] SELECT from urunler failed: ${error.message}`, durationMs: ms });
     } else {
       t({ group: "Ürün Sistemi", name: "Ürün Listesi Erişim", status: "pass", detail: `${urunler?.length || 0} ürün erişildi (${ms}ms)`, durationMs: ms });
 
-      // Slug benzersizliği
       const slugs = (urunler || []).map((u: any) => u.slug).filter(Boolean);
       const uniqueSlugs = new Set(slugs).size === slugs.length;
-      t({ group: "Ürün Sistemi", name: "Ürün Slug Benzersizlik", status: uniqueSlugs ? "pass" : "fail", detail: uniqueSlugs ? "Tüm sluglar benzersiz" : "Tekrarlayan ürün slug'ları var!", solution: !uniqueSlugs ? "set_urun_slug trigger'ını kontrol edin." : undefined });
+      t({ group: "Ürün Sistemi", name: "Ürün Slug Benzersizlik", status: uniqueSlugs ? "pass" : "fail", detail: uniqueSlugs ? "Tüm sluglar benzersiz" : "Tekrarlayan ürün slug'ları var!", technicalDetail: !uniqueSlugs ? `[DUPLICATE_SLUG] Duplicate slug values found in urunler table. Trigger set_urun_slug() is not enforcing uniqueness.` : undefined, solution: !uniqueSlugs ? `Check set_urun_slug() trigger and generate_slug() function. Add UNIQUE constraint on urunler.slug.` : undefined });
 
-      // Urun no benzersizliği
       const nos = (urunler || []).map((u: any) => u.urun_no).filter(Boolean);
       const uniqueNos = new Set(nos).size === nos.length;
-      t({ group: "Ürün Sistemi", name: "Ürün No Benzersizlik", status: uniqueNos ? "pass" : "fail", detail: uniqueNos ? "Tüm ürün numaraları benzersiz" : "Tekrarlayan ürün numaraları var!" });
+      t({ group: "Ürün Sistemi", name: "Ürün No Benzersizlik", status: uniqueNos ? "pass" : "fail", detail: uniqueNos ? "Tüm ürün numaraları benzersiz" : "Tekrarlayan ürün numaraları var!", technicalDetail: !uniqueNos ? `[DUPLICATE_URUN_NO] Duplicate urun_no values found. Trigger generate_urun_no() uniqueness check may be failing.` : undefined });
 
-      // Durum kontrolü
       const validDurumlar = ["duzenleniyor", "onay_bekliyor", "aktif", "reddedildi", "pasif"];
       const invalidUrunDurum = (urunler || []).filter((u: any) => !validDurumlar.includes(u.durum));
-      t({ group: "Ürün Sistemi", name: "Ürün Durum Geçerliliği", status: invalidUrunDurum.length === 0 ? "pass" : "fail", detail: invalidUrunDurum.length === 0 ? "Tüm ürünlerin durumu geçerli" : `${invalidUrunDurum.length} ürün geçersiz durumda` });
+      t({ group: "Ürün Sistemi", name: "Ürün Durum Geçerliliği", status: invalidUrunDurum.length === 0 ? "pass" : "fail", detail: invalidUrunDurum.length === 0 ? "Tüm ürünlerin durumu geçerli" : `${invalidUrunDurum.length} ürün geçersiz durumda`, technicalDetail: invalidUrunDurum.length > 0 ? `[INVALID_PRODUCT_STATUS] Products with invalid durum: ${invalidUrunDurum.map((u: any) => `${u.urun_no}="${u.durum}"`).join(", ")}. Valid: ${validDurumlar.join(", ")}` : undefined });
     }
   }
 
   // ═══════════════════════════════════════════
-  // 6. PAKET & ABONELİK SİSTEMİ
+  // 6. PACKAGE & SUBSCRIPTION SYSTEM
   // ═══════════════════════════════════════════
   {
     const { data: paketler, error } = await supabase.from("paketler").select("id, ad, slug, fiyat_aylik, fiyat_yillik");
     if (error) {
-      t({ group: "Paket Sistemi", name: "Paket Tanımları", status: "fail", detail: "Paketler tablosuna erişilemedi", technicalDetail: error.message });
+      t({ group: "Paket Sistemi", name: "Paket Tanımları", status: "fail", detail: "Paketler tablosuna erişilemedi", technicalDetail: `[PAKET_ACCESS_ERROR] ${error.message}` });
     } else {
       t({ group: "Paket Sistemi", name: "Paket Tanımları", status: (paketler?.length || 0) > 0 ? "pass" : "fail", detail: `${paketler?.length || 0} paket tanımlı` });
 
       const freePackage = (paketler || []).find((p: any) => p.slug === "ucretsiz");
-      t({ group: "Paket Sistemi", name: "Ücretsiz Paket", status: freePackage ? "pass" : "fail", detail: freePackage ? "Ücretsiz paket mevcut" : "Ücretsiz paket bulunamadı!", solution: !freePackage ? "paketler tablosuna slug='ucretsiz' olan bir paket ekleyin." : undefined });
+      t({ group: "Paket Sistemi", name: "Ücretsiz Paket", status: freePackage ? "pass" : "fail", detail: freePackage ? "Ücretsiz paket mevcut" : "Ücretsiz paket bulunamadı!", technicalDetail: !freePackage ? `[MISSING_FREE_PACKAGE] No row in paketler with slug='ucretsiz'. This breaks auto_assign_free_package trigger.` : undefined, solution: !freePackage ? `INSERT INTO paketler (ad, slug, fiyat_aylik, fiyat_yillik) VALUES ('Ücretsiz', 'ucretsiz', 0, 0);` : undefined });
     }
 
-    // Abonelik bütünlüğü
     const { data: abonelikler } = await supabase.from("kullanici_abonelikler").select("id, user_id, paket_id, durum").limit(100);
     const aktifAbonelikler = (abonelikler || []).filter((a: any) => a.durum === "aktif");
-    // Check for users with multiple active subscriptions
     const userAbonelikMap: Record<string, number> = {};
     aktifAbonelikler.forEach((a: any) => { userAbonelikMap[a.user_id] = (userAbonelikMap[a.user_id] || 0) + 1; });
     const multiActive = Object.entries(userAbonelikMap).filter(([_, count]) => count > 1);
-    t({ group: "Paket Sistemi", name: "Çoklu Aktif Abonelik", status: multiActive.length === 0 ? "pass" : "warn", detail: multiActive.length === 0 ? "Her kullanıcının tek aktif aboneliği var" : `${multiActive.length} kullanıcının birden fazla aktif aboneliği var`, solution: multiActive.length > 0 ? "kullanici_abonelikler tablosunda mükerrer kayıtları temizleyin." : undefined });
+    t({ group: "Paket Sistemi", name: "Çoklu Aktif Abonelik", status: multiActive.length === 0 ? "pass" : "warn", detail: multiActive.length === 0 ? "Her kullanıcının tek aktif aboneliği var" : `${multiActive.length} kullanıcının birden fazla aktif aboneliği var`, technicalDetail: multiActive.length > 0 ? `[DUPLICATE_ACTIVE_SUBSCRIPTIONS] ${multiActive.length} users have >1 active subscription. User IDs: ${multiActive.map(([uid]) => uid).join(", ")}` : undefined, solution: multiActive.length > 0 ? `Deduplicate: For each user, keep the most recent active subscription and set others to durum='iptal'. SQL: WITH ranked AS (SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) rn FROM kullanici_abonelikler WHERE durum='aktif') UPDATE kullanici_abonelikler SET durum='iptal' WHERE id IN (SELECT id FROM ranked WHERE rn > 1);` : undefined });
   }
 
   // ═══════════════════════════════════════════
-  // 7. MESAJLAŞMA SİSTEMİ
+  // 7. MESSAGING SYSTEM
   // ═══════════════════════════════════════════
   {
     const s = start();
     const { error: convErr } = await supabase.from("conversations").select("id", { count: "exact", head: true });
     const ms = elapsed(s);
-    t({ group: "Mesajlaşma", name: "Sohbetler Tablosu", status: convErr ? "fail" : "pass", detail: convErr ? "conversations tablosu erişilemedi" : `Erişim başarılı (${ms}ms)`, technicalDetail: convErr?.message, durationMs: ms });
+    t({ group: "Mesajlaşma", name: "Sohbetler Tablosu", status: convErr ? "fail" : "pass", detail: convErr ? "conversations tablosu erişilemedi" : `Erişim başarılı (${ms}ms)`, technicalDetail: convErr ? `[CONV_ACCESS_ERROR] ${convErr.message}` : undefined, durationMs: ms });
 
     const { error: msgErr } = await supabase.from("messages").select("id", { count: "exact", head: true });
-    t({ group: "Mesajlaşma", name: "Mesajlar Tablosu", status: msgErr ? "fail" : "pass", detail: msgErr ? "messages tablosu erişilemedi" : "Erişim başarılı", technicalDetail: msgErr?.message });
+    t({ group: "Mesajlaşma", name: "Mesajlar Tablosu", status: msgErr ? "fail" : "pass", detail: msgErr ? "messages tablosu erişilemedi" : "Erişim başarılı", technicalDetail: msgErr ? `[MSG_ACCESS_ERROR] ${msgErr.message}` : undefined });
 
-    // get_or_create_conversation RPC
     const { error: rpcErr } = await supabase.rpc("get_or_create_conversation", { p_user1: "00000000-0000-0000-0000-000000000001", p_user2: "00000000-0000-0000-0000-000000000002" });
-    // This will likely fail with FK constraint but the function itself should exist
-    t({ group: "Mesajlaşma", name: "Sohbet Oluşturma RPC", status: rpcErr && rpcErr.message?.includes("violates foreign key") ? "pass" : rpcErr ? "warn" : "pass", detail: !rpcErr || rpcErr.message?.includes("violates foreign key") ? "RPC fonksiyonu çalışıyor" : "RPC hatası", technicalDetail: rpcErr && !rpcErr.message?.includes("violates foreign key") ? rpcErr.message : undefined });
+    t({ group: "Mesajlaşma", name: "Sohbet Oluşturma RPC", status: rpcErr && rpcErr.message?.includes("violates foreign key") ? "pass" : rpcErr ? "warn" : "pass", detail: !rpcErr || rpcErr.message?.includes("violates foreign key") ? "RPC fonksiyonu çalışıyor" : "RPC hatası", technicalDetail: rpcErr && !rpcErr.message?.includes("violates foreign key") ? `[CONV_RPC_ERROR] get_or_create_conversation error: ${rpcErr.message}` : undefined });
   }
 
   // ═══════════════════════════════════════════
-  // 8. BİLDİRİM SİSTEMİ
+  // 8. NOTIFICATION SYSTEM
   // ═══════════════════════════════════════════
   {
     const { data, error } = await supabase.from("notifications").select("id, type", { count: "exact", head: false }).limit(10);
-    t({ group: "Bildirimler", name: "Bildirim Tablosu", status: error ? "fail" : "pass", detail: error ? "notifications tablosu erişilemedi" : "Erişim başarılı", technicalDetail: error?.message });
+    t({ group: "Bildirimler", name: "Bildirim Tablosu", status: error ? "fail" : "pass", detail: error ? "notifications tablosu erişilemedi" : "Erişim başarılı", technicalDetail: error ? `[NOTIF_ACCESS_ERROR] ${error.message}` : undefined });
 
-    // Check notification types
     if (data && data.length > 0) {
       const validTypes = [
         "ihale_onay_bekliyor", "ihale_onaylandi", "ihale_reddedildi", "ihale_iptal",
@@ -234,43 +221,41 @@ async function runAllTests(supabase: any): Promise<TestResult[]> {
       ];
       const types = data.map((d: any) => d.type);
       const invalidTypes = types.filter((t: string) => !validTypes.includes(t));
-      t({ group: "Bildirimler", name: "Bildirim Tip Kontrolü", status: invalidTypes.length === 0 ? "pass" : "warn", detail: invalidTypes.length === 0 ? "Tüm bildirim tipleri geçerli" : `${invalidTypes.length} bilinmeyen bildirim tipi`, technicalDetail: invalidTypes.length > 0 ? `Bilinmeyen tipler: ${[...new Set(invalidTypes)].join(", ")}` : undefined });
+      t({ group: "Bildirimler", name: "Bildirim Tip Kontrolü", status: invalidTypes.length === 0 ? "pass" : "warn", detail: invalidTypes.length === 0 ? "Tüm bildirim tipleri geçerli" : `${invalidTypes.length} bilinmeyen bildirim tipi`, technicalDetail: invalidTypes.length > 0 ? `[UNKNOWN_NOTIF_TYPES] Unknown notification types: ${[...new Set(invalidTypes)].join(", ")}. Expected one of: ${validTypes.join(", ")}` : undefined });
     }
   }
 
   // ═══════════════════════════════════════════
-  // 9. DESTEK SİSTEMİ
+  // 9. SUPPORT SYSTEM
   // ═══════════════════════════════════════════
   {
     const { data, error } = await supabase.from("destek_talepleri").select("id, durum, talep_no").limit(50);
-    t({ group: "Destek Sistemi", name: "Destek Talepleri", status: error ? "fail" : "pass", detail: error ? "Erişilemedi" : `${data?.length || 0} talep kontrol edildi`, technicalDetail: error?.message });
+    t({ group: "Destek Sistemi", name: "Destek Talepleri", status: error ? "fail" : "pass", detail: error ? "Erişilemedi" : `${data?.length || 0} talep kontrol edildi`, technicalDetail: error ? `[DESTEK_ACCESS_ERROR] ${error.message}` : undefined });
 
     if (data) {
-      const validDurum = ["acik", "cevaplandi", "cozuldu", "beklemede"];
+      const validDurum = ["acik", "cevaplandi", "cozuldu", "beklemede", "inceleniyor"];
       const invalidDurum = data.filter((d: any) => !validDurum.includes(d.durum));
-      t({ group: "Destek Sistemi", name: "Talep Durumları", status: invalidDurum.length === 0 ? "pass" : "warn", detail: invalidDurum.length === 0 ? "Tüm talepler geçerli durumda" : `${invalidDurum.length} geçersiz durum`, technicalDetail: invalidDurum.length > 0 ? `No'lar: ${invalidDurum.map((d: any) => d.talep_no).join(", ")}` : undefined });
+      t({ group: "Destek Sistemi", name: "Talep Durumları", status: invalidDurum.length === 0 ? "pass" : "warn", detail: invalidDurum.length === 0 ? "Tüm talepler geçerli durumda" : `${invalidDurum.length} geçersiz durum`, technicalDetail: invalidDurum.length > 0 ? `[INVALID_DESTEK_STATUS] Tickets with invalid durum: ${invalidDurum.map((d: any) => `${d.talep_no}="${d.durum}"`).join(", ")}. Valid: ${validDurum.join(", ")}` : undefined });
     }
   }
 
   // ═══════════════════════════════════════════
-  // 10. FİRMA SİSTEMİ
+  // 10. COMPANY (FİRMA) SYSTEM
   // ═══════════════════════════════════════════
   {
     const { data: firmalar } = await supabase.from("firmalar").select("id, slug, firma_unvani, user_id, onay_durumu, firma_turu_id, firma_tipi_id").limit(100);
     if (firmalar) {
-      // Slug kontrolü
       const slugs = firmalar.map((f: any) => f.slug).filter(Boolean);
       const uniqueSlugs = new Set(slugs).size === slugs.length;
-      t({ group: "Firma Sistemi", name: "Firma Slug Benzersizlik", status: uniqueSlugs ? "pass" : "fail", detail: uniqueSlugs ? "Tüm firma slugları benzersiz" : "Tekrarlayan slug var!" });
+      t({ group: "Firma Sistemi", name: "Firma Slug Benzersizlik", status: uniqueSlugs ? "pass" : "fail", detail: uniqueSlugs ? "Tüm firma slugları benzersiz" : "Tekrarlayan slug var!", technicalDetail: !uniqueSlugs ? `[DUPLICATE_FIRMA_SLUG] Duplicate slug values in firmalar. Trigger set_firma_slug() may be broken.` : undefined });
 
-      // Zorunlu alan kontrolü
       const missingRequired = firmalar.filter((f: any) => !f.firma_unvani || !f.user_id || !f.firma_turu_id || !f.firma_tipi_id);
-      t({ group: "Firma Sistemi", name: "Zorunlu Alan Kontrolü", status: missingRequired.length === 0 ? "pass" : "fail", detail: missingRequired.length === 0 ? "Tüm zorunlu alanlar dolu" : `${missingRequired.length} firma eksik bilgili`, solution: missingRequired.length > 0 ? "Eksik firma bilgilerini tamamlayın." : undefined });
+      t({ group: "Firma Sistemi", name: "Zorunlu Alan Kontrolü", status: missingRequired.length === 0 ? "pass" : "fail", detail: missingRequired.length === 0 ? "Tüm zorunlu alanlar dolu" : `${missingRequired.length} firma eksik bilgili`, technicalDetail: missingRequired.length > 0 ? `[MISSING_REQUIRED_FIELDS] ${missingRequired.length} firmalar rows missing required fields (firma_unvani, user_id, firma_turu_id, or firma_tipi_id). IDs: ${missingRequired.map((f: any) => f.id).join(", ")}` : undefined, solution: missingRequired.length > 0 ? `Complete missing fields via admin panel or SQL UPDATE.` : undefined });
     }
   }
 
   // ═══════════════════════════════════════════
-  // 11. EDGE FUNCTION'LAR
+  // 11. EDGE FUNCTIONS
   // ═══════════════════════════════════════════
   const edgeFunctions = [
     "admin-auth", "chatbot", "check-ihale-expiry", "check-subscription",
@@ -288,68 +273,65 @@ async function runAllTests(supabase: any): Promise<TestResult[]> {
       });
       const ms = elapsed(s);
       await res.text();
-      t({ group: "Edge Functions", name: fn, status: res.status < 500 ? "pass" : "fail", detail: res.status < 500 ? `Erişilebilir (${ms}ms)` : `HTTP ${res.status}`, technicalDetail: res.status >= 500 ? `OPTIONS ${SUPABASE_URL}/functions/v1/${fn} → ${res.status}` : undefined, solution: res.status >= 500 ? "Edge function deploy durumunu kontrol edin." : undefined, durationMs: ms });
+      t({ group: "Edge Functions", name: fn, status: res.status < 500 ? "pass" : "fail", detail: res.status < 500 ? `Erişilebilir (${ms}ms)` : `HTTP ${res.status}`, technicalDetail: res.status >= 500 ? `[EDGE_FN_ERROR] OPTIONS ${SUPABASE_URL}/functions/v1/${fn} → HTTP ${res.status}. Function may not be deployed or has runtime errors.` : undefined, solution: res.status >= 500 ? `Redeploy edge function "${fn}". Check function logs for runtime errors.` : undefined, durationMs: ms });
     } catch (e: any) {
       const ms = elapsed(s);
-      t({ group: "Edge Functions", name: fn, status: "fail", detail: "Erişilemedi", technicalDetail: e.message, solution: "Edge function'ın deploy edildiğinden emin olun.", durationMs: ms });
+      t({ group: "Edge Functions", name: fn, status: "fail", detail: "Erişilemedi", technicalDetail: `[EDGE_FN_UNREACHABLE] Fetch to ${fn} threw: ${e.message}`, solution: `Verify edge function "${fn}" is deployed. Check supabase/functions/${fn}/index.ts exists.`, durationMs: ms });
     }
   }
 
   // ═══════════════════════════════════════════
-  // 12. STORAGE BUCKET'LAR
+  // 12. STORAGE BUCKETS
   // ═══════════════════════════════════════════
   const buckets = ["firma-images", "ihale-files", "urun-images", "chat-files", "sikayet-files", "firma-belgeler", "banners"];
   for (const bucket of buckets) {
     const s = start();
     const { error } = await supabase.storage.from(bucket).list("", { limit: 1 });
     const ms = elapsed(s);
-    t({ group: "Depolama (Storage)", name: bucket, status: error ? "fail" : "pass", detail: error ? "Bucket erişilemedi" : `Erişim başarılı (${ms}ms)`, technicalDetail: error?.message, solution: error ? "Storage bucket ayarlarını ve RLS politikalarını kontrol edin." : undefined, durationMs: ms });
+    t({ group: "Depolama (Storage)", name: bucket, status: error ? "fail" : "pass", detail: error ? "Bucket erişilemedi" : `Erişim başarılı (${ms}ms)`, technicalDetail: error ? `[STORAGE_ERROR] supabase.storage.from("${bucket}").list() failed: ${error.message}` : undefined, solution: error ? `Verify bucket "${bucket}" exists in storage. Check storage RLS policies.` : undefined, durationMs: ms });
   }
 
   // ═══════════════════════════════════════════
-  // 13. VERİ BÜTÜNLÜĞÜ
+  // 13. DATA INTEGRITY
   // ═══════════════════════════════════════════
   {
-    // Profilleri olmayan firmalar
     const { data: firmalar } = await supabase.from("firmalar").select("user_id").limit(500);
     if (firmalar && firmalar.length > 0) {
       const userIds = firmalar.map((f: any) => f.user_id);
       const { data: profiles } = await supabase.from("profiles").select("user_id").in("user_id", userIds.slice(0, 100));
       const profileUserIds = new Set((profiles || []).map((p: any) => p.user_id));
       const orphan = userIds.slice(0, 100).filter((uid: string) => !profileUserIds.has(uid));
-      t({ group: "Veri Bütünlüğü", name: "Firma-Profil Eşleşmesi", status: orphan.length === 0 ? "pass" : "warn", detail: orphan.length === 0 ? "Tüm firmaların profili var" : `${orphan.length} firmanın profili yok`, solution: orphan.length > 0 ? "register_user RPC fonksiyonunu kontrol edin; profil oluşturma akışını gözden geçirin." : undefined });
+      t({ group: "Veri Bütünlüğü", name: "Firma-Profil Eşleşmesi", status: orphan.length === 0 ? "pass" : "warn", detail: orphan.length === 0 ? "Tüm firmaların profili var" : `${orphan.length} firmanın profili yok`, technicalDetail: orphan.length > 0 ? `[ORPHAN_FIRMA] ${orphan.length} firmalar rows have user_id with no matching profiles row. Orphan user_ids: ${orphan.slice(0, 5).join(", ")}${orphan.length > 5 ? "..." : ""}` : undefined, solution: orphan.length > 0 ? `Check register_user() RPC function. It should INSERT into both profiles and firmalar atomically. Manually fix: INSERT INTO profiles (user_id, ad, soyad) SELECT ... for missing users.` : undefined });
     }
 
-    // Aboneliği olmayan firmalar
     const { data: allFirmalar } = await supabase.from("firmalar").select("user_id").limit(500);
     if (allFirmalar && allFirmalar.length > 0) {
       const fUserIds = allFirmalar.map((f: any) => f.user_id);
       const { data: abonelikler } = await supabase.from("kullanici_abonelikler").select("user_id").in("user_id", fUserIds.slice(0, 100));
       const aUserIds = new Set((abonelikler || []).map((a: any) => a.user_id));
       const noSub = fUserIds.slice(0, 100).filter((uid: string) => !aUserIds.has(uid));
-      t({ group: "Veri Bütünlüğü", name: "Firma-Abonelik Eşleşmesi", status: noSub.length === 0 ? "pass" : "warn", detail: noSub.length === 0 ? "Tüm firmaların aboneliği var" : `${noSub.length} firmanın aboneliği yok`, solution: noSub.length > 0 ? "auto_assign_free_package trigger'ını kontrol edin." : undefined });
+      t({ group: "Veri Bütünlüğü", name: "Firma-Abonelik Eşleşmesi", status: noSub.length === 0 ? "pass" : "warn", detail: noSub.length === 0 ? "Tüm firmaların aboneliği var" : `${noSub.length} firmanın aboneliği yok`, technicalDetail: noSub.length > 0 ? `[MISSING_SUBSCRIPTION] ${noSub.length} users have firmalar row but no kullanici_abonelikler row. The auto_assign_free_package trigger may not be firing. User IDs: ${noSub.slice(0, 5).join(", ")}${noSub.length > 5 ? "..." : ""}` : undefined, solution: noSub.length > 0 ? `Check auto_assign_free_package() trigger on firmalar table. Manual fix: INSERT INTO kullanici_abonelikler (user_id, paket_id, ...) SELECT ... for missing users.` : undefined });
     }
   }
 
   // ═══════════════════════════════════════════
-  // 14. ŞİKAYET SİSTEMİ
+  // 14. COMPLAINT SYSTEM
   // ═══════════════════════════════════════════
   {
     const { data, error } = await supabase.from("sikayetler").select("id, sikayet_no, durum, tur").limit(50);
-    t({ group: "Şikayet Sistemi", name: "Şikayet Tablosu", status: error ? "fail" : "pass", detail: error ? "Erişilemedi" : `${data?.length || 0} şikayet kontrol edildi`, technicalDetail: error?.message });
+    t({ group: "Şikayet Sistemi", name: "Şikayet Tablosu", status: error ? "fail" : "pass", detail: error ? "Erişilemedi" : `${data?.length || 0} şikayet kontrol edildi`, technicalDetail: error ? `[SIKAYET_ACCESS_ERROR] ${error.message}` : undefined });
   }
 
   // ═══════════════════════════════════════════
-  // 15. BANNER & REKLAM
+  // 15. BANNER & ADS
   // ═══════════════════════════════════════════
   {
     const { data, error } = await supabase.from("banners").select("id, aktif, sayfa, konum, gorsel_url").eq("aktif", true);
-    t({ group: "Banner & Reklam", name: "Aktif Bannerlar", status: error ? "fail" : "pass", detail: error ? "Erişilemedi" : `${data?.length || 0} aktif banner`, technicalDetail: error?.message });
+    t({ group: "Banner & Reklam", name: "Aktif Bannerlar", status: error ? "fail" : "pass", detail: error ? "Erişilemedi" : `${data?.length || 0} aktif banner`, technicalDetail: error ? `[BANNER_ACCESS_ERROR] ${error.message}` : undefined });
 
-    // Görseli olmayan aktif bannerlar
     if (data) {
       const noImage = data.filter((b: any) => !b.gorsel_url);
-      t({ group: "Banner & Reklam", name: "Banner Görsel Kontrolü", status: noImage.length === 0 ? "pass" : "warn", detail: noImage.length === 0 ? "Tüm aktif bannerların görseli var" : `${noImage.length} aktif banner görselsiz`, solution: noImage.length > 0 ? "Yönetim paneli → Reklam bölümünden görselleri yükleyin." : undefined });
+      t({ group: "Banner & Reklam", name: "Banner Görsel Kontrolü", status: noImage.length === 0 ? "pass" : "warn", detail: noImage.length === 0 ? "Tüm aktif bannerların görseli var" : `${noImage.length} aktif banner görselsiz`, technicalDetail: noImage.length > 0 ? `[MISSING_BANNER_IMAGE] ${noImage.length} active banners have NULL gorsel_url. IDs: ${noImage.map((b: any) => b.id).join(", ")}` : undefined, solution: noImage.length > 0 ? `Upload images via Admin Panel → Reklam section, or deactivate banners without images.` : undefined });
     }
   }
 
@@ -358,23 +340,22 @@ async function runAllTests(supabase: any): Promise<TestResult[]> {
   // ═══════════════════════════════════════════
   {
     const { data: config, error } = await supabase.from("chatbot_config").select("anahtar, deger");
-    t({ group: "Chatbot", name: "Chatbot Konfigürasyonu", status: error ? "fail" : (config?.length || 0) > 0 ? "pass" : "warn", detail: error ? "Erişilemedi" : `${config?.length || 0} ayar`, technicalDetail: error?.message });
+    t({ group: "Chatbot", name: "Chatbot Konfigürasyonu", status: error ? "fail" : (config?.length || 0) > 0 ? "pass" : "warn", detail: error ? "Erişilemedi" : `${config?.length || 0} ayar`, technicalDetail: error ? `[CHATBOT_CONFIG_ERROR] ${error.message}` : undefined });
 
     const { data: bilgi } = await supabase.from("chatbot_bilgi").select("id", { count: "exact", head: true });
     t({ group: "Chatbot", name: "Chatbot Bilgi Tabanı", status: bilgi !== null ? "pass" : "warn", detail: "Erişim kontrol edildi" });
   }
 
   // ═══════════════════════════════════════════
-  // 17. ADMIN SİSTEMİ
+  // 17. ADMIN SYSTEM
   // ═══════════════════════════════════════════
   {
     const { data: admins, error } = await supabase.from("admin_users").select("id, username, is_primary").limit(10);
-    t({ group: "Admin Sistemi", name: "Admin Kullanıcılar", status: error ? "fail" : "pass", detail: error ? "Erişilemedi" : `${admins?.length || 0} admin kullanıcı`, technicalDetail: error?.message });
+    t({ group: "Admin Sistemi", name: "Admin Kullanıcılar", status: error ? "fail" : "pass", detail: error ? "Erişilemedi" : `${admins?.length || 0} admin kullanıcı`, technicalDetail: error ? `[ADMIN_ACCESS_ERROR] ${error.message}` : undefined });
 
-    // Primary admin kontrolü
     if (admins) {
       const primaryCount = admins.filter((a: any) => a.is_primary).length;
-      t({ group: "Admin Sistemi", name: "Primary Admin", status: primaryCount >= 1 ? "pass" : "fail", detail: primaryCount >= 1 ? `${primaryCount} primary admin` : "Primary admin bulunamadı!", solution: primaryCount === 0 ? "admin_users tablosunda en az bir is_primary=true kullanıcı olmalı." : undefined });
+      t({ group: "Admin Sistemi", name: "Primary Admin", status: primaryCount >= 1 ? "pass" : "fail", detail: primaryCount >= 1 ? `${primaryCount} primary admin` : "Primary admin bulunamadı!", technicalDetail: primaryCount === 0 ? `[NO_PRIMARY_ADMIN] No admin_users row with is_primary=true. The admin panel requires at least one primary admin.` : undefined, solution: primaryCount === 0 ? `SQL: UPDATE admin_users SET is_primary=true WHERE username='your_admin_username';` : undefined });
     }
   }
 
@@ -391,7 +372,6 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const { token } = body;
 
-    // Verify admin token
     if (!token) return json({ error: "Token gerekli" }, 401);
     try {
       const payload = JSON.parse(atob(token));

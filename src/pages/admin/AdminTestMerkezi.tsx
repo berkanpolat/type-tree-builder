@@ -4,12 +4,12 @@ import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   CheckCircle2, XCircle, AlertTriangle, Play, Loader2,
   ChevronDown, ChevronRight, Clock, Database, Shield, Gavel,
   ShoppingBag, Package, MessageSquare, Bell, Headphones, Building2,
-  Megaphone, Bot, Users, HardDrive, LinkIcon, FileWarning, RefreshCcw
+  Megaphone, Bot, Users, HardDrive, LinkIcon, FileWarning, RefreshCcw,
+  Download
 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
@@ -59,6 +59,123 @@ function StatusIcon({ status }: { status: string }) {
   return <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />;
 }
 
+function generateReportHTML(data: TestSummary): string {
+  const scorePercent = Math.round((data.pass / data.total) * 100);
+  const ts = new Date(data.timestamp).toISOString();
+
+  const grouped: Record<string, TestResult[]> = {};
+  data.results.forEach(r => { (grouped[r.group] = grouped[r.group] || []).push(r); });
+
+  const failResults = data.results.filter(r => r.status === "fail");
+  const warnResults = data.results.filter(r => r.status === "warn");
+
+  let html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Test Report ${ts}</title>
+<style>
+  body { font-family: 'Courier New', monospace; font-size: 12px; padding: 30px; max-width: 1000px; margin: 0 auto; color: #1a1a1a; }
+  h1 { font-size: 18px; border-bottom: 2px solid #333; padding-bottom: 8px; }
+  h2 { font-size: 14px; margin-top: 24px; border-bottom: 1px solid #999; padding-bottom: 4px; }
+  h3 { font-size: 13px; margin-top: 16px; color: #444; }
+  .summary { display: flex; gap: 30px; margin: 16px 0; padding: 12px; background: #f5f5f5; border-radius: 4px; }
+  .summary div { text-align: center; }
+  .summary .num { font-size: 24px; font-weight: bold; }
+  .pass { color: #16a34a; } .fail { color: #dc2626; } .warn { color: #d97706; }
+  .test-row { padding: 4px 0; border-bottom: 1px dotted #ddd; }
+  .status-icon { display: inline-block; width: 16px; }
+  .tech-detail { background: #f8f8f8; border-left: 3px solid #dc2626; padding: 6px 10px; margin: 4px 0 4px 20px; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+  .solution { background: #f0fdf4; border-left: 3px solid #16a34a; padding: 6px 10px; margin: 4px 0 4px 20px; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+  .warn-detail { border-left-color: #d97706; background: #fffbeb; }
+  .section-errors { margin: 12px 0; }
+  @media print { body { padding: 10px; } }
+</style></head><body>
+<h1>TEKSTIL A.S. — SYSTEM TEST REPORT</h1>
+<p><strong>Generated:</strong> ${ts}<br>
+<strong>Duration:</strong> ${(data.durationMs / 1000).toFixed(2)}s<br>
+<strong>Score:</strong> ${scorePercent}% (${data.pass}/${data.total} passed)</p>
+
+<div class="summary">
+  <div><div class="num">${data.total}</div>Total</div>
+  <div><div class="num pass">${data.pass}</div>Passed</div>
+  <div><div class="num fail">${data.fail}</div>Failed</div>
+  <div><div class="num warn">${data.warn}</div>Warnings</div>
+</div>`;
+
+  // CRITICAL ERRORS SECTION
+  if (failResults.length > 0) {
+    html += `<h2>❌ CRITICAL ERRORS (${failResults.length})</h2><div class="section-errors">`;
+    failResults.forEach((r, i) => {
+      html += `<div class="test-row"><strong>${i + 1}. [${r.group}] ${r.name}</strong> — ${r.detail}`;
+      if (r.technicalDetail) html += `<div class="tech-detail">${escapeHtml(r.technicalDetail)}</div>`;
+      if (r.solution) html += `<div class="solution">FIX: ${escapeHtml(r.solution)}</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  // WARNINGS SECTION
+  if (warnResults.length > 0) {
+    html += `<h2>⚠️ WARNINGS (${warnResults.length})</h2><div class="section-errors">`;
+    warnResults.forEach((r, i) => {
+      html += `<div class="test-row"><strong>${i + 1}. [${r.group}] ${r.name}</strong> — ${r.detail}`;
+      if (r.technicalDetail) html += `<div class="tech-detail warn-detail">${escapeHtml(r.technicalDetail)}</div>`;
+      if (r.solution) html += `<div class="solution">FIX: ${escapeHtml(r.solution)}</div>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  // ALL RESULTS BY GROUP
+  html += `<h2>📋 FULL RESULTS BY GROUP</h2>`;
+  Object.entries(grouped).forEach(([group, items]) => {
+    const gFail = items.filter(i => i.status === "fail").length;
+    const gWarn = items.filter(i => i.status === "warn").length;
+    const gPass = items.filter(i => i.status === "pass").length;
+    html += `<h3>${group} (✅${gPass} ❌${gFail} ⚠️${gWarn})</h3>`;
+    items.forEach(item => {
+      const icon = item.status === "pass" ? "✅" : item.status === "fail" ? "❌" : "⚠️";
+      const ms = item.durationMs != null ? ` [${item.durationMs}ms]` : "";
+      html += `<div class="test-row"><span class="status-icon">${icon}</span> <strong>${item.name}</strong>${ms} — ${item.detail}`;
+      if (item.status !== "pass" && item.technicalDetail) {
+        html += `<div class="tech-detail${item.status === "warn" ? " warn-detail" : ""}">${escapeHtml(item.technicalDetail)}</div>`;
+      }
+      if (item.status !== "pass" && item.solution) {
+        html += `<div class="solution">FIX: ${escapeHtml(item.solution)}</div>`;
+      }
+      html += `</div>`;
+    });
+  });
+
+  html += `<hr style="margin-top:30px"><p style="font-size:10px;color:#999">Report generated by TekstilAS Test Center. Share this file with your developer or AI assistant for automated diagnosis.</p>`;
+  html += `</body></html>`;
+  return html;
+}
+
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function downloadReport(data: TestSummary) {
+  const html = generateReportHTML(data);
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+
+  // Open in new tab for print-to-PDF
+  const win = window.open(url, "_blank");
+  if (win) {
+    win.onload = () => {
+      setTimeout(() => win.print(), 500);
+    };
+  } else {
+    // Fallback: direct download
+    const a = document.createElement("a");
+    a.href = url;
+    const dateStr = new Date(data.timestamp).toISOString().slice(0, 10);
+    a.download = `test-report-${dateStr}.html`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+
 export default function AdminTestMerkezi() {
   const { user } = useAdminAuth();
   const [loading, setLoading] = useState(false);
@@ -85,7 +202,6 @@ export default function AdminTestMerkezi() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Bilinmeyen hata");
       setData(json);
-      // Auto-open groups with failures
       const failGroups = new Set<string>(json.results.filter((r: TestResult) => r.status === "fail").map((r: TestResult) => r.group));
       setOpenGroups(failGroups);
     } catch (e: any) {
@@ -103,7 +219,6 @@ export default function AdminTestMerkezi() {
     });
   };
 
-  // Group results
   const grouped = (data?.results || []).reduce<Record<string, TestResult[]>>((acc, r) => {
     (acc[r.group] = acc[r.group] || []).push(r);
     return acc;
@@ -128,14 +243,27 @@ export default function AdminTestMerkezi() {
               Tüm site fonksiyonlarını otomatik olarak test edin. Hatalar, detayları ve çözüm önerileriyle birlikte raporlanır.
             </p>
           </div>
-          <Button
-            onClick={runTests}
-            disabled={loading}
-            className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700 shrink-0"
-          >
-            {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
-            {loading ? "Testler Çalışıyor..." : "Testleri Başlat"}
-          </Button>
+          <div className="flex gap-2 shrink-0">
+            {data && (
+              <Button
+                onClick={() => downloadReport(data)}
+                variant="outline"
+                className="text-xs"
+                style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+              >
+                <Download className="w-4 h-4 mr-1.5" />
+                Rapor İndir (PDF)
+              </Button>
+            )}
+            <Button
+              onClick={runTests}
+              disabled={loading}
+              className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700"
+            >
+              {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
+              {loading ? "Testler Çalışıyor..." : "Testleri Başlat"}
+            </Button>
+          </div>
         </div>
 
         {error && (
