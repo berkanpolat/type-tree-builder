@@ -792,7 +792,7 @@ export default function AdminFirmalarV2() {
     <AdminLayout title="Firmalar">
       <div className="space-y-4">
         {/* Action Bar */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 md:gap-3">
           <div className="flex items-center gap-2 text-xs" style={s.muted}>
             <Badge variant="secondary" className="text-[10px]">V2 TEST</Badge>
             {stats && <span>{stats.total} firma kayıtlı</span>}
