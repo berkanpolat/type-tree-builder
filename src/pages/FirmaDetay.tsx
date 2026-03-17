@@ -571,6 +571,28 @@ export default function FirmaDetay() {
     }
   };
 
+  const handleRevealContact = async () => {
+    if (!currentUserId || !firma) {
+      navigate("/giris-kayit");
+      return;
+    }
+    setContactRevealLoading(true);
+    // Check quota
+    const check = canPerformAction(packageInfo.limits, packageInfo.usage, "profil_goruntuleme");
+    if (!check.allowed) {
+      setMsgUpgradeMessage(check.message || "İletişim bilgisi görüntüleme hakkınız dolmuştur.");
+      setMsgUpgradeOpen(true);
+      setContactRevealLoading(false);
+      return;
+    }
+    // Record the view
+    await supabase
+      .from("profil_goruntulemeler" as any)
+      .insert({ user_id: currentUserId, firma_id: firma.id });
+    setContactRevealed(true);
+    setContactRevealLoading(false);
+  };
+
   const handleMessage = async () => {
     if (!currentUserId || !firma) {
       navigate("/giris-kayit");
