@@ -1545,8 +1545,16 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            ) : (
+            <div className="hidden lg:block">
+              <Card className="p-6 text-center">
+                <LogIn className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">Teklif vermek için giriş yapın</p>
+                <p className="text-xs text-muted-foreground mb-4">İhaleye teklif verebilmek ve detayları görebilmek için hesabınıza giriş yapmanız gerekmektedir.</p>
+                <Button className="w-full gap-2" onClick={() => navigate("/giris-kayit")}><LogIn className="w-4 h-4" /> Giriş Yap / Kayıt Ol</Button>
+              </Card>
+            </div>
             )}
-
             {currentUserId && !isOwner && (
               <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
                 <Flag className="w-4 h-4" /> İhaleyi Bildir
