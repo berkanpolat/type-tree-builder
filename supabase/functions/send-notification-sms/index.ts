@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
         break;
 
       case "kota_uyari":
-        message = `${firma}, Tekstil A.S. ${body.paketAd || "Paket"} paketinizdeki ${body.ozellikAd || "ozellik"} hakkiniz ${body.kalanSayi ?? 0} kalmistir. Bir ust pakete gecmek icin: ${SITE_URL}/paketim B038`;
+        message = `${firma}, Tekstil A.S. ${body.paketAd || "Paket"} paketinizdeki ${body.ozellikAd || "ozellik"} hakkiniz dolmustur. Bir ust pakete gecmek icin: ${SITE_URL}/giris-kayit?redirect=/paketim B038`;
         break;
 
       case "kisitlama": {
