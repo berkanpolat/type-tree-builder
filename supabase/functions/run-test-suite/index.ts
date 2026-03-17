@@ -218,6 +218,7 @@ async function runAllTests(supabase: any): Promise<TestResult[]> {
         "urun_durum_degisti", "yeni_mesaj", "sikayet_alindi", "destek_cevaplandi",
         "destek_cozuldu", "odeme_basarili", "odeme_basarisiz", "kota_uyari",
         "kisitlama_eklendi", "uzaklastirma_eklendi", "yasak_eklendi",
+        "firma_onaylandi", "ihale_admin_duzenlendi", "urun_admin_kaldirildi",
       ];
       const types = data.map((d: any) => d.type);
       const invalidTypes = types.filter((t: string) => !validTypes.includes(t));
