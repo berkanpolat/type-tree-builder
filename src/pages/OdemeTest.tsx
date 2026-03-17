@@ -173,7 +173,7 @@ export default function OdemeTest() {
               <div className="flex items-baseline gap-2 flex-wrap">
                 <span className="text-lg line-through text-white/40">${fmt(YILLIK_ORIGINAL)}</span>
                 <h1 className="text-3xl font-bold">${fmt(usdPrice)}<span className="text-base font-normal text-white/50">/yıl</span></h1>
-                <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded-full leading-none">%45</span>
+                <span className="text-xs font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full">%45</span>
               </div>
             ) : (
               <h1 className="text-3xl font-bold">${fmt(usdPrice)}<span className="text-base font-normal text-white/50">/ay</span></h1>
