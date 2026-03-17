@@ -1,4 +1,4 @@
-import { useEffect, useState, createContext, useContext } from "react";
+import { useEffect, useState, useMemo, useCallback, createContext, useContext } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
@@ -99,6 +99,19 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
     setMobileOpen(false);
   }, [location.pathname]);
 
+  const visibleGroups = useMemo(() => {
+    if (!user) return [];
+    const filterItem = (item: MenuItem) => {
+      const checkUser = originalUser || user;
+      if (item.primaryOnly) return checkUser?.is_primary ?? false;
+      if (item.permission) return hasPermission(item.permission as any);
+      return true;
+    };
+    return menuGroups
+      .map((g) => ({ ...g, items: g.items.filter(filterItem) }))
+      .filter((g) => g.items.length > 0);
+  }, [user, originalUser, hasPermission]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(217 33% 12%)" }}>
@@ -108,17 +121,6 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   }
 
   if (!user) return null;
-
-  const filterItem = (item: MenuItem) => {
-    const checkUser = originalUser || user;
-    if (item.primaryOnly) return checkUser?.is_primary ?? false;
-    if (item.permission) return hasPermission(item.permission as any);
-    return true;
-  };
-
-  const visibleGroups = menuGroups
-    .map((g) => ({ ...g, items: g.items.filter(filterItem) }))
-    .filter((g) => g.items.length > 0);
 
   const t = lightMode;
 

@@ -42,12 +42,14 @@ const AuthRedirectHandler = () => {
     }
   };
 
-  // Fresh server check — not cached session
+  // Use cached session first (no network call), only escalate to getUser() when needed
   const checkUserStatus = async () => {
     if (checking.current) return;
     checking.current = true;
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      // Fast path: read from local cache — no server round-trip
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
       if (!user) return;
 
       // Password check first (higher priority)
