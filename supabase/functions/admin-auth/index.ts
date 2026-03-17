@@ -458,6 +458,19 @@ Deno.serve(async (req) => {
           firmaQuery = firmaQuery.not("user_id", "in", `(${excludedSubscribedUserIds.join(",")})`);
         }
 
+        // Portfolio filter: only return firms assigned to a specific admin
+        if (filterPortfolyo) {
+          const { data: portfolyoFirmaRows } = await supabase
+            .from("admin_portfolyo")
+            .select("firma_id")
+            .eq("admin_id", filterPortfolyo);
+          const portfolyoFirmaIds = (portfolyoFirmaRows || []).map((r: any) => r.firma_id);
+          if (portfolyoFirmaIds.length === 0) {
+            return jsonResponse({ firmalar: [], total: 0, page, perPage });
+          }
+          firmaQuery = firmaQuery.in("id", portfolyoFirmaIds);
+        }
+
         const offset = (page - 1) * perPage;
         const { data: pageFirmalar, error: pageFirmalarError, count: totalCount } = await firmaQuery
           .order(sortField, { ascending: sortAscending })
