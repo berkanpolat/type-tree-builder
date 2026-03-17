@@ -1671,6 +1671,14 @@ export default function IhaleDetay() {
                 </Card>
               )}
             </div>
+            ) : (
+            <div className="hidden lg:block">
+              <Card className="p-6 text-center">
+                <Building2 className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm font-medium text-foreground mb-1">İhale Sahibi</p>
+                <p className="text-xs text-muted-foreground">Firma bilgilerini görmek için giriş yapın.</p>
+              </Card>
+            </div>
             )}
 
             {/* Benzer İhaleler - desktop only */}
