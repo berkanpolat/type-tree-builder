@@ -816,8 +816,8 @@ export default function AdminFirmalarV2() {
         )}
 
         {/* Search & Filters */}
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1">
+        <div className="flex flex-wrap items-center gap-2 md:gap-3">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
             <Input placeholder="Firma adı ile ara..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 h-9 text-sm" style={s.input} />
           </div>
