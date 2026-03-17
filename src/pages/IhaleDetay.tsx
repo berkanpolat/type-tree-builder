@@ -69,6 +69,7 @@ import {
   Flag,
   ShieldCheck,
   ShieldX,
+  LogIn,
 } from "lucide-react";
 import { Instagram, Facebook, Linkedin, Twitter } from "lucide-react";
 
