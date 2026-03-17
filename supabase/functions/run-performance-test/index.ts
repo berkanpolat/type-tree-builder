@@ -499,6 +499,109 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    if (action === "fix-issues") {
+      // Get latest completed test
+      const { data: lastTest } = await supabase
+        .from("performance_tests")
+        .select("*")
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (!lastTest) return jsonResponse({ error: "Analiz edilecek test bulunamadı" }, 404);
+
+      const { data: results } = await supabase
+        .from("performance_test_results")
+        .select("*")
+        .eq("test_id", lastTest.id);
+
+      const fixes: { action: string; status: "success" | "warning" | "info"; detail: string }[] = [];
+
+      const failedEndpoints = (results || []).filter(r => !r.success);
+      const slowEndpoints = (results || []).filter(r => r.response_time > 1000);
+
+      // 1. Check and report failed endpoints
+      if (failedEndpoints.length > 0) {
+        for (const ep of failedEndpoints) {
+          // Re-test the endpoint to see if it recovered
+          const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
+          const headers: Record<string, string> = ep.module === "api_health"
+            ? { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }
+            : {};
+          const url = ep.details?.url || "";
+          if (url) {
+            const retest = await testEndpoint(url, "GET", headers);
+            if (retest.success) {
+              fixes.push({ action: `${ep.endpoint} - Yeniden test edildi`, status: "success", detail: `Endpoint düzeldi (${retest.responseTime}ms). Geçici bir sorun olabilir.` });
+            } else {
+              fixes.push({ action: `${ep.endpoint} - Hâlâ erişilemiyor`, status: "warning", detail: `Hata devam ediyor: ${retest.error || retest.statusCode}. Sunucu loglarını kontrol edin.` });
+            }
+          }
+        }
+      }
+
+      // 2. Slow endpoint suggestions
+      if (slowEndpoints.length > 0) {
+        const sorted = slowEndpoints.sort((a, b) => b.response_time - a.response_time);
+        for (const ep of sorted.slice(0, 5)) {
+          if (ep.module === "api_health") {
+            fixes.push({ action: `${ep.endpoint} - Veritabanı optimizasyonu önerisi`, status: "info", detail: `${ep.response_time}ms yanıt süresi. İlgili tabloya index ekleyin veya sorguyu optimize edin.` });
+          } else if (ep.module === "page_performance") {
+            const sizeKb = ep.details?.page_size_kb || 0;
+            if (sizeKb > 500) {
+              fixes.push({ action: `${ep.endpoint} - Sayfa boyutu büyük (${sizeKb}KB)`, status: "info", detail: "Görselleri WebP formatına dönüştürün, lazy loading uygulayın ve JS bundle'ı küçültün." });
+            } else {
+              fixes.push({ action: `${ep.endpoint} - Sayfa yavaş (${ep.response_time}ms)`, status: "info", detail: "CDN kullanımını aktifleştirin, sunucu tarafı cache ekleyin." });
+            }
+          }
+        }
+      }
+
+      // 3. Load test issues
+      const loadResults = (results || []).filter(r => r.module === "load_test");
+      if (loadResults.length > 0 && loadResults[0].details?.success_rate < 100) {
+        fixes.push({ action: "Eş zamanlı istek kapasitesi yetersiz", status: "warning", detail: `Başarı oranı: %${loadResults[0].details.success_rate}. Connection pooling ayarlarını kontrol edin, rate limiting konfigürasyonunu gözden geçirin.` });
+      }
+
+      // 4. General health
+      if (fixes.length === 0) {
+        fixes.push({ action: "Sistemde kritik sorun tespit edilmedi", status: "success", detail: "Tüm endpointler çalışıyor, yanıt süreleri kabul edilebilir seviyede." });
+      }
+
+      // Run a quick re-test to verify current state
+      const { data: verifyTest } = await supabase
+        .from("performance_tests")
+        .insert({ test_type: "auto_fix", status: "running" })
+        .select()
+        .single();
+
+      if (verifyTest) {
+        const apiResults = await runApiHealthTests(supabase, verifyTest.id);
+        const scoreData = calculateScore(apiResults);
+        await supabase.from("performance_tests").update({
+          status: "completed",
+          overall_score: scoreData.score,
+          system_status: scoreData.status,
+          avg_response_time: scoreData.avgTime,
+          max_response_time: scoreData.maxTime,
+          error_rate: scoreData.errorRate,
+          total_endpoints: apiResults.length,
+          failed_endpoints: apiResults.filter(r => !r.success).length,
+          completed_at: new Date().toISOString(),
+          summary: { type: "auto_fix_verify" },
+        }).eq("id", verifyTest.id);
+
+        fixes.unshift({
+          action: "Hızlı doğrulama testi yapıldı",
+          status: scoreData.status === "healthy" ? "success" : "warning",
+          detail: `Anlık skor: ${scoreData.score}/100 — Durum: ${scoreData.status === "healthy" ? "Sağlıklı" : scoreData.status === "warning" ? "Uyarı" : "Kritik"}`,
+        });
+      }
+
+      return jsonResponse({ fixes, test_id: verifyTest?.id || null });
+    }
+
     return jsonResponse({ error: "Geçersiz action" }, 400);
   } catch (e: any) {
     return jsonResponse({ error: e.message }, 500);

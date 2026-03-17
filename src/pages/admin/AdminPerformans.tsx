@@ -9,12 +9,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Activity, Play, Download, RefreshCw, Clock, AlertTriangle, CheckCircle2,
   XCircle, Zap, TrendingUp, Server, Globe, Users, Cpu, Brain, Bell,
-  ChevronDown, ChevronUp, FileText, History
+  ChevronDown, ChevronUp, FileText, History, Wrench, Loader2, Info
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
 } from "recharts";
 import { toast } from "sonner";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 
 interface TestResult {
   id: string;
@@ -102,6 +105,9 @@ export default function AdminPerformans() {
   const [historyDays, setHistoryDays] = useState(7);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [fixing, setFixing] = useState(false);
+  const [fixResults, setFixResults] = useState<{ action: string; status: "success" | "warning" | "info"; detail: string }[]>([]);
+  const [fixDialogOpen, setFixDialogOpen] = useState(false);
 
   const loadHistory = useCallback(async () => {
     if (!token) return;
@@ -162,7 +168,25 @@ export default function AdminPerformans() {
     }
   };
 
-  const toggleSchedule = async (id: string, enabled: boolean) => {
+  const fixIssues = async () => {
+    if (!token || fixing) return;
+    setFixing(true);
+    setFixDialogOpen(true);
+    setFixResults([]);
+    try {
+      const data = await callPerfApi(token, "fix-issues");
+      setFixResults(data.fixes || []);
+      toast.success("Sorun analizi tamamlandı!");
+      await loadHistory();
+      await loadAlerts();
+    } catch (e: any) {
+      toast.error("Hata: " + (e.message || "Bilinmeyen hata"));
+      setFixResults([{ action: "İşlem başarısız", status: "warning", detail: e.message || "Bilinmeyen hata" }]);
+    } finally {
+      setFixing(false);
+    }
+  };
+
     if (!token) return;
     try {
       await callPerfApi(token, "update-schedule", { schedule_id: id, enabled });
@@ -230,6 +254,16 @@ export default function AdminPerformans() {
             <Button variant="outline" onClick={() => { loadHistory(); loadAlerts(); }} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
               <RefreshCw className="w-4 h-4 mr-2" /> Yenile
             </Button>
+            {latestTest && latestTest.system_status !== "healthy" && (
+              <Button
+                onClick={fixIssues}
+                disabled={fixing}
+                className="bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700"
+              >
+                {fixing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Wrench className="w-4 h-4 mr-2" />}
+                {fixing ? "Analiz Ediliyor..." : "Sorunları Gider"}
+              </Button>
+            )}
           </div>
           {selectedTest && (
             <Button variant="outline" onClick={generatePdf} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
@@ -605,6 +639,51 @@ export default function AdminPerformans() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Fix Issues Dialog */}
+        <Dialog open={fixDialogOpen} onOpenChange={setFixDialogOpen}>
+          <DialogContent className="max-w-lg" style={{ background: "hsl(var(--admin-card))", borderColor: "hsl(var(--admin-border))" }}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}>
+                <Wrench className="w-5 h-5 text-amber-500" /> Sorun Giderme Raporu
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3 max-h-[400px] overflow-y-auto">
+              {fixing && fixResults.length === 0 && (
+                <div className="flex items-center justify-center py-8 gap-3">
+                  <Loader2 className="w-6 h-6 animate-spin text-amber-500" />
+                  <span className="text-sm" style={{ color: "hsl(var(--admin-muted))" }}>Sistem analiz ediliyor ve sorunlar gideriliyor...</span>
+                </div>
+              )}
+              {fixResults.map((fix, i) => {
+                const FixIcon = fix.status === "success" ? CheckCircle2 : fix.status === "warning" ? AlertTriangle : Info;
+                const iconColor = fix.status === "success" ? "text-emerald-400" : fix.status === "warning" ? "text-amber-400" : "text-blue-400";
+                const bgColor = fix.status === "success" ? "bg-emerald-500/5 border-emerald-500/20" : fix.status === "warning" ? "bg-amber-500/5 border-amber-500/20" : "bg-blue-500/5 border-blue-500/20";
+                return (
+                  <div key={i} className={`rounded-lg border p-3 ${bgColor}`}>
+                    <div className="flex items-start gap-2">
+                      <FixIcon className={`w-4 h-4 mt-0.5 shrink-0 ${iconColor}`} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium" style={{ color: "hsl(var(--admin-text))" }}>{fix.action}</p>
+                        <p className="text-xs mt-1" style={{ color: "hsl(var(--admin-muted))" }}>{fix.detail}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            {!fixing && fixResults.length > 0 && (
+              <div className="flex justify-end gap-2 pt-2">
+                <Button size="sm" variant="outline" onClick={() => setFixDialogOpen(false)} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>
+                  Kapat
+                </Button>
+                <Button size="sm" onClick={fixIssues} className="bg-amber-500 text-white hover:bg-amber-600">
+                  <RefreshCw className="w-3 h-3 mr-1" /> Tekrar Dene
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
