@@ -1183,6 +1183,7 @@ export default function IhaleDetay() {
                 </Card>
               )}
             </div>
+            )}
 
             {/* İhale Bilgileri - order 7 */}
             <Card className="p-6 order-7 lg:order-none">
