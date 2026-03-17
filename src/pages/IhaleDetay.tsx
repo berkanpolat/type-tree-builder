@@ -69,6 +69,7 @@ import {
   Flag,
   ShieldCheck,
   ShieldX,
+  LogIn,
 } from "lucide-react";
 import { Instagram, Facebook, Linkedin, Twitter } from "lucide-react";
 
@@ -1041,8 +1042,8 @@ export default function IhaleDetay() {
               </Card>
             )}
 
-            {/* MOBILE ONLY: Teklif Verme - order 4 (only for logged-in users) */}
-            {currentUserId && (
+            {/* MOBILE ONLY: Teklif Verme - order 4 */}
+            {currentUserId ? (
             <div className="lg:hidden order-4">
               <Card className="p-6">
                 <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
@@ -1101,10 +1102,19 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            ) : (
+            <div className="lg:hidden order-4">
+              <Card className="p-6 text-center">
+                <LogIn className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">Teklif vermek için giriş yapın</p>
+                <p className="text-xs text-muted-foreground mb-4">İhaleye teklif verebilmek ve detayları görebilmek için hesabınıza giriş yapmanız gerekmektedir.</p>
+                <Button className="w-full gap-2" onClick={() => navigate("/giris-kayit")}><LogIn className="w-4 h-4" /> Giriş Yap / Kayıt Ol</Button>
+              </Card>
+            </div>
             )}
 
-            {/* MOBILE ONLY: Teklifler - order 5 (only for logged-in users) */}
-            {currentUserId && (
+            {/* MOBILE ONLY: Teklifler - order 5 */}
+            {currentUserId ? (
             <div className="lg:hidden order-5">
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -1158,10 +1168,18 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            ) : (
+            <div className="lg:hidden order-5">
+              <Card className="p-6 text-center">
+                <Wifi className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm font-medium text-foreground mb-1">Teklifler</p>
+                <p className="text-xs text-muted-foreground">Teklifleri görmek için giriş yapın.</p>
+              </Card>
+            </div>
             )}
 
-            {/* MOBILE ONLY: İhale Sahibi - order 6 (only for logged-in users) */}
-            {currentUserId && (
+            {/* MOBILE ONLY: İhale Sahibi - order 6 */}
+            {currentUserId ? (
             <div className="lg:hidden order-6">
               {ihale.firma_adi_gizle ? (
                 <Card className="p-6">
@@ -1188,8 +1206,15 @@ export default function IhaleDetay() {
                 </Card>
               )}
             </div>
+            ) : (
+            <div className="lg:hidden order-6">
+              <Card className="p-6 text-center">
+                <Building2 className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm font-medium text-foreground mb-1">İhale Sahibi</p>
+                <p className="text-xs text-muted-foreground">Firma bilgilerini görmek için giriş yapın.</p>
+              </Card>
+            </div>
             )}
-
             {/* İhale Bilgileri - order 7 */}
             <Card className="p-6 order-7 lg:order-none">
               <h3 className="text-lg font-bold text-foreground mb-4">İhale Bilgileri</h3>
@@ -1461,7 +1486,7 @@ export default function IhaleDetay() {
             )}
 
             {/* Title & Countdown + Teklif Form - desktop only (teklif only for logged-in) */}
-            {currentUserId && (
+            {currentUserId ? (
             <div className="hidden lg:block">
               <Card className="p-6">
                 <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
@@ -1520,8 +1545,16 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            ) : (
+            <div className="hidden lg:block">
+              <Card className="p-6 text-center">
+                <LogIn className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">Teklif vermek için giriş yapın</p>
+                <p className="text-xs text-muted-foreground mb-4">İhaleye teklif verebilmek ve detayları görebilmek için hesabınıza giriş yapmanız gerekmektedir.</p>
+                <Button className="w-full gap-2" onClick={() => navigate("/giris-kayit")}><LogIn className="w-4 h-4" /> Giriş Yap / Kayıt Ol</Button>
+              </Card>
+            </div>
             )}
-
             {currentUserId && !isOwner && (
               <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
                 <Flag className="w-4 h-4" /> İhaleyi Bildir
@@ -1529,7 +1562,7 @@ export default function IhaleDetay() {
             )}
 
             {/* Teklifler Card - desktop only (only for logged-in users) */}
-            {currentUserId && (
+            {currentUserId ? (
             <div className="hidden lg:block">
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -1581,9 +1614,17 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            ) : (
+            <div className="hidden lg:block">
+              <Card className="p-6 text-center">
+                <Wifi className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm font-medium text-foreground mb-1">Teklifler</p>
+                <p className="text-xs text-muted-foreground">Teklifleri görmek için giriş yapın.</p>
+              </Card>
+            </div>
             )}
-            {/* İhale Sahibi Firma - desktop only (only for logged-in users) */}
-            {currentUserId && (
+            {/* İhale Sahibi Firma - desktop only */}
+            {currentUserId ? (
             <div className="hidden lg:block">
               {ihale.firma_adi_gizle ? (
                 <Card className="p-6">
@@ -1629,6 +1670,14 @@ export default function IhaleDetay() {
                   )}
                 </Card>
               )}
+            </div>
+            ) : (
+            <div className="hidden lg:block">
+              <Card className="p-6 text-center">
+                <Building2 className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm font-medium text-foreground mb-1">İhale Sahibi</p>
+                <p className="text-xs text-muted-foreground">Firma bilgilerini görmek için giriş yapın.</p>
+              </Card>
             </div>
             )}
 
