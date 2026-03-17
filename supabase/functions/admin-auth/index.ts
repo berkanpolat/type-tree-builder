@@ -477,21 +477,12 @@ Deno.serve(async (req) => {
         const ilceIds = firmalar.map((firma: any) => firma.kurulus_ilce_id).filter(Boolean);
         const allLocationIds = [...new Set([...ilIds, ...ilceIds])];
 
-        const [profilesRes, ihaleCountsRes, teklifCountsRes, urunCountsRes, sikayetCountsRes, aboneliklerRes, paketlerData, portfolyoRes, locationsRes] = await Promise.all([
+        const [profilesRes, countsRes, aboneliklerRes, paketlerData, portfolyoRes, locationsRes] = await Promise.all([
           userIds.length > 0
             ? supabase.from("profiles").select("user_id, ad, soyad, iletisim_email, iletisim_numarasi, last_seen").in("user_id", userIds)
             : Promise.resolve({ data: [] }),
           userIds.length > 0
-            ? supabase.from("ihaleler").select("user_id").in("user_id", userIds)
-            : Promise.resolve({ data: [] }),
-          userIds.length > 0
-            ? supabase.from("ihale_teklifler").select("teklif_veren_user_id").in("teklif_veren_user_id", userIds)
-            : Promise.resolve({ data: [] }),
-          userIds.length > 0
-            ? supabase.from("urunler").select("user_id").in("user_id", userIds)
-            : Promise.resolve({ data: [] }),
-          userIds.length > 0
-            ? supabase.from("sikayetler").select("bildiren_user_id").in("bildiren_user_id", userIds)
+            ? supabase.rpc("get_firma_user_counts", { p_user_ids: userIds })
             : Promise.resolve({ data: [] }),
           userIds.length > 0
             ? supabase.from("kullanici_abonelikler").select("id, user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, created_at, updated_at").in("user_id", userIds)
