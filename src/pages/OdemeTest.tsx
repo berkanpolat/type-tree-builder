@@ -185,20 +185,11 @@ export default function OdemeTest() {
 
           {/* Yearly price advantage */}
           {period === "yillik" && (
-            <div className="rounded-lg bg-white/10 border border-white/10 p-3 space-y-1">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-white/60">Aylık fiyat üzerinden:</span>
-                <span className="line-through text-white/40">${fmt(YILLIK_ORIGINAL)}</span>
-                <span className="text-xs text-white/30">({PRO_FIYATLAR.aylik.fiyat}$ × 12 ay)</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <span className="text-emerald-300 font-semibold">%45 indirimli:</span>
-                <span className="text-emerald-300 font-bold">${fmt(YILLIK_INDIRIMLI)}/yıl</span>
-                <span className="text-xs text-emerald-400/80">(aylık ~${fmt(AYLIK_KARSILIK)})</span>
-              </div>
-              <p className="text-xs text-emerald-400/80">
-                Yıllık ${fmt(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)} tasarruf ediyorsunuz!
-              </p>
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="line-through text-white/40 text-lg">${fmt(YILLIK_ORIGINAL)}</span>
+              <span className="text-emerald-300 font-bold text-lg">${fmt(YILLIK_INDIRIMLI)}</span>
+              <span className="text-xs font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">%45 indirim</span>
+              <span className="text-xs text-white/40">(aylık ~${fmt(AYLIK_KARSILIK)})</span>
             </div>
           )}
 
