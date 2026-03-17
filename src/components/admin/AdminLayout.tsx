@@ -109,16 +109,17 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   if (!user) return null;
 
-  const filterItem = (item: MenuItem) => {
-    const checkUser = originalUser || user;
-    if (item.primaryOnly) return checkUser?.is_primary ?? false;
-    if (item.permission) return hasPermission(item.permission as any);
-    return true;
-  };
-
-  const visibleGroups = menuGroups
-    .map((g) => ({ ...g, items: g.items.filter(filterItem) }))
-    .filter((g) => g.items.length > 0);
+  const visibleGroups = useMemo(() => {
+    const filterItem = (item: MenuItem) => {
+      const checkUser = originalUser || user;
+      if (item.primaryOnly) return checkUser?.is_primary ?? false;
+      if (item.permission) return hasPermission(item.permission as any);
+      return true;
+    };
+    return menuGroups
+      .map((g) => ({ ...g, items: g.items.filter(filterItem) }))
+      .filter((g) => g.items.length > 0);
+  }, [user, originalUser, hasPermission]);
 
   const t = lightMode;
 

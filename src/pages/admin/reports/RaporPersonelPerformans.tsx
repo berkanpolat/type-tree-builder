@@ -81,11 +81,7 @@ export default function RaporPersonelPerformans() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  // Polling fallback
-  useEffect(() => {
-    const interval = setInterval(fetchData, 15000);
-    return () => clearInterval(interval);
-  }, [fetchData]);
+  // Realtime handles live updates — no polling needed
 
   // Realtime
   useEffect(() => {

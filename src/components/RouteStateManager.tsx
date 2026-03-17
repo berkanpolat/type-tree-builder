@@ -134,24 +134,35 @@ const getScrollContainer = (): HTMLElement | null => {
 const RouteStateManager = () => {
   const location = useLocation();
   const navigationType = useNavigationType();
+
+  // Skip state management entirely on admin routes — no scroll/field restore needed
+  const isAdmin = location.pathname.startsWith("/yonetim");
+
   const routeKey = getRouteKey(location.pathname, location.search);
   const isPop = useRef(navigationType === "POP");
+  const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Update ref on each render
   isPop.current = navigationType === "POP";
 
   useEffect(() => {
+    if (isAdmin) return;
+
     const saveScroll = () => {
-      const container = getScrollContainer();
-      const store = readStore();
-      const prev = store[routeKey] ?? { scrollY: 0, containerScroll: 0, fields: {}, updatedAt: Date.now() };
-      store[routeKey] = {
-        ...prev,
-        scrollY: window.scrollY,
-        containerScroll: container?.scrollTop ?? 0,
-        updatedAt: Date.now(),
-      };
-      writeStore(pruneStore(store));
+      // Debounce: avoid hammering sessionStorage on every scroll frame
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+      scrollTimerRef.current = setTimeout(() => {
+        const container = getScrollContainer();
+        const store = readStore();
+        const prev = store[routeKey] ?? { scrollY: 0, containerScroll: 0, fields: {}, updatedAt: Date.now() };
+        store[routeKey] = {
+          ...prev,
+          scrollY: window.scrollY,
+          containerScroll: container?.scrollTop ?? 0,
+          updatedAt: Date.now(),
+        };
+        writeStore(pruneStore(store));
+      }, 150);
     };
 
     const saveFieldChange = (event: Event) => {
@@ -186,25 +197,30 @@ const RouteStateManager = () => {
 
     const container = getScrollContainer();
 
-    const handleScroll = () => saveScroll();
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    container?.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("scroll", saveScroll, { passive: true });
+    container?.addEventListener("scroll", saveScroll, { passive: true });
     document.addEventListener("input", saveFieldChange, true);
     document.addEventListener("change", saveFieldChange, true);
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
-      container?.removeEventListener("scroll", handleScroll);
+      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+      window.removeEventListener("scroll", saveScroll);
+      container?.removeEventListener("scroll", saveScroll);
       document.removeEventListener("input", saveFieldChange, true);
       document.removeEventListener("change", saveFieldChange, true);
       if (!isPop.current) {
-        saveScroll();
+        // Direct save on unmount (no debounce)
+        const c = getScrollContainer();
+        const st = readStore();
+        const prev = st[routeKey] ?? { scrollY: 0, containerScroll: 0, fields: {}, updatedAt: Date.now() };
+        st[routeKey] = { ...prev, scrollY: window.scrollY, containerScroll: c?.scrollTop ?? 0, updatedAt: Date.now() };
+        writeStore(pruneStore(st));
       }
     };
-  }, [routeKey]);
+  }, [routeKey, isAdmin]);
 
   useEffect(() => {
+    if (isAdmin) return;
     if (navigationType !== "POP") return;
 
     const snapshot = readStore()[routeKey];
@@ -223,14 +239,12 @@ const RouteStateManager = () => {
 
     const t1 = window.setTimeout(restore, 50);
     const t2 = window.setTimeout(restore, 300);
-    const t3 = window.setTimeout(restore, 600);
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
-      clearTimeout(t3);
     };
-  }, [routeKey, navigationType]);
+  }, [routeKey, navigationType, isAdmin]);
 
   return null;
 };
