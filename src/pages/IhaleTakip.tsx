@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -528,7 +529,7 @@ export default function IhaleTakip() {
                 {ihale.foto_url ? (
                   <img src={ihale.foto_url} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                  <img src={ihaleDefaultCover} alt="" className="w-full h-full object-contain p-1" />
                 )}
               </div>
 

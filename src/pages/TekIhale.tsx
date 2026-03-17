@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
 import { useSessionState } from "@/hooks/use-session-state";
 import { useBanner } from "@/hooks/use-banner";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -527,7 +528,7 @@ export default function TekIhale() {
                           {ihale.foto_url ? (
                             <img src={ihale.foto_url} alt="" className="w-full h-full object-contain" />
                           ) : (
-                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                            <img src={ihaleDefaultCover} alt="" className="w-full h-full object-contain p-2" />
                           )}
                         </div>
 
