@@ -383,7 +383,8 @@ export default function TekRehber() {
   };
 
   const handleMessageFirma = async (firmaUserId: string) => {
-    if (!currentUserId || firmaUserId === currentUserId) return;
+    if (!currentUserId) { navigate("/giris-kayit"); return; }
+    if (firmaUserId === currentUserId) return;
     const { data: existingConv } = await supabase
       .from("conversations")
       .select("id")
