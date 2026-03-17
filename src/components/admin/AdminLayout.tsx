@@ -63,6 +63,7 @@ const menuGroups: MenuGroup[] = [
       { label: "Kaynak Raporu", path: "/yonetim/kaynak-raporu", icon: BarChart3, permission: null, primaryOnly: true },
       { label: "Raporlar", path: "/yonetim/raporlar", icon: FileBarChart, permission: "rapor_goruntule", primaryOnly: false },
       { label: "Performans", path: "/yonetim/performans", icon: Gauge, permission: null, primaryOnly: true },
+      { label: "Test Merkezi", path: "/yonetim/test-merkezi", icon: FlaskConical, permission: null, primaryOnly: true },
     ],
   },
 ];

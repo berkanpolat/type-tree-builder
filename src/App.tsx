@@ -204,6 +204,7 @@ const AppContent = () => {
             <Route path="raporlar/aksiyon-turu" element={<RaporAksiyonTuru />} />
             <Route path="raporlar/hedef-prim" element={<RaporHedefPrim />} />
             <Route path="performans" element={<AdminPerformans />} />
+            <Route path="test-merkezi" element={<AdminTestMerkezi />} />
           </Route>
 
           <Route path="/:slug" element={<FirmaDetay />} />
