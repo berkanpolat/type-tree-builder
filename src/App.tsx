@@ -81,6 +81,7 @@ const AdminKaynakRaporu = lazy(() => import("./pages/admin/AdminKaynakRaporu"));
 const AdminRaporlar = lazy(() => import("./pages/admin/AdminRaporlar"));
 const AdminPerformans = lazy(() => import("./pages/admin/AdminPerformans"));
 const AdminTestMerkezi = lazy(() => import("./pages/admin/AdminTestMerkezi"));
+const OdemeTest = lazy(() => import("./pages/OdemeTest"));
 const RaporSatisKanali = lazy(() => import("./pages/admin/reports/RaporSatisKanali"));
 const RaporMusteriTipi = lazy(() => import("./pages/admin/reports/RaporMusteriTipi"));
 const RaporPersonelPerformans = lazy(() => import("./pages/admin/reports/RaporPersonelPerformans"));
@@ -173,6 +174,7 @@ const AppContent = () => {
           <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
           <Route path="/sifre-sifirla" element={<SifreSifirla />} />
           <Route path="/telefon-dogrulama" element={<TelefonDogrulama />} />
+          <Route path="/odeme-test" element={<OdemeTest />} />
 
           <Route path="/yonetim" element={<AdminRoute />}>
             <Route index element={<AdminGiris />} />
