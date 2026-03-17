@@ -168,24 +168,11 @@ export default function OdemeTest() {
 
         <div className="flex-1 space-y-6">
           <div>
-            <p className="text-sm text-white/60 mb-1">PRO Paket</p>
-            {period === "yillik" ? (
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-lg line-through text-white/40">${fmt(YILLIK_ORIGINAL)}</span>
-                  <h1 className="text-2xl font-bold">
-                    ${fmt(YILLIK_INDIRIMLI)}
-                    <span className="text-sm font-normal text-white/50">/yıl</span>
-                  </h1>
-                  <span className="text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded-full leading-none">%45</span>
-                </div>
-              </div>
-            ) : (
-              <h1 className="text-3xl font-bold">
-                ${fmt(usdPrice)}
-                <span className="text-base font-normal text-white/50">/ay</span>
-              </h1>
-            )}
+            <p className="text-sm text-white/60 mb-1">PRO Paket — {period === "aylik" ? "Aylık" : "Yıllık"}</p>
+            <h1 className="text-3xl font-bold">
+              ${fmt(usdPrice)}
+              <span className="text-base font-normal text-white/50">/{period === "aylik" ? "ay" : "yıl"}</span>
+            </h1>
             {totalTry && !rateLoading && (
               <p className="text-sm text-white/50 mt-1 flex items-center gap-1">
                 ≈ ₺{fmt(usdPrice * exchangeRate!)}
@@ -198,10 +185,27 @@ export default function OdemeTest() {
 
           {/* Price breakdown */}
           <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-white/60">Ara Toplam</span>
-              <span>${fmt(usdPrice)}</span>
-            </div>
+            {period === "yillik" ? (
+              <>
+                <div className="flex justify-between">
+                  <span className="text-white/60">Ara Toplam</span>
+                  <span className="line-through text-white/40">${fmt(YILLIK_ORIGINAL)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-emerald-300">İndirim (%45)</span>
+                  <span className="text-emerald-300">-${fmt(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-white/60">İndirimli Fiyat</span>
+                  <span>${fmt(YILLIK_INDIRIMLI)}</span>
+                </div>
+              </>
+            ) : (
+              <div className="flex justify-between">
+                <span className="text-white/60">Ara Toplam</span>
+                <span>${fmt(usdPrice)}</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-white/60">KDV (%{PRO_FIYATLAR.kdvOrani})</span>
               <span>${fmt(kdv)}</span>
@@ -220,6 +224,15 @@ export default function OdemeTest() {
               </p>
             )}
           </div>
+
+          {/* Savings info for yearly */}
+          {period === "yillik" && (
+            <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3">
+              <p className="text-xs text-emerald-300 leading-relaxed">
+                💰 Yıllık planı tercih ederek <strong>${fmt(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)}</strong> tasarruf ediyorsunuz!
+              </p>
+            </div>
+          )}
 
           {/* Recurring / plan info */}
           <div className="rounded-lg bg-white/5 p-3">
