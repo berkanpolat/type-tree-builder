@@ -56,12 +56,14 @@ function validateExpiry(val: string): boolean {
 
 type Period = "aylik" | "yillik";
 
-const YILLIK_ORIGINAL = PRO_FIYATLAR.aylik.fiyat * 12; // 199 * 12 = 2388
-const YILLIK_INDIRIMLI = PRO_FIYATLAR.yillik.fiyat; // 1299
+const YILLIK_ORIGINAL = PRO_FIYATLAR.aylik.fiyat * 12;
+const YILLIK_INDIRIMLI = PRO_FIYATLAR.yillik.fiyat;
+const AYLIK_KARSILIK = Math.round((YILLIK_INDIRIMLI / 12) * 100) / 100;
 
 export default function OdemeTest() {
   const { toast } = useToast();
-  const [period, setPeriod] = useState<Period>("aylik");
+  const searchParams = new URLSearchParams(window.location.search);
+  const period: Period = searchParams.get("periyot") === "yillik" ? "yillik" : "aylik";
   const [cardNumber, setCardNumber] = useState("");
   const [cardHolder, setCardHolder] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -197,38 +199,18 @@ export default function OdemeTest() {
               )}
             </div>
 
-            {/* Period Toggle */}
-            <div className="flex rounded-lg border border-border overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setPeriod("aylik")}
-                className={`flex-1 py-2.5 text-sm font-medium transition-colors ${period === "aylik" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
-              >
-                Aylık
-              </button>
-              <button
-                type="button"
-                onClick={() => setPeriod("yillik")}
-                className={`flex-1 py-2.5 text-sm font-medium transition-colors relative ${period === "yillik" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
-              >
-                Yıllık
-                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${period === "yillik" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"}`}>
-                  %45
-                </span>
-              </button>
-            </div>
-
-            {/* Yearly discount display */}
+            {/* Yearly price advantage */}
             {period === "yillik" && (
               <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-3 space-y-1">
                 <div className="flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">Normal fiyat:</span>
+                  <span className="text-muted-foreground">Aylık fiyat üzerinden:</span>
                   <span className="line-through text-muted-foreground/70">${fmt(YILLIK_ORIGINAL)}</span>
                   <span className="text-xs text-muted-foreground/50">({PRO_FIYATLAR.aylik.fiyat}$ × 12 ay)</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <span className="text-emerald-700 dark:text-emerald-400 font-semibold">%45 indirimli:</span>
                   <span className="text-emerald-700 dark:text-emerald-400 font-bold">${fmt(YILLIK_INDIRIMLI)}/yıl</span>
+                  <span className="text-xs text-emerald-600 dark:text-emerald-500">(aylık ~${fmt(AYLIK_KARSILIK)})</span>
                 </div>
                 <p className="text-xs text-emerald-600 dark:text-emerald-500">
                   Yıllık ${fmt(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)} tasarruf ediyorsunuz!
@@ -261,23 +243,13 @@ export default function OdemeTest() {
               )}
             </div>
 
-            {/* Recurring notice */}
-            {period === "aylik" && (
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  <RotateCw className="w-3 h-3 inline mr-1 -mt-0.5" />
-                  Bu abonelik <strong>aylık olarak otomatik</strong> yenilenecektir. İstediğiniz zaman iptal edebilirsiniz.
-                </p>
-              </div>
-            )}
-            {period === "yillik" && (
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  <RotateCw className="w-3 h-3 inline mr-1 -mt-0.5" />
-                  Bu abonelik <strong>yıllık olarak otomatik</strong> yenilenecektir. İstediğiniz zaman iptal edebilirsiniz.
-                </p>
-              </div>
-            )}
+            {/* Recurring / plan info */}
+            <div className="rounded-lg bg-muted/50 p-3">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <RotateCw className="w-3 h-3 inline mr-1 -mt-0.5" />
+                Bu abonelik <strong>{period === "aylik" ? "aylık" : "yıllık"} olarak otomatik</strong> yenilenecektir. İstediğiniz zaman paketi değiştirebilirsiniz.
+              </p>
+            </div>
           </div>
 
           {/* RIGHT — Payment Form */}
