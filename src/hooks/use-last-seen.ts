@@ -11,8 +11,9 @@ export async function updateLastSeen() {
   if (now - lastUpdate < THROTTLE_MS) return;
   lastUpdate = now;
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    const user = session.user;
     await supabase
       .from("profiles")
       .update({ last_seen: new Date().toISOString() } as any)

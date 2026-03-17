@@ -25,8 +25,9 @@ export function useProfileCompletion() {
 
   useEffect(() => {
     const calc = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setLoading(false); return; }
+      const user = session.user;
 
       // Fetch firma + firma türü name in parallel
       const { data: firma } = await supabase

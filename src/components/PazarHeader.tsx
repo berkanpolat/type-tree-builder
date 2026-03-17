@@ -43,8 +43,8 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
   }, []);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setIsLoggedIn(!!user);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session?.user);
     });
   }, []);
 

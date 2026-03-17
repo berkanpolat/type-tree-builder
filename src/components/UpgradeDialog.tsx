@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { hasSafeUserSession } from "@/lib/auth-session";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -33,8 +33,8 @@ export default function UpgradeDialog({ open, onOpenChange, title, message }: Pr
   useEffect(() => {
     if (!open) return;
 
-    hasSafeUserSession().then((loggedIn) => {
-      setIsLoggedIn(loggedIn);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session?.user);
     });
   }, [open]);
 

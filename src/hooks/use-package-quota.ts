@@ -49,8 +49,9 @@ export function usePackageQuota(): PackageInfo {
 
   const fetchData = useCallback(async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setLoading(false); return; }
+      const user = session.user;
 
       // Get subscription + package info
       const { data: abone } = await supabase
