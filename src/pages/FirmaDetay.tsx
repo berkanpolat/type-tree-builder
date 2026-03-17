@@ -749,7 +749,7 @@ export default function FirmaDetay() {
 
   return (
     <div className="min-h-screen bg-muted/30">
-      <PazarHeader firmaUnvani="" />
+      {currentUserId ? <PazarHeader firmaUnvani="" /> : <PublicHeader />}
 
       {/* ===== HEADER / BANNER ===== */}
       <div className="max-w-7xl mx-auto px-4 mt-4">
