@@ -13,7 +13,7 @@ const s = {
 };
 
 export default function AdminIslemler() {
-  const { token, user } = useAdminAuth();
+  const { token, user, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"yonetim" | "kullanicilar">("yonetim");
 
@@ -48,11 +48,11 @@ export default function AdminIslemler() {
       .finally(() => setUserLoading(false));
   }, [activeTab, token, userLoaded, callApi, toast]);
 
-  if (!user?.is_primary) {
+  if (!hasPermission("islem_goruntule")) {
     return (
       <AdminLayout title="İşlemler">
         <div className="flex items-center justify-center h-64" style={s.text}>
-          <p>Bu sayfa yalnızca Ana Yönetici tarafından görüntülenebilir.</p>
+          <p>Bu sayfayı görüntülemek için yetkiniz bulunmamaktadır.</p>
         </div>
       </AdminLayout>
     );
