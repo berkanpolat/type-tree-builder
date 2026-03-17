@@ -555,7 +555,6 @@ export default function TekIhale() {
                             ) : (
                               <>
                                 <FirmaAvatar firmaUnvani={ihale.firma_unvani || ""} logoUrl={ihale.firma_logo_url} size="xs" className="rounded-full border border-border" />
-                                </div>
                                 <span className="text-sm text-muted-foreground">{ihale.firma_unvani}</span>
                               </>
                             )}

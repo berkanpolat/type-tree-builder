@@ -627,7 +627,6 @@ export default function Mesajlar() {
                   }`}
                 >
                   <FirmaAvatar firmaUnvani={conv.firma_unvani || ""} logoUrl={conv.logo_url} size="md" className="w-11 h-11 rounded-full border border-border" />
-                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p className={`text-sm truncate max-w-[130px] ${conv.unread_count > 0 ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{conv.firma_unvani}</p>
