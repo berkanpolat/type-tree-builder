@@ -167,26 +167,6 @@ export default function OdemeTest() {
         </Link>
 
         <div className="flex-1 space-y-6">
-          <div>
-            <p className="text-sm text-white/60 mb-1">PRO Paket — {period === "aylik" ? "Aylık" : "Yıllık"}</p>
-            {period === "yillik" ? (
-              <div className="flex items-baseline gap-2 flex-wrap">
-                <span className="text-lg line-through text-white/40">${fmt(YILLIK_ORIGINAL)}</span>
-                <h1 className="text-3xl font-bold">${fmt(usdPrice)}<span className="text-base font-normal text-white/50">/yıl</span></h1>
-                <span className="text-xs font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-1 rounded-full">%45</span>
-              </div>
-            ) : (
-              <h1 className="text-3xl font-bold">${fmt(usdPrice)}<span className="text-base font-normal text-white/50">/ay</span></h1>
-            )}
-            {totalTry && !rateLoading && (
-              <p className="text-sm text-white/50 mt-1 flex items-center gap-1">
-                ≈ ₺{fmt(usdPrice * exchangeRate!)}
-                <button onClick={fetchRate} className="hover:text-white/80 transition-colors" title="Kuru güncelle">
-                  <RotateCw className="w-3 h-3" />
-                </button>
-              </p>
-            )}
-          </div>
 
           {/* Price breakdown */}
           <div className="space-y-3 text-sm">
