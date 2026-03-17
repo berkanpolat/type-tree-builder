@@ -323,8 +323,9 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       onOpenChange(false);
       onSuccess();
     } catch (err: any) {
-      console.error(err);
-      toast.error(isEditMode ? "Aksiyon güncellenirken hata oluştu" : "Aksiyon eklenirken hata oluştu");
+      console.error("[AksiyonEkle] Submit error:", err, "message:", err?.message, "status:", err?.status, "context:", err?.context);
+      const errMsg = err?.message || "Bilinmeyen hata";
+      toast.error(isEditMode ? `Aksiyon güncellenirken hata: ${errMsg}` : `Aksiyon eklenirken hata: ${errMsg}`);
     } finally {
       setLoading(false);
     }
