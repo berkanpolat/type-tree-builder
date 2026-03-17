@@ -28,6 +28,8 @@ import {
   ChevronDown,
   ChevronUp,
   Flag,
+  Eye,
+  Lock,
 } from "lucide-react";
 import { Instagram, Facebook, Linkedin, Twitter, Youtube } from "lucide-react";
 
