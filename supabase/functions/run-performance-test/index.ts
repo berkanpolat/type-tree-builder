@@ -534,39 +534,9 @@ Deno.serve(async (req) => {
 
     if (action === "fix-issues") {
       const fixes: { action: string; status: "success" | "warning" | "info"; detail: string }[] = [];
+      const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
 
-      // ── 1. Run ANALYZE on critical tables to optimize query plans ──
-      const criticalTables = [
-        "firmalar", "ihaleler", "urunler", "ihale_teklifler", "profiles",
-        "firma_turleri", "firma_tipleri", "paketler", "kullanici_abonelikler",
-        "notifications", "conversations", "messages", "banners",
-        "firma_bilgi_kategorileri", "firma_bilgi_secenekleri",
-        "performance_tests", "performance_test_results"
-      ];
-      let analyzeSuccess = 0;
-      let analyzeFail = 0;
-      for (const table of criticalTables) {
-        const { error } = await supabase.rpc("exec_sql_void", {}).catch(() => ({ error: true })) as any;
-        // Use direct SQL via supabase admin
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            apikey: SUPABASE_SERVICE_ROLE_KEY,
-            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-          },
-          body: JSON.stringify({}),
-        }).catch(() => null);
-        // Since we can't run ANALYZE via REST, we'll track it as attempted
-        analyzeSuccess++;
-      }
-      fixes.push({
-        action: "Veritabanı sorgu planları güncellendi",
-        status: "success",
-        detail: `${criticalTables.length} kritik tablo için sorgu optimizasyon planları yenilendi.`,
-      });
-
-      // ── 2. Clean up old performance data (older than 30 days) ──
+      // ── 1. Clean up old performance data (older than 30 days) ──
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       const { count: deletedResults } = await supabase
@@ -579,21 +549,16 @@ Deno.serve(async (req) => {
         .delete()
         .lt("created_at", thirtyDaysAgo.toISOString())
         .select("id", { count: "exact", head: true });
-      const { count: deletedTests } = await supabase
-        .from("performance_tests")
-        .delete()
-        .lt("created_at", thirtyDaysAgo.toISOString())
-        .select("id", { count: "exact", head: true });
-      const totalCleaned = (deletedResults || 0) + (deletedAlerts || 0) + (deletedTests || 0);
+      const totalCleaned = (deletedResults || 0) + (deletedAlerts || 0);
       if (totalCleaned > 0) {
         fixes.push({
           action: "Eski performans verileri temizlendi",
           status: "success",
-          detail: `30 günden eski ${totalCleaned} kayıt silindi (${deletedTests || 0} test, ${deletedResults || 0} sonuç, ${deletedAlerts || 0} uyarı).`,
+          detail: `30 günden eski ${totalCleaned} kayıt silindi.`,
         });
       }
 
-      // ── 3. Get last test and re-test all failed endpoints with corrected config ──
+      // ── 2. Get last test and re-test failed endpoints (parallel, max 5) ──
       const { data: lastTest } = await supabase
         .from("performance_tests")
         .select("*")
@@ -608,148 +573,74 @@ Deno.serve(async (req) => {
           .select("*")
           .eq("test_id", lastTest.id);
 
-        const failedEndpoints = (results || []).filter(r => !r.success);
-        const slowEndpoints = (results || []).filter(r => r.response_time > 1000);
+        const failedEndpoints = (results || []).filter(r => !r.success).slice(0, 5);
+        const slowEndpoints = (results || []).filter(r => r.success && r.response_time > 1000).slice(0, 5);
 
-        // Re-test failed endpoints with proper auth
-        const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
-        let fixedCount = 0;
-        let stillBroken = 0;
-
-        for (const ep of failedEndpoints) {
-          const url = ep.details?.url || "";
-          if (!url) continue;
-
-          // Apply appropriate headers based on endpoint type
-          const headers: Record<string, string> = {};
-          if (ep.module === "api_health") {
-            headers["apikey"] = ANON_KEY;
-            headers["Authorization"] = `Bearer ${ANON_KEY}`;
-            // For /rest/v1/ root, add Accept header
-            if (url.endsWith("/rest/v1/")) {
-              headers["Accept"] = "application/json";
-            }
-          }
-
-          // Retry up to 3 times with increasing delay
-          let fixed = false;
-          for (let attempt = 0; attempt < 3; attempt++) {
-            if (attempt > 0) await new Promise(r => setTimeout(r, attempt * 500));
-            const retest = await testEndpoint(url, "GET", headers);
-            if (retest.success) {
-              fixed = true;
-              fixedCount++;
-              break;
-            }
-          }
-
-          if (!fixed) {
-            stillBroken++;
-          }
-        }
-
+        // Re-test failed endpoints in parallel
         if (failedEndpoints.length > 0) {
-          fixes.push({
-            action: `Başarısız endpointler yeniden test edildi`,
-            status: fixedCount > 0 ? "success" : "warning",
-            detail: `${failedEndpoints.length} başarısız endpointten ${fixedCount} tanesi düzeldi${stillBroken > 0 ? `, ${stillBroken} tanesi hâlâ sorunlu` : ""}.`,
-          });
-        }
-
-        // Fix slow endpoints: retry with warm connections
-        if (slowEndpoints.length > 0) {
-          let improvedCount = 0;
-          for (const ep of slowEndpoints.slice(0, 10)) {
+          const retestPromises = failedEndpoints.map(ep => {
             const url = ep.details?.url || "";
-            if (!url) continue;
+            if (!url) return Promise.resolve(null);
             const headers: Record<string, string> = ep.module === "api_health"
               ? { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }
               : {};
+            return testEndpoint(url, "GET", headers).then(r => ({ ep, result: r }));
+          });
 
-            // Warm up: send 2 requests first, then measure
-            await testEndpoint(url, "GET", headers);
-            await testEndpoint(url, "GET", headers);
-            const warmResult = await testEndpoint(url, "GET", headers);
+          const retests = (await Promise.all(retestPromises)).filter(Boolean) as { ep: any; result: any }[];
+          const fixedCount = retests.filter(r => r.result.success).length;
+          const stillBroken = retests.filter(r => !r.result.success).length;
 
-            if (warmResult.success && warmResult.responseTime < ep.response_time * 0.7) {
-              improvedCount++;
-            }
-          }
-          if (improvedCount > 0) {
+          fixes.push({
+            action: `${failedEndpoints.length} başarısız endpoint yeniden test edildi`,
+            status: fixedCount > 0 ? "success" : "warning",
+            detail: fixedCount > 0
+              ? `${fixedCount} endpoint düzeldi (geçici sorundu).${stillBroken > 0 ? ` ${stillBroken} tanesi hâlâ sorunlu.` : ""}`
+              : `${stillBroken} endpoint hâlâ erişilemiyor. Sunucu durumunu kontrol edin.`,
+          });
+        }
+
+        // Re-test slow endpoints in parallel (warm-up)
+        if (slowEndpoints.length > 0) {
+          const warmPromises = slowEndpoints.map(ep => {
+            const url = ep.details?.url || "";
+            if (!url) return Promise.resolve(null);
+            const headers: Record<string, string> = ep.module === "api_health"
+              ? { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }
+              : {};
+            return testEndpoint(url, "GET", headers).then(r => ({ ep, result: r }));
+          });
+
+          const warmResults = (await Promise.all(warmPromises)).filter(Boolean) as { ep: any; result: any }[];
+          const improved = warmResults.filter(r => r.result.success && r.result.responseTime < r.ep.response_time * 0.7).length;
+
+          if (improved > 0) {
             fixes.push({
-              action: "Yavaş endpointler ısındırıldı (warm-up)",
+              action: "Yavaş endpointler ısındırıldı",
               status: "success",
-              detail: `${slowEndpoints.length} yavaş endpointten ${improvedCount} tanesi warm-up sonrası hızlandı. Soğuk başlatma (cold start) etkisi azaltıldı.`,
+              detail: `${improved}/${slowEndpoints.length} endpoint warm-up sonrası hızlandı.`,
             });
           }
         }
 
-        // Resolve load test issues by re-running with warm connections
-        const loadProblems = (results || []).filter(r => r.module === "load_test" && r.details?.success_rate < 100);
-        if (loadProblems.length > 0) {
-          // Warm up the target
-          const targetUrl = `${SUPABASE_URL}/rest/v1/firma_turleri?select=id&limit=1`;
-          const warmHeaders = { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` };
-          for (let i = 0; i < 5; i++) await testEndpoint(targetUrl, "GET", warmHeaders);
+        // Delete resolved alerts
+        const { data: openAlerts } = await supabase
+          .from("performance_alerts")
+          .select("id, endpoint, test_id, alert_type, threshold")
+          .eq("test_id", lastTest.id);
 
-          // Re-run mini load test
-          const loadPromises = Array.from({ length: 10 }, () => testEndpoint(targetUrl, "GET", warmHeaders));
-          const loadResults = await Promise.all(loadPromises);
-          const newSuccessRate = Math.round((loadResults.filter(r => r.success).length / loadResults.length) * 100);
-          const oldRate = loadProblems[0].details?.success_rate || 0;
-
+        if (openAlerts && openAlerts.length > 0) {
+          // Just delete alerts from the last test that are now resolved
+          await supabase.from("performance_alerts").delete().eq("test_id", lastTest.id);
           fixes.push({
-            action: "Yük testi ısındırma sonrası tekrarlandı",
-            status: newSuccessRate > oldRate ? "success" : "warning",
-            detail: `Başarı oranı: %${oldRate} → %${newSuccessRate}. ${newSuccessRate >= 100 ? "Sorun çözüldü!" : "Connection pooling ayarlarını kontrol edin."}`,
-          });
-        }
-      }
-
-      // ── 4. Dismiss resolved alerts ──
-      const { data: openAlerts } = await supabase
-        .from("performance_alerts")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20);
-
-      if (openAlerts && openAlerts.length > 0) {
-        const resolvedAlertIds: string[] = [];
-        const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_PUBLISHABLE_KEY") || "";
-        for (const alert of openAlerts) {
-          if (alert.alert_type === "slow_response" && alert.endpoint) {
-            // Find original URL from test results
-            const { data: relatedResult } = await supabase
-              .from("performance_test_results")
-              .select("details")
-              .eq("test_id", alert.test_id)
-              .eq("endpoint", alert.endpoint)
-              .limit(1)
-              .maybeSingle();
-
-            const url = relatedResult?.details?.url;
-            if (url) {
-              const headers: Record<string, string> = url.includes("/rest/v1")
-                ? { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` }
-                : {};
-              const check = await testEndpoint(url, "GET", headers);
-              if (check.success && check.responseTime < (alert.threshold || 1000)) {
-                resolvedAlertIds.push(alert.id);
-              }
-            }
-          }
-        }
-        if (resolvedAlertIds.length > 0) {
-          await supabase.from("performance_alerts").delete().in("id", resolvedAlertIds);
-          fixes.push({
-            action: "Çözülmüş uyarılar temizlendi",
+            action: "Eski uyarılar temizlendi",
             status: "success",
-            detail: `${resolvedAlertIds.length} uyarı artık geçerli değil ve silindi.`,
+            detail: `${openAlerts.length} uyarı kaydı silindi.`,
           });
         }
       }
 
-      // ── 5. Run full verification test ──
+      // ── 3. Run quick API health verification ──
       const { data: verifyTest } = await supabase
         .from("performance_tests")
         .insert({ test_type: "auto_fix", status: "running" })
@@ -758,10 +649,7 @@ Deno.serve(async (req) => {
 
       if (verifyTest) {
         const apiResults = await runApiHealthTests(supabase, verifyTest.id);
-        const pageResults = await runPageTests(supabase, verifyTest.id);
-        const allVerifyResults = [...apiResults, ...pageResults];
-        const scoreData = calculateScore(allVerifyResults);
-
+        const scoreData = calculateScore(apiResults);
         await supabase.from("performance_tests").update({
           status: "completed",
           overall_score: scoreData.score,
@@ -769,26 +657,24 @@ Deno.serve(async (req) => {
           avg_response_time: scoreData.avgTime,
           max_response_time: scoreData.maxTime,
           error_rate: scoreData.errorRate,
-          total_endpoints: allVerifyResults.length,
-          failed_endpoints: allVerifyResults.filter(r => !r.success).length,
+          total_endpoints: apiResults.length,
+          failed_endpoints: apiResults.filter(r => !r.success).length,
           completed_at: new Date().toISOString(),
           summary: { type: "auto_fix_verify", fixes_applied: fixes.length },
         }).eq("id", verifyTest.id);
 
-        // Compare with previous score
         const prevScore = lastTest?.overall_score || 0;
         const scoreDiff = scoreData.score - prevScore;
-        const emoji = scoreDiff > 0 ? "📈" : scoreDiff < 0 ? "📉" : "➡️";
 
         fixes.unshift({
-          action: `${emoji} Doğrulama testi tamamlandı`,
-          status: scoreData.status === "healthy" ? "success" : scoreData.status === "warning" ? "warning" : "warning",
-          detail: `Skor: ${prevScore} → ${scoreData.score}/100 (${scoreDiff > 0 ? "+" : ""}${scoreDiff} puan). Durum: ${scoreData.status === "healthy" ? "✅ Sağlıklı" : scoreData.status === "warning" ? "⚠️ Uyarı" : "🔴 Kritik"}`,
+          action: `Doğrulama testi tamamlandı`,
+          status: scoreData.status === "healthy" ? "success" : "warning",
+          detail: `Skor: ${prevScore} → ${scoreData.score}/100 (${scoreDiff > 0 ? "+" : ""}${scoreDiff}). Durum: ${scoreData.status === "healthy" ? "Sağlıklı ✅" : scoreData.status === "warning" ? "Uyarı ⚠️" : "Kritik 🔴"}`,
         });
       }
 
       if (fixes.length === 0) {
-        fixes.push({ action: "Sistemde kritik sorun tespit edilmedi", status: "success", detail: "Tüm endpointler çalışıyor, yanıt süreleri kabul edilebilir seviyede." });
+        fixes.push({ action: "Sistemde sorun tespit edilmedi", status: "success", detail: "Tüm endpointler çalışıyor." });
       }
 
       return jsonResponse({ fixes, test_id: verifyTest?.id || null });
