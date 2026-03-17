@@ -136,64 +136,7 @@ export function usePackageQuota(): PackageInfo {
           mesaj: initiatedConversations,
         });
 
-        // Check for 10% remaining quota and send SMS warning
-        const currentUsage = {
-          profil_goruntuleme: uniqueFirmaIds.size,
-          teklif_verme: uniqueIhaleIds.size,
-          aktif_urun: urunRes.count || 0,
-          mesaj: initiatedConversations,
-        };
-        const currentLimits = {
-          profil_goruntuleme_limiti: paket.profil_goruntuleme_limiti != null
-            ? paket.profil_goruntuleme_limiti + (ekstra.profil_goruntuleme || 0) : null,
-          teklif_verme_limiti: paket.teklif_verme_limiti != null
-            ? paket.teklif_verme_limiti + (ekstra.teklif_verme || 0) : null,
-          aktif_urun_limiti: paket.aktif_urun_limiti + (ekstra.aktif_urun || 0),
-          mesaj_limiti: paket.mesaj_limiti != null
-            ? paket.mesaj_limiti + (ekstra.mesaj || 0) : null,
-        };
-
-        const quotaLabels: Record<string, string> = {
-          profil_goruntuleme: "Firma Profili Goruntuleme",
-          teklif_verme: "Teklif Verme",
-          aktif_urun: "Aktif Urun",
-          mesaj: "Mesaj Gonderme",
-        };
-
-        const limitKeys = [
-          { usageKey: "profil_goruntuleme", limitKey: "profil_goruntuleme_limiti" },
-          { usageKey: "teklif_verme", limitKey: "teklif_verme_limiti" },
-          { usageKey: "aktif_urun", limitKey: "aktif_urun_limiti" },
-          { usageKey: "mesaj", limitKey: "mesaj_limiti" },
-        ] as const;
-
-        for (const { usageKey, limitKey } of limitKeys) {
-          const limit = currentLimits[limitKey];
-          if (limit === null || limit === undefined || limit <= 0) continue;
-          const used = currentUsage[usageKey];
-          const remaining = limit - used;
-          const threshold = Math.max(1, Math.ceil(limit * 0.1));
-
-          if (remaining > 0 && remaining <= threshold) {
-            // Check localStorage to avoid duplicate SMS
-            const storageKey = `quota_sms_${usageKey}_${donemBaslangic}`;
-            if (!localStorage.getItem(storageKey)) {
-              localStorage.setItem(storageKey, "sent");
-              try {
-                await supabase.functions.invoke("send-notification-sms", {
-                  body: {
-                    type: "kota_uyari",
-                    paketAd: paket.ad,
-                    ozellikAd: quotaLabels[usageKey],
-                    kalanSayi: remaining,
-                  },
-                });
-              } catch (smsErr) {
-                console.error("Quota SMS failed:", smsErr);
-              }
-            }
-          }
-        }
+        // SMS quota warnings removed - now sent at action time via canPerformAction
       }
     } catch (err) {
       console.error("Paket bilgisi alınamadı:", err);
@@ -227,7 +170,8 @@ export function usePackageQuota(): PackageInfo {
 export function canPerformAction(
   limits: PackageLimits,
   usage: QuotaUsage,
-  action: "profil_goruntuleme" | "teklif_verme" | "aktif_urun" | "mesaj"
+  action: "profil_goruntuleme" | "teklif_verme" | "aktif_urun" | "mesaj",
+  options?: { paketAd?: string; paketSlug?: string }
 ): { allowed: boolean; message?: string } {
   const limitMap: Record<string, number | null> = {
     profil_goruntuleme: limits.profil_goruntuleme_limiti,
@@ -243,9 +187,17 @@ export function canPerformAction(
     mesaj: "mesaj gönderme",
   };
 
+  const smsLabelMap: Record<string, string> = {
+    profil_goruntuleme: "Firma Profili Goruntuleme",
+    teklif_verme: "Teklif Verme",
+    aktif_urun: "Aktif Urun",
+    mesaj: "Mesaj Gonderme",
+  };
+
   const limit = limitMap[action];
   
   if (action === "mesaj" && limit === 0) {
+    _sendQuotaBlockedSms(options?.paketAd, smsLabelMap[action], 0);
     return { allowed: false, message: "Ücretsiz paketinizde yeni mesaj oluşturma hakkınız bulunmamaktadır. Sadece gelen mesajlara yanıt verebilirsiniz. PRO pakete yükselterek sınırsız mesajlaşma hakkı kazanabilirsiniz." };
   }
 
@@ -254,8 +206,25 @@ export function canPerformAction(
   }
 
   if (usage[action] >= limit) {
+    _sendQuotaBlockedSms(options?.paketAd, smsLabelMap[action], 0);
     return { allowed: false, message: `${labelMap[action]} hakkınız dolmuştur (${usage[action]}/${limit}). PRO pakete yükselterek daha fazla hak kazanabilirsiniz.` };
   }
 
   return { allowed: true };
+}
+
+// Fire-and-forget SMS when user is blocked from an action
+function _sendQuotaBlockedSms(paketAd?: string, ozellikAd?: string, kalanSayi?: number) {
+  const storageKey = `quota_blocked_sms_${ozellikAd}_${new Date().toISOString().slice(0, 10)}`;
+  if (localStorage.getItem(storageKey)) return;
+  localStorage.setItem(storageKey, "sent");
+  
+  supabase.functions.invoke("send-notification-sms", {
+    body: {
+      type: "kota_uyari",
+      paketAd: paketAd || "Paket",
+      ozellikAd: ozellikAd || "ozellik",
+      kalanSayi: kalanSayi ?? 0,
+    },
+  }).catch((err) => console.error("Quota blocked SMS failed:", err));
 }

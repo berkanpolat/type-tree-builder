@@ -656,7 +656,7 @@ export default function IhaleDetay() {
   const handleTeklifSubmit = () => {
     // Quota check - only if this is a NEW ihale (user hasn't bid on this one before)
     if (!myTeklif) {
-      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "teklif_verme");
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "teklif_verme", { paketAd: packageInfo.paketAd });
       if (!check.allowed) {
         setUpgradeMessage(check.message || "Teklif verme hakkınız dolmuştur.");
         setUpgradeOpen(true);
@@ -826,7 +826,7 @@ export default function IhaleDetay() {
       .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${firma.user_id}),and(user1_id.eq.${firma.user_id},user2_id.eq.${currentUserId})`)
       .maybeSingle();
     if (!existingConv) {
-      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj", { paketAd: packageInfo.paketAd });
       if (!check.allowed) {
         setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
         setUpgradeOpen(true);

@@ -578,7 +578,7 @@ export default function FirmaDetay() {
     }
     setContactRevealLoading(true);
     // Check quota
-    const check = canPerformAction(packageInfo.limits, packageInfo.usage, "profil_goruntuleme");
+    const check = canPerformAction(packageInfo.limits, packageInfo.usage, "profil_goruntuleme", { paketAd: packageInfo.paketAd });
     if (!check.allowed) {
       setMsgUpgradeMessage(check.message || "İletişim bilgisi görüntüleme hakkınız dolmuştur.");
       setMsgUpgradeOpen(true);
@@ -606,7 +606,7 @@ export default function FirmaDetay() {
       .maybeSingle();
     if (!existingConv) {
       // New conversation - check quota
-      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj", { paketAd: packageInfo.paketAd });
       if (!check.allowed) {
         setMsgUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
         setMsgUpgradeOpen(true);
