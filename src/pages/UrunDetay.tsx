@@ -3,6 +3,7 @@ import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
+import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
 import { useBanner } from "@/hooks/use-banner";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
