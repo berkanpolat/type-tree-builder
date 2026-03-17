@@ -324,8 +324,16 @@ export default function TekIhale() {
       if (filterTur.length > 0 && (!ihale.urun_tur_id || !filterTur.includes(ihale.urun_tur_id))) return false;
       if (filterHizmetKategori.length > 0 && (!ihale.hizmet_kategori_id || !filterHizmetKategori.includes(ihale.hizmet_kategori_id))) return false;
       if (filterHizmetTur.length > 0 && (!ihale.hizmet_tur_id || !filterHizmetTur.includes(ihale.hizmet_tur_id))) return false;
-      if (filterOdeme.length > 0 && (!ihale.odeme_secenekleri || !filterOdeme.includes(ihale.odeme_secenekleri))) return false;
-      if (filterVade.length > 0 && (!ihale.odeme_vadesi || !filterVade.includes(ihale.odeme_vadesi))) return false;
+      if (filterOdeme.length > 0) {
+        if (!ihale.odeme_secenekleri) return false;
+        const ihaleOdemeArr = ihale.odeme_secenekleri.split(",").map(s => s.trim());
+        if (!filterOdeme.some(f => ihaleOdemeArr.includes(f))) return false;
+      }
+      if (filterVade.length > 0) {
+        if (!ihale.odeme_vadesi) return false;
+        const ihaleVadeArr = ihale.odeme_vadesi.split(",").map(s => s.trim());
+        if (!filterVade.some(f => ihaleVadeArr.includes(f))) return false;
+      }
       return true;
     });
   }, [ihaleler, searchTerm, filterIhaleTuru, filterTeklifUsulu, filterKategori, filterGrup, filterTur, filterHizmetKategori, filterHizmetTur, filterOdeme, filterVade, secenekMap]);
