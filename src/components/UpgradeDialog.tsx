@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -6,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, Check, Eye, Gavel, FileText, ShoppingBag, MessageSquare, AlertTriangle } from "lucide-react";
+import { Crown, Check, Eye, Gavel, FileText, ShoppingBag, MessageSquare, AlertTriangle, LogIn } from "lucide-react";
 import { PAKET_OZELLIKLERI, PRO_FIYATLAR } from "@/lib/package-config";
 
 interface Props {
@@ -26,6 +28,15 @@ const PRO_FEATURES = [
 
 export default function UpgradeDialog({ open, onOpenChange, title, message }: Props) {
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        setIsLoggedIn(!!user);
+      });
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -67,13 +78,26 @@ export default function UpgradeDialog({ open, onOpenChange, title, message }: Pr
             className="w-full gap-2"
             onClick={() => {
               onOpenChange(false);
-              navigate("/paketim");
+              if (isLoggedIn) {
+                navigate("/paketim");
+              } else {
+                navigate("/giris-kayit");
+              }
             }}
           >
-            <Crown className="w-4 h-4" />
-            PRO Pakete Yükselt — {PRO_FIYATLAR.aylik.fiyat}{PRO_FIYATLAR.paraBirimi}/ay
+            {isLoggedIn ? (
+              <>
+                <Crown className="w-4 h-4" />
+                PRO Pakete Yükselt — {PRO_FIYATLAR.aylik.fiyat}{PRO_FIYATLAR.paraBirimi}/ay
+              </>
+            ) : (
+              <>
+                <LogIn className="w-4 h-4" />
+                Giriş Yap / Kayıt Ol
+              </>
+            )}
           </Button>
-          <p className="text-xs text-center text-muted-foreground">+%{PRO_FIYATLAR.kdvOrani} KDV</p>
+          {isLoggedIn && <p className="text-xs text-center text-muted-foreground">+%{PRO_FIYATLAR.kdvOrani} KDV</p>}
           <Button
             variant="ghost"
             className="w-full text-muted-foreground"

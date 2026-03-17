@@ -1042,8 +1042,7 @@ export default function IhaleDetay() {
               </Card>
             )}
 
-            {/* MOBILE ONLY: Teklif Verme - order 4 */}
-            {currentUserId ? (
+            {/* MOBILE ONLY: Title + Teklif Verme - order 4 */}
             <div className="lg:hidden order-4">
               <Card className="p-6">
                 <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
@@ -1054,64 +1053,56 @@ export default function IhaleDetay() {
                     <span className="text-sm font-medium">{countdown}</span>
                   </div>
                 )}
-                {!isOwner && ihale.durum === "devam_ediyor" && filterBlockMessage && (
-                  <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
-                    <p className="text-sm text-destructive font-medium mb-1">Teklif Veremezsiniz</p>
-                    <p className="text-xs text-destructive/80">{filterBlockMessage}</p>
-                  </div>
-                )}
-                {!isOwner && ihale.durum === "devam_ediyor" && !filterBlockMessage && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">Teklif Tutarı ({sym})</label>
-                      <Input type="number" placeholder={`${sym}${ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati).toFixed(2) : "0.00"}`} value={teklifTutar} onChange={(e) => setTeklifTutar(e.target.value)} />
-                      {ihale.min_teklif_degisim != null && Number(ihale.min_teklif_degisim) > 0 && (ihale.teklif_usulu === "acik_indirme" || ihale.teklif_usulu === "acik_arttirma") && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {ihale.teklif_usulu === "acik_indirme" ? `Minimum indirme bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}` : `Minimum arttırma bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}`}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
-                      <SearchableSelect options={dbOdemeSecenekleri.map(o => ({ value: o, label: o }))} value={teklifOdemeSecenekleri} onValueChange={setTeklifOdemeSecenekleri} placeholder="Ödeme Seçenekleri" searchPlaceholder="Ara..." />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">Kargo Masrafı Ödemesi</label>
-                      <SearchableSelect options={dbKargoMasrafi.map(o => ({ value: o, label: o }))} value={teklifKargoMasrafi} onValueChange={setTeklifKargoMasrafi} placeholder="Kargo Masrafı Ödemesi" searchPlaceholder="Ara..." />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Vadesi</label>
-                      <SearchableSelect options={dbOdemeVadeleri.map(o => ({ value: o, label: o }))} value={teklifOdemeVadesi} onValueChange={setTeklifOdemeVadesi} placeholder="Ödeme Vadesi" searchPlaceholder="Ara..." />
-                    </div>
-                    <div>
-                      <label className="relative flex items-center justify-center gap-2 h-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
-                        <Upload className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">{uploading ? "Yükleniyor..." : teklifDosyaName || "Belge yükle"}</span>
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} disabled={uploading} />
-                      </label>
-                    </div>
-                    <Button className="w-full h-12 gap-2 text-base" onClick={handleTeklifSubmit}>
-                      <Send className="w-4 h-4" /> {myTeklif ? "Teklifi Güncelle" : "Teklif Ver"}
-                    </Button>
-                    {myTeklif && (
-                      <Button variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" onClick={handleTeklifGeriCek}>
-                        <Trash2 className="w-4 h-4" /> Teklifi Geri Çek
-                      </Button>
+                {currentUserId ? (
+                  <>
+                    {!isOwner && ihale.durum === "devam_ediyor" && filterBlockMessage && (
+                      <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                        <p className="text-sm text-destructive font-medium mb-1">Teklif Veremezsiniz</p>
+                        <p className="text-xs text-destructive/80">{filterBlockMessage}</p>
+                      </div>
                     )}
+                    {!isOwner && ihale.durum === "devam_ediyor" && !filterBlockMessage && (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <span>Teklif Usulü: {ihale.teklif_usulu === "acik_artirma" ? "Açık Artırma" : ihale.teklif_usulu === "kapali_zarf" ? "Kapalı Zarf" : "Pazarlık"}</span>
+                        </div>
+                        {(ihale.teklif_usulu === "acik_artirma" || ihale.teklif_usulu === "kapali_zarf") && (
+                          <div className="flex gap-2">
+                            <Input type="number" placeholder="Teklif tutarınız" value={teklifTutar} onChange={(e) => setTeklifTutar(e.target.value)} className="flex-1" />
+                            <Button onClick={handleTeklifSubmit} className="gap-2 whitespace-nowrap">
+                              Teklif Ver
+                            </Button>
+                          </div>
+                        )}
+                        {ihale.teklif_usulu === "pazarlik" && (
+                          <Button onClick={() => handleMesajGonder()} className="w-full gap-2">
+                            <MessageSquare className="w-4 h-4" /> Mesaj Gönder
+                          </Button>
+                        )}
+                        {myTeklif && (
+                          <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                            <p className="text-sm font-medium text-foreground">Teklifiniz: {myTeklif.tutar.toLocaleString("tr-TR")} {ihale.para_birimi || "TL"}</p>
+                            <p className="text-xs text-muted-foreground mt-1">{new Date(myTeklif.created_at).toLocaleDateString("tr-TR")}</p>
+                          </div>
+                        )}
+                        {myTeklif && ihale.durum === "devam_ediyor" && (
+                          <Button variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" onClick={handleTeklifGeriCek}>
+                            <Trash2 className="w-4 h-4" /> Teklifi Geri Çek
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center pt-2">
+                    <LogIn className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-sm font-medium text-foreground mb-1">Teklif vermek için giriş yapın</p>
+                    <p className="text-xs text-muted-foreground mb-4">İhaleye teklif verebilmek için hesabınıza giriş yapmanız gerekmektedir.</p>
+                    <Button className="w-full gap-2" onClick={() => navigate("/giris-kayit")}><LogIn className="w-4 h-4" /> Giriş Yap / Kayıt Ol</Button>
                   </div>
                 )}
               </Card>
             </div>
-            ) : (
-            <div className="lg:hidden order-4">
-              <Card className="p-6 text-center">
-                <LogIn className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm font-medium text-foreground mb-1">Teklif vermek için giriş yapın</p>
-                <p className="text-xs text-muted-foreground mb-4">İhaleye teklif verebilmek ve detayları görebilmek için hesabınıza giriş yapmanız gerekmektedir.</p>
-                <Button className="w-full gap-2" onClick={() => navigate("/giris-kayit")}><LogIn className="w-4 h-4" /> Giriş Yap / Kayıt Ol</Button>
-              </Card>
-            </div>
-            )}
 
             {/* MOBILE ONLY: Teklifler - order 5 */}
             {currentUserId ? (
@@ -1485,8 +1476,7 @@ export default function IhaleDetay() {
               </Card>
             )}
 
-            {/* Title & Countdown + Teklif Form - desktop only (teklif only for logged-in) */}
-            {currentUserId ? (
+            {/* Title & Countdown + Teklif Form - desktop only */}
             <div className="hidden lg:block">
               <Card className="p-6">
                 <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
@@ -1497,64 +1487,65 @@ export default function IhaleDetay() {
                     <span className="text-sm font-medium">{countdown}</span>
                   </div>
                 )}
-                {!isOwner && ihale.durum === "devam_ediyor" && filterBlockMessage && (
-                  <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
-                    <p className="text-sm text-destructive font-medium mb-1">Teklif Veremezsiniz</p>
-                    <p className="text-xs text-destructive/80">{filterBlockMessage}</p>
-                  </div>
-                )}
-                {!isOwner && ihale.durum === "devam_ediyor" && !filterBlockMessage && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">Teklif Tutarı ({sym})</label>
-                      <Input type="number" placeholder={`${sym}${ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati).toFixed(2) : "0.00"}`} value={teklifTutar} onChange={(e) => setTeklifTutar(e.target.value)} />
-                      {ihale.min_teklif_degisim != null && Number(ihale.min_teklif_degisim) > 0 && (ihale.teklif_usulu === "acik_indirme" || ihale.teklif_usulu === "acik_arttirma") && (
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {ihale.teklif_usulu === "acik_indirme" ? `Minimum indirme bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}` : `Minimum arttırma bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}`}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
-                      <SearchableSelect options={dbOdemeSecenekleri.map(o => ({ value: o, label: o }))} value={teklifOdemeSecenekleri} onValueChange={setTeklifOdemeSecenekleri} placeholder="Ödeme Seçenekleri" searchPlaceholder="Ara..." />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">Kargo Masrafı Ödemesi</label>
-                      <SearchableSelect options={dbKargoMasrafi.map(o => ({ value: o, label: o }))} value={teklifKargoMasrafi} onValueChange={setTeklifKargoMasrafi} placeholder="Kargo Masrafı Ödemesi" searchPlaceholder="Ara..." />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Vadesi</label>
-                      <SearchableSelect options={dbOdemeVadeleri.map(o => ({ value: o, label: o }))} value={teklifOdemeVadesi} onValueChange={setTeklifOdemeVadesi} placeholder="Ödeme Vadesi" searchPlaceholder="Ara..." />
-                    </div>
-                    <div>
-                      <label className="relative flex items-center justify-center gap-2 h-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
-                        <Upload className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">{uploading ? "Yükleniyor..." : teklifDosyaName || "Belge yükle"}</span>
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} disabled={uploading} />
-                      </label>
-                    </div>
-                    <Button className="w-full h-12 gap-2 text-base" onClick={handleTeklifSubmit}>
-                      <Send className="w-4 h-4" /> {myTeklif ? "Teklifi Güncelle" : "Teklif Ver"}
-                    </Button>
-                    {myTeklif && (
-                      <Button variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" onClick={handleTeklifGeriCek}>
-                        <Trash2 className="w-4 h-4" /> Teklifi Geri Çek
-                      </Button>
+                {currentUserId ? (
+                  <>
+                    {!isOwner && ihale.durum === "devam_ediyor" && filterBlockMessage && (
+                      <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                        <p className="text-sm text-destructive font-medium mb-1">Teklif Veremezsiniz</p>
+                        <p className="text-xs text-destructive/80">{filterBlockMessage}</p>
+                      </div>
                     )}
+                    {!isOwner && ihale.durum === "devam_ediyor" && !filterBlockMessage && (
+                      <div className="space-y-3">
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-1 block">Teklif Tutarı ({sym})</label>
+                          <Input type="number" placeholder={`${sym}${ihale.baslangic_fiyati ? Number(ihale.baslangic_fiyati).toFixed(2) : "0.00"}`} value={teklifTutar} onChange={(e) => setTeklifTutar(e.target.value)} />
+                          {ihale.min_teklif_degisim != null && Number(ihale.min_teklif_degisim) > 0 && (ihale.teklif_usulu === "acik_indirme" || ihale.teklif_usulu === "acik_arttirma") && (
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {ihale.teklif_usulu === "acik_indirme" ? `Minimum indirme bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}` : `Minimum arttırma bedeli: ${sym}${Number(ihale.min_teklif_degisim).toLocaleString("tr-TR")}`}
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Seçenekleri</label>
+                          <SearchableSelect options={dbOdemeSecenekleri.map(o => ({ value: o, label: o }))} value={teklifOdemeSecenekleri} onValueChange={setTeklifOdemeSecenekleri} placeholder="Ödeme Seçenekleri" searchPlaceholder="Ara..." />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-1 block">Kargo Masrafı Ödemesi</label>
+                          <SearchableSelect options={dbKargoMasrafi.map(o => ({ value: o, label: o }))} value={teklifKargoMasrafi} onValueChange={setTeklifKargoMasrafi} placeholder="Kargo Masrafı Ödemesi" searchPlaceholder="Ara..." />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-foreground mb-1 block">Ödeme Vadesi</label>
+                          <SearchableSelect options={dbOdemeVadeleri.map(o => ({ value: o, label: o }))} value={teklifOdemeVadesi} onValueChange={setTeklifOdemeVadesi} placeholder="Ödeme Vadesi" searchPlaceholder="Ara..." />
+                        </div>
+                        <div>
+                          <label className="relative flex items-center justify-center gap-2 h-12 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50 transition-colors">
+                            <Upload className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">{uploading ? "Yükleniyor..." : teklifDosyaName || "Belge yükle"}</span>
+                            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleFileUpload} disabled={uploading} />
+                          </label>
+                        </div>
+                        <Button className="w-full h-12 gap-2 text-base" onClick={handleTeklifSubmit}>
+                          <Send className="w-4 h-4" /> {myTeklif ? "Teklifi Güncelle" : "Teklif Ver"}
+                        </Button>
+                        {myTeklif && (
+                          <Button variant="outline" className="w-full gap-2 text-destructive hover:text-destructive" onClick={handleTeklifGeriCek}>
+                            <Trash2 className="w-4 h-4" /> Teklifi Geri Çek
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center pt-2">
+                    <LogIn className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-sm font-medium text-foreground mb-1">Teklif vermek için giriş yapın</p>
+                    <p className="text-xs text-muted-foreground mb-4">İhaleye teklif verebilmek için hesabınıza giriş yapmanız gerekmektedir.</p>
+                    <Button className="w-full gap-2" onClick={() => navigate("/giris-kayit")}><LogIn className="w-4 h-4" /> Giriş Yap / Kayıt Ol</Button>
                   </div>
                 )}
               </Card>
             </div>
-            ) : (
-            <div className="hidden lg:block">
-              <Card className="p-6 text-center">
-                <LogIn className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm font-medium text-foreground mb-1">Teklif vermek için giriş yapın</p>
-                <p className="text-xs text-muted-foreground mb-4">İhaleye teklif verebilmek ve detayları görebilmek için hesabınıza giriş yapmanız gerekmektedir.</p>
-                <Button className="w-full gap-2" onClick={() => navigate("/giris-kayit")}><LogIn className="w-4 h-4" /> Giriş Yap / Kayıt Ol</Button>
-              </Card>
-            </div>
-            )}
             {currentUserId && !isOwner && (
               <Button variant="outline" className="w-full gap-2 text-muted-foreground" onClick={() => setBildirOpen(true)}>
                 <Flag className="w-4 h-4" /> İhaleyi Bildir
