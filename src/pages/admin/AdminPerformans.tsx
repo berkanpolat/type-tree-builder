@@ -168,7 +168,25 @@ export default function AdminPerformans() {
     }
   };
 
-  const toggleSchedule = async (id: string, enabled: boolean) => {
+  const fixIssues = async () => {
+    if (!token || fixing) return;
+    setFixing(true);
+    setFixDialogOpen(true);
+    setFixResults([]);
+    try {
+      const data = await callPerfApi(token, "fix-issues");
+      setFixResults(data.fixes || []);
+      toast.success("Sorun analizi tamamlandı!");
+      await loadHistory();
+      await loadAlerts();
+    } catch (e: any) {
+      toast.error("Hata: " + (e.message || "Bilinmeyen hata"));
+      setFixResults([{ action: "İşlem başarısız", status: "warning", detail: e.message || "Bilinmeyen hata" }]);
+    } finally {
+      setFixing(false);
+    }
+  };
+
     if (!token) return;
     try {
       await callPerfApi(token, "update-schedule", { schedule_id: id, enabled });
