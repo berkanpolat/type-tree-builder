@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Crown, Check, Eye, Gavel, FileText, ShoppingBag, MessageSquare, AlertTriangle } from "lucide-react";
+import { Crown, Check, Eye, Gavel, FileText, ShoppingBag, MessageSquare, AlertTriangle, LogIn } from "lucide-react";
 import { PAKET_OZELLIKLERI, PRO_FIYATLAR } from "@/lib/package-config";
 
 interface Props {
