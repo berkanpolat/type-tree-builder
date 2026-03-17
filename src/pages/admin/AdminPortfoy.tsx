@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
@@ -113,6 +114,8 @@ export default function AdminPortfoy() {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterTuru, setFilterTuru] = useState<string>("all");
+  const [filterTipi, setFilterTipi] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -263,13 +266,18 @@ export default function AdminPortfoy() {
     }
   };
 
-  // Portfolio filtering is now done server-side via filterPortfolyo param
+  // Extract unique türler and tipler for filters
+  const uniqueTurler = [...new Set(allFirmalar.map(f => f.firma_turu_name).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
+  const uniqueTipler = [...new Set(allFirmalar.filter(f => filterTuru === "all" || f.firma_turu_name === filterTuru).map(f => f.firma_tipi_name).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
+
   const filtered = allFirmalar.filter(f => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       if (!f.firma_unvani.toLowerCase().includes(term) &&
           !(f.profile?.ad + " " + f.profile?.soyad).toLowerCase().includes(term)) return false;
     }
+    if (filterTuru !== "all" && f.firma_turu_name !== filterTuru) return false;
+    if (filterTipi !== "all" && f.firma_tipi_name !== filterTipi) return false;
     return true;
   });
 
@@ -311,22 +319,40 @@ export default function AdminPortfoy() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
               <Input
-                placeholder="Firma veya yetkili ara..."
+                placeholder="Firma ünvanı veya yetkili ara..."
                 value={searchTerm}
                 onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                 className="pl-9 w-64 h-9 text-sm"
                 style={s.input}
               />
             </div>
+            <Select value={filterTuru} onValueChange={v => { setFilterTuru(v); setFilterTipi("all"); setCurrentPage(1); }}>
+              <SelectTrigger className="w-40 h-9 text-xs" style={s.input}>
+                <SelectValue placeholder="Firma Türü" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Türler</SelectItem>
+                {uniqueTurler.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterTipi} onValueChange={v => { setFilterTipi(v); setCurrentPage(1); }}>
+              <SelectTrigger className="w-44 h-9 text-xs" style={s.input}>
+                <SelectValue placeholder="Firma Tipi" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Tipler</SelectItem>
+                {uniqueTipler.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-2">
             <div className="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2" style={{ background: "hsl(var(--admin-hover))" }}>
               <Briefcase className="w-3.5 h-3.5" style={{ color: "hsl(38 92% 50%)" }} />
-              <span style={s.text}>{allFirmalar.length} firma</span>
+              <span style={s.text}>{filtered.length} / {allFirmalar.length} firma</span>
             </div>
           </div>
         </div>
