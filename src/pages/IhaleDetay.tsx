@@ -316,11 +316,10 @@ export default function IhaleDetay() {
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      // Don't redirect to login if admin token exists
       if (!user) {
         const adminToken = localStorage.getItem("admin_token");
-        if (!adminToken) { navigate("/giris-kayit"); return; }
-        setIsAdminViewing(true);
+        if (adminToken) { setIsAdminViewing(true); }
+        // Allow anonymous users to view ihale details (no redirect)
         return;
       }
       setCurrentUserId(user.id);
