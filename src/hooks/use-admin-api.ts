@@ -34,7 +34,7 @@ export function useAdminApi() {
             }
             throw error;
           }
-          console.log(`[AdminAPI] ${action} success:`, typeof data, data ? Object.keys(data) : "null");
+          // Success — skip logging in production for perf
           return data;
         } catch (err: any) {
           if (attempt < maxRetries && (err?.message?.includes("Failed to fetch") || err?.message?.includes("network"))) {
