@@ -77,14 +77,15 @@ export default function TekRehber() {
   useEffect(() => {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/giris-kayit"); return; }
-      setCurrentUserId(user.id);
-      const { data: firma } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).single();
-      if (firma) { setFirmaUnvani(firma.firma_unvani); setFirmaLogoUrl(firma.logo_url); }
+      if (user) {
+        setCurrentUserId(user.id);
+        const { data: firma } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).single();
+        if (firma) { setFirmaUnvani(firma.firma_unvani); setFirmaLogoUrl(firma.logo_url); }
+      }
       setAuthLoading(false);
     };
     check();
-  }, [navigate]);
+  }, []);
 
   const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
   const [appliedSearchTerm, setAppliedSearchTerm] = useSessionState("appliedSearchTerm", "");
