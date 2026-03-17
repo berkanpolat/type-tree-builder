@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useSessionState } from "@/hooks/use-session-state";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import PazarHeader from "@/components/PazarHeader";
 import KategoriMegaMenu from "@/components/anasayfa/KategoriMegaMenu";
