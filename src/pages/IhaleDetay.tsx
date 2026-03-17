@@ -656,7 +656,7 @@ export default function IhaleDetay() {
   const handleTeklifSubmit = () => {
     // Quota check - only if this is a NEW ihale (user hasn't bid on this one before)
     if (!myTeklif) {
-      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "teklif_verme");
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "teklif_verme", { paketAd: packageInfo.paketAd });
       if (!check.allowed) {
         setUpgradeMessage(check.message || "Teklif verme hakkınız dolmuştur.");
         setUpgradeOpen(true);
