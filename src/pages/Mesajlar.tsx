@@ -626,12 +626,7 @@ export default function Mesajlar() {
                     selectedConv?.id === conv.id ? "bg-muted border-border" : ""
                   }`}
                 >
-                  <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
-                    {conv.logo_url ? (
-                      <img src={conv.logo_url} alt="" className="w-full h-full object-contain" />
-                    ) : (
-                      <Building2 className="w-4 h-4 text-muted-foreground" />
-                    )}
+                  <FirmaAvatar firmaUnvani={conv.firma_unvani || ""} logoUrl={conv.logo_url} size="md" className="w-11 h-11 rounded-full border border-border" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
