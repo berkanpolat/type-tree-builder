@@ -40,6 +40,7 @@ interface FirmaData {
   firma_unvani: string;
   firma_turu_id: string;
   firma_tipi_id: string;
+  logo_url: string | null;
 }
 
 const Dashboard = () => {
