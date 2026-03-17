@@ -791,9 +791,11 @@ export default function FirmaDetay() {
                 <MessageSquare className="w-4 h-4" />
                 Mesaj
               </Button>
-              <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setBildirOpen(true)} title="Bildir">
-                <Flag className="w-4 h-4 text-muted-foreground" />
-              </Button>
+              {currentUserId && (
+                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setBildirOpen(true)} title="Bildir">
+                  <Flag className="w-4 h-4 text-muted-foreground" />
+                </Button>
+              )}
             </div>
           </div>
 
@@ -823,7 +825,7 @@ export default function FirmaDetay() {
       <div className="sticky top-14 z-30 mt-4 max-w-7xl mx-auto px-4">
         <div className="bg-background border border-border rounded-lg">
           <div className="flex items-center gap-6 overflow-x-auto py-2 px-4">
-            {MENU_ITEMS.map((item) => (
+            {MENU_ITEMS.filter(item => currentUserId || item.id !== "urunler").map((item) => (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
@@ -1009,41 +1011,43 @@ export default function FirmaDetay() {
               </CollapsibleBlock>
             </div>
 
-            {/* Ürünler */}
-            <div ref={el => { sectionRefs.current["urunler"] = el; }}>
-              <Card className="p-6">
-                <h2 className="text-lg font-bold text-foreground mb-4">Ürünler</h2>
-                {urunler.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {urunler.map(u => (
-                      <Link
-                        key={u.id}
-                        to={`/urun/${u.id}`}
-                        className="group border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-background"
-                      >
-                        <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
-                          {u.foto_url ? (
-                            <img src={u.foto_url} alt={u.baslik} className="w-full h-full object-contain" />
-                          ) : (
-                            <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="p-2.5">
-                          <p className="text-xs font-medium text-foreground truncate">{u.baslik}</p>
-                          {u.fiyat != null && (
-                            <p className="text-xs font-bold text-secondary mt-0.5">
-                              {paraBirimiSymbol[u.para_birimi || "TRY"]}{u.fiyat.toLocaleString("tr-TR")}
-                            </p>
-                          )}
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Henüz ürün eklenmemiştir.</p>
-                )}
-              </Card>
-            </div>
+            {/* Ürünler - only for logged-in users */}
+            {currentUserId && (
+              <div ref={el => { sectionRefs.current["urunler"] = el; }}>
+                <Card className="p-6">
+                  <h2 className="text-lg font-bold text-foreground mb-4">Ürünler</h2>
+                  {urunler.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {urunler.map(u => (
+                        <Link
+                          key={u.id}
+                          to={`/urun/${u.id}`}
+                          className="group border border-border rounded-lg overflow-hidden hover:shadow-md transition-shadow bg-background"
+                        >
+                          <div className="aspect-square bg-muted flex items-center justify-center overflow-hidden">
+                            {u.foto_url ? (
+                              <img src={u.foto_url} alt={u.baslik} className="w-full h-full object-contain" />
+                            ) : (
+                              <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                            )}
+                          </div>
+                          <div className="p-2.5">
+                            <p className="text-xs font-medium text-foreground truncate">{u.baslik}</p>
+                            {u.fiyat != null && (
+                              <p className="text-xs font-bold text-secondary mt-0.5">
+                                {paraBirimiSymbol[u.para_birimi || "TRY"]}{u.fiyat.toLocaleString("tr-TR")}
+                              </p>
+                            )}
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Henüz ürün eklenmemiştir.</p>
+                  )}
+                </Card>
+              </div>
+            )}
 
           </div>
 

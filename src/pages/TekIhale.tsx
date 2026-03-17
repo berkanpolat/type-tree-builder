@@ -130,6 +130,7 @@ function CountdownBadge({ date }: { date: string | null }) {
 export default function TekIhale() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [currentUserId, setCurrentUserId] = useState("");
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const ihaleSidebarBanner = useBanner("tekihale-sidebar");
@@ -218,6 +219,7 @@ export default function TekIhale() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setCurrentUserId(user.id);
       const { data } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).maybeSingle();
       if (data) { setFirmaUnvani(data.firma_unvani); setFirmaLogoUrl(data.logo_url); }
     })();
@@ -546,20 +548,22 @@ export default function TekIhale() {
 
                           <h3 className="font-semibold text-foreground text-base mb-2 line-clamp-1">{ihale.baslik}</h3>
 
-                          {/* Firma */}
-                          <div className="flex items-center gap-2 mb-4">
-                            {ihale.firma_adi_gizle ? (
-                              <>
-                                <EyeOff className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-sm text-muted-foreground italic">Gizli Firma</span>
-                              </>
-                            ) : (
-                              <>
-                                <FirmaAvatar firmaUnvani={ihale.firma_unvani || ""} logoUrl={ihale.firma_logo_url} size="xs" className="rounded-full border border-border" />
-                                <span className="text-sm text-muted-foreground">{ihale.firma_unvani}</span>
-                              </>
-                            )}
-                          </div>
+                          {/* Firma - only for logged-in users */}
+                          {currentUserId && (
+                            <div className="flex items-center gap-2 mb-4">
+                              {ihale.firma_adi_gizle ? (
+                                <>
+                                  <EyeOff className="w-4 h-4 text-muted-foreground" />
+                                  <span className="text-sm text-muted-foreground italic">Gizli Firma</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FirmaAvatar firmaUnvani={ihale.firma_unvani || ""} logoUrl={ihale.firma_logo_url} size="xs" className="rounded-full border border-border" />
+                                  <span className="text-sm text-muted-foreground">{ihale.firma_unvani}</span>
+                                </>
+                              )}
+                            </div>
+                          )}
 
                           <div className="flex flex-wrap items-center gap-4 sm:gap-8">
                             <div>
