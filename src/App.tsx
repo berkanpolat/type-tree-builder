@@ -80,6 +80,7 @@ const AdminYetkilendirme = lazy(() => import("./pages/admin/AdminYetkilendirme")
 const AdminKaynakRaporu = lazy(() => import("./pages/admin/AdminKaynakRaporu"));
 const AdminRaporlar = lazy(() => import("./pages/admin/AdminRaporlar"));
 const AdminPerformans = lazy(() => import("./pages/admin/AdminPerformans"));
+const AdminTestMerkezi = lazy(() => import("./pages/admin/AdminTestMerkezi"));
 const RaporSatisKanali = lazy(() => import("./pages/admin/reports/RaporSatisKanali"));
 const RaporMusteriTipi = lazy(() => import("./pages/admin/reports/RaporMusteriTipi"));
 const RaporPersonelPerformans = lazy(() => import("./pages/admin/reports/RaporPersonelPerformans"));
@@ -203,6 +204,7 @@ const AppContent = () => {
             <Route path="raporlar/aksiyon-turu" element={<RaporAksiyonTuru />} />
             <Route path="raporlar/hedef-prim" element={<RaporHedefPrim />} />
             <Route path="performans" element={<AdminPerformans />} />
+            <Route path="test-merkezi" element={<AdminTestMerkezi />} />
           </Route>
 
           <Route path="/:slug" element={<FirmaDetay />} />
