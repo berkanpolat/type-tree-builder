@@ -1581,10 +1581,7 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
-
-            </div>
             )}
-
             {/* İhale Sahibi Firma - desktop only (only for logged-in users) */}
             {currentUserId && (
             <div className="hidden lg:block">
