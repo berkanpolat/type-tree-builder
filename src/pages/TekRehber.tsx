@@ -221,57 +221,62 @@ export default function TekRehber() {
       return;
     }
 
-    // Build lookup maps
-    const ids = new Set<string>();
+    // Collect all IDs needed for lookups
+    const secenekIds = new Set<string>();
     data.forEach((f) => {
-      if (f.firma_tipi_id) ids.add(f.firma_tipi_id);
-      if (f.firma_olcegi_id) ids.add(f.firma_olcegi_id);
-      if (f.kurulus_il_id) ids.add(f.kurulus_il_id);
-      if (f.kurulus_ilce_id) ids.add(f.kurulus_ilce_id);
+      if (f.firma_tipi_id) secenekIds.add(f.firma_tipi_id);
+      if (f.firma_olcegi_id) secenekIds.add(f.firma_olcegi_id);
+      if (f.kurulus_il_id) secenekIds.add(f.kurulus_il_id);
+      if (f.kurulus_ilce_id) secenekIds.add(f.kurulus_ilce_id);
     });
-    const allIds = [...ids];
-    let newSecenekMap = { ...secenekMap };
-    if (allIds.length > 0) {
-      const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", allIds);
-      if (names) names.forEach((n) => { newSecenekMap[n.id] = n.name; });
-    }
-
     const tipIds = [...new Set(data.map((f) => f.firma_tipi_id))];
-    if (tipIds.length > 0) {
-      const { data: tipNames } = await supabase.from("firma_tipleri").select("id, name").in("id", tipIds);
-      if (tipNames) tipNames.forEach((n) => { newSecenekMap[n.id] = n.name; });
-    }
+    const firmaIds = data.map((f) => f.id);
+
+    // Run ALL lookup queries in parallel instead of sequentially
+    const [secenekRes, tipRes, faaliyetRes, favsRes] = await Promise.all([
+      secenekIds.size > 0
+        ? supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...secenekIds])
+        : Promise.resolve({ data: null }),
+      tipIds.length > 0
+        ? supabase.from("firma_tipleri").select("id, name").in("id", tipIds)
+        : Promise.resolve({ data: null }),
+      firmaIds.length > 0
+        ? supabase.from("firma_urun_hizmet_secimler").select("firma_id, secenek_id").in("firma_id", firmaIds)
+        : Promise.resolve({ data: null }),
+      currentUserId
+        ? supabase.from("firma_favoriler").select("firma_id").eq("user_id", currentUserId)
+        : Promise.resolve({ data: null }),
+    ]);
+
+    let newSecenekMap = { ...secenekMap };
+    (secenekRes.data || []).forEach((n: any) => { newSecenekMap[n.id] = n.name; });
+    (tipRes.data || []).forEach((n: any) => { newSecenekMap[n.id] = n.name; });
 
     const turNameMap: Record<string, string> = {};
     firmaTurleri.forEach((t) => { turNameMap[t.id] = t.name; });
 
-    const firmaIds = data.map((f) => f.id);
+    // Build faaliyet map - need secondary lookup for secenek names
     const faaliyetMap: Record<string, string> = {};
-    if (firmaIds.length > 0) {
-      const { data: faaliyetData } = await supabase
-        .from("firma_urun_hizmet_secimler")
-        .select("firma_id, secenek_id")
-        .in("firma_id", firmaIds);
-      if (faaliyetData && faaliyetData.length > 0) {
-        const faaliyetSecIds = [...new Set(faaliyetData.map((f) => f.secenek_id))];
-        const { data: faaliyetNames } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", faaliyetSecIds);
-        const fNameMap: Record<string, string> = {};
-        if (faaliyetNames) faaliyetNames.forEach((n) => { fNameMap[n.id] = n.name; });
-        const seen = new Set<string>();
-        faaliyetData.forEach((f) => {
-          if (!seen.has(f.firma_id) && fNameMap[f.secenek_id]) {
-            faaliyetMap[f.firma_id] = fNameMap[f.secenek_id];
-            seen.add(f.firma_id);
-          }
-        });
+    const faaliyetData = faaliyetRes.data || [];
+    if (faaliyetData.length > 0) {
+      const faaliyetSecIds = [...new Set(faaliyetData.map((f: any) => f.secenek_id))];
+      // Check if we already have names in secenekMap, only fetch missing ones
+      const missingIds = faaliyetSecIds.filter((id: string) => !newSecenekMap[id]);
+      if (missingIds.length > 0) {
+        const { data: faaliyetNames } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", missingIds);
+        if (faaliyetNames) faaliyetNames.forEach((n) => { newSecenekMap[n.id] = n.name; });
       }
+      const seen = new Set<string>();
+      faaliyetData.forEach((f: any) => {
+        if (!seen.has(f.firma_id) && newSecenekMap[f.secenek_id]) {
+          faaliyetMap[f.firma_id] = newSecenekMap[f.secenek_id];
+          seen.add(f.firma_id);
+        }
+      });
     }
 
     let favSet = new Set<string>();
-    if (currentUserId) {
-      const { data: favs } = await supabase.from("firma_favoriler").select("firma_id").eq("user_id", currentUserId);
-      if (favs) favs.forEach((f) => favSet.add(f.firma_id));
-    }
+    (favsRes.data || []).forEach((f: any) => favSet.add(f.firma_id));
     setFirmaFavSet(favSet);
     setSecenekMap(newSecenekMap);
 

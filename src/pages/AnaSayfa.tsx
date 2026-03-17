@@ -129,9 +129,7 @@ export default function AnaSayfa() {
   const [activeFilter, setActiveFilter] = useSessionState<SearchResult | null>("activeFilter", null);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Product state
-  const [allUrunler, setAllUrunler] = useState<UrunWithExtra[]>([]);
-  const [urunLoading, setUrunLoading] = useState(true);
+  // Product state - now uses react-query for caching
   const [selectedKategori, setSelectedKategori] = useSessionState<string | null>("selectedKategori", null);
   const [selectedGrupId, setSelectedGrupId] = useSessionState<string | null>("selectedGrupId", null);
   const [selectedTurId, setSelectedTurId] = useSessionState<string | null>("selectedTurId", null);
