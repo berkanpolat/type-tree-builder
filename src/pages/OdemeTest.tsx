@@ -88,6 +88,14 @@ export default function OdemeTest() {
   const totalUsd = usdPrice + kdv;
   const totalTry = exchangeRate ? totalUsd * exchangeRate : null;
 
+  // Currency-aware price formatter
+  const p = useCallback((usdAmount: number) => {
+    if (currency === "TRY" && exchangeRate) {
+      return `₺${fmt(usdAmount * exchangeRate)}`;
+    }
+    return `$${fmt(usdAmount)}`;
+  }, [currency, exchangeRate]);
+
   // Fetch exchange rate
   const fetchRate = useCallback(async () => {
     setRateLoading(true);
