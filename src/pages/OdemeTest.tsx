@@ -1,9 +1,11 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Shield, Lock, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Eye, EyeOff } from "lucide-react";
+import { Shield, Lock, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Eye, EyeOff, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { PRO_FIYATLAR } from "@/lib/package-config";
 import logoImg from "@/assets/tekstil-as-logo.png";
 
 /* ─── Luhn Algorithm ─── */
@@ -14,10 +16,7 @@ function luhnCheck(num: string): boolean {
   let alternate = false;
   for (let i = digits.length - 1; i >= 0; i--) {
     let n = parseInt(digits[i], 10);
-    if (alternate) {
-      n *= 2;
-      if (n > 9) n -= 9;
-    }
+    if (alternate) { n *= 2; if (n > 9) n -= 9; }
     sum += n;
     alternate = !alternate;
   }
@@ -34,47 +33,35 @@ function detectBrand(num: string): string | null {
   return null;
 }
 
-const BRAND_COLORS: Record<string, string> = {
-  visa: "#1a1f71",
-  mastercard: "#eb001b",
-  amex: "#006fcf",
-  troy: "#00427a",
-};
+const BRAND_LABELS: Record<string, string> = { visa: "Visa", mastercard: "Mastercard", amex: "AMEX", troy: "Troy" };
+const BRAND_COLORS: Record<string, string> = { visa: "#1a1f71", mastercard: "#eb001b", amex: "#006fcf", troy: "#00427a" };
 
-/* ─── Format Helpers ─── */
 function formatCardNumber(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 16);
   return digits.replace(/(.{4})/g, "$1 ").trim();
 }
-
 function formatExpiry(value: string): string {
   const digits = value.replace(/\D/g, "").slice(0, 4);
   if (digits.length >= 3) return digits.slice(0, 2) + "/" + digits.slice(2);
   return digits;
 }
-
-/* ─── Validation ─── */
 function validateExpiry(val: string): boolean {
   const parts = val.split("/");
   if (parts.length !== 2) return false;
   const month = parseInt(parts[0], 10);
   const year = parseInt("20" + parts[1], 10);
   if (month < 1 || month > 12) return false;
-  const now = new Date();
-  const expDate = new Date(year, month);
-  return expDate > now;
+  return new Date(year, month) > new Date();
 }
 
-// ─── DEMO PRODUCT ───
-const DEMO_PRODUCT = {
-  name: "Pro Paket — Aylık",
-  description: "Tekstil A.Ş. TekPazar PRO üyelik",
-  amount: 999.00,
-  currency: "TRY",
-};
+type Period = "aylik" | "yillik";
+
+const YILLIK_ORIGINAL = PRO_FIYATLAR.aylik.fiyat * 12; // 199 * 12 = 2388
+const YILLIK_INDIRIMLI = PRO_FIYATLAR.yillik.fiyat; // 1299
 
 export default function OdemeTest() {
   const { toast } = useToast();
+  const [period, setPeriod] = useState<Period>("aylik");
   const [cardNumber, setCardNumber] = useState("");
   const [cardHolder, setCardHolder] = useState("");
   const [expiry, setExpiry] = useState("");
@@ -84,21 +71,38 @@ export default function OdemeTest() {
   const [success, setSuccess] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [exchangeRate, setExchangeRate] = useState<number | null>(null);
+  const [rateLoading, setRateLoading] = useState(true);
 
   const expiryRef = useRef<HTMLInputElement>(null);
   const cvvRef = useRef<HTMLInputElement>(null);
-
   const brand = detectBrand(cardNumber);
   const rawDigits = cardNumber.replace(/\D/g, "");
 
-  // Auto-focus next field
-  useEffect(() => {
-    if (rawDigits.length === 16) expiryRef.current?.focus();
-  }, [rawDigits]);
+  const usdPrice = period === "aylik" ? PRO_FIYATLAR.aylik.fiyat : YILLIK_INDIRIMLI;
+  const kdv = usdPrice * (PRO_FIYATLAR.kdvOrani / 100);
+  const totalUsd = usdPrice + kdv;
+  const totalTry = exchangeRate ? totalUsd * exchangeRate : null;
 
-  useEffect(() => {
-    if (expiry.replace(/\D/g, "").length === 4) cvvRef.current?.focus();
-  }, [expiry]);
+  // Fetch exchange rate
+  const fetchRate = useCallback(async () => {
+    setRateLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("get-exchange-rate");
+      if (error) throw error;
+      if (data?.usd_try) setExchangeRate(data.usd_try);
+    } catch {
+      setExchangeRate(38.50); // fallback
+    } finally {
+      setRateLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchRate(); }, [fetchRate]);
+
+  // Auto-focus
+  useEffect(() => { if (rawDigits.length === 16) expiryRef.current?.focus(); }, [rawDigits]);
+  useEffect(() => { if (expiry.replace(/\D/g, "").length === 4) cvvRef.current?.focus(); }, [expiry]);
 
   const validate = useCallback(() => {
     const errs: Record<string, string> = {};
@@ -116,259 +120,285 @@ export default function OdemeTest() {
     const errs = validate();
     setErrors(errs);
     setTouched({ cardNumber: true, cardHolder: true, expiry: true, cvv: true });
-
     if (Object.keys(errs).length > 0) {
       toast({ title: "Hata", description: "Lütfen form alanlarını kontrol edin", variant: "destructive" });
       return;
     }
-
     setLoading(true);
-
-    // Simulate payment — in production this calls the Edge Function
     await new Promise((r) => setTimeout(r, 2000));
-
-    // Simulated success
     setSuccess(true);
     setLoading(false);
-    // NOTE: In production, NEVER log card data
   };
+
+  const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: "linear-gradient(135deg, hsl(224 50% 97%), hsl(32 92% 97%))" }}>
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <div className="w-full max-w-md text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="mx-auto w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center">
-            <CheckCircle2 className="w-10 h-10 text-emerald-600" />
+          <div className="mx-auto w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+            <CheckCircle2 className="w-8 h-8 text-emerald-600" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Ödeme Başarılı!</h1>
-          <p className="text-muted-foreground">
-            Test ödemesi başarıyla tamamlandı. Bu bir simülasyondur — gerçek bir ödeme alınmamıştır.
+          <h1 className="text-2xl font-semibold text-foreground">Ödeme Başarılı!</h1>
+          <p className="text-sm text-muted-foreground">
+            Test ödemesi başarıyla tamamlandı. Gerçek bir ödeme alınmamıştır.
           </p>
-          <div className="rounded-xl border border-border bg-card p-4 text-left space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Ürün</span>
-              <span className="font-medium text-foreground">{DEMO_PRODUCT.name}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Tutar</span>
-              <span className="font-medium text-foreground">{DEMO_PRODUCT.amount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Kart</span>
-              <span className="font-medium text-foreground">•••• {rawDigits.slice(-4)}</span>
-            </div>
+          <div className="rounded-lg border border-border bg-card p-4 text-left space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Paket</span><span className="font-medium">PRO — {period === "aylik" ? "Aylık" : "Yıllık"}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Tutar</span><span className="font-medium">${fmt(totalUsd)}</span></div>
+            {totalTry && <div className="flex justify-between"><span className="text-muted-foreground">TL Karşılığı</span><span className="font-medium">₺{fmt(totalTry)}</span></div>}
+            <div className="flex justify-between"><span className="text-muted-foreground">Kart</span><span className="font-medium font-mono">•••• {rawDigits.slice(-4)}</span></div>
           </div>
-          <Button asChild className="w-full">
-            <Link to="/paketim">Paketim Sayfasına Git</Link>
-          </Button>
+          <Button asChild className="w-full"><Link to="/paketim">Paketim Sayfasına Git</Link></Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row" style={{ background: "linear-gradient(135deg, hsl(224 50% 97%), hsl(32 92% 97%))" }}>
-      {/* LEFT — Order Summary */}
-      <div className="lg:w-[45%] bg-primary text-primary-foreground p-6 sm:p-10 lg:p-16 flex flex-col justify-between relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(circle at 30% 50%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-
-        <div className="relative z-10">
-          <Link to="/" className="inline-flex items-center gap-2 mb-8 opacity-80 hover:opacity-100 transition-opacity">
+    <div className="min-h-screen bg-background">
+      {/* Top bar */}
+      <div className="border-b border-border bg-card">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm">Geri Dön</span>
+            <img src={logoImg} alt="Tekstil A.Ş." className="h-6" />
           </Link>
-
-          <img src={logoImg} alt="Tekstil A.Ş." className="h-8 mb-10 brightness-0 invert" />
-
-          <div className="space-y-6">
-            <div>
-              <p className="text-sm opacity-60 uppercase tracking-wider mb-1">Ödeme Özeti</p>
-              <h1 className="text-3xl font-bold">{DEMO_PRODUCT.name}</h1>
-              <p className="text-sm opacity-70 mt-1">{DEMO_PRODUCT.description}</p>
-            </div>
-
-            <div className="h-px bg-white/20" />
-
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="opacity-70">Ara Toplam</span>
-                <span>{(DEMO_PRODUCT.amount / 1.20).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="opacity-70">KDV (%20)</span>
-                <span>{(DEMO_PRODUCT.amount - DEMO_PRODUCT.amount / 1.20).toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺</span>
-              </div>
-              <div className="h-px bg-white/20" />
-              <div className="flex justify-between text-lg font-bold">
-                <span>Toplam</span>
-                <span>{DEMO_PRODUCT.amount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺</span>
-              </div>
-            </div>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Güvenli Ödeme</span>
           </div>
-        </div>
-
-        <div className="relative z-10 mt-10 flex items-center gap-3 opacity-50">
-          <Lock className="w-4 h-4" />
-          <span className="text-xs">256-bit SSL şifreleme ile korunmaktadır</span>
         </div>
       </div>
 
-      {/* RIGHT — Payment Form */}
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
-        <div className="w-full max-w-lg">
-          {/* TEST BADGE */}
-          <div className="mb-6 rounded-xl border-2 border-dashed border-amber-400 bg-amber-50 p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
+      <div className="max-w-3xl mx-auto px-4 py-8 lg:py-12">
+        {/* TEST BADGE */}
+        <div className="mb-8 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-3 flex items-center gap-3">
+          <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+          <p className="text-xs text-amber-800 dark:text-amber-200"><strong>Test Modu</strong> — Gerçek ödeme alınmaz. Onayladığınızda canlıya alınacaktır.</p>
+        </div>
+
+        <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
+          {/* LEFT — Order Summary */}
+          <div className="lg:col-span-2 space-y-6">
             <div>
-              <p className="font-semibold text-amber-800 text-sm">Test Modu</p>
-              <p className="text-xs text-amber-700 mt-0.5">Bu bir test sayfasıdır. Gerçek ödeme alınmaz. Onayladığınızda canlıya alınacaktır.</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 mb-6">
-            <Shield className="w-5 h-5 text-emerald-600" />
-            <h2 className="text-lg font-bold text-foreground">Güvenli Ödeme</h2>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-5" autoComplete="off">
-            {/* Card Number */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Kart Numarası</label>
-              <div className="relative">
-                <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground/50" />
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="1234 5678 9012 3456"
-                  className={`pl-12 pr-16 h-12 text-base tracking-wider font-mono ${touched.cardNumber && errors.cardNumber ? "border-destructive ring-destructive/20 ring-2" : ""}`}
-                  value={formatCardNumber(cardNumber)}
-                  onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16))}
-                  onBlur={() => setTouched((p) => ({ ...p, cardNumber: true }))}
-                  maxLength={19}
-                  autoComplete="off"
-                />
-                {brand && (
-                  <span
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold uppercase tracking-widest"
-                    style={{ color: BRAND_COLORS[brand] || "hsl(var(--muted-foreground))" }}
-                  >
-                    {brand === "troy" ? "Troy" : brand === "amex" ? "AMEX" : brand.charAt(0).toUpperCase() + brand.slice(1)}
-                  </span>
-                )}
-              </div>
-              {touched.cardNumber && errors.cardNumber && (
-                <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.cardNumber}</p>
+              <p className="text-sm text-muted-foreground mb-1">PRO Paket</p>
+              <h1 className="text-3xl font-bold text-foreground">
+                ${fmt(usdPrice)}
+                <span className="text-base font-normal text-muted-foreground">/{period === "aylik" ? "ay" : "yıl"}</span>
+              </h1>
+              {totalTry && !rateLoading && (
+                <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
+                  ≈ ₺{fmt(usdPrice * exchangeRate!)}
+                  <button onClick={fetchRate} className="hover:text-foreground transition-colors" title="Kuru güncelle">
+                    <RotateCw className="w-3 h-3" />
+                  </button>
+                </p>
               )}
             </div>
 
-            {/* Card Holder */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Kart Sahibi</label>
-              <Input
-                type="text"
-                placeholder="AD SOYAD"
-                className={`h-12 text-base uppercase tracking-wide ${touched.cardHolder && errors.cardHolder ? "border-destructive ring-destructive/20 ring-2" : ""}`}
-                value={cardHolder}
-                onChange={(e) => setCardHolder(e.target.value.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ\s]/g, ""))}
-                onBlur={() => setTouched((p) => ({ ...p, cardHolder: true }))}
-                maxLength={50}
-                autoComplete="off"
-              />
-              {touched.cardHolder && errors.cardHolder && (
-                <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.cardHolder}</p>
+            {/* Period Toggle */}
+            <div className="flex rounded-lg border border-border overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setPeriod("aylik")}
+                className={`flex-1 py-2.5 text-sm font-medium transition-colors ${period === "aylik" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+              >
+                Aylık
+              </button>
+              <button
+                type="button"
+                onClick={() => setPeriod("yillik")}
+                className={`flex-1 py-2.5 text-sm font-medium transition-colors relative ${period === "yillik" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:text-foreground"}`}
+              >
+                Yıllık
+                <span className={`ml-1 text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${period === "yillik" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300"}`}>
+                  %45
+                </span>
+              </button>
+            </div>
+
+            {/* Yearly discount display */}
+            {period === "yillik" && (
+              <div className="rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-3 space-y-1">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">Normal fiyat:</span>
+                  <span className="line-through text-muted-foreground/70">${fmt(YILLIK_ORIGINAL)}</span>
+                  <span className="text-xs text-muted-foreground/50">({PRO_FIYATLAR.aylik.fiyat}$ × 12 ay)</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="text-emerald-700 dark:text-emerald-400 font-semibold">%45 indirimli:</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 font-bold">${fmt(YILLIK_INDIRIMLI)}/yıl</span>
+                </div>
+                <p className="text-xs text-emerald-600 dark:text-emerald-500">
+                  Yıllık ${fmt(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)} tasarruf ediyorsunuz!
+                </p>
+              </div>
+            )}
+
+            {/* Price breakdown */}
+            <div className="space-y-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Ara Toplam</span>
+                <span className="text-foreground">${fmt(usdPrice)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">KDV (%{PRO_FIYATLAR.kdvOrani})</span>
+                <span className="text-foreground">${fmt(kdv)}</span>
+              </div>
+              <div className="h-px bg-border" />
+              <div className="flex justify-between font-semibold text-base">
+                <span className="text-foreground">Toplam</span>
+                <div className="text-right">
+                  <div className="text-foreground">${fmt(totalUsd)}</div>
+                  {totalTry && <div className="text-xs font-normal text-muted-foreground">≈ ₺{fmt(totalTry)}</div>}
+                </div>
+              </div>
+              {exchangeRate && (
+                <p className="text-[11px] text-muted-foreground">
+                  1 USD = {fmt(exchangeRate)} TRY · TCMB döviz satış kuru
+                </p>
               )}
             </div>
 
-            {/* Expiry + CVV */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">Son Kullanma</label>
-                <Input
-                  ref={expiryRef}
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="AA/YY"
-                  className={`h-12 text-base text-center tracking-widest font-mono ${touched.expiry && errors.expiry ? "border-destructive ring-destructive/20 ring-2" : ""}`}
-                  value={formatExpiry(expiry)}
-                  onChange={(e) => setExpiry(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                  onBlur={() => setTouched((p) => ({ ...p, expiry: true }))}
-                  maxLength={5}
-                  autoComplete="off"
-                />
-                {touched.expiry && errors.expiry && (
-                  <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.expiry}</p>
-                )}
+            {/* Recurring notice */}
+            {period === "aylik" && (
+              <div className="rounded-lg bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <RotateCw className="w-3 h-3 inline mr-1 -mt-0.5" />
+                  Bu abonelik <strong>aylık olarak otomatik</strong> yenilenecektir. İstediğiniz zaman iptal edebilirsiniz.
+                </p>
               </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">CVV</label>
-                <div className="relative">
+            )}
+            {period === "yillik" && (
+              <div className="rounded-lg bg-muted/50 p-3">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <RotateCw className="w-3 h-3 inline mr-1 -mt-0.5" />
+                  Bu abonelik <strong>yıllık olarak otomatik</strong> yenilenecektir. İstediğiniz zaman iptal edebilirsiniz.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT — Payment Form */}
+          <div className="lg:col-span-3">
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="text-base font-semibold text-foreground mb-5">Kart Bilgileri</h2>
+
+              <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
+                {/* Card Number */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Kart Numarası</label>
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="1234 1234 1234 1234"
+                      className={`h-11 pr-16 tracking-wider font-mono text-sm ${touched.cardNumber && errors.cardNumber ? "border-destructive ring-1 ring-destructive" : ""}`}
+                      value={formatCardNumber(cardNumber)}
+                      onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16))}
+                      onBlur={() => setTouched((p) => ({ ...p, cardNumber: true }))}
+                      maxLength={19}
+                      autoComplete="off"
+                    />
+                    {brand && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-widest" style={{ color: BRAND_COLORS[brand] }}>
+                        {BRAND_LABELS[brand]}
+                      </span>
+                    )}
+                  </div>
+                  {touched.cardNumber && errors.cardNumber && <p className="text-xs text-destructive">{errors.cardNumber}</p>}
+                </div>
+
+                {/* Card Holder */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Kart Sahibi</label>
                   <Input
-                    ref={cvvRef}
-                    type={showCvv ? "text" : "password"}
-                    inputMode="numeric"
-                    placeholder="•••"
-                    className={`h-12 text-base text-center tracking-widest font-mono pr-10 ${touched.cvv && errors.cvv ? "border-destructive ring-destructive/20 ring-2" : ""}`}
-                    value={cvv}
-                    onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
-                    onBlur={() => setTouched((p) => ({ ...p, cvv: true }))}
-                    maxLength={4}
+                    type="text"
+                    placeholder="Ad Soyad"
+                    className={`h-11 uppercase tracking-wide text-sm ${touched.cardHolder && errors.cardHolder ? "border-destructive ring-1 ring-destructive" : ""}`}
+                    value={cardHolder}
+                    onChange={(e) => setCardHolder(e.target.value.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ\s]/g, ""))}
+                    onBlur={() => setTouched((p) => ({ ...p, cardHolder: true }))}
+                    maxLength={50}
                     autoComplete="off"
                   />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowCvv(!showCvv)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground"
-                  >
-                    {showCvv ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                  {touched.cardHolder && errors.cardHolder && <p className="text-xs text-destructive">{errors.cardHolder}</p>}
                 </div>
-                {touched.cvv && errors.cvv && (
-                  <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="w-3 h-3" />{errors.cvv}</p>
-                )}
-              </div>
-            </div>
 
-            {/* Submit */}
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full h-13 text-base font-semibold relative overflow-hidden"
-              style={{ background: "linear-gradient(135deg, hsl(var(--primary)), hsl(224 50% 30%))" }}
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>İşleniyor...</span>
+                {/* Expiry + CVV */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Son Kullanma</label>
+                    <Input
+                      ref={expiryRef}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="AA / YY"
+                      className={`h-11 text-center tracking-widest font-mono text-sm ${touched.expiry && errors.expiry ? "border-destructive ring-1 ring-destructive" : ""}`}
+                      value={formatExpiry(expiry)}
+                      onChange={(e) => setExpiry(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                      onBlur={() => setTouched((p) => ({ ...p, expiry: true }))}
+                      maxLength={5}
+                      autoComplete="off"
+                    />
+                    {touched.expiry && errors.expiry && <p className="text-xs text-destructive">{errors.expiry}</p>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">CVV</label>
+                    <div className="relative">
+                      <Input
+                        ref={cvvRef}
+                        type={showCvv ? "text" : "password"}
+                        inputMode="numeric"
+                        placeholder="•••"
+                        className={`h-11 text-center tracking-widest font-mono text-sm pr-9 ${touched.cvv && errors.cvv ? "border-destructive ring-1 ring-destructive" : ""}`}
+                        value={cvv}
+                        onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        onBlur={() => setTouched((p) => ({ ...p, cvv: true }))}
+                        maxLength={4}
+                        autoComplete="off"
+                      />
+                      <button type="button" tabIndex={-1} onClick={() => setShowCvv(!showCvv)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground">
+                        {showCvv ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    {touched.cvv && errors.cvv && <p className="text-xs text-destructive">{errors.cvv}</p>}
+                  </div>
                 </div>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Lock className="w-4 h-4" />
-                  {DEMO_PRODUCT.amount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })} ₺ Öde
-                </span>
-              )}
-            </Button>
 
-            {/* Security Badges */}
-            <div className="flex items-center justify-center gap-6 pt-2">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Lock className="w-3.5 h-3.5" />
-                <span>SSL Korumalı</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <Shield className="w-3.5 h-3.5" />
-                <span>3D Secure</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <CreditCard className="w-3.5 h-3.5" />
-                <span>PCI DSS</span>
-              </div>
+                {/* Submit */}
+                <Button type="submit" disabled={loading} className="w-full h-11 text-sm font-semibold mt-2">
+                  {loading ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                      İşleniyor...
+                    </span>
+                  ) : (
+                    <span>${fmt(totalUsd)} Öde</span>
+                  )}
+                </Button>
+
+                {/* Security info */}
+                <div className="flex items-center justify-center gap-5 pt-1">
+                  {[
+                    { icon: Lock, label: "SSL" },
+                    { icon: Shield, label: "3D Secure" },
+                    { icon: CreditCard, label: "PCI DSS" },
+                  ].map((b) => (
+                    <div key={b.label} className="flex items-center gap-1 text-[11px] text-muted-foreground/60">
+                      <b.icon className="w-3 h-3" />
+                      <span>{b.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-[11px] text-muted-foreground/60 text-center">
+                  Ödemeniz PayTR altyapısı üzerinden güvenle işlenir. Kart bilgileriniz sunucularımızda saklanmaz.
+                </p>
+              </form>
             </div>
-
-            <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-              Ödemeniz PayTR altyapısı üzerinden güvenle işlenir. Kart bilgileriniz sunucularımızda saklanmaz.
-            </p>
-          </form>
+          </div>
         </div>
       </div>
     </div>
