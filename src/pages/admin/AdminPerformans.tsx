@@ -105,6 +105,9 @@ export default function AdminPerformans() {
   const [historyDays, setHistoryDays] = useState(7);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [fixing, setFixing] = useState(false);
+  const [fixResults, setFixResults] = useState<{ action: string; status: "success" | "warning" | "info"; detail: string }[]>([]);
+  const [fixDialogOpen, setFixDialogOpen] = useState(false);
 
   const loadHistory = useCallback(async () => {
     if (!token) return;
