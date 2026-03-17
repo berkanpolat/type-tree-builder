@@ -86,7 +86,7 @@ export default function AdminTestMerkezi() {
       if (!res.ok) throw new Error(json.error || "Bilinmeyen hata");
       setData(json);
       // Auto-open groups with failures
-      const failGroups = new Set(json.results.filter((r: TestResult) => r.status === "fail").map((r: TestResult) => r.group));
+      const failGroups = new Set<string>(json.results.filter((r: TestResult) => r.status === "fail").map((r: TestResult) => r.group));
       setOpenGroups(failGroups);
     } catch (e: any) {
       setError(e.message);
