@@ -78,13 +78,26 @@ export default function UpgradeDialog({ open, onOpenChange, title, message }: Pr
             className="w-full gap-2"
             onClick={() => {
               onOpenChange(false);
-              navigate("/paketim");
+              if (isLoggedIn) {
+                navigate("/paketim");
+              } else {
+                navigate("/giris-kayit");
+              }
             }}
           >
-            <Crown className="w-4 h-4" />
-            PRO Pakete Yükselt — {PRO_FIYATLAR.aylik.fiyat}{PRO_FIYATLAR.paraBirimi}/ay
+            {isLoggedIn ? (
+              <>
+                <Crown className="w-4 h-4" />
+                PRO Pakete Yükselt — {PRO_FIYATLAR.aylik.fiyat}{PRO_FIYATLAR.paraBirimi}/ay
+              </>
+            ) : (
+              <>
+                <LogIn className="w-4 h-4" />
+                Giriş Yap / Kayıt Ol
+              </>
+            )}
           </Button>
-          <p className="text-xs text-center text-muted-foreground">+%{PRO_FIYATLAR.kdvOrani} KDV</p>
+          {isLoggedIn && <p className="text-xs text-center text-muted-foreground">+%{PRO_FIYATLAR.kdvOrani} KDV</p>}
           <Button
             variant="ghost"
             className="w-full text-muted-foreground"
