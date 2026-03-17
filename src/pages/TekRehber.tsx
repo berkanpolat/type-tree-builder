@@ -366,7 +366,7 @@ export default function TekRehber() {
   };
 
   const toggleFirmaFavorite = async (firmaId: string, isFav: boolean) => {
-    if (!currentUserId) return;
+    if (!currentUserId) { navigate("/giris-kayit"); return; }
     if (isFav) {
       await supabase.from("firma_favoriler").delete().eq("user_id", currentUserId).eq("firma_id", firmaId);
       toast({ title: "Favorilerden çıkarıldı" });
