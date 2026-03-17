@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { hasSafeUserSession } from "@/lib/auth-session";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
