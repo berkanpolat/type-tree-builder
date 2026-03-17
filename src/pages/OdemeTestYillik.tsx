@@ -1,11 +1,10 @@
-import OdemeTest from "./OdemeTest";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function OdemeTestYillik() {
-  // Override URL search param so the component renders in "yillik" mode
-  const original = window.location.search;
-  const url = new URL(window.location.href);
-  url.searchParams.set("periyot", "yillik");
-  window.history.replaceState(null, "", url.toString());
-
-  return <OdemeTest />;
+  const navigate = useNavigate();
+  useEffect(() => {
+    navigate("/odeme-test?periyot=yillik", { replace: true });
+  }, [navigate]);
+  return null;
 }
