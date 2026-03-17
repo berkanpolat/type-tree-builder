@@ -356,12 +356,15 @@ export default function AdminIhaleler() {
       open: true, title: "İhaleyi Kaldır",
       desc: `"${ihale.baslik}" (${ihale.ihale_no}) başlıklı ihaleyi kaldırmak istediğinize emin misiniz? İhale "İptal" durumuna geçecektir.`,
       action: async () => {
+        setConfirmLoading(true);
         try {
           await callApi("remove-ihale", { token, ihaleId: ihale.id });
           toast({ title: "Başarılı", description: "İhale kaldırıldı" });
           fetchData();
         } catch (err: any) {
           toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+        } finally {
+          setConfirmLoading(false);
         }
         setConfirmDialog(prev => ({ ...prev, open: false }));
       },
