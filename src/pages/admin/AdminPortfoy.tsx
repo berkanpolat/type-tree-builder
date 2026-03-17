@@ -110,7 +110,7 @@ export default function AdminPortfoy() {
   const { token, user: adminUser, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [allFirmalar, setAllFirmalar] = useState<FirmaItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [sortField, setSortField] = useState<SortField | null>(null);
