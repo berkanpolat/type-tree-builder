@@ -251,7 +251,7 @@ export default function ManuIhale() {
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                        {ihale.foto_url ? <img src={ihale.foto_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
+                        {ihale.foto_url ? <img src={ihale.foto_url} alt="" className="w-full h-full object-cover" /> : <img src={ihaleDefaultCover} alt="" className="w-full h-full object-contain p-1" />}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-foreground text-sm truncate">{ihale.baslik}</p>
