@@ -477,21 +477,12 @@ Deno.serve(async (req) => {
         const ilceIds = firmalar.map((firma: any) => firma.kurulus_ilce_id).filter(Boolean);
         const allLocationIds = [...new Set([...ilIds, ...ilceIds])];
 
-        const [profilesRes, ihaleCountsRes, teklifCountsRes, urunCountsRes, sikayetCountsRes, aboneliklerRes, paketlerData, portfolyoRes, locationsRes] = await Promise.all([
+        const [profilesRes, countsRes, aboneliklerRes, paketlerData, portfolyoRes, locationsRes] = await Promise.all([
           userIds.length > 0
             ? supabase.from("profiles").select("user_id, ad, soyad, iletisim_email, iletisim_numarasi, last_seen").in("user_id", userIds)
             : Promise.resolve({ data: [] }),
           userIds.length > 0
-            ? supabase.from("ihaleler").select("user_id").in("user_id", userIds)
-            : Promise.resolve({ data: [] }),
-          userIds.length > 0
-            ? supabase.from("ihale_teklifler").select("teklif_veren_user_id").in("teklif_veren_user_id", userIds)
-            : Promise.resolve({ data: [] }),
-          userIds.length > 0
-            ? supabase.from("urunler").select("user_id").in("user_id", userIds)
-            : Promise.resolve({ data: [] }),
-          userIds.length > 0
-            ? supabase.from("sikayetler").select("bildiren_user_id").in("bildiren_user_id", userIds)
+            ? supabase.rpc("get_firma_user_counts", { p_user_ids: userIds })
             : Promise.resolve({ data: [] }),
           userIds.length > 0
             ? supabase.from("kullanici_abonelikler").select("id, user_id, paket_id, periyot, donem_baslangic, donem_bitis, durum, created_at, updated_at").in("user_id", userIds)
@@ -517,16 +508,15 @@ Deno.serve(async (req) => {
         for (const profile of (profilesRes.data || [])) profileMap.set(profile.user_id, profile);
 
         const ihaleCountMap = new Map<string, number>();
-        for (const ihale of (ihaleCountsRes.data || [])) ihaleCountMap.set(ihale.user_id, (ihaleCountMap.get(ihale.user_id) || 0) + 1);
-
         const teklifCountMap = new Map<string, number>();
-        for (const teklif of (teklifCountsRes.data || [])) teklifCountMap.set(teklif.teklif_veren_user_id, (teklifCountMap.get(teklif.teklif_veren_user_id) || 0) + 1);
-
         const urunCountMap = new Map<string, number>();
-        for (const urun of (urunCountsRes.data || [])) urunCountMap.set(urun.user_id, (urunCountMap.get(urun.user_id) || 0) + 1);
-
         const sikayetCountMap = new Map<string, number>();
-        for (const sikayet of (sikayetCountsRes.data || [])) sikayetCountMap.set(sikayet.bildiren_user_id, (sikayetCountMap.get(sikayet.bildiren_user_id) || 0) + 1);
+        for (const row of (countsRes.data || [])) {
+          ihaleCountMap.set(row.user_id, Number(row.ihale_count) || 0);
+          teklifCountMap.set(row.user_id, Number(row.teklif_count) || 0);
+          urunCountMap.set(row.user_id, Number(row.urun_count) || 0);
+          sikayetCountMap.set(row.user_id, Number(row.sikayet_count) || 0);
+        }
 
         const abonelikByUser = new Map<string, any>();
         const sortedAbonelikler = [...(aboneliklerRes.data || [])].sort((a: any, b: any) => {

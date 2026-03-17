@@ -16,12 +16,32 @@ export function useAdminApi() {
       if (impersonatedUser) {
         enrichedBody.actingAdminId = impersonatedUser.id;
       }
-      const { data, error } = await supabase.functions.invoke(
-        `admin-auth/${action}`,
-        { body: enrichedBody }
-      );
-      if (error) throw error;
-      return data;
+      
+      const maxRetries = 2;
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const { data, error } = await supabase.functions.invoke(
+            `admin-auth/${action}`,
+            { body: enrichedBody }
+          );
+          if (error) {
+            // Retry on 503/504 (cold start timeouts)
+            const status = (error as any)?.status || (error as any)?.context?.status;
+            if ((status === 503 || status === 504 || String(error.message).includes("boot")) && attempt < maxRetries) {
+              await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+              continue;
+            }
+            throw error;
+          }
+          return data;
+        } catch (err: any) {
+          if (attempt < maxRetries && (err?.message?.includes("Failed to fetch") || err?.message?.includes("network"))) {
+            await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+            continue;
+          }
+          throw err;
+        }
+      }
     },
     [impersonatedUser]
   );

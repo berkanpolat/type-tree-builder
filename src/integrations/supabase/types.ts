@@ -2521,6 +2521,16 @@ export type Database = {
           profile_score: number
         }[]
       }
+      get_firma_user_counts: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          ihale_count: number
+          sikayet_count: number
+          teklif_count: number
+          urun_count: number
+          user_id: string
+        }[]
+      }
       get_or_create_conversation: {
         Args: { p_user1: string; p_user2: string }
         Returns: string
