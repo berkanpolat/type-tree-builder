@@ -433,6 +433,11 @@ export default function UrunDetay() {
     });
   };
 
+  const handleUpgradeNavigation = useCallback(async () => {
+    const user = await getSafeUser();
+    navigate(user ? "/paketim" : "/giris-kayit");
+  }, [navigate]);
+
   const handleImageZoomMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!imageContainerRef.current) return;
     const rect = imageContainerRef.current.getBoundingClientRect();
