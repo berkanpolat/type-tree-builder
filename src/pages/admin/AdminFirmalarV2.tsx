@@ -851,24 +851,26 @@ export default function AdminFirmalarV2() {
 
         {/* Bulk Action Toolbar */}
         {selectedCount > 0 && (
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-lg" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
-            <CheckCheck className="w-4 h-4 text-amber-500" />
-            <span className="text-sm font-medium" style={s.text}>{selectedCount} firma seçildi</span>
-            <div className="flex items-center gap-2 ml-auto">
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7" onClick={() => setBulkAction("approve")}>
-                <CheckCircle className="w-3.5 h-3.5 mr-1" /> Toplu Onayla
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 px-3 md:px-4 py-2 md:py-2.5 rounded-lg" style={{ background: "hsl(var(--admin-hover))", border: "1px solid hsl(var(--admin-border))" }}>
+            <div className="flex items-center gap-2">
+              <CheckCheck className="w-4 h-4 text-amber-500" />
+              <span className="text-xs md:text-sm font-medium" style={s.text}>{selectedCount} firma seçildi</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 md:gap-2 ml-auto">
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] md:text-xs h-6 md:h-7 px-2 md:px-3" onClick={() => setBulkAction("approve")}>
+                <CheckCircle className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" /> Onayla
               </Button>
-              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-7" onClick={() => setBulkAction("verify")}>
-                <ShieldCheck className="w-3.5 h-3.5 mr-1" /> Toplu Doğrula
+              <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] md:text-xs h-6 md:h-7 px-2 md:px-3" onClick={() => setBulkAction("verify")}>
+                <ShieldCheck className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" /> Doğrula
               </Button>
-              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white text-xs h-7" onClick={() => setBulkAction("portfolio")}>
-                <Briefcase className="w-3.5 h-3.5 mr-1" /> Toplu Portföye Ekle
+              <Button size="sm" className="bg-amber-500 hover:bg-amber-600 text-white text-[10px] md:text-xs h-6 md:h-7 px-2 md:px-3" onClick={() => setBulkAction("portfolio")}>
+                <Briefcase className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" /> Portföy
               </Button>
-              <Button size="sm" variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-500/10 text-xs h-7" onClick={() => setBulkAction("delete")} style={{ borderColor: "hsl(var(--admin-border))" }}>
-                <Trash2 className="w-3.5 h-3.5 mr-1" /> Toplu Sil
+              <Button size="sm" variant="outline" className="text-red-500 hover:text-red-600 hover:bg-red-500/10 text-[10px] md:text-xs h-6 md:h-7 px-2 md:px-3" onClick={() => setBulkAction("delete")} style={{ borderColor: "hsl(var(--admin-border))" }}>
+                <Trash2 className="w-3 h-3 md:w-3.5 md:h-3.5 mr-1" /> Sil
               </Button>
-              <Button size="sm" variant="ghost" className="text-xs h-7" style={s.muted} onClick={() => setSelectedIds(new Set())}>
-                Seçimi Kaldır
+              <Button size="sm" variant="ghost" className="text-[10px] md:text-xs h-6 md:h-7" style={s.muted} onClick={() => setSelectedIds(new Set())}>
+                Kaldır
               </Button>
             </div>
           </div>
