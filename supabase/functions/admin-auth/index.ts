@@ -324,6 +324,7 @@ Deno.serve(async (req) => {
       }
 
       const paginated = body.paginated === true;
+      const filterPortfolyo = typeof body.filterPortfolyo === "string" ? body.filterPortfolyo : null;
       const unsupportedSorts = new Set(["ihale_sayisi", "teklif_sayisi", "urun_sayisi", "profil_doluluk", "last_seen"]);
 
       if (paginated && !unsupportedSorts.has(body.sortField)) {
