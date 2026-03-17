@@ -157,8 +157,7 @@ export default function OdemeTest() {
           </p>
           <div className="rounded-lg border border-border bg-card p-4 text-left space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Paket</span><span className="font-medium">PRO — {period === "aylik" ? "Aylık" : "Yıllık"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Tutar</span><span className="font-medium">${fmt(totalUsd)}</span></div>
-            {totalTry && <div className="flex justify-between"><span className="text-muted-foreground">TL Karşılığı</span><span className="font-medium">₺{fmt(totalTry)}</span></div>}
+            <div className="flex justify-between"><span className="text-muted-foreground">Tutar</span><span className="font-medium">{p(totalUsd)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Kart</span><span className="font-medium font-mono">•••• {rawDigits.slice(-4)}</span></div>
           </div>
           <Button asChild className="w-full"><Link to="/paketim">Paketim Sayfasına Git</Link></Button>
