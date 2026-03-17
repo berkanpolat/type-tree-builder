@@ -58,6 +58,13 @@ const LandingPage = () => {
         const mustSet = (session.user.user_metadata as { must_set_password?: boolean } | null)?.must_set_password === true;
         navigate(mustSet ? "/sifre-sifirla" : "/tekpazar", { replace: true });
       } else {
+        // Returning visitor check — skip landing for repeat visitors
+        const hasVisited = localStorage.getItem("tas_visited");
+        if (hasVisited) {
+          navigate("/firmalar", { replace: true });
+          return;
+        }
+        localStorage.setItem("tas_visited", "1");
         setLoading(false);
       }
     });
