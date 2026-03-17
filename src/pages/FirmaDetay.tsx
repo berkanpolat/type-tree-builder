@@ -249,6 +249,8 @@ export default function FirmaDetay() {
   const [quotaBlocked, setQuotaBlocked] = useState(false);
   const [quotaMessage, setQuotaMessage] = useState("");
   const packageInfo = usePackageQuota();
+  const [contactRevealed, setContactRevealed] = useState(false);
+  const [contactRevealLoading, setContactRevealLoading] = useState(false);
   const [msgUpgradeOpen, setMsgUpgradeOpen] = useState(false);
   const [msgUpgradeMessage, setMsgUpgradeMessage] = useState("");
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
