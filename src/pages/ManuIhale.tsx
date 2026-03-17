@@ -125,12 +125,18 @@ export default function ManuIhale() {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("ihaleler").delete().eq("id", id);
-    if (error) {
-      toast({ title: "Hata", description: "İhale silinemedi.", variant: "destructive" });
-    } else {
-      toast({ title: "İhale silindi" });
-      setIhaleler((prev) => prev.filter((i) => i.id !== id));
+    if (deleteLoading) return;
+    setDeleteLoading(true);
+    try {
+      const { error } = await supabase.from("ihaleler").delete().eq("id", id);
+      if (error) {
+        toast({ title: "Hata", description: "İhale silinemedi.", variant: "destructive" });
+      } else {
+        toast({ title: "İhale silindi" });
+        setIhaleler((prev) => prev.filter((i) => i.id !== id));
+      }
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
