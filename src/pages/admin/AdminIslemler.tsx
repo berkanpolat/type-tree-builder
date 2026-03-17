@@ -13,7 +13,7 @@ const s = {
 };
 
 export default function AdminIslemler() {
-  const { token, user } = useAdminAuth();
+  const { token, user, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"yonetim" | "kullanicilar">("yonetim");
 
