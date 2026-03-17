@@ -134,7 +134,7 @@ describe("İhale filtreleme - Durum", () => {
 
 describe("İhale filtreleme - Arama + Durum birlikte", () => {
   it("arama + durum filtresi birlikte çalışır", () => {
-    const result = filterIhaleler(sampleIhaleler, "iplik", "devam_ediyor");
+    const result = filterIhaleler(sampleIhaleler, "Pamuk", "devam_ediyor");
     expect(result).toHaveLength(1);
     expect(result[0].baslik).toBe("Pamuk İplik Alımı");
   });
