@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import PazarHeader from "@/components/PazarHeader";
+import PublicHeader from "@/components/PublicHeader";
 import KategoriMegaMenu from "@/components/anasayfa/KategoriMegaMenu";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
 import UrunFiltreler, { type FilterState } from "@/components/anasayfa/UrunFiltreler";
