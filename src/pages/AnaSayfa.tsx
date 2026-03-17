@@ -717,11 +717,13 @@ export default function AnaSayfa() {
         </div>
         <div className="p-3 flex flex-col flex-1">
           <p className="text-sm font-medium text-foreground line-clamp-2 mb-2 min-h-[2.5rem]">{urun.baslik}</p>
-          <div className="flex items-center gap-2 mb-2">
-            <FirmaAvatar firmaUnvani={urun.firma_unvani || ""} logoUrl={urun.firma_logo_url} size="xs" className="rounded-full border border-border" />
-            <span className="text-xs text-muted-foreground truncate">{urun.firma_unvani || ""}</span>
-            {(urun as any).belge_onayli && <VerifiedBadge />}
-          </div>
+          {currentUserId && (
+            <div className="flex items-center gap-2 mb-2">
+              <FirmaAvatar firmaUnvani={urun.firma_unvani || ""} logoUrl={urun.firma_logo_url} size="xs" className="rounded-full border border-border" />
+              <span className="text-xs text-muted-foreground truncate">{urun.firma_unvani || ""}</span>
+              {(urun as any).belge_onayli && <VerifiedBadge />}
+            </div>
+          )}
           <div className="mb-3">{priceDisplay}</div>
           <Button size="sm" className="w-full mt-auto bg-primary text-primary-foreground hover:bg-primary/90">Ürünü Göster</Button>
         </div>

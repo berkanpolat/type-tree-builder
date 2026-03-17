@@ -546,20 +546,22 @@ export default function TekIhale() {
 
                           <h3 className="font-semibold text-foreground text-base mb-2 line-clamp-1">{ihale.baslik}</h3>
 
-                          {/* Firma */}
-                          <div className="flex items-center gap-2 mb-4">
-                            {ihale.firma_adi_gizle ? (
-                              <>
-                                <EyeOff className="w-4 h-4 text-muted-foreground" />
-                                <span className="text-sm text-muted-foreground italic">Gizli Firma</span>
-                              </>
-                            ) : (
-                              <>
-                                <FirmaAvatar firmaUnvani={ihale.firma_unvani || ""} logoUrl={ihale.firma_logo_url} size="xs" className="rounded-full border border-border" />
-                                <span className="text-sm text-muted-foreground">{ihale.firma_unvani}</span>
-                              </>
-                            )}
-                          </div>
+                          {/* Firma - only for logged-in users */}
+                          {currentUserId && (
+                            <div className="flex items-center gap-2 mb-4">
+                              {ihale.firma_adi_gizle ? (
+                                <>
+                                  <EyeOff className="w-4 h-4 text-muted-foreground" />
+                                  <span className="text-sm text-muted-foreground italic">Gizli Firma</span>
+                                </>
+                              ) : (
+                                <>
+                                  <FirmaAvatar firmaUnvani={ihale.firma_unvani || ""} logoUrl={ihale.firma_logo_url} size="xs" className="rounded-full border border-border" />
+                                  <span className="text-sm text-muted-foreground">{ihale.firma_unvani}</span>
+                                </>
+                              )}
+                            </div>
+                          )}
 
                           <div className="flex flex-wrap items-center gap-4 sm:gap-8">
                             <div>
