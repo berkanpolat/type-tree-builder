@@ -317,11 +317,10 @@ export default function IhaleDetay() {
   // Init user
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getSafeUser();
       if (!user) {
         const adminToken = localStorage.getItem("admin_token");
         if (adminToken) { setIsAdminViewing(true); }
-        // Allow anonymous users to view ihale details (no redirect)
         return;
       }
       setCurrentUserId(user.id);

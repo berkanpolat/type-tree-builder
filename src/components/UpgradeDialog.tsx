@@ -31,11 +31,11 @@ export default function UpgradeDialog({ open, onOpenChange, title, message }: Pr
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
-    if (open) {
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        setIsLoggedIn(!!user);
-      });
-    }
+    if (!open) return;
+
+    hasSafeUserSession().then((loggedIn) => {
+      setIsLoggedIn(loggedIn);
+    });
   }, [open]);
 
   return (

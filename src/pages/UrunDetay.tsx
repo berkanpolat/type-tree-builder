@@ -197,14 +197,13 @@ export default function UrunDetay() {
 
   useEffect(() => {
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await getSafeUser();
       if (!user) {
         const adminToken = localStorage.getItem("admin_token");
         if (adminToken) {
           setIsAdminViewing(true);
           setCurrentUserId("admin");
         } else {
-          // Allow public access - set a placeholder to trigger fetch
           setCurrentUserId("public");
         }
         return;
