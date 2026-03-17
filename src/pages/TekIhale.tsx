@@ -219,6 +219,7 @@ export default function TekIhale() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setCurrentUserId(user.id);
       const { data } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).maybeSingle();
       if (data) { setFirmaUnvani(data.firma_unvani); setFirmaLogoUrl(data.logo_url); }
     })();
