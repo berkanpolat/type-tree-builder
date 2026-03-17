@@ -806,7 +806,7 @@ export default function AdminFirmalarV2() {
       console.error("[CreateFirma] Error:", err);
       toast({ title: "Hata", description: errorMsg, variant: "destructive" });
     } finally {
-      setYeniFirmaSaving(true);
+      setYeniFirmaSaving(false);
     }
   };
 
