@@ -319,22 +319,40 @@ export default function AdminPortfoy() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
               <Input
-                placeholder="Firma veya yetkili ara..."
+                placeholder="Firma ünvanı veya yetkili ara..."
                 value={searchTerm}
                 onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                 className="pl-9 w-64 h-9 text-sm"
                 style={s.input}
               />
             </div>
+            <Select value={filterTuru} onValueChange={v => { setFilterTuru(v); setFilterTipi("all"); setCurrentPage(1); }}>
+              <SelectTrigger className="w-40 h-9 text-xs" style={s.input}>
+                <SelectValue placeholder="Firma Türü" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Türler</SelectItem>
+                {uniqueTurler.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterTipi} onValueChange={v => { setFilterTipi(v); setCurrentPage(1); }}>
+              <SelectTrigger className="w-44 h-9 text-xs" style={s.input}>
+                <SelectValue placeholder="Firma Tipi" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Tipler</SelectItem>
+                {uniqueTipler.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex items-center gap-2">
             <div className="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2" style={{ background: "hsl(var(--admin-hover))" }}>
               <Briefcase className="w-3.5 h-3.5" style={{ color: "hsl(38 92% 50%)" }} />
-              <span style={s.text}>{allFirmalar.length} firma</span>
+              <span style={s.text}>{filtered.length} / {allFirmalar.length} firma</span>
             </div>
           </div>
         </div>
