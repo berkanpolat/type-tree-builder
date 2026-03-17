@@ -314,31 +314,20 @@ export default function FirmaDetay() {
 
       const firmaId = firmaData.id;
 
-      // Kendi firması ise kota kontrolü yapma
-      if (user && firmaData.user_id !== user.id) {
-        // Daha önce HİÇ görüntülenmiş mi kontrol et (tüm zamanlar)
+      // Kendi firması ise iletişim otomatik açık
+      if (user && firmaData.user_id === user.id) {
+        setContactRevealed(true);
+      } else if (user) {
+        // Daha önce iletişim görüntülenmiş mi kontrol et
         const { data: existingView } = await supabase
           .from("profil_goruntulemeler" as any)
           .select("id")
           .eq("user_id", user.id)
           .eq("firma_id", firmaId)
           .maybeSingle();
-
-        if (!existingView) {
-          // İlk kez görüntüleme - kota kontrolü yap
-          const check = canPerformAction(packageInfo.limits, packageInfo.usage, "profil_goruntuleme");
-          if (!check.allowed) {
-            setQuotaBlocked(true);
-            setQuotaMessage(check.message || "Profil görüntüleme hakkınız dolmuştur.");
-            setLoading(false);
-            return;
-          }
-          // Görüntüleme kaydı oluştur
-          await supabase
-            .from("profil_goruntulemeler" as any)
-            .insert({ user_id: user.id, firma_id: firmaId });
+        if (existingView) {
+          setContactRevealed(true);
         }
-        // Daha önce görüntülenmişse → serbestçe devam et, hak düşmez
       }
 
       setFirma(firmaData as FirmaData);
