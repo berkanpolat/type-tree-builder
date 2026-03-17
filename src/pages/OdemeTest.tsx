@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Shield, Lock, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Eye, EyeOff, RotateCw } from "lucide-react";
+import { Shield, Lock, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Eye, EyeOff, RotateCw, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -55,6 +55,7 @@ function validateExpiry(val: string): boolean {
 }
 
 type Period = "aylik" | "yillik";
+type Currency = "USD" | "TRY";
 
 const YILLIK_ORIGINAL = PRO_FIYATLAR.aylik.fiyat * 12;
 const YILLIK_INDIRIMLI = PRO_FIYATLAR.yillik.fiyat;
@@ -75,6 +76,7 @@ export default function OdemeTest() {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(true);
+  const [currency, setCurrency] = useState<Currency>("USD");
 
   const expiryRef = useRef<HTMLInputElement>(null);
   const cvvRef = useRef<HTMLInputElement>(null);
@@ -85,6 +87,14 @@ export default function OdemeTest() {
   const kdv = usdPrice * (PRO_FIYATLAR.kdvOrani / 100);
   const totalUsd = usdPrice + kdv;
   const totalTry = exchangeRate ? totalUsd * exchangeRate : null;
+
+  // Currency-aware price formatter
+  const p = useCallback((usdAmount: number) => {
+    if (currency === "TRY" && exchangeRate) {
+      return `₺${fmt(usdAmount * exchangeRate)}`;
+    }
+    return `$${fmt(usdAmount)}`;
+  }, [currency, exchangeRate]);
 
   // Fetch exchange rate
   const fetchRate = useCallback(async () => {
@@ -147,8 +157,7 @@ export default function OdemeTest() {
           </p>
           <div className="rounded-lg border border-border bg-card p-4 text-left space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Paket</span><span className="font-medium">PRO — {period === "aylik" ? "Aylık" : "Yıllık"}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Tutar</span><span className="font-medium">${fmt(totalUsd)}</span></div>
-            {totalTry && <div className="flex justify-between"><span className="text-muted-foreground">TL Karşılığı</span><span className="font-medium">₺{fmt(totalTry)}</span></div>}
+            <div className="flex justify-between"><span className="text-muted-foreground">Tutar</span><span className="font-medium">{p(totalUsd)}</span></div>
             <div className="flex justify-between"><span className="text-muted-foreground">Kart</span><span className="font-medium font-mono">•••• {rawDigits.slice(-4)}</span></div>
           </div>
           <Button asChild className="w-full"><Link to="/paketim">Paketim Sayfasına Git</Link></Button>
@@ -168,40 +177,54 @@ export default function OdemeTest() {
 
         <div className="flex-1 space-y-6">
 
+          {/* Currency toggle */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrency("USD")}
+              className={`px-3 py-1.5 rounded-l-lg text-xs font-semibold transition-colors ${currency === "USD" ? "bg-white/20 text-white" : "bg-white/5 text-white/40 hover:text-white/60"}`}
+            >
+              $ USD
+            </button>
+            <button
+              onClick={() => setCurrency("TRY")}
+              disabled={!exchangeRate}
+              className={`px-3 py-1.5 rounded-r-lg text-xs font-semibold transition-colors ${currency === "TRY" ? "bg-white/20 text-white" : "bg-white/5 text-white/40 hover:text-white/60"} disabled:opacity-30`}
+            >
+              ₺ TRY
+            </button>
+          </div>
+
           {/* Price breakdown */}
           <div className="space-y-3 text-sm">
             {period === "yillik" ? (
               <>
                 <div className="flex justify-between">
                   <span className="text-white/60">Ara Toplam</span>
-                  <span className="line-through text-white/40">${fmt(YILLIK_ORIGINAL)}</span>
+                  <span className="line-through text-white/40">{p(YILLIK_ORIGINAL)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-emerald-300">İndirim (%45)</span>
-                  <span className="text-emerald-300">-${fmt(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)}</span>
+                  <span className="text-emerald-300">-{p(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-white/60">İndirimli Fiyat</span>
-                  <span>${fmt(YILLIK_INDIRIMLI)}</span>
+                  <span>{p(YILLIK_INDIRIMLI)}</span>
                 </div>
               </>
             ) : (
               <div className="flex justify-between">
                 <span className="text-white/60">Ara Toplam</span>
-                <span>${fmt(usdPrice)}</span>
+                <span>{p(usdPrice)}</span>
               </div>
             )}
             <div className="flex justify-between">
               <span className="text-white/60">KDV (%{PRO_FIYATLAR.kdvOrani})</span>
-              <span>${fmt(kdv)}</span>
+              <span>{p(kdv)}</span>
             </div>
             <div className="h-px bg-white/10" />
             <div className="flex justify-between font-semibold text-base">
               <span>Toplam</span>
-              <div className="text-right">
-                <div>${fmt(totalUsd)}</div>
-                {totalTry && <div className="text-xs font-normal text-white/50">≈ ₺{fmt(totalTry)}</div>}
-              </div>
+              <span>{p(totalUsd)}</span>
             </div>
             {exchangeRate && (
               <p className="text-[11px] text-white/40">
@@ -214,7 +237,7 @@ export default function OdemeTest() {
           {period === "yillik" && (
             <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3">
               <p className="text-xs text-emerald-300 leading-relaxed">
-                💰 Yıllık planı tercih ederek <strong>${fmt(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)}</strong> tasarruf ediyorsunuz!
+                💰 Yıllık planı tercih ederek <strong>{p(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)}</strong> tasarruf ediyorsunuz!
               </p>
             </div>
           )}
@@ -347,7 +370,7 @@ export default function OdemeTest() {
                   İşleniyor...
                 </span>
               ) : (
-                <span>${fmt(totalUsd)} Öde</span>
+                <span>{p(totalUsd)} Öde</span>
               )}
             </Button>
 
