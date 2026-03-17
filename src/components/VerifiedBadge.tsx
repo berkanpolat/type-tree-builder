@@ -1,4 +1,4 @@
-import { CheckCircle } from "lucide-react";
+import { Check } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface VerifiedBadgeProps {
@@ -7,14 +7,17 @@ interface VerifiedBadgeProps {
 }
 
 export default function VerifiedBadge({ className = "", size = "sm" }: VerifiedBadgeProps) {
-  const iconSize = size === "sm" ? "w-4 h-4" : "w-5 h-5";
+  const outerSize = size === "sm" ? "w-5 h-5" : "w-6 h-6";
+  const checkSize = size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5";
 
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className={`inline-flex items-center ${className}`}>
-            <CheckCircle className={`${iconSize} text-emerald-500 fill-emerald-500/20`} />
+          <span
+            className={`inline-flex items-center justify-center ${outerSize} rounded-full bg-emerald-500 shrink-0 ${className}`}
+          >
+            <Check className={`${checkSize} text-white`} strokeWidth={3} />
           </span>
         </TooltipTrigger>
         <TooltipContent side="top" className="text-xs">
