@@ -779,6 +779,7 @@ export default function AdminFirmalarV2() {
       setYeniFirma({ email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "", firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "", cep_telefonu: "" });
       fetchData();
     } catch (err: any) {
+      console.error("[CreateFirma] Error:", err, "message:", err?.message, "status:", err?.status, "context:", err?.context);
       toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
     } finally {
       setYeniFirmaSaving(false);
