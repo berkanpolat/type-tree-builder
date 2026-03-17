@@ -247,10 +247,8 @@ export default function AdminPortfoy() {
     }
   };
 
-  // Filter only current admin's portfolio
-  const portfolyoFirmalar = allFirmalar.filter(f => f.portfolyo?.admin_id === adminUser?.id);
-
-  const filtered = portfolyoFirmalar.filter(f => {
+  // Portfolio filtering is now done server-side via filterPortfolyo param
+  const filtered = allFirmalar.filter(f => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       if (!f.firma_unvani.toLowerCase().includes(term) &&
