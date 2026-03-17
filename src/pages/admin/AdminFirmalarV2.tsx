@@ -783,16 +783,30 @@ export default function AdminFirmalarV2() {
     }
     setYeniFirmaSaving(true);
     try {
-      await callApi("create-firma", { token, ...yeniFirma, iletisim_numarasi: cepDigits.length === 10 ? "+90" + cepDigits : "" });
+      const result = await callApi("create-firma", { token, ...yeniFirma, iletisim_numarasi: cepDigits.length === 10 ? "+90" + cepDigits : "" });
+      if (result?.error) {
+        toast({ title: "Hata", description: result.error, variant: "destructive" });
+        return;
+      }
       toast({ title: "Başarılı", description: "Firma oluşturuldu" });
       setYeniFirmaOpen(false);
       setYeniFirma({ email: "", password: "", ad: "", soyad: "", iletisim_email: "", iletisim_numarasi: "", firma_unvani: "", vergi_numarasi: "", vergi_dairesi: "", firma_turu_id: "", firma_tipi_id: "", cep_telefonu: "" });
       fetchData();
     } catch (err: any) {
-      console.error("[CreateFirma] Error:", err, "message:", err?.message, "status:", err?.status, "context:", err?.context);
-      toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+      // Extract actual error message from edge function response
+      let errorMsg = "İşlem başarısız";
+      try {
+        if (err?.context) {
+          const body = typeof err.context === "string" ? JSON.parse(err.context) : (err.context?.json ? await err.context.json() : err.context);
+          if (body?.error) errorMsg = body.error;
+        } else if (err?.message && !err.message.includes("non-2xx")) {
+          errorMsg = err.message;
+        }
+      } catch { /* fallback to default */ }
+      console.error("[CreateFirma] Error:", err);
+      toast({ title: "Hata", description: errorMsg, variant: "destructive" });
     } finally {
-      setYeniFirmaSaving(false);
+      setYeniFirmaSaving(true);
     }
   };
 
