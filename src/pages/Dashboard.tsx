@@ -17,7 +17,6 @@ import {
   Bell,
   UserCheck,
   Pencil,
-  Building2,
   MapPin,
   Factory,
   Layers,
@@ -26,6 +25,7 @@ import {
   Crown,
   Infinity,
 } from "lucide-react";
+import FirmaAvatar from "@/components/FirmaAvatar";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useBanner } from "@/hooks/use-banner";
 
