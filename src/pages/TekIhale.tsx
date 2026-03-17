@@ -130,6 +130,7 @@ function CountdownBadge({ date }: { date: string | null }) {
 export default function TekIhale() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [currentUserId, setCurrentUserId] = useState("");
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const ihaleSidebarBanner = useBanner("tekihale-sidebar");
