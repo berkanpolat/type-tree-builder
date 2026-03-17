@@ -169,10 +169,24 @@ export default function OdemeTest() {
         <div className="flex-1 space-y-6">
           <div>
             <p className="text-sm text-white/60 mb-1">PRO Paket</p>
-            <h1 className="text-3xl font-bold">
-              ${fmt(usdPrice)}
-              <span className="text-base font-normal text-white/50">/{period === "aylik" ? "ay" : "yıl"}</span>
-            </h1>
+            {period === "yillik" ? (
+              <div className="space-y-1">
+                <div className="flex items-center gap-3">
+                  <span className="text-xl line-through text-white/40">${fmt(YILLIK_ORIGINAL)}</span>
+                  <h1 className="text-3xl font-bold">
+                    ${fmt(YILLIK_INDIRIMLI)}
+                    <span className="text-base font-normal text-white/50">/yıl</span>
+                  </h1>
+                  <span className="text-xs font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">%45 indirim</span>
+                </div>
+                <p className="text-xs text-white/40">(aylık ~${fmt(AYLIK_KARSILIK)})</p>
+              </div>
+            ) : (
+              <h1 className="text-3xl font-bold">
+                ${fmt(usdPrice)}
+                <span className="text-base font-normal text-white/50">/ay</span>
+              </h1>
+            )}
             {totalTry && !rateLoading && (
               <p className="text-sm text-white/50 mt-1 flex items-center gap-1">
                 ≈ ₺{fmt(usdPrice * exchangeRate!)}
@@ -182,16 +196,6 @@ export default function OdemeTest() {
               </p>
             )}
           </div>
-
-          {/* Yearly price advantage */}
-          {period === "yillik" && (
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="line-through text-white/40 text-lg">${fmt(YILLIK_ORIGINAL)}</span>
-              <span className="text-emerald-300 font-bold text-lg">${fmt(YILLIK_INDIRIMLI)}</span>
-              <span className="text-xs font-semibold bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">%45 indirim</span>
-              <span className="text-xs text-white/40">(aylık ~${fmt(AYLIK_KARSILIK)})</span>
-            </div>
-          )}
 
           {/* Price breakdown */}
           <div className="space-y-3 text-sm">
