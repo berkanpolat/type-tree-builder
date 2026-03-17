@@ -327,6 +327,8 @@ const LandingPage = () => {
               src={heroImg}
               alt="Tekstil sektörü profesyonelleri"
               className="rounded-2xl shadow-xl w-full object-cover aspect-[4/3]"
+              fetchPriority="high"
+              decoding="async"
             />
             <div className="absolute -bottom-6 -right-2 z-10 bg-background rounded-xl shadow-lg p-4 hidden lg:block">
               <div className="h-16 w-40 flex items-end">
