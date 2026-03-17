@@ -55,6 +55,7 @@ function validateExpiry(val: string): boolean {
 }
 
 type Period = "aylik" | "yillik";
+type Currency = "USD" | "TRY";
 
 const YILLIK_ORIGINAL = PRO_FIYATLAR.aylik.fiyat * 12;
 const YILLIK_INDIRIMLI = PRO_FIYATLAR.yillik.fiyat;
