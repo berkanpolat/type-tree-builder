@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import FirmaAvatar from "@/components/FirmaAvatar";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";

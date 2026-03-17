@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import FirmaAvatar from "@/components/FirmaAvatar";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
 import { useLocation } from "react-router-dom";

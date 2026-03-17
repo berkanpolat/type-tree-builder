@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
+import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
