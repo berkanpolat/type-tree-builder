@@ -433,6 +433,11 @@ export default function UrunDetay() {
     });
   };
 
+  const handleUpgradeNavigation = useCallback(async () => {
+    const user = await getSafeUser();
+    navigate(user ? "/paketim" : "/giris-kayit");
+  }, [navigate]);
+
   const handleImageZoomMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!imageContainerRef.current) return;
     const rect = imageContainerRef.current.getBoundingClientRect();
@@ -681,7 +686,7 @@ export default function UrunDetay() {
                 <Card className="p-6 text-center">
                   <h3 className="text-lg font-semibold text-foreground mb-2">Satıcı Bilgileri</h3>
                   <p className="text-sm text-muted-foreground mb-4">Satıcı bilgilerini görüntülemek için PRO pakete yükseltin.</p>
-                  <Button onClick={() => currentUserId && currentUserId !== "public" ? navigate("/paketim") : navigate("/giris-kayit")} className="gap-2">
+                  <Button onClick={handleUpgradeNavigation} className="gap-2">
                     {currentUserId && currentUserId !== "public" ? "PRO Pakete Yükselt" : "Giriş Yap"}
                   </Button>
                 </Card>
@@ -1101,7 +1106,7 @@ export default function UrunDetay() {
               <Card className="p-6 text-center">
                 <h3 className="text-lg font-semibold text-foreground mb-2">Satıcı Bilgileri</h3>
                 <p className="text-sm text-muted-foreground mb-4">Satıcı bilgilerini görüntülemek için PRO pakete yükseltin.</p>
-                <Button onClick={() => currentUserId && currentUserId !== "public" ? navigate("/paketim") : navigate("/giris-kayit")} className="gap-2">
+                <Button onClick={handleUpgradeNavigation} className="gap-2">
                   {currentUserId && currentUserId !== "public" ? "PRO Pakete Yükselt" : "Giriş Yap"}
                 </Button>
               </Card>
