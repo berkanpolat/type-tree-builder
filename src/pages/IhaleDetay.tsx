@@ -1460,7 +1460,8 @@ export default function IhaleDetay() {
               </Card>
             )}
 
-            {/* Title & Countdown + Teklif Form - desktop only */}
+            {/* Title & Countdown + Teklif Form - desktop only (teklif only for logged-in) */}
+            {currentUserId && (
             <div className="hidden lg:block">
               <Card className="p-6">
                 <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
