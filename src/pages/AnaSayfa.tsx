@@ -148,8 +148,7 @@ export default function AnaSayfa() {
   // Filter state from sidebar
   const [filterState, setFilterState] = useSessionState<FilterState | null>("filterState", null);
 
-  // Varyasyon data for client-side filtering
-  const [varyasyonMap, setVaryasyonMap] = useState<Record<string, { renk: string[]; beden: string[] }>>({});
+  // Varyasyon data is now part of urunQueryData
 
   // Sorting
   const [sortBy, setSortBy] = useSessionState<string>("sortBy", "newest");
