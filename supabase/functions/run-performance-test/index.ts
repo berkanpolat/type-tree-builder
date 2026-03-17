@@ -18,7 +18,7 @@ function jsonResponse(data: unknown, status = 200) {
 
 // API endpoints to test
 const API_ENDPOINTS = [
-  { name: "Supabase Health", url: `${SUPABASE_URL}/rest/v1/`, method: "GET" },
+  { name: "Supabase Health", url: `${SUPABASE_URL}/rest/v1/firma_turleri?select=count&limit=0`, method: "GET" },
   { name: "Auth Health", url: `${SUPABASE_URL}/auth/v1/health`, method: "GET" },
   { name: "Firma Türleri", url: `${SUPABASE_URL}/rest/v1/firma_turleri?select=id,name&limit=1`, method: "GET" },
   { name: "Firma Tipleri", url: `${SUPABASE_URL}/rest/v1/firma_tipleri?select=id,name&limit=1`, method: "GET" },
