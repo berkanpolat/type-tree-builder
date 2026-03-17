@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   HelpCircle,
   LogOut,
-  Building2,
   Menu,
   X,
   LogIn,
@@ -18,6 +17,7 @@ import HeaderFavoritesPanel from "@/components/header/HeaderFavoritesPanel";
 import HeaderNotificationsPanel from "@/components/header/HeaderNotificationsPanel";
 import QuotaReminderBadge from "@/components/QuotaReminderBadge";
 import { Button } from "@/components/ui/button";
+import FirmaAvatar from "@/components/FirmaAvatar";
 
 interface PazarHeaderProps {
   firmaUnvani: string;
@@ -103,13 +103,12 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
                   onClick={() => setMenuOpen(!menuOpen)}
                   className="flex items-center gap-1.5 md:gap-2.5 hover:opacity-80 transition-opacity"
                 >
-                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
-                    {firmaLogoUrl ? (
-                      <img src={firmaLogoUrl} alt="" className="w-full h-full object-contain p-0.5" />
-                    ) : (
-                      <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
-                    )}
-                  </div>
+                  <FirmaAvatar
+                    firmaUnvani={firmaUnvani || "Firma"}
+                    logoUrl={firmaLogoUrl}
+                    size="sm"
+                    className="w-7 h-7 md:w-8 md:h-8 border border-border"
+                  />
                   <span className="hidden md:block text-sm font-medium text-foreground truncate max-w-[200px]">
                     {firmaUnvani}
                   </span>
