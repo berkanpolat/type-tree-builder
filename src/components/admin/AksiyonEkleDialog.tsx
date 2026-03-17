@@ -186,6 +186,9 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
     }
   }, [open, firmaId]);
 
+  const selectedPaket = paketler.find(p => p.id === sonucPaketId);
+  const isProPaket = selectedPaket?.slug === "pro";
+
   useEffect(() => {
     if (!open || !firmaId || !isProPaket || emailSecim !== "default" || firmaEmail) return;
 
@@ -217,9 +220,6 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       setYetkiliSaving(false);
     }
   };
-
-  const selectedPaket = paketler.find(p => p.id === sonucPaketId);
-  const isProPaket = selectedPaket?.slug === "pro";
 
   const getOdemeMail = () => {
     if (emailSecim === "default") return firmaEmail;
