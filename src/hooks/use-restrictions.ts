@@ -13,8 +13,9 @@ export function useRestrictions() {
   const [loading, setLoading] = useState(true);
 
   const fetchRestrictions = useCallback(async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setLoading(false); return; }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { setLoading(false); return; }
+    const user = session.user;
 
     const now = new Date().toISOString();
     const { data } = await supabase
