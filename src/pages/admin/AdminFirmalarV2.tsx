@@ -304,7 +304,11 @@ export default function AdminFirmalarV2() {
   useEffect(() => { fetchDropdowns(); }, [fetchDropdowns]);
 
   // ── Single actions ──
+  const [reviewActionLoading, setReviewActionLoading] = useState(false);
+
   const handleApprove = async (firmaId: string) => {
+    if (reviewActionLoading) return;
+    setReviewActionLoading(true);
     try {
       await callApi("approve-firma", { token, firmaId });
       toast({ title: "Başarılı", description: "Firma onaylandı" });
@@ -312,10 +316,14 @@ export default function AdminFirmalarV2() {
       fetchData();
     } catch (err: any) {
       toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setReviewActionLoading(false);
     }
   };
 
   const handleReject = async (firmaId: string) => {
+    if (reviewActionLoading) return;
+    setReviewActionLoading(true);
     try {
       await callApi("reject-firma", { token, firmaId });
       toast({ title: "Başarılı", description: "Firma reddedildi" });
@@ -323,6 +331,8 @@ export default function AdminFirmalarV2() {
       fetchData();
     } catch (err: any) {
       toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setReviewActionLoading(false);
     }
   };
 
