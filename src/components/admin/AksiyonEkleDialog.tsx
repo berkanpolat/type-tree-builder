@@ -127,7 +127,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
   const fetchYetkililer = async () => {
     setYetkililerLoading(true);
     try {
-      const data = await callApi("list-yetkililer", { token, firmaId });
+      const data = await callApi("list-yetkililer", { token, firmaId, compact: true });
       setYetkililer((data.yetkililer || []).map((y: any) => ({ id: y.id, ad: y.ad, soyad: y.soyad, pozisyon: y.pozisyon })));
     } catch {
       setYetkililer([]);
@@ -141,20 +141,10 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
     setPaketler((data || []).map((p: any) => ({ id: p.id, ad: p.ad, slug: p.slug || "" })));
   };
 
-  const fetchFirmaEmail = async () => {
-    try {
-      const data = await callApi("get-firma-email", { token, firmaId });
-      setFirmaEmail(data.email || "");
-    } catch {
-      setFirmaEmail("");
-    }
-  };
-
   useEffect(() => {
     if (open && firmaId) {
       fetchYetkililer();
       fetchPaketler();
-      fetchFirmaEmail();
       if (editData) {
         // Pre-fill from edit data
         setTur(editData.tur || turler[0]?.value || "diger");
@@ -187,6 +177,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       setProPeriod("aylik");
       setEmailSecim("default");
       setCustomEmail("");
+      setFirmaEmail("");
       setShowYetkiliForm(false);
       setHatirlaticiAktif(false);
       setHatirlaticiTarih(new Date(Date.now() + 7 * 86400000));
@@ -194,6 +185,24 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       setHatirlaticiNot("");
     }
   }, [open, firmaId]);
+
+  const selectedPaket = paketler.find(p => p.id === sonucPaketId);
+  const isProPaket = selectedPaket?.slug === "pro";
+
+  useEffect(() => {
+    if (!open || !firmaId || !isProPaket || emailSecim !== "default" || firmaEmail) return;
+
+    const loadFirmaEmail = async () => {
+      try {
+        const data = await callApi("get-firma-email", { token, firmaId });
+        setFirmaEmail(data.email || "");
+      } catch {
+        setFirmaEmail("");
+      }
+    };
+
+    void loadFirmaEmail();
+  }, [open, firmaId, isProPaket, emailSecim, firmaEmail, callApi, token]);
 
   const handleAddYetkili = async () => {
     if (!yetkiliAd.trim() || !yetkiliSoyad.trim()) return;
@@ -211,9 +220,6 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
       setYetkiliSaving(false);
     }
   };
-
-  const selectedPaket = paketler.find(p => p.id === sonucPaketId);
-  const isProPaket = selectedPaket?.slug === "pro";
 
   const getOdemeMail = () => {
     if (emailSecim === "default") return firmaEmail;

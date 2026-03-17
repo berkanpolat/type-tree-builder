@@ -4,12 +4,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
 import RouteStateManager from "./components/RouteStateManager";
 import RoutePreloader from "./components/RoutePreloader";
 import AuthRedirectHandler from "./components/AuthRedirectHandler";
-import Chatbot from "./components/Chatbot";
 
 // Only GirisKayit is eagerly loaded (auth gate)
 import GirisKayit from "./pages/GirisKayit";
@@ -54,6 +53,7 @@ const HizmetBilgileri = lazy(() => import("./pages/HizmetBilgileri"));
 const UrunBilgileri = lazy(() => import("./pages/UrunBilgileri"));
 const UrunKategorisi = lazy(() => import("./pages/UrunKategorisi"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Chatbot = lazy(() => import("./components/Chatbot"));
 
 // Admin pages
 const AdminGiris = lazy(() => import("./pages/admin/AdminGiris"));
@@ -88,18 +88,20 @@ const RaporHedefPrim = lazy(() => import("./pages/admin/reports/RaporHedefPrim")
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 10 * 60 * 1000, // 10 min - reduce unnecessary refetches
-      gcTime: 30 * 60 * 1000,    // 30 min garbage collection
+      staleTime: 10 * 60 * 1000,
+      gcTime: 30 * 60 * 1000,
       retry: 1,
       refetchOnWindowFocus: false,
-      refetchOnMount: false,      // Don't refetch if data is still fresh
-      refetchOnReconnect: false,  // Prevent refetch storms on reconnect
+      refetchOnMount: false,
+      refetchOnReconnect: false,
     },
   },
 });
 
-const AdminRoute = ({ children }: { children: React.ReactNode }) => (
-  <AdminAuthProvider>{children}</AdminAuthProvider>
+const AdminRoute = () => (
+  <AdminAuthProvider>
+    <Outlet />
+  </AdminAuthProvider>
 );
 
 const PageLoader = () => (
@@ -108,7 +110,112 @@ const PageLoader = () => (
   </div>
 );
 
-const VisitorTracker = () => { useVisitorSource(); return null; };
+const VisitorTracker = () => {
+  useVisitorSource();
+  return null;
+};
+
+const AppContent = () => {
+  const location = useLocation();
+  const isAdminPath = location.pathname.startsWith("/yonetim");
+  const showPublicChrome = !isAdminPath;
+
+  return (
+    <>
+      {showPublicChrome && <VisitorTracker />}
+      <RouteStateManager />
+      {showPublicChrome && <RoutePreloader />}
+      {showPublicChrome && <AuthRedirectHandler />}
+
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/test-index" element={<Index />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/tekpazar" element={<AnaSayfa />} />
+          <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
+          <Route path="/ihalelerim" element={<ManuIhale />} />
+          <Route path="/ihalelerim/yeni" element={<YeniIhale />} />
+          <Route path="/ihaleler" element={<TekIhale />} />
+          <Route path="/ihaleler/:slug" element={<IhaleDetay />} />
+          <Route path="/ihalelerim/duzenle/:id" element={<YeniIhale />} />
+          <Route path="/ihalelerim/takip/:id" element={<IhaleTakip />} />
+          <Route path="/tekliflerim" element={<Tekliflerim />} />
+          <Route path="/urunlerim" element={<ManuPazar />} />
+          <Route path="/urunlerim/yeni" element={<YeniUrun />} />
+          <Route path="/urunlerim/duzenle/:id" element={<YeniUrun />} />
+          <Route path="/favoriler" element={<Favoriler />} />
+          <Route path="/mesajlar" element={<Mesajlar />} />
+          <Route path="/bildirimler" element={<Bildirimler />} />
+          <Route path="/paketim" element={<Paketim />} />
+          <Route path="/destek" element={<DashboardDestek />} />
+          <Route path="/destek/:id" element={<DashboardDestekDetay />} />
+          <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
+          <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
+          <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
+          <Route path="/giris-kayit" element={<GirisKayit />} />
+          <Route path="/urunler/:slug" element={<UrunDetay />} />
+          <Route path="/firma/:slug" element={<FirmaDetay />} />
+          <Route path="/firmalar" element={<TekRehber />} />
+          <Route path="/ayarlar" element={<ProfilAyarlari />} />
+          <Route path="/profil-ayarlari" element={<ProfilAyarlari />} />
+          <Route path="/hakkimizda" element={<Hakkimizda />} />
+          <Route path="/iletisim" element={<Iletisim />} />
+          <Route path="/uretici-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
+          <Route path="/tekihale-tanitim" element={<TekIhaleTanitim />} />
+          <Route path="/tekpazar-tanitim" element={<TekPazarTanitim />} />
+          <Route path="/sss" element={<SSS />} />
+          <Route path="/gizlilik-kosullari" element={<GizlilikKosullari />} />
+          <Route path="/kvkk-aydinlatma" element={<KVKKAydinlatma />} />
+          <Route path="/kullanim-kosullari" element={<KullanimKosullari />} />
+          <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
+          <Route path="/sifre-sifirla" element={<SifreSifirla />} />
+          <Route path="/telefon-dogrulama" element={<TelefonDogrulama />} />
+
+          <Route path="/yonetim" element={<AdminRoute />}>
+            <Route index element={<AdminGiris />} />
+            <Route path="panel" element={<AdminPanel />} />
+            <Route path="kullanicilar" element={<AdminKullanicilar />} />
+            <Route path="firmalar" element={<AdminFirmalar />} />
+            <Route path="firmalar-v2" element={<AdminFirmalarV2 />} />
+            <Route path="ihaleler" element={<AdminIhaleler />} />
+            <Route path="urunler" element={<AdminUrunler />} />
+            <Route path="sikayetler" element={<AdminSikayetler />} />
+            <Route path="paketler" element={<AdminPaketler />} />
+            <Route path="destek" element={<AdminDestek />} />
+            <Route path="islemler" element={<AdminIslemler />} />
+            <Route path="kisitlamalar" element={<AdminKisitlamalar />} />
+            <Route path="reklam" element={<AdminReklam />} />
+            <Route path="tekbot" element={<AdminTekBot />} />
+            <Route path="portfolyo" element={<AdminPortfoy />} />
+            <Route path="aksiyonlar" element={<AdminAksiyonlar />} />
+            <Route path="ziyaret-planlari" element={<AdminZiyaretPlanlari />} />
+            <Route path="hedefler" element={<AdminHedefler />} />
+            <Route path="ajanda" element={<AdminAjanda />} />
+            <Route path="canli-harita" element={<AdminCanliHarita />} />
+            <Route path="yetkilendirme" element={<AdminYetkilendirme />} />
+            <Route path="kaynak-raporu" element={<AdminKaynakRaporu />} />
+            <Route path="raporlar" element={<AdminRaporlar />} />
+            <Route path="raporlar/satis-kanali" element={<RaporSatisKanali />} />
+            <Route path="raporlar/musteri-tipi" element={<RaporMusteriTipi />} />
+            <Route path="raporlar/personel-performans" element={<RaporPersonelPerformans />} />
+            <Route path="raporlar/aksiyon-turu" element={<RaporAksiyonTuru />} />
+            <Route path="raporlar/hedef-prim" element={<RaporHedefPrim />} />
+          </Route>
+
+          <Route path="/:slug" element={<FirmaDetay />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
+
+      {showPublicChrome && (
+        <Suspense fallback={null}>
+          <Chatbot />
+        </Suspense>
+      )}
+    </>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -116,93 +223,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <VisitorTracker />
-        <RouteStateManager />
-        <RoutePreloader />
-        <AuthRedirectHandler />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/test-index" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/tekpazar" element={<AnaSayfa />} />
-            <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
-            <Route path="/ihalelerim" element={<ManuIhale />} />
-            <Route path="/ihalelerim/yeni" element={<YeniIhale />} />
-            <Route path="/ihaleler" element={<TekIhale />} />
-            <Route path="/ihaleler/:slug" element={<IhaleDetay />} />
-            <Route path="/ihalelerim/duzenle/:id" element={<YeniIhale />} />
-            <Route path="/ihalelerim/takip/:id" element={<IhaleTakip />} />
-            <Route path="/tekliflerim" element={<Tekliflerim />} />
-            <Route path="/urunlerim" element={<ManuPazar />} />
-            <Route path="/urunlerim/yeni" element={<YeniUrun />} />
-            <Route path="/urunlerim/duzenle/:id" element={<YeniUrun />} />
-            <Route path="/favoriler" element={<Favoriler />} />
-            <Route path="/mesajlar" element={<Mesajlar />} />
-            <Route path="/bildirimler" element={<Bildirimler />} />
-            <Route path="/paketim" element={<Paketim />} />
-            <Route path="/destek" element={<DashboardDestek />} />
-            <Route path="/destek/:id" element={<DashboardDestekDetay />} />
-            <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
-            <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
-            <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
-            <Route path="/giris-kayit" element={<GirisKayit />} />
-            <Route path="/urunler/:slug" element={<UrunDetay />} />
-            <Route path="/firma/:slug" element={<FirmaDetay />} />
-            <Route path="/firmalar" element={<TekRehber />} />
-            <Route path="/ayarlar" element={<ProfilAyarlari />} />
-            <Route path="/profil-ayarlari" element={<ProfilAyarlari />} />
-            <Route path="/hakkimizda" element={<Hakkimizda />} />
-            <Route path="/iletisim" element={<Iletisim />} />
-            <Route path="/uretici-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
-            <Route path="/tekihale-tanitim" element={<TekIhaleTanitim />} />
-            <Route path="/tekpazar-tanitim" element={<TekPazarTanitim />} />
-            <Route path="/sss" element={<SSS />} />
-            <Route path="/gizlilik-kosullari" element={<GizlilikKosullari />} />
-            <Route path="/kvkk-aydinlatma" element={<KVKKAydinlatma />} />
-            <Route path="/kullanim-kosullari" element={<KullanimKosullari />} />
-            <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
-            <Route path="/sifre-sifirla" element={<SifreSifirla />} />
-            <Route path="/telefon-dogrulama" element={<TelefonDogrulama />} />
-            
-            {/* Admin Panel Routes */}
-            <Route path="/yonetim" element={<AdminRoute><AdminGiris /></AdminRoute>} />
-            <Route path="/yonetim/panel" element={<AdminRoute><AdminPanel /></AdminRoute>} />
-            <Route path="/yonetim/kullanicilar" element={<AdminRoute><AdminKullanicilar /></AdminRoute>} />
-            <Route path="/yonetim/firmalar" element={<AdminRoute><AdminFirmalar /></AdminRoute>} />
-            <Route path="/yonetim/firmalar-v2" element={<AdminRoute><AdminFirmalarV2 /></AdminRoute>} />
-            <Route path="/yonetim/ihaleler" element={<AdminRoute><AdminIhaleler /></AdminRoute>} />
-            <Route path="/yonetim/urunler" element={<AdminRoute><AdminUrunler /></AdminRoute>} />
-            <Route path="/yonetim/sikayetler" element={<AdminRoute><AdminSikayetler /></AdminRoute>} />
-            <Route path="/yonetim/paketler" element={<AdminRoute><AdminPaketler /></AdminRoute>} />
-            <Route path="/yonetim/destek" element={<AdminRoute><AdminDestek /></AdminRoute>} />
-            <Route path="/yonetim/islemler" element={<AdminRoute><AdminIslemler /></AdminRoute>} />
-            <Route path="/yonetim/kisitlamalar" element={<AdminRoute><AdminKisitlamalar /></AdminRoute>} />
-            <Route path="/yonetim/reklam" element={<AdminRoute><AdminReklam /></AdminRoute>} />
-            <Route path="/yonetim/tekbot" element={<AdminRoute><AdminTekBot /></AdminRoute>} />
-            <Route path="/yonetim/portfolyo" element={<AdminRoute><AdminPortfoy /></AdminRoute>} />
-            <Route path="/yonetim/aksiyonlar" element={<AdminRoute><AdminAksiyonlar /></AdminRoute>} />
-            <Route path="/yonetim/ziyaret-planlari" element={<AdminRoute><AdminZiyaretPlanlari /></AdminRoute>} />
-            <Route path="/yonetim/hedefler" element={<AdminRoute><AdminHedefler /></AdminRoute>} />
-            <Route path="/yonetim/ajanda" element={<AdminRoute><AdminAjanda /></AdminRoute>} />
-            <Route path="/yonetim/canli-harita" element={<AdminRoute><AdminCanliHarita /></AdminRoute>} />
-            <Route path="/yonetim/yetkilendirme" element={<AdminRoute><AdminYetkilendirme /></AdminRoute>} />
-            <Route path="/yonetim/kaynak-raporu" element={<AdminRoute><AdminKaynakRaporu /></AdminRoute>} />
-            <Route path="/yonetim/raporlar" element={<AdminRoute><AdminRaporlar /></AdminRoute>} />
-            <Route path="/yonetim/raporlar/satis-kanali" element={<AdminRoute><RaporSatisKanali /></AdminRoute>} />
-            <Route path="/yonetim/raporlar/musteri-tipi" element={<AdminRoute><RaporMusteriTipi /></AdminRoute>} />
-            <Route path="/yonetim/raporlar/personel-performans" element={<AdminRoute><RaporPersonelPerformans /></AdminRoute>} />
-            <Route path="/yonetim/raporlar/aksiyon-turu" element={<AdminRoute><RaporAksiyonTuru /></AdminRoute>} />
-            <Route path="/yonetim/raporlar/hedef-prim" element={<AdminRoute><RaporHedefPrim /></AdminRoute>} />
-
-            {/* Catch-all: try firma slug at root level */}
-            <Route path="/:slug" element={<FirmaDetay />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
+        <AppContent />
       </BrowserRouter>
-      <Chatbot />
     </TooltipProvider>
   </QueryClientProvider>
 );

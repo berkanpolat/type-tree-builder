@@ -1,75 +1,68 @@
 import { useEffect } from "react";
 
-/**
- * Preloads frequently visited route chunks after initial page load
- * so that navigation between them is instant (no Suspense fallback).
- */
-const preloadRoutes = () => {
-  const routes = [
-    // Main pages
-    () => import("@/pages/AnaSayfa"),
-    () => import("@/pages/TekIhale"),
-    () => import("@/pages/Dashboard"),
-    () => import("@/pages/TekRehber"),
-    () => import("@/pages/ManuPazar"),
-    () => import("@/pages/ManuIhale"),
-    () => import("@/pages/Favoriler"),
-    () => import("@/pages/Mesajlar"),
-    () => import("@/pages/Bildirimler"),
-    () => import("@/pages/FirmaBilgilerim"),
-    () => import("@/pages/Tekliflerim"),
-    // Detail pages
-    () => import("@/pages/UrunDetay"),
-    () => import("@/pages/IhaleDetay"),
-    () => import("@/pages/FirmaDetay"),
-    () => import("@/pages/IhaleTakip"),
-    () => import("@/pages/YeniIhale"),
-    () => import("@/pages/YeniUrun"),
-    // Other pages
-    () => import("@/pages/ProfilAyarlari"),
-    () => import("@/pages/Paketim"),
-    () => import("@/pages/DashboardDestek"),
-    () => import("@/pages/DashboardDestekDetay"),
-    () => import("@/pages/HizmetBilgileri"),
-    () => import("@/pages/UrunBilgileri"),
-    () => import("@/pages/UrunKategorisi"),
-    () => import("@/pages/LandingPage"),
-    () => import("@/pages/Hakkimizda"),
-    () => import("@/pages/Iletisim"),
-    () => import("@/pages/SSS"),
-    () => import("@/pages/UreticiTedarikciKesfi"),
-    () => import("@/pages/TekIhaleTanitim"),
-    () => import("@/pages/TekPazarTanitim"),
-  ];
+const PRELOAD_ROUTES = [
+  () => import("@/pages/AnaSayfa"),
+  () => import("@/pages/TekIhale"),
+  () => import("@/pages/Dashboard"),
+  () => import("@/pages/TekRehber"),
+  () => import("@/pages/ManuPazar"),
+  () => import("@/pages/ManuIhale"),
+  () => import("@/pages/Favoriler"),
+  () => import("@/pages/Mesajlar"),
+  () => import("@/pages/Bildirimler"),
+  () => import("@/pages/FirmaBilgilerim"),
+  () => import("@/pages/Tekliflerim"),
+  () => import("@/pages/ProfilAyarlari"),
+  () => import("@/pages/Paketim"),
+];
 
-  let i = 0;
+const shouldPreloadRoutes = () => {
+  if (document.visibilityState !== "visible") return false;
+
+  const connection = (navigator as Navigator & {
+    connection?: { saveData?: boolean; effectiveType?: string };
+  }).connection;
+
+  if (connection?.saveData) return false;
+  if (connection?.effectiveType?.includes("2g")) return false;
+
+  return true;
+};
+
+const preloadRoutes = () => {
+  let index = 0;
+
   const loadNext = () => {
-    if (i >= routes.length) return;
-    routes[i]().finally(() => {
-      i++;
-      // Stagger loads to avoid blocking main thread
+    if (index >= PRELOAD_ROUTES.length) return;
+
+    void PRELOAD_ROUTES[index]().finally(() => {
+      index += 1;
       if ("requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(loadNext, { timeout: 3000 });
+        (window as any).requestIdleCallback(loadNext, { timeout: 4000 });
       } else {
-        setTimeout(loadNext, 100);
+        globalThis.setTimeout(loadNext, 250);
       }
     });
   };
+
   loadNext();
 };
 
 const RoutePreloader = () => {
   useEffect(() => {
-    // Wait for initial page to fully render, then start preloading
-    const timer = setTimeout(() => {
-      if ("requestIdleCallback" in window) {
-        (window as any).requestIdleCallback(() => preloadRoutes(), { timeout: 5000 });
-      } else {
-        preloadRoutes();
-      }
-    }, 2000);
+    if (!shouldPreloadRoutes()) return;
 
-    return () => clearTimeout(timer);
+    const startPreloading = () => preloadRoutes();
+
+    const timer = globalThis.setTimeout(() => {
+      if ("requestIdleCallback" in window) {
+        (window as any).requestIdleCallback(startPreloading, { timeout: 6000 });
+      } else {
+        startPreloading();
+      }
+    }, 3500);
+
+    return () => globalThis.clearTimeout(timer);
   }, []);
 
   return null;

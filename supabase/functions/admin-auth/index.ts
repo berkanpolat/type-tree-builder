@@ -4467,16 +4467,27 @@ Deno.serve(async (req) => {
     if (action === "list-yetkililer") {
       verifyToken(body.token);
       const { firmaId } = body;
+      const compact = body.compact === true;
       if (!firmaId) return jsonResponse({ error: "Firma ID zorunlu" }, 400);
-      
-      const { data, error } = await supabase.from("firma_yetkililer").select("*").eq("firma_id", firmaId).order("created_at", { ascending: false });
+
+      const selectFields = compact ? "id, ad, soyad, pozisyon, created_at" : "*";
+      const { data, error } = await supabase
+        .from("firma_yetkililer")
+        .select(selectFields)
+        .eq("firma_id", firmaId)
+        .order("created_at", { ascending: false });
       if (error) return jsonResponse({ error: error.message }, 400);
-      
-      // Enrich with admin names
+
+      if (compact) {
+        return jsonResponse({ yetkililer: data || [] });
+      }
+
       const adminIds = [...new Set((data || []).map((y: any) => y.admin_id))];
-      const { data: admins } = adminIds.length > 0 ? await supabase.from("admin_users").select("id, ad, soyad").in("id", adminIds) : { data: [] };
+      const { data: admins } = adminIds.length > 0
+        ? await supabase.from("admin_users").select("id, ad, soyad").in("id", adminIds)
+        : { data: [] };
       const adminMap = new Map((admins || []).map((a: any) => [a.id, `${a.ad} ${a.soyad}`]));
-      
+
       const enriched = (data || []).map((y: any) => ({ ...y, admin_ad: adminMap.get(y.admin_id) || "—" }));
       return jsonResponse({ yetkililer: enriched });
     }
