@@ -1041,8 +1041,8 @@ export default function IhaleDetay() {
               </Card>
             )}
 
-            {/* MOBILE ONLY: Teklif Verme - order 4 (only for logged-in users) */}
-            {currentUserId && (
+            {/* MOBILE ONLY: Teklif Verme - order 4 */}
+            {currentUserId ? (
             <div className="lg:hidden order-4">
               <Card className="p-6">
                 <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
