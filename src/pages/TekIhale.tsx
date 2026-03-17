@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
 import { useSessionState } from "@/hooks/use-session-state";
 import { useBanner } from "@/hooks/use-banner";
 import { useNavigate, useLocation } from "react-router-dom";

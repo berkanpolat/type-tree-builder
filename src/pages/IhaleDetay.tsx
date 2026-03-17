@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBanner } from "@/hooks/use-banner";
