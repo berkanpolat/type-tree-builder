@@ -261,7 +261,7 @@ export default function TekRehber() {
     if (faaliyetData.length > 0) {
       const faaliyetSecIds = [...new Set(faaliyetData.map((f: any) => f.secenek_id))];
       // Check if we already have names in secenekMap, only fetch missing ones
-      const missingIds = faaliyetSecIds.filter((id: string) => !newSecenekMap[id]);
+      const missingIds = faaliyetSecIds.filter((id) => !newSecenekMap[id as string]) as string[];
       if (missingIds.length > 0) {
         const { data: faaliyetNames } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", missingIds);
         if (faaliyetNames) faaliyetNames.forEach((n) => { newSecenekMap[n.id] = n.name; });

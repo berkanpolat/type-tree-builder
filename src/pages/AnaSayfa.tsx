@@ -671,7 +671,7 @@ export default function AnaSayfa() {
       await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: urunId });
       toast({ title: "Favorilere eklendi" });
     }
-    setAllUrunler((prev) => prev.map((u) => u.id === urunId ? { ...u, is_favorited: !isFav } : u));
+    // Favoriting updates cache optimistically - no need for local state update
   };
 
   if (authLoading) {
