@@ -1205,8 +1205,15 @@ export default function IhaleDetay() {
                 </Card>
               )}
             </div>
+            ) : (
+            <div className="lg:hidden order-6">
+              <Card className="p-6 text-center">
+                <Building2 className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm font-medium text-foreground mb-1">İhale Sahibi</p>
+                <p className="text-xs text-muted-foreground">Firma bilgilerini görmek için giriş yapın.</p>
+              </Card>
+            </div>
             )}
-
             {/* İhale Bilgileri - order 7 */}
             <Card className="p-6 order-7 lg:order-none">
               <h3 className="text-lg font-bold text-foreground mb-4">İhale Bilgileri</h3>
