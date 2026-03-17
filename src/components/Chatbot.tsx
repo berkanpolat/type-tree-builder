@@ -1,11 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
 import { X, Send, Loader2, Sparkles, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { lazy, Suspense } from "react";
 const ReactMarkdown = lazy(() => import("react-markdown"));
-
-// Use a smaller inline placeholder until avatar is needed
-const TEKBOT_AVATAR_URL = new URL("@/assets/tekbot-avatar.png", import.meta.url).href;
+import tekbotAvatar from "@/assets/tekbot-avatar.png";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
