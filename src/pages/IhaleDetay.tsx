@@ -3,6 +3,7 @@ import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getSafeUser } from "@/lib/auth-session";
 import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
 import Footer from "@/components/Footer";

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { getSafeUser } from "@/lib/auth-session";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
