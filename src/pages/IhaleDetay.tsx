@@ -1101,10 +1101,19 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            ) : (
+            <div className="lg:hidden order-4">
+              <Card className="p-6 text-center">
+                <LogIn className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm font-medium text-foreground mb-1">Teklif vermek için giriş yapın</p>
+                <p className="text-xs text-muted-foreground mb-4">İhaleye teklif verebilmek ve detayları görebilmek için hesabınıza giriş yapmanız gerekmektedir.</p>
+                <Button className="w-full gap-2" onClick={() => navigate("/giris-kayit")}><LogIn className="w-4 h-4" /> Giriş Yap / Kayıt Ol</Button>
+              </Card>
+            </div>
             )}
 
-            {/* MOBILE ONLY: Teklifler - order 5 (only for logged-in users) */}
-            {currentUserId && (
+            {/* MOBILE ONLY: Teklifler - order 5 */}
+            {currentUserId ? (
             <div className="lg:hidden order-5">
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
