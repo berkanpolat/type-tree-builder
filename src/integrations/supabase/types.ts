@@ -2124,6 +2124,178 @@ export type Database = {
         }
         Relationships: []
       }
+      performance_alerts: {
+        Row: {
+          acknowledged: boolean | null
+          alert_type: string
+          created_at: string
+          endpoint: string | null
+          id: string
+          message: string
+          severity: string
+          test_id: string | null
+          threshold: number | null
+          value: number | null
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          alert_type: string
+          created_at?: string
+          endpoint?: string | null
+          id?: string
+          message: string
+          severity?: string
+          test_id?: string | null
+          threshold?: number | null
+          value?: number | null
+        }
+        Update: {
+          acknowledged?: boolean | null
+          alert_type?: string
+          created_at?: string
+          endpoint?: string | null
+          id?: string
+          message?: string
+          severity?: string
+          test_id?: string | null
+          threshold?: number | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_alerts_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "performance_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_test_results: {
+        Row: {
+          created_at: string
+          details: Json | null
+          endpoint: string
+          error_message: string | null
+          id: string
+          module: string
+          response_time: number | null
+          status_code: number | null
+          success: boolean | null
+          test_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          module: string
+          response_time?: number | null
+          status_code?: number | null
+          success?: boolean | null
+          test_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          module?: string
+          response_time?: number | null
+          status_code?: number | null
+          success?: boolean | null
+          test_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "performance_test_results_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "performance_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      performance_test_schedules: {
+        Row: {
+          created_at: string
+          enabled: boolean | null
+          id: string
+          interval_minutes: number
+          last_run_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean | null
+          id?: string
+          interval_minutes: number
+          last_run_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean | null
+          id?: string
+          interval_minutes?: number
+          last_run_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      performance_tests: {
+        Row: {
+          avg_response_time: number | null
+          completed_at: string | null
+          created_at: string
+          error_rate: number | null
+          failed_endpoints: number | null
+          id: string
+          max_response_time: number | null
+          overall_score: number | null
+          started_at: string
+          status: string
+          summary: Json | null
+          system_status: string | null
+          test_type: string
+          total_endpoints: number | null
+        }
+        Insert: {
+          avg_response_time?: number | null
+          completed_at?: string | null
+          created_at?: string
+          error_rate?: number | null
+          failed_endpoints?: number | null
+          id?: string
+          max_response_time?: number | null
+          overall_score?: number | null
+          started_at?: string
+          status?: string
+          summary?: Json | null
+          system_status?: string | null
+          test_type?: string
+          total_endpoints?: number | null
+        }
+        Update: {
+          avg_response_time?: number | null
+          completed_at?: string | null
+          created_at?: string
+          error_rate?: number | null
+          failed_endpoints?: number | null
+          id?: string
+          max_response_time?: number | null
+          overall_score?: number | null
+          started_at?: string
+          status?: string
+          summary?: Json | null
+          system_status?: string | null
+          test_type?: string
+          total_endpoints?: number | null
+        }
+        Relationships: []
+      }
       profil_goruntulemeler: {
         Row: {
           created_at: string
