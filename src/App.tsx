@@ -174,6 +174,7 @@ const AppContent = () => {
           <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
           <Route path="/sifre-sifirla" element={<SifreSifirla />} />
           <Route path="/telefon-dogrulama" element={<TelefonDogrulama />} />
+          <Route path="/odeme-test" element={<OdemeTest />} />
 
           <Route path="/yonetim" element={<AdminRoute />}>
             <Route index element={<AdminGiris />} />
