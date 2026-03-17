@@ -731,7 +731,7 @@ export default function AnaSayfa() {
 
   return (
     <div className="min-h-screen bg-muted/30 font-sans">
-      <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
+      {currentUserId ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       <main className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
         {/* Search Header */}

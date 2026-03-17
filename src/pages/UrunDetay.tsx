@@ -199,9 +199,13 @@ export default function UrunDetay() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         const adminToken = localStorage.getItem("admin_token");
-        if (!adminToken) { navigate("/giris-kayit"); return; }
-        setIsAdminViewing(true);
-        setCurrentUserId("admin");
+        if (adminToken) {
+          setIsAdminViewing(true);
+          setCurrentUserId("admin");
+        } else {
+          // Allow public access - set a placeholder to trigger fetch
+          setCurrentUserId("public");
+        }
         return;
       }
       setCurrentUserId(user.id);
@@ -209,7 +213,7 @@ export default function UrunDetay() {
       if (f) { setFirmaUnvani(f.firma_unvani); setFirmaLogoUrl(f.logo_url); }
     };
     init();
-  }, [navigate]);
+  }, []);
 
   const [resolvedUrunId, setResolvedUrunId] = useState<string | null>(null);
 
