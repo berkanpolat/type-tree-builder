@@ -66,9 +66,15 @@ const PAGE_ENDPOINTS = [
 
 const USER_SCENARIOS = [
   { name: "Ana Sayfa Yükleme", url: SITE_URL, description: "Ana sayfayı yükle" },
+  { name: "Dashboard", url: `${SITE_URL}/dashboard`, description: "Dashboard sayfası" },
   { name: "Firma Listesi Görüntüleme", url: `${SITE_URL}/firmalar`, description: "Firma rehberini aç" },
+  { name: "İhale Listesi", url: `${SITE_URL}/ihaleler`, description: "İhale listesini görüntüle" },
+  { name: "Ürün Listesi", url: `${SITE_URL}/tekpazar`, description: "Ürün/pazar sayfası" },
   { name: "Giriş Sayfası", url: `${SITE_URL}/giris-kayit`, description: "Giriş sayfasını yükle" },
   { name: "Hakkımızda", url: `${SITE_URL}/hakkimizda`, description: "Hakkımızda sayfası" },
+  { name: "SSS", url: `${SITE_URL}/sss`, description: "SSS sayfası" },
+  { name: "İletişim", url: `${SITE_URL}/iletisim`, description: "İletişim sayfası" },
+  { name: "Destek", url: `${SITE_URL}/destek`, description: "Destek sayfası" },
 ];
 
 async function testEndpoint(url: string, method = "GET", headers: Record<string, string> = {}): Promise<{ responseTime: number; statusCode: number; success: boolean; error?: string; contentLength?: number }> {
