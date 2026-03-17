@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
@@ -640,13 +641,7 @@ export default function UrunDetay() {
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Satıcı Bilgileri</h3>
                   <div className="flex items-center gap-4 mb-4">
-                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
-                      {firma.logo_url ? (
-                        <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
-                      ) : (
-                        <span className="text-xl font-bold text-muted-foreground">{firma.firma_unvani.charAt(0)}</span>
-                      )}
-                    </div>
+                    <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={firma.logo_url} size="xl" className="w-16 h-16 text-xl border border-border" />
                     <div>
                       {firma.belge_onayli && (
                         <div className="flex items-center gap-2 mb-0.5">
@@ -984,13 +979,7 @@ export default function UrunDetay() {
                 <h3 className="text-lg font-semibold text-foreground mb-4">Satıcı Bilgileri</h3>
 
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
-                    {firma.logo_url ? (
-                      <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" />
-                    ) : (
-                      <span className="text-xl font-bold text-muted-foreground">{firma.firma_unvani.charAt(0)}</span>
-                    )}
-                  </div>
+                  <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={firma.logo_url} size="xl" className="w-16 h-16 text-xl border border-border" />
                   <div>
                     {firma.belge_onayli && (
                       <div className="flex items-center gap-2 mb-0.5">
@@ -1139,13 +1128,7 @@ export default function UrunDetay() {
                     <div className="p-3 flex flex-col flex-1">
                       <p className="text-sm font-medium text-foreground line-clamp-2 mb-2 min-h-[2.5rem]">{b.baslik}</p>
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden shrink-0 border border-border">
-                          {b.firma_logo_url ? (
-                            <img src={b.firma_logo_url} alt="" className="w-full h-full object-contain" />
-                          ) : (
-                            <span className="text-[8px] font-bold text-muted-foreground">{b.firma_unvani?.charAt(0) || "?"}</span>
-                          )}
-                        </div>
+                        <FirmaAvatar firmaUnvani={b.firma_unvani || ""} logoUrl={b.firma_logo_url} size="xs" className="rounded-full border border-border" />
                         <span className="text-xs text-muted-foreground truncate">{b.firma_unvani || ""}</span>
                       </div>
                       <div className="mb-3">{bPrice}</div>

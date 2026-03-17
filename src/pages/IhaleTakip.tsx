@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
+import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
@@ -652,13 +653,7 @@ export default function IhaleTakip() {
                      <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 md:gap-6">
                        {/* Firma Info */}
                        <div className="flex items-center gap-3 w-full sm:w-auto sm:min-w-[180px]">
-                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                           {teklif.firma_logo_url ? (
-                             <img src={teklif.firma_logo_url} alt="" className="w-full h-full object-contain" />
-                           ) : (
-                             <span className="text-xs font-bold text-muted-foreground">{teklif.firma_unvani.charAt(0)}</span>
-                           )}
-                         </div>
+                         <FirmaAvatar firmaUnvani={teklif.firma_unvani} logoUrl={teklif.firma_logo_url} size="md" className="rounded-full" />
                          <div className="min-w-0">
                            <p className="font-semibold text-foreground text-sm truncate">{teklif.firma_unvani}</p>
                            {teklif.firma_il && (

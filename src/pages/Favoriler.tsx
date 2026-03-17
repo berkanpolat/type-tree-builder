@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import FirmaAvatar from "@/components/FirmaAvatar";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
@@ -196,13 +197,7 @@ export default function Favoriler() {
               <div className="divide-y divide-border">
                 {favFirmalar.map((fav) => (
                   <div key={fav.id} className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4 px-2">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                      {fav.firma?.logo_url ? (
-                        <img src={fav.firma.logo_url} alt="" className="w-full h-full object-contain" />
-                      ) : (
-                        <Building2 className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </div>
+                    <FirmaAvatar firmaUnvani={fav.firma?.firma_unvani || "-"} logoUrl={fav.firma?.logo_url} size="md" className="sm:w-12 sm:h-12 sm:text-base" />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-foreground text-sm sm:text-base truncate">{fav.firma?.firma_unvani || "-"}</p>
                       <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mt-0.5 flex-wrap">

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import FirmaAvatar from "@/components/FirmaAvatar";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
 import { useLocation } from "react-router-dom";
@@ -626,13 +627,7 @@ export default function Mesajlar() {
                     selectedConv?.id === conv.id ? "bg-muted border-border" : ""
                   }`}
                 >
-                  <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden border border-border">
-                    {conv.logo_url ? (
-                      <img src={conv.logo_url} alt="" className="w-full h-full object-contain" />
-                    ) : (
-                      <Building2 className="w-4 h-4 text-muted-foreground" />
-                    )}
-                  </div>
+                  <FirmaAvatar firmaUnvani={conv.firma_unvani || ""} logoUrl={conv.logo_url} size="md" className="w-11 h-11 rounded-full border border-border" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p className={`text-sm truncate max-w-[130px] ${conv.unread_count > 0 ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{conv.firma_unvani}</p>
@@ -674,13 +669,7 @@ export default function Mesajlar() {
                 <button className="md:hidden p-1 rounded hover:bg-muted" onClick={() => setSelectedConv(null)}>
                   <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                 </button>
-                <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                  {selectedConv.logo_url ? (
-                    <img src={selectedConv.logo_url} alt="" className="w-full h-full object-contain" />
-                  ) : (
-                    <Building2 className="w-4 h-4 text-muted-foreground" />
-                  )}
-                </div>
+                <FirmaAvatar firmaUnvani={selectedConv.firma_unvani || ""} logoUrl={selectedConv.logo_url} size="sm" className="w-9 h-9 rounded-full" />
                 <div className="flex-1">
                   <p className="font-semibold text-foreground text-sm">{selectedConv.firma_unvani}</p>
                   
