@@ -10,12 +10,14 @@ import {
   Building2,
   Menu,
   X,
+  LogIn,
 } from "lucide-react";
 import { useNotificationCount } from "@/hooks/use-notifications";
 import HeaderMessagePanel from "@/components/header/HeaderMessagePanel";
 import HeaderFavoritesPanel from "@/components/header/HeaderFavoritesPanel";
 import HeaderNotificationsPanel from "@/components/header/HeaderNotificationsPanel";
 import QuotaReminderBadge from "@/components/QuotaReminderBadge";
+import { Button } from "@/components/ui/button";
 
 interface PazarHeaderProps {
   firmaUnvani: string;
@@ -27,6 +29,7 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => location.pathname.startsWith(path);
@@ -37,6 +40,12 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
   }, []);
 
   const handleLogout = async () => {
@@ -73,61 +82,75 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
             <Link to="/ihaleler" className={`text-[11px] font-medium px-1.5 py-1 rounded ${isActive("/ihaleler") ? "text-secondary bg-secondary/10" : "text-muted-foreground hover:bg-muted"}`}>İhale</Link>
           </nav>
 
-          {/* Icons */}
-          <HeaderFavoritesPanel />
-          <HeaderMessagePanel />
-          <HeaderNotificationsPanel />
+          {isLoggedIn ? (
+            <>
+              {/* Icons */}
+              <HeaderFavoritesPanel />
+              <HeaderMessagePanel />
+              <HeaderNotificationsPanel />
 
-          {/* Quota - hide on very small screens */}
-          <div className="hidden sm:block">
-            <QuotaReminderBadge />
-          </div>
+              {/* Quota - hide on very small screens */}
+              <div className="hidden sm:block">
+                <QuotaReminderBadge />
+              </div>
 
-          {/* Divider */}
-          <div className="w-px h-6 bg-border mx-1 md:mx-2" />
+              {/* Divider */}
+              <div className="w-px h-6 bg-border mx-1 md:mx-2" />
 
-          {/* User menu */}
-          <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="flex items-center gap-1.5 md:gap-2.5 hover:opacity-80 transition-opacity"
-            >
-              <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
-                {firmaLogoUrl ? (
-                  <img src={firmaLogoUrl} alt="" className="w-full h-full object-contain p-0.5" />
-                ) : (
-                  <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
+              {/* User menu */}
+              <div className="relative" ref={menuRef}>
+                <button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="flex items-center gap-1.5 md:gap-2.5 hover:opacity-80 transition-opacity"
+                >
+                  <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
+                    {firmaLogoUrl ? (
+                      <img src={firmaLogoUrl} alt="" className="w-full h-full object-contain p-0.5" />
+                    ) : (
+                      <Building2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
+                    )}
+                  </div>
+                  <span className="hidden md:block text-sm font-medium text-foreground truncate max-w-[200px]">
+                    {firmaUnvani}
+                  </span>
+                  <ChevronDown className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-background border border-border rounded-xl shadow-lg py-2 z-50">
+                    {menuItems.map((item) => (
+                      <button
+                        key={item.label}
+                        onClick={() => { setMenuOpen(false); navigate(item.path); }}
+                        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                      >
+                        <item.icon className="w-4 h-4 text-muted-foreground" />
+                        {item.label}
+                      </button>
+                    ))}
+                    <div className="border-t border-border my-1" />
+                    <button
+                      onClick={() => { setMenuOpen(false); handleLogout(); }}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                    >
+                      <LogOut className="w-4 h-4 text-muted-foreground" />
+                      Çıkış Yap
+                    </button>
+                  </div>
                 )}
               </div>
-              <span className="hidden md:block text-sm font-medium text-foreground truncate max-w-[200px]">
-                {firmaUnvani}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 md:w-4 md:h-4 text-muted-foreground" />
-            </button>
-
-            {menuOpen && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-background border border-border rounded-xl shadow-lg py-2 z-50">
-                {menuItems.map((item) => (
-                  <button
-                    key={item.label}
-                    onClick={() => { setMenuOpen(false); navigate(item.path); }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <item.icon className="w-4 h-4 text-muted-foreground" />
-                    {item.label}
-                  </button>
-                ))}
-                <div className="border-t border-border my-1" />
-                <button
-                  onClick={() => { setMenuOpen(false); handleLogout(); }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                >
-                  <LogOut className="w-4 h-4 text-muted-foreground" />
-                  Çıkış Yap
-                </button>
-              </div>
-            )}
-          </div>
+            </>
+          ) : isLoggedIn === false ? (
+            <Button
+              size="sm"
+              variant="default"
+              onClick={() => navigate("/giris-kayit")}
+              className="flex items-center gap-1.5"
+            >
+              <LogIn className="w-4 h-4" />
+              <span className="hidden sm:inline">Giriş Yap</span>
+            </Button>
+          ) : null}
         </div>
       </div>
     </header>
