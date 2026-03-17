@@ -165,6 +165,7 @@ export default function AdminIhaleler() {
 
   // Confirm dialog
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; desc: string; action: () => void }>({ open: false, title: "", desc: "", action: () => {} });
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const callApi = useAdminApi();
 
