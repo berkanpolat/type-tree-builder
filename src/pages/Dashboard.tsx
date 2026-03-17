@@ -17,7 +17,6 @@ import {
   Bell,
   UserCheck,
   Pencil,
-  Building2,
   MapPin,
   Factory,
   Layers,
@@ -26,6 +25,7 @@ import {
   Crown,
   Infinity,
 } from "lucide-react";
+import FirmaAvatar from "@/components/FirmaAvatar";
 import DashboardLayout from "@/components/DashboardLayout";
 import { useBanner } from "@/hooks/use-banner";
 
@@ -40,6 +40,7 @@ interface FirmaData {
   firma_unvani: string;
   firma_turu_id: string;
   firma_tipi_id: string;
+  logo_url: string | null;
 }
 
 const Dashboard = () => {
@@ -159,9 +160,11 @@ const Dashboard = () => {
            <CardContent className="p-4 sm:p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3 sm:gap-4">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-muted flex items-center justify-center">
-                    <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground" />
-                  </div>
+                  <FirmaAvatar
+                    firmaUnvani={firma?.firma_unvani || ""}
+                    logoUrl={firma?.logo_url}
+                    size="xl"
+                  />
                   <div className="space-y-1">
                     <h2 className="text-lg font-semibold text-foreground">{firma?.firma_unvani || "Firma Bilgisi Yok"}</h2>
                     <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
