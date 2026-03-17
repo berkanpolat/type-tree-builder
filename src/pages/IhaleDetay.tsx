@@ -1167,10 +1167,18 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            ) : (
+            <div className="lg:hidden order-5">
+              <Card className="p-6 text-center">
+                <Wifi className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm font-medium text-foreground mb-1">Teklifler</p>
+                <p className="text-xs text-muted-foreground">Teklifleri görmek için giriş yapın.</p>
+              </Card>
+            </div>
             )}
 
-            {/* MOBILE ONLY: İhale Sahibi - order 6 (only for logged-in users) */}
-            {currentUserId && (
+            {/* MOBILE ONLY: İhale Sahibi - order 6 */}
+            {currentUserId ? (
             <div className="lg:hidden order-6">
               {ihale.firma_adi_gizle ? (
                 <Card className="p-6">
