@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Gavel, Eye, Clock, Filter, Search, RotateCcw, Package, HeadphonesIcon,
   ExternalLink, Pencil, Trash2, ArrowUpDown, FileText, ChevronLeft, ChevronRight,
-  Image as ImageIcon, X, ChevronDown, Activity, CheckCircle2, XCircle, ClockIcon, FileEdit, MessageSquare
+  Image as ImageIcon, X, ChevronDown, Activity, CheckCircle2, XCircle, ClockIcon, FileEdit, MessageSquare, Loader2
 } from "lucide-react";
 
 /* ── Theme-aware style helpers ── */
@@ -165,6 +165,7 @@ export default function AdminIhaleler() {
 
   // Confirm dialog
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; desc: string; action: () => void }>({ open: false, title: "", desc: "", action: () => {} });
+  const [confirmLoading, setConfirmLoading] = useState(false);
 
   const callApi = useAdminApi();
 
@@ -355,12 +356,15 @@ export default function AdminIhaleler() {
       open: true, title: "İhaleyi Kaldır",
       desc: `"${ihale.baslik}" (${ihale.ihale_no}) başlıklı ihaleyi kaldırmak istediğinize emin misiniz? İhale "İptal" durumuna geçecektir.`,
       action: async () => {
+        setConfirmLoading(true);
         try {
           await callApi("remove-ihale", { token, ihaleId: ihale.id });
           toast({ title: "Başarılı", description: "İhale kaldırıldı" });
           fetchData();
         } catch (err: any) {
           toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+        } finally {
+          setConfirmLoading(false);
         }
         setConfirmDialog(prev => ({ ...prev, open: false }));
       },
@@ -881,9 +885,9 @@ export default function AdminIhaleler() {
             <AlertDialogDescription style={s.muted}>{confirmDialog.desc}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel style={{ color: "hsl(var(--admin-muted))", borderColor: "hsl(var(--admin-border))" }}>Vazgeç</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDialog.action} className="bg-amber-500 hover:bg-amber-600 text-white">
-              Evet, Onayla
+            <AlertDialogCancel disabled={confirmLoading} style={{ color: "hsl(var(--admin-muted))", borderColor: "hsl(var(--admin-border))" }}>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDialog.action} disabled={confirmLoading} className="bg-amber-500 hover:bg-amber-600 text-white">
+              {confirmLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Evet, Onayla
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

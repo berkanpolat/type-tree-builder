@@ -99,6 +99,7 @@ export default function ManuIhale() {
   const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
   const [filterDurum, setFilterDurum] = useSessionState("filterDurum", "all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -124,12 +125,18 @@ export default function ManuIhale() {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("ihaleler").delete().eq("id", id);
-    if (error) {
-      toast({ title: "Hata", description: "İhale silinemedi.", variant: "destructive" });
-    } else {
-      toast({ title: "İhale silindi" });
-      setIhaleler((prev) => prev.filter((i) => i.id !== id));
+    if (deleteLoading) return;
+    setDeleteLoading(true);
+    try {
+      const { error } = await supabase.from("ihaleler").delete().eq("id", id);
+      if (error) {
+        toast({ title: "Hata", description: "İhale silinemedi.", variant: "destructive" });
+      } else {
+        toast({ title: "İhale silindi" });
+        setIhaleler((prev) => prev.filter((i) => i.id !== id));
+      }
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -411,7 +418,8 @@ export default function ManuIhale() {
             <AlertDialogCancel>Vazgeç</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => { if (deleteId) handleDelete(deleteId); setDeleteId(null); }}
+              disabled={deleteLoading}
+              onClick={async () => { if (deleteId) { await handleDelete(deleteId); setDeleteId(null); } }}
             >
               Sil
             </AlertDialogAction>

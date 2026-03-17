@@ -304,7 +304,11 @@ export default function AdminFirmalarV2() {
   useEffect(() => { fetchDropdowns(); }, [fetchDropdowns]);
 
   // ── Single actions ──
+  const [reviewActionLoading, setReviewActionLoading] = useState(false);
+
   const handleApprove = async (firmaId: string) => {
+    if (reviewActionLoading) return;
+    setReviewActionLoading(true);
     try {
       await callApi("approve-firma", { token, firmaId });
       toast({ title: "Başarılı", description: "Firma onaylandı" });
@@ -312,10 +316,14 @@ export default function AdminFirmalarV2() {
       fetchData();
     } catch (err: any) {
       toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setReviewActionLoading(false);
     }
   };
 
   const handleReject = async (firmaId: string) => {
+    if (reviewActionLoading) return;
+    setReviewActionLoading(true);
     try {
       await callApi("reject-firma", { token, firmaId });
       toast({ title: "Başarılı", description: "Firma reddedildi" });
@@ -323,6 +331,8 @@ export default function AdminFirmalarV2() {
       fetchData();
     } catch (err: any) {
       toast({ title: "Hata", description: err?.message || "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setReviewActionLoading(false);
     }
   };
 
@@ -1205,12 +1215,12 @@ export default function AdminFirmalarV2() {
             </div>
           ) : null}
           {reviewDetail && (
-            <DialogFooter className="gap-2 mt-4">
-              <Button variant="ghost" onClick={() => handleReject(reviewDetail.firma.id)} className="text-red-500 hover:text-red-600 hover:bg-red-500/10">
-                <XCircle className="w-4 h-4 mr-2" /> Reddet
+          <DialogFooter className="gap-2 mt-4">
+              <Button variant="ghost" disabled={reviewActionLoading} onClick={() => handleReject(reviewDetail.firma.id)} className="text-red-500 hover:text-red-600 hover:bg-red-500/10">
+                {reviewActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <XCircle className="w-4 h-4 mr-2" />} Reddet
               </Button>
-              <Button onClick={() => handleApprove(reviewDetail.firma.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
-                <CheckCircle className="w-4 h-4 mr-2" /> Onayla
+              <Button disabled={reviewActionLoading} onClick={() => handleApprove(reviewDetail.firma.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                {reviewActionLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />} Onayla
               </Button>
             </DialogFooter>
           )}

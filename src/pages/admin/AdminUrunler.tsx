@@ -299,7 +299,10 @@ export default function AdminUrunler() {
     : firmaList;
 
   // Toggle ürün aktif/pasif
+  const [toggleLoadingId, setToggleLoadingId] = useState<string | null>(null);
   const handleToggle = async (urunId: string, currentDurum: string) => {
+    if (toggleLoadingId) return;
+    setToggleLoadingId(urunId);
     const newDurum = currentDurum === "aktif" ? "pasif" : "aktif";
     try {
       await callApi("toggle-urun", { token, urunId, newDurum });
@@ -307,6 +310,8 @@ export default function AdminUrunler() {
       toast({ title: `Ürün ${newDurum === "aktif" ? "aktif" : "pasif"} yapıldı` });
     } catch {
       toast({ title: "Hata", description: "İşlem başarısız", variant: "destructive" });
+    } finally {
+      setToggleLoadingId(null);
     }
   };
 
@@ -760,6 +765,7 @@ export default function AdminUrunler() {
                       {(urun.durum === "aktif" || urun.durum === "pasif") && hasPermission("urun_onaylayabilir") && (
                         <Switch
                           checked={urun.durum === "aktif"}
+                          disabled={toggleLoadingId === urun.id}
                           onCheckedChange={() => handleToggle(urun.id, urun.durum)}
                           className="scale-[0.85]"
                         />
