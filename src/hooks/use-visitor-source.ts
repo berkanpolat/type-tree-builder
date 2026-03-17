@@ -9,7 +9,7 @@ function detectKanal(utmSource: string | null, utmMedium: string | null, referre
     if (src.includes("google") || src.includes("bing") || src.includes("yahoo") || src.includes("yandex")) {
       return utmMedium?.toLowerCase() === "cpc" ? "ucretli_arama" : "organik_arama";
     }
-    if (["facebook", "instagram", "linkedin", "twitter", "tiktok", "x"].some(s => src.includes(s))) {
+    if (["facebook", "instagram", "linkedin", "twitter", "tiktok", "x"].some((s) => src.includes(s))) {
       return utmMedium?.toLowerCase() === "cpc" || utmMedium?.toLowerCase() === "paid" ? "ucretli_sosyal" : "sosyal_medya";
     }
     if (src === "email" || src === "newsletter" || src === "postmark") return "email";
@@ -21,8 +21,8 @@ function detectKanal(utmSource: string | null, utmMedium: string | null, referre
 
   try {
     const host = new URL(referrer).hostname.toLowerCase();
-    if (["google", "bing", "yahoo", "yandex", "duckduckgo"].some(s => host.includes(s))) return "organik_arama";
-    if (["facebook", "instagram", "linkedin", "twitter", "tiktok", "t.co", "lnkd.in"].some(s => host.includes(s))) return "sosyal_medya";
+    if (["google", "bing", "yahoo", "yandex", "duckduckgo"].some((s) => host.includes(s))) return "organik_arama";
+    if (["facebook", "instagram", "linkedin", "twitter", "tiktok", "t.co", "lnkd.in"].some((s) => host.includes(s))) return "sosyal_medya";
     return "yonlendirme";
   } catch {
     return "diger";
@@ -40,7 +40,6 @@ function getSessionId(): string {
 
 export function useVisitorSource() {
   useEffect(() => {
-    // Only track once per session
     if (sessionStorage.getItem(SESSION_KEY)) return;
 
     const params = new URLSearchParams(window.location.search);
@@ -50,12 +49,11 @@ export function useVisitorSource() {
     const utmTerm = params.get("utm_term");
     const utmContent = params.get("utm_content");
     const referrer = document.referrer || "";
-
     const kanal = detectKanal(utmSource, utmMedium, referrer);
 
     sessionStorage.setItem(SESSION_KEY, "1");
 
-    supabase.from("visitor_sources").insert({
+    const payload = {
       session_id: getSessionId(),
       utm_source: utmSource,
       utm_medium: utmMedium,
@@ -65,6 +63,18 @@ export function useVisitorSource() {
       referrer: referrer || null,
       kanal,
       landing_page: window.location.pathname,
-    } as any).then(() => {});
+    };
+
+    const sendTracking = () => {
+      void supabase.from("visitor_sources").insert(payload as any);
+    };
+
+    if ("requestIdleCallback" in window) {
+      const idleId = (window as any).requestIdleCallback(sendTracking, { timeout: 4000 });
+      return () => (window as any).cancelIdleCallback?.(idleId);
+    }
+
+    const timeoutId = window.setTimeout(sendTracking, 1500);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 }
