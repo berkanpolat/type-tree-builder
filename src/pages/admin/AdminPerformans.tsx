@@ -9,12 +9,15 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Activity, Play, Download, RefreshCw, Clock, AlertTriangle, CheckCircle2,
   XCircle, Zap, TrendingUp, Server, Globe, Users, Cpu, Brain, Bell,
-  ChevronDown, ChevronUp, FileText, History
+  ChevronDown, ChevronUp, FileText, History, Wrench, Loader2, Info
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area,
 } from "recharts";
 import { toast } from "sonner";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
 
 interface TestResult {
   id: string;
