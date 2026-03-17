@@ -986,9 +986,9 @@ export default function UrunDetay() {
               </div>
             </Card>
 
-            {/* Seller Info Card - desktop only (on mobile shown after price) */}
+            {/* Seller Info Card - desktop only (on mobile shown after price) - PRO only */}
             <div className="hidden lg:block">
-            {firma && (
+            {firma && packageInfo.paketSlug !== "ucretsiz" && currentUserId && currentUserId !== "public" ? (
               <Card className="p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Satıcı Bilgileri</h3>
 
@@ -1088,7 +1088,15 @@ export default function UrunDetay() {
                   </>
                 )}
               </Card>
-            )}
+            ) : firma ? (
+              <Card className="p-6 text-center">
+                <h3 className="text-lg font-semibold text-foreground mb-2">Satıcı Bilgileri</h3>
+                <p className="text-sm text-muted-foreground mb-4">Satıcı bilgilerini görüntülemek için PRO pakete yükseltin.</p>
+                <Button onClick={() => currentUserId && currentUserId !== "public" ? navigate("/paketim") : navigate("/giris-kayit")} className="gap-2">
+                  {currentUserId && currentUserId !== "public" ? "PRO Pakete Yükselt" : "Giriş Yap"}
+                </Button>
+              </Card>
+            ) : null}
             </div>
           </div>
         </div>
