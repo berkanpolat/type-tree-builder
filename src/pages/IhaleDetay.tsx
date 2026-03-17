@@ -1562,7 +1562,7 @@ export default function IhaleDetay() {
             )}
 
             {/* Teklifler Card - desktop only (only for logged-in users) */}
-            {currentUserId && (
+            {currentUserId ? (
             <div className="hidden lg:block">
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
