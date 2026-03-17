@@ -138,16 +138,22 @@ export default function AdminPortfoy() {
   const callApi = useAdminApi();
 
   const fetchData = useCallback(async () => {
-    if (!token) return;
+    if (!token || !adminUser?.id) return;
     try {
-      const firmaData = await callApi("list-firmalar", { token });
+      const firmaData = await callApi("list-firmalar", {
+        token,
+        paginated: true,
+        page: 1,
+        perPage: 100,
+        filterPortfolyo: adminUser.id,
+      });
       setAllFirmalar(firmaData.firmalar || []);
     } catch {
       toast({ title: "Hata", description: "Veriler yüklenemedi", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [token, callApi, toast]);
+  }, [token, adminUser?.id, callApi, toast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -241,10 +247,8 @@ export default function AdminPortfoy() {
     }
   };
 
-  // Filter only current admin's portfolio
-  const portfolyoFirmalar = allFirmalar.filter(f => f.portfolyo?.admin_id === adminUser?.id);
-
-  const filtered = portfolyoFirmalar.filter(f => {
+  // Portfolio filtering is now done server-side via filterPortfolyo param
+  const filtered = allFirmalar.filter(f => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       if (!f.firma_unvani.toLowerCase().includes(term) &&
@@ -306,7 +310,7 @@ export default function AdminPortfoy() {
           <div className="flex items-center gap-2">
             <div className="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2" style={{ background: "hsl(var(--admin-hover))" }}>
               <Briefcase className="w-3.5 h-3.5" style={{ color: "hsl(38 92% 50%)" }} />
-              <span style={s.text}>{portfolyoFirmalar.length} firma</span>
+              <span style={s.text}>{allFirmalar.length} firma</span>
             </div>
           </div>
         </div>

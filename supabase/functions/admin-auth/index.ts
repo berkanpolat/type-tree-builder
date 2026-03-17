@@ -324,6 +324,7 @@ Deno.serve(async (req) => {
       }
 
       const paginated = body.paginated === true;
+      const filterPortfolyo = typeof body.filterPortfolyo === "string" ? body.filterPortfolyo : null;
       const unsupportedSorts = new Set(["ihale_sayisi", "teklif_sayisi", "urun_sayisi", "profil_doluluk", "last_seen"]);
 
       if (paginated && !unsupportedSorts.has(body.sortField)) {
@@ -455,6 +456,19 @@ Deno.serve(async (req) => {
         if (allowedUserIds) firmaQuery = firmaQuery.in("user_id", allowedUserIds);
         if (!allowedUserIds && filterPaket === "none" && excludedSubscribedUserIds.length > 0) {
           firmaQuery = firmaQuery.not("user_id", "in", `(${excludedSubscribedUserIds.join(",")})`);
+        }
+
+        // Portfolio filter: only return firms assigned to a specific admin
+        if (filterPortfolyo) {
+          const { data: portfolyoFirmaRows } = await supabase
+            .from("admin_portfolyo")
+            .select("firma_id")
+            .eq("admin_id", filterPortfolyo);
+          const portfolyoFirmaIds = (portfolyoFirmaRows || []).map((r: any) => r.firma_id);
+          if (portfolyoFirmaIds.length === 0) {
+            return jsonResponse({ firmalar: [], total: 0, page, perPage });
+          }
+          firmaQuery = firmaQuery.in("id", portfolyoFirmaIds);
         }
 
         const offset = (page - 1) * perPage;
