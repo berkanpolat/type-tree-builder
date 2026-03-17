@@ -806,7 +806,7 @@ export default function AdminFirmalarV2() {
 
         {/* Summary Cards */}
         {stats && (
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             <StatCard icon={Building2} label="Toplam" value={stats.total} color="text-blue-400" active={activeStatCard === "total"} onClick={() => handleStatCardClick("total")} />
             <StatCard icon={AlertCircle} label="Bekleyen" value={stats.pending} color="text-amber-400" active={activeStatCard === "pending"} onClick={() => handleStatCardClick("pending")} />
             <StatCard icon={Clock} label={statsDays === 1 ? "Son 24s" : `Son ${statsDays}g`} value={stats.recent} color="text-purple-400" active={activeStatCard === "recent"} onClick={() => handleStatCardClick("recent")} />
