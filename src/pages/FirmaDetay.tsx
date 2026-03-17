@@ -825,7 +825,7 @@ export default function FirmaDetay() {
       <div className="sticky top-14 z-30 mt-4 max-w-7xl mx-auto px-4">
         <div className="bg-background border border-border rounded-lg">
           <div className="flex items-center gap-6 overflow-x-auto py-2 px-4">
-            {MENU_ITEMS.map((item) => (
+            {MENU_ITEMS.filter(item => currentUserId || item.id !== "urunler").map((item) => (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
