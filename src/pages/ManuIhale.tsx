@@ -99,6 +99,7 @@ export default function ManuIhale() {
   const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
   const [filterDurum, setFilterDurum] = useSessionState("filterDurum", "all");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
