@@ -170,7 +170,8 @@ export function usePackageQuota(): PackageInfo {
 export function canPerformAction(
   limits: PackageLimits,
   usage: QuotaUsage,
-  action: "profil_goruntuleme" | "teklif_verme" | "aktif_urun" | "mesaj"
+  action: "profil_goruntuleme" | "teklif_verme" | "aktif_urun" | "mesaj",
+  options?: { paketAd?: string; paketSlug?: string }
 ): { allowed: boolean; message?: string } {
   const limitMap: Record<string, number | null> = {
     profil_goruntuleme: limits.profil_goruntuleme_limiti,
@@ -186,9 +187,17 @@ export function canPerformAction(
     mesaj: "mesaj gönderme",
   };
 
+  const smsLabelMap: Record<string, string> = {
+    profil_goruntuleme: "Firma Profili Goruntuleme",
+    teklif_verme: "Teklif Verme",
+    aktif_urun: "Aktif Urun",
+    mesaj: "Mesaj Gonderme",
+  };
+
   const limit = limitMap[action];
   
   if (action === "mesaj" && limit === 0) {
+    _sendQuotaBlockedSms(options?.paketAd, smsLabelMap[action], 0);
     return { allowed: false, message: "Ücretsiz paketinizde yeni mesaj oluşturma hakkınız bulunmamaktadır. Sadece gelen mesajlara yanıt verebilirsiniz. PRO pakete yükselterek sınırsız mesajlaşma hakkı kazanabilirsiniz." };
   }
 
@@ -197,8 +206,25 @@ export function canPerformAction(
   }
 
   if (usage[action] >= limit) {
+    _sendQuotaBlockedSms(options?.paketAd, smsLabelMap[action], 0);
     return { allowed: false, message: `${labelMap[action]} hakkınız dolmuştur (${usage[action]}/${limit}). PRO pakete yükselterek daha fazla hak kazanabilirsiniz.` };
   }
 
   return { allowed: true };
+}
+
+// Fire-and-forget SMS when user is blocked from an action
+function _sendQuotaBlockedSms(paketAd?: string, ozellikAd?: string, kalanSayi?: number) {
+  const storageKey = `quota_blocked_sms_${ozellikAd}_${new Date().toISOString().slice(0, 10)}`;
+  if (localStorage.getItem(storageKey)) return;
+  localStorage.setItem(storageKey, "sent");
+  
+  supabase.functions.invoke("send-notification-sms", {
+    body: {
+      type: "kota_uyari",
+      paketAd: paketAd || "Paket",
+      ozellikAd: ozellikAd || "ozellik",
+      kalanSayi: kalanSayi ?? 0,
+    },
+  }).catch((err) => console.error("Quota blocked SMS failed:", err));
 }
