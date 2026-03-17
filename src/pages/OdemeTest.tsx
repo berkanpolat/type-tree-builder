@@ -238,7 +238,7 @@ export default function OdemeTest() {
           {period === "yillik" && (
             <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-3">
               <p className="text-xs text-emerald-300 leading-relaxed">
-                💰 Yıllık planı tercih ederek <strong>${fmt(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)}</strong> tasarruf ediyorsunuz!
+                💰 Yıllık planı tercih ederek <strong>{p(YILLIK_ORIGINAL - YILLIK_INDIRIMLI)}</strong> tasarruf ediyorsunuz!
               </p>
             </div>
           )}
