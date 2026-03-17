@@ -1052,78 +1052,131 @@ export default function FirmaDetay() {
             {/* İletişim */}
             <Card className="p-5">
               <h3 className="text-base font-bold text-foreground mb-4">İletişim</h3>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                    <Phone className="w-4 h-4 text-muted-foreground" />
+              {contactRevealed ? (
+                <>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Telefon</p>
+                        <p className="text-sm font-medium text-foreground">{firma.firma_iletisim_numarasi || "Belirtilmedi"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">E-Posta</p>
+                        <p className="text-sm font-medium text-foreground">{firma.firma_iletisim_email || "Belirtilmedi"}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <Globe className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Website</p>
+                        {firma.web_sitesi ? (
+                          <a href={firma.web_sitesi.startsWith("http") ? firma.web_sitesi : `https://${firma.web_sitesi}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-secondary hover:underline">
+                            {firma.web_sitesi}
+                          </a>
+                        ) : (
+                          <p className="text-sm font-medium text-foreground">Belirtilmedi</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Telefon</p>
-                    <p className="text-sm font-medium text-foreground">{firma.firma_iletisim_numarasi || "Belirtilmedi"}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">E-Posta</p>
-                    <p className="text-sm font-medium text-foreground">{firma.firma_iletisim_email || "Belirtilmedi"}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                    <Globe className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Website</p>
-                    {firma.web_sitesi ? (
-                      <a href={firma.web_sitesi.startsWith("http") ? firma.web_sitesi : `https://${firma.web_sitesi}`} target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-secondary hover:underline">
-                        {firma.web_sitesi}
+
+                  <Separator className="my-4" />
+                  <div className="flex items-center justify-center gap-3 flex-wrap">
+                    {firma.linkedin && (
+                      <a href={firma.linkedin.startsWith("http") ? firma.linkedin : `https://${firma.linkedin}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <Linkedin className="w-4 h-4" />
                       </a>
-                    ) : (
-                      <p className="text-sm font-medium text-foreground">Belirtilmedi</p>
+                    )}
+                    {firma.instagram && (
+                      <a href={firma.instagram.startsWith("http") ? firma.instagram : `https://${firma.instagram}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <Instagram className="w-4 h-4" />
+                      </a>
+                    )}
+                    {firma.facebook && (
+                      <a href={firma.facebook.startsWith("http") ? firma.facebook : `https://${firma.facebook}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <Facebook className="w-4 h-4" />
+                      </a>
+                    )}
+                    {firma.x_twitter && (
+                      <a href={firma.x_twitter.startsWith("http") ? firma.x_twitter : `https://${firma.x_twitter}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <Twitter className="w-4 h-4" />
+                      </a>
+                    )}
+                    {firma.tiktok && (
+                      <a href={firma.tiktok.startsWith("http") ? firma.tiktok : `https://${firma.tiktok}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <TikTokIcon className="w-4 h-4" />
+                      </a>
+                    )}
+                    {firma.youtube && (
+                      <a href={firma.youtube.startsWith("http") ? firma.youtube : `https://youtube.com/${firma.youtube}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+                        <Youtube className="w-4 h-4" />
+                      </a>
+                    )}
+                    {!firma.linkedin && !firma.instagram && !firma.facebook && !firma.x_twitter && !firma.tiktok && !firma.youtube && (
+                      <p className="text-sm text-muted-foreground">Sosyal medya hesabı belirtilmemiştir.</p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="relative">
+                  {/* Blurred/censored preview */}
+                  <div className="space-y-3 blur-sm select-none pointer-events-none" aria-hidden="true">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Telefon</p>
+                        <p className="text-sm font-medium text-foreground">+90 5XX XXX XX XX</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <Mail className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">E-Posta</p>
+                        <p className="text-sm font-medium text-foreground">info@example.com</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                        <Globe className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Website</p>
+                        <p className="text-sm font-medium text-foreground">www.example.com</p>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Overlay button */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-card/60 rounded-lg">
+                    <Lock className="w-6 h-6 text-muted-foreground mb-2" />
+                    <Button
+                      size="sm"
+                      className="gap-2"
+                      onClick={handleRevealContact}
+                      disabled={contactRevealLoading}
+                    >
+                      <Eye className="w-4 h-4" />
+                      {contactRevealLoading ? "Yükleniyor..." : "İletişim Bilgisini Gör"}
+                    </Button>
+                    {!currentUserId && (
+                      <p className="text-xs text-muted-foreground mt-2">Görüntülemek için giriş yapın</p>
                     )}
                   </div>
                 </div>
-              </div>
-
-              <Separator className="my-4" />
-              <div className="flex items-center justify-center gap-3 flex-wrap">
-                {firma.linkedin && (
-                  <a href={firma.linkedin.startsWith("http") ? firma.linkedin : `https://${firma.linkedin}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <Linkedin className="w-4 h-4" />
-                  </a>
-                )}
-                {firma.instagram && (
-                  <a href={firma.instagram.startsWith("http") ? firma.instagram : `https://${firma.instagram}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <Instagram className="w-4 h-4" />
-                  </a>
-                )}
-                {firma.facebook && (
-                  <a href={firma.facebook.startsWith("http") ? firma.facebook : `https://${firma.facebook}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <Facebook className="w-4 h-4" />
-                  </a>
-                )}
-                {firma.x_twitter && (
-                  <a href={firma.x_twitter.startsWith("http") ? firma.x_twitter : `https://${firma.x_twitter}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <Twitter className="w-4 h-4" />
-                  </a>
-                )}
-                {firma.tiktok && (
-                  <a href={firma.tiktok.startsWith("http") ? firma.tiktok : `https://${firma.tiktok}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <TikTokIcon className="w-4 h-4" />
-                  </a>
-                )}
-                {firma.youtube && (
-                  <a href={firma.youtube.startsWith("http") ? firma.youtube : `https://youtube.com/${firma.youtube}`} target="_blank" rel="noopener noreferrer" className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
-                    <Youtube className="w-4 h-4" />
-                  </a>
-                )}
-                {!firma.linkedin && !firma.instagram && !firma.facebook && !firma.x_twitter && !firma.tiktok && !firma.youtube && (
-                  <p className="text-sm text-muted-foreground">Sosyal medya hesabı belirtilmemiştir.</p>
-                )}
-              </div>
+              )}
             </Card>
 
             {/* Sertifikalar */}
