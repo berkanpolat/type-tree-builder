@@ -303,8 +303,8 @@ export default function TekRehber() {
   }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, firmaTurleri, currentUserId, currentPage]);
 
   useEffect(() => {
-    if (currentUserId && selectedFirmaTuru) fetchFirmalar();
-  }, [fetchFirmalar, currentUserId, selectedFirmaTuru]);
+    if (selectedFirmaTuru) fetchFirmalar();
+  }, [fetchFirmalar, selectedFirmaTuru]);
 
   // Trigger search on Enter or Ara button
   const handleSearch = useCallback(async () => {
