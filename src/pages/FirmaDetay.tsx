@@ -748,13 +748,7 @@ export default function FirmaDetay() {
         {/* Header Card */}
         <div className="bg-card border border-t-0 border-border rounded-b-xl shadow-sm p-5">
           <div className="flex flex-col md:flex-row items-start gap-4">
-            <div className="w-20 h-20 rounded-lg border border-border bg-background flex items-center justify-center overflow-hidden shrink-0 -mt-14">
-              {firma.logo_url ? (
-                <img src={firma.logo_url} alt="Logo" className="w-full h-full object-contain p-1" />
-              ) : (
-                <ImageIcon className="w-8 h-8 text-muted-foreground" />
-              )}
-            </div>
+            <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={firma.logo_url} size="xl" className="w-20 h-20 text-2xl -mt-14 border border-border" />
 
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-foreground flex items-center gap-1.5">

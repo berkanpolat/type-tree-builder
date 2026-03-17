@@ -669,12 +669,7 @@ export default function Mesajlar() {
                 <button className="md:hidden p-1 rounded hover:bg-muted" onClick={() => setSelectedConv(null)}>
                   <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
                 </button>
-                <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                  {selectedConv.logo_url ? (
-                    <img src={selectedConv.logo_url} alt="" className="w-full h-full object-contain" />
-                  ) : (
-                    <Building2 className="w-4 h-4 text-muted-foreground" />
-                  )}
+                <FirmaAvatar firmaUnvani={selectedConv.firma_unvani || ""} logoUrl={selectedConv.logo_url} size="sm" className="w-9 h-9 rounded-full" />
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-foreground text-sm">{selectedConv.firma_unvani}</p>

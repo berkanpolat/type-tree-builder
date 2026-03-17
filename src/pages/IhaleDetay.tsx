@@ -1586,9 +1586,7 @@ export default function IhaleDetay() {
                 <Card className="p-6">
                   <h3 className="font-bold text-foreground mb-4">İhale Sahibi Firma</h3>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
-                      {firma.logo_url ? <img src={firma.logo_url} alt="" className="w-full h-full object-contain p-1" /> : <Building2 className="w-6 h-6 text-muted-foreground" />}
-                    </div>
+                    <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={firma.logo_url} size="lg" className="border border-border" />
                     <div>
                       <p className="font-semibold text-foreground">{firma.firma_unvani}</p>
                       {locationText && <div className="flex items-center gap-1 text-sm text-muted-foreground"><MapPin className="w-3.5 h-3.5" /> {locationText}</div>}

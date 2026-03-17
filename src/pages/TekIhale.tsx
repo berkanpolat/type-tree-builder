@@ -554,12 +554,7 @@ export default function TekIhale() {
                               </>
                             ) : (
                               <>
-                                <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center overflow-hidden border border-border shrink-0">
-                                  {ihale.firma_logo_url ? (
-                                    <img src={ihale.firma_logo_url} alt="" className="w-full h-full object-contain p-0.5" />
-                                  ) : (
-                                    <Building2 className="w-3 h-3 text-muted-foreground" />
-                                  )}
+                                <FirmaAvatar firmaUnvani={ihale.firma_unvani || ""} logoUrl={ihale.firma_logo_url} size="xs" className="rounded-full border border-border" />
                                 </div>
                                 <span className="text-sm text-muted-foreground">{ihale.firma_unvani}</span>
                               </>
