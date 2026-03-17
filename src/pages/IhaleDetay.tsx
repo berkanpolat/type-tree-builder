@@ -1044,6 +1044,7 @@ export default function IhaleDetay() {
             {/* MOBILE ONLY: Teklif Verme - order 4 (only for logged-in users) */}
             {currentUserId && (
             <div className="lg:hidden order-4">
+              <Card className="p-6">
                 <h1 className="text-xl font-bold text-foreground mb-2">{ihale.baslik}</h1>
                 <p className="text-sm text-muted-foreground mb-3">#{ihale.ihale_no}</p>
                 {countdown && (
@@ -1100,8 +1101,10 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            )}
 
-            {/* MOBILE ONLY: Teklifler - order 5 */}
+            {/* MOBILE ONLY: Teklifler - order 5 (only for logged-in users) */}
+            {currentUserId && (
             <div className="lg:hidden order-5">
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
@@ -1133,6 +1136,8 @@ export default function IhaleDetay() {
                     <p className="font-bold text-foreground text-sm">{`${sym}${myTeklif.tutar.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`}</p>
                   </div>
                 )}
+                {isKapaliTeklif && !isOwner && <p className="text-xs text-muted-foreground text-center mb-4">Kapalı teklif usulünde yalnızca kendi teklifinizi görebilirsiniz.</p>}
+                {myRank && !isKapaliTeklif && <p className="text-sm text-center text-muted-foreground mb-4">Teklif sıranız: <strong className="text-foreground">{myRank}.</strong></p>}
                 {visibleTeklifler.length > 0 ? (
                   <div className="space-y-0">
                     <div className="grid grid-cols-3 text-[10px] uppercase tracking-wider text-muted-foreground font-medium py-2 border-b border-border">
