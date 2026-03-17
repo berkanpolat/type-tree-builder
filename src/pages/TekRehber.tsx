@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
 import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
+import PublicHeader from "@/components/PublicHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -76,14 +77,15 @@ export default function TekRehber() {
   useEffect(() => {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/giris-kayit"); return; }
-      setCurrentUserId(user.id);
-      const { data: firma } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).single();
-      if (firma) { setFirmaUnvani(firma.firma_unvani); setFirmaLogoUrl(firma.logo_url); }
+      if (user) {
+        setCurrentUserId(user.id);
+        const { data: firma } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).single();
+        if (firma) { setFirmaUnvani(firma.firma_unvani); setFirmaLogoUrl(firma.logo_url); }
+      }
       setAuthLoading(false);
     };
     check();
-  }, [navigate]);
+  }, []);
 
   const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
   const [appliedSearchTerm, setAppliedSearchTerm] = useSessionState("appliedSearchTerm", "");
@@ -301,8 +303,8 @@ export default function TekRehber() {
   }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, firmaTurleri, currentUserId, currentPage]);
 
   useEffect(() => {
-    if (currentUserId && selectedFirmaTuru) fetchFirmalar();
-  }, [fetchFirmalar, currentUserId, selectedFirmaTuru]);
+    if (selectedFirmaTuru) fetchFirmalar();
+  }, [fetchFirmalar, selectedFirmaTuru]);
 
   // Trigger search on Enter or Ara button
   const handleSearch = useCallback(async () => {
@@ -364,7 +366,7 @@ export default function TekRehber() {
   };
 
   const toggleFirmaFavorite = async (firmaId: string, isFav: boolean) => {
-    if (!currentUserId) return;
+    if (!currentUserId) { navigate("/giris-kayit"); return; }
     if (isFav) {
       await supabase.from("firma_favoriler").delete().eq("user_id", currentUserId).eq("firma_id", firmaId);
       toast({ title: "Favorilerden çıkarıldı" });
@@ -381,7 +383,8 @@ export default function TekRehber() {
   };
 
   const handleMessageFirma = async (firmaUserId: string) => {
-    if (!currentUserId || firmaUserId === currentUserId) return;
+    if (!currentUserId) { navigate("/giris-kayit"); return; }
+    if (firmaUserId === currentUserId) return;
     const { data: existingConv } = await supabase
       .from("conversations")
       .select("id")
@@ -440,7 +443,7 @@ export default function TekRehber() {
 
   return (
     <div className="min-h-screen bg-muted/30 font-sans overflow-x-hidden">
-      <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
+      {currentUserId ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
         <HeroSearchSection

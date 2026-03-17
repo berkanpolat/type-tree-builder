@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import PazarHeader from "@/components/PazarHeader";
+import PublicHeader from "@/components/PublicHeader";
 import KategoriMegaMenu from "@/components/anasayfa/KategoriMegaMenu";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
 import UrunFiltreler, { type FilterState } from "@/components/anasayfa/UrunFiltreler";
@@ -114,14 +115,15 @@ export default function AnaSayfa() {
   useEffect(() => {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/giris-kayit"); return; }
-      setCurrentUserId(user.id);
-      const { data: firma } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).single();
-      if (firma) { setFirmaUnvani(firma.firma_unvani); setFirmaLogoUrl(firma.logo_url); }
+      if (user) {
+        setCurrentUserId(user.id);
+        const { data: firma } = await supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", user.id).single();
+        if (firma) { setFirmaUnvani(firma.firma_unvani); setFirmaLogoUrl(firma.logo_url); }
+      }
       setAuthLoading(false);
     };
     check();
-  }, [navigate]);
+  }, []);
 
   const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
   const [appliedSearchTerm, setAppliedSearchTerm] = useSessionState("appliedSearchTerm", "");
@@ -729,7 +731,7 @@ export default function AnaSayfa() {
 
   return (
     <div className="min-h-screen bg-muted/30 font-sans">
-      <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
+      {currentUserId ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       <main className="max-w-7xl mx-auto px-3 md:px-6 py-4 md:py-6 space-y-4 md:space-y-6">
         {/* Search Header */}

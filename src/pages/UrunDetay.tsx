@@ -3,6 +3,7 @@ import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import PazarHeader from "@/components/PazarHeader";
+import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
 import { useBanner } from "@/hooks/use-banner";
 import { usePackageQuota, canPerformAction } from "@/hooks/use-package-quota";
@@ -198,9 +199,13 @@ export default function UrunDetay() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         const adminToken = localStorage.getItem("admin_token");
-        if (!adminToken) { navigate("/giris-kayit"); return; }
-        setIsAdminViewing(true);
-        setCurrentUserId("admin");
+        if (adminToken) {
+          setIsAdminViewing(true);
+          setCurrentUserId("admin");
+        } else {
+          // Allow public access - set a placeholder to trigger fetch
+          setCurrentUserId("public");
+        }
         return;
       }
       setCurrentUserId(user.id);
@@ -208,7 +213,7 @@ export default function UrunDetay() {
       if (f) { setFirmaUnvani(f.firma_unvani); setFirmaLogoUrl(f.logo_url); }
     };
     init();
-  }, [navigate]);
+  }, []);
 
   const [resolvedUrunId, setResolvedUrunId] = useState<string | null>(null);
 
@@ -466,7 +471,7 @@ export default function UrunDetay() {
   return (
     <div className="min-h-screen bg-muted/30 font-sans">
       {/* Header */}
-      <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} />
+      {currentUserId && currentUserId !== "public" ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
@@ -635,9 +640,9 @@ export default function UrunDetay() {
               </Card>
             </div>
 
-            {/* Seller Info - MOBILE ONLY (order 4, after price) */}
+            {/* Seller Info - MOBILE ONLY (order 4, after price) - PRO only */}
             <div className="lg:hidden order-4">
-              {firma && (
+              {firma && packageInfo.paketSlug !== "ucretsiz" && currentUserId && currentUserId !== "public" && (
                 <Card className="p-6">
                   <h3 className="text-lg font-semibold text-foreground mb-4">Satıcı Bilgileri</h3>
                   <div className="flex items-center gap-4 mb-4">
@@ -660,6 +665,15 @@ export default function UrunDetay() {
                   </div>
                   <Button onClick={handleSaticiyaSor} className="w-full h-12 gap-2 text-base" disabled={urun.user_id === currentUserId}>
                     <MessageSquare className="w-5 h-5" /> Satıcıya Soru Sor
+                  </Button>
+                </Card>
+              )}
+              {firma && (packageInfo.paketSlug === "ucretsiz" || !currentUserId || currentUserId === "public") && (
+                <Card className="p-6 text-center">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">Satıcı Bilgileri</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Satıcı bilgilerini görüntülemek için PRO pakete yükseltin.</p>
+                  <Button onClick={() => currentUserId && currentUserId !== "public" ? navigate("/paketim") : navigate("/giris-kayit")} className="gap-2">
+                    {currentUserId && currentUserId !== "public" ? "PRO Pakete Yükselt" : "Giriş Yap"}
                   </Button>
                 </Card>
               )}
@@ -972,9 +986,9 @@ export default function UrunDetay() {
               </div>
             </Card>
 
-            {/* Seller Info Card - desktop only (on mobile shown after price) */}
+            {/* Seller Info Card - desktop only (on mobile shown after price) - PRO only */}
             <div className="hidden lg:block">
-            {firma && (
+            {firma && packageInfo.paketSlug !== "ucretsiz" && currentUserId && currentUserId !== "public" ? (
               <Card className="p-6">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Satıcı Bilgileri</h3>
 
@@ -1074,7 +1088,15 @@ export default function UrunDetay() {
                   </>
                 )}
               </Card>
-            )}
+            ) : firma ? (
+              <Card className="p-6 text-center">
+                <h3 className="text-lg font-semibold text-foreground mb-2">Satıcı Bilgileri</h3>
+                <p className="text-sm text-muted-foreground mb-4">Satıcı bilgilerini görüntülemek için PRO pakete yükseltin.</p>
+                <Button onClick={() => currentUserId && currentUserId !== "public" ? navigate("/paketim") : navigate("/giris-kayit")} className="gap-2">
+                  {currentUserId && currentUserId !== "public" ? "PRO Pakete Yükselt" : "Giriş Yap"}
+                </Button>
+              </Card>
+            ) : null}
             </div>
           </div>
         </div>
