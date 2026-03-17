@@ -370,7 +370,7 @@ export default function OdemeTest() {
                   İşleniyor...
                 </span>
               ) : (
-                <span>${fmt(totalUsd)} Öde</span>
+                <span>{p(totalUsd)} Öde</span>
               )}
             </Button>
 
