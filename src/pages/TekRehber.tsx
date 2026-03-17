@@ -163,17 +163,29 @@ export default function TekRehber() {
         }
       }
 
-      const usTurIds = fs.uretimSatisTurIds;
-      const usGrupIds = fs.uretimSatisGrupIds;
-      const usKatIds = fs.uretimSatisKategoriIds;
+      const usTurIds = fs.uretimSatisTurIds || [];
+      const usGrupIds = fs.uretimSatisGrupIds || [];
+      const usKatIds = fs.uretimSatisKategoriIds || [];
       if (usTurIds.length > 0 || usGrupIds.length > 0 || usKatIds.length > 0) {
-        let usQuery = supabase.from("firma_uretim_satis").select("firma_id");
-        if (usTurIds.length > 0) usQuery = usQuery.in("tur_id", usTurIds);
-        else if (usGrupIds.length > 0) usQuery = usQuery.in("grup_id", usGrupIds);
-        else if (usKatIds.length > 0) usQuery = usQuery.in("kategori_id", usKatIds);
-        const { data: usData } = await usQuery;
+        // Build OR filter: most specific level takes priority
+        // If türler selected → filter by tür; else if gruplar → filter by grup; else kategori
+        const filterColumn = usTurIds.length > 0 ? "tur_id" : usGrupIds.length > 0 ? "grup_id" : "kategori_id";
+        const filterValues = usTurIds.length > 0 ? usTurIds : usGrupIds.length > 0 ? usGrupIds : usKatIds;
+        
+        console.log("[FirmaFilter] Üretim/Satış filter:", { filterColumn, filterValues, usTurIds, usGrupIds, usKatIds });
+        
+        const { data: usData, error: usError } = await supabase
+          .from("firma_uretim_satis")
+          .select("firma_id")
+          .in(filterColumn, filterValues);
+        
+        if (usError) {
+          console.error("[FirmaFilter] Üretim/Satış query error:", usError);
+        }
+        
         if (usData) {
           const usFirmaIds = new Set(usData.map((d) => d.firma_id));
+          console.log("[FirmaFilter] Üretim/Satış matched firma count:", usFirmaIds.size, [...usFirmaIds]);
           if (junctionFirmaIds === null) junctionFirmaIds = [...usFirmaIds];
           else junctionFirmaIds = junctionFirmaIds.filter((id) => usFirmaIds.has(id));
         }
