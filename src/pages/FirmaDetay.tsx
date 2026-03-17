@@ -578,7 +578,7 @@ export default function FirmaDetay() {
     }
     setContactRevealLoading(true);
     // Check quota
-    const check = canPerformAction(packageInfo.limits, packageInfo.usage, "profil_goruntuleme");
+    const check = canPerformAction(packageInfo.limits, packageInfo.usage, "profil_goruntuleme", { paketAd: packageInfo.paketAd });
     if (!check.allowed) {
       setMsgUpgradeMessage(check.message || "İletişim bilgisi görüntüleme hakkınız dolmuştur.");
       setMsgUpgradeOpen(true);
