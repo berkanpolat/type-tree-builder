@@ -310,7 +310,7 @@ export default function AdminPortfoy() {
           <div className="flex items-center gap-2">
             <div className="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2" style={{ background: "hsl(var(--admin-hover))" }}>
               <Briefcase className="w-3.5 h-3.5" style={{ color: "hsl(38 92% 50%)" }} />
-              <span style={s.text}>{portfolyoFirmalar.length} firma</span>
+              <span style={s.text}>{allFirmalar.length} firma</span>
             </div>
           </div>
         </div>
