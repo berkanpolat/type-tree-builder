@@ -1153,8 +1153,10 @@ export default function IhaleDetay() {
                 )}
               </Card>
             </div>
+            )}
 
-            {/* MOBILE ONLY: İhale Sahibi - order 6 */}
+            {/* MOBILE ONLY: İhale Sahibi - order 6 (only for logged-in users) */}
+            {currentUserId && (
             <div className="lg:hidden order-6">
               {ihale.firma_adi_gizle ? (
                 <Card className="p-6">
