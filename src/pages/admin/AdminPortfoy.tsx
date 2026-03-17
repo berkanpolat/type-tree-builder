@@ -266,13 +266,18 @@ export default function AdminPortfoy() {
     }
   };
 
-  // Portfolio filtering is now done server-side via filterPortfolyo param
+  // Extract unique türler and tipler for filters
+  const uniqueTurler = [...new Set(allFirmalar.map(f => f.firma_turu_name).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
+  const uniqueTipler = [...new Set(allFirmalar.filter(f => filterTuru === "all" || f.firma_turu_name === filterTuru).map(f => f.firma_tipi_name).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
+
   const filtered = allFirmalar.filter(f => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       if (!f.firma_unvani.toLowerCase().includes(term) &&
           !(f.profile?.ad + " " + f.profile?.soyad).toLowerCase().includes(term)) return false;
     }
+    if (filterTuru !== "all" && f.firma_turu_name !== filterTuru) return false;
+    if (filterTipi !== "all" && f.firma_tipi_name !== filterTipi) return false;
     return true;
   });
 
