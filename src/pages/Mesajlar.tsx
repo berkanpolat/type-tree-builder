@@ -365,7 +365,7 @@ export default function Mesajlar() {
     
     if (existingMessages.length === 0) {
       // This is initiating a new conversation - check quota
-      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj", { paketAd: packageInfo.paketAd });
       console.log("[Mesajlar] Quota check result:", check);
       if (!check.allowed) {
         setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");

@@ -403,7 +403,7 @@ export default function TekRehber() {
       .or(`and(user1_id.eq.${currentUserId},user2_id.eq.${firmaUserId}),and(user1_id.eq.${firmaUserId},user2_id.eq.${currentUserId})`)
       .maybeSingle();
     if (!existingConv) {
-      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj");
+      const check = canPerformAction(packageInfo.limits, packageInfo.usage, "mesaj", { paketAd: packageInfo.paketAd });
       if (!check.allowed) {
         setUpgradeMessage(check.message || "Mesaj gönderme hakkınız dolmuştur.");
         setUpgradeOpen(true);
