@@ -197,8 +197,9 @@ export default function UrunDetay() {
 
   useEffect(() => {
     const init = async () => {
-      const user = await getSafeUser();
-      if (!user) {
+      // Use getSession first (fast, from cache) then validate with getUser
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
         const adminToken = localStorage.getItem("admin_token");
         if (adminToken) {
           setIsAdminViewing(true);
@@ -206,6 +207,14 @@ export default function UrunDetay() {
         } else {
           setCurrentUserId("public");
         }
+        return;
+      }
+      // Validate session with server
+      const { data: { user }, error } = await supabase.auth.getUser();
+      if (error || !user) {
+        // Stale session - clear it
+        await supabase.auth.signOut({ scope: "local" });
+        setCurrentUserId("public");
         return;
       }
       setCurrentUserId(user.id);
