@@ -299,12 +299,12 @@ const LandingPage = () => {
               yakalayın!
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link
-                 to="/giris-kayit?tab=kayit"
+              <a
+                 href="#kayit"
                 className="px-10 py-3.5 rounded-lg bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-colors"
               >
                 Ücretsiz Kayıt Ol
-              </Link>
+              </a>
               <a href="/Tekstil_AS_Kurumsal_Sunum_v2.pdf" download className="px-10 py-3.5 rounded-lg bg-secondary text-secondary-foreground font-semibold text-base hover:bg-secondary/90 transition-colors">
                 Tanıtım PDF İndir
               </a>
