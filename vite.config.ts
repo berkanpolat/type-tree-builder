@@ -1,7 +1,39 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { execFile } from "node:child_process";
 import path from "path";
+import { promisify } from "node:util";
+import react from "@vitejs/plugin-react";
 import { componentTagger } from "lovable-tagger";
+import { defineConfig, loadEnv, type PluginOption } from "vite";
+
+const execFileAsync = promisify(execFile);
+
+const sitemapGeneratorPlugin = (mode: string): PluginOption => ({
+  name: "generate-sitemap-on-build",
+  apply: "build",
+  async buildStart() {
+    const env = loadEnv(mode, process.cwd(), "");
+
+    try {
+      const { stdout, stderr } = await execFileAsync(process.execPath, ["scripts/generate-sitemap.mjs"], {
+        env: {
+          ...process.env,
+          ...env,
+        },
+      });
+
+      if (stdout.trim()) {
+        console.log(stdout.trim());
+      }
+
+      if (stderr.trim()) {
+        console.error(stderr.trim());
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Sitemap generation failed.";
+      this.error(message);
+    }
+  },
+});
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -12,7 +44,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), mode === "development" && componentTagger(), sitemapGeneratorPlugin(mode)].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
