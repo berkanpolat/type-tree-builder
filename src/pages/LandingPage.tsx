@@ -16,6 +16,7 @@ import iso27701Img from "@/assets/iso-27701.png";
 import iso9001Img from "@/assets/iso-9001.png";
 import iso22301Img from "@/assets/iso-22301.png";
 import kosgebImg from "@/assets/kosgeb.png";
+import indirimBadge from "@/assets/indirim-badge.png";
 import Footer from "@/components/Footer";
 import LandingRegistrationForm from "@/components/landing/LandingRegistrationForm";
 import { PAKET_OZELLIKLERI, PRO_FIYATLAR } from "@/lib/package-config";
@@ -573,23 +574,7 @@ const LandingPage = () => {
             </button>
             <span className={`text-sm font-medium ${billingYearly ? "text-foreground" : "text-muted-foreground"}`}>Yıllık</span>
             {billingYearly && (
-              <svg width="72" height="72" viewBox="0 0 200 200" className="animate-pulse -ml-1">
-                {/* Yellow arc */}
-                <path d="M160 20 A90 90 0 0 1 190 110" fill="none" stroke="hsl(var(--secondary))" strokeWidth="6" strokeLinecap="round"/>
-                {/* Red teardrop */}
-                <path d="M100 25 C155 25 180 65 180 110 C180 150 145 185 100 185 C55 185 20 150 20 110 C20 65 45 25 100 25 Z" fill="hsl(0,72%,47%)"/>
-                {/* Yellow badge circle */}
-                <circle cx="38" cy="35" r="26" fill="hsl(var(--secondary))"/>
-                <text x="38" y="32" textAnchor="middle" fill="hsl(0,72%,47%)" fontSize="11" fontWeight="800">İNDİ</text>
-                <text x="38" y="44" textAnchor="middle" fill="hsl(0,72%,47%)" fontSize="11" fontWeight="800">RİM</text>
-                {/* %45 text */}
-                <text x="92" y="118" textAnchor="middle" fill="white" fontSize="52" fontWeight="900" letterSpacing="-2">%45</text>
-                {/* Yellow underline */}
-                <line x1="90" y1="145" x2="155" y2="145" stroke="hsl(var(--secondary))" strokeWidth="4" strokeLinecap="round"/>
-                <line x1="90" y1="152" x2="140" y2="152" stroke="hsl(var(--secondary))" strokeWidth="3" strokeLinecap="round"/>
-                {/* Yıllık pakette text */}
-                <text x="118" y="170" textAnchor="middle" fill="white" fontSize="14" fontWeight="700" letterSpacing="2">YILLIK PAKETTE</text>
-              </svg>
+              <img src={indirimBadge} alt="%45 İndirim" className="w-16 h-16 -ml-1 animate-pulse object-contain" />
             )}
           </div>
 
