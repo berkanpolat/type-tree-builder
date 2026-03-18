@@ -14,6 +14,7 @@ import KategoriStep from "@/components/ihale/steps/KategoriStep";
 import IhaleBilgileriStep from "@/components/ihale/steps/IhaleBilgileriStep";
 import TeknikDetaylarStep from "@/components/ihale/steps/TeknikDetaylarStep";
 import StokStep from "@/components/ihale/steps/StokStep";
+import OnayStep from "@/components/ihale/steps/OnayStep";
 
 
 export interface IhaleFormData {
@@ -86,7 +87,7 @@ const INITIAL_FORM: IhaleFormData = {
   stoklar: [],
 };
 
-const ALL_STEPS = ["İhale Türü", "Teklif Usulü", "Kategori", "İhale Bilgileri", "Teknik Detaylar", "Stok"];
+const ALL_STEPS = ["İhale Türü", "Teklif Usulü", "Kategori", "İhale Bilgileri", "Teknik Detaylar", "Stok", "Onay"];
 
 export default function YeniIhale() {
   const navigate = useNavigate();
@@ -476,14 +477,28 @@ export default function YeniIhale() {
   const handlePreview = async () => {
     await handleSave();
     if (!ihaleId) return;
-    // Fetch slug for navigation
     const { data: ihaleRow } = await supabase.from("ihaleler").select("slug").eq("id", ihaleId).maybeSingle();
     const target = ihaleRow?.slug || ihaleId;
+    window.open(`/ihaleler/${target}`, "_blank");
+  };
+
+  const handleSubmitForApproval = async () => {
+    if (!ihaleId) return;
+    setSaving(true);
+    await handleSave();
+
     if (isAdminMode) {
-      window.open(`/ihaleler/${target}`, "_blank");
+      const adminToken = localStorage.getItem("admin_token");
+      await supabase.functions.invoke("admin-auth/admin-save-ihale", {
+        body: { token: adminToken, ihaleId, ihaleData: { durum: "onay_bekliyor" }, filtreler: [], stoklar: [], fotograflar: [], ek_dosyalar: [] },
+      });
     } else {
-      navigate(`/ihaleler/${target}`);
+      await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihaleId);
     }
+
+    setSaving(false);
+    toast({ title: "Başarılı", description: "İhaleniz onaya gönderildi." });
+    navigate("/ihalelerim");
   };
 
   if (loadingEdit) {
@@ -517,6 +532,7 @@ export default function YeniIhale() {
             {STEPS[currentStep] === "İhale Bilgileri" && <IhaleBilgileriStep formData={formData} updateForm={updateForm} ihaleId={ihaleId} skipBirim={skipStokStep} />}
             {STEPS[currentStep] === "Teknik Detaylar" && <TeknikDetaylarStep formData={formData} updateForm={updateForm} />}
             {STEPS[currentStep] === "Stok" && <StokStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "Onay" && <OnayStep formData={formData} onSubmit={handleSubmitForApproval} onPreview={handlePreview} submitting={saving} />}
           </CardContent>
         </Card>
 
@@ -528,9 +544,7 @@ export default function YeniIhale() {
           {currentStep < STEPS.length - 1 ? (
             <Button onClick={handleNext}>İleri</Button>
           ) : (
-            <Button onClick={handlePreview} disabled={saving}>
-              {saving ? "Kaydediliyor..." : "İlerle ve Önizle"}
-            </Button>
+            <div />
           )}
         </div>
       </div>
