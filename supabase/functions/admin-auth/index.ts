@@ -78,9 +78,30 @@ const corsHeaders = {
 };
 
 function verifyToken(token: string) {
-  const payload = JSON.parse(atob(token));
-  if (payload.exp < Date.now()) throw new Error("Token süresi dolmuş");
-  return payload;
+  const normalizedToken = token
+    .replace(/^Bearer\s+/i, "")
+    .trim()
+    .replace(/^"+|"+$/g, "");
+
+  const encodedPayload = normalizedToken.includes(".")
+    ? normalizedToken.split(".")[1]
+    : normalizedToken;
+
+  const base64Payload = encodedPayload.replace(/-/g, "+").replace(/_/g, "/");
+  const paddedPayload = base64Payload.padEnd(
+    base64Payload.length + ((4 - (base64Payload.length % 4)) % 4),
+    "="
+  );
+
+  const payload = JSON.parse(atob(paddedPayload));
+  const exp = typeof payload.exp === "number" && payload.exp < 10_000_000_000
+    ? payload.exp * 1000
+    : payload.exp;
+
+  if (typeof exp !== "number") throw new Error("Geçersiz token");
+  if (exp < Date.now()) throw new Error("Token süresi dolmuş");
+
+  return { ...payload, exp };
 }
 
 /**
