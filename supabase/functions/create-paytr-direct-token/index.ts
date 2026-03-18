@@ -63,6 +63,7 @@ serve(async (req) => {
       expiry_month,
       expiry_year,
       cvv,
+      firma_unvani,
     } = await req.json();
 
     // Validate inputs
@@ -89,7 +90,8 @@ serve(async (req) => {
     );
 
     const { data: profile } = await supabaseAdmin.from("profiles").select("ad, soyad, iletisim_numarasi").eq("user_id", user.id).single();
-    const { data: firma } = await supabaseAdmin.from("firmalar").select("firma_unvani").eq("user_id", user.id).single();
+    // Use firma_unvani from request body (firma not yet created for PRO)
+    const userFirmaUnvani = firma_unvani || "Türkiye";
 
     const merchantId = Deno.env.get("PAYTR_MERCHANT_ID")!;
     const merchantKey = Deno.env.get("PAYTR_MERCHANT_KEY")!;
@@ -109,7 +111,7 @@ serve(async (req) => {
     const paymentAmount = paymentAmountKurus.toString();
     const userName = `${profile?.ad || ""} ${profile?.soyad || ""}`.trim() || "Kullanıcı";
     const userPhone = profile?.iletisim_numarasi || "05000000000";
-    const userAddress = firma?.firma_unvani || "Türkiye";
+    const userAddress = userFirmaUnvani;
 
     const basketLabel = periyot === "yillik"
       ? `PRO Paket (Yillik) $${usdPrice} x ${usdTryRate.toFixed(2)} + %20 KDV`
@@ -182,6 +184,7 @@ serve(async (req) => {
       periyot,
       tutar_kurus: paymentAmountKurus,
       durum: "bekliyor",
+      meta: { firma_unvani: firma_unvani || "" },
     });
 
     // PayTR Direct API returns HTML (3D Secure page) that needs to be rendered

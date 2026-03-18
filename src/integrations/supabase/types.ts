@@ -2043,6 +2043,7 @@ export type Database = {
           durum: string
           id: string
           merchant_oid: string
+          meta: Json | null
           periyot: string
           tutar_kurus: number
           updated_at: string
@@ -2053,6 +2054,7 @@ export type Database = {
           durum?: string
           id?: string
           merchant_oid: string
+          meta?: Json | null
           periyot?: string
           tutar_kurus?: number
           updated_at?: string
@@ -2063,6 +2065,7 @@ export type Database = {
           durum?: string
           id?: string
           merchant_oid?: string
+          meta?: Json | null
           periyot?: string
           tutar_kurus?: number
           updated_at?: string
@@ -2783,6 +2786,16 @@ export type Database = {
       }
       normalize_email: { Args: { p_email: string }; Returns: string }
       normalize_phone: { Args: { p_phone: string }; Returns: string }
+      register_profile_only: {
+        Args: {
+          p_ad: string
+          p_iletisim_email: string
+          p_iletisim_numarasi: string
+          p_soyad: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       register_user: {
         Args: {
           p_ad: string
