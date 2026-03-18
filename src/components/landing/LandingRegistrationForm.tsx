@@ -36,7 +36,7 @@ const formatPhoneDisplay = (value: string) => {
   return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
 };
 
-const isValidEmail = (val: string) => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val);
+const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
 
 export default function LandingRegistrationForm({ selectedPackage, billingYearly, onBack }: Props) {
   const { toast } = useToast();
