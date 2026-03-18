@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -266,6 +267,15 @@ export default function IhaleDetay() {
   const [breadcrumbKategori, setBreadcrumbKategori] = useState("");
   const [breadcrumbGrup, setBreadcrumbGrup] = useState("");
   const [breadcrumbTur, setBreadcrumbTur] = useState("");
+
+  // SEO meta tags
+  useSeoMeta({
+    slug: `/ihaleler/${slugParam || ""}`,
+    dynamicTitle: ihale?.meta_title || (ihale ? `${ihale.baslik} | İhaleler | Tekstil A.Ş.` : undefined),
+    dynamicDescription: ihale?.meta_description || (ihale ? `${ihale.baslik} ihale detayları, şartları ve başvuru bilgileri.` : undefined),
+    fallbackTitle: "İhale Detay | Tekstil A.Ş.",
+    fallbackDescription: "İhale detayları, şartları ve başvuru bilgileri.",
+  });
 
   const countdown = useCountdown(ihale?.bitis_tarihi);
   const isOwner = currentUserId && ihale?.user_id === currentUserId;

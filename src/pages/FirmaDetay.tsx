@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +69,8 @@ interface FirmaData {
   fiziksel_magaza_sayisi: number | null;
   aylik_tedarik_sayisi: number | null;
   aylik_tedarik_birim_id: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
 }
 
 interface Tesis {
@@ -274,6 +277,16 @@ export default function FirmaDetay() {
   const [activeMenu, setActiveMenu] = useState("hakkinda");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // SEO meta tags
+  useSeoMeta({
+    slug: `/${slug || ""}`,
+    dynamicTitle: firma?.meta_title || (firma ? `${firma.firma_unvani} | Tekstil A.Ş.` : undefined),
+    dynamicDescription: firma?.meta_description || (firma ? `${firma.firma_unvani} firma profili, ürünleri ve iletişim bilgileri.` : undefined),
+    dynamicOgImage: firma?.logo_url || undefined,
+    fallbackTitle: "Firma Detay | Tekstil A.Ş.",
+    fallbackDescription: "Firma profili, ürünleri ve iletişim bilgileri.",
+  });
 
   const scrollToSection = (sectionId: string) => {
     setActiveMenu(sectionId);
