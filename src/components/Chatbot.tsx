@@ -225,9 +225,8 @@ export default function Chatbot() {
     ? { position: "fixed", left: position.x, top: position.y, right: "auto", bottom: "auto", zIndex: 9999, touchAction: "none" }
     : {};
 
-  const panelStyle: React.CSSProperties = position
-    ? { position: "fixed", left: position.x, top: position.y, right: "auto", bottom: "auto", zIndex: 9999, touchAction: "none" }
-    : {};
+  // Panel always uses default CSS positioning (no drag)
+  const panelStyle: React.CSSProperties = {};
 
   return (
     <>
