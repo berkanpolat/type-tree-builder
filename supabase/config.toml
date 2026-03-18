@@ -23,3 +23,39 @@ verify_jwt = false
 
 [functions.get-exchange-rate]
 verify_jwt = false
+
+[functions.admin-auth]
+verify_jwt = false
+
+[functions.verify-payment]
+verify_jwt = false
+
+[functions.verify-sms-otp]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-sms-otp]
+verify_jwt = false
+
+[functions.check-ihale-expiry]
+verify_jwt = false
+
+[functions.log-client-error]
+verify_jwt = false
+
+[functions.import-bubble-firmalar]
+verify_jwt = false
+
+[functions.list-postmark-templates]
+verify_jwt = false
+
+[functions.run-performance-test]
+verify_jwt = false
+
+[functions.run-test-suite]
+verify_jwt = false
