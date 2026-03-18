@@ -184,6 +184,7 @@ const AppContent = () => {
           <Route path="/telefon-dogrulama" element={<TelefonDogrulama />} />
           <Route path="/odeme-test" element={<OdemeTest />} />
           <Route path="/odeme-test-yillik" element={<OdemeTestYillik />} />
+          <Route path="/odeme-sonuc" element={<OdemeSonuc />} />
 
           <Route path="/yonetim" element={<AdminRoute />}>
             <Route index element={<AdminGiris />} />

@@ -423,6 +423,29 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
     }
   }, [threeDHtml]);
 
+  // Listen for payment result from iframe postMessage
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.data?.type !== "PAYTR_PAYMENT_RESULT") return;
+      
+      if (event.data.result === "basarili") {
+        // PRO payment successful → sign out and redirect to dashboard
+        // The paytr-callback already created the firma and subscription
+        toast({ title: "Başarılı", description: "Ödemeniz alındı! Giriş sayfasına yönlendiriliyorsunuz." });
+        await supabase.auth.signOut();
+        setThreeDHtml(null);
+        // Redirect to login - user needs to set password first via welcome email
+        navigate("/giris-kayit?odeme=basarili", { replace: true });
+      } else if (event.data.result === "basarisiz") {
+        await handlePaymentFailure("Ödeme başarısız oldu");
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigate]);
+
   // Registration complete screen
   if (registrationComplete) {
     return (
