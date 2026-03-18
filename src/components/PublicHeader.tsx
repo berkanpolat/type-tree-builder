@@ -16,6 +16,8 @@ export default function PublicHeader() {
             <Link to="/firmalar" className={`text-sm font-medium transition-colors ${isActive("/firmalar") ? "text-secondary border-b-2 border-secondary pb-0.5" : "text-muted-foreground hover:text-secondary"}`}>TekRehber</Link>
             <Link to="/tekpazar" className={`text-sm font-medium transition-colors ${isActive("/tekpazar") ? "text-secondary border-b-2 border-secondary pb-0.5" : "text-muted-foreground hover:text-secondary"}`}>TekPazar</Link>
             <Link to="/ihaleler" className={`text-sm font-medium transition-colors ${isActive("/ihaleler") ? "text-secondary border-b-2 border-secondary pb-0.5" : "text-muted-foreground hover:text-secondary"}`}>Tekİhale</Link>
+            <Link to="/#kayit" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Fiyatlandırma</Link>
+            <Link to="/hakkimizda" className={`text-sm font-medium transition-colors ${isActive("/hakkimizda") ? "text-secondary border-b-2 border-secondary pb-0.5" : "text-muted-foreground hover:text-secondary"}`}>Hakkımızda</Link>
           </nav>
         </div>
         <div className="flex items-center gap-2">
