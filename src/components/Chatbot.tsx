@@ -225,9 +225,8 @@ export default function Chatbot() {
     ? { position: "fixed", left: position.x, top: position.y, right: "auto", bottom: "auto", zIndex: 9999, touchAction: "none" }
     : {};
 
-  const panelStyle: React.CSSProperties = position
-    ? { position: "fixed", left: position.x, top: position.y, right: "auto", bottom: "auto", zIndex: 9999, touchAction: "none" }
-    : {};
+  // Panel always uses default CSS positioning (no drag)
+  const panelStyle: React.CSSProperties = {};
 
   return (
     <>
@@ -262,20 +261,13 @@ export default function Chatbot() {
           ref={panelRef}
           className={cn(
             "flex flex-col rounded-2xl bg-background shadow-[0_8px_60px_-12px_rgba(0,0,0,0.25)] overflow-hidden border border-border/60",
-            !position && "fixed bottom-20 right-5 z-[9999] md:bottom-5",
+            "fixed bottom-20 right-5 z-[9999] md:bottom-5",
             minimized ? "w-[280px]" : "w-[380px] max-w-[calc(100vw-2rem)] h-[540px] max-h-[calc(100vh-6rem)]",
-            !position && "animate-in slide-in-from-bottom-5 fade-in duration-300"
+            "animate-in slide-in-from-bottom-5 fade-in duration-300"
           )}
-          style={panelStyle}
         >
-          {/* Header — gradient with glass feel, draggable */}
-          <div
-            className="relative shrink-0 overflow-hidden cursor-grab active:cursor-grabbing select-none"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            style={{ touchAction: "none" }}
-          >
+          {/* Header */}
+          <div className="relative shrink-0 overflow-hidden select-none">
             <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--secondary)/0.15),transparent_60%)]" />
             <div className="relative flex items-center gap-3 px-5 py-3">
