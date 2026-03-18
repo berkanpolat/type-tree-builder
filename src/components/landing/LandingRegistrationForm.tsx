@@ -592,7 +592,7 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
       </div>
 
       {/* ─── Card Details (PRO only) ─── */}
-      {isPro && (
+      {isPro && phoneVerified && (
         <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-4">
           <div className="flex items-center gap-2">
             <CreditCard className="w-4 h-4 text-primary" />
