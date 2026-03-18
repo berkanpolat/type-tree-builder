@@ -5147,6 +5147,58 @@ Deno.serve(async (req) => {
       return jsonResponse({ logs: data || [] });
     }
 
+    // ─── SEO: LIST ───
+    if (action === "seo-list") {
+      const payload = verifyToken(body.token);
+      const { data, error } = await supabase.from("seo_meta").select("*").order("sayfa_adi");
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ entries: data || [] });
+    }
+
+    // ─── SEO: CREATE ───
+    if (action === "seo-create") {
+      const payload = verifyToken(body.token);
+      const { entry } = body;
+      if (!entry?.sayfa_slug || !entry?.sayfa_adi) return jsonResponse({ error: "Slug ve ad zorunlu" }, 400);
+      const { json_ld, ...rest } = entry;
+      let parsedJsonLd = null;
+      if (json_ld) {
+        try { parsedJsonLd = typeof json_ld === "string" ? JSON.parse(json_ld) : json_ld; } catch { parsedJsonLd = null; }
+      }
+      const { data, error } = await supabase.from("seo_meta").insert({ ...rest, json_ld: parsedJsonLd }).select().single();
+      if (error) return jsonResponse({ error: error.message }, 500);
+      await logActivity(supabase, payload, "seo_kaydi_olustur", { target_type: "seo", target_label: entry.sayfa_adi });
+      return jsonResponse({ entry: data });
+    }
+
+    // ─── SEO: UPDATE ───
+    if (action === "seo-update") {
+      const payload = verifyToken(body.token);
+      const { entry } = body;
+      if (!entry?.id) return jsonResponse({ error: "ID zorunlu" }, 400);
+      const { id, created_at, updated_at, json_ld, ...updates } = entry;
+      let parsedJsonLd = undefined;
+      if (json_ld !== undefined) {
+        try { parsedJsonLd = json_ld === null ? null : (typeof json_ld === "string" ? JSON.parse(json_ld) : json_ld); } catch { parsedJsonLd = null; }
+      }
+      const updateData = { ...updates, ...(parsedJsonLd !== undefined ? { json_ld: parsedJsonLd } : {}) };
+      const { data, error } = await supabase.from("seo_meta").update(updateData).eq("id", id).select().single();
+      if (error) return jsonResponse({ error: error.message }, 500);
+      await logActivity(supabase, payload, "seo_kaydi_guncelle", { target_type: "seo", target_id: id, target_label: entry.sayfa_adi });
+      return jsonResponse({ entry: data });
+    }
+
+    // ─── SEO: DELETE ───
+    if (action === "seo-delete") {
+      const payload = verifyToken(body.token);
+      const { id } = body;
+      if (!id) return jsonResponse({ error: "ID zorunlu" }, 400);
+      const { error } = await supabase.from("seo_meta").delete().eq("id", id);
+      if (error) return jsonResponse({ error: error.message }, 500);
+      await logActivity(supabase, payload, "seo_kaydi_sil", { target_type: "seo", target_id: id });
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
