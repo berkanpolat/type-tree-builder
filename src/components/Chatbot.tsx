@@ -124,6 +124,7 @@ export default function Chatbot() {
       startPosX: currentX,
       startPosY: currentY,
       dragging: false,
+      justDragged: false,
     };
   }, [open]);
 
