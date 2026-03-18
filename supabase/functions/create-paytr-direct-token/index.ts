@@ -184,6 +184,7 @@ serve(async (req) => {
       periyot,
       tutar_kurus: paymentAmountKurus,
       durum: "bekliyor",
+      meta: { firma_unvani: firma_unvani || "" },
     });
 
     // PayTR Direct API returns HTML (3D Secure page) that needs to be rendered
