@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
+    "generate:sitemap": "node --env-file=.env scripts/generate-sitemap.mjs",
+    "build": "npm run generate:sitemap && vite build",
+    "build:dev": "npm run generate:sitemap && vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
