@@ -146,6 +146,7 @@ export default function AdminSistemLoglari() {
           {[
             { label: "Toplam Log", value: logs.length, icon: Activity, color: "#3b82f6" },
             { label: "Hata", value: totalErrors, icon: XCircle, color: "#ef4444" },
+            { label: "Tarayıcı Hatası", value: clientErrors, icon: AlertTriangle, color: "#dc2626" },
             { label: "SMS Gönderildi", value: smsSent, icon: MessageSquare, color: "#22c55e" },
             { label: "E-posta Gönderildi", value: emailSent, icon: Mail, color: "#8b5cf6" },
           ].map((kpi) => (
