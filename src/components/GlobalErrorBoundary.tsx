@@ -22,7 +22,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    reportReactError(error, errorInfo.componentStack || "");
+    reportReactError(error, errorInfo.componentStack || "", window.location.href);
   }
 
   render() {
@@ -37,6 +37,12 @@ export class GlobalErrorBoundary extends Component<Props, State> {
             <p className="text-sm text-muted-foreground">
               Hata ekibimize otomatik olarak bildirildi. Lütfen sayfayı yenilemeyi deneyin.
             </p>
+            {this.state.error && (
+              <details className="text-left text-xs text-muted-foreground bg-muted rounded-lg p-3">
+                <summary className="cursor-pointer font-medium mb-1">Hata Detayı</summary>
+                <code className="block whitespace-pre-wrap break-all mt-1">{this.state.error.message}</code>
+              </details>
+            )}
             <button
               onClick={() => window.location.reload()}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
