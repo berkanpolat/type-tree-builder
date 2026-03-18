@@ -202,9 +202,75 @@ Deno.serve(async (req) => {
         detaylar: { periyot, totalAmount, merchantOid },
       });
 
+      // Auto-approve PRO firma (no admin approval needed)
+      try {
+        await supabase
+          .from("firmalar")
+          .update({ onay_durumu: "onaylandi", updated_at: new Date().toISOString() })
+          .eq("user_id", userId);
+        logStep("Firma auto-approved for PRO user");
+      } catch (approveErr) {
+        logStep("Firma auto-approve failed", { error: approveErr });
+      }
+
+      // Set must_set_password flag so user is forced to set password on first login
+      try {
+        await supabase.auth.admin.updateUserById(userId, {
+          user_metadata: { must_set_password: true },
+        });
+        logStep("must_set_password flag set");
+      } catch (metaErr) {
+        logStep("Failed to set must_set_password", { error: metaErr });
+      }
+
+      // Send welcome email with password reset link
+      const baseUrl = Deno.env.get("SUPABASE_URL")!;
+      try {
+        // Get user email
+        const { data: userData } = await supabase.auth.admin.getUserById(userId);
+        const userEmail = userData?.user?.email;
+        if (userEmail) {
+          // Generate password reset link
+          const { data: linkData } = await supabase.auth.admin.generateLink({
+            type: "magiclink",
+            email: userEmail,
+            options: { redirectTo: "https://tekstilas.com/sifre-sifirla" },
+          });
+          const tokenHash = linkData?.properties?.hashed_token;
+          const resetUrl = tokenHash
+            ? `https://tekstilas.com/sifre-sifirla?token_hash=${tokenHash}&type=recovery`
+            : "https://tekstilas.com/giris-kayit";
+
+          // Get firma name
+          const { data: firmaData } = await supabase
+            .from("firmalar")
+            .select("firma_unvani")
+            .eq("user_id", userId)
+            .single();
+
+          // Send welcome email
+          const emailUrl = `${baseUrl}/functions/v1/send-email`;
+          await fetch(emailUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              type: "hosgeldiniz",
+              to: userEmail,
+              templateModel: {
+                firma_unvani: firmaData?.firma_unvani || "Firma",
+                sifre_link: resetUrl,
+              },
+            }),
+          });
+          logStep("Welcome email with password link sent", { email: userEmail });
+        }
+      } catch (emailErr) {
+        logStep("Welcome email send failed", { error: emailErr });
+      }
+
       // Send payment success SMS
       try {
-        const smsUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`;
+        const smsUrl = `${baseUrl}/functions/v1/send-notification-sms`;
         await fetch(smsUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
