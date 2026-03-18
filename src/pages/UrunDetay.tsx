@@ -246,8 +246,17 @@ export default function UrunDetay() {
       const adminToken = localStorage.getItem("admin_token");
       if (adminToken) {
         try {
-          const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth/get-urun-detail", {
-            body: { token: adminToken, urunId: slugParam },
+          // First try to resolve slug to ID if not UUID
+          let resolveId = slugParam;
+          if (!isId) {
+            // Try getting ID by slug using service role via admin-auth
+            const { data: slugRes } = await supabase.functions.invoke("admin-auth", {
+              body: { action: "get-urun-by-slug", token: adminToken, slug: slugParam },
+            });
+            if (slugRes?.urunId) resolveId = slugRes.urunId;
+          }
+          const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth", {
+            body: { action: "get-urun-detail", token: adminToken, urunId: resolveId },
           });
           if (!adminErr && adminRes?.urun) {
             urunData = adminRes.urun;
