@@ -10,7 +10,6 @@ const POSTMARK_API_URL = "https://api.postmarkapp.com/email/withTemplate";
 const FROM_EMAIL = "Tekstil A.Ş. <info@tekstilas.com>";
 const SITE_URL = "https://type-tree-builder.lovable.app";
 
-// Template ID mapping
 const TEMPLATES: Record<string, number> = {
   hosgeldiniz: 43889443,
   basvuru_alindi: 43896400,
@@ -39,9 +38,24 @@ const TEMPLATES: Record<string, number> = {
 
 interface EmailRequest {
   type: string;
-  to?: string;          // email address (optional, resolved from userId)
-  userId?: string;      // resolve email from auth
+  to?: string;
+  userId?: string;
   templateModel: Record<string, string>;
+}
+
+async function logSystem(supabase: any, kaynak: string, islem: string, mesaj: string, basarili: boolean, opts: { detaylar?: Record<string, any>; user_id?: string; hata_mesaji?: string } = {}) {
+  try {
+    await supabase.from("system_logs").insert({
+      kaynak,
+      islem,
+      mesaj,
+      basarili,
+      seviye: basarili ? "info" : "error",
+      detaylar: opts.detaylar || {},
+      user_id: opts.user_id || null,
+      hata_mesaji: opts.hata_mesaji || null,
+    });
+  } catch {}
 }
 
 serve(async (req) => {
@@ -58,30 +72,39 @@ serve(async (req) => {
     );
   }
 
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  );
+
   try {
     const { type, to, userId, templateModel }: EmailRequest = await req.json();
 
     if (!type || !TEMPLATES[type]) {
+      await logSystem(supabase, "email", type || "bilinmeyen", `Bilinmeyen email tipi: ${type}`, false, {
+        hata_mesaji: `Unknown email type: ${type}`,
+        user_id: userId,
+      });
       return new Response(
         JSON.stringify({ success: false, error: `Unknown email type: ${type}` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Resolve email address
     let recipientEmail = to;
 
     if (!recipientEmail && userId) {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      );
       const { data: { user } } = await supabase.auth.admin.getUserById(userId);
       recipientEmail = user?.email;
     }
 
     if (!recipientEmail) {
       console.log(`[SEND-EMAIL] No email for type=${type}, userId=${userId}`);
+      await logSystem(supabase, "email", type, `Email adresi bulunamadı - type=${type}`, false, {
+        user_id: userId,
+        hata_mesaji: "Alıcı email adresi bulunamadı",
+        detaylar: { type, userId },
+      });
       return new Response(
         JSON.stringify({ success: false, error: "No recipient email" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -90,7 +113,6 @@ serve(async (req) => {
 
     const templateId = TEMPLATES[type];
 
-    // Add common model fields
     const model = {
       ...templateModel,
       platform_adi: "Tekstil A.Ş.",
@@ -118,6 +140,11 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error(`[SEND-EMAIL] Postmark error for type=${type}:`, JSON.stringify(data));
+      await logSystem(supabase, "email", type, `Email gönderilemedi: ${type} → ${recipientEmail}`, false, {
+        user_id: userId,
+        hata_mesaji: data.Message || "Postmark error",
+        detaylar: { type, to: recipientEmail, postmark_error: data.Message },
+      });
       return new Response(
         JSON.stringify({ success: false, error: data.Message || "Postmark error" }),
         { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -125,6 +152,11 @@ serve(async (req) => {
     }
 
     console.log(`[SEND-EMAIL] Sent type=${type} to=${recipientEmail} messageId=${data.MessageID}`);
+    await logSystem(supabase, "email", type, `Email gönderildi: ${type} → ${recipientEmail}`, true, {
+      user_id: userId,
+      detaylar: { type, to: recipientEmail, messageId: data.MessageID },
+    });
+
     return new Response(
       JSON.stringify({ success: true, messageId: data.MessageID }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -132,6 +164,9 @@ serve(async (req) => {
   } catch (error: unknown) {
     console.error("[SEND-EMAIL] Error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    await logSystem(supabase, "email", "hata", `Email gönderim hatası: ${errorMessage}`, false, {
+      hata_mesaji: errorMessage,
+    });
     return new Response(
       JSON.stringify({ success: false, error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
