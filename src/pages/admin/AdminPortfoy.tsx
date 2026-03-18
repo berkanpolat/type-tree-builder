@@ -266,9 +266,15 @@ export default function AdminPortfoy() {
     }
   };
 
-  // Extract unique türler and tipler for filters
+  const [filterIl, setFilterIl] = useState<string>("all");
+  const [filterDurum, setFilterDurum] = useState<string>("all");
+  const [filterPaket, setFilterPaket] = useState<string>("all");
+
+  // Extract unique values for filters
   const uniqueTurler = [...new Set(allFirmalar.map(f => f.firma_turu_name).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
   const uniqueTipler = [...new Set(allFirmalar.filter(f => filterTuru === "all" || f.firma_turu_name === filterTuru).map(f => f.firma_tipi_name).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
+  const uniqueIller = [...new Set(allFirmalar.map(f => f.il_name).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
+  const uniquePaketler = [...new Set(allFirmalar.map(f => f.abonelik?.paket_ad).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
 
   const filtered = allFirmalar.filter(f => {
     if (searchTerm) {
@@ -278,6 +284,12 @@ export default function AdminPortfoy() {
     }
     if (filterTuru !== "all" && f.firma_turu_name !== filterTuru) return false;
     if (filterTipi !== "all" && f.firma_tipi_name !== filterTipi) return false;
+    if (filterIl !== "all" && f.il_name !== filterIl) return false;
+    if (filterDurum !== "all" && f.onay_durumu !== filterDurum) return false;
+    if (filterPaket !== "all") {
+      if (filterPaket === "yok" && f.abonelik) return false;
+      if (filterPaket !== "yok" && f.abonelik?.paket_ad !== filterPaket) return false;
+    }
     return true;
   });
 
@@ -331,7 +343,7 @@ export default function AdminPortfoy() {
               />
             </div>
             <Select value={filterTuru} onValueChange={v => { setFilterTuru(v); setFilterTipi("all"); setCurrentPage(1); }}>
-              <SelectTrigger className="w-40 h-9 text-xs" style={s.input}>
+              <SelectTrigger className="w-36 h-9 text-xs" style={s.input}>
                 <SelectValue placeholder="Firma Türü" />
               </SelectTrigger>
               <SelectContent>
@@ -340,12 +352,42 @@ export default function AdminPortfoy() {
               </SelectContent>
             </Select>
             <Select value={filterTipi} onValueChange={v => { setFilterTipi(v); setCurrentPage(1); }}>
-              <SelectTrigger className="w-44 h-9 text-xs" style={s.input}>
+              <SelectTrigger className="w-40 h-9 text-xs" style={s.input}>
                 <SelectValue placeholder="Firma Tipi" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tüm Tipler</SelectItem>
                 {uniqueTipler.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterIl} onValueChange={v => { setFilterIl(v); setCurrentPage(1); }}>
+              <SelectTrigger className="w-36 h-9 text-xs" style={s.input}>
+                <SelectValue placeholder="İl" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm İller</SelectItem>
+                {uniqueIller.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterDurum} onValueChange={v => { setFilterDurum(v); setCurrentPage(1); }}>
+              <SelectTrigger className="w-32 h-9 text-xs" style={s.input}>
+                <SelectValue placeholder="Durum" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Durumlar</SelectItem>
+                <SelectItem value="onaylandi">Onaylı</SelectItem>
+                <SelectItem value="onay_bekliyor">Bekliyor</SelectItem>
+                <SelectItem value="reddedildi">Reddedildi</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterPaket} onValueChange={v => { setFilterPaket(v); setCurrentPage(1); }}>
+              <SelectTrigger className="w-32 h-9 text-xs" style={s.input}>
+                <SelectValue placeholder="Paket" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Paketler</SelectItem>
+                <SelectItem value="yok">Paketi Yok</SelectItem>
+                {uniquePaketler.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
