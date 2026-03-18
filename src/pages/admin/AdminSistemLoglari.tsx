@@ -142,7 +142,7 @@ export default function AdminSistemLoglari() {
     <AdminLayout title="Sistem Logları">
       <div className="space-y-4">
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { label: "Toplam Log", value: logs.length, icon: Activity, color: "#3b82f6" },
             { label: "Hata", value: totalErrors, icon: XCircle, color: "#ef4444" },
