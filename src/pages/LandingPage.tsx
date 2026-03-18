@@ -61,12 +61,16 @@ const LandingPage = () => {
         navigate(mustSet ? "/sifre-sifirla" : "/tekpazar", { replace: true });
       } else {
         // Returning visitor check — skip landing for repeat visitors
-        const hasVisited = localStorage.getItem("tas_visited");
-        if (hasVisited) {
-          navigate("/firmalar", { replace: true });
-          return;
+        // Disable redirect in preview/development environments
+        const isPreview = window.location.hostname.includes("preview") || window.location.hostname === "localhost";
+        if (!isPreview) {
+          const hasVisited = localStorage.getItem("tas_visited");
+          if (hasVisited) {
+            navigate("/firmalar", { replace: true });
+            return;
+          }
+          localStorage.setItem("tas_visited", "1");
         }
-        localStorage.setItem("tas_visited", "1");
         setLoading(false);
       }
     });
