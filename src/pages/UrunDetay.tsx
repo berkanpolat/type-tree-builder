@@ -310,8 +310,11 @@ export default function UrunDetay() {
 
     const teknikData = (urunData.teknik_detaylar as Record<string, any>) || {};
     Object.values(teknikData).forEach(val => {
-      if (typeof val === "string" && isUUID(val)) {
-        idsToResolve.push(val);
+      if (typeof val === "string") {
+        // Handle single UUID or comma-separated UUIDs
+        val.split(",").map(s => s.trim()).filter(Boolean).forEach(part => {
+          if (isUUID(part)) idsToResolve.push(part);
+        });
       } else if (Array.isArray(val)) {
         val.forEach(v => { if (typeof v === "string" && isUUID(v)) idsToResolve.push(v); });
       }
