@@ -11,7 +11,7 @@ export function useAdminApi() {
 
   const callApi = useCallback(
     async (action: string, body: Record<string, unknown>) => {
-      const enrichedBody = { ...body, action };
+      const enrichedBody: Record<string, unknown> = { ...body, action };
       // When impersonating, inject the impersonated user's ID
       if (impersonatedUser) {
         enrichedBody.actingAdminId = impersonatedUser.id;
