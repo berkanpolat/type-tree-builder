@@ -2367,6 +2367,66 @@ export type Database = {
         }
         Relationships: []
       }
+      seo_meta: {
+        Row: {
+          aktif: boolean
+          canonical_url: string | null
+          created_at: string
+          description: string | null
+          h1_text: string | null
+          id: string
+          json_ld: Json | null
+          keywords: string | null
+          og_description: string | null
+          og_image: string | null
+          og_title: string | null
+          robots: string | null
+          sayfa_adi: string
+          sayfa_slug: string
+          sayfa_tipi: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          aktif?: boolean
+          canonical_url?: string | null
+          created_at?: string
+          description?: string | null
+          h1_text?: string | null
+          id?: string
+          json_ld?: Json | null
+          keywords?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          robots?: string | null
+          sayfa_adi: string
+          sayfa_slug: string
+          sayfa_tipi?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aktif?: boolean
+          canonical_url?: string | null
+          created_at?: string
+          description?: string | null
+          h1_text?: string | null
+          id?: string
+          json_ld?: Json | null
+          keywords?: string | null
+          og_description?: string | null
+          og_image?: string | null
+          og_title?: string | null
+          robots?: string | null
+          sayfa_adi?: string
+          sayfa_slug?: string
+          sayfa_tipi?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sikayetler: {
         Row: {
           aciklama: string | null
