@@ -347,7 +347,11 @@ export default function AdminSeo() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-[hsl(var(--admin-text))] max-w-[200px] truncate text-xs">
-                          {entry.title || <span className="text-red-500 italic">Tanımsız</span>}
+                          {entry.title || (
+                            entry.sayfa_tipi === "dinamik" && DYNAMIC_FALLBACKS[entry.sayfa_slug]
+                              ? <span className="text-amber-600 italic">{DYNAMIC_FALLBACKS[entry.sayfa_slug].title}</span>
+                              : <span className="text-red-500 italic">Tanımsız</span>
+                          )}
                         </TableCell>
                         <TableCell>
                           <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold border ${getScoreBadge(audit.score)}`}>
