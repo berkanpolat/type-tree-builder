@@ -1437,8 +1437,8 @@ export type Database = {
           firma_iletisim_email: string | null
           firma_iletisim_numarasi: string | null
           firma_olcegi_id: string | null
-          firma_tipi_id: string
-          firma_turu_id: string
+          firma_tipi_id: string | null
+          firma_turu_id: string | null
           firma_unvani: string
           fiziksel_magaza_sayisi: number | null
           hizli_numune_id: string | null
@@ -1476,8 +1476,8 @@ export type Database = {
           firma_iletisim_email?: string | null
           firma_iletisim_numarasi?: string | null
           firma_olcegi_id?: string | null
-          firma_tipi_id: string
-          firma_turu_id: string
+          firma_tipi_id?: string | null
+          firma_turu_id?: string | null
           firma_unvani: string
           fiziksel_magaza_sayisi?: number | null
           hizli_numune_id?: string | null
@@ -1515,8 +1515,8 @@ export type Database = {
           firma_iletisim_email?: string | null
           firma_iletisim_numarasi?: string | null
           firma_olcegi_id?: string | null
-          firma_tipi_id?: string
-          firma_turu_id?: string
+          firma_tipi_id?: string | null
+          firma_turu_id?: string | null
           firma_unvani?: string
           fiziksel_magaza_sayisi?: number | null
           hizli_numune_id?: string | null
@@ -2795,6 +2795,17 @@ export type Database = {
           p_user_id: string
           p_vergi_dairesi: string
           p_vergi_numarasi: string
+        }
+        Returns: undefined
+      }
+      register_user_simple: {
+        Args: {
+          p_ad: string
+          p_firma_unvani: string
+          p_iletisim_email: string
+          p_iletisim_numarasi: string
+          p_soyad: string
+          p_user_id: string
         }
         Returns: undefined
       }
