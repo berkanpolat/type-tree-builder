@@ -109,6 +109,8 @@ interface UrunData {
   urun_tur_id: string | null;
   user_id: string;
   durum: string;
+  meta_title?: string | null;
+  meta_description?: string | null;
 }
 
 interface VaryasyonData {
