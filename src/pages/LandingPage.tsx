@@ -46,7 +46,7 @@ const LandingPage = () => {
   const [activeTab, setActiveTab] = useState("tedarikci");
   const [productSlide, setProductSlide] = useState(0);
   const [billingYearly, setBillingYearly] = useState(true);
-  const [selectedPackage, setSelectedPackage] = useState<"ucretsiz" | "pro" | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<"ucretsiz" | "pro">("ucretsiz");
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
