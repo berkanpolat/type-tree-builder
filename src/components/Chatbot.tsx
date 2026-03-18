@@ -152,7 +152,7 @@ export default function Chatbot() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-20 right-5 z-[9999] group md:bottom-5"
+          className="fixed bottom-28 right-5 z-[9999] group md:bottom-5"
           aria-label="TekBot Asistan"
         >
           <div className="relative w-[60px] h-[60px] rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.18)] transition-all duration-300 hover:scale-105 overflow-hidden border-2 border-secondary/30 bg-background">

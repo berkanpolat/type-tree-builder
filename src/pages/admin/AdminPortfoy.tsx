@@ -266,9 +266,15 @@ export default function AdminPortfoy() {
     }
   };
 
-  // Extract unique türler and tipler for filters
+  const [filterIl, setFilterIl] = useState<string>("all");
+  const [filterDurum, setFilterDurum] = useState<string>("all");
+  const [filterPaket, setFilterPaket] = useState<string>("all");
+
+  // Extract unique values for filters
   const uniqueTurler = [...new Set(allFirmalar.map(f => f.firma_turu_name).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
   const uniqueTipler = [...new Set(allFirmalar.filter(f => filterTuru === "all" || f.firma_turu_name === filterTuru).map(f => f.firma_tipi_name).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
+  const uniqueIller = [...new Set(allFirmalar.map(f => f.il_name).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
+  const uniquePaketler = [...new Set(allFirmalar.map(f => f.abonelik?.paket_ad).filter(Boolean))].sort((a, b) => a!.localeCompare(b!, "tr")) as string[];
 
   const filtered = allFirmalar.filter(f => {
     if (searchTerm) {
@@ -278,6 +284,12 @@ export default function AdminPortfoy() {
     }
     if (filterTuru !== "all" && f.firma_turu_name !== filterTuru) return false;
     if (filterTipi !== "all" && f.firma_tipi_name !== filterTipi) return false;
+    if (filterIl !== "all" && f.il_name !== filterIl) return false;
+    if (filterDurum !== "all" && f.onay_durumu !== filterDurum) return false;
+    if (filterPaket !== "all") {
+      if (filterPaket === "yok" && f.abonelik) return false;
+      if (filterPaket !== "yok" && f.abonelik?.paket_ad !== filterPaket) return false;
+    }
     return true;
   });
 
