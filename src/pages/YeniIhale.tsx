@@ -532,6 +532,7 @@ export default function YeniIhale() {
             {STEPS[currentStep] === "İhale Bilgileri" && <IhaleBilgileriStep formData={formData} updateForm={updateForm} ihaleId={ihaleId} skipBirim={skipStokStep} />}
             {STEPS[currentStep] === "Teknik Detaylar" && <TeknikDetaylarStep formData={formData} updateForm={updateForm} />}
             {STEPS[currentStep] === "Stok" && <StokStep formData={formData} updateForm={updateForm} />}
+            {STEPS[currentStep] === "Onay" && <OnayStep formData={formData} onSubmit={handleSubmitForApproval} onPreview={handlePreview} submitting={saving} />}
           </CardContent>
         </Card>
 
@@ -543,9 +544,7 @@ export default function YeniIhale() {
           {currentStep < STEPS.length - 1 ? (
             <Button onClick={handleNext}>İleri</Button>
           ) : (
-            <Button onClick={handlePreview} disabled={saving}>
-              {saving ? "Kaydediliyor..." : "İlerle ve Önizle"}
-            </Button>
+            <div />
           )}
         </div>
       </div>
