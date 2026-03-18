@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useSessionState } from "@/hooks/use-session-state";

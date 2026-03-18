@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";

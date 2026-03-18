@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
