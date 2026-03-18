@@ -568,7 +568,14 @@ const LandingPage = () => {
               <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ${billingYearly ? "translate-x-8" : "translate-x-1"}`} />
             </button>
             <span className={`text-sm font-medium ${billingYearly ? "text-foreground" : "text-muted-foreground"}`}>Yıllık</span>
-            {billingYearly && <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">%45+ İndirim</span>}
+            {billingYearly && (
+              <span className="relative inline-flex items-center gap-1 text-xs font-extrabold text-secondary bg-secondary/10 border border-secondary/30 px-3 py-1 rounded-full shadow-sm animate-pulse">
+                <span className="absolute -top-1 -left-1 text-[10px]">🎉</span>
+                <span className="absolute -top-1.5 -right-1.5 text-[10px]">✨</span>
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px]">🎊</span>
+                %45+ İndirim
+              </span>
+            )}
           </div>
 
           {/* Cards + Form */}
