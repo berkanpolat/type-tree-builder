@@ -2020,7 +2020,7 @@ Deno.serve(async (req) => {
           user_id: data.user_id,
           type: "urun_yayinlandi",
           message: msg,
-          link: "/manupazar",
+          link: "/urunlerim",
         });
 
         // Send urun approval SMS
@@ -2168,7 +2168,7 @@ Deno.serve(async (req) => {
           user_id: urunInfo.user_id,
           type: "urun_admin_kaldirildi",
           message: msg,
-          link: "/manupazar",
+           link: "/urunlerim",
         });
       }
 
@@ -2232,7 +2232,7 @@ Deno.serve(async (req) => {
           user_id: urunInfo.user_id,
           type: "urun_admin_duzenlendi",
           message: msg,
-          link: "/manupazar",
+          link: "/urunlerim",
         });
       }
 

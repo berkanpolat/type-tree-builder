@@ -772,7 +772,7 @@ export default function AdminUrunler() {
                       )}
                       {hasPermission("urun_duzenleyebilir") && (
                         <Button
-                          onClick={() => window.open(`/manupazar/duzenle/${urun.id}?admin=1`, "_blank")}
+                          onClick={() => window.open(`/urunlerim/duzenle/${urun.id}?admin=1`, "_blank")}
                           variant="ghost" size="sm"
                           className="h-7 w-7 p-0"
                           style={s.muted}

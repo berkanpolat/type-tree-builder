@@ -1042,7 +1042,7 @@ export default function YeniUrun() {
           </div>
         ) : (
           <div className="flex items-center justify-between sticky bottom-0 bg-background py-3 border-t z-10">
-            <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate("/manupazar")}>Geri</Button>
+            <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate("/urunlerim")}>Geri</Button>
             {step < STEPS.length - 1 ? (
               <Button onClick={handleNext}>İleri</Button>
             ) : (
