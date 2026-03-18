@@ -126,6 +126,7 @@ export default function AdminSistemLoglari() {
   const totalSuccess = logs.filter((l) => l.basarili).length;
   const smsSent = logs.filter((l) => l.kaynak === "sms" && l.basarili).length;
   const emailSent = logs.filter((l) => l.kaynak === "email" && l.basarili).length;
+  const clientErrors = logs.filter((l) => l.kaynak === "client_error").length;
 
   if (!hasPermission("islem_goruntule")) {
     return (
