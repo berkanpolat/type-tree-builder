@@ -1450,6 +1450,8 @@ export type Database = {
           kurulus_tarihi: string | null
           linkedin: string | null
           logo_url: string | null
+          meta_description: string | null
+          meta_title: string | null
           moq: number | null
           onay_durumu: string
           slug: string | null
@@ -1489,6 +1491,8 @@ export type Database = {
           kurulus_tarihi?: string | null
           linkedin?: string | null
           logo_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           moq?: number | null
           onay_durumu?: string
           slug?: string | null
@@ -1528,6 +1532,8 @@ export type Database = {
           kurulus_tarihi?: string | null
           linkedin?: string | null
           logo_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           moq?: number | null
           onay_durumu?: string
           slug?: string | null
@@ -1812,6 +1818,8 @@ export type Database = {
           kargo_masrafi: string | null
           kargo_sirketi_anlasmasi: string | null
           kdv_durumu: string | null
+          meta_description: string | null
+          meta_title: string | null
           min_teklif_degisim: number | null
           odeme_secenekleri: string | null
           odeme_vadesi: string | null
@@ -1852,6 +1860,8 @@ export type Database = {
           kargo_masrafi?: string | null
           kargo_sirketi_anlasmasi?: string | null
           kdv_durumu?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           min_teklif_degisim?: number | null
           odeme_secenekleri?: string | null
           odeme_vadesi?: string | null
@@ -1892,6 +1902,8 @@ export type Database = {
           kargo_masrafi?: string | null
           kargo_sirketi_anlasmasi?: string | null
           kdv_durumu?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           min_teklif_degisim?: number | null
           odeme_secenekleri?: string | null
           odeme_vadesi?: string | null
