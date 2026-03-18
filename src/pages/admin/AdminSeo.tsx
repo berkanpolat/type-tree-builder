@@ -63,33 +63,55 @@ const emptySeoEntry: Partial<SeoEntry> = {
   aktif: true,
 };
 
+const DYNAMIC_FALLBACKS: Record<string, { title: string; description: string }> = {
+  "/:slug": {
+    title: "[Firma Adı] | Tekstil A.Ş.",
+    description: "[Firma Adı] firma profili, ürünleri ve iletişim bilgileri.",
+  },
+  "/ihaleler/:slug": {
+    title: "[İhale Başlığı] | İhaleler | Tekstil A.Ş.",
+    description: "[İhale Başlığı] ihale detayları, şartları ve başvuru bilgileri.",
+  },
+};
+
 function auditSeoEntry(entry: SeoEntry): SeoAuditResult {
   const issues: SeoAuditResult["issues"] = [];
   let score = 100;
 
-  if (!entry.title) {
+  const fallback = DYNAMIC_FALLBACKS[entry.sayfa_slug];
+  const isDynamic = entry.sayfa_tipi === "dinamik";
+  const effectiveTitle = entry.title || (isDynamic && fallback ? fallback.title : null);
+  const effectiveDescription = entry.description || (isDynamic && fallback ? fallback.description : null);
+
+  if (!effectiveTitle) {
     issues.push({ type: "error", message: "Title etiketi tanımlanmamış" });
     score -= 20;
   } else {
-    if (entry.title.length < 30) {
+    if (!entry.title && isDynamic && fallback) {
+      issues.push({ type: "info", message: "Title fallback sistemiyle otomatik üretiliyor" });
+    }
+    if (entry.title && entry.title.length < 30) {
       issues.push({ type: "warning", message: `Title çok kısa (${entry.title.length} karakter, min 30)` });
       score -= 5;
     }
-    if (entry.title.length > 60) {
+    if (entry.title && entry.title.length > 60) {
       issues.push({ type: "warning", message: `Title çok uzun (${entry.title.length} karakter, max 60)` });
       score -= 5;
     }
   }
 
-  if (!entry.description) {
+  if (!effectiveDescription) {
     issues.push({ type: "error", message: "Meta description tanımlanmamış" });
     score -= 20;
   } else {
-    if (entry.description.length < 70) {
+    if (!entry.description && isDynamic && fallback) {
+      issues.push({ type: "info", message: "Description fallback sistemiyle otomatik üretiliyor" });
+    }
+    if (entry.description && entry.description.length < 70) {
       issues.push({ type: "warning", message: `Description çok kısa (${entry.description.length} karakter, min 70)` });
       score -= 5;
     }
-    if (entry.description.length > 160) {
+    if (entry.description && entry.description.length > 160) {
       issues.push({ type: "warning", message: `Description çok uzun (${entry.description.length} karakter, max 160)` });
       score -= 5;
     }
@@ -100,11 +122,11 @@ function auditSeoEntry(entry: SeoEntry): SeoAuditResult {
     score -= 3;
   }
 
-  if (!entry.og_title && !entry.title) {
+  if (!entry.og_title && !effectiveTitle) {
     issues.push({ type: "warning", message: "Open Graph title tanımlanmamış" });
     score -= 5;
   }
-  if (!entry.og_description && !entry.description) {
+  if (!entry.og_description && !effectiveDescription) {
     issues.push({ type: "warning", message: "Open Graph description tanımlanmamış" });
     score -= 5;
   }
