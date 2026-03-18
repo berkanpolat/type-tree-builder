@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -18,6 +18,9 @@ import {
   CheckCircle2,
   CreditCard,
   ArrowLeft,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 type SelectedPackage = "ucretsiz" | "pro";
@@ -37,6 +40,50 @@ const formatPhoneDisplay = (value: string) => {
 };
 
 const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+
+/* ─── Card Utilities ─── */
+function luhnCheck(num: string): boolean {
+  const digits = num.replace(/\D/g, "");
+  if (digits.length < 13 || digits.length > 19) return false;
+  let sum = 0, alternate = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let n = parseInt(digits[i], 10);
+    if (alternate) { n *= 2; if (n > 9) n -= 9; }
+    sum += n;
+    alternate = !alternate;
+  }
+  return sum % 10 === 0;
+}
+
+function detectBrand(num: string): string | null {
+  const d = num.replace(/\D/g, "");
+  if (/^4/.test(d)) return "visa";
+  if (/^5[1-5]/.test(d) || /^2[2-7]/.test(d)) return "mastercard";
+  if (/^3[47]/.test(d)) return "amex";
+  if (/^9792/.test(d)) return "troy";
+  return null;
+}
+
+const BRAND_LABELS: Record<string, string> = { visa: "Visa", mastercard: "Mastercard", amex: "AMEX", troy: "Troy" };
+const BRAND_COLORS: Record<string, string> = { visa: "#1a1f71", mastercard: "#eb001b", amex: "#006fcf", troy: "#00427a" };
+
+function formatCardNumber(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 16);
+  return digits.replace(/(.{4})/g, "$1 ").trim();
+}
+function formatExpiry(value: string): string {
+  const digits = value.replace(/\D/g, "").slice(0, 4);
+  if (digits.length >= 3) return digits.slice(0, 2) + "/" + digits.slice(2);
+  return digits;
+}
+function validateExpiry(val: string): boolean {
+  const parts = val.split("/");
+  if (parts.length !== 2) return false;
+  const month = parseInt(parts[0], 10);
+  const year = parseInt("20" + parts[1], 10);
+  if (month < 1 || month > 12) return false;
+  return new Date(year, month) > new Date();
+}
 
 export default function LandingRegistrationForm({ selectedPackage, billingYearly, onBack }: Props) {
   const { toast } = useToast();
@@ -69,10 +116,23 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
 
-  // Payment (PRO)
-  const [paymentStep, setPaymentStep] = useState(false);
-  const [paytrIframeUrl, setPaytrIframeUrl] = useState<string | null>(null);
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  // Card fields (PRO only)
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardHolder, setCardHolder] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [showCvv, setShowCvv] = useState(false);
+  const [cardErrors, setCardErrors] = useState<Record<string, string>>({});
+  const [cardTouched, setCardTouched] = useState<Record<string, boolean>>({});
+  const expiryRef = useRef<HTMLInputElement>(null);
+  const cvvRef = useRef<HTMLInputElement>(null);
+
+  // 3D Secure
+  const [threeDHtml, setThreeDHtml] = useState<string | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const brand = detectBrand(cardNumber);
+  const rawDigits = cardNumber.replace(/\D/g, "");
 
   const getFullPhone = () => {
     const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
@@ -119,6 +179,17 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
     return () => clearTimeout(timer);
   }, [telefon, countryCode]);
 
+  // Card auto-focus
+  useEffect(() => { if (rawDigits.length === 16) expiryRef.current?.focus(); }, [rawDigits]);
+  useEffect(() => { if (expiry.replace(/\D/g, "").length === 4) cvvRef.current?.focus(); }, [expiry]);
+
+  // Sync card holder with ad/soyad
+  useEffect(() => {
+    if (!cardTouched.cardHolder && ad && soyad) {
+      setCardHolder(`${ad} ${soyad}`.toUpperCase());
+    }
+  }, [ad, soyad]);
+
   const handleSendOtp = async () => {
     const fullPhone = getFullPhone();
     const cleaned = telefon.replace(/\D/g, "").replace(/^0+/, "");
@@ -126,15 +197,12 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
       toast({ title: "Hata", description: "Geçerli bir telefon numarası giriniz", variant: "destructive" });
       return;
     }
-
-    // Check duplicate
     const { data: dupCheck } = await supabase.rpc("check_registration_duplicate", { p_email: "", p_phone: fullPhone });
     if (dupCheck && (dupCheck as any).phone_exists) {
       setPhoneDuplicate(true);
       toast({ title: "Hata", description: "Bu telefon numarası ile zaten bir üyelik bulunmaktadır.", variant: "destructive" });
       return;
     }
-
     setSendingOtp(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-sms-otp", { body: { telefon: fullPhone } });
@@ -169,10 +237,35 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
     }
   };
 
+  const validateCard = useCallback(() => {
+    const errs: Record<string, string> = {};
+    if (!rawDigits || rawDigits.length < 13) errs.cardNumber = "Geçerli bir kart numarası girin";
+    else if (!luhnCheck(rawDigits)) errs.cardNumber = "Kart numarası geçersiz";
+    if (!cardHolder.trim() || cardHolder.trim().length < 3) errs.cardHolder = "Kart sahibi adını girin";
+    if (!validateExpiry(expiry)) errs.expiry = "Geçerli bir son kullanma tarihi girin";
+    const cvvDigits = cvv.replace(/\D/g, "");
+    if (cvvDigits.length < 3 || cvvDigits.length > 4) errs.cvv = "Geçerli bir CVV girin";
+    return errs;
+  }, [rawDigits, cardHolder, expiry, cvv]);
+
+  const isPro = selectedPackage === "pro";
   const canSubmit = firmaUnvani && ad && soyad && email && isValidEmail(email) && !emailDuplicate && phoneVerified && kvkkAccepted;
+  const canSubmitPro = canSubmit && Object.keys(validateCard()).length === 0;
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
+
+    // Validate card for PRO
+    if (isPro) {
+      const errs = validateCard();
+      setCardErrors(errs);
+      setCardTouched({ cardNumber: true, cardHolder: true, expiry: true, cvv: true });
+      if (Object.keys(errs).length > 0) {
+        toast({ title: "Hata", description: "Lütfen kart bilgilerini kontrol edin", variant: "destructive" });
+        return;
+      }
+    }
+
     setRegisterLoading(true);
     try {
       const fullPhone = getFullPhone();
@@ -202,7 +295,6 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
       const userId = authData.user?.id;
       if (!userId) throw new Error("Kullanıcı oluşturulamadı");
 
-      // Use simplified register function
       const { error: rpcError } = await supabase.rpc("register_user_simple" as any, {
         p_user_id: userId,
         p_ad: ad,
@@ -214,25 +306,15 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
       if (rpcError) throw rpcError;
 
       // Send emails/SMS
-      try {
-        await supabase.functions.invoke("send-email", {
-          body: { type: "basvuru_alindi", to: email, templateModel: { firma_unvani: firmaUnvani } },
-        });
-      } catch { }
-      try {
-        await supabase.functions.invoke("send-notification-sms", {
-          body: { type: "kayit_alindi", telefon: fullPhone, firmaUnvani },
-        });
-      } catch { }
+      try { await supabase.functions.invoke("send-email", { body: { type: "basvuru_alindi", to: email, templateModel: { firma_unvani: firmaUnvani } } }); } catch { }
+      try { await supabase.functions.invoke("send-notification-sms", { body: { type: "kayit_alindi", telefon: fullPhone, firmaUnvani } }); } catch { }
 
-      if (selectedPackage === "ucretsiz") {
-        // Free package: sign out, show admin approval message
+      if (!isPro) {
         await supabase.auth.signOut();
         setRegistrationComplete(true);
       } else {
-        // PRO package: keep signed in, initiate payment
-        setPaymentStep(true);
-        await initiatePayment(userId);
+        // PRO: Send card details to PayTR Direct API
+        await initiateDirectPayment();
       }
     } catch (error: any) {
       let msg = error.message;
@@ -244,12 +326,13 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
     }
   };
 
-  const initiatePayment = async (userId: string) => {
-    setPaymentLoading(true);
+  const initiateDirectPayment = async () => {
     try {
       const periyot = billingYearly ? "yillik" : "aylik";
+      const expiryParts = expiry.split("/");
+      const expiryMonth = expiryParts[0] || "";
+      const expiryYear = expiryParts[1] || "";
 
-      // Get client IP
       let clientIp = "";
       try {
         const ipRes = await fetch("https://api.ipify.org?format=json");
@@ -257,38 +340,33 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
         clientIp = ipData.ip || "";
       } catch { }
 
-      const { data, error } = await supabase.functions.invoke("create-paytr-token", {
-        body: { periyot, clientIp, forceTestMode: false },
+      const { data, error } = await supabase.functions.invoke("create-paytr-direct-token", {
+        body: {
+          periyot,
+          clientIp,
+          forceTestMode: false,
+          cc_owner: cardHolder,
+          card_number: cardNumber.replace(/\s/g, ""),
+          expiry_month: expiryMonth,
+          expiry_year: expiryYear,
+          cvv,
+        },
       });
+
       if (error) throw new Error(error.message || "Ödeme başlatılamadı");
       if (data?.error) throw new Error(data.error);
-      if (!data?.url) throw new Error("Ödeme URL'i alınamadı");
+      if (!data?.html_content) throw new Error("3D Secure sayfası alınamadı");
 
-      setPaytrIframeUrl(data.url);
+      // Show 3D Secure page in iframe
+      setThreeDHtml(data.html_content);
 
-      // Log payment initiation
-      try {
-        await supabase.functions.invoke("log-client-error", {
-          body: {
-            error_message: `PRO paket ödeme başlatıldı: ${periyot}`,
-            error_source: "landing_payment",
-            url: window.location.href,
-            user_id: userId,
-          },
-        });
-      } catch { }
     } catch (err: any) {
       toast({ title: "Ödeme Hatası", description: err.message, variant: "destructive" });
-      // Payment failed before even starting - assign free and inform
       await handlePaymentFailure(err.message);
-    } finally {
-      setPaymentLoading(false);
     }
   };
 
   const handlePaymentFailure = async (reason: string) => {
-    // User is already registered with free package (auto_assign_free_package trigger)
-    // Log the failure
     try {
       const { data: { session } } = await supabase.auth.getSession();
       await supabase.functions.invoke("log-client-error", {
@@ -300,16 +378,26 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
         },
       });
     } catch { }
-
     await supabase.auth.signOut();
-    setPaymentStep(false);
+    setThreeDHtml(null);
     setRegistrationComplete(true);
-    // Show a modified message for payment failure
     toast({
       title: "Bilgi",
       description: "Ödeme tamamlanamadı. Kaydınız ücretsiz paket ile oluşturuldu. Admin onayı sonrası giriş yapabilirsiniz.",
     });
   };
+
+  // Write 3D Secure HTML into iframe
+  useEffect(() => {
+    if (threeDHtml && iframeRef.current) {
+      const doc = iframeRef.current.contentDocument || iframeRef.current.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(threeDHtml);
+        doc.close();
+      }
+    }
+  }, [threeDHtml]);
 
   // Registration complete screen
   if (registrationComplete) {
@@ -327,57 +415,43 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
         <p className="text-sm text-muted-foreground leading-relaxed">
           Başvurunuz onaylandığında, şifre oluşturma bağlantısı <span className="font-medium text-foreground">{email}</span> adresine gönderilecektir.
         </p>
-        <Button onClick={() => navigate("/giris-kayit")} className="w-full">
-          Giriş Sayfasına Dön
-        </Button>
+        <Button onClick={() => navigate("/giris-kayit")} className="w-full">Giriş Sayfasına Dön</Button>
       </div>
     );
   }
 
-  // Payment iframe step (PRO)
-  if (paymentStep) {
-    if (paymentLoading) {
-      return (
-        <div className="flex flex-col items-center justify-center py-12 gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Ödeme sayfası yükleniyor...</p>
+  // 3D Secure iframe screen
+  if (threeDHtml) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Lock className="w-4 h-4" />
+          <span>3D Secure doğrulamasını tamamlayın</span>
         </div>
-      );
-    }
-
-    if (paytrIframeUrl) {
-      return (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <CreditCard className="w-4 h-4" />
-            <span>Ödeme işleminizi güvenli şekilde tamamlayın</span>
-          </div>
-          <div className="rounded-xl overflow-hidden border border-border" style={{ minHeight: 460 }}>
-            <iframe
-              src={paytrIframeUrl}
-              className="w-full border-0"
-              style={{ height: 460 }}
-              frameBorder="0"
-              title="PayTR Ödeme"
-            />
-          </div>
-          <button
-            type="button"
-            className="text-xs text-muted-foreground hover:underline"
-            onClick={() => handlePaymentFailure("Kullanıcı ödemeyi iptal etti")}
-          >
-            Ödemeyi atla, ücretsiz paket ile devam et
-          </button>
+        <div className="rounded-xl overflow-hidden border border-border" style={{ minHeight: 500 }}>
+          <iframe
+            ref={iframeRef}
+            className="w-full border-0"
+            style={{ height: 500 }}
+            title="3D Secure Doğrulama"
+            sandbox="allow-forms allow-scripts allow-same-origin allow-top-navigation allow-popups"
+          />
         </div>
-      );
-    }
-
-    return null;
+        <button
+          type="button"
+          className="text-xs text-muted-foreground hover:underline"
+          onClick={() => handlePaymentFailure("Kullanıcı ödemeyi iptal etti")}
+        >
+          Ödemeyi atla, ücretsiz paket ile devam et
+        </button>
+      </div>
+    );
   }
 
   const otpMinutes = Math.floor(otpCountdown / 60);
   const otpSeconds = otpCountdown % 60;
   const cleanedPhone = telefon.replace(/\D/g, "").replace(/^0+/, "");
+  const formattedExpiry = formatExpiry(expiry);
 
   return (
     <div className="space-y-5">
@@ -386,7 +460,7 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h3 className="text-lg font-semibold text-foreground">
-          {selectedPackage === "pro" ? "PRO Paket" : "Ücretsiz Paket"} — {selectedPackage === "pro" ? (billingYearly ? "Yıllık" : "Aylık") : ""} Kayıt Formu
+          {isPro ? `PRO Paket — ${billingYearly ? "Yıllık" : "Aylık"} Kayıt` : "Ücretsiz Paket — Kayıt Formu"}
         </h3>
       </div>
 
@@ -447,14 +521,8 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
               disabled={phoneVerified}
             />
             {!phoneVerified && !otpSent && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="shrink-0 text-xs px-3"
-                onClick={handleSendOtp}
-                disabled={sendingOtp || phoneDuplicate || cleanedPhone.length < 7}
-              >
+              <Button type="button" variant="outline" size="sm" className="shrink-0 text-xs px-3"
+                onClick={handleSendOtp} disabled={sendingOtp || phoneDuplicate || cleanedPhone.length < 7}>
                 {sendingOtp ? <Loader2 className="w-3 h-3 animate-spin" /> : "Kod Gönder"}
               </Button>
             )}
@@ -483,31 +551,119 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
               </InputOTP>
             </div>
             <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                className="flex-1"
-                onClick={handleVerifyOtp}
-                disabled={verifyingOtp || otpCode.length !== 6}
-              >
+              <Button type="button" size="sm" className="flex-1" onClick={handleVerifyOtp} disabled={verifyingOtp || otpCode.length !== 6}>
                 {verifyingOtp ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <ShieldCheck className="w-3 h-3 mr-1" />}
                 Doğrula
               </Button>
             </div>
             <div className="text-center">
               {otpCountdown > 0 ? (
-                <p className="text-[11px] text-muted-foreground">
-                  Tekrar gönder: {otpMinutes}:{String(otpSeconds).padStart(2, "0")}
-                </p>
+                <p className="text-[11px] text-muted-foreground">Tekrar gönder: {otpMinutes}:{String(otpSeconds).padStart(2, "0")}</p>
               ) : (
-                <button type="button" className="text-[11px] text-primary hover:underline" onClick={() => { setOtpCode(""); handleSendOtp(); }}>
-                  Yeniden Kod Gönder
-                </button>
+                <button type="button" className="text-[11px] text-primary hover:underline" onClick={() => { setOtpCode(""); handleSendOtp(); }}>Yeniden Kod Gönder</button>
               )}
             </div>
           </div>
         )}
       </div>
+
+      {/* ─── Card Details (PRO only) ─── */}
+      {isPro && (
+        <div className="space-y-4 rounded-xl border border-border bg-muted/30 p-4">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-primary" />
+            <span className="text-sm font-semibold text-foreground">Kart Bilgileri</span>
+            <div className="ml-auto flex items-center gap-1 text-[10px] text-muted-foreground">
+              <Lock className="w-3 h-3" /> 3D Secure
+            </div>
+          </div>
+
+          {/* Card Number */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Kart Numarası</label>
+            <div className="relative">
+              <Input
+                type="text"
+                inputMode="numeric"
+                placeholder="1234 1234 1234 1234"
+                className={`h-10 pr-16 tracking-wider font-mono text-sm ${cardTouched.cardNumber && cardErrors.cardNumber ? "border-destructive ring-1 ring-destructive" : ""}`}
+                value={formatCardNumber(cardNumber)}
+                onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16))}
+                onBlur={() => setCardTouched((p) => ({ ...p, cardNumber: true }))}
+                maxLength={19}
+                autoComplete="off"
+              />
+              {brand && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold uppercase tracking-widest" style={{ color: BRAND_COLORS[brand] }}>
+                  {BRAND_LABELS[brand]}
+                </span>
+              )}
+            </div>
+            {cardTouched.cardNumber && cardErrors.cardNumber && <p className="text-xs text-destructive">{cardErrors.cardNumber}</p>}
+          </div>
+
+          {/* Card Holder */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground">Kart Sahibi</label>
+            <Input
+              type="text"
+              placeholder="Ad Soyad"
+              className={`h-10 uppercase tracking-wide text-sm ${cardTouched.cardHolder && cardErrors.cardHolder ? "border-destructive ring-1 ring-destructive" : ""}`}
+              value={cardHolder}
+              onChange={(e) => { setCardHolder(e.target.value.replace(/[^a-zA-ZçÇğĞıİöÖşŞüÜ\s]/g, "")); setCardTouched((p) => ({ ...p, cardHolder: true })); }}
+              onBlur={() => setCardTouched((p) => ({ ...p, cardHolder: true }))}
+              maxLength={50}
+              autoComplete="off"
+            />
+            {cardTouched.cardHolder && cardErrors.cardHolder && <p className="text-xs text-destructive">{cardErrors.cardHolder}</p>}
+          </div>
+
+          {/* Expiry + CVV */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Son Kullanma</label>
+              <Input
+                ref={expiryRef}
+                type="text"
+                inputMode="numeric"
+                placeholder="AA / YY"
+                className={`h-10 text-center tracking-widest font-mono text-sm ${cardTouched.expiry && cardErrors.expiry ? "border-destructive ring-1 ring-destructive" : ""}`}
+                value={formattedExpiry}
+                onChange={(e) => setExpiry(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                onBlur={() => setCardTouched((p) => ({ ...p, expiry: true }))}
+                maxLength={5}
+                autoComplete="off"
+              />
+              {cardTouched.expiry && cardErrors.expiry && <p className="text-xs text-destructive">{cardErrors.expiry}</p>}
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">CVV</label>
+              <div className="relative">
+                <Input
+                  ref={cvvRef}
+                  type={showCvv ? "text" : "password"}
+                  inputMode="numeric"
+                  placeholder="•••"
+                  className={`h-10 text-center tracking-widest font-mono text-sm pr-9 ${cardTouched.cvv && cardErrors.cvv ? "border-destructive ring-1 ring-destructive" : ""}`}
+                  value={cvv}
+                  onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                  onBlur={() => setCardTouched((p) => ({ ...p, cvv: true }))}
+                  maxLength={4}
+                  autoComplete="off"
+                />
+                <button type="button" tabIndex={-1} onClick={() => setShowCvv(!showCvv)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-muted-foreground">
+                  {showCvv ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+              {cardTouched.cvv && cardErrors.cvv && <p className="text-xs text-destructive">{cardErrors.cvv}</p>}
+            </div>
+          </div>
+
+          <p className="text-[10px] text-muted-foreground/60 text-center">
+            Kart bilgileriniz sunucularımızda saklanmaz. Ödeme PayTR altyapısı üzerinden güvenle işlenir.
+          </p>
+        </div>
+      )}
 
       {/* KVKK */}
       <div className="space-y-3 pt-1">
@@ -530,12 +686,12 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
         type="button"
         className="w-full h-12 text-sm font-semibold"
         onClick={handleSubmit}
-        disabled={!canSubmit || registerLoading}
+        disabled={(!isPro ? !canSubmit : !canSubmit) || registerLoading}
       >
         {registerLoading ? (
           <><Loader2 className="w-4 h-4 animate-spin mr-2" /> İşleniyor...</>
-        ) : selectedPackage === "pro" ? (
-          "Ödeme Yap"
+        ) : isPro ? (
+          <><CreditCard className="w-4 h-4 mr-2" /> Ödeme Yap ve Kaydı Tamamla</>
         ) : (
           "Kaydı Tamamla"
         )}
