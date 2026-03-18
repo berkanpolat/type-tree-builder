@@ -2020,7 +2020,7 @@ Deno.serve(async (req) => {
           user_id: data.user_id,
           type: "urun_yayinlandi",
           message: msg,
-          link: "/manupazar",
+          link: "/urunlerim",
         });
 
         // Send urun approval SMS
