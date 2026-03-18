@@ -264,6 +264,8 @@ const LandingPage = () => {
               <Link to="/firmalar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekRehber</Link>
               <Link to="/tekpazar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekPazar</Link>
               <Link to="/ihaleler" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Tekİhale</Link>
+              <a href="#kayit" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Fiyatlandırma</a>
+              <Link to="/hakkimizda" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Hakkımızda</Link>
             </nav>
           </div>
           <div className="flex items-center gap-2">
