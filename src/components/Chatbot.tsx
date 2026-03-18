@@ -235,7 +235,7 @@ export default function Chatbot() {
       {!open && (
         <button
           ref={triggerRef}
-          onClick={() => { if (!dragRef.current.dragging) handleOpen(); }}
+          onClick={handleTriggerClick}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
