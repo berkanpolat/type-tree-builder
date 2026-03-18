@@ -449,6 +449,13 @@ const GirisKayit = () => {
 
           {activeTab === "giris" ? (
             <form onSubmit={handleLogin} className="space-y-4">
+              {searchParams.get("odeme") === "basarili" && (
+                <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-center space-y-1">
+                  <div className="flex justify-center"><CheckCircle2 className="w-6 h-6 text-green-600" /></div>
+                  <p className="text-sm font-medium text-green-800">PRO paketiniz başarıyla aktifleştirildi!</p>
+                  <p className="text-xs text-green-700">E-postanıza gönderilen şifre bağlantısıyla giriş yapabilirsiniz.</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>E-posta</Label>
                 <Input type="email" placeholder="E-posta" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} required />
