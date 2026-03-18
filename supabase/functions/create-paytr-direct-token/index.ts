@@ -90,7 +90,8 @@ serve(async (req) => {
     );
 
     const { data: profile } = await supabaseAdmin.from("profiles").select("ad, soyad, iletisim_numarasi").eq("user_id", user.id).single();
-    const { data: firma } = await supabaseAdmin.from("firmalar").select("firma_unvani").eq("user_id", user.id).single();
+    // Use firma_unvani from request body (firma not yet created for PRO)
+    const userFirmaUnvani = firma_unvani || "Türkiye";
 
     const merchantId = Deno.env.get("PAYTR_MERCHANT_ID")!;
     const merchantKey = Deno.env.get("PAYTR_MERCHANT_KEY")!;
