@@ -114,11 +114,12 @@ export function initErrorTracker() {
 }
 
 // React Error Boundary helper
-export function reportReactError(error: Error, componentStack: string) {
+export function reportReactError(error: Error, componentStack: string, pageUrl?: string) {
   sendError({
     error_message: error.message,
     error_source: "react_error_boundary",
     error_stack: error.stack,
     component_stack: componentStack,
+    url: pageUrl || window.location.href,
   });
 }

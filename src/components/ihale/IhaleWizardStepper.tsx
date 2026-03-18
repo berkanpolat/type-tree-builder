@@ -1,6 +1,6 @@
-import { ShoppingCart, TrendingUp, Layers, FileText, Settings, Package } from "lucide-react";
+import { ShoppingCart, TrendingUp, Layers, FileText, Settings, Package, CheckCircle } from "lucide-react";
 
-const STEP_ICONS = [ShoppingCart, TrendingUp, Layers, FileText, Settings, Package];
+const STEP_ICONS = [ShoppingCart, TrendingUp, Layers, FileText, Settings, Package, CheckCircle];
 
 interface Props {
   steps: string[];
@@ -13,7 +13,7 @@ export default function IhaleWizardStepper({ steps, currentStep, onStepClick, fr
   return (
     <div className="flex items-center justify-center gap-0">
       {steps.map((label, i) => {
-        const Icon = STEP_ICONS[i];
+        const Icon = STEP_ICONS[i] || CheckCircle;
         const isActive = i === currentStep;
         const isDone = i < currentStep;
         const isClickable = !!onStepClick && (freeNavigation || isDone || isActive);
