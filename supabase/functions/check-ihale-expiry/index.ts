@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
           user_id: ihale.user_id,
           type: 'ihale_suresi_doldu',
           message: `${ihale.ihale_no} numaralı ${ihale.baslik} başlıklı ihalenizin süresi dolmuştur.`,
-          link: `/manuihale/takip/${ihale.id}`,
+          link: `/ihalelerim/takip/${ihale.id}`,
           reference_id: expiredRefId,
         })
         inserted++
