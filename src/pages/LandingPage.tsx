@@ -17,6 +17,7 @@ import iso9001Img from "@/assets/iso-9001.png";
 import iso22301Img from "@/assets/iso-22301.png";
 import kosgebImg from "@/assets/kosgeb.png";
 import Footer from "@/components/Footer";
+import LandingRegistrationForm from "@/components/landing/LandingRegistrationForm";
 import { PAKET_OZELLIKLERI, PRO_FIYATLAR } from "@/lib/package-config";
 import { Mail, Phone, MapPin } from "lucide-react";
 import {
@@ -45,6 +46,7 @@ const LandingPage = () => {
   const [activeTab, setActiveTab] = useState("tedarikci");
   const [productSlide, setProductSlide] = useState(0);
   const [billingYearly, setBillingYearly] = useState(true);
+  const [selectedPackage, setSelectedPackage] = useState<"ucretsiz" | "pro" | null>(null);
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -274,12 +276,12 @@ const LandingPage = () => {
               <Link to="/tekpazar" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">Pazar</Link>
               <Link to="/ihaleler" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">İhale</Link>
             </nav>
-            <Link
-              to="/giris-kayit?tab=kayit"
+            <a
+              href="#kayit"
               className="px-4 md:px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-xs md:text-sm font-medium hover:bg-primary/90 transition-colors"
             >
               Giriş Yap / Kayıt Ol
-            </Link>
+            </a>
           </div>
         </div>
       </header>
@@ -297,12 +299,12 @@ const LandingPage = () => {
               yakalayın!
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link
-                 to="/giris-kayit?tab=kayit"
+              <a
+                 href="#kayit"
                 className="px-10 py-3.5 rounded-lg bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-colors"
               >
                 Ücretsiz Kayıt Ol
-              </Link>
+              </a>
               <a href="/Tekstil_AS_Kurumsal_Sunum_v2.pdf" download className="px-10 py-3.5 rounded-lg bg-secondary text-secondary-foreground font-semibold text-base hover:bg-secondary/90 transition-colors">
                 Tanıtım PDF İndir
               </a>
@@ -466,12 +468,12 @@ const LandingPage = () => {
                     </div>
                   ))}
                 </div>
-                <Link
-                   to="/giris-kayit?tab=kayit"
+                <a
+                   href="#kayit"
                   className="inline-block px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
                 >
                   {currentProduct.cta}
-                </Link>
+                </a>
               </div>
             </div>
           </div>
@@ -533,19 +535,19 @@ const LandingPage = () => {
                   </div>
                 ))}
               </div>
-              <Link
-                 to="/giris-kayit?tab=kayit"
+              <a
+                 href="#kayit"
                 className="inline-block px-8 py-3.5 rounded-full bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
               >
                 Hemen Kayıt Ol
-              </Link>
+              </a>
             </div>
           </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section className="bg-muted/40 py-20">
+      <section id="kayit" className="bg-muted/40 py-20">
         <div className="max-w-5xl mx-auto px-6">
           <div className="text-center mb-10">
             <span className="inline-block px-5 py-2 rounded-full bg-secondary text-secondary-foreground font-semibold text-sm mb-4">
@@ -569,11 +571,21 @@ const LandingPage = () => {
             {billingYearly && <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">%45+ İndirim</span>}
           </div>
 
-          {/* Cards */}
+          {/* Cards + Form */}
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {/* Ücretsiz */}
-            <div className="bg-background rounded-2xl border border-border p-6 flex flex-col">
-              <span className="inline-block w-fit px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold mb-2">Üye</span>
+            <div
+              className={`bg-background rounded-2xl border-2 p-6 flex flex-col cursor-pointer transition-all ${
+                selectedPackage === "ucretsiz" ? "border-primary shadow-lg ring-2 ring-primary/20" : "border-border hover:border-primary/40"
+              }`}
+              onClick={() => setSelectedPackage(selectedPackage === "ucretsiz" ? null : "ucretsiz")}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="inline-block w-fit px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Üye</span>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPackage === "ucretsiz" ? "border-primary bg-primary" : "border-border"}`}>
+                  {selectedPackage === "ucretsiz" && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
+                </div>
+              </div>
               <p className="text-sm text-muted-foreground mb-3">İnternette Görünür Ol!</p>
               <p className="text-4xl font-extrabold text-foreground mb-6">$0</p>
               <div className="border-t border-border pt-4 space-y-3 flex-1">
@@ -592,20 +604,24 @@ const LandingPage = () => {
                   </div>
                 ))}
               </div>
-              <Link
-                 to="/giris-kayit?tab=kayit"
-                className="mt-6 block text-center px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
-              >
-                Hemen Kayıt Ol
-              </Link>
             </div>
 
             {/* PRO */}
-            <div className="bg-background rounded-2xl border-2 border-secondary p-6 flex flex-col relative">
+            <div
+              className={`bg-background rounded-2xl border-2 p-6 flex flex-col relative cursor-pointer transition-all ${
+                selectedPackage === "pro" ? "border-secondary shadow-lg ring-2 ring-secondary/20" : "border-secondary/40 hover:border-secondary"
+              }`}
+              onClick={() => setSelectedPackage(selectedPackage === "pro" ? null : "pro")}
+            >
               <div className="absolute -top-3 right-4 w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center">
                 <span className="text-lg">⭐</span>
               </div>
-              <span className="inline-block w-fit px-3 py-1 rounded-full bg-secondary/20 text-secondary font-bold text-xs mb-2">PRO</span>
+              <div className="flex items-center justify-between mb-2">
+                <span className="inline-block w-fit px-3 py-1 rounded-full bg-secondary/20 text-secondary font-bold text-xs">PRO</span>
+                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedPackage === "pro" ? "border-secondary bg-secondary" : "border-border"}`}>
+                  {selectedPackage === "pro" && <CheckCircle2 className="w-3.5 h-3.5 text-secondary-foreground" />}
+                </div>
+              </div>
               <p className="text-sm text-muted-foreground mb-3">Profesyonel Ol!</p>
               <div className="mb-1 flex items-baseline gap-2">
                 {billingYearly ? (
@@ -638,14 +654,25 @@ const LandingPage = () => {
                   </div>
                 ))}
               </div>
-              <Link
-                to="/giris-kayit?tab=kayit"
-                className="mt-6 block text-center px-6 py-3 rounded-full bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/90 transition-colors"
-              >
-                Hemen Kayıt Ol
-              </Link>
             </div>
           </div>
+
+          {/* Inline Registration Form */}
+          {selectedPackage && (
+            <div className="max-w-lg mx-auto mt-10 bg-background rounded-2xl border border-border p-6 md:p-8 shadow-sm animate-in slide-in-from-bottom-4 fade-in duration-300">
+              <LandingRegistrationForm
+                selectedPackage={selectedPackage}
+                billingYearly={billingYearly}
+                onBack={() => setSelectedPackage(null)}
+              />
+            </div>
+          )}
+
+          {!selectedPackage && (
+            <p className="text-center text-sm text-muted-foreground mt-8">
+              Başlamak için yukarıdan bir paket seçin
+            </p>
+          )}
         </div>
       </section>
 
