@@ -887,7 +887,7 @@ export default function UrunDetay() {
                           });
                         } catch (e) { console.error("Urun review email failed:", e); }
                         toast({ title: "Ürün onaya gönderildi!" });
-                        navigate("/manupazar");
+                        navigate("/urunlerim");
                       }}
                     >
                       <CheckCircle className="w-4 h-4" />
