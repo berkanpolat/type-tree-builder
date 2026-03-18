@@ -477,30 +477,44 @@ export default function YeniIhale() {
   };
 
   const handlePreview = async () => {
+    // Open window synchronously to avoid popup blocker
+    const newTab = window.open("about:blank", "_blank");
     await handleSave();
-    if (!ihaleId) return;
+    if (!ihaleId) { newTab?.close(); return; }
     const { data: ihaleRow } = await supabase.from("ihaleler").select("slug").eq("id", ihaleId).maybeSingle();
     const target = ihaleRow?.slug || ihaleId;
-    window.open(`/ihaleler/${target}`, "_blank");
+    if (newTab) {
+      newTab.location.href = `${window.location.origin}/ihaleler/${target}`;
+    }
   };
 
   const handleSubmitForApproval = async () => {
     if (!ihaleId) return;
     setSaving(true);
-    await handleSave();
+    try {
+      await handleSave();
 
-    if (isAdminMode) {
-      const adminToken = localStorage.getItem("admin_token");
-      await supabase.functions.invoke("admin-auth/admin-save-ihale", {
-        body: { token: adminToken, ihaleId, ihaleData: { durum: "onay_bekliyor" }, filtreler: [], stoklar: [], fotograflar: [], ek_dosyalar: [] },
-      });
-    } else {
-      await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihaleId);
+      if (isAdminMode) {
+        const adminToken = localStorage.getItem("admin_token");
+        await supabase.functions.invoke("admin-auth/admin-save-ihale", {
+          body: { token: adminToken, ihaleId, ihaleData: { durum: "onay_bekliyor" }, filtreler: [], stoklar: [], fotograflar: [], ek_dosyalar: [] },
+        });
+      } else {
+        const { error } = await supabase.from("ihaleler").update({ durum: "onay_bekliyor" } as any).eq("id", ihaleId);
+        if (error) {
+          toast({ title: "Hata", description: `Onaya gönderilemedi: ${error.message}`, variant: "destructive" });
+          setSaving(false);
+          return;
+        }
+      }
+
+      toast({ title: "Başarılı", description: "İhaleniz onaya gönderildi." });
+      navigate("/ihalelerim");
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "Beklenmeyen bir hata oluştu.", variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
-    toast({ title: "Başarılı", description: "İhaleniz onaya gönderildi." });
-    navigate("/ihalelerim");
   };
 
   if (loadingEdit) {
