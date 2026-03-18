@@ -386,7 +386,7 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h3 className="text-lg font-semibold text-foreground">
-          {selectedPackage === "pro" ? "PRO Paket" : "Ücretsiz Paket"} — Kayıt Formu
+          {selectedPackage === "pro" ? "PRO Paket" : "Ücretsiz Paket"} — {selectedPackage === "pro" ? (billingYearly ? "Yıllık" : "Aylık") : ""} Kayıt Formu
         </h3>
       </div>
 

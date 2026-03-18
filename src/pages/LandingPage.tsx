@@ -664,22 +664,14 @@ const LandingPage = () => {
             </div>
           </div>
 
-          {/* Inline Registration Form */}
-          {selectedPackage && (
-            <div className="max-w-lg mx-auto mt-10 bg-background rounded-2xl border border-border p-6 md:p-8 shadow-sm animate-in slide-in-from-bottom-4 fade-in duration-300">
-              <LandingRegistrationForm
-                selectedPackage={selectedPackage}
-                billingYearly={billingYearly}
-                onBack={() => setSelectedPackage(null)}
-              />
-            </div>
-          )}
-
-          {!selectedPackage && (
-            <p className="text-center text-sm text-muted-foreground mt-8">
-              Başlamak için yukarıdan bir paket seçin
-            </p>
-          )}
+          {/* Inline Registration Form — always visible */}
+          <div className="max-w-lg mx-auto mt-10 bg-background rounded-2xl border border-border p-6 md:p-8 shadow-sm">
+            <LandingRegistrationForm
+              selectedPackage={selectedPackage}
+              billingYearly={billingYearly}
+              onBack={() => setSelectedPackage("ucretsiz")}
+            />
+          </div>
         </div>
       </section>
 
