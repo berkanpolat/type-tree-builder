@@ -1812,6 +1812,22 @@ Deno.serve(async (req) => {
       return jsonResponse({ urunler: enriched });
     }
 
+    // ─── GET URUN BY SLUG (resolve slug to ID for admin) ───
+    if (action === "get-urun-by-slug") {
+      const { token, slug } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.urun_goruntule) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+      const { data } = await supabase
+        .from("urunler")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+      if (!data) return jsonResponse({ error: "Ürün bulunamadı" }, 404);
+      return jsonResponse({ urunId: data.id });
+    }
+
     // ─── GET URUN DETAIL (for admin preview - bypasses RLS) ───
     if (action === "get-urun-detail") {
       const { token, urunId } = body;
