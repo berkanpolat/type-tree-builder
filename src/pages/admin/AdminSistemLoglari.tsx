@@ -49,6 +49,7 @@ const KAYNAK_LABELS: Record<string, { label: string; icon: React.ElementType; co
   auth: { label: "Kimlik Doğr.", icon: Shield, color: "#f59e0b" },
   sistem: { label: "Sistem", icon: Server, color: "#6b7280" },
   edge_function: { label: "Backend", icon: Server, color: "#06b6d4" },
+  client_error: { label: "Tarayıcı Hatası", icon: AlertTriangle, color: "#dc2626" },
 };
 
 const SEVIYE_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
@@ -125,6 +126,7 @@ export default function AdminSistemLoglari() {
   const totalSuccess = logs.filter((l) => l.basarili).length;
   const smsSent = logs.filter((l) => l.kaynak === "sms" && l.basarili).length;
   const emailSent = logs.filter((l) => l.kaynak === "email" && l.basarili).length;
+  const clientErrors = logs.filter((l) => l.kaynak === "client_error").length;
 
   if (!hasPermission("islem_goruntule")) {
     return (
@@ -140,10 +142,11 @@ export default function AdminSistemLoglari() {
     <AdminLayout title="Sistem Logları">
       <div className="space-y-4">
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
             { label: "Toplam Log", value: logs.length, icon: Activity, color: "#3b82f6" },
             { label: "Hata", value: totalErrors, icon: XCircle, color: "#ef4444" },
+            { label: "Tarayıcı Hatası", value: clientErrors, icon: AlertTriangle, color: "#dc2626" },
             { label: "SMS Gönderildi", value: smsSent, icon: MessageSquare, color: "#22c55e" },
             { label: "E-posta Gönderildi", value: emailSent, icon: Mail, color: "#8b5cf6" },
           ].map((kpi) => (
