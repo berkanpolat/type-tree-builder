@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
                   TemplateModel: {
                     firma_unvani: firma?.firma_unvani || "",
                     ihale_basligi: ihale.baslik,
-                    ihale_takip_linki: `${SITE_URL}/manuihale/takip/${ihale.id}`,
+                    ihale_takip_linki: `${SITE_URL}/ihalelerim/takip/${ihale.id}`,
                     platform_adi: "Tekstil A.Ş.",
                     destek_email: "info@manufixo.com",
                     yil: new Date().getFullYear().toString(),
