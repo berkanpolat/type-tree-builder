@@ -44,7 +44,7 @@ export function useSeoMeta({
       const description = dynamicDescription || meta.description || fallbackDescription || "";
       const ogTitle = meta.og_title || title;
       const ogDesc = meta.og_description || description;
-      const ogImage = dynamicOgImage || meta.og_image || "";
+      const ogImage = dynamicOgImage || meta.og_image || "https://tekstilas.com/images/og-default.jpg";
 
       document.title = title;
 
