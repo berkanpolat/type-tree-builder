@@ -2445,6 +2445,51 @@ export type Database = {
         }
         Relationships: []
       }
+      system_logs: {
+        Row: {
+          basarili: boolean
+          created_at: string
+          detaylar: Json | null
+          firma_id: string | null
+          hata_mesaji: string | null
+          id: string
+          ip_address: string | null
+          islem: string
+          kaynak: string
+          mesaj: string
+          seviye: string
+          user_id: string | null
+        }
+        Insert: {
+          basarili?: boolean
+          created_at?: string
+          detaylar?: Json | null
+          firma_id?: string | null
+          hata_mesaji?: string | null
+          id?: string
+          ip_address?: string | null
+          islem: string
+          kaynak: string
+          mesaj: string
+          seviye?: string
+          user_id?: string | null
+        }
+        Update: {
+          basarili?: boolean
+          created_at?: string
+          detaylar?: Json | null
+          firma_id?: string | null
+          hata_mesaji?: string | null
+          id?: string
+          ip_address?: string | null
+          islem?: string
+          kaynak?: string
+          mesaj?: string
+          seviye?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       urun_favoriler: {
         Row: {
           created_at: string
