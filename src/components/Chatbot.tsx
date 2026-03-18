@@ -147,26 +147,27 @@ export default function Chatbot() {
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
     const wasDragging = dragRef.current.dragging;
-    dragRef.current = { startX: 0, startY: 0, startPosX: 0, startPosY: 0, dragging: false };
-    const el = open ? panelRef.current : triggerRef.current;
+    dragRef.current = { startX: 0, startY: 0, startPosX: 0, startPosY: 0, dragging: false, justDragged: wasDragging };
+    const el = triggerRef.current;
     if (el) el.releasePointerCapture(e.pointerId);
-    // If it was a drag, don't trigger click
-    if (wasDragging) {
-      e.stopPropagation();
-    }
-  }, [open]);
+  }, []);
 
-  // Reset position when toggling open/close
   const handleOpen = () => {
-    setPosition(null);
     setOpen(true);
     setMinimized(false);
   };
 
   const handleClose = () => {
-    setPosition(null);
     setOpen(false);
     setMinimized(false);
+  };
+
+  const handleTriggerClick = () => {
+    if (dragRef.current.justDragged) {
+      dragRef.current.justDragged = false;
+      return;
+    }
+    handleOpen();
   };
 
   const sendMessage = useCallback(async (text: string, prevMessages: Msg[] = messages) => {
