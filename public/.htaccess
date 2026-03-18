@@ -11,6 +11,9 @@ RewriteRule ^(.*)$ https://%1/$1 [R=301,L]
 # PayTR callback proxy - MUST be BEFORE SPA catch-all
 RewriteRule ^api/paytr-callback$ https://bctoawgovyyueifnmwhq.supabase.co/functions/v1/paytr-callback [P,L]
 
+# Always serve the static sitemap directly
+RewriteRule ^sitemap\.xml$ - [L]
+
 # SPA catch-all: send all non-file/non-directory requests to index.html
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
