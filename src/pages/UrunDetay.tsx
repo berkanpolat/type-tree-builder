@@ -198,7 +198,17 @@ export default function UrunDetay() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
 
-  useEffect(() => {
+  // SEO meta tags
+  useSeoMeta({
+    slug: `/urunler/${slugParam || ""}`,
+    dynamicTitle: urun?.meta_title || (urun ? `${urun.baslik} | TekPazar | Tekstil A.Ş.` : undefined),
+    dynamicDescription: urun?.meta_description || (urun ? `${urun.baslik} ürün detayları, fiyatları ve teknik özellikleri.` : undefined),
+    dynamicOgImage: urun?.foto_url || undefined,
+    fallbackTitle: "Ürün Detay | TekPazar | Tekstil A.Ş.",
+    fallbackDescription: "Ürün detayları, fiyatları ve teknik özellikleri.",
+  });
+
+
     const init = async () => {
       // Use getSession first (fast, from cache) then validate with getUser
       const { data: { session } } = await supabase.auth.getSession();
