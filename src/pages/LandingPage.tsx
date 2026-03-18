@@ -618,7 +618,7 @@ const LandingPage = () => {
               className={`bg-background rounded-2xl border-2 p-6 flex flex-col relative cursor-pointer transition-all ${
                 selectedPackage === "pro" ? "border-secondary shadow-lg ring-2 ring-secondary/20" : "border-secondary/40 hover:border-secondary"
               }`}
-              onClick={() => setSelectedPackage(selectedPackage === "pro" ? null : "pro")}
+              onClick={() => setSelectedPackage("pro")}
             >
               <div className="absolute -top-3 right-4 w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center">
                 <span className="text-lg">⭐</span>
