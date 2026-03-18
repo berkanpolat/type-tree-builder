@@ -296,39 +296,27 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
       const userId = authData.user?.id;
       if (!userId) throw new Error("Kullanıcı oluşturulamadı");
 
+      // Both PRO and FREE: Create profile + firma together upfront
+      // This prevents orphaned profiles (profile without firma) that block re-registration
+      const { error: rpcError } = await supabase.rpc("register_user_simple" as any, {
+        p_user_id: userId,
+        p_ad: ad,
+        p_soyad: soyad,
+        p_iletisim_email: email,
+        p_iletisim_numarasi: fullPhone,
+        p_firma_unvani: firmaUnvani,
+      });
+      if (rpcError) throw rpcError;
+
+      // Send emails/SMS
+      try { await supabase.functions.invoke("send-email", { body: { type: "basvuru_alindi", to: email, templateModel: { firma_unvani: firmaUnvani } } }); } catch { }
+      try { await supabase.functions.invoke("send-notification-sms", { body: { type: "kayit_alindi", telefon: fullPhone, firmaUnvani } }); } catch { }
+
       if (isPro) {
-        // PRO: Only create profile, firma will be created after payment
-        const { error: rpcError } = await supabase.rpc("register_profile_only" as any, {
-          p_user_id: userId,
-          p_ad: ad,
-          p_soyad: soyad,
-          p_iletisim_email: email,
-          p_iletisim_numarasi: fullPhone,
-        });
-        if (rpcError) throw rpcError;
-
-        // Send emails/SMS
-        try { await supabase.functions.invoke("send-email", { body: { type: "basvuru_alindi", to: email, templateModel: { firma_unvani: firmaUnvani } } }); } catch { }
-        try { await supabase.functions.invoke("send-notification-sms", { body: { type: "kayit_alindi", telefon: fullPhone, firmaUnvani } }); } catch { }
-
         // PRO: Send card details to PayTR Direct API
         await initiateDirectPayment();
       } else {
-        // FREE: Create profile + firma together
-        const { error: rpcError } = await supabase.rpc("register_user_simple" as any, {
-          p_user_id: userId,
-          p_ad: ad,
-          p_soyad: soyad,
-          p_iletisim_email: email,
-          p_iletisim_numarasi: fullPhone,
-          p_firma_unvani: firmaUnvani,
-        });
-        if (rpcError) throw rpcError;
-
-        // Send emails/SMS
-        try { await supabase.functions.invoke("send-email", { body: { type: "basvuru_alindi", to: email, templateModel: { firma_unvani: firmaUnvani } } }); } catch { }
-        try { await supabase.functions.invoke("send-notification-sms", { body: { type: "kayit_alindi", telefon: fullPhone, firmaUnvani } }); } catch { }
-
+        // FREE: Done
         await supabase.auth.signOut();
         setRegistrationComplete(true);
       }
@@ -387,11 +375,8 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
-      
-      // Create firma for the user (was deferred for PRO payment)
-      if (userId) {
-        await supabase.from("firmalar").insert({ user_id: userId, firma_unvani: firmaUnvani } as any);
-      }
+
+      // Firma already created upfront, no need to create here
 
       await supabase.functions.invoke("log-client-error", {
         body: {
