@@ -477,11 +477,15 @@ export default function YeniIhale() {
   };
 
   const handlePreview = async () => {
+    // Open window synchronously to avoid popup blocker
+    const newTab = window.open("about:blank", "_blank");
     await handleSave();
-    if (!ihaleId) return;
+    if (!ihaleId) { newTab?.close(); return; }
     const { data: ihaleRow } = await supabase.from("ihaleler").select("slug").eq("id", ihaleId).maybeSingle();
     const target = ihaleRow?.slug || ihaleId;
-    window.open(`/ihaleler/${target}`, "_blank");
+    if (newTab) {
+      newTab.location.href = `${window.location.origin}/ihaleler/${target}`;
+    }
   };
 
   const handleSubmitForApproval = async () => {
