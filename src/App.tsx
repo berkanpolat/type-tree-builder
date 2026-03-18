@@ -15,8 +15,23 @@ import RouteStateManager from "./components/RouteStateManager";
 import RoutePreloader from "./components/RoutePreloader";
 import AuthRedirectHandler from "./components/AuthRedirectHandler";
 
+// Retry wrapper: on chunk load failure, reload the page once to get fresh assets
+const lazyRetry = (factory: () => Promise<any>) =>
+  lazy(() =>
+    factory().catch((err) => {
+      const key = "chunk_reload";
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, "1");
+        window.location.reload();
+        return new Promise(() => {}); // never resolves, page reloads
+      }
+      sessionStorage.removeItem(key);
+      throw err;
+    })
+  );
+
 // GirisKayit is now also lazy-loaded
-const GirisKayit = lazy(() => import("./pages/GirisKayit"));
+const GirisKayit = lazyRetry(() => import("./pages/GirisKayit"));
 
 // All pages lazy-loaded for optimal code splitting
 const LandingPage = lazy(() => import("./pages/LandingPage"));
