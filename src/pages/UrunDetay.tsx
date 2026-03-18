@@ -310,8 +310,11 @@ export default function UrunDetay() {
 
     const teknikData = (urunData.teknik_detaylar as Record<string, any>) || {};
     Object.values(teknikData).forEach(val => {
-      if (typeof val === "string" && isUUID(val)) {
-        idsToResolve.push(val);
+      if (typeof val === "string") {
+        // Handle single UUID or comma-separated UUIDs
+        val.split(",").map(s => s.trim()).filter(Boolean).forEach(part => {
+          if (isUUID(part)) idsToResolve.push(part);
+        });
       } else if (Array.isArray(val)) {
         val.forEach(v => { if (typeof v === "string" && isUUID(v)) idsToResolve.push(v); });
       }
@@ -329,8 +332,14 @@ export default function UrunDetay() {
 
         const resolved: Record<string, string> = {};
         Object.entries(teknikData).forEach(([key, val]) => {
-          if (typeof val === "string" && isUUID(val)) {
-            resolved[key] = map[val] || String(val);
+          if (typeof val === "string") {
+            const parts = val.split(",").map(s => s.trim()).filter(Boolean);
+            const hasUUIDs = parts.some(p => isUUID(p));
+            if (hasUUIDs) {
+              resolved[key] = parts.map(p => isUUID(p) ? (map[p] || p) : p).join(", ");
+            } else {
+              resolved[key] = val;
+            }
           } else if (Array.isArray(val)) {
             resolved[key] = val.map(v => (typeof v === "string" && isUUID(v)) ? (map[v] || v) : String(v)).join(", ");
           } else {
