@@ -101,6 +101,7 @@ const paraBirimiSymbol: Record<string, string> = {
 };
 
 export default function AnaSayfa() {
+  useSeoMeta({ slug: "/tekpazar", fallbackTitle: "TekPazar | Tekstil Ürünleri Pazaryeri" });
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();

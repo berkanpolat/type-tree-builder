@@ -37,6 +37,7 @@ const formatPhoneDisplay = (value: string) => {
 };
 
 const GirisKayit = () => {
+  useSeoMeta({ slug: "/giris-kayit", fallbackTitle: "Giriş Yap veya Kayıt Ol | Tekstil A.Ş." });
   const [searchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<"giris" | "kayit">(tabParam === "kayit" ? "kayit" : "giris");

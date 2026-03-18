@@ -43,6 +43,7 @@ import {
 } from "lucide-react";
 
 const LandingPage = () => {
+  useSeoMeta({ slug: "/", fallbackTitle: "Tekstil A.Ş. | Türkiye'nin B2B Tekstil Platformu" });
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tedarikci");

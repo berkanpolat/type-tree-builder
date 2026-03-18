@@ -129,6 +129,7 @@ function CountdownBadge({ date }: { date: string | null }) {
 }
 
 export default function TekIhale() {
+  useSeoMeta({ slug: "/ihaleler", fallbackTitle: "TekİHale | Tekstil İhaleleri | Tekstil A.Ş." });
   const navigate = useNavigate();
   const location = useLocation();
   const [currentUserId, setCurrentUserId] = useState("");
