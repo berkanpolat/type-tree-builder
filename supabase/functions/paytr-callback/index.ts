@@ -109,6 +109,35 @@ Deno.serve(async (req) => {
     if (status === "success") {
       logStep("Payment successful, assigning PRO package", { userId, periyot });
 
+      // Create firma if not exists (PRO registration flow creates profile first, firma after payment)
+      const { data: existingFirma } = await supabase
+        .from("firmalar")
+        .select("id")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!existingFirma) {
+        // Get firma_unvani from payment record meta
+        const { data: paymentRecord } = await supabase
+          .from("odeme_kayitlari")
+          .select("meta")
+          .eq("merchant_oid", merchantOid)
+          .single();
+
+        const firmaUnvani = (paymentRecord?.meta as any)?.firma_unvani || "Firma";
+        logStep("Creating firma after payment", { userId, firmaUnvani });
+
+        const { error: firmaError } = await supabase
+          .from("firmalar")
+          .insert({ user_id: userId, firma_unvani: firmaUnvani });
+
+        if (firmaError) {
+          logStep("Firma creation error", { error: firmaError });
+        } else {
+          logStep("Firma created successfully");
+        }
+      }
+
       const { data: proPaket } = await supabase
         .from("paketler")
         .select("id")
