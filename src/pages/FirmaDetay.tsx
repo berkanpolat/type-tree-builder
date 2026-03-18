@@ -69,6 +69,8 @@ interface FirmaData {
   fiziksel_magaza_sayisi: number | null;
   aylik_tedarik_sayisi: number | null;
   aylik_tedarik_birim_id: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
 }
 
 interface Tesis {
