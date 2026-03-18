@@ -208,7 +208,7 @@ export default function UrunDetay() {
     fallbackDescription: "Ürün detayları, fiyatları ve teknik özellikleri.",
   });
 
-
+  useEffect(() => {
     const init = async () => {
       // Use getSession first (fast, from cache) then validate with getUser
       const { data: { session } } = await supabase.auth.getSession();
