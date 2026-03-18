@@ -774,7 +774,7 @@ export default function IhaleDetay() {
               firma_unvani: ownerFirma?.firma_unvani || "",
               ihale_basligi: ihale.baslik,
               teklif_veren_firma_unvani: bidderFirma?.firma_unvani || "Bir firma",
-              teklif_linki: `${window.location.origin}/manuihale/takip/${ihale.id}`,
+              teklif_linki: `${window.location.origin}/ihalelerim/takip/${ihale.id}`,
             },
           },
         }).catch(console.error);
