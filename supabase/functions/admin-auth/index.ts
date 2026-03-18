@@ -154,8 +154,13 @@ Deno.serve(async (req) => {
     );
 
     const url = new URL(req.url);
-    const action = url.pathname.split("/").pop();
     const body = await req.json();
+    const pathSegments = url.pathname.split("/").filter(Boolean);
+    const pathAction = pathSegments[pathSegments.length - 1];
+    const action =
+      (typeof body?.action === "string" && body.action.trim()) ||
+      url.searchParams.get("action") ||
+      (pathAction && pathAction !== "admin-auth" ? pathAction : null);
 
     // ─── LOGIN ───
     if (action === "login") {
