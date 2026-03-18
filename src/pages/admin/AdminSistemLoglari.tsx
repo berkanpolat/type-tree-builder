@@ -49,6 +49,7 @@ const KAYNAK_LABELS: Record<string, { label: string; icon: React.ElementType; co
   auth: { label: "Kimlik Doğr.", icon: Shield, color: "#f59e0b" },
   sistem: { label: "Sistem", icon: Server, color: "#6b7280" },
   edge_function: { label: "Backend", icon: Server, color: "#06b6d4" },
+  client_error: { label: "Tarayıcı Hatası", icon: AlertTriangle, color: "#dc2626" },
 };
 
 const SEVIYE_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType }> = {
