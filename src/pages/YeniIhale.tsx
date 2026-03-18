@@ -14,6 +14,7 @@ import KategoriStep from "@/components/ihale/steps/KategoriStep";
 import IhaleBilgileriStep from "@/components/ihale/steps/IhaleBilgileriStep";
 import TeknikDetaylarStep from "@/components/ihale/steps/TeknikDetaylarStep";
 import StokStep from "@/components/ihale/steps/StokStep";
+import OnayStep from "@/components/ihale/steps/OnayStep";
 
 
 export interface IhaleFormData {
