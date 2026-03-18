@@ -78,6 +78,7 @@ const sssData = [
 ];
 
 export default function SSS() {
+  useSeoMeta({ slug: "/sss", fallbackTitle: "Sıkça Sorulan Sorular | Tekstil A.Ş." });
   const navigate = useNavigate();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
