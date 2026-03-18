@@ -4075,49 +4075,49 @@ Deno.serve(async (req) => {
           packageAssigned = true;
           console.log(`[AKSIYON] Auto-assigned package ${paket.slug} to user ${firmaData.user_id}`);
 
-          // Send password creation email for paid package assignments
+          // Send hosgeldiniz (welcome + password creation) email
           try {
             const { data: { user: authUser } } = await supabase.auth.admin.getUserById(firmaData.user_id);
             const userEmail = authUser?.email;
+            console.log("[AKSIYON-EMAIL] Starting email send. user_id:", firmaData.user_id, "email:", userEmail);
             if (userEmail) {
               const { data: profileData } = await supabase.from("profiles").select("ad, soyad").eq("user_id", firmaData.user_id).single();
               const adSoyad = profileData ? `${profileData.ad} ${profileData.soyad}` : "";
 
-              const SITE_URL = "https://tekstilas.com";
+              const AKSIYON_SITE_URL = "https://tekstilas.com";
               const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
                 type: "recovery",
                 email: userEmail,
-                options: { redirectTo: `${SITE_URL}/sifre-sifirla` },
+                options: { redirectTo: `${AKSIYON_SITE_URL}/sifre-sifirla` },
               });
 
-              console.log("[AKSIYON] generateLink result:", JSON.stringify({ linkError, hasProperties: !!linkData?.properties, hashed_token: linkData?.properties?.hashed_token ? "exists" : "missing", action_link: linkData?.properties?.action_link ? "exists" : "missing" }));
+              console.log("[AKSIYON-EMAIL] generateLink result:", JSON.stringify({ linkError, hasProperties: !!linkData?.properties, hashed_token: linkData?.properties?.hashed_token ? "exists" : "missing", action_link: linkData?.properties?.action_link ? "exists" : "missing" }));
 
-              let sifreLink = `${SITE_URL}/sifre-sifirla`;
+              let sifreLink = `${AKSIYON_SITE_URL}/sifre-sifirla`;
               if (!linkError && linkData?.properties?.hashed_token) {
-                sifreLink = `${SITE_URL}/sifre-sifirla?token_hash=${linkData.properties.hashed_token}&type=recovery`;
+                sifreLink = `${AKSIYON_SITE_URL}/sifre-sifirla?token_hash=${linkData.properties.hashed_token}&type=recovery`;
               } else if (!linkError && linkData?.properties?.action_link) {
-                // Fallback: extract token from action_link
                 try {
                   const actionUrl = new URL(linkData.properties.action_link);
                   const token = actionUrl.searchParams.get("token");
                   if (token) {
-                    sifreLink = `${SITE_URL}/sifre-sifirla?token_hash=${token}&type=recovery`;
-                    console.log("[AKSIYON] Used fallback token from action_link");
+                    sifreLink = `${AKSIYON_SITE_URL}/sifre-sifirla?token_hash=${token}&type=recovery`;
+                    console.log("[AKSIYON-EMAIL] Used fallback token from action_link");
                   }
                 } catch (e) {
-                  console.error("[AKSIYON] Failed to parse action_link:", e);
+                  console.error("[AKSIYON-EMAIL] Failed to parse action_link:", e);
                 }
               }
-              console.log("[AKSIYON] Final sifreLink:", sifreLink);
+              console.log("[AKSIYON-EMAIL] Final sifreLink:", sifreLink);
 
-              const POSTMARK_SERVER_TOKEN = Deno.env.get("POSTMARK_SERVER_TOKEN");
-              if (POSTMARK_SERVER_TOKEN) {
+              const POSTMARK_TOKEN = Deno.env.get("POSTMARK_SERVER_TOKEN");
+              if (POSTMARK_TOKEN) {
                 const emailRes = await fetch("https://api.postmarkapp.com/email/withTemplate", {
                   method: "POST",
                   headers: {
                     "Accept": "application/json",
                     "Content-Type": "application/json",
-                    "X-Postmark-Server-Token": POSTMARK_SERVER_TOKEN,
+                    "X-Postmark-Server-Token": POSTMARK_TOKEN,
                   },
                   body: JSON.stringify({
                     From: "Tekstil A.Ş. <info@tekstilas.com>",
@@ -4133,20 +4133,72 @@ Deno.serve(async (req) => {
                       giris_linki: sifreLink,
                       destek_email: "destek@tekstilas.com",
                       yil: new Date().getFullYear().toString(),
-                      site_url: SITE_URL,
+                      site_url: AKSIYON_SITE_URL,
                     },
                   }),
                 });
                 const emailData = await emailRes.json();
                 if (emailRes.ok) {
-                  console.log(`[AKSIYON] Password creation email sent to ${userEmail}`);
+                  console.log(`[AKSIYON-EMAIL] Hosgeldiniz email sent to ${userEmail}, MessageID: ${emailData.MessageID}`);
+                  await supabase.from("system_logs").insert({
+                    kaynak: "email",
+                    islem: "hosgeldiniz_aksiyon",
+                    mesaj: `Hoşgeldiniz e-postası gönderildi: ${userEmail}`,
+                    basarili: true,
+                    seviye: "info",
+                    detaylar: { to: userEmail, messageId: emailData.MessageID, paket: paket.slug, firma_id: firmaId },
+                    user_id: firmaData.user_id,
+                  });
                 } else {
-                  console.error(`[AKSIYON] Postmark error:`, JSON.stringify(emailData));
+                  console.error(`[AKSIYON-EMAIL] Postmark error:`, JSON.stringify(emailData));
+                  await supabase.from("system_logs").insert({
+                    kaynak: "email",
+                    islem: "hosgeldiniz_aksiyon",
+                    mesaj: `Hoşgeldiniz e-postası BAŞARISIZ: ${userEmail}`,
+                    basarili: false,
+                    seviye: "error",
+                    hata_mesaji: emailData.Message || JSON.stringify(emailData),
+                    detaylar: { to: userEmail, paket: paket.slug, firma_id: firmaId, postmark_error: emailData },
+                    user_id: firmaData.user_id,
+                  });
                 }
+              } else {
+                console.error("[AKSIYON-EMAIL] POSTMARK_SERVER_TOKEN not configured!");
+                await supabase.from("system_logs").insert({
+                  kaynak: "email",
+                  islem: "hosgeldiniz_aksiyon",
+                  mesaj: `POSTMARK_SERVER_TOKEN yapılandırılmamış`,
+                  basarili: false,
+                  seviye: "error",
+                  hata_mesaji: "POSTMARK_SERVER_TOKEN not configured",
+                  detaylar: { firma_id: firmaId },
+                  user_id: firmaData.user_id,
+                });
               }
+            } else {
+              console.error("[AKSIYON-EMAIL] No email found for user:", firmaData.user_id);
+              await supabase.from("system_logs").insert({
+                kaynak: "email",
+                islem: "hosgeldiniz_aksiyon",
+                mesaj: `Kullanıcı e-posta adresi bulunamadı`,
+                basarili: false,
+                seviye: "error",
+                hata_mesaji: "User email not found",
+                detaylar: { firma_id: firmaId, user_id: firmaData.user_id },
+              });
             }
-          } catch (emailErr) {
-            console.error("[AKSIYON] Password creation email error:", emailErr);
+          } catch (emailErr: unknown) {
+            const errMsg = emailErr instanceof Error ? emailErr.message : String(emailErr);
+            console.error("[AKSIYON-EMAIL] Error:", errMsg);
+            await supabase.from("system_logs").insert({
+              kaynak: "email",
+              islem: "hosgeldiniz_aksiyon",
+              mesaj: `Hoşgeldiniz e-postası hatası: ${errMsg}`,
+              basarili: false,
+              seviye: "error",
+              hata_mesaji: errMsg,
+              detaylar: { firma_id: firmaId },
+            }).catch(() => {});
           }
 
         } else if (paket?.slug === "pro") {
