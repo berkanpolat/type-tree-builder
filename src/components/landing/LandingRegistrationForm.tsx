@@ -186,7 +186,7 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
 
   // Sync card holder with ad/soyad
   useEffect(() => {
-    if (!cardTouched.cardHolder && ad && soyad) {
+    if (!isPreviewEnv && !cardTouched.cardHolder && ad && soyad) {
       setCardHolder(`${ad} ${soyad}`.toUpperCase());
     }
   }, [ad, soyad]);
