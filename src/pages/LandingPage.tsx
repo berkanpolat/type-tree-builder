@@ -59,9 +59,12 @@ const LandingPage = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         const mustSet = (session.user.user_metadata as { must_set_password?: boolean } | null)?.must_set_password === true;
-        navigate(mustSet ? "/sifre-sifirla" : "/tekpazar", { replace: true });
-        setLoading(false);
+        if (mustSet) {
+          navigate("/sifre-sifirla", { replace: true });
+          return;
+        }
       }
+      setLoading(false);
     });
   }, [navigate]);
 
