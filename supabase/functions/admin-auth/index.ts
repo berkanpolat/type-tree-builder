@@ -2168,7 +2168,7 @@ Deno.serve(async (req) => {
           user_id: urunInfo.user_id,
           type: "urun_admin_kaldirildi",
           message: msg,
-          link: "/manupazar",
+           link: "/urunlerim",
         });
       }
 
