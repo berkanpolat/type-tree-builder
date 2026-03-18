@@ -264,16 +264,16 @@ const LandingPage = () => {
               <Link to="/firmalar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekRehber</Link>
               <Link to="/tekpazar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekPazar</Link>
               <Link to="/ihaleler" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Tekİhale</Link>
-              <a href="#kayit" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Fiyatlandırma</a>
-              <Link to="/hakkimizda" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Hakkımızda</Link>
             </nav>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-5">
             <nav className="flex md:hidden items-center gap-1 mr-1">
               <Link to="/firmalar" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">Rehber</Link>
               <Link to="/tekpazar" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">Pazar</Link>
               <Link to="/ihaleler" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">İhale</Link>
             </nav>
+            <a href="#kayit" className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Fiyatlandırma</a>
+            <Link to="/hakkimizda" className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Hakkımızda</Link>
             <Link
               to="/giris-kayit"
               className="px-3 md:px-5 py-2.5 rounded-lg border border-primary text-primary text-xs md:text-sm font-medium hover:bg-primary/10 transition-colors"
