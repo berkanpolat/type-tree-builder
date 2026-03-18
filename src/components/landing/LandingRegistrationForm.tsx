@@ -386,12 +386,19 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
   const handlePaymentFailure = async (reason: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      // Create firma for the user (was deferred for PRO payment)
+      if (userId) {
+        await supabase.from("firmalar").insert({ user_id: userId, firma_unvani: firmaUnvani } as any);
+      }
+
       await supabase.functions.invoke("log-client-error", {
         body: {
           error_message: `PRO ödeme başarısız - ücretsiz pakete düşürüldü: ${reason}`,
           error_source: "landing_payment_fail",
           url: window.location.href,
-          user_id: session?.user?.id,
+          user_id: userId,
         },
       });
     } catch { }
