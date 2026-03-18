@@ -69,6 +69,10 @@ export default function HeaderNotificationsPanel() {
   };
 
   const handleClick = async (n: Notification) => {
+    // Don't navigate if user is selecting text
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) return;
+
     if (!n.is_read) {
       await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
     }
