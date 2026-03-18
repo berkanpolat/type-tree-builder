@@ -278,6 +278,16 @@ export default function FirmaDetay() {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  // SEO meta tags
+  useSeoMeta({
+    slug: `/${slug || ""}`,
+    dynamicTitle: firma?.meta_title || (firma ? `${firma.firma_unvani} | Tekstil A.Ş.` : undefined),
+    dynamicDescription: firma?.meta_description || (firma ? `${firma.firma_unvani} firma profili, ürünleri ve iletişim bilgileri.` : undefined),
+    dynamicOgImage: firma?.logo_url || undefined,
+    fallbackTitle: "Firma Detay | Tekstil A.Ş.",
+    fallbackDescription: "Firma profili, ürünleri ve iletişim bilgileri.",
+  });
+
   const scrollToSection = (sectionId: string) => {
     setActiveMenu(sectionId);
     const el = sectionRefs.current[sectionId];
