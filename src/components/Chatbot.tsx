@@ -167,7 +167,7 @@ export default function Chatbot() {
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-20 right-5 z-[9999] w-[380px] max-w-[calc(100vw-2rem)] h-[540px] max-h-[calc(100vh-6rem)] flex flex-col rounded-2xl bg-background shadow-[0_8px_60px_-12px_rgba(0,0,0,0.25)] overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-300 border border-border/60 md:bottom-5">
+        <div className="fixed bottom-28 right-5 z-[9999] w-[380px] max-w-[calc(100vw-2rem)] h-[540px] max-h-[calc(100vh-6rem)] flex flex-col rounded-2xl bg-background shadow-[0_8px_60px_-12px_rgba(0,0,0,0.25)] overflow-hidden animate-in slide-in-from-bottom-5 fade-in duration-300 border border-border/60 md:bottom-5">
           
           {/* Header — gradient with glass feel */}
           <div className="relative shrink-0 overflow-hidden">

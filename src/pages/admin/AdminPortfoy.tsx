@@ -343,7 +343,7 @@ export default function AdminPortfoy() {
               />
             </div>
             <Select value={filterTuru} onValueChange={v => { setFilterTuru(v); setFilterTipi("all"); setCurrentPage(1); }}>
-              <SelectTrigger className="w-40 h-9 text-xs" style={s.input}>
+              <SelectTrigger className="w-36 h-9 text-xs" style={s.input}>
                 <SelectValue placeholder="Firma Türü" />
               </SelectTrigger>
               <SelectContent>
@@ -352,12 +352,42 @@ export default function AdminPortfoy() {
               </SelectContent>
             </Select>
             <Select value={filterTipi} onValueChange={v => { setFilterTipi(v); setCurrentPage(1); }}>
-              <SelectTrigger className="w-44 h-9 text-xs" style={s.input}>
+              <SelectTrigger className="w-40 h-9 text-xs" style={s.input}>
                 <SelectValue placeholder="Firma Tipi" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tüm Tipler</SelectItem>
                 {uniqueTipler.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterIl} onValueChange={v => { setFilterIl(v); setCurrentPage(1); }}>
+              <SelectTrigger className="w-36 h-9 text-xs" style={s.input}>
+                <SelectValue placeholder="İl" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm İller</SelectItem>
+                {uniqueIller.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterDurum} onValueChange={v => { setFilterDurum(v); setCurrentPage(1); }}>
+              <SelectTrigger className="w-32 h-9 text-xs" style={s.input}>
+                <SelectValue placeholder="Durum" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Durumlar</SelectItem>
+                <SelectItem value="onaylandi">Onaylı</SelectItem>
+                <SelectItem value="onay_bekliyor">Bekliyor</SelectItem>
+                <SelectItem value="reddedildi">Reddedildi</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterPaket} onValueChange={v => { setFilterPaket(v); setCurrentPage(1); }}>
+              <SelectTrigger className="w-32 h-9 text-xs" style={s.input}>
+                <SelectValue placeholder="Paket" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tüm Paketler</SelectItem>
+                <SelectItem value="yok">Paketi Yok</SelectItem>
+                {uniquePaketler.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
