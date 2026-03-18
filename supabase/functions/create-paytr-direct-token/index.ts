@@ -63,6 +63,7 @@ serve(async (req) => {
       expiry_month,
       expiry_year,
       cvv,
+      firma_unvani,
     } = await req.json();
 
     // Validate inputs

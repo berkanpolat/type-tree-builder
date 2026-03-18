@@ -366,6 +366,7 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
           expiry_month: expiryMonth,
           expiry_year: expiryYear,
           cvv,
+          firma_unvani: firmaUnvani,
         },
       });
 
