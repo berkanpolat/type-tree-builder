@@ -268,6 +268,15 @@ export default function IhaleDetay() {
   const [breadcrumbGrup, setBreadcrumbGrup] = useState("");
   const [breadcrumbTur, setBreadcrumbTur] = useState("");
 
+  // SEO meta tags
+  useSeoMeta({
+    slug: `/ihaleler/${slugParam || ""}`,
+    dynamicTitle: ihale?.meta_title || (ihale ? `${ihale.baslik} | İhaleler | Tekstil A.Ş.` : undefined),
+    dynamicDescription: ihale?.meta_description || (ihale ? `${ihale.baslik} ihale detayları, şartları ve başvuru bilgileri.` : undefined),
+    fallbackTitle: "İhale Detay | Tekstil A.Ş.",
+    fallbackDescription: "İhale detayları, şartları ve başvuru bilgileri.",
+  });
+
   const countdown = useCountdown(ihale?.bitis_tarihi);
   const isOwner = currentUserId && ihale?.user_id === currentUserId;
   const sym = paraBirimiSymbol[ihale?.para_birimi || "TRY"] || "₺";
