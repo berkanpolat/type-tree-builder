@@ -585,7 +585,7 @@ const LandingPage = () => {
               className={`bg-background rounded-2xl border-2 p-6 flex flex-col cursor-pointer transition-all ${
                 selectedPackage === "ucretsiz" ? "border-primary shadow-lg ring-2 ring-primary/20" : "border-border hover:border-primary/40"
               }`}
-              onClick={() => setSelectedPackage(selectedPackage === "ucretsiz" ? null : "ucretsiz")}
+              onClick={() => setSelectedPackage("ucretsiz")}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="inline-block w-fit px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Üye</span>
