@@ -242,22 +242,26 @@ export default function UrunDetay() {
     if (directData) {
       urunData = directData;
     } else {
-      // Fallback: try admin edge function
+      // Fallback: try admin edge function via path-based action routing
       const adminToken = localStorage.getItem("admin_token");
       if (adminToken) {
         try {
-          // First try to resolve slug to ID if not UUID
           let resolveId = slugParam;
+
           if (!isId) {
-            // Try getting ID by slug using service role via admin-auth
-            const { data: slugRes } = await supabase.functions.invoke("admin-auth", {
-              body: { action: "get-urun-by-slug", token: adminToken, slug: slugParam },
+            const { data: slugRes, error: slugErr } = await supabase.functions.invoke("admin-auth/get-urun-by-slug", {
+              body: { token: adminToken, slug: slugParam },
             });
-            if (slugRes?.urunId) resolveId = slugRes.urunId;
+
+            if (!slugErr && slugRes?.urunId) {
+              resolveId = slugRes.urunId;
+            }
           }
-          const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth", {
-            body: { action: "get-urun-detail", token: adminToken, urunId: resolveId },
+
+          const { data: adminRes, error: adminErr } = await supabase.functions.invoke("admin-auth/get-urun-detail", {
+            body: { token: adminToken, urunId: resolveId },
           });
+
           if (!adminErr && adminRes?.urun) {
             urunData = adminRes.urun;
             setIsAdminViewing(true);
