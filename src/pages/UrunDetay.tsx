@@ -332,8 +332,14 @@ export default function UrunDetay() {
 
         const resolved: Record<string, string> = {};
         Object.entries(teknikData).forEach(([key, val]) => {
-          if (typeof val === "string" && isUUID(val)) {
-            resolved[key] = map[val] || String(val);
+          if (typeof val === "string") {
+            const parts = val.split(",").map(s => s.trim()).filter(Boolean);
+            const hasUUIDs = parts.some(p => isUUID(p));
+            if (hasUUIDs) {
+              resolved[key] = parts.map(p => isUUID(p) ? (map[p] || p) : p).join(", ");
+            } else {
+              resolved[key] = val;
+            }
           } else if (Array.isArray(val)) {
             resolved[key] = val.map(v => (typeof v === "string" && isUUID(v)) ? (map[v] || v) : String(v)).join(", ");
           } else {
