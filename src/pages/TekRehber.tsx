@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from "react";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
@@ -66,6 +67,7 @@ interface FirmaWithExtra {
 }
 
 export default function TekRehber() {
+  useSeoMeta({ slug: "/firmalar", fallbackTitle: "TekRehber | Tekstil Firma Rehberi | Tekstil A.Ş." });
   const navigate = useNavigate();
   const { toast } = useToast();
   const [firmaUnvani, setFirmaUnvani] = useState("");

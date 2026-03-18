@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
 
 export default function Iletisim() {
+  useSeoMeta({ slug: "/iletisim", fallbackTitle: "İletişim | Tekstil A.Ş." });
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);

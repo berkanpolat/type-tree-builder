@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
@@ -8,6 +9,7 @@ import { ShoppingBag, Users, Eye, Store, Search, MessageSquare, ShieldCheck, Mon
 import { Button } from "@/components/ui/button";
 
 export default function TekPazarTanitim() {
+  useSeoMeta({ slug: "/tekpazar-tanitim", fallbackTitle: "TekPazar Nedir? | Tekstil A.Ş." });
   const navigate = useNavigate();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -100,6 +101,7 @@ const paraBirimiSymbol: Record<string, string> = {
 };
 
 export default function AnaSayfa() {
+  useSeoMeta({ slug: "/tekpazar", fallbackTitle: "TekPazar | Tekstil Ürünleri Pazaryeri" });
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
@@ -42,6 +43,7 @@ import {
 } from "lucide-react";
 
 const LandingPage = () => {
+  useSeoMeta({ slug: "/", fallbackTitle: "Tekstil A.Ş. | Türkiye'nin B2B Tekstil Platformu" });
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tedarikci");

@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
@@ -128,6 +129,7 @@ function CountdownBadge({ date }: { date: string | null }) {
 }
 
 export default function TekIhale() {
+  useSeoMeta({ slug: "/ihaleler", fallbackTitle: "TekİHale | Tekstil İhaleleri | Tekstil A.Ş." });
   const navigate = useNavigate();
   const location = useLocation();
   const [currentUserId, setCurrentUserId] = useState("");
