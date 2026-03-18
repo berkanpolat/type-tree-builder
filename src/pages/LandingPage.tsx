@@ -46,7 +46,7 @@ const LandingPage = () => {
   const [activeTab, setActiveTab] = useState("tedarikci");
   const [productSlide, setProductSlide] = useState(0);
   const [billingYearly, setBillingYearly] = useState(true);
-  const [selectedPackage, setSelectedPackage] = useState<"ucretsiz" | "pro" | null>(null);
+  const [selectedPackage, setSelectedPackage] = useState<"ucretsiz" | "pro">("ucretsiz");
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -568,7 +568,14 @@ const LandingPage = () => {
               <span className={`inline-block h-5 w-5 rounded-full bg-white shadow-md transition-transform duration-200 ${billingYearly ? "translate-x-8" : "translate-x-1"}`} />
             </button>
             <span className={`text-sm font-medium ${billingYearly ? "text-foreground" : "text-muted-foreground"}`}>Yıllık</span>
-            {billingYearly && <span className="text-xs font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded-full">%45+ İndirim</span>}
+            {billingYearly && (
+              <span className="relative inline-flex items-center gap-1 text-xs font-extrabold text-secondary bg-secondary/10 border border-secondary/30 px-3 py-1 rounded-full shadow-sm animate-pulse">
+                <span className="absolute -top-1 -left-1 text-[10px]">🎉</span>
+                <span className="absolute -top-1.5 -right-1.5 text-[10px]">✨</span>
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[10px]">🎊</span>
+                %45+ İndirim
+              </span>
+            )}
           </div>
 
           {/* Cards + Form */}
@@ -578,7 +585,7 @@ const LandingPage = () => {
               className={`bg-background rounded-2xl border-2 p-6 flex flex-col cursor-pointer transition-all ${
                 selectedPackage === "ucretsiz" ? "border-primary shadow-lg ring-2 ring-primary/20" : "border-border hover:border-primary/40"
               }`}
-              onClick={() => setSelectedPackage(selectedPackage === "ucretsiz" ? null : "ucretsiz")}
+              onClick={() => setSelectedPackage("ucretsiz")}
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="inline-block w-fit px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold">Üye</span>
@@ -611,7 +618,7 @@ const LandingPage = () => {
               className={`bg-background rounded-2xl border-2 p-6 flex flex-col relative cursor-pointer transition-all ${
                 selectedPackage === "pro" ? "border-secondary shadow-lg ring-2 ring-secondary/20" : "border-secondary/40 hover:border-secondary"
               }`}
-              onClick={() => setSelectedPackage(selectedPackage === "pro" ? null : "pro")}
+              onClick={() => setSelectedPackage("pro")}
             >
               <div className="absolute -top-3 right-4 w-10 h-10 rounded-full bg-secondary text-secondary-foreground flex items-center justify-center">
                 <span className="text-lg">⭐</span>
@@ -657,22 +664,14 @@ const LandingPage = () => {
             </div>
           </div>
 
-          {/* Inline Registration Form */}
-          {selectedPackage && (
-            <div className="max-w-lg mx-auto mt-10 bg-background rounded-2xl border border-border p-6 md:p-8 shadow-sm animate-in slide-in-from-bottom-4 fade-in duration-300">
-              <LandingRegistrationForm
-                selectedPackage={selectedPackage}
-                billingYearly={billingYearly}
-                onBack={() => setSelectedPackage(null)}
-              />
-            </div>
-          )}
-
-          {!selectedPackage && (
-            <p className="text-center text-sm text-muted-foreground mt-8">
-              Başlamak için yukarıdan bir paket seçin
-            </p>
-          )}
+          {/* Inline Registration Form — always visible */}
+          <div className="max-w-lg mx-auto mt-10 bg-background rounded-2xl border border-border p-6 md:p-8 shadow-sm">
+            <LandingRegistrationForm
+              selectedPackage={selectedPackage}
+              billingYearly={billingYearly}
+              onBack={() => setSelectedPackage("ucretsiz")}
+            />
+          </div>
         </div>
       </section>
 

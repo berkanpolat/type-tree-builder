@@ -36,7 +36,7 @@ const formatPhoneDisplay = (value: string) => {
   return `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
 };
 
-const isValidEmail = (val: string) => /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(val);
+const isValidEmail = (val: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
 
 export default function LandingRegistrationForm({ selectedPackage, billingYearly, onBack }: Props) {
   const { toast } = useToast();
@@ -386,7 +386,7 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h3 className="text-lg font-semibold text-foreground">
-          {selectedPackage === "pro" ? "PRO Paket" : "Ücretsiz Paket"} — Kayıt Formu
+          {selectedPackage === "pro" ? "PRO Paket" : "Ücretsiz Paket"} — {selectedPackage === "pro" ? (billingYearly ? "Yıllık" : "Aylık") : ""} Kayıt Formu
         </h3>
       </div>
 
