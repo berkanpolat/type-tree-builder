@@ -272,11 +272,17 @@ const LandingPage = () => {
               <Link to="/tekpazar" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">Pazar</Link>
               <Link to="/ihaleler" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">İhale</Link>
             </nav>
+            <Link
+              to="/giris-kayit"
+              className="px-3 md:px-5 py-2.5 rounded-lg border border-primary text-primary text-xs md:text-sm font-medium hover:bg-primary/10 transition-colors"
+            >
+              Giriş Yap
+            </Link>
             <a
               href="#kayit"
-              className="px-4 md:px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-xs md:text-sm font-medium hover:bg-primary/90 transition-colors"
+              className="px-3 md:px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-xs md:text-sm font-medium hover:bg-primary/90 transition-colors"
             >
-              Giriş Yap / Kayıt Ol
+              Kayıt Ol
             </a>
           </div>
         </div>
