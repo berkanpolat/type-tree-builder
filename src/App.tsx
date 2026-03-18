@@ -210,6 +210,7 @@ const AppContent = () => {
             <Route path="raporlar/hedef-prim" element={<RaporHedefPrim />} />
             <Route path="performans" element={<AdminPerformans />} />
             <Route path="test-merkezi" element={<AdminTestMerkezi />} />
+            <Route path="sistem-loglari" element={<AdminSistemLoglari />} />
           </Route>
 
           <Route path="/:slug" element={<FirmaDetay />} />
