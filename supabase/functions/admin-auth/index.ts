@@ -5036,6 +5036,28 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ─── LIST SYSTEM LOGS ───
+    if (action === "list-system-logs") {
+      const payload = verifyToken(body.token);
+
+      let query = supabase
+        .from("system_logs")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (body.kaynak) query = query.eq("kaynak", body.kaynak);
+      if (body.seviye) query = query.eq("seviye", body.seviye);
+      if (body.basarili !== undefined && body.basarili !== null) query = query.eq("basarili", body.basarili);
+      if (body.from) query = query.gte("created_at", body.from);
+      if (body.to) query = query.lte("created_at", body.to);
+
+      query = query.limit(1000);
+
+      const { data, error } = await query;
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ logs: data || [] });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
