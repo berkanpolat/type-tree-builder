@@ -357,12 +357,14 @@ export default function YeniIhale() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    const uniqueSuffix = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
     const { data, error } = await supabase.from("ihaleler").insert({
       user_id: user.id,
       ihale_turu: formData.ihale_turu,
       teklif_usulu: formData.teklif_usulu,
       baslik: "Taslak İhale",
       durum: "duzenleniyor",
+      slug: `taslak-${uniqueSuffix}`,
     } as any).select().single();
 
     if (error) {

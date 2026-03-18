@@ -122,16 +122,16 @@ export default function HeaderNotificationsPanel() {
                 const Icon = typeIconMap[n.type] || Bell;
                 const colorClass = typeColorMap[n.type] || "text-muted-foreground bg-muted";
                 return (
-                  <button
+                  <div
                     key={n.id}
                     onClick={() => handleClick(n)}
-                    className={`w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex items-start gap-3 ${!n.is_read ? "bg-primary/[0.03]" : ""}`}
+                    className={`w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors flex items-start gap-3 cursor-pointer select-text ${!n.is_read ? "bg-primary/[0.03]" : ""}`}
                   >
                     <div className={`p-1.5 rounded-full shrink-0 mt-0.5 ${colorClass}`}>
                       <Icon className="w-3.5 h-3.5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`text-xs leading-relaxed ${!n.is_read ? "font-medium text-foreground" : "text-muted-foreground"}`}>
+                      <p className={`text-xs leading-relaxed select-text ${!n.is_read ? "font-medium text-foreground" : "text-muted-foreground"}`}>
                         {n.message}
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
@@ -139,7 +139,7 @@ export default function HeaderNotificationsPanel() {
                       </p>
                     </div>
                     {!n.is_read && <div className="w-2 h-2 rounded-full bg-primary shrink-0 mt-1.5" />}
-                  </button>
+                  </div>
                 );
               })}
             </div>
