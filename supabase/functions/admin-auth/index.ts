@@ -1446,7 +1446,7 @@ Deno.serve(async (req) => {
           user_id: data.user_id,
           type: "ihale_admin_duzenlendi",
           message: msg,
-          link: "/manuihale",
+          link: "/ihalelerim",
         });
       }
 
