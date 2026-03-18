@@ -1505,7 +1505,7 @@ Deno.serve(async (req) => {
           user_id: ihaleInfo.user_id,
           type: "ihale_admin_kaldirildi",
           message: msg,
-          link: "/manuihale",
+           link: "/ihalelerim",
         });
       }
 
