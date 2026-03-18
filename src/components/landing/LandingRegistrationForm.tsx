@@ -375,11 +375,8 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const userId = session?.user?.id;
-      
-      // Create firma for the user (was deferred for PRO payment)
-      if (userId) {
-        await supabase.from("firmalar").insert({ user_id: userId, firma_unvani: firmaUnvani } as any);
-      }
+
+      // Firma already created upfront, no need to create here
 
       await supabase.functions.invoke("log-client-error", {
         body: {
