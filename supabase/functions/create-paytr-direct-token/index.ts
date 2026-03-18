@@ -130,8 +130,8 @@ serve(async (req) => {
     const testMode = isPreview ? "1" : "0";
 
     const siteUrl = origin || Deno.env.get("PAYTR_SITE_URL") || "https://tekstilas.com";
-    const merchantOkUrl = `${siteUrl}/firma-bilgilerim?odeme=basarili`;
-    const merchantFailUrl = `${siteUrl}/firma-bilgilerim?odeme=basarisiz`;
+    const merchantOkUrl = `${siteUrl}/odeme-sonuc?odeme=basarili`;
+    const merchantFailUrl = `${siteUrl}/odeme-sonuc?odeme=basarisiz`;
 
     // Direct API hash: merchant_id + user_ip + merchant_oid + email + payment_amount + payment_type + installment_count + currency + test_mode + non_3d
     const hashStr = merchantId + userIp + merchantOid + email + paymentAmount + paymentType + installmentCount + currency + testMode + non3d;
