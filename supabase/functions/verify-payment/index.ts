@@ -143,6 +143,17 @@ Deno.serve(async (req) => {
       .update({ durum: "basarili", updated_at: now.toISOString() })
       .eq("id", pendingPayment.id);
 
+    // Auto-approve PRO firma
+    try {
+      await supabaseAdmin
+        .from("firmalar")
+        .update({ onay_durumu: "onaylandi", updated_at: now.toISOString() })
+        .eq("user_id", userId);
+      logStep("Firma auto-approved for PRO");
+    } catch (e) {
+      logStep("Firma approve failed", { error: e });
+    }
+
     // Ödeme başarılı SMS gönder
     try {
       const smsUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification-sms`;

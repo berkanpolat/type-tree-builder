@@ -308,15 +308,13 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
       });
       if (rpcError) throw rpcError;
 
-      // Send emails/SMS
-      try { await supabase.functions.invoke("send-email", { body: { type: "basvuru_alindi", to: email, templateModel: { firma_unvani: firmaUnvani } } }); } catch { }
-      try { await supabase.functions.invoke("send-notification-sms", { body: { type: "kayit_alindi", telefon: fullPhone, firmaUnvani } }); } catch { }
-
       if (isPro) {
-        // PRO: Send card details to PayTR Direct API
+        // PRO: Go directly to payment — emails sent AFTER payment success via paytr-callback
         await initiateDirectPayment();
       } else {
-        // FREE: Done
+        // FREE: Send "başvuru alındı" email & SMS, then show completion screen
+        try { await supabase.functions.invoke("send-email", { body: { type: "basvuru_alindi", to: email, templateModel: { firma_unvani: firmaUnvani } } }); } catch { }
+        try { await supabase.functions.invoke("send-notification-sms", { body: { type: "kayit_alindi", telefon: fullPhone, firmaUnvani } }); } catch { }
         await supabase.auth.signOut();
         setRegistrationComplete(true);
       }
