@@ -111,7 +111,7 @@ serve(async (req) => {
     const paymentAmount = paymentAmountKurus.toString();
     const userName = `${profile?.ad || ""} ${profile?.soyad || ""}`.trim() || "Kullanıcı";
     const userPhone = profile?.iletisim_numarasi || "05000000000";
-    const userAddress = firma?.firma_unvani || "Türkiye";
+    const userAddress = userFirmaUnvani;
 
     const basketLabel = periyot === "yillik"
       ? `PRO Paket (Yillik) $${usdPrice} x ${usdTryRate.toFixed(2)} + %20 KDV`
