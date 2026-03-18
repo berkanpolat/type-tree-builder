@@ -860,7 +860,7 @@ export default function UrunDetay() {
                     <Button
                       variant="outline"
                       className="flex-1 gap-2"
-                      onClick={() => navigate(`/manupazar/duzenle/${urun.id}`)}
+                      onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}
                     >
                       <Pencil className="w-4 h-4" />
                       Düzenle
