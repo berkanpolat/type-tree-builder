@@ -72,6 +72,10 @@ const DYNAMIC_FALLBACKS: Record<string, { title: string; description: string }> 
     title: "[İhale Başlığı] | İhaleler | Tekstil A.Ş.",
     description: "[İhale Başlığı] ihale detayları, şartları ve başvuru bilgileri.",
   },
+  "/urunler/:slug": {
+    title: "[Ürün Adı] | TekPazar | Tekstil A.Ş.",
+    description: "[Ürün Adı] ürün detayları, fiyatları ve teknik özellikleri.",
+  },
 };
 
 function auditSeoEntry(entry: SeoEntry): SeoAuditResult {

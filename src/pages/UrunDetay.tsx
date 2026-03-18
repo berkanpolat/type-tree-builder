@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,6 +110,8 @@ interface UrunData {
   urun_tur_id: string | null;
   user_id: string;
   durum: string;
+  meta_title?: string | null;
+  meta_description?: string | null;
 }
 
 interface VaryasyonData {
@@ -195,6 +198,16 @@ export default function UrunDetay() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
 
+  // SEO meta tags
+  useSeoMeta({
+    slug: `/urunler/${slugParam || ""}`,
+    dynamicTitle: urun?.meta_title || (urun ? `${urun.baslik} | TekPazar | Tekstil A.Ş.` : undefined),
+    dynamicDescription: urun?.meta_description || (urun ? `${urun.baslik} ürün detayları, fiyatları ve teknik özellikleri.` : undefined),
+    dynamicOgImage: urun?.foto_url || undefined,
+    fallbackTitle: "Ürün Detay | TekPazar | Tekstil A.Ş.",
+    fallbackDescription: "Ürün detayları, fiyatları ve teknik özellikleri.",
+  });
+
   useEffect(() => {
     const init = async () => {
       // Use getSession first (fast, from cache) then validate with getUser
@@ -235,7 +248,7 @@ export default function UrunDetay() {
 
     const { data: directData } = await supabase
       .from("urunler")
-      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum, slug, admin_karar_sebebi, admin_karar_veren, admin_karar_tarihi")
+      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum, slug, admin_karar_sebebi, admin_karar_veren, admin_karar_tarihi, meta_title, meta_description")
       .eq(isId ? "id" : "slug", slugParam)
       .maybeSingle();
 

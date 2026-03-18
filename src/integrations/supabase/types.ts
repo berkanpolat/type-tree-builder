@@ -2658,6 +2658,8 @@ export type Database = {
           foto_url: string | null
           goruntuleme_sayisi: number
           id: string
+          meta_description: string | null
+          meta_title: string | null
           min_siparis_miktari: number | null
           para_birimi: string | null
           slug: string | null
@@ -2682,6 +2684,8 @@ export type Database = {
           foto_url?: string | null
           goruntuleme_sayisi?: number
           id?: string
+          meta_description?: string | null
+          meta_title?: string | null
           min_siparis_miktari?: number | null
           para_birimi?: string | null
           slug?: string | null
@@ -2706,6 +2710,8 @@ export type Database = {
           foto_url?: string | null
           goruntuleme_sayisi?: number
           id?: string
+          meta_description?: string | null
+          meta_title?: string | null
           min_siparis_miktari?: number | null
           para_birimi?: string | null
           slug?: string | null
