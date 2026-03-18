@@ -119,7 +119,7 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
   // Card fields (PRO only) - prefill test card in preview
   const isPreviewEnv = typeof window !== "undefined" && (window.location.hostname.includes("preview") || window.location.hostname === "localhost");
   const [cardNumber, setCardNumber] = useState(isPreviewEnv ? "9792030394440796" : "");
-  const [cardHolder, setCardHolder] = useState(isPreviewEnv ? "TEST KARTI" : "");
+  const [cardHolder, setCardHolder] = useState(isPreviewEnv ? "PAYTR TEST" : "");
   const [expiry, setExpiry] = useState(isPreviewEnv ? "12/30" : "");
   const [cvv, setCvv] = useState(isPreviewEnv ? "000" : "");
   const [showCvv, setShowCvv] = useState(false);
