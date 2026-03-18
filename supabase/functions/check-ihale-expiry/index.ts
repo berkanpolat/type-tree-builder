@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
             user_id: ihale.user_id,
             type: 'ihale_sure_uyari',
             message: msg,
-            link: `/manuihale/takip/${ihale.id}`,
+            link: `/ihalelerim/takip/${ihale.id}`,
             reference_id: refId,
           })
           inserted++

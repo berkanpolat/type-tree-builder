@@ -1421,7 +1421,7 @@ export default function IhaleDetay() {
                 )}
                 <div className="flex gap-3">
                   {(ihale.durum === "duzenleniyor" || ihale.durum === "reddedildi") && (
-                    <Button variant="outline" className="flex-1 gap-2" onClick={() => navigate(`/manuihale/duzenle/${ihale.id}`)}>
+                    <Button variant="outline" className="flex-1 gap-2" onClick={() => navigate(`/ihalelerim/duzenle/${ihale.id}`)}>
                       <FileText className="w-4 h-4" /> Düzenle
                     </Button>
                   )}

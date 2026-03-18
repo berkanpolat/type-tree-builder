@@ -1877,7 +1877,7 @@ Deno.serve(async (req) => {
           user_id: data.user_id,
           type: "ihale_yayinlandi",
           message: msg,
-          link: "/manuihale/takip/" + data.id,
+          link: "/ihalelerim/takip/" + data.id,
         });
 
         // Send ihale approval SMS
