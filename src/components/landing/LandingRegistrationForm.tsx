@@ -116,11 +116,12 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
   const [registerLoading, setRegisterLoading] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
 
-  // Card fields (PRO only)
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardHolder, setCardHolder] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
+  // Card fields (PRO only) - prefill test card in preview
+  const isPreviewEnv = typeof window !== "undefined" && (window.location.hostname.includes("preview") || window.location.hostname === "localhost");
+  const [cardNumber, setCardNumber] = useState(isPreviewEnv ? "9792030394440796" : "");
+  const [cardHolder, setCardHolder] = useState(isPreviewEnv ? "TEST KARTI" : "");
+  const [expiry, setExpiry] = useState(isPreviewEnv ? "1230" : "");
+  const [cvv, setCvv] = useState(isPreviewEnv ? "000" : "");
   const [showCvv, setShowCvv] = useState(false);
   const [cardErrors, setCardErrors] = useState<Record<string, string>>({});
   const [cardTouched, setCardTouched] = useState<Record<string, boolean>>({});
