@@ -89,6 +89,7 @@ const AdminTestMerkezi = lazy(() => import("./pages/admin/AdminTestMerkezi"));
 const AdminSistemLoglari = lazy(() => import("./pages/admin/AdminSistemLoglari"));
 const OdemeTest = lazy(() => import("./pages/OdemeTest"));
 const OdemeTestYillik = lazy(() => import("./pages/OdemeTestYillik"));
+const OdemeSonuc = lazy(() => import("./pages/OdemeSonuc"));
 const RaporSatisKanali = lazy(() => import("./pages/admin/reports/RaporSatisKanali"));
 const RaporMusteriTipi = lazy(() => import("./pages/admin/reports/RaporMusteriTipi"));
 const RaporPersonelPerformans = lazy(() => import("./pages/admin/reports/RaporPersonelPerformans"));
