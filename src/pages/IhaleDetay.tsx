@@ -774,7 +774,7 @@ export default function IhaleDetay() {
               firma_unvani: ownerFirma?.firma_unvani || "",
               ihale_basligi: ihale.baslik,
               teklif_veren_firma_unvani: bidderFirma?.firma_unvani || "Bir firma",
-              teklif_linki: `${window.location.origin}/manuihale/takip/${ihale.id}`,
+              teklif_linki: `${window.location.origin}/ihalelerim/takip/${ihale.id}`,
             },
           },
         }).catch(console.error);
@@ -787,7 +787,7 @@ export default function IhaleDetay() {
             firmaUnvani: ownerFirma?.firma_unvani || "",
             ihaleBasligi: ihale.baslik,
             teklifVerenFirma: bidderFirma?.firma_unvani || "Bir firma",
-            ihaleTakipLinki: `${window.location.origin}/manuihale/takip/${ihale.id}`,
+            ihaleTakipLinki: `${window.location.origin}/ihalelerim/takip/${ihale.id}`,
           },
         }).catch(console.error);
       } catch (e) {
@@ -1421,7 +1421,7 @@ export default function IhaleDetay() {
                 )}
                 <div className="flex gap-3">
                   {(ihale.durum === "duzenleniyor" || ihale.durum === "reddedildi") && (
-                    <Button variant="outline" className="flex-1 gap-2" onClick={() => navigate(`/manuihale/duzenle/${ihale.id}`)}>
+                    <Button variant="outline" className="flex-1 gap-2" onClick={() => navigate(`/ihalelerim/duzenle/${ihale.id}`)}>
                       <FileText className="w-4 h-4" /> Düzenle
                     </Button>
                   )}

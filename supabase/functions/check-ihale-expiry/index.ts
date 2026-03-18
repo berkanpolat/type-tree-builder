@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
                   TemplateModel: {
                     firma_unvani: firma?.firma_unvani || "",
                     ihale_basligi: ihale.baslik,
-                    ihale_takip_linki: `${SITE_URL}/manuihale/takip/${ihale.id}`,
+                    ihale_takip_linki: `${SITE_URL}/ihalelerim/takip/${ihale.id}`,
                     platform_adi: "Tekstil A.Ş.",
                     destek_email: "info@manufixo.com",
                     yil: new Date().getFullYear().toString(),
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
           user_id: ihale.user_id,
           type: 'ihale_suresi_doldu',
           message: `${ihale.ihale_no} numaralı ${ihale.baslik} başlıklı ihalenizin süresi dolmuştur.`,
-          link: `/manuihale/takip/${ihale.id}`,
+          link: `/ihalelerim/takip/${ihale.id}`,
           reference_id: expiredRefId,
         })
         inserted++
@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
             user_id: ihale.user_id,
             type: 'ihale_sure_uyari',
             message: msg,
-            link: `/manuihale/takip/${ihale.id}`,
+            link: `/ihalelerim/takip/${ihale.id}`,
             reference_id: refId,
           })
           inserted++

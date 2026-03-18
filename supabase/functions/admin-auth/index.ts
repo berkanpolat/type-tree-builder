@@ -1446,7 +1446,7 @@ Deno.serve(async (req) => {
           user_id: data.user_id,
           type: "ihale_admin_duzenlendi",
           message: msg,
-          link: "/manuihale",
+          link: "/ihalelerim",
         });
       }
 
@@ -1505,7 +1505,7 @@ Deno.serve(async (req) => {
           user_id: ihaleInfo.user_id,
           type: "ihale_admin_kaldirildi",
           message: msg,
-          link: "/manuihale",
+           link: "/ihalelerim",
         });
       }
 
@@ -1594,7 +1594,7 @@ Deno.serve(async (req) => {
           user_id: ihaleInfo.user_id,
           type: "ihale_admin_duzenlendi",
           message: msg,
-          link: "/manuihale",
+          link: "/ihalelerim",
         });
       }
 
@@ -1877,7 +1877,7 @@ Deno.serve(async (req) => {
           user_id: data.user_id,
           type: "ihale_yayinlandi",
           message: msg,
-          link: "/manuihale/takip/" + data.id,
+          link: "/ihalelerim/takip/" + data.id,
         });
 
         // Send ihale approval SMS
