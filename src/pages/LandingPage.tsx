@@ -574,7 +574,9 @@ const LandingPage = () => {
             </button>
             <span className={`text-sm font-medium ${billingYearly ? "text-foreground" : "text-muted-foreground"}`}>Yıllık</span>
             {billingYearly && (
-              <img src={indirimBadge} alt="%45 İndirim" className="w-16 h-16 -ml-1 animate-pulse object-contain" />
+              <span className="ml-2 inline-block rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700 animate-pulse">
+                %45+ İndirim
+              </span>
             )}
           </div>
 
