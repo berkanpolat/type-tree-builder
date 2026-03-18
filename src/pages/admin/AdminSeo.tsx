@@ -174,8 +174,8 @@ export default function AdminSeo() {
   }, [callApi, token, toast]);
 
   useEffect(() => {
-    fetchEntries();
-  }, [fetchEntries]);
+    if (token) fetchEntries();
+  }, [fetchEntries, token]);
 
   const handleSave = async () => {
     if (!editEntry?.sayfa_slug || !editEntry?.sayfa_adi) {
