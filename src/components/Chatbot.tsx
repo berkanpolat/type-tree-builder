@@ -89,8 +89,8 @@ export default function Chatbot() {
 
   // Drag state
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
-  const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number; dragging: boolean }>({
-    startX: 0, startY: 0, startPosX: 0, startPosY: 0, dragging: false,
+  const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number; dragging: boolean; justDragged: boolean }>({
+    startX: 0, startY: 0, startPosX: 0, startPosY: 0, dragging: false, justDragged: false,
   });
   const panelRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
