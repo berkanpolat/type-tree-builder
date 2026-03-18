@@ -1,6 +1,6 @@
-import { ShoppingCart, TrendingUp, Layers, FileText, Settings, Package } from "lucide-react";
+import { ShoppingCart, TrendingUp, Layers, FileText, Settings, Package, CheckCircle } from "lucide-react";
 
-const STEP_ICONS = [ShoppingCart, TrendingUp, Layers, FileText, Settings, Package];
+const STEP_ICONS = [ShoppingCart, TrendingUp, Layers, FileText, Settings, Package, CheckCircle];
 
 interface Props {
   steps: string[];
