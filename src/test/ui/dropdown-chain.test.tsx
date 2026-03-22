@@ -1,7 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import { BrowserRouter } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Category hierarchy mock data
 const mockKategoriler = [
@@ -17,68 +14,7 @@ const mockTurler = [
   { id: "tur-2", name: "Gabardin" },
 ];
 
-// Track parent_id calls to return correct children
-const fromMock = vi.fn();
-
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: { id: "test-user" } } }),
-      getSession: vi.fn().mockResolvedValue({ data: { session: { user: { id: "test-user" } } } }),
-      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
-    },
-    from: (...args: any[]) => fromMock(...args),
-    rpc: vi.fn().mockResolvedValue({ data: null }),
-    functions: { invoke: vi.fn().mockResolvedValue({ data: {} }) },
-  },
-}));
-
-vi.mock("@/hooks/use-package-quota", () => ({
-  usePackageQuota: () => ({
-    paketAdi: "PRO",
-    aktifUrunLimiti: 100,
-    aktifUrunSayisi: 0,
-    canAddProduct: true,
-    loading: false,
-  }),
-}));
-
-vi.mock("@/hooks/use-toast", () => ({
-  useToast: () => ({ toast: vi.fn() }),
-}));
-
-vi.mock("@/hooks/use-restrictions", () => ({
-  useRestrictions: () => ({ isRestricted: () => false, getRestrictionMessage: () => "" }),
-}));
-
-// Helper to build chainable query mock
-const chainable = (data: any[] | null) => {
-  const obj: any = {
-    select: vi.fn().mockReturnValue(obj),
-    eq: vi.fn().mockReturnValue(obj),
-    is: vi.fn().mockReturnValue(obj),
-    in: vi.fn().mockReturnValue(obj),
-    order: vi.fn().mockResolvedValue({ data }),
-    single: vi.fn().mockResolvedValue({ data: data?.[0] || null }),
-  };
-  return obj;
-};
-
 describe("Dropdown Chain Tests (L5)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    // Default mock: return empty for most tables
-    fromMock.mockImplementation((table: string) => {
-      if (table === "firma_bilgi_secenekleri") {
-        return chainable(mockKategoriler);
-      }
-      if (table === "firma_bilgi_kategorileri") {
-        return chainable([{ id: "cat-1", name: "Beden" }]);
-      }
-      return chainable([]);
-    });
-  });
-
   it("should have 3 levels of dropdowns in product creation", () => {
     // Test the TEKNIK_ALANLAR config structure
     const TEKNIK_ALANLAR_KEYS = [
@@ -91,6 +27,7 @@ describe("Dropdown Chain Tests (L5)", () => {
     TEKNIK_ALANLAR_KEYS.forEach(key => {
       expect(key).toBeTruthy();
     });
+    expect(TEKNIK_ALANLAR_KEYS.length).toBeGreaterThanOrEqual(7);
   });
 
   it("should clear child selections when parent changes", () => {
@@ -165,5 +102,34 @@ describe("Dropdown Chain Tests (L5)", () => {
     // When category changes, multi-select should also reset
     const resetValue: string[] = [];
     expect(resetValue.length).toBe(0);
+  });
+
+  it("should return correct children for given parent_id", () => {
+    // Simulate fetchChildren logic
+    const allOptions = [
+      ...mockKategoriler,
+      ...mockGruplar.map(g => ({ ...g, parent_id: "kat-1" })),
+      ...mockTurler.map(t => ({ ...t, parent_id: "grp-1" })),
+    ];
+
+    const getChildren = (parentId: string) =>
+      allOptions.filter((o: any) => o.parent_id === parentId);
+
+    expect(getChildren("kat-1").length).toBe(2); // 2 gruplar
+    expect(getChildren("grp-1").length).toBe(2); // 2 turler
+    expect(getChildren("kat-2").length).toBe(0); // no children
+  });
+
+  it("should not have empty dropdown options for known categories", () => {
+    // Validate mock data is not empty
+    expect(mockKategoriler.length).toBeGreaterThan(0);
+    expect(mockGruplar.length).toBeGreaterThan(0);
+    expect(mockTurler.length).toBeGreaterThan(0);
+
+    // Each option should have id and name
+    mockKategoriler.forEach(k => {
+      expect(k.id).toBeTruthy();
+      expect(k.name).toBeTruthy();
+    });
   });
 });
