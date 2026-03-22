@@ -117,7 +117,7 @@ export default function TestResultGroup({ group, items, isOpen, onToggle, onTest
                             <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">{item.errorCategory}</Badge>
                           )}
                           {item.layer && (
-                            <Badge variant="outline" className="text-[9px] h-4 px-1 opacity-50">L{item.layer === "infrastructure" ? "1" : item.layer === "data_integrity" ? "2" : "3"}</Badge>
+                            <Badge variant="outline" className="text-[9px] h-4 px-1 opacity-50">L{item.layer === "infrastructure" ? "1" : item.layer === "data_integrity" ? "2" : item.layer === "workflow" ? "3" : item.layer === "e2e_simulation" ? "4" : "5"}</Badge>
                           )}
                         </div>
                         {item.durationMs != null && (
