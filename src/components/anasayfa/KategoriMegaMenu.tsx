@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, ChevronDown } from "lucide-react";
+import ScrollHintWrapper from "@/components/ScrollHintWrapper";
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 
@@ -260,21 +261,23 @@ export default function KategoriMegaMenu({ kategoriler, selectedKategori, onSele
 
       {/* Mobile: scrollable pill bar + expandable accordion below */}
       <div className="md:hidden">
-        <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide -mx-2 px-2">
-          {kategoriler.map((kat) => (
-            <button
-              key={kat}
-              onClick={() => handleMobileKatToggle(kat)}
-              className={`whitespace-nowrap text-xs font-medium px-3 py-1.5 rounded-full border transition-colors shrink-0 ${
-                selectedKategori === kat
-                  ? "bg-secondary text-secondary-foreground border-secondary"
-                  : "bg-background text-muted-foreground border-border hover:border-foreground"
-              }`}
-            >
-              {displayName(kat)}
-            </button>
-          ))}
-        </div>
+        <ScrollHintWrapper>
+          <div className="flex gap-2 py-3 px-2">
+            {kategoriler.map((kat) => (
+              <button
+                key={kat}
+                onClick={() => handleMobileKatToggle(kat)}
+                className={`whitespace-nowrap text-xs font-medium px-3 py-1.5 rounded-full border transition-colors shrink-0 ${
+                  selectedKategori === kat
+                    ? "bg-secondary text-secondary-foreground border-secondary"
+                    : "bg-background text-muted-foreground border-border hover:border-foreground"
+                }`}
+              >
+                {displayName(kat)}
+              </button>
+            ))}
+          </div>
+        </ScrollHintWrapper>
 
         {/* Mobile accordion for subcategories */}
         {mobileExpandedKat && mobileGruplar.length > 0 && (
