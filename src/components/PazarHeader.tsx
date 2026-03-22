@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import MobileBackButton from "@/components/MobileBackButton";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
