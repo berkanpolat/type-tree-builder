@@ -986,8 +986,25 @@ async function runRealUserFlowTests(supabase: any): Promise<TestResult[]> {
     }
 
   } finally {
-    // CLEANUP: Remove all test data
     await cleanup();
+    // Update all E2E results with cleanup status
+    for (const r of results) {
+      if (r.layer === "e2e_simulation" && r.cleanupStatus === "skipped") {
+        r.cleanupStatus = cleanupSuccess ? "success" : "failed";
+      }
+    }
+  }
+
+  // Log critical failures to system_logs
+  const failures = results.filter(r => r.status === "fail");
+  if (failures.length > 0) {
+    try {
+      await supabase.from("system_logs").insert({
+        log_type: "error",
+        message: `E2E test suite: ${failures.length} test(s) failed`,
+        details: { failures: failures.map(f => ({ name: f.name, group: f.group, detail: f.detail, errorCategory: f.errorCategory })) },
+      });
+    } catch { /* ignore logging errors */ }
   }
 
   return results;
