@@ -838,7 +838,8 @@ export default function FirmaDetay() {
       {/* ===== STICKY TAB MENU ===== */}
       <div className="sticky top-14 z-30 mt-4 max-w-7xl mx-auto px-4">
         <div className="bg-background border border-border rounded-lg">
-          <div className="flex items-center gap-6 overflow-x-auto py-2 px-4">
+          {/* Desktop */}
+          <div className="hidden md:flex items-center gap-6 overflow-x-auto py-2 px-4">
             {MENU_ITEMS.filter(item => currentUserId || item.id !== "urunler").map((item) => (
               <button
                 key={item.id}
@@ -853,6 +854,24 @@ export default function FirmaDetay() {
               </button>
             ))}
           </div>
+          {/* Mobile with scroll hint */}
+          <ScrollHintWrapper>
+            <div className="flex items-center gap-4 py-2 px-4">
+              {MENU_ITEMS.filter(item => currentUserId || item.id !== "urunler").map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => scrollToSection(item.id)}
+                  className={`text-sm font-medium whitespace-nowrap pb-1 border-b-2 transition-colors ${
+                    activeMenu === item.id
+                      ? "text-secondary border-secondary"
+                      : "text-muted-foreground border-transparent hover:text-foreground"
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </ScrollHintWrapper>
         </div>
       </div>
 
