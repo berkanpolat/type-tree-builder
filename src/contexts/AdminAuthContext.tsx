@@ -125,6 +125,12 @@ const normalizeAdminToken = (token: string) => {
     throw new Error("Invalid admin token");
   }
 
+  // Check expiry on frontend to avoid unnecessary API calls
+  const exp = payload.exp < 10_000_000_000 ? payload.exp * 1000 : payload.exp;
+  if (exp < Date.now()) {
+    throw new Error("Token expired");
+  }
+
   return normalizedToken;
 };
 
