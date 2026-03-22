@@ -13,6 +13,7 @@ import TestCharts from "@/components/admin/test-center/TestCharts";
 import TopFailingTests from "@/components/admin/test-center/TopFailingTests";
 import TestSchedulePanel from "@/components/admin/test-center/TestSchedulePanel";
 import { downloadReport } from "@/components/admin/test-center/TestReportGenerator";
+import { runBrowserTests } from "@/lib/browser-test-engine";
 
 interface TestResult {
   group: string;
