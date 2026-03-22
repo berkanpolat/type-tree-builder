@@ -175,7 +175,7 @@ const AppContent = () => {
             <Route path="/urunlerim/duzenle/:id" element={<YeniUrun />} />
             <Route path="/urun-kategorisi/:categoryId" element={<UrunKategorisi />} />
             <Route path="/urun/:slug" element={<UrunDetay />} />
-            <Route path="/firmalar" element={<UreticiTedarikciKesfi />} />
+            <Route path="/firmalar" element={<TekRehber />} />
             <Route path="/mesajlar" element={<Mesajlar />} />
             <Route path="/favoriler" element={<Favoriler />} />
             <Route path="/bildirimler" element={<Bildirimler />} />
