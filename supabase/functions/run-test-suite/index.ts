@@ -1097,6 +1097,13 @@ Deno.serve(async (req) => {
         technical_detail: r.technicalDetail || null,
         solution: r.solution || null,
         duration_ms: r.durationMs || 0,
+        proof_metadata: (r.createdTestRecords || r.verifiedTables || r.verificationSteps) ? JSON.stringify({
+          created_test_records: r.createdTestRecords || [],
+          verified_tables: r.verifiedTables || [],
+          cleanup_status: r.cleanupStatus || null,
+          failure_reason: r.failureReason || null,
+          verification_steps: r.verificationSteps || [],
+        }) : null,
       }));
 
       // Insert in batches of 50
