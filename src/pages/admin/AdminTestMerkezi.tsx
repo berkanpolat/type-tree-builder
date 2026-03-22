@@ -158,7 +158,7 @@ export default function AdminTestMerkezi() {
       let l5Results: TestResult[] = [];
       if (includesL5) {
         setL5Running(true);
-        l5Results = runL5Tests();
+        l5Results = await runL5Tests();
         await saveL5Results(l5Results);
         setL5Running(false);
       }
