@@ -74,6 +74,7 @@ interface Props {
   items: TestResult[];
   isOpen: boolean;
   onToggle: () => void;
+  onTestClick?: (test: TestResult) => void;
 }
 
 export default function TestResultGroup({ group, items, isOpen, onToggle }: Props) {
