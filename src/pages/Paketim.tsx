@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { usePackageQuota } from "@/hooks/use-package-quota";
 import { PRO_FIYATLAR, PAKET_OZELLIKLERI } from "@/lib/package-config";
 import { supabase } from "@/integrations/supabase/client";
