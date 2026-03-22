@@ -70,31 +70,20 @@ export default function AdminTestMerkezi() {
     });
   };
 
-  // Run L5 UI tests in-browser
-  const runL5Tests = useCallback((): TestResult[] => {
-    return L5_UI_TESTS.map(t => {
-      const start = performance.now();
-      let status: "pass" | "fail" = "pass";
-      let errorMsg = "";
-      try {
-        const result = t.test();
-        if (!result) { status = "fail"; errorMsg = "Test assertion false döndü"; }
-      } catch (e: any) {
-        status = "fail";
-        errorMsg = e.message || "Test exception";
-      }
-      return {
-        group: t.group,
-        name: t.name,
-        status,
-        detail: t.detail,
-        technicalDetail: errorMsg || undefined,
-        durationMs: Math.round(performance.now() - start),
-        layer: "ui_browser",
-        category: "ui",
-        errorCategory: status === "fail" ? "UI_ERROR" : undefined,
-      };
-    });
+  // Run L5 UI tests in-browser using real browser test engine
+  const runL5Tests = useCallback(async (): Promise<TestResult[]> => {
+    const results = await runBrowserTests();
+    return results.map(r => ({
+      group: r.group,
+      name: r.name,
+      status: r.status,
+      detail: r.detail,
+      technicalDetail: r.technicalDetail,
+      durationMs: r.durationMs,
+      layer: "ui_browser",
+      category: r.category,
+      errorCategory: r.errorCategory,
+    }));
   }, []);
 
   // Save L5 results to DB
