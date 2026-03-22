@@ -62,6 +62,11 @@ interface TestResult {
   layer?: string;
   errorCategory?: string;
   stepFailed?: string;
+  createdTestRecords?: string[];
+  verifiedTables?: string[];
+  cleanupStatus?: string;
+  failureReason?: string;
+  verificationSteps?: string[];
 }
 
 interface Props {
@@ -69,9 +74,10 @@ interface Props {
   items: TestResult[];
   isOpen: boolean;
   onToggle: () => void;
+  onTestClick?: (test: TestResult) => void;
 }
 
-export default function TestResultGroup({ group, items, isOpen, onToggle }: Props) {
+export default function TestResultGroup({ group, items, isOpen, onToggle, onTestClick }: Props) {
   const Icon = groupIcons[group] || Database;
   const groupFail = items.filter(i => i.status === "fail").length;
   const groupWarn = items.filter(i => i.status === "warn").length;
@@ -100,7 +106,7 @@ export default function TestResultGroup({ group, items, isOpen, onToggle }: Prop
           <CardContent className="px-3 pb-3 pt-0">
             <div className="space-y-1">
               {items.map((item, idx) => (
-                <div key={idx} className={`rounded-md p-2 text-sm ${item.status === "fail" ? "bg-red-50 dark:bg-red-500/5" : item.status === "warn" ? "bg-amber-50 dark:bg-amber-500/5" : ""}`}>
+                <div key={idx} className={`rounded-md p-2 text-sm cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${item.status === "fail" ? "bg-red-50 dark:bg-red-500/5" : item.status === "warn" ? "bg-amber-50 dark:bg-amber-500/5" : ""}`} onClick={() => onTestClick?.(item)}>
                   <div className="flex items-start gap-2">
                     <StatusIcon status={item.status} />
                     <div className="flex-1 min-w-0">
@@ -111,7 +117,7 @@ export default function TestResultGroup({ group, items, isOpen, onToggle }: Prop
                             <Badge variant="outline" className="text-[9px] h-4 px-1 font-mono">{item.errorCategory}</Badge>
                           )}
                           {item.layer && (
-                            <Badge variant="outline" className="text-[9px] h-4 px-1 opacity-50">L{item.layer === "infrastructure" ? "1" : item.layer === "data_integrity" ? "2" : "3"}</Badge>
+                            <Badge variant="outline" className="text-[9px] h-4 px-1 opacity-50">L{item.layer === "infrastructure" ? "1" : item.layer === "data_integrity" ? "2" : item.layer === "workflow" ? "3" : item.layer === "e2e_simulation" ? "4" : "5"}</Badge>
                           )}
                         </div>
                         {item.durationMs != null && (

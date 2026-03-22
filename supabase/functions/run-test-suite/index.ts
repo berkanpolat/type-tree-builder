@@ -25,6 +25,11 @@ interface TestResult {
   category?: string;
   errorCategory?: string;
   stepFailed?: string;
+  createdTestRecords?: string[];
+  verifiedTables?: string[];
+  cleanupStatus?: "success" | "failed" | "skipped";
+  failureReason?: string;
+  verificationSteps?: string[];
 }
 
 // ═══════════════════════════════════════════
@@ -499,11 +504,12 @@ async function runRealUserFlowTests(supabase: any): Promise<TestResult[]> {
   const TEST_PREFIX = "__e2e_test_";
   const testTimestamp = Date.now();
 
-  // Helper: cleanup test data at the end
   const cleanupIds: { table: string; id: string }[] = [];
+  let cleanupSuccess = true;
   const cleanup = async () => {
     for (const item of cleanupIds.reverse()) {
-      await supabase.from(item.table).delete().eq("id", item.id);
+      const { error } = await supabase.from(item.table).delete().eq("id", item.id);
+      if (error) cleanupSuccess = false;
     }
   };
 
@@ -593,9 +599,14 @@ async function runRealUserFlowTests(supabase: any): Promise<TestResult[]> {
           // Step 6: Verify notification was triggered
           const { data: notifs } = await supabase.from("notifications").select("id, type").eq("user_id", testFirma.user_id).eq("type", "urun_onay_bekliyor").order("created_at", { ascending: false }).limit(1);
           t({ group: "E2E Ürün Ekleme", name: "Bildirim Trigger", status: (notifs?.length || 0) > 0 ? "pass" : "warn", detail: (notifs?.length || 0) > 0 ? "Bildirim tetiklendi" : "Bildirim bulunamadı (eski olabilir)", category: "product" });
-        }
-      }
-      t({ group: "E2E Ürün Ekleme", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms`, category: "product", durationMs: elapsed(s) });
+
+          // Proof summary
+          t({ group: "E2E Ürün Ekleme", name: "Kanıt Özeti", status: "pass", detail: "Ürün ekleme simülasyonu tamamlandı", category: "product",
+            createdTestRecords: [`urunler:${newProduct.id}`, newVar?.id ? `urun_varyasyonlar:${newVar.id}` : ""].filter(Boolean),
+            verifiedTables: ["urunler", "urun_varyasyonlar", "notifications"],
+            verificationSteps: ["Ürün INSERT", "urun_no trigger", "slug trigger", "durum kontrolü", "varyasyon INSERT", "varyasyon DB doğrulama", "bildirim trigger"],
+            cleanupStatus: "skipped",
+          });
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -975,8 +986,25 @@ async function runRealUserFlowTests(supabase: any): Promise<TestResult[]> {
     }
 
   } finally {
-    // CLEANUP: Remove all test data
     await cleanup();
+    // Update all E2E results with cleanup status
+    for (const r of results) {
+      if (r.layer === "e2e_simulation" && r.cleanupStatus === "skipped") {
+        r.cleanupStatus = cleanupSuccess ? "success" : "failed";
+      }
+    }
+  }
+
+  // Log critical failures to system_logs
+  const failures = results.filter(r => r.status === "fail");
+  if (failures.length > 0) {
+    try {
+      await supabase.from("system_logs").insert({
+        log_type: "error",
+        message: `E2E test suite: ${failures.length} test(s) failed`,
+        details: { failures: failures.map(f => ({ name: f.name, group: f.group, detail: f.detail, errorCategory: f.errorCategory })) },
+      });
+    } catch { /* ignore logging errors */ }
   }
 
   return results;
@@ -1013,6 +1041,7 @@ Deno.serve(async (req) => {
     const { data: runRecord } = await supabase.from("test_runs").insert({
       triggered_by: triggered_by || "manual",
       environment: "prod",
+      layers: requestedLayers,
     }).select("id").single();
     const runId = runRecord?.id;
 
@@ -1051,6 +1080,7 @@ Deno.serve(async (req) => {
         passed_tests: pass,
         failed_tests: fail,
         warning_tests: warn,
+        overall_status: fail > 0 ? "fail" : warn > 0 ? "warn" : "pass",
       }).eq("id", runId);
 
       // Batch insert test results
@@ -1067,6 +1097,13 @@ Deno.serve(async (req) => {
         technical_detail: r.technicalDetail || null,
         solution: r.solution || null,
         duration_ms: r.durationMs || 0,
+        proof_metadata: (r.createdTestRecords || r.verifiedTables || r.verificationSteps) ? JSON.stringify({
+          created_test_records: r.createdTestRecords || [],
+          verified_tables: r.verifiedTables || [],
+          cleanup_status: r.cleanupStatus || null,
+          failure_reason: r.failureReason || null,
+          verification_steps: r.verificationSteps || [],
+        }) : null,
       }));
 
       // Insert in batches of 50

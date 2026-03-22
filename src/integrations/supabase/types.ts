@@ -2619,6 +2619,7 @@ export type Database = {
           error_message: string | null
           id: string
           layer: string
+          proof_metadata: Json | null
           run_id: string
           solution: string | null
           status: string
@@ -2635,6 +2636,7 @@ export type Database = {
           error_message?: string | null
           id?: string
           layer?: string
+          proof_metadata?: Json | null
           run_id: string
           solution?: string | null
           status?: string
@@ -2651,6 +2653,7 @@ export type Database = {
           error_message?: string | null
           id?: string
           layer?: string
+          proof_metadata?: Json | null
           run_id?: string
           solution?: string | null
           status?: string
@@ -2677,6 +2680,8 @@ export type Database = {
           failed_tests: number
           finished_at: string | null
           id: string
+          layers: string[] | null
+          overall_status: string | null
           passed_tests: number
           started_at: string
           total_tests: number
@@ -2690,6 +2695,8 @@ export type Database = {
           failed_tests?: number
           finished_at?: string | null
           id?: string
+          layers?: string[] | null
+          overall_status?: string | null
           passed_tests?: number
           started_at?: string
           total_tests?: number
@@ -2703,6 +2710,8 @@ export type Database = {
           failed_tests?: number
           finished_at?: string | null
           id?: string
+          layers?: string[] | null
+          overall_status?: string | null
           passed_tests?: number
           started_at?: string
           total_tests?: number
