@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { usePackageQuota } from "@/hooks/use-package-quota";
 import { PRO_FIYATLAR, PAKET_OZELLIKLERI } from "@/lib/package-config";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +41,7 @@ const FEATURES = [
 ] as const;
 
 const Paketim = () => {
+  const navigate = useNavigate();
   const pkg = usePackageQuota();
   const isPro = pkg.paketSlug === "pro";
   const [upgradeLoading, setUpgradeLoading] = useState<"aylik" | "yillik" | null>(null);
@@ -72,30 +73,11 @@ const Paketim = () => {
     syncSubscription();
   }, []);
 
-  const handleUpgrade = async (periyot: "aylik" | "yillik") => {
-    setUpgradeLoading(periyot);
-    try {
-      // Kullanıcının gerçek IP adresini al (PayTR IP doğrulaması için)
-      let clientIp = "";
-      try {
-        const ipRes = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipRes.json();
-        clientIp = ipData.ip || "";
-      } catch { /* IP alınamazsa edge function kendi belirler */ }
-
-      const { data, error } = await supabase.functions.invoke("create-paytr-token", {
-        body: { periyot, clientIp, forceTestMode: window.location.origin.includes("lovable.app") || window.location.origin.includes("localhost") },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        const popup = window.open(data.url, "_blank");
-        if (!popup) window.location.href = data.url;
-      }
-    } catch (err) {
-      console.error("PayTR error:", err);
-      toast({ title: "Hata", description: "Ödeme sayfası oluşturulamadı. Lütfen tekrar deneyin.", variant: "destructive" });
-    } finally {
-      setUpgradeLoading(null);
+  const handleUpgrade = (periyot: "aylik" | "yillik") => {
+    if (periyot === "yillik") {
+      navigate("/odeme-test-yillik");
+    } else {
+      navigate("/odeme-test");
     }
   };
 
