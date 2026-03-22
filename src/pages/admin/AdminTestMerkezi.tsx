@@ -40,35 +40,7 @@ interface TestSummary {
   timestamp: string;
 }
 
-// L5 UI test definitions (mirrors the Vitest test files)
-const L5_UI_TESTS = [
-  // login-form tests
-  { name: "Login form render", group: "L5 Login UI", test: () => { return true; /* form renders with email/password */ }, detail: "Login formu email ve şifre alanlarıyla render oluyor" },
-  { name: "Login/Register tab switch", group: "L5 Login UI", test: () => { return true; }, detail: "Giriş ve Kayıt sekmeleri arası geçiş çalışıyor" },
-  { name: "Email input accepts value", group: "L5 Login UI", test: () => { return true; }, detail: "Email input değer kabul ediyor" },
-  { name: "Submit triggers auth", group: "L5 Login UI", test: () => { return true; }, detail: "Form submit signInWithPassword tetikliyor" },
-  // dropdown-chain tests
-  { name: "3-level dropdown structure", group: "L5 Dropdown Zinciri", test: () => { return ["Hazır Giyim","Kumaş","İplik","Aksesuar","Ambalaj","Makine ve Yedek Parça","Boya ve Kimyasal Maddeler"].length >= 7; }, detail: "Kategori→Grup→Tür 3 seviyeli yapı doğru" },
-  { name: "Child reset on parent change", group: "L5 Dropdown Zinciri", test: () => { let g="grp"; g=""; return g===""; }, detail: "Üst dropdown değişince alt alanlar sıfırlanıyor" },
-  { name: "Cannot proceed without 3 levels", group: "L5 Dropdown Zinciri", test: () => { const k=""; const g=""; const t="tur"; return !(k && g && t); }, detail: "3 seviye seçilmeden ilerleme engelleniyor" },
-  { name: "Dependent dropdown reset", group: "L5 Dropdown Zinciri", test: () => { let td: Record<string,string> = {"Kumaş Türü":"x"}; td["Kumaş Türü"]=""; return td["Kumaş Türü"]===""; }, detail: "Bağımlı dropdown parent değişince sıfırlanıyor" },
-  // product-form tests
-  { name: "Product title validation", group: "L5 Ürün Formu", test: () => { return "".trim().length === 0 && "Test".trim().length > 0; }, detail: "Boş başlık reddediliyor, dolu başlık kabul ediliyor" },
-  { name: "Price positive validation", group: "L5 Ürün Formu", test: () => { return parseFloat("100") > 0 && !(parseFloat("-5") > 0); }, detail: "Fiyat pozitif sayı kontrolü çalışıyor" },
-  { name: "Variation matrix generation", group: "L5 Ürün Formu", test: () => { const m = [1,2,3].flatMap(b => [1,2].map(r => ({b,r}))); return m.length === 6; }, detail: "3 beden × 2 renk = 6 varyasyon matrisi doğru" },
-  { name: "Beden vs Birim label", group: "L5 Ürün Formu", test: () => { const l = (k:string) => k.toLowerCase().includes("hazır giyim") ? "Beden" : "Birim"; return l("Hazır Giyim")==="Beden" && l("Kumaş")==="Birim"; }, detail: "Hazır Giyim=Beden, diğerleri=Birim etiketi doğru" },
-  { name: "Teknik alan config exists", group: "L5 Ürün Formu", test: () => { return true; /* 9 categories have technical fields */ }, detail: "9 kategori için teknik alan konfigürasyonu tanımlı" },
-  // tender-form tests
-  { name: "7 step wizard structure", group: "L5 İhale Formu", test: () => { return ["İhale Türü","Teklif Usulü","Kategori","İhale Bilgileri","Teknik Detaylar","Stok","Onay"].length === 7; }, detail: "İhale wizard 7 adımdan oluşuyor" },
-  { name: "Step 0 requires ihale_turu", group: "L5 İhale Formu", test: () => { const empty = ""; const filled = "urun_alim"; return !empty && !!filled; }, detail: "Adım 0: ihale türü seçilmeden ilerleme engelleniyor" },
-  { name: "9 required fields validation", group: "L5 İhale Formu", test: () => { const m: string[] = []; const v1 = ""; const v2 = ""; if(!v1) m.push("a"); if(!v2) m.push("b"); return m.length > 0; }, detail: "Boş form 9 zorunlu alan hatası veriyor" },
-  { name: "Date range validation", group: "L5 İhale Formu", test: () => { const s = new Date("2026-03-10"); const e = new Date("2026-03-05"); return e <= s; }, detail: "Bitiş tarihi < başlangıç tarihi reddediliyor" },
-  { name: "Stok skip for Teknik Tasarım", group: "L5 İhale Formu", test: () => { const steps = ["a","b","Stok","c"].filter(s => s !== "Stok"); return steps.length === 3; }, detail: "Teknik & Tasarım hizmet ihalelerinde Stok adımı atlanıyor" },
-  // form-validation tests
-  { name: "Email format validation", group: "L5 Form Validasyon", test: () => { const v = (e:string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); return v("a@b.com") && !v("invalid"); }, detail: "Email format doğrulama çalışıyor" },
-  { name: "Phone format cleanup", group: "L5 Form Validasyon", test: () => { return "05321234567".replace(/\D/g,"").replace(/^0+/,"") === "5321234567"; }, detail: "Telefon numarası formatlama doğru" },
-  { name: "Price tier no overlap", group: "L5 Form Validasyon", test: () => { const t = [{min:1,max:10},{min:11,max:50}]; return t[1].min > t[0].max; }, detail: "Fiyat kademeleri çakışma kontrolü çalışıyor" },
-];
+// L5 tests now use the real browser test engine from src/lib/browser-test-engine.ts
 
 const LAYER_OPTIONS = [
   { key: "infrastructure", label: "L1 Altyapı", color: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" },
