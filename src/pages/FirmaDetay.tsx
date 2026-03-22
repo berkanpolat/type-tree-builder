@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import ScrollHintWrapper from "@/components/ScrollHintWrapper";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
