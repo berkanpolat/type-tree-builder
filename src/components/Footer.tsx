@@ -74,13 +74,13 @@ export default function Footer() {
             <h4 className="text-secondary font-bold text-sm mb-4">Modüller</h4>
             <ul className="space-y-2.5">
               <li>
-                <FooterLink to="/firmalar">TekRehber</FooterLink>
+                <FooterLink to="/uretici-ve-tedarikci-kesfi">TekRehber</FooterLink>
               </li>
               <li>
-                <FooterLink to="/tekpazar-tanitim">TekPazar</FooterLink>
+                <FooterLink to="/online-pazar-yeri">TekPazar</FooterLink>
               </li>
               <li>
-                <FooterLink to="/tekihale-tanitim">Tekİhale</FooterLink>
+                <FooterLink to="/online-ihale-platformu">Tekİhale</FooterLink>
               </li>
             </ul>
           </div>
