@@ -24,13 +24,17 @@ interface PazarHeaderProps {
   firmaLogoUrl?: string | null;
 }
 
-export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderProps) {
+export default function PazarHeader({ firmaUnvani: propUnvani, firmaLogoUrl: propLogoUrl }: PazarHeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [ownFirma, setOwnFirma] = useState<{ firma_unvani: string; logo_url: string | null } | null>(null);
+
+  const firmaUnvani = propUnvani || ownFirma?.firma_unvani || "";
+  const firmaLogoUrl = propLogoUrl !== undefined ? propLogoUrl : ownFirma?.logo_url;
 
   const isActive = (path: string) => location.pathname.startsWith(path);
 
@@ -45,6 +49,16 @@ export default function PazarHeader({ firmaUnvani, firmaLogoUrl }: PazarHeaderPr
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsLoggedIn(!!session?.user);
+      if (session?.user) {
+        supabase
+          .from("firmalar")
+          .select("firma_unvani, logo_url")
+          .eq("user_id", session.user.id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data) setOwnFirma(data);
+          });
+      }
     });
   }, []);
 
