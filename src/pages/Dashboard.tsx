@@ -101,25 +101,11 @@ const Dashboard = () => {
     fetchData();
   }, [navigate]);
 
-  const handleUpgrade = async (periyot: "aylik" | "yillik") => {
-    try {
-      let clientIp = "";
-      try {
-        const ipRes = await fetch("https://api.ipify.org?format=json");
-        const ipData = await ipRes.json();
-        clientIp = ipData.ip || "";
-      } catch { /* fallback */ }
-
-      const { data, error } = await supabase.functions.invoke("create-paytr-token", {
-        body: { periyot, clientIp, forceTestMode: window.location.origin.includes("lovable.app") || window.location.origin.includes("localhost") },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        const popup = window.open(data.url, "_blank");
-        if (!popup) window.location.href = data.url;
-      }
-    } catch (err: any) {
-      console.error("PayTR error:", err);
+  const handleUpgrade = (periyot: "aylik" | "yillik") => {
+    if (periyot === "yillik") {
+      navigate("/odeme-test-yillik");
+    } else {
+      navigate("/odeme-test");
     }
   };
 
