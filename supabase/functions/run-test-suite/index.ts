@@ -25,6 +25,11 @@ interface TestResult {
   category?: string;
   errorCategory?: string;
   stepFailed?: string;
+  createdTestRecords?: string[];
+  verifiedTables?: string[];
+  cleanupStatus?: "success" | "failed" | "skipped";
+  failureReason?: string;
+  verificationSteps?: string[];
 }
 
 // ═══════════════════════════════════════════
