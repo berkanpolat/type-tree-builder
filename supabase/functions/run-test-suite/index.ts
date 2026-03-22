@@ -865,6 +865,115 @@ async function runRealUserFlowTests(supabase: any): Promise<TestResult[]> {
       t({ group: "E2E Mesajlaşma", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms`, category: "messaging", durationMs: elapsed(s) });
     }
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // E2E-8: AUTH GERÇEK TEST (signUp / signIn / session)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    {
+      const s = start();
+      const testEmail = `${TEST_PREFIX}auth_${testTimestamp}@test-e2e.local`;
+      const testPass = "E2eTest_" + testTimestamp;
+
+      // Step 1: signUp
+      const { data: signUpData, error: signUpErr } = await supabase.auth.admin.createUser({
+        email: testEmail,
+        password: testPass,
+        email_confirm: true,
+        user_metadata: { source: "e2e_test" },
+      });
+
+      if (signUpErr) {
+        t({ group: "E2E Auth", name: "Kullanıcı Oluşturma (signUp)", status: "fail", detail: `signUp başarısız: ${signUpErr.message}`, category: "auth", errorCategory: "AUTH_ERROR", stepFailed: "signup", durationMs: elapsed(s) });
+      } else {
+        const testUserId = signUpData.user?.id;
+        t({ group: "E2E Auth", name: "Kullanıcı Oluşturma (signUp)", status: "pass", detail: `Kullanıcı oluşturuldu: ${testEmail}`, category: "auth" });
+
+        // Step 2: signIn with anon client
+        const anonClient = createClient(SUPABASE_URL, ANON_KEY);
+        const { data: signInData, error: signInErr } = await anonClient.auth.signInWithPassword({
+          email: testEmail,
+          password: testPass,
+        });
+
+        if (signInErr) {
+          t({ group: "E2E Auth", name: "Oturum Açma (signIn)", status: "fail", detail: `signIn başarısız: ${signInErr.message}`, category: "auth", errorCategory: "AUTH_ERROR", stepFailed: "signin" });
+        } else {
+          t({ group: "E2E Auth", name: "Oturum Açma (signIn)", status: "pass", detail: "signIn başarılı, token alındı", category: "auth" });
+
+          // Step 3: Verify session
+          const hasSession = !!signInData.session?.access_token;
+          t({ group: "E2E Auth", name: "Session Doğrulama", status: hasSession ? "pass" : "fail", detail: hasSession ? "access_token mevcut" : "Session oluşmadı!", category: "auth", errorCategory: !hasSession ? "AUTH_ERROR" : undefined, stepFailed: !hasSession ? "session_verify" : undefined });
+
+          // Step 4: getUser with token
+          if (hasSession) {
+            const authedClient = createClient(SUPABASE_URL, ANON_KEY, {
+              global: { headers: { Authorization: `Bearer ${signInData.session!.access_token}` } }
+            });
+            const { data: userData, error: userErr } = await authedClient.auth.getUser();
+            t({ group: "E2E Auth", name: "getUser Doğrulama", status: !userErr && userData.user?.email === testEmail ? "pass" : "fail", detail: !userErr ? `User: ${userData.user?.email}` : `Hata: ${userErr?.message}`, category: "auth", errorCategory: userErr ? "AUTH_ERROR" : undefined });
+          }
+        }
+
+        // Step 5: Wrong password should fail
+        const { error: wrongErr } = await anonClient.auth.signInWithPassword({
+          email: testEmail,
+          password: "wrong_password_123",
+        });
+        t({ group: "E2E Auth", name: "Yanlış Şifre Reddi", status: wrongErr ? "pass" : "fail", detail: wrongErr ? "Yanlış şifre doğru reddedildi" : "Yanlış şifre kabul edildi!", category: "auth", errorCategory: !wrongErr ? "AUTH_ERROR" : undefined });
+
+        // Cleanup: delete test user
+        if (testUserId) {
+          await supabase.auth.admin.deleteUser(testUserId);
+        }
+      }
+
+      t({ group: "E2E Auth", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms`, category: "auth", durationMs: elapsed(s) });
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // E2E-9: STORAGE TEST (upload / verify / delete)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    {
+      const s = start();
+      const testFileName = `${TEST_PREFIX}storage_${testTimestamp}.txt`;
+      const testContent = new TextEncoder().encode("E2E storage test - " + testTimestamp);
+      const testBucket = "firma-images";
+
+      // Step 1: Upload
+      const { data: uploadData, error: uploadErr } = await supabase.storage
+        .from(testBucket)
+        .upload(`e2e-tests/${testFileName}`, testContent, {
+          contentType: "text/plain",
+          upsert: true,
+        });
+
+      if (uploadErr) {
+        t({ group: "E2E Storage", name: "Dosya Yükleme", status: "fail", detail: `Upload başarısız: ${uploadErr.message}`, category: "infrastructure", errorCategory: "NETWORK_ERROR", stepFailed: "upload" });
+      } else {
+        t({ group: "E2E Storage", name: "Dosya Yükleme", status: "pass", detail: `Yüklendi: ${uploadData.path}`, category: "infrastructure" });
+
+        // Step 2: Verify file exists
+        const { data: listData } = await supabase.storage
+          .from(testBucket)
+          .list("e2e-tests", { search: testFileName });
+
+        const found = (listData || []).some((f: any) => f.name === testFileName);
+        t({ group: "E2E Storage", name: "Dosya Doğrulama", status: found ? "pass" : "fail", detail: found ? "Dosya listede bulundu" : "Dosya listede yok!", category: "infrastructure", errorCategory: !found ? "DATA_ERROR" : undefined });
+
+        // Step 3: Get public URL
+        const { data: urlData } = supabase.storage.from(testBucket).getPublicUrl(`e2e-tests/${testFileName}`);
+        t({ group: "E2E Storage", name: "Public URL", status: urlData?.publicUrl ? "pass" : "fail", detail: urlData?.publicUrl ? "URL oluşturuldu" : "URL oluşturulamadı", category: "infrastructure" });
+
+        // Step 4: Delete
+        const { error: delErr } = await supabase.storage
+          .from(testBucket)
+          .remove([`e2e-tests/${testFileName}`]);
+
+        t({ group: "E2E Storage", name: "Dosya Silme", status: !delErr ? "pass" : "fail", detail: !delErr ? "Dosya silindi" : `Silme hatası: ${delErr.message}`, category: "infrastructure", errorCategory: delErr ? "DATA_ERROR" : undefined });
+      }
+
+      t({ group: "E2E Storage", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms`, category: "infrastructure", durationMs: elapsed(s) });
+    }
+
   } finally {
     // CLEANUP: Remove all test data
     await cleanup();
