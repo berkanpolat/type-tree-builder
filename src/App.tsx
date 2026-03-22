@@ -245,6 +245,7 @@ const AppContent = () => {
 
       {showPublicChrome && (
         <Suspense fallback={null}>
+          <MobileBottomNav />
           <Chatbot />
         </Suspense>
       )}
