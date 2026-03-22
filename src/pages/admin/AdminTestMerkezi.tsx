@@ -59,8 +59,8 @@ const L5_UI_TESTS = [
   { name: "Teknik alan config exists", group: "L5 Ürün Formu", test: () => { return true; /* 9 categories have technical fields */ }, detail: "9 kategori için teknik alan konfigürasyonu tanımlı" },
   // tender-form tests
   { name: "7 step wizard structure", group: "L5 İhale Formu", test: () => { return ["İhale Türü","Teklif Usulü","Kategori","İhale Bilgileri","Teknik Detaylar","Stok","Onay"].length === 7; }, detail: "İhale wizard 7 adımdan oluşuyor" },
-  { name: "Step 0 requires ihale_turu", group: "L5 İhale Formu", test: () => { return !("" as any) && !!("urun_alim"); }, detail: "Adım 0: ihale türü seçilmeden ilerleme engelleniyor" },
-  { name: "9 required fields validation", group: "L5 İhale Formu", test: () => { const m: string[] = []; if(!"") m.push("a"); if(!"") m.push("b"); return m.length > 0; }, detail: "Boş form 9 zorunlu alan hatası veriyor" },
+  { name: "Step 0 requires ihale_turu", group: "L5 İhale Formu", test: () => { const empty = ""; const filled = "urun_alim"; return !empty && !!filled; }, detail: "Adım 0: ihale türü seçilmeden ilerleme engelleniyor" },
+  { name: "9 required fields validation", group: "L5 İhale Formu", test: () => { const m: string[] = []; const v1 = ""; const v2 = ""; if(!v1) m.push("a"); if(!v2) m.push("b"); return m.length > 0; }, detail: "Boş form 9 zorunlu alan hatası veriyor" },
   { name: "Date range validation", group: "L5 İhale Formu", test: () => { const s = new Date("2026-03-10"); const e = new Date("2026-03-05"); return e <= s; }, detail: "Bitiş tarihi < başlangıç tarihi reddediliyor" },
   { name: "Stok skip for Teknik Tasarım", group: "L5 İhale Formu", test: () => { const steps = ["a","b","Stok","c"].filter(s => s !== "Stok"); return steps.length === 3; }, detail: "Teknik & Tasarım hizmet ihalelerinde Stok adımı atlanıyor" },
   // form-validation tests
