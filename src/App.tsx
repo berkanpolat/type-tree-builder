@@ -196,7 +196,7 @@ const AppContent = () => {
             <Route path="/odeme-sonuc" element={<OdemeSonuc />} />
             <Route path="/odeme-test" element={<OdemeTest />} />
             <Route path="/odeme-test-yillik" element={<OdemeTestYillik />} />
-            <Route path="/uretici-ve-tedarikci-kesfi" element={<TekRehber />} />
+            <Route path="/uretici-ve-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
             <Route path="/online-ihale-platformu" element={<TekIhaleTanitim />} />
             <Route path="/online-pazar-yeri" element={<TekPazarTanitim />} />
 
