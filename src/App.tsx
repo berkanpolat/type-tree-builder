@@ -201,7 +201,7 @@ const AppContent = () => {
             <Route path="/online-pazar-yeri" element={<TekPazarTanitim />} />
 
             <Route path="/yonetim/giris" element={<AdminGiris />} />
-            <Route path="/yonetim" element={<AdminLayout />}>
+            <Route path="/yonetim" element={<AdminRoute />}>
               <Route index element={<AdminPanel />} />
               <Route path="firmalar" element={<AdminFirmalarV2 />} />
               <Route path="kullanicilar" element={<AdminKullanicilar />} />
