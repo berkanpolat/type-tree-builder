@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, ChevronDown } from "lucide-react";
+import ScrollHintWrapper from "@/components/ScrollHintWrapper";
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 
