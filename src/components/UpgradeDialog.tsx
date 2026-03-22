@@ -85,7 +85,7 @@ export default function UpgradeDialog({ open, onOpenChange, title, message }: Pr
             onClick={() => {
               onOpenChange(false);
               if (isLoggedIn) {
-                navigate("/paketim");
+                navigate("/odeme-test");
               } else {
                 navigate("/giris-kayit");
               }
