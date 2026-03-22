@@ -97,33 +97,138 @@ export default function AdminTestMerkezi() {
     });
   };
 
+  // Run L5 UI tests in-browser
+  const runL5Tests = useCallback((): TestResult[] => {
+    return L5_UI_TESTS.map(t => {
+      const start = performance.now();
+      let status: "pass" | "fail" = "pass";
+      let errorMsg = "";
+      try {
+        const result = t.test();
+        if (!result) { status = "fail"; errorMsg = "Test assertion false döndü"; }
+      } catch (e: any) {
+        status = "fail";
+        errorMsg = e.message || "Test exception";
+      }
+      return {
+        group: t.group,
+        name: t.name,
+        status,
+        detail: t.detail,
+        technicalDetail: errorMsg || undefined,
+        durationMs: Math.round(performance.now() - start),
+        layer: "ui_browser",
+        category: "ui",
+        errorCategory: status === "fail" ? "UI_ERROR" : undefined,
+      };
+    });
+  }, []);
+
+  // Save L5 results to DB
+  const saveL5Results = useCallback(async (results: TestResult[]) => {
+    try {
+      const pass = results.filter(r => r.status === "pass").length;
+      const fail = results.filter(r => r.status === "fail").length;
+      const totalDuration = results.reduce((s, r) => s + (r.durationMs || 0), 0);
+
+      const { data: runData } = await supabase.from("test_runs").insert({
+        started_at: new Date().toISOString(),
+        finished_at: new Date().toISOString(),
+        duration_ms: totalDuration,
+        total_tests: results.length,
+        passed_tests: pass,
+        failed_tests: fail,
+        warning_tests: 0,
+        environment: "prod",
+        triggered_by: "manual",
+        layers: ["ui_browser"],
+        overall_status: fail > 0 ? "fail" : "pass",
+      } as any).select("id").single();
+
+      if (runData?.id) {
+        const rows = results.map(r => ({
+          run_id: runData.id,
+          test_name: r.name,
+          category: "ui",
+          status: r.status,
+          error_message: r.technicalDetail || null,
+          step_failed: null,
+          duration_ms: r.durationMs || 0,
+          error_category: r.errorCategory || null,
+        }));
+        await supabase.from("test_results").insert(rows as any);
+      }
+    } catch (e) {
+      console.error("L5 save error:", e);
+    }
+  }, []);
+
   const runTests = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const token = btoa(JSON.stringify({ uid: user.id, exp: Date.now() + 600000 }));
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-test-suite`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ token, layers: selectedLayers }),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "Bilinmeyen hata");
-      setData(json);
+      const backendLayers = selectedLayers.filter(l => l !== "ui_browser");
+      const includesL5 = selectedLayers.includes("ui_browser");
+
+      let backendResults: TestResult[] = [];
+      let backendSummary: any = null;
+
+      // Run backend layers (L1-L4) if any selected
+      if (backendLayers.length > 0) {
+        const token = btoa(JSON.stringify({ uid: user.id, exp: Date.now() + 600000 }));
+        const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-test-suite`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ token, layers: backendLayers }),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Bilinmeyen hata");
+        backendResults = json.results || [];
+        backendSummary = json;
+      }
+
+      // Run L5 UI tests in-browser
+      let l5Results: TestResult[] = [];
+      if (includesL5) {
+        setL5Running(true);
+        l5Results = runL5Tests();
+        await saveL5Results(l5Results);
+        setL5Running(false);
+      }
+
+      // Merge results
+      const allResults = [...backendResults, ...l5Results];
+      const pass = allResults.filter(r => r.status === "pass").length;
+      const fail = allResults.filter(r => r.status === "fail").length;
+      const warn = allResults.filter(r => r.status === "warn").length;
+
+      const merged: TestSummary = {
+        run_id: backendSummary?.run_id,
+        total: allResults.length,
+        pass,
+        fail,
+        warn,
+        durationMs: (backendSummary?.durationMs || 0) + l5Results.reduce((s, r) => s + (r.durationMs || 0), 0),
+        results: allResults,
+        timestamp: new Date().toISOString(),
+      };
+
+      setData(merged);
       setRefreshKey(k => k + 1);
-      const failGroups = new Set<string>(json.results.filter((r: TestResult) => r.status === "fail").map((r: TestResult) => r.group));
+      const failGroups = new Set<string>(allResults.filter(r => r.status === "fail").map(r => r.group));
       setOpenGroups(failGroups);
     } catch (e: any) {
       setError(e.message);
     } finally {
       setLoading(false);
+      setL5Running(false);
     }
-  }, [user, selectedLayers]);
+  }, [user, selectedLayers, runL5Tests, saveL5Results]);
 
   const toggleGroup = (group: string) => {
     setOpenGroups(prev => {
