@@ -155,93 +155,90 @@ const AppContent = () => {
       {showPublicChrome && <RoutePreloader />}
       {showPublicChrome && <AuthRedirectHandler />}
 
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/test-index" element={<Index />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/tekpazar" element={<AnaSayfa />} />
-          <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
-          <Route path="/ihalelerim" element={<ManuIhale />} />
-          <Route path="/ihalelerim/yeni" element={<YeniIhale />} />
-          <Route path="/ihaleler" element={<TekIhale />} />
-          <Route path="/ihaleler/:slug" element={<IhaleDetay />} />
-          <Route path="/ihalelerim/duzenle/:id" element={<YeniIhale />} />
-          <Route path="/ihalelerim/takip/:id" element={<IhaleTakip />} />
-          <Route path="/tekliflerim" element={<Tekliflerim />} />
-          <Route path="/urunlerim" element={<ManuPazar />} />
-          <Route path="/urunlerim/yeni" element={<YeniUrun />} />
-          <Route path="/urunlerim/duzenle/:id" element={<YeniUrun />} />
-          <Route path="/favoriler" element={<Favoriler />} />
-          <Route path="/mesajlar" element={<Mesajlar />} />
-          <Route path="/bildirimler" element={<Bildirimler />} />
-          <Route path="/paketim" element={<Paketim />} />
-          <Route path="/destek" element={<DashboardDestek />} />
-          <Route path="/destek/:id" element={<DashboardDestekDetay />} />
-          <Route path="/hizmet-bilgileri" element={<HizmetBilgileri />} />
-          <Route path="/urun-bilgileri" element={<UrunBilgileri />} />
-          <Route path="/urun-kategorisi" element={<UrunKategorisi />} />
-          <Route path="/giris-kayit" element={<GirisKayit />} />
-          <Route path="/urunler/:slug" element={<UrunDetay />} />
-          <Route path="/firma/:slug" element={<FirmaDetay />} />
-          <Route path="/firmalar" element={<TekRehber />} />
-          <Route path="/ayarlar" element={<ProfilAyarlari />} />
-          <Route path="/profil-ayarlari" element={<ProfilAyarlari />} />
-          <Route path="/hakkimizda" element={<Hakkimizda />} />
-          <Route path="/iletisim" element={<Iletisim />} />
-          <Route path="/uretici-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
-          <Route path="/tekihale-tanitim" element={<TekIhaleTanitim />} />
-          <Route path="/tekpazar-tanitim" element={<TekPazarTanitim />} />
-          <Route path="/sss" element={<SSS />} />
-          <Route path="/gizlilik-kosullari" element={<GizlilikKosullari />} />
-          <Route path="/kvkk-aydinlatma" element={<KVKKAydinlatma />} />
-          <Route path="/kullanim-kosullari" element={<KullanimKosullari />} />
-          <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
-          <Route path="/sifre-sifirla" element={<SifreSifirla />} />
-          <Route path="/telefon-dogrulama" element={<TelefonDogrulama />} />
-          <Route path="/odeme-test" element={<OdemeTest />} />
-          <Route path="/odeme-test-yillik" element={<OdemeTestYillik />} />
-          <Route path="/odeme-sonuc" element={<OdemeSonuc />} />
+      <div className={showPublicChrome ? "pb-20 md:pb-0" : ""}>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/test-index" element={<Index />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/tekpazar" element={<AnaSayfa />} />
+            <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
+            <Route path="/ihalelerim" element={<ManuIhale />} />
+            <Route path="/ihalelerim/yeni" element={<YeniIhale />} />
+            <Route path="/ihaleler" element={<TekIhale />} />
+            <Route path="/ihaleler/:slug" element={<IhaleDetay />} />
+            <Route path="/ihalelerim/duzenle/:id" element={<YeniIhale />} />
+            <Route path="/ihalelerim/takip/:id" element={<IhaleTakip />} />
+            <Route path="/tekliflerim" element={<Tekliflerim />} />
+            <Route path="/urunlerim" element={<ManuPazar />} />
+            <Route path="/urunlerim/yeni" element={<YeniUrun />} />
+            <Route path="/urunlerim/duzenle/:id" element={<YeniUrun />} />
+            <Route path="/urun-kategorisi/:categoryId" element={<UrunKategorisi />} />
+            <Route path="/urun/:slug" element={<UrunDetay />} />
+            <Route path="/firmalar" element={<UreticiTedarikciKesfi />} />
+            <Route path="/mesajlar" element={<Mesajlar />} />
+            <Route path="/favoriler" element={<Favoriler />} />
+            <Route path="/bildirimler" element={<Bildirimler />} />
+            <Route path="/profil-ayarlari" element={<ProfilAyarlari />} />
+            <Route path="/paketim" element={<Paketim />} />
+            <Route path="/destek" element={<DashboardDestek />} />
+            <Route path="/destek/:id" element={<DashboardDestekDetay />} />
+            <Route path="/giris-kayit" element={<GirisKayit />} />
+            <Route path="/sifre-sifirla" element={<SifreSifirla />} />
+            <Route path="/telefon-dogrulama" element={<TelefonDogrulama />} />
+            <Route path="/hakkimizda" element={<Hakkimizda />} />
+            <Route path="/sss" element={<SSS />} />
+            <Route path="/iletisim" element={<Iletisim />} />
+            <Route path="/gizlilik-kosullari" element={<GizlilikKosullari />} />
+            <Route path="/kullanim-kosullari" element={<KullanimKosullari />} />
+            <Route path="/kvkk-aydinlatma" element={<KVKKAydinlatma />} />
+            <Route path="/mesafeli-satis-sozlesmesi" element={<MesafeliSatisSozlesmesi />} />
+            <Route path="/odeme-sonuc" element={<OdemeSonuc />} />
+            <Route path="/odeme-test" element={<OdemeTest />} />
+            <Route path="/odeme-test-yillik" element={<OdemeTestYillik />} />
+            <Route path="/uretici-ve-tedarikci-kesfi" element={<TekRehber />} />
+            <Route path="/online-ihale-platformu" element={<TekIhaleTanitim />} />
+            <Route path="/online-pazar-yeri" element={<TekPazarTanitim />} />
 
-          <Route path="/yonetim" element={<AdminRoute />}>
-            <Route index element={<AdminGiris />} />
-            <Route path="panel" element={<AdminPanel />} />
-            <Route path="kullanicilar" element={<AdminKullanicilar />} />
-            <Route path="firmalar" element={<AdminFirmalar />} />
-            <Route path="firmalar-v2" element={<AdminFirmalarV2 />} />
-            <Route path="ihaleler" element={<AdminIhaleler />} />
-            <Route path="urunler" element={<AdminUrunler />} />
-            <Route path="sikayetler" element={<AdminSikayetler />} />
-            <Route path="paketler" element={<AdminPaketler />} />
-            <Route path="destek" element={<AdminDestek />} />
-            <Route path="islemler" element={<AdminIslemler />} />
-            <Route path="kisitlamalar" element={<AdminKisitlamalar />} />
-            <Route path="reklam" element={<AdminReklam />} />
-            <Route path="tekbot" element={<AdminTekBot />} />
-            <Route path="portfolyo" element={<AdminPortfoy />} />
-            <Route path="aksiyonlar" element={<AdminAksiyonlar />} />
-            <Route path="ziyaret-planlari" element={<AdminZiyaretPlanlari />} />
-            <Route path="hedefler" element={<AdminHedefler />} />
-            <Route path="ajanda" element={<AdminAjanda />} />
-            <Route path="canli-harita" element={<AdminCanliHarita />} />
-            <Route path="yetkilendirme" element={<AdminYetkilendirme />} />
-            <Route path="kaynak-raporu" element={<AdminKaynakRaporu />} />
-            <Route path="raporlar" element={<AdminRaporlar />} />
-            <Route path="raporlar/satis-kanali" element={<RaporSatisKanali />} />
-            <Route path="raporlar/musteri-tipi" element={<RaporMusteriTipi />} />
-            <Route path="raporlar/personel-performans" element={<RaporPersonelPerformans />} />
-            <Route path="raporlar/aksiyon-turu" element={<RaporAksiyonTuru />} />
-            <Route path="raporlar/hedef-prim" element={<RaporHedefPrim />} />
-            <Route path="performans" element={<AdminPerformans />} />
-            <Route path="test-merkezi" element={<AdminTestMerkezi />} />
-            <Route path="sistem-loglari" element={<AdminSistemLoglari />} />
-            <Route path="seo" element={<AdminSeo />} />
-          </Route>
+            <Route path="/yonetim/giris" element={<AdminGiris />} />
+            <Route path="/yonetim" element={<AdminLayout />}>
+              <Route index element={<AdminPanel />} />
+              <Route path="firmalar" element={<AdminFirmalarV2 />} />
+              <Route path="kullanicilar" element={<AdminKullanicilar />} />
+              <Route path="urunler" element={<AdminUrunler />} />
+              <Route path="ihaleler" element={<AdminIhaleler />} />
+              <Route path="destek" element={<AdminDestek />} />
+              <Route path="islemler" element={<AdminIslemler />} />
+              <Route path="paketler" element={<AdminPaketler />} />
+              <Route path="reklam" element={<AdminReklam />} />
+              <Route path="yetkilendirme" element={<AdminYetkilendirme />} />
+              <Route path="kisitlamalar" element={<AdminKisitlamalar />} />
+              <Route path="sikayetler" element={<AdminSikayetler />} />
+              <Route path="aksiyonlar" element={<AdminAksiyonlar />} />
+              <Route path="ajanda" element={<AdminAjanda />} />
+              <Route path="hedefler" element={<AdminHedefler />} />
+              <Route path="portfolyo" element={<AdminPortfoy />} />
+              <Route path="ziyaret-planlari" element={<AdminZiyaretPlanlari />} />
+              <Route path="canli-harita" element={<AdminCanliHarita />} />
+              <Route path="kaynak-raporu" element={<AdminKaynakRaporu />} />
+              <Route path="tekbot" element={<AdminTekBot />} />
+              <Route path="raporlar" element={<AdminRaporlar />} />
+              <Route path="raporlar/satis-kanali" element={<RaporSatisKanali />} />
+              <Route path="raporlar/musteri-tipi" element={<RaporMusteriTipi />} />
+              <Route path="raporlar/personel-performans" element={<RaporPersonelPerformans />} />
+              <Route path="raporlar/aksiyon-turu" element={<RaporAksiyonTuru />} />
+              <Route path="raporlar/hedef-prim" element={<RaporHedefPrim />} />
+              <Route path="performans" element={<AdminPerformans />} />
+              <Route path="test-merkezi" element={<AdminTestMerkezi />} />
+              <Route path="sistem-loglari" element={<AdminSistemLoglari />} />
+              <Route path="seo" element={<AdminSeo />} />
+            </Route>
 
-          <Route path="/:slug" element={<FirmaDetay />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
+            <Route path="/:slug" element={<FirmaDetay />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </div>
 
       {showPublicChrome && (
         <Suspense fallback={null}>
