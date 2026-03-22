@@ -49,5 +49,6 @@ export default function FirmaTabMenu({ tabs, activeTab, onTabChange }: FirmaTabM
           })}
         </div>
       </ScrollHintWrapper>
+    </>
   );
 }
