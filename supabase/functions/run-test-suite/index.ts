@@ -1041,6 +1041,7 @@ Deno.serve(async (req) => {
     const { data: runRecord } = await supabase.from("test_runs").insert({
       triggered_by: triggered_by || "manual",
       environment: "prod",
+      layers: requestedLayers,
     }).select("id").single();
     const runId = runRecord?.id;
 
