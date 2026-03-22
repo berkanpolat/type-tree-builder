@@ -62,6 +62,11 @@ interface TestResult {
   layer?: string;
   errorCategory?: string;
   stepFailed?: string;
+  createdTestRecords?: string[];
+  verifiedTables?: string[];
+  cleanupStatus?: string;
+  failureReason?: string;
+  verificationSteps?: string[];
 }
 
 interface Props {
