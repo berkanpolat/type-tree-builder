@@ -1,5 +1,4 @@
 import { useRef, useState, useEffect, useCallback, type ReactNode } from "react";
-import { ChevronRight } from "lucide-react";
 
 interface ScrollHintWrapperProps {
   children: ReactNode;
@@ -35,9 +34,9 @@ export default function ScrollHintWrapper({ children, className = "" }: ScrollHi
 
   return (
     <div className={`relative md:hidden ${className}`}>
-      {/* Left fade */}
+      {/* Left shadow */}
       {showLeft && (
-        <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-8 z-10 pointer-events-none bg-gradient-to-r from-background via-background/80 to-transparent" />
       )}
 
       {/* Scrollable content */}
@@ -45,13 +44,9 @@ export default function ScrollHintWrapper({ children, className = "" }: ScrollHi
         {children}
       </div>
 
-      {/* Right fade + arrow hint */}
+      {/* Right shadow */}
       {showRight && (
-        <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none flex items-center justify-end pr-1">
-          <div className="w-5 h-5 rounded-full bg-muted-foreground/20 flex items-center justify-center animate-pulse">
-            <ChevronRight className="w-3 h-3 text-muted-foreground" />
-          </div>
-        </div>
+        <div className="absolute right-0 top-0 bottom-0 w-8 z-10 pointer-events-none bg-gradient-to-l from-background via-background/80 to-transparent" />
       )}
     </div>
   );
