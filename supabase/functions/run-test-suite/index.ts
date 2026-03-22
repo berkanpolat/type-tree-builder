@@ -489,6 +489,391 @@ async function runWorkflowTests(supabase: any): Promise<TestResult[]> {
 }
 
 // ═══════════════════════════════════════════
+// LAYER 4: REAL E2E SIMULATION TESTS (yeni)
+// ═══════════════════════════════════════════
+async function runRealUserFlowTests(supabase: any): Promise<TestResult[]> {
+  const results: TestResult[] = [];
+  const t = (r: TestResult) => results.push({ ...r, layer: "e2e_simulation" });
+  const start = () => performance.now();
+  const elapsed = (s: number) => Math.round(performance.now() - s);
+  const TEST_PREFIX = "__e2e_test_";
+  const testTimestamp = Date.now();
+
+  // Helper: cleanup test data at the end
+  const cleanupIds: { table: string; id: string }[] = [];
+  const cleanup = async () => {
+    for (const item of cleanupIds.reverse()) {
+      await supabase.from(item.table).delete().eq("id", item.id);
+    }
+  };
+
+  try {
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // E2E-1: ÜRÜN EKLEME SİMÜLASYONU
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    {
+      const s = start();
+      let stepFailed: string | undefined;
+
+      // Step 1: Find a real user to simulate
+      const { data: testFirma } = await supabase.from("firmalar").select("id, user_id").limit(1).single();
+      if (!testFirma) {
+        t({ group: "E2E Ürün Ekleme", name: "Simülasyon", status: "fail", detail: "Test için firma bulunamadı", category: "product", errorCategory: "DATA_ERROR", stepFailed: "find_test_user", durationMs: elapsed(s) });
+      } else {
+        // Step 2: Get a valid category chain
+        const { data: kategoriler } = await supabase.from("firma_bilgi_kategorileri").select("id, name").limit(1).single();
+        const { data: l1Options } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", kategoriler?.id).is("parent_id", null).limit(1);
+        let l2Option: any = null;
+        let l3Option: any = null;
+        if (l1Options && l1Options.length > 0) {
+          const { data: l2 } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("parent_id", l1Options[0].id).limit(1);
+          if (l2 && l2.length > 0) {
+            l2Option = l2[0];
+            const { data: l3 } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("parent_id", l2[0].id).limit(1);
+            if (l3 && l3.length > 0) l3Option = l3[0];
+          }
+        }
+
+        // Step 3: INSERT product (simulating form submit)
+        const productData = {
+          user_id: testFirma.user_id,
+          baslik: `${TEST_PREFIX}urun_${testTimestamp}`,
+          aciklama: "E2E test ürünü - otomatik silinecek",
+          fiyat: 100,
+          fiyat_tipi: "tek_fiyat",
+          para_birimi: "TRY",
+          min_siparis_miktari: 10,
+          durum: "onay_bekliyor",
+          urun_kategori_id: l1Options?.[0]?.id || null,
+          urun_grup_id: l2Option?.id || null,
+          urun_tur_id: l3Option?.id || null,
+          teknik_detaylar: { test: true, source: "e2e_simulation" },
+        };
+
+        const { data: newProduct, error: insertErr } = await supabase.from("urunler").insert(productData).select("id, urun_no, slug, durum").single();
+
+        if (insertErr) {
+          stepFailed = "product_insert";
+          t({ group: "E2E Ürün Ekleme", name: "Ürün INSERT", status: "fail", detail: `INSERT başarısız: ${insertErr.message}`, category: "product", errorCategory: "DATA_ERROR", stepFailed, technicalDetail: `[E2E_PRODUCT_INSERT_FAIL] ${insertErr.message}`, solution: "Check RLS policies on urunler table for service_role access", durationMs: elapsed(s) });
+        } else {
+          cleanupIds.push({ table: "urunler", id: newProduct.id });
+
+          // Step 4: Verify trigger-generated fields
+          const hasUrunNo = newProduct.urun_no && newProduct.urun_no.startsWith("#");
+          t({ group: "E2E Ürün Ekleme", name: "urun_no Trigger", status: hasUrunNo ? "pass" : "fail", detail: hasUrunNo ? `Otomatik no: ${newProduct.urun_no}` : "urun_no oluşmadı!", category: "product", errorCategory: !hasUrunNo ? "DATA_ERROR" : undefined, stepFailed: !hasUrunNo ? "urun_no_trigger" : undefined });
+
+          const hasSlug = !!newProduct.slug;
+          t({ group: "E2E Ürün Ekleme", name: "Slug Trigger", status: hasSlug ? "pass" : "fail", detail: hasSlug ? `Slug: ${newProduct.slug}` : "Slug oluşmadı!", category: "product", errorCategory: !hasSlug ? "DATA_ERROR" : undefined, stepFailed: !hasSlug ? "slug_trigger" : undefined });
+
+          t({ group: "E2E Ürün Ekleme", name: "Durum Kontrolü", status: newProduct.durum === "onay_bekliyor" ? "pass" : "fail", detail: `Durum: ${newProduct.durum}`, category: "product", errorCategory: newProduct.durum !== "onay_bekliyor" ? "STATE_ERROR" : undefined });
+
+          // Step 5: Add variation
+          const varyasyonData = {
+            urun_id: newProduct.id,
+            varyant_1_label: "Beden",
+            varyant_1_value: "M",
+            varyant_2_label: "Renk",
+            varyant_2_value: "Kırmızı",
+            min_adet: 10,
+            max_adet: 100,
+            birim_fiyat: 50,
+            foto_url: "https://placeholder.co/200",
+          };
+
+          const { data: newVar, error: varErr } = await supabase.from("urun_varyasyonlar").insert(varyasyonData).select("id").single();
+          if (varErr) {
+            t({ group: "E2E Ürün Ekleme", name: "Varyasyon INSERT", status: "fail", detail: `Varyasyon eklenemedi: ${varErr.message}`, category: "product", errorCategory: "DATA_ERROR", stepFailed: "variation_insert" });
+          } else {
+            cleanupIds.push({ table: "urun_varyasyonlar", id: newVar.id });
+            // Verify variation exists for product
+            const { count } = await supabase.from("urun_varyasyonlar").select("id", { count: "exact", head: true }).eq("urun_id", newProduct.id);
+            t({ group: "E2E Ürün Ekleme", name: "Varyasyon Doğrulama", status: (count || 0) > 0 ? "pass" : "fail", detail: `${count} varyasyon kaydı`, category: "product", errorCategory: (count || 0) === 0 ? "DATA_ERROR" : undefined });
+          }
+
+          // Step 6: Verify notification was triggered
+          const { data: notifs } = await supabase.from("notifications").select("id, type").eq("user_id", testFirma.user_id).eq("type", "urun_onay_bekliyor").order("created_at", { ascending: false }).limit(1);
+          t({ group: "E2E Ürün Ekleme", name: "Bildirim Trigger", status: (notifs?.length || 0) > 0 ? "pass" : "warn", detail: (notifs?.length || 0) > 0 ? "Bildirim tetiklendi" : "Bildirim bulunamadı (eski olabilir)", category: "product" });
+        }
+      }
+      t({ group: "E2E Ürün Ekleme", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms`, category: "product", durationMs: elapsed(s) });
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // E2E-2: İHALE OLUŞTURMA SİMÜLASYONU
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    {
+      const s = start();
+      const { data: testFirma } = await supabase.from("firmalar").select("id, user_id").limit(1).single();
+      if (!testFirma) {
+        t({ group: "E2E İhale Oluşturma", name: "Simülasyon", status: "fail", detail: "Test için firma bulunamadı", category: "tender", errorCategory: "DATA_ERROR", durationMs: elapsed(s) });
+      } else {
+        const { data: kat } = await supabase.from("firma_bilgi_kategorileri").select("id").limit(1).single();
+        const { data: l1 } = await supabase.from("firma_bilgi_secenekleri").select("id").eq("kategori_id", kat?.id).is("parent_id", null).limit(1);
+
+        const ihaleData = {
+          user_id: testFirma.user_id,
+          baslik: `${TEST_PREFIX}ihale_${testTimestamp}`,
+          aciklama: "E2E test ihalesi - otomatik silinecek",
+          ihale_turu: "urun",
+          teklif_usulu: "acik",
+          baslangic_tarihi: new Date().toISOString(),
+          bitis_tarihi: new Date(Date.now() + 86400000 * 7).toISOString(),
+          durum: "onay_bekliyor",
+          para_birimi: "TRY",
+          miktar: 100,
+          birim: "Adet",
+          kategori_id: l1?.[0]?.id || null,
+        };
+
+        const { data: newIhale, error: ihaleErr } = await supabase.from("ihaleler").insert(ihaleData).select("id, ihale_no, slug, durum").single();
+
+        if (ihaleErr) {
+          t({ group: "E2E İhale Oluşturma", name: "İhale INSERT", status: "fail", detail: `INSERT başarısız: ${ihaleErr.message}`, category: "tender", errorCategory: "DATA_ERROR", stepFailed: "ihale_insert", technicalDetail: `[E2E_IHALE_INSERT_FAIL] ${ihaleErr.message}` });
+        } else {
+          cleanupIds.push({ table: "ihaleler", id: newIhale.id });
+
+          t({ group: "E2E İhale Oluşturma", name: "ihale_no Trigger", status: newIhale.ihale_no ? "pass" : "fail", detail: newIhale.ihale_no ? `No: ${newIhale.ihale_no}` : "ihale_no oluşmadı!", category: "tender", errorCategory: !newIhale.ihale_no ? "DATA_ERROR" : undefined });
+
+          t({ group: "E2E İhale Oluşturma", name: "Slug Trigger", status: newIhale.slug ? "pass" : "fail", detail: newIhale.slug ? `Slug: ${newIhale.slug}` : "Slug oluşmadı!", category: "tender", errorCategory: !newIhale.slug ? "DATA_ERROR" : undefined });
+
+          t({ group: "E2E İhale Oluşturma", name: "Durum Kontrolü", status: newIhale.durum === "onay_bekliyor" ? "pass" : "fail", detail: `Durum: ${newIhale.durum}`, category: "tender" });
+
+          // Add ihale stock entry
+          const { data: stok, error: stokErr } = await supabase.from("ihale_stok").insert({
+            ihale_id: newIhale.id,
+            varyant_1_label: "Beden",
+            varyant_1_value: "L",
+            stok_sayisi: 500,
+            miktar_tipi: "Adet",
+          }).select("id").single();
+
+          if (!stokErr && stok) {
+            cleanupIds.push({ table: "ihale_stok", id: stok.id });
+            t({ group: "E2E İhale Oluşturma", name: "Stok Kaydı", status: "pass", detail: "Stok başarıyla eklendi", category: "tender" });
+          } else {
+            t({ group: "E2E İhale Oluşturma", name: "Stok Kaydı", status: "fail", detail: stokErr?.message || "Stok eklenemedi", category: "tender", errorCategory: "DATA_ERROR" });
+          }
+        }
+      }
+      t({ group: "E2E İhale Oluşturma", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms`, category: "tender", durationMs: elapsed(s) });
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // E2E-3: TEKLİF VERME SİMÜLASYONU
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    {
+      const s = start();
+      // Find an active ihale to bid on
+      const { data: activeIhale } = await supabase.from("ihaleler").select("id, user_id").eq("durum", "devam_ediyor").limit(1).single();
+      if (!activeIhale) {
+        t({ group: "E2E Teklif Verme", name: "Simülasyon", status: "warn", detail: "Aktif ihale bulunamadı - teklif testi atlandı", category: "tender", durationMs: elapsed(s) });
+      } else {
+        // Find a different user to bid
+        const { data: bidder } = await supabase.from("firmalar").select("user_id").neq("user_id", activeIhale.user_id).limit(1).single();
+        if (!bidder) {
+          t({ group: "E2E Teklif Verme", name: "Simülasyon", status: "warn", detail: "Farklı teklif veren kullanıcı bulunamadı", category: "tender", durationMs: elapsed(s) });
+        } else {
+          const teklifData = {
+            ihale_id: activeIhale.id,
+            teklif_veren_user_id: bidder.user_id,
+            tutar: 999.99,
+            durum: "inceleniyor",
+          };
+
+          const { data: newTeklif, error: teklifErr } = await supabase.from("ihale_teklifler").insert(teklifData).select("id, tutar, durum").single();
+
+          if (teklifErr) {
+            t({ group: "E2E Teklif Verme", name: "Teklif INSERT", status: "fail", detail: `INSERT başarısız: ${teklifErr.message}`, category: "tender", errorCategory: "DATA_ERROR", stepFailed: "teklif_insert", technicalDetail: `[E2E_TEKLIF_INSERT_FAIL] ${teklifErr.message}` });
+          } else {
+            cleanupIds.push({ table: "ihale_teklifler", id: newTeklif.id });
+
+            t({ group: "E2E Teklif Verme", name: "Teklif Kaydı", status: "pass", detail: `Tutar: ${newTeklif.tutar}, Durum: ${newTeklif.durum}`, category: "tender" });
+
+            // Verify DB record
+            const { data: verify } = await supabase.from("ihale_teklifler").select("id, tutar").eq("id", newTeklif.id).single();
+            t({ group: "E2E Teklif Verme", name: "DB Doğrulama", status: verify ? "pass" : "fail", detail: verify ? "Kayıt DB'de doğrulandı" : "Kayıt bulunamadı!", category: "tender", errorCategory: !verify ? "DATA_ERROR" : undefined });
+
+            // Check notification was triggered for ihale owner
+            const { data: notifs } = await supabase.from("notifications").select("id, type").eq("user_id", activeIhale.user_id).eq("type", "ihale_yeni_teklif").order("created_at", { ascending: false }).limit(1);
+            t({ group: "E2E Teklif Verme", name: "Bildirim Trigger", status: (notifs?.length || 0) > 0 ? "pass" : "warn", detail: (notifs?.length || 0) > 0 ? "İhale sahibine bildirim gitti" : "Bildirim bulunamadı", category: "tender" });
+          }
+        }
+      }
+      t({ group: "E2E Teklif Verme", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms`, category: "tender", durationMs: elapsed(s) });
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // E2E-4: DROPDOWN ZİNCİR DOĞRULAMA
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    {
+      const s = start();
+      const { data: allKats } = await supabase.from("firma_bilgi_kategorileri").select("id, name");
+      const testedKats: string[] = [];
+
+      if (allKats) {
+        for (const kat of allKats.slice(0, 5)) {
+          const { data: l1 } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("kategori_id", kat.id).is("parent_id", null);
+          const l1Count = l1?.length || 0;
+
+          if (l1Count === 0) {
+            t({ group: "E2E Dropdown Zinciri", name: `${kat.name}: L1 Boş`, status: "fail", detail: `${kat.name} kategorisinde hiç üst seçenek yok!`, category: "dropdown", errorCategory: "DATA_ERROR", stepFailed: "l1_empty" });
+            continue;
+          }
+
+          // Test first L1 → L2 chain
+          const { data: l2 } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("parent_id", l1![0].id);
+          const l2Count = l2?.length || 0;
+
+          if (l2Count === 0) {
+            t({ group: "E2E Dropdown Zinciri", name: `${kat.name}: L1→L2`, status: "warn", detail: `${l1![0].name} altında alt seçenek yok`, category: "dropdown" });
+          } else {
+            // Test L2 → L3 chain
+            const { data: l3 } = await supabase.from("firma_bilgi_secenekleri").select("id, name").eq("parent_id", l2[0].id);
+            const l3Count = l3?.length || 0;
+            t({ group: "E2E Dropdown Zinciri", name: `${kat.name}: Tam Zincir`, status: l3Count > 0 ? "pass" : "warn", detail: `${l1![0].name} → ${l2[0].name} → ${l3Count} alt seçenek`, category: "dropdown" });
+          }
+
+          // Test: switching category should give different L1 options
+          testedKats.push(kat.name);
+        }
+      }
+
+      // Verify parent_id reset simulation: changing parent should yield different children
+      if (allKats && allKats.length >= 2) {
+        const { data: l1_kat1 } = await supabase.from("firma_bilgi_secenekleri").select("id").eq("kategori_id", allKats[0].id).is("parent_id", null).limit(1);
+        const { data: l1_kat2 } = await supabase.from("firma_bilgi_secenekleri").select("id").eq("kategori_id", allKats[1].id).is("parent_id", null).limit(1);
+
+        if (l1_kat1?.length && l1_kat2?.length) {
+          const { data: children1 } = await supabase.from("firma_bilgi_secenekleri").select("id").eq("parent_id", l1_kat1[0].id);
+          const { data: children2 } = await supabase.from("firma_bilgi_secenekleri").select("id").eq("parent_id", l1_kat2[0].id);
+          const ids1 = new Set((children1 || []).map((c: any) => c.id));
+          const ids2 = new Set((children2 || []).map((c: any) => c.id));
+          const overlap = [...ids1].filter(id => ids2.has(id));
+          t({ group: "E2E Dropdown Zinciri", name: "Kategori Değişim İzolasyonu", status: overlap.length === 0 ? "pass" : "warn", detail: overlap.length === 0 ? "Kategoriler izole, çakışma yok" : `${overlap.length} çakışan seçenek`, category: "dropdown" });
+        }
+      }
+      t({ group: "E2E Dropdown Zinciri", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms, ${testedKats.length} kategori test edildi`, category: "dropdown", durationMs: elapsed(s) });
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // E2E-5: PAKET & KOTA KONTROLÜ
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    {
+      const s = start();
+      // Check free package exists and has correct limits
+      const { data: freePaket } = await supabase.from("paketler").select("*").eq("slug", "ucretsiz").single();
+      if (!freePaket) {
+        t({ group: "E2E Paket/Kota", name: "Ücretsiz Paket", status: "fail", detail: "Ücretsiz paket bulunamadı!", category: "payment", errorCategory: "DATA_ERROR" });
+      } else {
+        t({ group: "E2E Paket/Kota", name: "Ücretsiz Paket Varlığı", status: "pass", detail: `Paket: ${freePaket.ad}`, category: "payment" });
+
+        // Verify limits are set
+        const hasLimits = freePaket.profil_goruntuleme_limiti !== null || freePaket.teklif_verme_limiti !== null;
+        t({ group: "E2E Paket/Kota", name: "Limit Tanımları", status: hasLimits ? "pass" : "warn", detail: hasLimits ? `Profil: ${freePaket.profil_goruntuleme_limiti}, Teklif: ${freePaket.teklif_verme_limiti}, Ürün: ${freePaket.aktif_urun_limiti}` : "Limitler tanımsız", category: "payment" });
+      }
+
+      // Check PRO package exists
+      const { data: proPaketler } = await supabase.from("paketler").select("id, ad, slug").neq("slug", "ucretsiz");
+      t({ group: "E2E Paket/Kota", name: "PRO Paketler", status: (proPaketler?.length || 0) > 0 ? "pass" : "warn", detail: `${proPaketler?.length || 0} ücretli paket tanımlı`, category: "payment" });
+
+      // Verify auto_assign_free_package trigger by checking a recent firma
+      const { data: recentFirma } = await supabase.from("firmalar").select("user_id").order("created_at", { ascending: false }).limit(1).single();
+      if (recentFirma) {
+        const { data: sub } = await supabase.from("kullanici_abonelikler").select("id, paket_id").eq("user_id", recentFirma.user_id).limit(1).single();
+        t({ group: "E2E Paket/Kota", name: "Otomatik Paket Ataması", status: sub ? "pass" : "fail", detail: sub ? "Son firma kaydına otomatik paket atanmış" : "Abonelik bulunamadı!", category: "payment", errorCategory: !sub ? "DATA_ERROR" : undefined, stepFailed: !sub ? "auto_assign_free_package trigger" : undefined });
+      }
+
+      t({ group: "E2E Paket/Kota", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms`, category: "payment", durationMs: elapsed(s) });
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // E2E-6: ADMIN ONAY/RED SİMÜLASYONU
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    {
+      const s = start();
+      // Find a test product we just created (or any onay_bekliyor)
+      const testProductName = `${TEST_PREFIX}urun_${testTimestamp}`;
+      const { data: testProduct } = await supabase.from("urunler").select("id, durum, user_id").eq("baslik", testProductName).single();
+
+      if (testProduct) {
+        // Simulate admin approval
+        const { error: approveErr } = await supabase.from("urunler").update({ durum: "aktif", admin_karar_tarihi: new Date().toISOString(), admin_karar_veren: "e2e_test_system" }).eq("id", testProduct.id);
+
+        if (approveErr) {
+          t({ group: "E2E Admin Onay/Red", name: "Ürün Onaylama", status: "fail", detail: `UPDATE başarısız: ${approveErr.message}`, category: "admin", errorCategory: "DATA_ERROR" });
+        } else {
+          // Verify status changed
+          const { data: verified } = await supabase.from("urunler").select("durum").eq("id", testProduct.id).single();
+          t({ group: "E2E Admin Onay/Red", name: "Ürün Onaylama", status: verified?.durum === "aktif" ? "pass" : "fail", detail: verified?.durum === "aktif" ? "Durum başarıyla 'aktif' oldu" : `Durum: ${verified?.durum}`, category: "admin" });
+
+          // Now simulate rejection
+          const { error: rejectErr } = await supabase.from("urunler").update({ durum: "reddedildi", admin_karar_sebebi: "E2E test reddi" }).eq("id", testProduct.id);
+          if (!rejectErr) {
+            const { data: rejVerified } = await supabase.from("urunler").select("durum, admin_karar_sebebi").eq("id", testProduct.id).single();
+            t({ group: "E2E Admin Onay/Red", name: "Ürün Reddetme", status: rejVerified?.durum === "reddedildi" ? "pass" : "fail", detail: rejVerified?.durum === "reddedildi" ? `Red sebebi: ${rejVerified.admin_karar_sebebi}` : `Durum: ${rejVerified?.durum}`, category: "admin" });
+          }
+        }
+      } else {
+        t({ group: "E2E Admin Onay/Red", name: "Simülasyon", status: "warn", detail: "Test ürünü bulunamadı, onay/red testi atlandı", category: "admin" });
+      }
+
+      t({ group: "E2E Admin Onay/Red", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms`, category: "admin", durationMs: elapsed(s) });
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // E2E-7: MESAJLAŞMA SİMÜLASYONU
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    {
+      const s = start();
+      // Find two different users
+      const { data: users } = await supabase.from("firmalar").select("user_id").limit(2);
+      if (!users || users.length < 2) {
+        t({ group: "E2E Mesajlaşma", name: "Simülasyon", status: "warn", detail: "Yeterli kullanıcı bulunamadı", category: "messaging", durationMs: elapsed(s) });
+      } else {
+        // Use RPC to get/create conversation
+        const { data: convId, error: convErr } = await supabase.rpc("get_or_create_conversation", {
+          p_user1: users[0].user_id,
+          p_user2: users[1].user_id,
+        });
+
+        if (convErr) {
+          t({ group: "E2E Mesajlaşma", name: "Sohbet Oluşturma", status: "fail", detail: `RPC hatası: ${convErr.message}`, category: "messaging", errorCategory: "DATA_ERROR" });
+        } else {
+          t({ group: "E2E Mesajlaşma", name: "Sohbet Oluşturma", status: "pass", detail: `Conversation ID: ${convId}`, category: "messaging" });
+
+          // Insert test message
+          const { data: newMsg, error: msgErr } = await supabase.from("messages").insert({
+            conversation_id: convId,
+            sender_id: users[0].user_id,
+            content: `${TEST_PREFIX}mesaj_${testTimestamp}`,
+          }).select("id").single();
+
+          if (msgErr) {
+            t({ group: "E2E Mesajlaşma", name: "Mesaj Gönderme", status: "fail", detail: `INSERT başarısız: ${msgErr.message}`, category: "messaging", errorCategory: "DATA_ERROR" });
+          } else {
+            cleanupIds.push({ table: "messages", id: newMsg.id });
+            // Verify in DB
+            const { data: verified } = await supabase.from("messages").select("id, content").eq("id", newMsg.id).single();
+            t({ group: "E2E Mesajlaşma", name: "Mesaj DB Doğrulama", status: verified ? "pass" : "fail", detail: verified ? "Mesaj DB'de doğrulandı" : "Mesaj bulunamadı!", category: "messaging" });
+
+            // Check notification for recipient
+            const { data: notifs } = await supabase.from("notifications").select("id").eq("user_id", users[1].user_id).eq("type", "yeni_mesaj").order("created_at", { ascending: false }).limit(1);
+            t({ group: "E2E Mesajlaşma", name: "Bildirim Trigger", status: (notifs?.length || 0) > 0 ? "pass" : "warn", detail: (notifs?.length || 0) > 0 ? "Alıcıya bildirim gitti" : "Bildirim bulunamadı", category: "messaging" });
+          }
+        }
+      }
+      t({ group: "E2E Mesajlaşma", name: "Toplam Süre", status: "pass", detail: `${elapsed(s)}ms`, category: "messaging", durationMs: elapsed(s) });
+    }
+
+  } finally {
+    // CLEANUP: Remove all test data
+    await cleanup();
+  }
+
+  return results;
+}
+
+// ═══════════════════════════════════════════
 // MAIN HANDLER
 // ═══════════════════════════════════════════
 Deno.serve(async (req) => {
@@ -536,6 +921,11 @@ Deno.serve(async (req) => {
     if (requestedLayers.includes("workflow")) {
       const wfResults = await runWorkflowTests(supabase);
       allResults = allResults.concat(wfResults);
+    }
+
+    if (requestedLayers.includes("e2e_simulation")) {
+      const e2eResults = await runRealUserFlowTests(supabase);
+      allResults = allResults.concat(e2eResults);
     }
 
     const totalMs = Math.round(performance.now() - startTime);
