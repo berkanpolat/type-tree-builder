@@ -48,9 +48,23 @@ const GirisKayit = () => {
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+
+  // Load saved credentials on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("tekstilas_remember");
+      if (saved) {
+        const { email: savedEmail, password: savedPassword } = JSON.parse(saved);
+        if (savedEmail) setLoginEmail(savedEmail);
+        if (savedPassword) setLoginPassword(savedPassword);
+        setRememberMe(true);
+      }
+    } catch {}
+  }, []);
 
   // Register state
   const [selectedTurId, setSelectedTurId] = useState("");
