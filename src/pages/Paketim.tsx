@@ -41,6 +41,7 @@ const FEATURES = [
 ] as const;
 
 const Paketim = () => {
+  const navigate = useNavigate();
   const pkg = usePackageQuota();
   const isPro = pkg.paketSlug === "pro";
   const [upgradeLoading, setUpgradeLoading] = useState<"aylik" | "yillik" | null>(null);
