@@ -49,7 +49,7 @@ const L5_UI_TESTS = [
   // dropdown-chain tests
   { name: "3-level dropdown structure", group: "L5 Dropdown Zinciri", test: () => { return ["Hazır Giyim","Kumaş","İplik","Aksesuar","Ambalaj","Makine ve Yedek Parça","Boya ve Kimyasal Maddeler"].length >= 7; }, detail: "Kategori→Grup→Tür 3 seviyeli yapı doğru" },
   { name: "Child reset on parent change", group: "L5 Dropdown Zinciri", test: () => { let g="grp"; g=""; return g===""; }, detail: "Üst dropdown değişince alt alanlar sıfırlanıyor" },
-  { name: "Cannot proceed without 3 levels", group: "L5 Dropdown Zinciri", test: () => { return !("" && "" && "tur"); }, detail: "3 seviye seçilmeden ilerleme engelleniyor" },
+  { name: "Cannot proceed without 3 levels", group: "L5 Dropdown Zinciri", test: () => { const k=""; const g=""; const t="tur"; return !(k && g && t); }, detail: "3 seviye seçilmeden ilerleme engelleniyor" },
   { name: "Dependent dropdown reset", group: "L5 Dropdown Zinciri", test: () => { let td: Record<string,string> = {"Kumaş Türü":"x"}; td["Kumaş Türü"]=""; return td["Kumaş Türü"]===""; }, detail: "Bağımlı dropdown parent değişince sıfırlanıyor" },
   // product-form tests
   { name: "Product title validation", group: "L5 Ürün Formu", test: () => { return "".trim().length === 0 && "Test".trim().length > 0; }, detail: "Boş başlık reddediliyor, dolu başlık kabul ediliyor" },
