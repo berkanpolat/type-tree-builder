@@ -48,9 +48,23 @@ const GirisKayit = () => {
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
+
+  // Load saved credentials on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("tekstilas_remember");
+      if (saved) {
+        const { email: savedEmail, password: savedPassword } = JSON.parse(saved);
+        if (savedEmail) setLoginEmail(savedEmail);
+        if (savedPassword) setLoginPassword(savedPassword);
+        setRememberMe(true);
+      }
+    } catch {}
+  }, []);
 
   // Register state
   const [selectedTurId, setSelectedTurId] = useState("");
@@ -238,6 +252,12 @@ const GirisKayit = () => {
         password: loginPassword,
       });
       if (error) throw error;
+      // Save or clear credentials based on rememberMe
+      if (rememberMe) {
+        localStorage.setItem("tekstilas_remember", JSON.stringify({ email: loginEmail, password: loginPassword }));
+      } else {
+        localStorage.removeItem("tekstilas_remember");
+      }
       toast({ title: "Giriş başarılı" });
       navigate("/firmalar");
     } catch (error: any) {
@@ -465,6 +485,19 @@ const GirisKayit = () => {
               <div className="space-y-2">
                 <Label>Şifre</Label>
                 <Input type="password" placeholder="Şifre" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => {
+                    setRememberMe(!!checked);
+                    if (!checked) localStorage.removeItem("tekstilas_remember");
+                  }}
+                />
+                <Label htmlFor="rememberMe" className="text-sm font-normal cursor-pointer text-muted-foreground">
+                  Giriş bilgilerimi kaydet
+                </Label>
               </div>
               <Button type="submit" className="w-full" disabled={loginLoading}>
                 {loginLoading ? "Giriş yapılıyor..." : "Giriş"}
