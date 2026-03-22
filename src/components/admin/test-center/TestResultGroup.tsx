@@ -77,7 +77,7 @@ interface Props {
   onTestClick?: (test: TestResult) => void;
 }
 
-export default function TestResultGroup({ group, items, isOpen, onToggle }: Props) {
+export default function TestResultGroup({ group, items, isOpen, onToggle, onTestClick }: Props) {
   const Icon = groupIcons[group] || Database;
   const groupFail = items.filter(i => i.status === "fail").length;
   const groupWarn = items.filter(i => i.status === "warn").length;
