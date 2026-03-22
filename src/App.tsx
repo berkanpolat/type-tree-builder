@@ -175,7 +175,7 @@ const AppContent = () => {
             <Route path="/urunlerim/duzenle/:id" element={<YeniUrun />} />
             <Route path="/urun-kategorisi/:categoryId" element={<UrunKategorisi />} />
             <Route path="/urun/:slug" element={<UrunDetay />} />
-            <Route path="/firmalar" element={<UreticiTedarikciKesfi />} />
+            <Route path="/firmalar" element={<TekRehber />} />
             <Route path="/mesajlar" element={<Mesajlar />} />
             <Route path="/favoriler" element={<Favoriler />} />
             <Route path="/bildirimler" element={<Bildirimler />} />
@@ -196,7 +196,7 @@ const AppContent = () => {
             <Route path="/odeme-sonuc" element={<OdemeSonuc />} />
             <Route path="/odeme-test" element={<OdemeTest />} />
             <Route path="/odeme-test-yillik" element={<OdemeTestYillik />} />
-            <Route path="/uretici-ve-tedarikci-kesfi" element={<TekRehber />} />
+            <Route path="/uretici-ve-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
             <Route path="/online-ihale-platformu" element={<TekIhaleTanitim />} />
             <Route path="/online-pazar-yeri" element={<TekPazarTanitim />} />
 
