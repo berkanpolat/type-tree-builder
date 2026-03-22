@@ -1,4 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
+import MobileBackButton from "@/components/MobileBackButton";
 import logoImg from "@/assets/tekstil-as-logo.png";
 
 export default function PublicHeader() {
