@@ -106,7 +106,7 @@ export default function TestResultGroup({ group, items, isOpen, onToggle, onTest
           <CardContent className="px-3 pb-3 pt-0">
             <div className="space-y-1">
               {items.map((item, idx) => (
-                <div key={idx} className={`rounded-md p-2 text-sm ${item.status === "fail" ? "bg-red-50 dark:bg-red-500/5" : item.status === "warn" ? "bg-amber-50 dark:bg-amber-500/5" : ""}`}>
+                <div key={idx} className={`rounded-md p-2 text-sm cursor-pointer hover:ring-1 hover:ring-primary/30 transition-all ${item.status === "fail" ? "bg-red-50 dark:bg-red-500/5" : item.status === "warn" ? "bg-amber-50 dark:bg-amber-500/5" : ""}`} onClick={() => onTestClick?.(item)}>
                   <div className="flex items-start gap-2">
                     <StatusIcon status={item.status} />
                     <div className="flex-1 min-w-0">
