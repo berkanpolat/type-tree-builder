@@ -42,6 +42,7 @@ const LAYER_OPTIONS = [
   { key: "infrastructure", label: "L1 Altyapı", color: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" },
   { key: "data_integrity", label: "L2 Veri Bütünlüğü", color: "bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400" },
   { key: "workflow", label: "L3 İş Akışı", color: "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400" },
+  { key: "e2e_simulation", label: "L4 E2E Simülasyon", color: "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400" },
 ] as const;
 
 export default function AdminTestMerkezi() {
