@@ -74,6 +74,7 @@ const UrunBilgileri = lazyRetry(() => import("./pages/UrunBilgileri"));
 const UrunKategorisi = lazyRetry(() => import("./pages/UrunKategorisi"));
 const NotFound = lazyRetry(() => import("./pages/NotFound"));
 const Chatbot = lazyRetry(() => import("./components/Chatbot"));
+const MobileBottomNav = lazyRetry(() => import("./components/MobileBottomNav"));
 
 // Admin pages
 const AdminGiris = lazyRetry(() => import("./pages/admin/AdminGiris"));
@@ -244,6 +245,7 @@ const AppContent = () => {
 
       {showPublicChrome && (
         <Suspense fallback={null}>
+          <MobileBottomNav />
           <Chatbot />
         </Suspense>
       )}
