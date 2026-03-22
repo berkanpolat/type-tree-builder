@@ -504,11 +504,12 @@ async function runRealUserFlowTests(supabase: any): Promise<TestResult[]> {
   const TEST_PREFIX = "__e2e_test_";
   const testTimestamp = Date.now();
 
-  // Helper: cleanup test data at the end
   const cleanupIds: { table: string; id: string }[] = [];
+  let cleanupSuccess = true;
   const cleanup = async () => {
     for (const item of cleanupIds.reverse()) {
-      await supabase.from(item.table).delete().eq("id", item.id);
+      const { error } = await supabase.from(item.table).delete().eq("id", item.id);
+      if (error) cleanupSuccess = false;
     }
   };
 
