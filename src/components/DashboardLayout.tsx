@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useLastSeen } from "@/hooks/use-last-seen";
 import QuotaReminderBadge from "@/components/QuotaReminderBadge";
+import MobileBackButton from "@/components/MobileBackButton";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
