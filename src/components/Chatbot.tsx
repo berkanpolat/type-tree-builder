@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback, lazy, Suspense } from "react";
-import { X, Send, Loader2, Sparkles, RotateCcw, Minus, GripVertical } from "lucide-react";
+import { X, Send, Loader2, Sparkles, RotateCcw, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 const ReactMarkdown = lazy(() => import("react-markdown"));
 import tekbotAvatar from "@/assets/tekbot-avatar.png";
@@ -87,7 +87,7 @@ export default function Chatbot() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Drag state
+  // Drag state (icon only)
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   const dragRef = useRef<{ startX: number; startY: number; startPosX: number; startPosY: number; dragging: boolean; justDragged: boolean }>({
     startX: 0, startY: 0, startPosX: 0, startPosY: 0, dragging: false, justDragged: false,
@@ -107,26 +107,42 @@ export default function Chatbot() {
     }
   }, [open, minimized]);
 
-  // Drag handlers
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        setMinimized(false);
+      }
+    };
+    // Delay to avoid closing immediately on the same click that opened
+    const timer = setTimeout(() => {
+      document.addEventListener("mousedown", handler);
+    }, 100);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousedown", handler);
+    };
+  }, [open]);
+
+  // Drag handlers (icon only)
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    const el = open ? panelRef.current : triggerRef.current;
+    const el = triggerRef.current;
     if (!el) return;
     e.preventDefault();
     el.setPointerCapture(e.pointerId);
 
     const rect = el.getBoundingClientRect();
-    const currentX = rect.left;
-    const currentY = rect.top;
-
     dragRef.current = {
       startX: e.clientX,
       startY: e.clientY,
-      startPosX: currentX,
-      startPosY: currentY,
+      startPosX: rect.left,
+      startPosY: rect.top,
       dragging: false,
       justDragged: false,
     };
-  }, [open]);
+  }, []);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     const d = dragRef.current;
@@ -136,7 +152,7 @@ export default function Chatbot() {
     if (!d.dragging && Math.abs(dx) + Math.abs(dy) < 5) return;
     d.dragging = true;
 
-    const el = open ? panelRef.current : triggerRef.current;
+    const el = triggerRef.current;
     if (!el) return;
     const w = el.offsetWidth;
     const h = el.offsetHeight;
@@ -144,7 +160,7 @@ export default function Chatbot() {
     const newX = clamp(d.startPosX + dx, 0, window.innerWidth - w);
     const newY = clamp(d.startPosY + dy, 0, window.innerHeight - h);
     setPosition({ x: newX, y: newY });
-  }, [open]);
+  }, []);
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
     const wasDragging = dragRef.current.dragging;
@@ -227,12 +243,9 @@ export default function Chatbot() {
     ? { position: "fixed", left: position.x, top: position.y, right: "auto", bottom: "auto", zIndex: 9999, touchAction: "none" }
     : {};
 
-  // Panel always uses default CSS positioning (no drag)
-  const panelStyle: React.CSSProperties = {};
-
   return (
     <>
-      {/* Floating trigger */}
+      {/* Floating trigger — smaller on mobile */}
       {!open && (
         <button
           ref={triggerRef}
@@ -242,17 +255,17 @@ export default function Chatbot() {
           onPointerUp={handlePointerUp}
           className={cn(
             "group",
-            !position && "fixed bottom-20 right-5 z-[9999] md:bottom-5"
+            !position && "fixed bottom-20 right-3 z-[9999] md:bottom-5 md:right-5"
           )}
           style={triggerStyle}
           aria-label="TekBot Asistan"
         >
-          <div className="relative w-[60px] h-[60px] rounded-full shadow-[0_4px_24px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.18)] transition-all duration-300 hover:scale-105 overflow-hidden border-2 border-secondary/30 bg-background">
+          <div className="relative w-11 h-11 md:w-[52px] md:h-[52px] rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.18)] transition-all duration-300 hover:scale-105 overflow-hidden border-2 border-secondary/30 bg-background">
             <img src={tekbotAvatar} alt="TekBot" className="w-full h-full object-contain p-0.5" />
           </div>
           {/* Badge */}
-          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-secondary rounded-full border-2 border-background flex items-center justify-center">
-            <Sparkles className="w-2.5 h-2.5 text-secondary-foreground" />
+          <span className="absolute -top-0.5 -right-0.5 w-3 h-3 md:w-3.5 md:h-3.5 bg-secondary rounded-full border-2 border-background flex items-center justify-center">
+            <Sparkles className="w-2 h-2 md:w-2.5 md:h-2.5 text-secondary-foreground" />
           </span>
         </button>
       )}
@@ -262,9 +275,13 @@ export default function Chatbot() {
         <div
           ref={panelRef}
           className={cn(
-            "flex flex-col rounded-2xl bg-background shadow-[0_8px_60px_-12px_rgba(0,0,0,0.25)] overflow-hidden border border-border/60",
-            "fixed bottom-20 right-5 z-[9999] md:bottom-5",
-            minimized ? "w-[280px]" : "w-[380px] max-w-[calc(100vw-2rem)] h-[540px] max-h-[calc(100vh-6rem)]",
+            "flex flex-col bg-background shadow-[0_8px_60px_-12px_rgba(0,0,0,0.25)] overflow-hidden border border-border/60",
+            // Mobile: full-screen sheet from bottom; Desktop: floating card
+            "fixed z-[9999]",
+            "inset-0 rounded-none md:inset-auto md:bottom-5 md:right-5 md:rounded-2xl",
+            minimized
+              ? "h-auto inset-auto bottom-20 right-3 md:bottom-5 md:right-5 w-[260px] md:w-[280px] rounded-2xl"
+              : "md:w-[380px] md:max-w-[calc(100vw-2rem)] md:h-[540px] md:max-h-[calc(100vh-6rem)]",
             "animate-in slide-in-from-bottom-5 fade-in duration-300"
           )}
         >
@@ -272,7 +289,7 @@ export default function Chatbot() {
           <div className="relative shrink-0 overflow-hidden select-none">
             <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-primary/80" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--secondary)/0.15),transparent_60%)]" />
-            <div className="relative flex items-center gap-3 px-5 py-3">
+            <div className="relative flex items-center gap-3 px-4 py-3 md:px-5">
               <div className="w-8 h-8 rounded-xl overflow-hidden bg-white/15 backdrop-blur-sm flex items-center justify-center border border-white/10">
                 <img src={tekbotAvatar} alt="TekBot" className="w-7 h-7 object-contain" />
               </div>
@@ -285,28 +302,29 @@ export default function Chatbot() {
                   <p className="text-[11px] text-primary-foreground/70">Tekstil A.Ş. Yapay Zeka Asistanı</p>
                 )}
               </div>
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-1">
                 {messages.length > 0 && !minimized && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setMessages([]); setInput(""); }}
-                    className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-primary-foreground/70 hover:text-primary-foreground"
+                    className="p-2 rounded-lg hover:bg-white/10 transition-colors text-primary-foreground/70 hover:text-primary-foreground"
                     title="Sohbeti sıfırla"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw className="w-4 h-4" />
                   </button>
                 )}
                 <button
                   onClick={(e) => { e.stopPropagation(); setMinimized(!minimized); }}
-                  className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-primary-foreground/70 hover:text-primary-foreground"
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors text-primary-foreground/70 hover:text-primary-foreground"
                   title={minimized ? "Genişlet" : "Küçült"}
                 >
                   <Minus className="w-4 h-4" />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleClose(); }}
-                  className="p-1.5 rounded-lg hover:bg-white/10 transition-colors text-primary-foreground/70 hover:text-primary-foreground"
+                  className="p-2 rounded-lg hover:bg-white/10 transition-colors text-primary-foreground/70 hover:text-primary-foreground"
+                  title="Kapat"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -396,7 +414,7 @@ export default function Chatbot() {
               </div>
 
               {/* Input area */}
-              <div className="shrink-0 border-t border-border/60 bg-background p-3">
+              <div className="shrink-0 border-t border-border/60 bg-background p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))]">
                 <div className="flex items-end gap-2 bg-muted/50 rounded-xl p-1.5 border border-border/40 focus-within:border-primary/30 focus-within:ring-1 focus-within:ring-primary/10 transition-all">
                   <textarea
                     ref={inputRef}
