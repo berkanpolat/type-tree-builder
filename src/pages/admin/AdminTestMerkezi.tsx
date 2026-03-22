@@ -4,7 +4,7 @@ import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Play, Loader2, Download, XCircle, Layers, Monitor } from "lucide-react";
+import { Play, Loader2, Download, XCircle, Layers } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import TestSummaryCards from "@/components/admin/test-center/TestSummaryCards";
 import TestResultGroup from "@/components/admin/test-center/TestResultGroup";
@@ -12,6 +12,10 @@ import TestHistory from "@/components/admin/test-center/TestHistory";
 import TestCharts from "@/components/admin/test-center/TestCharts";
 import TopFailingTests from "@/components/admin/test-center/TopFailingTests";
 import TestSchedulePanel from "@/components/admin/test-center/TestSchedulePanel";
+import TestDetailDialog from "@/components/admin/test-center/TestDetailDialog";
+import TestAlarmBanner from "@/components/admin/test-center/TestAlarmBanner";
+import TestValidationMode from "@/components/admin/test-center/TestValidationMode";
+import TestOperationInfo from "@/components/admin/test-center/TestOperationInfo";
 import { downloadReport } from "@/components/admin/test-center/TestReportGenerator";
 import { runBrowserTests } from "@/lib/browser-test-engine";
 
@@ -27,6 +31,11 @@ interface TestResult {
   category?: string;
   errorCategory?: string;
   stepFailed?: string;
+  createdTestRecords?: string[];
+  verifiedTables?: string[];
+  cleanupStatus?: string;
+  failureReason?: string;
+  verificationSteps?: string[];
 }
 
 interface TestSummary {
@@ -39,8 +48,6 @@ interface TestSummary {
   results: TestResult[];
   timestamp: string;
 }
-
-// L5 tests now use the real browser test engine from src/lib/browser-test-engine.ts
 
 const LAYER_OPTIONS = [
   { key: "infrastructure", label: "L1 Altyapı", color: "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400" },
@@ -60,6 +67,8 @@ export default function AdminTestMerkezi() {
   const [selectedLayers, setSelectedLayers] = useState<string[]>(["infrastructure", "data_integrity", "workflow", "e2e_simulation", "ui_browser"]);
   const [l5Running, setL5Running] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedTest, setSelectedTest] = useState<TestResult | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
 
   const toggleLayer = (layer: string) => {
     setSelectedLayers(prev => {
@@ -70,7 +79,11 @@ export default function AdminTestMerkezi() {
     });
   };
 
-  // Run L5 UI tests in-browser using real browser test engine
+  const handleTestClick = (test: TestResult) => {
+    setSelectedTest(test);
+    setDetailOpen(true);
+  };
+
   const runL5Tests = useCallback(async (): Promise<TestResult[]> => {
     const results = await runBrowserTests();
     return results.map(r => ({
@@ -86,7 +99,6 @@ export default function AdminTestMerkezi() {
     }));
   }, []);
 
-  // Save L5 results to DB
   const saveL5Results = useCallback(async (results: TestResult[]) => {
     try {
       const pass = results.filter(r => r.status === "pass").length;
@@ -136,7 +148,6 @@ export default function AdminTestMerkezi() {
       let backendResults: TestResult[] = [];
       let backendSummary: any = null;
 
-      // Run backend layers (L1-L4) if any selected
       if (backendLayers.length > 0) {
         const token = btoa(JSON.stringify({ uid: user.id, exp: Date.now() + 600000 }));
         const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/run-test-suite`;
@@ -154,7 +165,6 @@ export default function AdminTestMerkezi() {
         backendSummary = json;
       }
 
-      // Run L5 UI tests in-browser
       let l5Results: TestResult[] = [];
       if (includesL5) {
         setL5Running(true);
@@ -163,7 +173,6 @@ export default function AdminTestMerkezi() {
         setL5Running(false);
       }
 
-      // Merge results
       const allResults = [...backendResults, ...l5Results];
       const pass = allResults.filter(r => r.status === "pass").length;
       const fail = allResults.filter(r => r.status === "fail").length;
@@ -213,11 +222,14 @@ export default function AdminTestMerkezi() {
   return (
     <AdminLayout title="Test Merkezi v2">
       <div className="space-y-4 max-w-6xl">
+        {/* Alarm Banner */}
+        <TestAlarmBanner />
+
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
             <p className="text-sm text-muted-foreground">
-              3 katmanlı test mimarisi: Altyapı, Veri Bütünlüğü ve İş Akışı testleri. Sonuçlar veritabanında saklanır.
+              5 katmanlı test mimarisi: Altyapı, Veri Bütünlüğü, İş Akışı, E2E Simülasyon ve UI testleri.
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -233,7 +245,7 @@ export default function AdminTestMerkezi() {
               className="bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:from-amber-600 hover:to-orange-700"
             >
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
-              {loading ? "Testler Çalışıyor..." : "Testleri Başlat"}
+              {loading ? (l5Running ? "UI Testleri..." : "Testler Çalışıyor...") : "Testleri Başlat"}
             </Button>
           </div>
         </div>
@@ -265,7 +277,6 @@ export default function AdminTestMerkezi() {
           </Card>
         )}
 
-        {/* Summary + Side panels */}
         {data && (
           <>
             <TestSummaryCards
@@ -308,13 +319,19 @@ export default function AdminTestMerkezi() {
                   items={items}
                   isOpen={openGroups.has(group)}
                   onToggle={() => toggleGroup(group)}
+                  onTestClick={handleTestClick}
                 />
               ))}
             </div>
           </>
         )}
 
-        {/* History */}
+        {/* Validation Mode + Operation Info + History */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <TestValidationMode />
+          <TestOperationInfo />
+        </div>
+
         <TestHistory refreshKey={refreshKey} />
 
         {/* Empty State */}
@@ -326,7 +343,7 @@ export default function AdminTestMerkezi() {
               </div>
               <h3 className="text-lg font-semibold mb-2 text-foreground">Test Merkezi v2</h3>
               <p className="text-sm max-w-md mx-auto mb-4 text-muted-foreground">
-                3 katmanlı test mimarisi ile veritabanı, veri bütünlüğü ve iş akışlarını test edin. Sonuçlar otomatik kaydedilir.
+                5 katmanlı test mimarisi ile veritabanı, veri bütünlüğü, iş akışları, E2E simülasyon ve UI testlerini çalıştırın.
               </p>
               <div className="flex items-center justify-center gap-2 mb-6">
                 {LAYER_OPTIONS.map(opt => (
@@ -340,6 +357,9 @@ export default function AdminTestMerkezi() {
             </CardContent>
           </Card>
         )}
+
+        {/* Test Detail Dialog */}
+        <TestDetailDialog test={selectedTest} open={detailOpen} onOpenChange={setDetailOpen} />
       </div>
     </AdminLayout>
   );
