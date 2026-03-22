@@ -252,6 +252,12 @@ const GirisKayit = () => {
         password: loginPassword,
       });
       if (error) throw error;
+      // Save or clear credentials based on rememberMe
+      if (rememberMe) {
+        localStorage.setItem("tekstilas_remember", JSON.stringify({ email: loginEmail, password: loginPassword }));
+      } else {
+        localStorage.removeItem("tekstilas_remember");
+      }
       toast({ title: "Giriş başarılı" });
       navigate("/firmalar");
     } catch (error: any) {
