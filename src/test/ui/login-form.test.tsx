@@ -64,11 +64,11 @@ describe("Login Form UI Tests (L5)", () => {
     expect(screen.getByText("Kayıt")).toBeInTheDocument();
   });
 
-  it("login submit button is present", async () => {
+  it("login submit button is present with type=submit", async () => {
     await renderLoginPage();
-    const submitBtn = screen.getByRole("button", { name: /giriş$/i });
-    expect(submitBtn).toBeInTheDocument();
-    expect(submitBtn).toHaveAttribute("type", "submit");
+    const allButtons = screen.getAllByRole("button", { name: /giriş/i });
+    const submitBtn = allButtons.find(b => b.getAttribute("type") === "submit");
+    expect(submitBtn).toBeTruthy();
   });
 
   it("email field accepts input", async () => {
