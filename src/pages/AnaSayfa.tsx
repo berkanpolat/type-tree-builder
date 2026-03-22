@@ -701,10 +701,10 @@ export default function AnaSayfa() {
     }
 
     return (
-      <Card key={urun.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer" onClick={() => navigate(`/urunler/${urun.slug || urun.id}`)}>
-        <div className="aspect-square bg-muted relative overflow-hidden">
+      <Card key={urun.id} className="overflow-hidden hover:shadow-lg transition-shadow group flex flex-col cursor-pointer border border-border" onClick={() => navigate(`/urunler/${urun.slug || urun.id}`)}>
+        <div className="aspect-square bg-white relative overflow-hidden">
           {urun.foto_url ? (
-            <img src={urun.foto_url} alt={urun.baslik} loading="lazy" className="w-full h-full object-contain p-1 group-hover:scale-105 transition-transform" />
+            <img src={urun.foto_url} alt={urun.baslik} loading="lazy" className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform" />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <ImageIcon className="w-10 h-10 text-muted-foreground/40" />
