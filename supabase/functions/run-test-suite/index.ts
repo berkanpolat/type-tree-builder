@@ -1080,6 +1080,7 @@ Deno.serve(async (req) => {
         passed_tests: pass,
         failed_tests: fail,
         warning_tests: warn,
+        overall_status: fail > 0 ? "fail" : warn > 0 ? "warn" : "pass",
       }).eq("id", runId);
 
       // Batch insert test results
