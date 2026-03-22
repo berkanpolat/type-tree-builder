@@ -84,7 +84,8 @@ export default function AdminTestMerkezi() {
   const [error, setError] = useState<string | null>(null);
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
   const [filter, setFilter] = useState<"all" | "fail" | "warn" | "pass">("all");
-  const [selectedLayers, setSelectedLayers] = useState<string[]>(["infrastructure", "data_integrity", "workflow", "e2e_simulation"]);
+  const [selectedLayers, setSelectedLayers] = useState<string[]>(["infrastructure", "data_integrity", "workflow", "e2e_simulation", "ui_browser"]);
+  const [l5Running, setL5Running] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const toggleLayer = (layer: string) => {
