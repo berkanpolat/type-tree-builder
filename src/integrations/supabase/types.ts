@@ -2565,6 +2565,185 @@ export type Database = {
         }
         Relationships: []
       }
+      test_logs: {
+        Row: {
+          created_at: string
+          id: string
+          log_type: string
+          message: string
+          metadata: Json | null
+          run_id: string | null
+          test_result_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          log_type?: string
+          message: string
+          metadata?: Json | null
+          run_id?: string | null
+          test_result_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          log_type?: string
+          message?: string
+          metadata?: Json | null
+          run_id?: string | null
+          test_result_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_logs_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "test_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_logs_test_result_id_fkey"
+            columns: ["test_result_id"]
+            isOneToOne: false
+            referencedRelation: "test_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_results: {
+        Row: {
+          category: string
+          created_at: string
+          duration_ms: number | null
+          error_category: string | null
+          error_message: string | null
+          id: string
+          layer: string
+          run_id: string
+          solution: string | null
+          status: string
+          step_failed: string | null
+          technical_detail: string | null
+          test_group: string
+          test_name: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          duration_ms?: number | null
+          error_category?: string | null
+          error_message?: string | null
+          id?: string
+          layer?: string
+          run_id: string
+          solution?: string | null
+          status?: string
+          step_failed?: string | null
+          technical_detail?: string | null
+          test_group?: string
+          test_name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          duration_ms?: number | null
+          error_category?: string | null
+          error_message?: string | null
+          id?: string
+          layer?: string
+          run_id?: string
+          solution?: string | null
+          status?: string
+          step_failed?: string | null
+          technical_detail?: string | null
+          test_group?: string
+          test_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "test_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      test_runs: {
+        Row: {
+          created_at: string
+          duration_ms: number
+          environment: string
+          failed_tests: number
+          finished_at: string | null
+          id: string
+          passed_tests: number
+          started_at: string
+          total_tests: number
+          triggered_by: string
+          warning_tests: number
+        }
+        Insert: {
+          created_at?: string
+          duration_ms?: number
+          environment?: string
+          failed_tests?: number
+          finished_at?: string | null
+          id?: string
+          passed_tests?: number
+          started_at?: string
+          total_tests?: number
+          triggered_by?: string
+          warning_tests?: number
+        }
+        Update: {
+          created_at?: string
+          duration_ms?: number
+          environment?: string
+          failed_tests?: number
+          finished_at?: string | null
+          id?: string
+          passed_tests?: number
+          started_at?: string
+          total_tests?: number
+          triggered_by?: string
+          warning_tests?: number
+        }
+        Relationships: []
+      }
+      test_schedules: {
+        Row: {
+          created_at: string
+          cron_expression: string
+          enabled: boolean
+          id: string
+          last_run_at: string | null
+          name: string
+          test_layers: string[]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cron_expression?: string
+          enabled?: boolean
+          id?: string
+          last_run_at?: string | null
+          name: string
+          test_layers?: string[]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cron_expression?: string
+          enabled?: boolean
+          id?: string
+          last_run_at?: string | null
+          name?: string
+          test_layers?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       urun_favoriler: {
         Row: {
           created_at: string
