@@ -211,6 +211,7 @@ const GirisKayit = () => {
               selectedPackage="ucretsiz"
               billingYearly={false}
               onBack={() => setActiveTab("giris")}
+              hideHeader
             />
           )}
         </div>
