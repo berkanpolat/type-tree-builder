@@ -254,6 +254,7 @@ const AppContent = () => {
           <Chatbot />
         </Suspense>
       )}
+      <PwaInstallBanner />
     </>
   );
 };
