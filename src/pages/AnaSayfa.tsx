@@ -667,12 +667,12 @@ export default function AnaSayfa() {
     setSelectedTurId(turId || null);
   };
 
+  const [localFavOverrides, setLocalFavOverrides] = useState<Record<string, boolean>>({});
   const [heartAnimId, setHeartAnimId] = useState<string | null>(null);
 
   const toggleFavorite = async (urunId: string, isFav: boolean) => {
     if (!currentUserId) return;
-    // Optimistic UI update
-    setUrunler(prev => prev.map(u => u.id === urunId ? { ...u, is_favorited: !isFav } : u));
+    setLocalFavOverrides(prev => ({ ...prev, [urunId]: !isFav }));
     setHeartAnimId(urunId);
     setTimeout(() => setHeartAnimId(null), 450);
     if (isFav) {
