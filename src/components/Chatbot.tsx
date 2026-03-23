@@ -107,22 +107,49 @@ export default function Chatbot() {
     }
   }, [open, minimized]);
 
-  // Close on outside click
+  // Close on outside click (desktop only)
   useEffect(() => {
     if (!open) return;
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) return; // Don't close on outside click on mobile (it's full-screen)
     const handler = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
         setOpen(false);
         setMinimized(false);
       }
     };
-    // Delay to avoid closing immediately on the same click that opened
     const timer = setTimeout(() => {
       document.addEventListener("mousedown", handler);
     }, 100);
     return () => {
       clearTimeout(timer);
       document.removeEventListener("mousedown", handler);
+    };
+  }, [open]);
+
+  // Lock body scroll on mobile when chatbot is open
+  useEffect(() => {
+    if (!open) return;
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return;
+
+    const origOverflow = document.body.style.overflow;
+    const origPosition = document.body.style.position;
+    const origTop = document.body.style.top;
+    const origWidth = document.body.style.width;
+    const scrollY = window.scrollY;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
+    return () => {
+      document.body.style.overflow = origOverflow;
+      document.body.style.position = origPosition;
+      document.body.style.top = origTop;
+      document.body.style.width = origWidth;
+      window.scrollTo(0, scrollY);
     };
   }, [open]);
 
