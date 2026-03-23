@@ -174,13 +174,30 @@ export default function AdminZiyaretPlanlari() {
 
   const callApi = useAdminApi();
 
+  // Fetch admin list for Yönetim Kurulu filter
+  useEffect(() => {
+    if (!isYonetimKurulu || !token) return;
+    const fetchAdmins = async () => {
+      try {
+        const data = await callApi("list-admin-users", { token });
+        setAdminList((data.users || []).map((u: any) => ({ id: u.id, ad: u.ad, soyad: u.soyad })));
+      } catch {
+        setAdminList([]);
+      }
+    };
+    fetchAdmins();
+  }, [isYonetimKurulu, token, callApi]);
+
+  const viewingAdminId = selectedAdminId === "all" ? undefined : (selectedAdminId === "own" ? adminUser?.id : selectedAdminId);
+  const isViewingOwnPlans = selectedAdminId === "own";
+
   const fetchPlanlar = useCallback(async () => {
     if (!token || !adminUser) return;
     try {
       const weekEnd = endOfWeek(selectedWeekStart, { weekStartsOn: 1 });
       const data = await callApi("list-ziyaret-planlari", {
         token,
-        adminId: adminUser.id,
+        adminId: viewingAdminId,
         baslangic: format(selectedWeekStart, "yyyy-MM-dd"),
         bitis: format(weekEnd, "yyyy-MM-dd"),
       });
@@ -191,7 +208,7 @@ export default function AdminZiyaretPlanlari() {
     } finally {
       setLoading(false);
     }
-  }, [token, adminUser, callApi, toast, selectedWeekStart]);
+  }, [token, adminUser, callApi, toast, selectedWeekStart, viewingAdminId]);
 
   useEffect(() => { setLoading(true); fetchPlanlar(); }, [fetchPlanlar]);
 
