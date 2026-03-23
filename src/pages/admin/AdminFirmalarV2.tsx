@@ -138,7 +138,14 @@ export default function AdminFirmalarV2() {
   const [totalFirmalar, setTotalFirmalar] = useState(0);
   const [statsDays, setStatsDays] = useState(7);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Debounce search input by 400ms
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
