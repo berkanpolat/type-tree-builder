@@ -665,19 +665,31 @@ export default function UrunDetay() {
               <div
                 ref={imageContainerRef}
                 className="aspect-square bg-background rounded-xl overflow-hidden border border-border relative group"
-                onMouseMove={(e) => { handleImageZoomMove(e); setIsZoomed(true); }}
-                onMouseLeave={() => setIsZoomed(false)}
-                style={{ cursor: "crosshair" }}
+                onMouseMove={!isMobile ? (e) => { handleImageZoomMove(e); setIsZoomed(true); } : undefined}
+                onMouseLeave={!isMobile ? () => setIsZoomed(false) : undefined}
+                onTouchStart={isMobile ? (e) => { handleDoubleTap(e); handleTouchStart(e); } : undefined}
+                onTouchMove={isMobile ? handleTouchMove : undefined}
+                onTouchEnd={isMobile ? handleTouchEnd : undefined}
+                style={{ cursor: isMobile ? "default" : "crosshair", touchAction: isMobile ? "pan-x" : undefined }}
               >
                 {allImages.length > 0 ? (
                   <img
                     src={allImages[selectedImageIndex]}
                     alt={urun.baslik}
                     className="w-full h-full object-contain transition-transform duration-200"
-                    style={isZoomed ? {
-                      transform: "scale(2.5)",
-                      transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                    } : undefined}
+                    draggable={false}
+                    style={isMobile
+                      ? {
+                          transform: `scale(${mobileZoomScale})`,
+                          transformOrigin: `${mobileZoomOrigin.x}% ${mobileZoomOrigin.y}%`,
+                        }
+                      : isZoomed
+                        ? {
+                            transform: "scale(2.5)",
+                            transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                          }
+                        : undefined
+                    }
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -686,8 +698,8 @@ export default function UrunDetay() {
                 )}
 
                 {/* Zoom icon overlay */}
-                {!isZoomed && (
-                  <div className="absolute bottom-3 right-3 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                {!isZoomed && mobileZoomScale <= 1 && (
+                  <div className="absolute bottom-3 right-3 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 md:transition-opacity">
                     <ZoomIn className="w-5 h-5 text-muted-foreground" />
                   </div>
                 )}
