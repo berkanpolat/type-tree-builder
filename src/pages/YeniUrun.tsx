@@ -533,7 +533,7 @@ export default function YeniUrun() {
       para_birimi: paraBirimi,
       min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
       teknik_detaylar: teknikDetaylar,
-      durum: "duzenleniyor",
+      durum: isAdminMode && originalDurum ? originalDurum : "duzenleniyor",
     };
 
     let urunId = draftId;
