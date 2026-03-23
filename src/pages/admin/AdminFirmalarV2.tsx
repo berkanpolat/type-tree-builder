@@ -234,35 +234,39 @@ export default function AdminFirmalarV2() {
 
   const callApi = useAdminApi();
 
+  const [loadError, setLoadError] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
+    setLoadError(false);
     try {
-      const [firmaData, statsData] = await Promise.all([
-        callApi("list-firmalar", {
-          token,
-          paginated: true,
-          page: currentPage,
-          perPage: ITEMS_PER_PAGE,
-          searchTerm: debouncedSearch,
-          filterTuru,
-          filterTipi,
-          filterIl,
-          filterIlce,
-          filterDurum,
-          filterPaket,
-          activeStatCard,
-          abonePeriod,
-          sortField,
-          sortDir,
-        }),
-        callApi("firma-stats", { token, days: statsDays }),
-      ]);
-      setFirmalar(firmaData.firmalar || []);
-      setTotalFirmalar(firmaData.total || 0);
+      // Sequential calls to reduce edge function cold-start pressure
+      const firmaData = await callApi("list-firmalar", {
+        token,
+        paginated: true,
+        page: currentPage,
+        perPage: ITEMS_PER_PAGE,
+        searchTerm: debouncedSearch,
+        filterTuru,
+        filterTipi,
+        filterIl,
+        filterIlce,
+        filterDurum,
+        filterPaket,
+        activeStatCard,
+        abonePeriod,
+        sortField,
+        sortDir,
+      });
+      setFirmalar(firmaData?.firmalar || []);
+      setTotalFirmalar(firmaData?.total || 0);
+
+      const statsData = await callApi("firma-stats", { token, days: statsDays });
       setStats(statsData);
     } catch {
-      toast({ title: "Hata", description: "Veriler yüklenemedi", variant: "destructive" });
+      setLoadError(true);
+      toast({ title: "Hata", description: "Veriler yüklenemedi. Tekrar deneyin.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -981,6 +985,14 @@ export default function AdminFirmalarV2() {
         {loading ? (
           <div className="flex items-center justify-center p-12">
             <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center p-12 gap-3">
+            <AlertCircle className="w-8 h-8 text-red-500" />
+            <p style={s.muted}>Veriler yüklenemedi</p>
+            <Button variant="outline" size="sm" onClick={fetchData} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>
+              <RotateCcw className="w-4 h-4 mr-2" /> Tekrar Dene
+            </Button>
           </div>
         ) : firmalar.length === 0 ? (
           <div className="text-center py-12" style={s.muted}>Firma bulunamadı.</div>

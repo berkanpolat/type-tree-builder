@@ -118,6 +118,7 @@ export default function AdminIhaleler() {
   const [ihaleler, setIhaleler] = useState<IhaleItem[]>([]);
   const [stats, setStats] = useState<IhaleStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [statFilter, setStatFilter] = useState<{ type: string; value?: string }>({ type: "all" });
@@ -249,15 +250,17 @@ export default function AdminIhaleler() {
 
   const fetchData = useCallback(async () => {
     if (!token) return;
+    setLoading(true);
+    setLoadError(false);
     try {
-      const [ihaleData, statsData] = await Promise.all([
-        callApi("list-ihaleler", { token }),
-        callApi("ihale-stats", { token }),
-      ]);
-      setIhaleler(ihaleData.ihaleler || []);
+      // Sequential to avoid cold-start overload
+      const ihaleData = await callApi("list-ihaleler", { token });
+      setIhaleler(ihaleData?.ihaleler || []);
+
+      const statsData = await callApi("ihale-stats", { token });
       setStats(statsData);
 
-      const firms = (ihaleData.ihaleler || []).reduce((acc: any[], i: any) => {
+      const firms = (ihaleData?.ihaleler || []).reduce((acc: any[], i: any) => {
         if (!acc.find((f: any) => f.user_id === i.user_id)) {
           acc.push({ user_id: i.user_id, firma_unvani: i.firma_unvani });
         }
@@ -265,7 +268,8 @@ export default function AdminIhaleler() {
       }, []);
       setFirmaList(firms.sort((a: any, b: any) => a.firma_unvani.localeCompare(b.firma_unvani)));
     } catch {
-      toast({ title: "Hata", description: "Veriler yüklenemedi", variant: "destructive" });
+      setLoadError(true);
+      toast({ title: "Hata", description: "Veriler yüklenemedi. Tekrar deneyin.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -724,6 +728,14 @@ export default function AdminIhaleler() {
         {loading ? (
           <div className="flex items-center justify-center p-16">
             <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center p-16 gap-3">
+            <Gavel className="w-8 h-8 text-red-500" />
+            <p style={s.muted}>Veriler yüklenemedi</p>
+            <Button variant="outline" size="sm" onClick={fetchData} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>
+              <RotateCcw className="w-4 h-4 mr-2" /> Tekrar Dene
+            </Button>
           </div>
         ) : (
           <div className="space-y-3">
