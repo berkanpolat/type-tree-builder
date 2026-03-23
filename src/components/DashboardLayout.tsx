@@ -13,20 +13,20 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
   useLastSeen();
   return (
     <SidebarProvider>
-      <div className="h-screen flex w-full overflow-hidden">
+      <div className="h-[100dvh] flex w-full overflow-hidden">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <header className="h-14 flex items-center border-b bg-background px-4 md:px-6 shrink-0">
+          <header className="h-12 md:h-14 flex items-center border-b bg-background px-3 md:px-6 shrink-0">
             <SidebarTrigger className="mr-2" />
             <MobileBackButton />
             {title && (
-              <h1 className="text-lg font-bold text-foreground">{title}</h1>
+              <h1 className="text-base md:text-lg font-bold text-foreground truncate">{title}</h1>
             )}
             <div className="ml-auto">
               <QuotaReminderBadge />
             </div>
           </header>
-          <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-6">
+          <main className="flex-1 overflow-y-auto bg-muted/30 p-3 md:p-6">
             {children}
           </main>
         </div>
