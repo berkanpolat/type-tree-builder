@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,10 +8,10 @@ import { ChevronDown, ChevronUp, Search, X, SlidersHorizontal } from "lucide-rea
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1"; // Ana Ürün Kategorileri
 
-// Filter definitions per firma türü name
 interface FilterDef {
   key: string;
   label: string;
@@ -70,12 +70,10 @@ const FILTER_CONFIG: Record<string, FilterDef[]> = {
   ],
 };
 
-// Which filters map to firmalar columns vs junction table
 const DIRECT_COLUMN_FILTERS: Record<string, string> = {
   firmaOlcegi: "firma_olcegi_id",
 };
 
-// Junction table filters - these secenek_ids are in firma_urun_hizmet_secimler
 const JUNCTION_FILTER_KEYS = [
   "faaliyetAlani", "uretimModeli", "uretimYetkinlikleri", "uzmanlikAlani",
   "urunSegmenti", "tedarikHizmetTipi", "temsilTipi", "mevcutPazarlar",
@@ -91,7 +89,7 @@ export interface FirmaFilterState {
   firmaOlcekleri: string[];
   iller: string[];
   moq: string;
-  junctionFilters: Record<string, string[]>; // key → secenek_ids
+  junctionFilters: Record<string, string[]>;
   uretimSatisKategoriIds: string[];
   uretimSatisGrupIds: string[];
   uretimSatisTurIds: string[];
@@ -103,7 +101,6 @@ interface Props {
   onFilterChange: (state: FirmaFilterState) => void;
 }
 
-// Cache
 const optionsCache: Record<string, Option[]> = {};
 
 export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterChange }: Props) {
@@ -122,10 +119,11 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
 
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [searchTerms, setSearchTerms] = useState<Record<string, string>>({});
+  const [mobileOpen, setMobileOpen] = useState(false);
 
+  const isMobile = useIsMobile();
   const filters = FILTER_CONFIG[firmaTuruName] || FILTER_CONFIG["Tedarikçi"] || [];
 
-  // Reset on firma türü change
   useEffect(() => {
     setSelections({});
     setMoq("");
@@ -136,14 +134,16 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
     setExpandedSections({});
   }, [firmaTuruName]);
 
-  // Fetch firma tipleri
   useEffect(() => {
     if (!firmaTuruId) return;
-    supabase.from("firma_tipleri").select("id, name").eq("firma_turu_id", firmaTuruId).order("name")
+    supabase
+      .from("firma_tipleri")
+      .select("id, name")
+      .eq("firma_turu_id", firmaTuruId)
+      .order("name")
       .then(({ data }) => setFirmaTipleri(data || []));
   }, [firmaTuruId]);
 
-  // Fetch kategori-based filter options
   useEffect(() => {
     const kategoriNames = filters
       .filter((f) => f.type === "kategori" && f.kategoriName)
@@ -152,12 +152,17 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
     const uncached = kategoriNames.filter((n) => !optionsCache[n]);
     if (uncached.length === 0) {
       const opts: Record<string, Option[]> = {};
-      kategoriNames.forEach((n) => { opts[n] = optionsCache[n] || []; });
+      kategoriNames.forEach((n) => {
+        opts[n] = optionsCache[n] || [];
+      });
       setKategoriOptions(opts);
       return;
     }
 
-    supabase.from("firma_bilgi_kategorileri").select("id, name").in("name", uncached)
+    supabase
+      .from("firma_bilgi_kategorileri")
+      .select("id, name")
+      .in("name", uncached)
       .then(async ({ data: kats }) => {
         if (!kats || kats.length === 0) return;
         const katIds = kats.map((k) => k.id);
@@ -170,7 +175,9 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
 
         if (opts) {
           const katIdToName: Record<string, string> = {};
-          kats.forEach((k) => { katIdToName[k.id] = k.name; });
+          kats.forEach((k) => {
+            katIdToName[k.id] = k.name;
+          });
           opts.forEach((o) => {
             const catName = katIdToName[o.kategori_id];
             if (catName) {
@@ -183,12 +190,13 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
         }
 
         const allOpts: Record<string, Option[]> = {};
-        kategoriNames.forEach((n) => { allOpts[n] = optionsCache[n] || []; });
+        kategoriNames.forEach((n) => {
+          allOpts[n] = optionsCache[n] || [];
+        });
         setKategoriOptions(allOpts);
       });
-  }, [firmaTuruName]);
+  }, [filters]);
 
-  // Fetch İl options (distinct from firmalar)
   useEffect(() => {
     const fetchIller = async () => {
       const { data: firmaData } = await supabase
@@ -208,12 +216,13 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
 
       setIlOptions(names || []);
     };
+
     fetchIller();
   }, []);
 
-  // Fetch Üretim/Satış kategorileri
   useEffect(() => {
-    supabase.from("firma_bilgi_secenekleri")
+    supabase
+      .from("firma_bilgi_secenekleri")
       .select("id, name")
       .eq("kategori_id", KATEGORI_ID)
       .is("parent_id", null)
@@ -221,27 +230,46 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
       .then(({ data }) => setUsKategoriler(data || []));
   }, []);
 
-  // Fetch gruplar when kategori selected
   useEffect(() => {
-    if (usSelectedKategoriler.length === 0) { setUsGruplar([]); setUsSelectedGruplar([]); setUsTurler([]); setUsSelectedTurler([]); return; }
-    supabase.from("firma_bilgi_secenekleri")
+    if (usSelectedKategoriler.length === 0) {
+      setUsGruplar([]);
+      setUsSelectedGruplar([]);
+      setUsTurler([]);
+      setUsSelectedTurler([]);
+      return;
+    }
+
+    supabase
+      .from("firma_bilgi_secenekleri")
       .select("id, name")
       .in("parent_id", usSelectedKategoriler)
       .order("name")
-      .then(({ data }) => { setUsGruplar(data || []); setUsSelectedGruplar([]); setUsTurler([]); setUsSelectedTurler([]); });
+      .then(({ data }) => {
+        setUsGruplar(data || []);
+        setUsSelectedGruplar([]);
+        setUsTurler([]);
+        setUsSelectedTurler([]);
+      });
   }, [usSelectedKategoriler]);
 
-  // Fetch türler when grup selected
   useEffect(() => {
-    if (usSelectedGruplar.length === 0) { setUsTurler([]); setUsSelectedTurler([]); return; }
-    supabase.from("firma_bilgi_secenekleri")
+    if (usSelectedGruplar.length === 0) {
+      setUsTurler([]);
+      setUsSelectedTurler([]);
+      return;
+    }
+
+    supabase
+      .from("firma_bilgi_secenekleri")
       .select("id, name")
       .in("parent_id", usSelectedGruplar)
       .order("name")
-      .then(({ data }) => { setUsTurler(data || []); setUsSelectedTurler([]); });
+      .then(({ data }) => {
+        setUsTurler(data || []);
+        setUsSelectedTurler([]);
+      });
   }, [usSelectedGruplar]);
 
-  // Emit filter state
   useEffect(() => {
     const junctionFilters: Record<string, string[]> = {};
     JUNCTION_FILTER_KEYS.forEach((key) => {
@@ -252,16 +280,16 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
     });
 
     onFilterChange({
-      firmaTipleri: selections["firmaTipi"] || [],
-      firmaOlcekleri: selections["firmaOlcegi"] || [],
-      iller: selections["firmaBolgesi"] || [],
+      firmaTipleri: selections.firmaTipi || [],
+      firmaOlcekleri: selections.firmaOlcegi || [],
+      iller: selections.firmaBolgesi || [],
       moq,
       junctionFilters,
       uretimSatisKategoriIds: usSelectedKategoriler,
       uretimSatisGrupIds: usSelectedGruplar,
       uretimSatisTurIds: usSelectedTurler,
     });
-  }, [selections, moq, usSelectedKategoriler, usSelectedGruplar, usSelectedTurler]);
+  }, [filters, moq, onFilterChange, selections, usSelectedGruplar, usSelectedKategoriler, usSelectedTurler]);
 
   const toggle = (key: string, id: string) => {
     setSelections((prev) => {
@@ -275,8 +303,12 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
     setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const activeCount = Object.values(selections).reduce((a, v) => a + v.length, 0)
-    + (moq ? 1 : 0) + usSelectedKategoriler.length + usSelectedGruplar.length + usSelectedTurler.length;
+  const activeCount =
+    Object.values(selections).reduce((a, v) => a + v.length, 0) +
+    (moq ? 1 : 0) +
+    usSelectedKategoriler.length +
+    usSelectedGruplar.length +
+    usSelectedTurler.length;
 
   const clearAll = () => {
     setSelections({});
@@ -293,25 +325,40 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
   };
 
   const toggleUsKategori = (id: string) => {
-    setUsSelectedKategoriler((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-  };
-  const toggleUsGrup = (id: string) => {
-    setUsSelectedGruplar((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-  };
-  const toggleUsTur = (id: string) => {
-    setUsSelectedTurler((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+    setUsSelectedKategoriler((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
   };
 
-  const isMobile = useIsMobile();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const toggleUsGrup = (id: string) => {
+    setUsSelectedGruplar((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleUsTur = (id: string) => {
+    setUsSelectedTurler((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
 
   const filterContent = (
     <>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-foreground text-lg">Filtreler</h3>
+      <div className="mb-4 flex items-start justify-between gap-3 lg:mb-3 lg:items-center">
+        <div>
+          <h3 className="text-xl font-semibold text-foreground lg:text-lg">Filtreler</h3>
+          {activeCount > 0 && (
+            <p className="mt-1 text-xs text-muted-foreground">{activeCount} aktif filtre seçildi</p>
+          )}
+        </div>
         {activeCount > 0 && (
-          <Button variant="ghost" size="sm" onClick={clearAll} className="text-xs text-muted-foreground h-auto py-1">
-            <X className="w-3 h-3 mr-1" /> Temizle
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAll}
+            className="h-9 rounded-full px-3 text-xs text-muted-foreground lg:h-auto lg:rounded-md lg:px-2 lg:py-1"
+          >
+            <X className="mr-1 h-3.5 w-3.5" /> Temizle
           </Button>
         )}
       </div>
@@ -321,14 +368,26 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
           const opts = getFilteredOpts(firmaTipleri, filterDef.key);
           const selected = selections[filterDef.key] || [];
           return (
-            <FilterSection key={filterDef.key} title={filterDef.label} isExpanded={expandedSections[filterDef.key] !== false} onToggle={() => toggleSection(filterDef.key)} selectedCount={selected.length}>
-              <FilterSearchInput value={searchTerms[filterDef.key] || ""} onChange={(v) => setSearchTerms((p) => ({ ...p, [filterDef.key]: v }))} placeholder={`${filterDef.label} ara...`} />
-              <div className="max-h-48 overflow-y-auto space-y-1">
+            <FilterSection
+              key={filterDef.key}
+              title={filterDef.label}
+              isExpanded={expandedSections[filterDef.key] !== false}
+              onToggle={() => toggleSection(filterDef.key)}
+              selectedCount={selected.length}
+            >
+              <FilterSearchInput
+                value={searchTerms[filterDef.key] || ""}
+                onChange={(v) => setSearchTerms((p) => ({ ...p, [filterDef.key]: v }))}
+                placeholder={`${filterDef.label} ara...`}
+              />
+              <div className="max-h-64 space-y-2 overflow-y-auto pr-1 lg:max-h-48">
                 {opts.map((opt) => (
-                  <label key={opt.id} className="flex items-center gap-2 cursor-pointer py-1 px-1 rounded hover:bg-muted/50">
-                    <Checkbox checked={selected.includes(opt.id)} onCheckedChange={() => toggle(filterDef.key, opt.id)} className="h-3.5 w-3.5" />
-                    <span className="text-sm text-foreground">{opt.name}</span>
-                  </label>
+                  <FilterOptionRow
+                    key={opt.id}
+                    checked={selected.includes(opt.id)}
+                    label={opt.name}
+                    onCheckedChange={() => toggle(filterDef.key, opt.id)}
+                  />
                 ))}
               </div>
             </FilterSection>
@@ -339,17 +398,31 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
           const opts = getFilteredOpts(kategoriOptions[filterDef.kategoriName!] || [], filterDef.key);
           const selected = selections[filterDef.key] || [];
           return (
-            <FilterSection key={filterDef.key} title={filterDef.label} isExpanded={expandedSections[filterDef.key] !== false} onToggle={() => toggleSection(filterDef.key)} selectedCount={selected.length}>
-              <FilterSearchInput value={searchTerms[filterDef.key] || ""} onChange={(v) => setSearchTerms((p) => ({ ...p, [filterDef.key]: v }))} placeholder={`${filterDef.label} ara...`} />
-              <div className="max-h-48 overflow-y-auto space-y-1">
+            <FilterSection
+              key={filterDef.key}
+              title={filterDef.label}
+              isExpanded={expandedSections[filterDef.key] !== false}
+              onToggle={() => toggleSection(filterDef.key)}
+              selectedCount={selected.length}
+            >
+              <FilterSearchInput
+                value={searchTerms[filterDef.key] || ""}
+                onChange={(v) => setSearchTerms((p) => ({ ...p, [filterDef.key]: v }))}
+                placeholder={`${filterDef.label} ara...`}
+              />
+              <div className="max-h-64 space-y-2 overflow-y-auto pr-1 lg:max-h-48">
                 {opts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-1">Seçenek yok</p>
-                ) : opts.map((opt) => (
-                  <label key={opt.id} className="flex items-center gap-2 cursor-pointer py-1 px-1 rounded hover:bg-muted/50">
-                    <Checkbox checked={selected.includes(opt.id)} onCheckedChange={() => toggle(filterDef.key, opt.id)} className="h-3.5 w-3.5" />
-                    <span className="text-sm text-foreground">{opt.name}</span>
-                  </label>
-                ))}
+                  <p className="py-2 text-sm text-muted-foreground">Seçenek yok</p>
+                ) : (
+                  opts.map((opt) => (
+                    <FilterOptionRow
+                      key={opt.id}
+                      checked={selected.includes(opt.id)}
+                      label={opt.name}
+                      onCheckedChange={() => toggle(filterDef.key, opt.id)}
+                    />
+                  ))
+                )}
               </div>
             </FilterSection>
           );
@@ -359,14 +432,26 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
           const opts = getFilteredOpts(ilOptions, filterDef.key);
           const selected = selections[filterDef.key] || [];
           return (
-            <FilterSection key={filterDef.key} title={filterDef.label} isExpanded={expandedSections[filterDef.key] !== false} onToggle={() => toggleSection(filterDef.key)} selectedCount={selected.length}>
-              <FilterSearchInput value={searchTerms[filterDef.key] || ""} onChange={(v) => setSearchTerms((p) => ({ ...p, [filterDef.key]: v }))} placeholder="İl ara..." />
-              <div className="max-h-48 overflow-y-auto space-y-1">
+            <FilterSection
+              key={filterDef.key}
+              title={filterDef.label}
+              isExpanded={expandedSections[filterDef.key] !== false}
+              onToggle={() => toggleSection(filterDef.key)}
+              selectedCount={selected.length}
+            >
+              <FilterSearchInput
+                value={searchTerms[filterDef.key] || ""}
+                onChange={(v) => setSearchTerms((p) => ({ ...p, [filterDef.key]: v }))}
+                placeholder="İl ara..."
+              />
+              <div className="max-h-64 space-y-2 overflow-y-auto pr-1 lg:max-h-48">
                 {opts.map((opt) => (
-                  <label key={opt.id} className="flex items-center gap-2 cursor-pointer py-1 px-1 rounded hover:bg-muted/50">
-                    <Checkbox checked={selected.includes(opt.id)} onCheckedChange={() => toggle(filterDef.key, opt.id)} className="h-3.5 w-3.5" />
-                    <span className="text-sm text-foreground">{opt.name}</span>
-                  </label>
+                  <FilterOptionRow
+                    key={opt.id}
+                    checked={selected.includes(opt.id)}
+                    label={opt.name}
+                    onCheckedChange={() => toggle(filterDef.key, opt.id)}
+                  />
                 ))}
               </div>
             </FilterSection>
@@ -375,61 +460,88 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
 
         if (filterDef.type === "moq") {
           return (
-            <FilterSection key={filterDef.key} title={filterDef.label} isExpanded={expandedSections[filterDef.key] !== false} onToggle={() => toggleSection(filterDef.key)} selectedCount={moq ? 1 : 0}>
+            <FilterSection
+              key={filterDef.key}
+              title={filterDef.label}
+              isExpanded={expandedSections[filterDef.key] !== false}
+              onToggle={() => toggleSection(filterDef.key)}
+              selectedCount={moq ? 1 : 0}
+            >
               <Input
                 type="number"
                 placeholder="Min. sipariş miktarı"
                 value={moq}
                 onChange={(e) => setMoq(e.target.value)}
-                className="h-8 text-sm"
+                className="h-11 rounded-xl text-base lg:h-8 lg:rounded-md lg:text-sm"
               />
-              <p className="text-xs text-muted-foreground mt-1">Girilen değer ve üzeri MOQ'ya sahip firmalar</p>
+              <p className="text-xs text-muted-foreground">Girilen değer ve üzeri MOQ'ya sahip firmalar</p>
             </FilterSection>
           );
         }
 
         if (filterDef.type === "uretim_satis") {
           return (
-            <FilterSection key={filterDef.key} title={filterDef.label} isExpanded={expandedSections[filterDef.key] !== false} onToggle={() => toggleSection(filterDef.key)} selectedCount={usSelectedKategoriler.length + usSelectedGruplar.length + usSelectedTurler.length}>
-              {/* Kategori */}
-              <p className="text-xs font-medium text-muted-foreground mb-1">Ana Ürün Kategorisi</p>
-              <FilterSearchInput value={searchTerms["us_kat"] || ""} onChange={(v) => setSearchTerms((p) => ({ ...p, us_kat: v }))} placeholder="Kategori ara..." />
-              <div className="max-h-36 overflow-y-auto space-y-1 mb-3">
+            <FilterSection
+              key={filterDef.key}
+              title={filterDef.label}
+              isExpanded={expandedSections[filterDef.key] !== false}
+              onToggle={() => toggleSection(filterDef.key)}
+              selectedCount={usSelectedKategoriler.length + usSelectedGruplar.length + usSelectedTurler.length}
+            >
+              <p className="text-xs font-medium text-muted-foreground">Ana Ürün Kategorisi</p>
+              <FilterSearchInput
+                value={searchTerms.us_kat || ""}
+                onChange={(v) => setSearchTerms((p) => ({ ...p, us_kat: v }))}
+                placeholder="Kategori ara..."
+              />
+              <div className="mb-3 max-h-52 space-y-2 overflow-y-auto pr-1 lg:max-h-36">
                 {getFilteredOpts(usKategoriler, "us_kat").map((opt) => (
-                  <label key={opt.id} className="flex items-center gap-2 cursor-pointer py-1 px-1 rounded hover:bg-muted/50">
-                    <Checkbox checked={usSelectedKategoriler.includes(opt.id)} onCheckedChange={() => toggleUsKategori(opt.id)} className="h-3.5 w-3.5" />
-                    <span className="text-sm text-foreground">{opt.name}</span>
-                  </label>
+                  <FilterOptionRow
+                    key={opt.id}
+                    checked={usSelectedKategoriler.includes(opt.id)}
+                    label={opt.name}
+                    onCheckedChange={() => toggleUsKategori(opt.id)}
+                  />
                 ))}
               </div>
 
-              {/* Grup */}
               {usGruplar.length > 0 && (
                 <>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Ürün Grubu</p>
-                  <FilterSearchInput value={searchTerms["us_grup"] || ""} onChange={(v) => setSearchTerms((p) => ({ ...p, us_grup: v }))} placeholder="Grup ara..." />
-                  <div className="max-h-36 overflow-y-auto space-y-1 mb-3">
+                  <p className="text-xs font-medium text-muted-foreground">Ürün Grubu</p>
+                  <FilterSearchInput
+                    value={searchTerms.us_grup || ""}
+                    onChange={(v) => setSearchTerms((p) => ({ ...p, us_grup: v }))}
+                    placeholder="Grup ara..."
+                  />
+                  <div className="mb-3 max-h-52 space-y-2 overflow-y-auto pr-1 lg:max-h-36">
                     {getFilteredOpts(usGruplar, "us_grup").map((opt) => (
-                      <label key={opt.id} className="flex items-center gap-2 cursor-pointer py-1 px-1 rounded hover:bg-muted/50">
-                        <Checkbox checked={usSelectedGruplar.includes(opt.id)} onCheckedChange={() => toggleUsGrup(opt.id)} className="h-3.5 w-3.5" />
-                        <span className="text-sm text-foreground">{opt.name}</span>
-                      </label>
+                      <FilterOptionRow
+                        key={opt.id}
+                        checked={usSelectedGruplar.includes(opt.id)}
+                        label={opt.name}
+                        onCheckedChange={() => toggleUsGrup(opt.id)}
+                      />
                     ))}
                   </div>
                 </>
               )}
 
-              {/* Tür */}
               {usTurler.length > 0 && (
                 <>
-                  <p className="text-xs font-medium text-muted-foreground mb-1">Ürün Türü</p>
-                  <FilterSearchInput value={searchTerms["us_tur"] || ""} onChange={(v) => setSearchTerms((p) => ({ ...p, us_tur: v }))} placeholder="Tür ara..." />
-                  <div className="max-h-36 overflow-y-auto space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Ürün Türü</p>
+                  <FilterSearchInput
+                    value={searchTerms.us_tur || ""}
+                    onChange={(v) => setSearchTerms((p) => ({ ...p, us_tur: v }))}
+                    placeholder="Tür ara..."
+                  />
+                  <div className="max-h-52 space-y-2 overflow-y-auto pr-1 lg:max-h-36">
                     {getFilteredOpts(usTurler, "us_tur").map((opt) => (
-                      <label key={opt.id} className="flex items-center gap-2 cursor-pointer py-1 px-1 rounded hover:bg-muted/50">
-                        <Checkbox checked={usSelectedTurler.includes(opt.id)} onCheckedChange={() => toggleUsTur(opt.id)} className="h-3.5 w-3.5" />
-                        <span className="text-sm text-foreground">{opt.name}</span>
-                      </label>
+                      <FilterOptionRow
+                        key={opt.id}
+                        checked={usSelectedTurler.includes(opt.id)}
+                        label={opt.name}
+                        onCheckedChange={() => toggleUsTur(opt.id)}
+                      />
                     ))}
                   </div>
                 </>
@@ -446,33 +558,38 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
   if (isMobile) {
     return (
       <>
-        <Button variant="outline" className="lg:hidden gap-2" onClick={() => setMobileOpen(true)}>
-          <SlidersHorizontal className="w-4 h-4" />
+        <Button
+          variant="outline"
+          className="h-11 w-full gap-2 rounded-xl text-base lg:hidden"
+          onClick={() => setMobileOpen(true)}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
           Filtreler
           {activeCount > 0 && (
-            <Badge className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-[10px]">{activeCount}</Badge>
+            <Badge className="ml-1 flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px]">
+              {activeCount}
+            </Badge>
           )}
         </Button>
+
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetContent side="left" className="w-[300px] overflow-y-auto p-4">
-            <SheetHeader className="mb-4">
-              <SheetTitle>Filtreler</SheetTitle>
+          <SheetContent
+            side="left"
+            className="w-[calc(100vw-1.5rem)] max-w-[420px] overflow-y-auto border-r px-4 py-5 sm:px-5"
+          >
+            <SheetHeader className="mb-5 border-b border-border pb-4 text-left">
+              <SheetTitle className="text-2xl font-semibold text-foreground">Filtreler</SheetTitle>
             </SheetHeader>
-            <div className="space-y-3">{filterContent}</div>
+            <div className="space-y-4">{filterContent}</div>
           </SheetContent>
         </Sheet>
       </>
     );
   }
 
-  return (
-    <div className="w-72 shrink-0 space-y-3 hidden lg:block">
-      {filterContent}
-    </div>
-  );
+  return <div className="hidden w-72 shrink-0 space-y-3 lg:block">{filterContent}</div>;
 }
 
-// Sub-components
 function FilterSection({
   title,
   isExpanded,
@@ -487,34 +604,68 @@ function FilterSection({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="p-4">
-      <button onClick={onToggle} className="w-full flex items-center justify-between">
+    <Card className="rounded-2xl border-border p-4 shadow-sm lg:rounded-xl">
+      <button type="button" onClick={onToggle} className="flex w-full items-center justify-between gap-3 text-left">
         <div className="flex items-center gap-2">
-          <h4 className="font-medium text-sm text-foreground">{title}</h4>
+          <h4 className="text-lg font-medium text-foreground lg:text-sm">{title}</h4>
           {selectedCount > 0 && (
-            <span className="bg-primary text-primary-foreground text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="flex h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-primary-foreground lg:h-5 lg:min-w-5 lg:text-[10px]">
               {selectedCount}
             </span>
           )}
         </div>
-        {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+        {isExpanded ? (
+          <ChevronUp className="h-5 w-5 text-muted-foreground lg:h-4 lg:w-4" />
+        ) : (
+          <ChevronDown className="h-5 w-5 text-muted-foreground lg:h-4 lg:w-4" />
+        )}
       </button>
-      {isExpanded && <div className="mt-3 space-y-2">{children}</div>}
+      {isExpanded && <div className="mt-4 space-y-3">{children}</div>}
     </Card>
   );
 }
 
-function FilterSearchInput({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+function FilterSearchInput({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+}) {
   return (
-    <div className="relative mb-2">
-      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground lg:left-2.5 lg:h-3.5 lg:w-3.5" />
       <Input
         type="text"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-8 pl-8 text-sm"
+        className="h-11 rounded-xl pl-10 text-base lg:h-8 lg:rounded-md lg:pl-8 lg:text-sm"
       />
     </div>
+  );
+}
+
+function FilterOptionRow({
+  checked,
+  label,
+  onCheckedChange,
+}: {
+  checked: boolean;
+  label: string;
+  onCheckedChange: () => void;
+}) {
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors",
+        checked ? "border-primary/30 bg-primary/5" : "border-transparent hover:border-border hover:bg-muted/40"
+      )}
+    >
+      <Checkbox checked={checked} onCheckedChange={onCheckedChange} />
+      <span className="text-[15px] leading-6 text-foreground lg:text-sm lg:leading-5">{label}</span>
+    </label>
   );
 }
