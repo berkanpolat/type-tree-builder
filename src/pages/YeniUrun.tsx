@@ -593,9 +593,15 @@ export default function YeniUrun() {
 
     setSaving(false);
     toast({ title: "Ürün kaydedildi!" });
-    // Fetch slug for navigation
-    const { data: savedUrun } = await supabase.from("urunler").select("slug").eq("id", urunId).single();
-    navigate(`/urun/${savedUrun?.slug || urunId}`);
+
+    if (isAdminMode) {
+      // Admin mode: go back to admin products page
+      navigate("/yonetim/urunler");
+    } else {
+      // Normal user: navigate to preview
+      const { data: savedUrun } = await supabase.from("urunler").select("slug").eq("id", urunId).single();
+      navigate(`/urun/${savedUrun?.slug || urunId}`);
+    }
   };
 
   // --- Fiyat Kademesi helpers ---
