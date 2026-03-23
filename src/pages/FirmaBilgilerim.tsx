@@ -141,6 +141,12 @@ const FirmaBilgilerim = () => {
     }
   };
 
+  // Refresh completion when switching tabs (user likely saved data)
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    triggerRefresh();
+  };
+
   const tabs = tabsByFirmaTuru[firmaTuruName] || tabsByFirmaTuru["Hazır Giyim Üreticisi"] || [];
 
   const renderTabContent = () => {
