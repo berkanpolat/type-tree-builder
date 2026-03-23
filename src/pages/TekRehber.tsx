@@ -38,11 +38,18 @@ import {
 } from "lucide-react";
 
 const PER_PAGE = 20;
+const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1"; // Ana Ürün Kategorileri
 
 interface SearchResult {
   id: string;
   name: string;
-  type: "Firma" | "Tür";
+  type: "Firma" | "Tür" | "Kategori" | "Grup" | "Ürün Türü";
+}
+
+interface UrunTaxNode {
+  id: string;
+  name: string;
+  parent_id: string | null;
 }
 
 interface FirmaWithExtra {
