@@ -99,6 +99,7 @@ export default function YeniIhale() {
   const [ihaleId, setIhaleId] = useState<string | null>(null);
   const [loadingEdit, setLoadingEdit] = useState(!!editId);
   const [isAdminMode, setIsAdminMode] = useState(false);
+  const [originalDurum, setOriginalDurum] = useState<string | null>(null);
   const { isRestricted, getRestrictionMessage } = useRestrictions();
 
   // Check if selected hizmet category is "Teknik & Tasarım" (no birim/stok needed)
