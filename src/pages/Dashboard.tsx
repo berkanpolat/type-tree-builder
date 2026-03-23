@@ -167,7 +167,7 @@ const Dashboard = () => {
                     <h2 className="text-lg font-semibold text-foreground">{firma?.firma_unvani || "Firma Bilgisi Yok"}</h2>
                     <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                       <MapPin className="w-3.5 h-3.5" />
-                      <span>İstanbul, Ataşehir</span>
+                      <span>{[kurulusIlName, kurulusIlceName].filter(Boolean).join(", ") || "—"}</span>
                     </div>
                   </div>
                 </div>
