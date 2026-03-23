@@ -221,6 +221,10 @@ export default function AdminFirmalarV2() {
   const [portfolyoAtaLoading, setPortfolyoAtaLoading] = useState(false);
   const [adminUsersList, setAdminUsersList] = useState<{ id: string; ad: string; soyad: string; departman: string; pozisyon: string }[]>([]);
 
+  // Aksiyon Ekle dialog
+  const [aksiyonEkleFirma, setAksiyonEkleFirma] = useState<FirmaItem | null>(null);
+  const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
+
   const callApi = useAdminApi();
 
   const fetchData = useCallback(async () => {
