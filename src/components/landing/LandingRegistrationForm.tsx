@@ -29,6 +29,7 @@ interface Props {
   selectedPackage: SelectedPackage;
   billingYearly: boolean;
   onBack: () => void;
+  hideHeader?: boolean;
 }
 
 const formatPhoneDisplay = (value: string) => {
@@ -85,7 +86,7 @@ function validateExpiry(val: string): boolean {
   return new Date(year, month) > new Date();
 }
 
-export default function LandingRegistrationForm({ selectedPackage, billingYearly, onBack }: Props) {
+export default function LandingRegistrationForm({ selectedPackage, billingYearly, onBack, hideHeader }: Props) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -498,14 +499,16 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center gap-2">
-        <button type="button" onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h3 className="text-lg font-semibold text-foreground">
-          {isPro ? `PRO Paket — ${billingYearly ? "Yıllık" : "Aylık"} Kayıt` : "Ücretsiz Paket — Kayıt Formu"}
-        </h3>
-      </div>
+      {!hideHeader && (
+        <div className="flex items-center gap-2">
+          <button type="button" onClick={onBack} className="text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <h3 className="text-lg font-semibold text-foreground">
+            {isPro ? `PRO Paket — ${billingYearly ? "Yıllık" : "Aylık"} Kayıt` : "Ücretsiz Paket — Kayıt Formu"}
+          </h3>
+        </div>
+      )}
 
       {/* Firma Ünvanı */}
       <div className="space-y-1.5">
