@@ -17,7 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   MapPin, CalendarIcon, Building2, Loader2, MoreHorizontal, Trash2, CheckCircle, Clock,
-  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown, GripVertical,
+  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown, GripVertical, Users,
 } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isToday, isPast, isSameDay } from "date-fns";
 import { tr } from "date-fns/locale";
