@@ -772,7 +772,7 @@ export default function UrunDetay() {
                   <div className="flex items-center gap-3 bg-muted rounded-lg px-4 py-3 mt-4">
                     <Package className="w-5 h-5 text-muted-foreground shrink-0" />
                     <span className="text-sm text-foreground">
-                      Minimum Sipariş Miktarı: <strong>{urun.min_siparis_miktari} Adet</strong>
+                      Minimum Sipariş Miktarı: <strong>{urun.min_siparis_miktari} {urun.siparis_birimi || "Adet"}</strong>
                     </span>
                   </div>
                 )}
