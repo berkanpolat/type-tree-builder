@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Shield, Lock, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Eye, EyeOff, RotateCw, DollarSign } from "lucide-react";
+import { Shield, Lock, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Eye, EyeOff, RotateCw, DollarSign, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { PRO_FIYATLAR } from "@/lib/package-config";
 import logoImg from "@/assets/tekstil-as-logo.png";
