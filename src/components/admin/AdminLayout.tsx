@@ -82,7 +82,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   useEffect(() => {
     if (!loading && !user) {
-      navigate("/yonetim");
+      navigate("/yonetim/giris");
     }
   }, [user, loading, navigate]);
 
