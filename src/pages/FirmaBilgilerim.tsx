@@ -187,28 +187,18 @@ const FirmaBilgilerim = () => {
   return (
     <DashboardLayout title="Firma Profil Bilgilerim">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Firma Doluluk Oranı */}
-        <div className="bg-card border rounded-xl p-4 space-y-3">
+        {/* Firma Doluluk Oranı - Compact on mobile */}
+        <div className="bg-card border rounded-xl p-3 md:p-4 space-y-1.5 md:space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-sm">Firma Profil Doluluk Oranı</span>
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className="h-4 w-4 md:h-5 md:w-5 text-primary" />
+              <span className="font-semibold text-xs md:text-sm">Profil Doluluk</span>
             </div>
-            <span className={`text-sm font-bold ${percentage >= 80 ? 'text-green-600' : percentage >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+            <span className={`text-xs md:text-sm font-bold ${percentage >= 80 ? 'text-green-600' : percentage >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
               {completionLoading ? '...' : `%${percentage}`}
             </span>
           </div>
-          <Progress value={completionLoading ? 0 : percentage} className="h-3" />
-          {!completionLoading && percentage < 100 && (
-            <p className="text-xs text-muted-foreground">
-              Firma profilinizi tamamlayarak görünürlüğünüzü artırın.
-            </p>
-          )}
-          {!completionLoading && percentage === 100 && (
-            <p className="text-xs text-green-600 font-medium">
-              🎉 Tebrikler! Firma profiliniz eksiksiz.
-            </p>
-          )}
+          <Progress value={completionLoading ? 0 : percentage} className="h-2 md:h-3" />
         </div>
 
         <FirmaTabMenu tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
