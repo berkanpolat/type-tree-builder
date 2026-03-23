@@ -90,9 +90,9 @@ const Dashboard = () => {
 
       if (firmaRes.data) {
         setFirma(firmaRes.data);
-        const lookups: Promise<any>[] = [
-          supabase.from("firma_turleri").select("name").eq("id", firmaRes.data.firma_turu_id).single(),
-          supabase.from("firma_tipleri").select("name").eq("id", firmaRes.data.firma_tipi_id).single(),
+        const lookups: any[] = [
+          supabase.from("firma_turleri").select("name").eq("id", firmaRes.data.firma_turu_id).single() as any,
+          supabase.from("firma_tipleri").select("name").eq("id", firmaRes.data.firma_tipi_id).single() as any,
         ];
         if (firmaRes.data.kurulus_il_id) {
           lookups.push(supabase.from("firma_bilgi_secenekleri").select("name").eq("id", firmaRes.data.kurulus_il_id).single());
