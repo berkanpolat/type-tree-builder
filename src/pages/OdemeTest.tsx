@@ -131,6 +131,28 @@ export default function OdemeTest() {
     return errs;
   }, [rawDigits, cardHolder, expiry, cvv]);
 
+  // Listen for 3D Secure result from iframe
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === "PAYTR_PAYMENT_RESULT") {
+        setThreeDHtml(null);
+        if (e.data.result === "basarili") {
+          // Verify payment and activate subscription
+          supabase.functions.invoke("verify-payment").then(({ data, error }) => {
+            if (error) console.error("verify-payment error:", error);
+          });
+          setSuccess(true);
+        } else {
+          setPaymentFailed(true);
+          toast({ title: "Ödeme Başarısız", description: "Ödeme işlemi tamamlanamadı. Lütfen tekrar deneyin.", variant: "destructive" });
+        }
+        setLoading(false);
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [toast]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
@@ -140,10 +162,61 @@ export default function OdemeTest() {
       toast({ title: "Hata", description: "Lütfen form alanlarını kontrol edin", variant: "destructive" });
       return;
     }
+
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    setSuccess(true);
-    setLoading(false);
+    setPaymentFailed(false);
+
+    try {
+      // Get user's firma info for payment
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Hata", description: "Lütfen önce giriş yapın", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", user.id).maybeSingle();
+
+      // Get client IP
+      let clientIp = "";
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        clientIp = ipData.ip || "";
+      } catch { /* fallback handled server-side */ }
+
+      const expiryParts = expiry.replace(/\D/g, "");
+      const expiryMonth = expiryParts.slice(0, 2);
+      const expiryYear = expiryParts.slice(2, 4);
+
+      const { data, error } = await supabase.functions.invoke("create-paytr-direct-token", {
+        body: {
+          periyot: period,
+          clientIp,
+          forceTestMode: false,
+          cc_owner: cardHolder.toUpperCase(),
+          card_number: cardNumber.replace(/\s/g, ""),
+          expiry_month: expiryMonth,
+          expiry_year: expiryYear,
+          cvv: cvv,
+          firma_unvani: firma?.firma_unvani || "",
+        },
+      });
+
+      if (error) throw new Error(error.message || "Ödeme başlatılamadı");
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.html_content) {
+        // Show 3D Secure page in iframe
+        setThreeDHtml(data.html_content);
+      } else {
+        throw new Error("3D Secure sayfası oluşturulamadı");
+      }
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      toast({ title: "Ödeme Hatası", description: err.message || "Ödeme sayfası oluşturulamadı", variant: "destructive" });
+      setLoading(false);
+    }
   };
 
   const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
