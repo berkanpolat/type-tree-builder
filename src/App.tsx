@@ -155,7 +155,7 @@ const AppContent = () => {
       {showPublicChrome && <RoutePreloader />}
       {showPublicChrome && <AuthRedirectHandler />}
 
-      <div className={showPublicChrome ? "pb-20 md:pb-0" : ""}>
+      <div className={showPublicChrome ? "pb-20 md:pb-0 h-[100dvh] md:h-auto overflow-y-auto md:overflow-visible overscroll-none" : ""}>
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
