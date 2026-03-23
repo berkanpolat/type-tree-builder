@@ -234,35 +234,39 @@ export default function AdminFirmalarV2() {
 
   const callApi = useAdminApi();
 
+  const [loadError, setLoadError] = useState(false);
+
   const fetchData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
+    setLoadError(false);
     try {
-      const [firmaData, statsData] = await Promise.all([
-        callApi("list-firmalar", {
-          token,
-          paginated: true,
-          page: currentPage,
-          perPage: ITEMS_PER_PAGE,
-          searchTerm: debouncedSearch,
-          filterTuru,
-          filterTipi,
-          filterIl,
-          filterIlce,
-          filterDurum,
-          filterPaket,
-          activeStatCard,
-          abonePeriod,
-          sortField,
-          sortDir,
-        }),
-        callApi("firma-stats", { token, days: statsDays }),
-      ]);
-      setFirmalar(firmaData.firmalar || []);
-      setTotalFirmalar(firmaData.total || 0);
+      // Sequential calls to reduce edge function cold-start pressure
+      const firmaData = await callApi("list-firmalar", {
+        token,
+        paginated: true,
+        page: currentPage,
+        perPage: ITEMS_PER_PAGE,
+        searchTerm: debouncedSearch,
+        filterTuru,
+        filterTipi,
+        filterIl,
+        filterIlce,
+        filterDurum,
+        filterPaket,
+        activeStatCard,
+        abonePeriod,
+        sortField,
+        sortDir,
+      });
+      setFirmalar(firmaData?.firmalar || []);
+      setTotalFirmalar(firmaData?.total || 0);
+
+      const statsData = await callApi("firma-stats", { token, days: statsDays });
       setStats(statsData);
     } catch {
-      toast({ title: "Hata", description: "Veriler yüklenemedi", variant: "destructive" });
+      setLoadError(true);
+      toast({ title: "Hata", description: "Veriler yüklenemedi. Tekrar deneyin.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
