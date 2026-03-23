@@ -77,8 +77,11 @@ function StatCard({ title, value, icon: Icon, color, onClick }: { title: string;
   );
 }
 
-function DistributionList({ items }: { items: { name: string; count: number }[] }) {
-  const sorted = [...items].sort((a, b) => b.count - a.count);
+function DistributionList({ items }: { items: { name: string; count: number }[] | undefined | null }) {
+  const safeItems = Array.isArray(items)
+    ? items.filter((item): item is { name: string; count: number } => Boolean(item && typeof item.name === "string" && typeof item.count === "number"))
+    : [];
+  const sorted = [...safeItems].sort((a, b) => b.count - a.count);
   if (sorted.length === 0) return <p className="text-xs" style={{ color: "hsl(var(--admin-muted))" }}>Veri yok</p>;
   return (
     <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -202,6 +205,53 @@ export default function AdminPanel() {
 
   const cardStyle = { background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" };
 
+  const panelData = {
+    firma: {
+      toplam: Number(data?.firma?.toplam ?? 0),
+      onay_bekleyen: Number(data?.firma?.onay_bekleyen ?? 0),
+      turDagilimi: Array.isArray(data?.firma?.turDagilimi) ? data.firma.turDagilimi : [],
+      tipDagilimi: Array.isArray(data?.firma?.tipDagilimi) ? data.firma.tipDagilimi : [],
+    },
+    ihale: {
+      toplam: Number(data?.ihale?.toplam ?? 0),
+      aktif: Number(data?.ihale?.aktif ?? 0),
+      tamamlanan: Number(data?.ihale?.tamamlanan ?? 0),
+      iptal: Number(data?.ihale?.iptal ?? 0),
+      onay_bekleyen: Number(data?.ihale?.onay_bekleyen ?? 0),
+      reddedilen: Number(data?.ihale?.reddedilen ?? 0),
+      taslak: Number(data?.ihale?.taslak ?? 0),
+      urunKatDist: Array.isArray(data?.ihale?.urunKatDist) ? data.ihale.urunKatDist : [],
+      hizmetKatDist: Array.isArray(data?.ihale?.hizmetKatDist) ? data.ihale.hizmetKatDist : [],
+    },
+    urun: {
+      toplam: Number(data?.urun?.toplam ?? 0),
+      aktif: Number(data?.urun?.aktif ?? 0),
+      pasif: Number(data?.urun?.pasif ?? 0),
+      onay_bekleyen: Number(data?.urun?.onay_bekleyen ?? 0),
+      reddedilen: Number(data?.urun?.reddedilen ?? 0),
+      taslak: Number(data?.urun?.taslak ?? 0),
+      katDist: Array.isArray(data?.urun?.katDist) ? data.urun.katDist : [],
+      turDist: Array.isArray(data?.urun?.turDist) ? data.urun.turDist : [],
+    },
+    paket: {
+      paketDist: Array.isArray(data?.paket?.paketDist) ? data.paket.paketDist : [],
+    },
+    destek: {
+      toplam: Number(data?.destek?.toplam ?? 0),
+      cozulen: Number(data?.destek?.cozulen ?? 0),
+      incelenen: Number(data?.destek?.incelenen ?? 0),
+    },
+    sikayet: {
+      toplam: Number(data?.sikayet?.toplam ?? 0),
+      mesaj: Number(data?.sikayet?.mesaj ?? 0),
+      ihale: Number(data?.sikayet?.ihale ?? 0),
+      profil: Number(data?.sikayet?.profil ?? 0),
+      urun: Number(data?.sikayet?.urun ?? 0),
+      beklemede: Number(data?.sikayet?.beklemede ?? 0),
+      cozuldu: Number(data?.sikayet?.cozuldu ?? 0),
+    },
+  };
+
   return (
     <AdminLayout title="Panel Özeti">
       <div className="space-y-6 md:space-y-8">
@@ -221,17 +271,17 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><Building2 className="w-5 h-5 text-blue-500" /> Firma</h3>
             <SectionFilters timeFilter={firmaFilter} onTimeChange={setFirmaFilter} dateRange={firmaDateRange} onDateChange={setFirmaDateRange} />
           </div>
-          {data?.firma && (<>
+          <>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-              <StatCard title="Toplam Kayıtlı Firma" value={data.firma.toplam} icon={Building2} color="from-blue-500 to-blue-600" onClick={() => goFirmalar()} />
-              <StatCard title="Onay Bekleyen" value={data.firma.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goFirmalar("onay_bekliyor")} />
+              <StatCard title="Toplam Kayıtlı Firma" value={panelData.firma.toplam} icon={Building2} color="from-blue-500 to-blue-600" onClick={() => goFirmalar()} />
+              <StatCard title="Onay Bekleyen" value={panelData.firma.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goFirmalar("onay_bekliyor")} />
               <StatCard title="Çevrimiçi" value={onlineCount} icon={Wifi} color="from-emerald-500 to-emerald-600" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Türü Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={data.firma.turDagilimi || []} /></CardContent></Card>
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Tipi Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={data.firma.tipDagilimi || []} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Türü Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={panelData.firma.turDagilimi} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Tipi Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={panelData.firma.tipDagilimi} /></CardContent></Card>
             </div>
-          </>)}
+          </>
         </section>
 
         {/* ═══ İHALE ═══ */}
@@ -240,21 +290,21 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><Gavel className="w-5 h-5 text-emerald-500" /> İhale</h3>
             <SectionFilters timeFilter={ihaleFilter} onTimeChange={setIhaleFilter} dateRange={ihaleDateRange} onDateChange={setIhaleDateRange} />
           </div>
-          {data?.ihale && (<>
+          <>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 mb-4">
-              <StatCard title="Toplam" value={data.ihale.toplam} icon={Gavel} color="from-emerald-500 to-emerald-600" onClick={() => goIhaleler()} />
-              <StatCard title="Aktif" value={data.ihale.aktif} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goIhaleler("devam_ediyor")} />
-              <StatCard title="Tamamlanan" value={data.ihale.tamamlanan} icon={CheckCircle} color="from-teal-500 to-teal-600" onClick={() => goIhaleler("tamamlandi")} />
-              <StatCard title="İptal" value={data.ihale.iptal} icon={XCircle} color="from-red-500 to-red-600" onClick={() => goIhaleler("iptal")} />
-              <StatCard title="Onay Bekleyen" value={data.ihale.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goIhaleler("onay_bekliyor")} />
-              <StatCard title="Reddedilen" value={data.ihale.reddedilen} icon={XCircle} color="from-orange-500 to-orange-600" onClick={() => goIhaleler("reddedildi")} />
-              <StatCard title="Taslak" value={data.ihale.taslak} icon={FileText} color="from-slate-400 to-slate-500" onClick={() => goIhaleler("taslak")} />
+              <StatCard title="Toplam" value={panelData.ihale.toplam} icon={Gavel} color="from-emerald-500 to-emerald-600" onClick={() => goIhaleler()} />
+              <StatCard title="Aktif" value={panelData.ihale.aktif} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goIhaleler("devam_ediyor")} />
+              <StatCard title="Tamamlanan" value={panelData.ihale.tamamlanan} icon={CheckCircle} color="from-teal-500 to-teal-600" onClick={() => goIhaleler("tamamlandi")} />
+              <StatCard title="İptal" value={panelData.ihale.iptal} icon={XCircle} color="from-red-500 to-red-600" onClick={() => goIhaleler("iptal")} />
+              <StatCard title="Onay Bekleyen" value={panelData.ihale.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goIhaleler("onay_bekliyor")} />
+              <StatCard title="Reddedilen" value={panelData.ihale.reddedilen} icon={XCircle} color="from-orange-500 to-orange-600" onClick={() => goIhaleler("reddedildi")} />
+              <StatCard title="Taslak" value={panelData.ihale.taslak} icon={FileText} color="from-slate-400 to-slate-500" onClick={() => goIhaleler("taslak")} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Kategorisi Bazlı</CardTitle></CardHeader><CardContent><DistributionList items={data.ihale.urunKatDist || []} /></CardContent></Card>
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Hizmet Kategorisi Bazlı</CardTitle></CardHeader><CardContent><DistributionList items={data.ihale.hizmetKatDist || []} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Kategorisi Bazlı</CardTitle></CardHeader><CardContent><DistributionList items={panelData.ihale.urunKatDist} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Hizmet Kategorisi Bazlı</CardTitle></CardHeader><CardContent><DistributionList items={panelData.ihale.hizmetKatDist} /></CardContent></Card>
             </div>
-          </>)}
+          </>
         </section>
 
         {/* ═══ PAZAR ═══ */}
@@ -263,20 +313,20 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><ShoppingBag className="w-5 h-5 text-purple-500" /> Pazar</h3>
             <SectionFilters timeFilter={urunFilter} onTimeChange={setUrunFilter} dateRange={urunDateRange} onDateChange={setUrunDateRange} />
           </div>
-          {data?.urun && (<>
+          <>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-              <StatCard title="Toplam" value={data.urun.toplam} icon={ShoppingBag} color="from-purple-500 to-purple-600" onClick={() => goUrunler()} />
-              <StatCard title="Aktif" value={data.urun.aktif} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goUrunler("aktif")} />
-              <StatCard title="Pasif" value={data.urun.pasif} icon={XCircle} color="from-slate-400 to-slate-500" onClick={() => goUrunler("pasif")} />
-              <StatCard title="Onay Bekleyen" value={data.urun.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goUrunler("onay_bekliyor")} />
-              <StatCard title="Reddedilen" value={data.urun.reddedilen} icon={XCircle} color="from-red-500 to-red-600" onClick={() => goUrunler("reddedildi")} />
-              <StatCard title="Taslak" value={data.urun.taslak} icon={FileText} color="from-slate-400 to-slate-500" onClick={() => goUrunler("taslak")} />
+              <StatCard title="Toplam" value={panelData.urun.toplam} icon={ShoppingBag} color="from-purple-500 to-purple-600" onClick={() => goUrunler()} />
+              <StatCard title="Aktif" value={panelData.urun.aktif} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goUrunler("aktif")} />
+              <StatCard title="Pasif" value={panelData.urun.pasif} icon={XCircle} color="from-slate-400 to-slate-500" onClick={() => goUrunler("pasif")} />
+              <StatCard title="Onay Bekleyen" value={panelData.urun.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goUrunler("onay_bekliyor")} />
+              <StatCard title="Reddedilen" value={panelData.urun.reddedilen} icon={XCircle} color="from-red-500 to-red-600" onClick={() => goUrunler("reddedildi")} />
+              <StatCard title="Taslak" value={panelData.urun.taslak} icon={FileText} color="from-slate-400 to-slate-500" onClick={() => goUrunler("taslak")} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Kategorisi Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={data.urun.katDist || []} /></CardContent></Card>
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Türü Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={data.urun.turDist || []} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Kategorisi Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={panelData.urun.katDist} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Türü Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={panelData.urun.turDist} /></CardContent></Card>
             </div>
-          </>)}
+          </>
         </section>
 
         {/* ═══ PAKET ═══ */}
@@ -285,11 +335,9 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><Package className="w-5 h-5 text-amber-500" /> Paket</h3>
             <SectionFilters timeFilter={paketFilter} onTimeChange={setPaketFilter} dateRange={paketDateRange} onDateChange={setPaketDateRange} />
           </div>
-          {data?.paket && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Paket Abone Sayısı</CardTitle></CardHeader><CardContent><DistributionList items={data.paket.paketDist || []} /></CardContent></Card>
-            </div>
-          )}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Paket Abone Sayısı</CardTitle></CardHeader><CardContent><DistributionList items={panelData.paket.paketDist} /></CardContent></Card>
+          </div>
         </section>
 
         {/* ═══ DESTEK ═══ */}
@@ -298,13 +346,11 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><HeadphonesIcon className="w-5 h-5 text-cyan-500" /> Destek</h3>
             <SectionFilters timeFilter={destekFilter} onTimeChange={setDestekFilter} dateRange={destekDateRange} onDateChange={setDestekDateRange} />
           </div>
-          {data?.destek && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <StatCard title="Toplam Destek Talebi" value={data.destek.toplam} icon={HeadphonesIcon} color="from-cyan-500 to-cyan-600" onClick={() => goDestek()} />
-              <StatCard title="Çözülen" value={data.destek.cozulen} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goDestek("cozuldu")} />
-              <StatCard title="İncelenen" value={data.destek.incelenen} icon={Eye} color="from-yellow-500 to-yellow-600" onClick={() => goDestek("inceleniyor")} />
-            </div>
-          )}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard title="Toplam Destek Talebi" value={panelData.destek.toplam} icon={HeadphonesIcon} color="from-cyan-500 to-cyan-600" onClick={() => goDestek()} />
+            <StatCard title="Çözülen" value={panelData.destek.cozulen} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goDestek("cozuldu")} />
+            <StatCard title="İncelenen" value={panelData.destek.incelenen} icon={Eye} color="from-yellow-500 to-yellow-600" onClick={() => goDestek("inceleniyor")} />
+          </div>
         </section>
 
         {/* ═══ ŞİKAYET ═══ */}
@@ -313,17 +359,15 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><MessageSquareWarning className="w-5 h-5 text-red-500" /> Şikayet</h3>
             <SectionFilters timeFilter={sikayetFilter} onTimeChange={setSikayetFilter} dateRange={sikayetDateRange} onDateChange={setSikayetDateRange} />
           </div>
-          {data?.sikayet && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
-              <StatCard title="Toplam" value={data.sikayet.toplam} icon={MessageSquareWarning} color="from-red-500 to-red-600" onClick={() => goSikayetler()} />
-              <StatCard title="Mesaj" value={data.sikayet.mesaj} icon={MessageSquareWarning} color="from-blue-500 to-blue-600" onClick={() => goSikayetler("mesaj")} />
-              <StatCard title="İhale" value={data.sikayet.ihale} icon={Gavel} color="from-emerald-500 to-emerald-600" onClick={() => goSikayetler("ihale")} />
-              <StatCard title="Profil" value={data.sikayet.profil} icon={Users} color="from-purple-500 to-purple-600" onClick={() => goSikayetler("profil")} />
-              <StatCard title="Ürün" value={data.sikayet.urun} icon={ShoppingBag} color="from-orange-500 to-orange-600" onClick={() => goSikayetler("urun")} />
-              <StatCard title="Beklemede" value={data.sikayet.beklemede} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goSikayetler("beklemede")} />
-              <StatCard title="Çözüldü" value={data.sikayet.cozuldu} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goSikayetler("cozuldu")} />
-            </div>
-          )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
+            <StatCard title="Toplam" value={panelData.sikayet.toplam} icon={MessageSquareWarning} color="from-red-500 to-red-600" onClick={() => goSikayetler()} />
+            <StatCard title="Mesaj" value={panelData.sikayet.mesaj} icon={MessageSquareWarning} color="from-blue-500 to-blue-600" onClick={() => goSikayetler("mesaj")} />
+            <StatCard title="İhale" value={panelData.sikayet.ihale} icon={Gavel} color="from-emerald-500 to-emerald-600" onClick={() => goSikayetler("ihale")} />
+            <StatCard title="Profil" value={panelData.sikayet.profil} icon={Users} color="from-purple-500 to-purple-600" onClick={() => goSikayetler("profil")} />
+            <StatCard title="Ürün" value={panelData.sikayet.urun} icon={ShoppingBag} color="from-orange-500 to-orange-600" onClick={() => goSikayetler("urun")} />
+            <StatCard title="Beklemede" value={panelData.sikayet.beklemede} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goSikayetler("beklemede")} />
+            <StatCard title="Çözüldü" value={panelData.sikayet.cozuldu} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goSikayetler("cozuldu")} />
+          </div>
         </section>
       </div>
     </AdminLayout>
