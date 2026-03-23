@@ -1054,7 +1054,7 @@ export default function YeniUrun() {
             {step < STEPS.length - 1 ? (
               <Button onClick={handleNext}>İleri</Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={saving}>{saving ? "Kaydediliyor..." : "İlerle ve Önizle"}</Button>
+              <Button onClick={handleSubmit} disabled={saving}>{saving ? "Kaydediliyor..." : isAdminMode ? "Kaydet" : "İlerle ve Önizle"}</Button>
             )}
           </div>
         )}
