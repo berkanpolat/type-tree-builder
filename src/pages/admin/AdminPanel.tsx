@@ -146,17 +146,16 @@ export default function AdminPanel() {
   const fetchStats = useCallback(async () => {
     if (!token) return;
     try {
-      const { data: res, error } = await supabase.functions.invoke("admin-auth", {
-        body: { action: "panel-stats", token, filters: buildFilters() },
-      });
-      if (!error && res) {
+      // Direct RPC call — no Edge Function needed
+      const { data: res } = await supabase.rpc("admin_panel_stats_v2");
+      if (res) {
         setData(res);
-        setOnlineCount(res.firma?.online || 0);
+        setOnlineCount((res as any)?.firma?.online || 0);
       }
     } finally {
       setLoading(false);
     }
-  }, [token, buildFilters]);
+  }, [token]);
 
   // Initial load
   useEffect(() => {
