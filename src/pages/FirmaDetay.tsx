@@ -840,7 +840,7 @@ export default function FirmaDetay() {
         <div className="bg-background border border-border rounded-lg">
           {/* Desktop */}
           <div className="hidden md:flex items-center gap-6 overflow-x-auto py-2 px-4">
-            {MENU_ITEMS.filter(item => currentUserId || item.id !== "urunler").map((item) => (
+            {MENU_ITEMS.filter(item => item.id !== "urunler" || (currentUserId && packageInfo.paketSlug !== "ucretsiz")).map((item) => (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
