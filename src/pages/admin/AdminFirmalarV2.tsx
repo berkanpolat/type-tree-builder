@@ -1110,6 +1110,11 @@ export default function AdminFirmalarV2() {
                                 <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
                               </DropdownMenuItem>
                             )}
+                            {hasPermission("portfolyo_aksiyon_ekle") && (
+                              <DropdownMenuItem onClick={() => { setAksiyonEkleFirma(firma); setAksiyonEkleOpen(true); }} className="text-xs cursor-pointer">
+                                <Plus className="w-3.5 h-3.5 mr-2 text-emerald-500" /> Aksiyon Ekle
+                              </DropdownMenuItem>
+                            )}
                             {!firma.portfolyo ? (
                               <DropdownMenuItem onClick={() => handleAddPortfolyo(firma)} className="text-xs cursor-pointer">
                                 <Briefcase className="w-3.5 h-3.5 mr-2 text-amber-500" /> Portföyüme Ekle
