@@ -596,8 +596,9 @@ export default function AdminFirmalarV2() {
     setPortfolyoAtaOpen(true);
     if (adminUsersList.length === 0) {
       try {
-        const data = await callApi("list-admin-users", { token });
-        setAdminUsersList(data.users || []);
+        const { data, error } = await supabase.rpc("admin_list_admin_users_v2");
+        if (error) throw error;
+        setAdminUsersList((data as any) || []);
       } catch { /* ignore */ }
     }
   };
