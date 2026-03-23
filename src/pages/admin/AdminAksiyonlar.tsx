@@ -76,9 +76,9 @@ export default function AdminAksiyonlar() {
 
   useEffect(() => { fetchAksiyonlar(); }, [fetchAksiyonlar]);
 
-  // Polling fallback: refresh every 10 seconds to catch new aksiyonlar
+  // Refresh every 30 seconds instead of 10
   useEffect(() => {
-    const interval = setInterval(() => { fetchAksiyonlar(); }, 10000);
+    const interval = setInterval(() => { fetchAksiyonlar(); }, 30000);
     return () => clearInterval(interval);
   }, [fetchAksiyonlar]);
 
