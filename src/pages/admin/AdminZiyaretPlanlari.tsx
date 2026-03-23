@@ -345,11 +345,28 @@ export default function AdminZiyaretPlanlari() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
               <Input placeholder="Firma ara..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 w-56 h-9 text-sm" style={s.input} />
             </div>
+            {isYonetimKurulu && adminList.length > 0 && (
+              <Select value={selectedAdminId} onValueChange={setSelectedAdminId}>
+                <SelectTrigger className="h-9 w-52 text-xs" style={s.input}>
+                  <div className="flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "hsl(38 92% 50%)" }} />
+                    <SelectValue placeholder="Personel seçin" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent style={{ ...s.card, zIndex: 9999 }}>
+                  <SelectItem value="own" className="text-xs">Benim Planlarım</SelectItem>
+                  <SelectItem value="all" className="text-xs">Tüm Personeller</SelectItem>
+                  {adminList.filter(a => a.id !== adminUser?.id).map(a => (
+                    <SelectItem key={a.id} value={a.id} className="text-xs">{a.ad} {a.soyad}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="h-8" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }} onClick={() => setSelectedWeekStart(prev => addDays(prev, -7))}><ChevronLeft className="w-4 h-4" /></Button>
