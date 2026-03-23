@@ -86,6 +86,12 @@ export function usePackageQuota(): PackageInfo {
 
         const donemBaslangic = (abone as any).donem_baslangic;
 
+        // For mesaj: use start of current calendar month so package upgrade doesn't reset count
+        const monthStart = new Date();
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+        const mesajBaslangic = monthStart.toISOString();
+
         // Fetch usage counts in parallel
         const [profilRes, teklifRes, urunRes, mesajRes] = await Promise.all([
           supabase
@@ -107,7 +113,7 @@ export function usePackageQuota(): PackageInfo {
             .from("conversations")
             .select("id, user1_id, user2_id, created_at")
             .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
-            .gte("created_at", donemBaslangic),
+            .gte("created_at", mesajBaslangic),
         ]);
 
         const uniqueFirmaIds = new Set((profilRes.data || []).map((p: any) => p.firma_id));
