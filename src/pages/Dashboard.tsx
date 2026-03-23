@@ -90,12 +90,22 @@ const Dashboard = () => {
 
       if (firmaRes.data) {
         setFirma(firmaRes.data);
-        const [turRes, tipRes] = await Promise.all([
+        const lookups: Promise<any>[] = [
           supabase.from("firma_turleri").select("name").eq("id", firmaRes.data.firma_turu_id).single(),
           supabase.from("firma_tipleri").select("name").eq("id", firmaRes.data.firma_tipi_id).single(),
-        ]);
-        if (turRes.data) setFirmaTuruName(turRes.data.name);
-        if (tipRes.data) setFirmaTipiName(tipRes.data.name);
+        ];
+        if (firmaRes.data.kurulus_il_id) {
+          lookups.push(supabase.from("firma_bilgi_secenekleri").select("name").eq("id", firmaRes.data.kurulus_il_id).single());
+        }
+        if (firmaRes.data.kurulus_ilce_id) {
+          lookups.push(supabase.from("firma_bilgi_secenekleri").select("name").eq("id", firmaRes.data.kurulus_ilce_id).single());
+        }
+        const results = await Promise.all(lookups);
+        if (results[0]?.data) setFirmaTuruName(results[0].data.name);
+        if (results[1]?.data) setFirmaTipiName(results[1].data.name);
+        let idx = 2;
+        if (firmaRes.data.kurulus_il_id && results[idx]?.data) { setKurulusIlName(results[idx].data.name); idx++; }
+        if (firmaRes.data.kurulus_ilce_id && results[idx]?.data) { setKurulusIlceName(results[idx].data.name); }
       }
 
       setLoading(false);
