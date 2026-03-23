@@ -693,7 +693,7 @@ export default function YeniUrun() {
         }
       }
     }
-    setVaryasyonlar(prev => [...prev, ...newItems]);
+    setVaryasyonlar(prev => sortVaryasyonList([...prev, ...newItems], varyant1Options, renkOptions));
     setSelectedV1([]);
     setSelectedV2([]);
   };
