@@ -179,8 +179,8 @@ const AppContent = () => {
             <Route path="/mesajlar" element={<Mesajlar />} />
             <Route path="/favoriler" element={<Favoriler />} />
             <Route path="/bildirimler" element={<Bildirimler />} />
+            <Route path="/ayarlar" element={<ProfilAyarlari />} />
             <Route path="/profil-ayarlari" element={<ProfilAyarlari />} />
-            <Route path="/paketim" element={<Paketim />} />
             <Route path="/destek" element={<DashboardDestek />} />
             <Route path="/destek/:id" element={<DashboardDestekDetay />} />
             <Route path="/giris-kayit" element={<GirisKayit />} />
