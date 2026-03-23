@@ -275,6 +275,7 @@ export default function YeniUrun() {
     const td = data.teknik_detaylar as Record<string, string | string[]> || {};
     setTeknikDetaylar(td);
     setDraftId(urunId);
+    setOriginalDurum(data.durum);
 
     // Resolve category name directly to load dependent options correctly
     let resolvedKatName = "";
