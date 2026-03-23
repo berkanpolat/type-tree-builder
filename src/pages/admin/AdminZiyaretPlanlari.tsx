@@ -17,7 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   MapPin, CalendarIcon, Building2, Loader2, MoreHorizontal, Trash2, CheckCircle, Clock,
-  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown, GripVertical, Users,
+  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown, GripVertical, Users, Navigation,
 } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isToday, isPast, isSameDay } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -102,6 +102,12 @@ function SortablePlanItem({ plan, onAksiyonEkle, onDurumChange, onIptal, onEditN
         <DropdownMenuContent align="end" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.75rem" }} className="min-w-[160px]">
           <DropdownMenuItem onClick={() => onAksiyonEkle(plan)} className="text-xs cursor-pointer">
             <ClipboardList className="w-3.5 h-3.5 mr-2 text-amber-500" /> Aksiyon Ekle
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => {
+            const q = encodeURIComponent(plan.firma_unvani);
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${q}`, "_blank");
+          }} className="text-xs cursor-pointer">
+            <Navigation className="w-3.5 h-3.5 mr-2 text-blue-500" /> Yol Tarifi
           </DropdownMenuItem>
           {plan.durum === "planli" && (
             <DropdownMenuItem onClick={() => onDurumChange(plan.id, "tamamlandi")} className="text-xs cursor-pointer">
