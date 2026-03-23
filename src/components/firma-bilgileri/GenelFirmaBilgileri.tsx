@@ -513,10 +513,16 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange, onDataC
           />
         </div>
 
-        {/* Save button */}
-        <div className="flex justify-end pt-2">
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Kaydediliyor..." : "Kaydet"}
+        {/* Auto-save status indicator */}
+        <div className="flex items-center justify-end pt-2 gap-3">
+          {autoSaveStatus === "saving" && (
+            <span className="text-xs text-muted-foreground animate-pulse">Kaydediliyor...</span>
+          )}
+          {autoSaveStatus === "saved" && (
+            <span className="text-xs text-green-600">✓ Kaydedildi</span>
+          )}
+          <Button onClick={() => performSave(false)} disabled={saving} variant="outline" size="sm">
+            {saving ? "Kaydediliyor..." : "Manuel Kaydet"}
           </Button>
         </div>
       </CardContent>
