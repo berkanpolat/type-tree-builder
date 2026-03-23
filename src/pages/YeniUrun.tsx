@@ -456,7 +456,7 @@ export default function YeniUrun() {
           priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
         }
       }
-      setVaryasyonlar(prodVars);
+      setVaryasyonlar(sortVaryasyonList(prodVars, varyant1Options, renkOptions));
       if (priceTiers.length > 0) setFiyatKademeleri(priceTiers);
     }
     setLoadingData(false);
