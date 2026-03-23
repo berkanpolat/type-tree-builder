@@ -725,7 +725,7 @@ export default function YeniUrun() {
 
   return (
     <DashboardLayout title={editId ? "Ürün Düzenle" : "Yeni Ürün"}>
-      <div className="max-w-4xl mx-auto space-y-6 pb-20">
+      <div className="max-w-4xl mx-auto space-y-6 pb-4">
         <h2 className="text-2xl font-bold text-foreground">{editId ? "Ürün Düzenle" : "Yeni Ürün"}</h2>
 
         {/* Stepper */}
