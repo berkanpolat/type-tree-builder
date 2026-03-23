@@ -253,14 +253,16 @@ export default function AdminIhaleler() {
     setLoading(true);
     setLoadError(false);
     try {
-      // Sequential to avoid cold-start overload
-      const ihaleData = await callApi("list-ihaleler", { token });
-      setIhaleler(ihaleData?.ihaleler || []);
+      // Direct RPC calls — no Edge Function needed
+      const [{ data: ihaleList }, { data: statsResult }] = await Promise.all([
+        supabase.rpc("admin_list_ihaleler_v2"),
+        supabase.rpc("admin_ihale_stats_v2"),
+      ]);
+      const parsedList = (Array.isArray(ihaleList) ? ihaleList : []) as unknown as IhaleItem[];
+      setIhaleler(parsedList);
+      setStats((statsResult || null) as unknown as IhaleStats);
 
-      const statsData = await callApi("ihale-stats", { token });
-      setStats(statsData);
-
-      const firms = (ihaleData?.ihaleler || []).reduce((acc: any[], i: any) => {
+      const firms = parsedList.reduce((acc: any[], i: any) => {
         if (!acc.find((f: any) => f.user_id === i.user_id)) {
           acc.push({ user_id: i.user_id, firma_unvani: i.firma_unvani });
         }
@@ -273,7 +275,7 @@ export default function AdminIhaleler() {
     } finally {
       setLoading(false);
     }
-  }, [token, callApi, toast]);
+  }, [token, toast]);
 
   useEffect(() => { fetchData(); fetchCategoryOptions(); }, [fetchData, fetchCategoryOptions]);
 

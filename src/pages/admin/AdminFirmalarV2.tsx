@@ -241,36 +241,31 @@ export default function AdminFirmalarV2() {
     setLoading(true);
     setLoadError(false);
     try {
-      // Sequential calls to reduce edge function cold-start pressure
-      const firmaData = await callApi("list-firmalar", {
-        token,
-        paginated: true,
-        page: currentPage,
-        perPage: ITEMS_PER_PAGE,
-        searchTerm: debouncedSearch,
-        filterTuru,
-        filterTipi,
-        filterIl,
-        filterIlce,
-        filterDurum,
-        filterPaket,
-        activeStatCard,
-        abonePeriod,
-        sortField,
-        sortDir,
-      });
-      setFirmalar(firmaData?.firmalar || []);
-      setTotalFirmalar(firmaData?.total || 0);
-
-      const statsData = await callApi("firma-stats", { token, days: statsDays });
-      setStats(statsData);
+      // Direct RPC calls — no Edge Function needed
+      const [{ data: firmaResult }, { data: statsResult }] = await Promise.all([
+        supabase.rpc("admin_list_firmalar_v2", {
+          p_page: currentPage,
+          p_per_page: ITEMS_PER_PAGE,
+          p_search: debouncedSearch || null,
+          p_filter_turu: filterTuru !== "all" ? filterTuru : null,
+          p_filter_tipi: filterTipi !== "all" ? filterTipi : null,
+          p_filter_il: filterIl !== "all" ? filterIl : null,
+          p_filter_ilce: filterIlce !== "all" ? filterIlce : null,
+          p_filter_durum: filterDurum !== "all" ? filterDurum : null,
+        }),
+        supabase.rpc("admin_firma_stats_v2"),
+      ]);
+      const parsed = firmaResult as any;
+      setFirmalar(parsed?.firmalar || []);
+      setTotalFirmalar(parsed?.total || 0);
+      setStats((statsResult || null) as unknown as FirmaStats);
     } catch {
       setLoadError(true);
       toast({ title: "Hata", description: "Veriler yüklenemedi. Tekrar deneyin.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [token, currentPage, statsDays, debouncedSearch, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, activeStatCard, abonePeriod, sortField, sortDir, callApi, toast]);
+  }, [token, currentPage, debouncedSearch, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, toast]);
 
   const fetchDropdowns = useCallback(async () => {
     if (!token) return;
