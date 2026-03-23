@@ -983,7 +983,7 @@ export default function IhaleDetay() {
             </>
           )}
           <span>/</span>
-          <span className="text-foreground font-medium truncate max-w-[300px]">{ihale.baslik}</span>
+          <span className="text-foreground font-medium truncate max-w-[200px] md:max-w-[300px]">{ihale.baslik}</span>
         </nav>
 
         {/* Main Grid - Mobile: single column with specific order, Desktop: 2-column */}
