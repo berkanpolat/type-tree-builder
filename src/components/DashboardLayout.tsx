@@ -3,8 +3,10 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { useLastSeen } from "@/hooks/use-last-seen";
 import QuotaReminderBadge from "@/components/QuotaReminderBadge";
 import MobileBackButton from "@/components/MobileBackButton";
-import { Menu } from "lucide-react";
+import { Menu, RefreshCw } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
 
 function MobileMenuButton() {
   const { toggleSidebar } = useSidebar();
@@ -15,6 +17,27 @@ function MobileMenuButton() {
     >
       <Menu className="h-4 w-4" />
       <span className="text-xs font-medium">Menü</span>
+    </button>
+  );
+}
+
+function RefreshButton() {
+  const queryClient = useQueryClient();
+  const [spinning, setSpinning] = useState(false);
+
+  const handleRefresh = useCallback(() => {
+    setSpinning(true);
+    queryClient.invalidateQueries();
+    setTimeout(() => setSpinning(false), 800);
+  }, [queryClient]);
+
+  return (
+    <button
+      onClick={handleRefresh}
+      title="Sayfayı yenile"
+      className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors active:scale-95"
+    >
+      <RefreshCw className={`h-4 w-4 ${spinning ? "animate-spin" : ""}`} />
     </button>
   );
 }
@@ -38,7 +61,8 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
             {title && (
               <h1 className="text-base md:text-lg font-bold text-foreground truncate">{title}</h1>
             )}
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-1">
+              <RefreshButton />
               <QuotaReminderBadge />
             </div>
           </header>
