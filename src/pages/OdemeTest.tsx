@@ -243,6 +243,48 @@ export default function OdemeTest() {
     );
   }
 
+  // 3D Secure iframe view
+  if (threeDHtml) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
+        <div className="w-full max-w-lg space-y-4">
+          <h2 className="text-lg font-semibold text-foreground text-center">3D Secure Doğrulama</h2>
+          <p className="text-sm text-muted-foreground text-center">Bankanızın güvenlik doğrulamasını tamamlayın.</p>
+          <iframe
+            ref={iframeRef}
+            srcDoc={threeDHtml}
+            className="w-full h-[500px] border border-border rounded-lg"
+            sandbox="allow-scripts allow-forms allow-same-origin allow-top-navigation allow-popups"
+            title="3D Secure"
+          />
+          <Button
+            variant="ghost"
+            className="w-full text-muted-foreground"
+            onClick={() => { setThreeDHtml(null); setLoading(false); }}
+          >
+            İptal Et
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Payment failed view
+  if (paymentFailed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="w-full max-w-md text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+            <XCircle className="w-8 h-8 text-destructive" />
+          </div>
+          <h1 className="text-2xl font-semibold text-foreground">Ödeme Başarısız</h1>
+          <p className="text-sm text-muted-foreground">Ödeme işlemi tamamlanamadı. Lütfen kart bilgilerinizi kontrol ederek tekrar deneyin.</p>
+          <Button className="w-full" onClick={() => { setPaymentFailed(false); setLoading(false); }}>Tekrar Dene</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* LEFT — Blue branded summary */}
