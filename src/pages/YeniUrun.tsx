@@ -441,7 +441,7 @@ export default function YeniUrun() {
       para_birimi: paraBirimi,
       min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
       teknik_detaylar: teknikDetaylar,
-      durum: "taslak",
+      durum: isAdminMode && originalDurum ? originalDurum : "taslak",
     };
     if (draftId) {
       await supabase.from("urunler").update(payload as any).eq("id", draftId);
