@@ -32,7 +32,7 @@ const PUBLIC_ROUTES = [
   "/urun-bilgileri",
   "/urun-kategorisi",
   "/giris-kayit",
-  "/urunler/:slug",
+  "/urun/:slug",
   "/firma/:slug",
   "/firmalar",
   "/ayarlar",

@@ -320,7 +320,7 @@ export default function IhaleTakip() {
             templateModel: {
               firma_unvani: bidderFirma?.firma_unvani || "",
               ihale_basligi: ihale.baslik,
-              ihale_linki: `${window.location.origin}/tekihale/${ihale.id}`,
+              ihale_linki: `${window.location.origin}/ihaleler/${ihale.id}`,
             },
           },
         }).catch(console.error);
@@ -332,7 +332,7 @@ export default function IhaleTakip() {
             userId: teklif.teklif_veren_user_id,
             firmaUnvani: bidderFirma?.firma_unvani || "",
             ihaleBasligi: ihale.baslik,
-            ihaleDetayLinki: `${window.location.origin}/tekihale/${ihale.id}`,
+            ihaleDetayLinki: `${window.location.origin}/ihaleler/${ihale.id}`,
           },
         }).catch(console.error);
 
