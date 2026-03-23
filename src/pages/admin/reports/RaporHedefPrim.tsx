@@ -32,16 +32,16 @@ export default function RaporHedefPrim() {
     if (!token) return;
     setLoading(true);
     try {
-      const [hedefData, adminData] = await Promise.all([
-        callApi("list-hedefler", { token }),
-        callApi("list-admin-users", { token }),
+      const [hedefRes, adminRes] = await Promise.all([
+        supabase.rpc("admin_list_hedefler_v2"),
+        supabase.rpc("admin_list_admin_users_v2"),
       ]);
-      const allHedefler = (hedefData.hedefler || []).filter((h: any) =>
+      const allHedefler = ((hedefRes.data as any) || []).filter((h: any) =>
         h.baslangic_tarihi <= dateRange.to.toISOString().split("T")[0] &&
         h.bitis_tarihi >= dateRange.from.toISOString().split("T")[0]
       );
       setHedefler(allHedefler);
-      setAdminUsers(adminData.users || []);
+      setAdminUsers((adminRes.data as any) || []);
     } catch {
       setHedefler([]);
       setAdminUsers([]);
