@@ -57,7 +57,7 @@ const ADMIN_ROUTES = [
   "/yonetim/panel",
   "/yonetim/kullanicilar",
   "/yonetim/firmalar",
-  "/yonetim/firmalar-v2",
+  "/yonetim/ihaleler",
   "/yonetim/ihaleler",
   "/yonetim/urunler",
   "/yonetim/sikayetler",
