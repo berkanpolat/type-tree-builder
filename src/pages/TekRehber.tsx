@@ -550,12 +550,20 @@ export default function TekRehber() {
           onFirmaTuruChange={handleFirmaTuruChange}
         />
 
-        {appliedSearchTerm && (
+        {(appliedSearchTerm || uretimSatisFilter) && (
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary" className="gap-1 px-3 py-1.5">
-              Arama: {appliedSearchTerm}
-              <button onClick={() => { setAppliedSearchTerm(""); setSearchTerm(""); }} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
-            </Badge>
+            {appliedSearchTerm && (
+              <Badge variant="secondary" className="gap-1 px-3 py-1.5">
+                Arama: {appliedSearchTerm}
+                <button onClick={() => { setAppliedSearchTerm(""); setSearchTerm(""); }} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
+              </Badge>
+            )}
+            {uretimSatisFilter && (
+              <Badge variant="secondary" className="gap-1 px-3 py-1.5">
+                {searchTerm || "Ürün Filtresi"}
+                <button onClick={() => { setUretimSatisFilter(null); setSearchTerm(""); }} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
+              </Badge>
+            )}
           </div>
         )}
 
