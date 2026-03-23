@@ -115,13 +115,17 @@ export default function TekRehber() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
 
+  // Product taxonomy for search
+  const [urunTaxNodes, setUrunTaxNodes] = useState<UrunTaxNode[]>([]);
+  const [uretimSatisFilter, setUretimSatisFilter] = useState<{ column: string; ids: string[] } | null>(null);
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const totalPages = Math.max(1, Math.ceil(totalCount / PER_PAGE));
 
   // Reset page when filters change
-  useEffect(() => { setCurrentPage(1); }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm]);
+  useEffect(() => { setCurrentPage(1); }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter]);
 
   // Click outside
   useEffect(() => {
