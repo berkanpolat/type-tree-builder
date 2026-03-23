@@ -219,7 +219,7 @@ export default function TekRehber() {
       const { data: usSearchData } = await supabase
         .from("firma_uretim_satis")
         .select("firma_id")
-        .in(uretimSatisFilter.column, uretimSatisFilter.ids);
+        .in(uretimSatisFilter.column as any, uretimSatisFilter.ids);
       if (usSearchData) {
         const usFirmaIds = new Set(usSearchData.map((d) => d.firma_id));
         if (junctionFirmaIds === null) junctionFirmaIds = [...usFirmaIds];
