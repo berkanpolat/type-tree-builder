@@ -649,7 +649,7 @@ export default function UrunDetay() {
             <div className="flex flex-col sm:flex-row gap-4">
             {/* Thumbnails - horizontal on mobile, vertical on desktop */}
             {allImages.length > 1 && (
-              <div className="flex sm:flex-col gap-2 shrink-0 overflow-x-auto sm:overflow-x-visible">
+              <div className="flex sm:flex-col gap-2 shrink-0 overflow-x-auto sm:overflow-x-hidden sm:overflow-y-auto sm:max-h-[500px] scrollbar-thin">
                 {allImages.map((img, i) => (
                   <button
                     key={i}
