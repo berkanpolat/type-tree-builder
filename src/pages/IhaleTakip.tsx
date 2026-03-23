@@ -491,7 +491,7 @@ export default function IhaleTakip() {
   if (loading) {
     return (
       <DashboardLayout title="İhale Takip">
-        <div className="flex items-center justify-center py-20 text-muted-foreground">Yükleniyor...</div>
+        <div className="flex items-center justify-center py-20 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>
       </DashboardLayout>
     );
   }

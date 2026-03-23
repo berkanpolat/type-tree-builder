@@ -194,7 +194,7 @@ export default function Favoriler() {
 
           <TabsContent value="firmalar" className="mt-4">
             {loading ? (
-              <p className="text-center py-10 text-muted-foreground">Yükleniyor...</p>
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             ) : favFirmalar.length === 0 ? (
               <p className="text-center py-10 text-muted-foreground">Henüz favori firma eklenmemiş.</p>
             ) : (
@@ -230,7 +230,7 @@ export default function Favoriler() {
 
           <TabsContent value="urunler" className="mt-4">
             {loading ? (
-              <p className="text-center py-10 text-muted-foreground">Yükleniyor...</p>
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             ) : favUrunler.length === 0 ? (
               <p className="text-center py-10 text-muted-foreground">Henüz favori ürün eklenmemiş.</p>
             ) : (

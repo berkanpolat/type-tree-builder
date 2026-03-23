@@ -38,7 +38,7 @@ export default function TestHistory({ refreshKey, onSelectRun }: Props) {
     load();
   }, [refreshKey]);
 
-  if (loading) return <div className="text-sm text-muted-foreground p-4">Yükleniyor...</div>;
+  if (loading) return <div className="text-sm text-muted-foreground p-4"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>;
   if (runs.length === 0) return null;
 
   return (

@@ -522,7 +522,7 @@ export default function TekIhale() {
           {/* Main content */}
           <div className="flex-1 space-y-4">
             {loading ? (
-              <div className="text-center py-20 text-muted-foreground">Yükleniyor...</div>
+              <div className="text-center py-20 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>
             ) : paginated.length === 0 ? (
               <div className="text-center py-20 text-muted-foreground">İhale bulunamadı.</div>
             ) : (

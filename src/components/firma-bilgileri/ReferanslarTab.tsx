@@ -132,7 +132,7 @@ export default function ReferanslarTab({ userId }: ReferanslarTabProps) {
     toast({ title: "Referans silindi" });
   };
 
-  if (loading) return <div className="flex items-center justify-center h-40 text-muted-foreground">Yükleniyor...</div>;
+  if (loading) return <div className="flex items-center justify-center h-40 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>;
 
   return (
     <div className="bg-card border border-border rounded-xl p-6 space-y-6">

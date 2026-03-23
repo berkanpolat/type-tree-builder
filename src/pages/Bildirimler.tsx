@@ -132,7 +132,7 @@ const Bildirimler = () => {
 
         {loading ? (
           <div className="flex items-center justify-center h-40">
-            <p className="text-muted-foreground">Yükleniyor...</p>
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : notifications.length === 0 ? (
           <Card>

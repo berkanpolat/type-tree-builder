@@ -314,7 +314,7 @@ export default function ManuPazar() {
         {/* Mobile Card View */}
         <div className="md:hidden space-y-3">
           {loading ? (
-            <div className="text-center py-10 text-muted-foreground">Yükleniyor...</div>
+            <div className="text-center py-10 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>
           ) : filteredUrunler.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">Henüz ürün bulunmamaktadır.</div>
           ) : (

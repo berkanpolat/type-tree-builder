@@ -189,7 +189,7 @@ const DashboardDestek = () => {
         <h2 className="text-lg font-semibold text-foreground">Destek Kayıtlarım</h2>
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <p className="text-muted-foreground">Yükleniyor...</p>
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : talepler.length === 0 ? (
           <Card>

@@ -267,7 +267,7 @@ const DashboardDestekDetay = () => {
     return (
       <DashboardLayout title="Destek Kaydı Detayları">
         <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Yükleniyor...</p>
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       </DashboardLayout>
     );

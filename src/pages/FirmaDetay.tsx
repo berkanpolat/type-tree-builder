@@ -738,7 +738,7 @@ export default function FirmaDetay() {
       <div className="min-h-screen bg-muted/30">
         {currentUserId ? <PazarHeader firmaUnvani="" /> : <PublicHeader />}
         <div className="flex items-center justify-center h-96">
-          <p className="text-muted-foreground">Yükleniyor...</p>
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     );
