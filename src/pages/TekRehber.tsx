@@ -214,6 +214,19 @@ export default function TekRehber() {
       }
     }
 
+    // Apply search-based uretimSatisFilter (from autocomplete selection)
+    if (uretimSatisFilter) {
+      const { data: usSearchData } = await supabase
+        .from("firma_uretim_satis")
+        .select("firma_id")
+        .in(uretimSatisFilter.column, uretimSatisFilter.ids);
+      if (usSearchData) {
+        const usFirmaIds = new Set(usSearchData.map((d) => d.firma_id));
+        if (junctionFirmaIds === null) junctionFirmaIds = [...usFirmaIds];
+        else junctionFirmaIds = junctionFirmaIds.filter((id) => usFirmaIds.has(id));
+      }
+    }
+
     if (junctionFirmaIds !== null && junctionFirmaIds.length === 0) {
       setFirmalar([]);
       setTotalCount(0);
