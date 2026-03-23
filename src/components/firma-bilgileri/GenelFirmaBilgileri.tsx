@@ -124,6 +124,8 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange, onDataC
       }
 
       setLoading(false);
+      // Mark initial load complete after a tick so auto-save doesn't fire
+      setTimeout(() => { isInitialLoad.current = false; }, 500);
     };
     if (userId) fetchAll();
   }, [userId]);
