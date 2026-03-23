@@ -32,10 +32,15 @@ export function sortFirmaTurleri<T extends { name: string }>(items: T[]): T[] {
  * - Geri kalanlar alfabetik
  */
 /**
- * Beden benzeri değerleri mantıksal sırada tutmak için sabit sıra haritası.
- * Burada olmayanlar alfabetik sıralanır.
+ * Beden benzeri değerleri mantıksal sırada tutmak için sıra anahtarı üretir.
+ * Desteklenen tipler:
+ * - ay aralığı: 0-3 ay, 6-9 ay
+ * - yaş aralığı: 2-3 yaş, 10-11 yaş
+ * - harf beden: XXS, XS, S, M, L, XL, 2XL...
+ * - sayısal beden: 32, 34, 36, 50 Üzeri
  */
-const BEDEN_SIRASI: Record<string, number> = {
+const BEDEN_HARF_SIRASI: Record<string, number> = {
+  "4xs": 0,
   "3xs": 1, "xxxs": 1,
   "2xs": 2, "xxs": 2,
   "xs": 3,
@@ -50,9 +55,55 @@ const BEDEN_SIRASI: Record<string, number> = {
   "6xl": 12,
 };
 
-const getBedenOrder = (name: string): number | null => {
-  const key = name.trim().toLowerCase().replace(/\s+/g, "");
-  return BEDEN_SIRASI[key] ?? null;
+type BedenSortKey = {
+  group: number;
+  order: number;
+};
+
+const getBedenSortKey = (name: string): BedenSortKey | null => {
+  const normalized = normalizeOptionText(name);
+  const compact = normalized.replace(/\s+/g, "");
+
+  if (normalized === "yenidogan") {
+    return { group: 0, order: -1 };
+  }
+
+  const ayRangeMatch = normalized.match(/^(\d+)\s*-\s*(\d+)\s*ay$/);
+  if (ayRangeMatch) {
+    return { group: 0, order: Number(ayRangeMatch[1]) };
+  }
+
+  const singleAyMatch = normalized.match(/^(\d+)\s*ay$/);
+  if (singleAyMatch) {
+    return { group: 0, order: Number(singleAyMatch[1]) };
+  }
+
+  const yasRangeMatch = normalized.match(/^(\d+)\s*-\s*(\d+)\s*yas$/);
+  if (yasRangeMatch) {
+    return { group: 1, order: Number(yasRangeMatch[1]) };
+  }
+
+  const singleYasMatch = normalized.match(/^(\d+)\s*yas$/);
+  if (singleYasMatch) {
+    return { group: 1, order: Number(singleYasMatch[1]) };
+  }
+
+  const harfOrder = BEDEN_HARF_SIRASI[compact];
+  if (harfOrder !== undefined) {
+    return { group: 2, order: harfOrder };
+  }
+
+  const numericMatch = normalized.match(/^(\d+)$/);
+  if (numericMatch) {
+    return { group: 3, order: Number(numericMatch[1]) };
+  }
+
+  const numericOverMatch = normalized.match(/^(\d+)\s*uzeri$/);
+  if (numericOverMatch) {
+    return { group: 3, order: Number(numericOverMatch[1]) + 0.5 };
+  }
+
+  return null;
 };
 
 export function sortSecenekler<T extends { name: string }>(items: T[]): T[] {
@@ -79,14 +130,17 @@ export function sortSecenekler<T extends { name: string }>(items: T[]): T[] {
   }
 
   rest.sort((a, b) => {
-    const aSize = getBedenOrder(a.name);
-    const bSize = getBedenOrder(b.name);
-    // Both are sizes → sort by size order
-    if (aSize !== null && bSize !== null) return aSize - bSize;
-    // Only one is a size → size first
-    if (aSize !== null) return -1;
-    if (bSize !== null) return 1;
-    // Neither → alphabetical
+    const aSize = getBedenSortKey(a.name);
+    const bSize = getBedenSortKey(b.name);
+
+    if (aSize && bSize) {
+      if (aSize.group !== bSize.group) return aSize.group - bSize.group;
+      if (aSize.order !== bSize.order) return aSize.order - bSize.order;
+    }
+
+    if (aSize) return -1;
+    if (bSize) return 1;
+
     return a.name.localeCompare(b.name, "tr", { sensitivity: "base" });
   });
   return [...belirtmek, ...rest, ...diger];
