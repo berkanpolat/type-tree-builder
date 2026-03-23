@@ -29,6 +29,7 @@ interface Props {
   selectedPackage: SelectedPackage;
   billingYearly: boolean;
   onBack: () => void;
+  hideHeader?: boolean;
 }
 
 const formatPhoneDisplay = (value: string) => {
