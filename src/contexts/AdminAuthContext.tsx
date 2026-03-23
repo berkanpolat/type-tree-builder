@@ -108,21 +108,32 @@ interface AdminAuthContextType {
 const AdminAuthContext = createContext<AdminAuthContextType | null>(null);
 
 const normalizeAdminToken = (token: string) => {
+  if (!token || typeof token !== "string") throw new Error("Invalid admin token");
+
   const normalizedToken = token
     .replace(/^Bearer\s+/i, "")
     .trim()
     .replace(/^"+|"+$/g, "");
 
-  const encodedPayload = normalizedToken.includes(".")
-    ? normalizedToken.split(".")[1]
-    : normalizedToken;
+  if (!normalizedToken) throw new Error("Invalid admin token");
+
+  const parts = normalizedToken.split(".");
+  const encodedPayload = parts.length >= 3 ? parts[1] : normalizedToken;
+
+  if (!encodedPayload) throw new Error("Invalid admin token");
 
   const base64Payload = encodedPayload.replace(/-/g, "+").replace(/_/g, "/");
   const paddedPayload = base64Payload.padEnd(
     base64Payload.length + ((4 - (base64Payload.length % 4)) % 4),
     "="
   );
-  const payload = JSON.parse(atob(paddedPayload)) as { exp?: number };
+
+  let payload: { exp?: number };
+  try {
+    payload = JSON.parse(atob(paddedPayload)) as { exp?: number };
+  } catch {
+    throw new Error("Invalid admin token");
+  }
 
   if (typeof payload.exp !== "number") {
     throw new Error("Invalid admin token");
