@@ -105,6 +105,7 @@ interface UrunData {
   para_birimi: string | null;
   urun_no: string;
   min_siparis_miktari: number | null;
+  siparis_birimi: string;
   teknik_detaylar: Record<string, string> | null;
   urun_kategori_id: string | null;
   urun_grup_id: string | null;
