@@ -710,7 +710,7 @@ export default function AdminFirmalarV2() {
   const safePage = Math.min(currentPage, totalPages);
   const paginatedFirmalar = firmalar;
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, sortField, sortDir, activeStatCard, abonePeriod, statsDays]);
+  useEffect(() => { setCurrentPage(1); }, [debouncedSearch, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, sortField, sortDir, activeStatCard, abonePeriod, statsDays]);
 
   // İl değiştiğinde ilçeyi sıfırla
   useEffect(() => { setFilterIlce("all"); }, [filterIl]);
