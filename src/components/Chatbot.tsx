@@ -107,22 +107,49 @@ export default function Chatbot() {
     }
   }, [open, minimized]);
 
-  // Close on outside click
+  // Close on outside click (desktop only)
   useEffect(() => {
     if (!open) return;
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) return; // Don't close on outside click on mobile (it's full-screen)
     const handler = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
         setOpen(false);
         setMinimized(false);
       }
     };
-    // Delay to avoid closing immediately on the same click that opened
     const timer = setTimeout(() => {
       document.addEventListener("mousedown", handler);
     }, 100);
     return () => {
       clearTimeout(timer);
       document.removeEventListener("mousedown", handler);
+    };
+  }, [open]);
+
+  // Lock body scroll on mobile when chatbot is open
+  useEffect(() => {
+    if (!open) return;
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return;
+
+    const origOverflow = document.body.style.overflow;
+    const origPosition = document.body.style.position;
+    const origTop = document.body.style.top;
+    const origWidth = document.body.style.width;
+    const scrollY = window.scrollY;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
+    return () => {
+      document.body.style.overflow = origOverflow;
+      document.body.style.position = origPosition;
+      document.body.style.top = origTop;
+      document.body.style.width = origWidth;
+      window.scrollTo(0, scrollY);
     };
   }, [open]);
 
@@ -276,14 +303,15 @@ export default function Chatbot() {
           ref={panelRef}
           className={cn(
             "flex flex-col bg-background shadow-[0_8px_60px_-12px_rgba(0,0,0,0.25)] overflow-hidden border border-border/60",
-            // Mobile: full-screen sheet from bottom; Desktop: floating card
             "fixed z-[9999]",
+            // Mobile: true full-screen with overscroll containment
             "inset-0 rounded-none md:inset-auto md:bottom-5 md:right-5 md:rounded-2xl",
             minimized
               ? "h-auto inset-auto bottom-20 right-3 md:bottom-5 md:right-5 w-[260px] md:w-[280px] rounded-2xl"
               : "md:w-[380px] md:max-w-[calc(100vw-2rem)] md:h-[540px] md:max-h-[calc(100vh-6rem)]",
             "animate-in slide-in-from-bottom-5 fade-in duration-300"
           )}
+          style={{ touchAction: "none", overscrollBehavior: "contain" }}
         >
           {/* Header */}
           <div className="relative shrink-0 overflow-hidden select-none">
@@ -334,7 +362,7 @@ export default function Chatbot() {
           {!minimized && (
             <>
               {/* Messages area */}
-              <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-gradient-to-b from-muted/30 to-background">
+              <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-4 bg-gradient-to-b from-muted/30 to-background" style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}>
                 
                 {/* Welcome state */}
                 {messages.length === 0 && (
