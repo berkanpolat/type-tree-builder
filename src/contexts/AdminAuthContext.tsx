@@ -163,11 +163,33 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
   const effectiveUser = impersonatedUser || user;
 
   const callEdgeFunction = useCallback(async (action: string, body: Record<string, unknown>) => {
-    const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, {
-      body,
-    });
-    if (error) throw error;
-    return data;
+    const maxRetries = 2;
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, {
+          body,
+        });
+        if (error) {
+          const status = (error as any)?.status || (error as any)?.context?.status;
+          if ((status === 503 || status === 504 || String(error.message).includes("boot")) && attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+            continue;
+          }
+          throw error;
+        }
+        return data;
+      } catch (err: any) {
+        const isRetryable = err?.message?.includes("Failed to fetch") ||
+          err?.message?.includes("Failed to send") ||
+          err?.message?.includes("network") ||
+          err?.message?.includes("aborted");
+        if (isRetryable && attempt < maxRetries) {
+          await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+          continue;
+        }
+        throw err;
+      }
+    }
   }, []);
 
   useEffect(() => {
