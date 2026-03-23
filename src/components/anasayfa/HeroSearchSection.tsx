@@ -200,7 +200,7 @@ const HeroSearchSection = ({
                   </button>
                 )}
                 <button
-                  onClick={() => { if (searchResults.length > 0) onShowDropdown(true); }}
+                  onClick={() => { onSearch(); }}
                   className="flex items-center gap-1.5 bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground rounded-lg px-3 sm:px-4 py-2 text-xs font-semibold shadow-[0_3px_10px_rgba(245,154,35,0.5)] hover:brightness-110 active:scale-95 transition-all whitespace-nowrap flex-shrink-0"
                 >
                   <Search className="w-3 h-3" />
