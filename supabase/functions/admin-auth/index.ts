@@ -2832,11 +2832,9 @@ Deno.serve(async (req) => {
         periyot: periyotValue,
         stripe_subscription_id: null,
         stripe_customer_id: null,
+        ekstra_haklar: ekstraHaklar !== undefined ? ekstraHaklar : {},
         updated_at: now.toISOString(),
       };
-      if (ekstraHaklar !== undefined) {
-        updatePayload.ekstra_haklar = ekstraHaklar;
-      }
 
       const { data: existingRows, error: existingError } = await supabase
         .from("kullanici_abonelikler")
