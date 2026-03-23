@@ -230,7 +230,7 @@ export default function OdemeTest() {
           </div>
           <h1 className="text-2xl font-semibold text-foreground">Ödeme Başarılı!</h1>
           <p className="text-sm text-muted-foreground">
-            Test ödemesi başarıyla tamamlandı. Gerçek bir ödeme alınmamıştır.
+            PRO paketiniz başarıyla aktive edildi. Sınırsız erişimin keyfini çıkarın!
           </p>
           <div className="rounded-lg border border-border bg-card p-4 text-left space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Paket</span><span className="font-medium">PRO — {period === "aylik" ? "Aylık" : "Yıllık"}</span></div>
