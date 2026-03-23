@@ -490,12 +490,69 @@ export default function UrunDetay() {
   }, [navigate]);
 
   const handleImageZoomMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!imageContainerRef.current) return;
+    if (!imageContainerRef.current || isMobile) return;
     const rect = imageContainerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     setZoomPosition({ x, y });
   };
+
+  const getTouchDistance = (touches: globalThis.TouchList) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = (e: ReactTouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && imageContainerRef.current) {
+      e.preventDefault();
+      const dist = getTouchDistance(e.nativeEvent.touches);
+      setPinchStartDist(dist);
+      setPinchStartScale(mobileZoomScale);
+      const rect = imageContainerRef.current.getBoundingClientRect();
+      const midX = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left) / rect.width * 100;
+      const midY = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top) / rect.height * 100;
+      setMobileZoomOrigin({ x: midX, y: midY });
+    }
+  };
+
+  const handleTouchMove = (e: ReactTouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && pinchStartDist !== null) {
+      e.preventDefault();
+      const dist = getTouchDistance(e.nativeEvent.touches);
+      const newScale = Math.min(4, Math.max(1, pinchStartScale * (dist / pinchStartDist)));
+      setMobileZoomScale(newScale);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setPinchStartDist(null);
+    if (mobileZoomScale <= 1.1) {
+      setMobileZoomScale(1);
+    }
+  };
+
+  const handleDoubleTap = (() => {
+    let lastTap = 0;
+    return (e: ReactTouchEvent<HTMLDivElement>) => {
+      const now = Date.now();
+      if (now - lastTap < 300) {
+        e.preventDefault();
+        if (mobileZoomScale > 1) {
+          setMobileZoomScale(1);
+        } else {
+          if (imageContainerRef.current) {
+            const rect = imageContainerRef.current.getBoundingClientRect();
+            const x = ((e.touches[0]?.clientX ?? e.changedTouches[0].clientX) - rect.left) / rect.width * 100;
+            const y = ((e.touches[0]?.clientY ?? e.changedTouches[0].clientY) - rect.top) / rect.height * 100;
+            setMobileZoomOrigin({ x, y });
+          }
+          setMobileZoomScale(2.5);
+        }
+      }
+      lastTap = now;
+    };
+  })();
 
   if (loading) {
     return (
