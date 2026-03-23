@@ -211,7 +211,7 @@ const FirmaBilgilerim = () => {
           )}
         </div>
 
-        <FirmaTabMenu tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        <FirmaTabMenu tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
         {renderTabContent()}
       </div>
     </DashboardLayout>
