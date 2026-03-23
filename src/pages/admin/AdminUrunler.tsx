@@ -206,14 +206,17 @@ export default function AdminUrunler() {
   const fetchData = useCallback(async () => {
     if (!token) return;
     try {
-      const [urunData, statsData] = await Promise.all([
-        callApi("list-urunler", { token }),
-        callApi("urun-stats", { token }),
+      const [{ data: urunResult, error: urunErr }, { data: statsResult, error: statsErr }] = await Promise.all([
+        supabase.rpc("admin_list_urunler_v2"),
+        supabase.rpc("admin_urun_stats_v2"),
       ]);
-      setUrunler(urunData.urunler || []);
-      setStats(statsData);
+      if (urunErr) throw urunErr;
+      if (statsErr) throw statsErr;
+      const urunList = (urunResult as any) || [];
+      setUrunler(urunList);
+      setStats((statsResult || null) as unknown as UrunStats);
 
-      const firms = (urunData.urunler || []).reduce((acc: any[], u: any) => {
+      const firms = urunList.reduce((acc: any[], u: any) => {
         if (!acc.find((f: any) => f.user_id === u.user_id)) {
           acc.push({ user_id: u.user_id, firma_unvani: u.firma_unvani });
         }
@@ -225,7 +228,7 @@ export default function AdminUrunler() {
     } finally {
       setLoading(false);
     }
-  }, [token, callApi, toast]);
+  }, [token, toast]);
 
   useEffect(() => { fetchData(); fetchCategoryOptions(); }, [fetchData, fetchCategoryOptions]);
 
