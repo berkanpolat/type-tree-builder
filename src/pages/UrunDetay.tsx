@@ -424,8 +424,13 @@ export default function UrunDetay() {
 
   useEffect(() => { fetchUrun(); }, [fetchUrun]);
 
+  const [heartAnim, setHeartAnim] = useState(false);
+
   const toggleFavorite = async () => {
     if (!currentUserId || !resolvedUrunId) return;
+    setIsFavorited(!isFavorited);
+    setHeartAnim(true);
+    setTimeout(() => setHeartAnim(false), 450);
     if (isFavorited) {
       await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", resolvedUrunId);
       toast({ title: "Favorilerden çıkarıldı" });
@@ -433,7 +438,6 @@ export default function UrunDetay() {
       await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: resolvedUrunId });
       toast({ title: "Favorilere eklendi" });
     }
-    setIsFavorited(!isFavorited);
   };
 
   const handleSaticiyaSor = async () => {
