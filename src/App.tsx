@@ -160,7 +160,7 @@ const AppContent = () => {
 
       <div className={showPublicChrome ? "pb-20 md:pb-0 h-[100dvh] md:h-auto overflow-y-auto md:overflow-visible overscroll-none" : ""}>
         <Suspense fallback={<PageLoader />}>
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence initial={false}>
             <PageTransition key={location.pathname}>
               <Routes location={location}>
                 <Route path="/" element={<LandingPage />} />

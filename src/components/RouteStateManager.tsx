@@ -148,21 +148,28 @@ const RouteStateManager = () => {
   useEffect(() => {
     if (isAdmin) return;
 
+    let rafId: number | null = null;
+    let lastSaveTime = 0;
+    const THROTTLE_MS = 300;
+
     const saveScroll = () => {
-      // Debounce: avoid hammering sessionStorage on every scroll frame
-      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
-      scrollTimerRef.current = setTimeout(() => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        rafId = null;
+        const now = Date.now();
+        if (now - lastSaveTime < THROTTLE_MS) return;
+        lastSaveTime = now;
         const container = getScrollContainer();
         const store = readStore();
-        const prev = store[routeKey] ?? { scrollY: 0, containerScroll: 0, fields: {}, updatedAt: Date.now() };
+        const prev = store[routeKey] ?? { scrollY: 0, containerScroll: 0, fields: {}, updatedAt: now };
         store[routeKey] = {
           ...prev,
           scrollY: window.scrollY,
           containerScroll: container?.scrollTop ?? 0,
-          updatedAt: Date.now(),
+          updatedAt: now,
         };
         writeStore(pruneStore(store));
-      }, 150);
+      });
     };
 
     const saveFieldChange = (event: Event) => {
@@ -203,13 +210,12 @@ const RouteStateManager = () => {
     document.addEventListener("change", saveFieldChange, true);
 
     return () => {
-      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+      if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener("scroll", saveScroll);
       container?.removeEventListener("scroll", saveScroll);
       document.removeEventListener("input", saveFieldChange, true);
       document.removeEventListener("change", saveFieldChange, true);
       if (!isPop.current) {
-        // Direct save on unmount (no debounce)
         const c = getScrollContainer();
         const st = readStore();
         const prev = st[routeKey] ?? { scrollY: 0, containerScroll: 0, fields: {}, updatedAt: Date.now() };
