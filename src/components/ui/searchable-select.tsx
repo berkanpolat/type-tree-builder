@@ -101,6 +101,7 @@ export default function SearchableSelect({
       }
     }
 
+    rest.sort((a, b) => a.label.localeCompare(b.label, "tr", { sensitivity: "base" }));
     return [...belirtmek, ...rest, ...diger];
   }, [options]);
 
