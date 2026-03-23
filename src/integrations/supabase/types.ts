@@ -2850,6 +2850,7 @@ export type Database = {
           meta_title: string | null
           min_siparis_miktari: number | null
           para_birimi: string | null
+          siparis_birimi: string
           slug: string | null
           teknik_detaylar: Json | null
           updated_at: string
@@ -2876,6 +2877,7 @@ export type Database = {
           meta_title?: string | null
           min_siparis_miktari?: number | null
           para_birimi?: string | null
+          siparis_birimi?: string
           slug?: string | null
           teknik_detaylar?: Json | null
           updated_at?: string
@@ -2902,6 +2904,7 @@ export type Database = {
           meta_title?: string | null
           min_siparis_miktari?: number | null
           para_birimi?: string | null
+          siparis_birimi?: string
           slug?: string | null
           teknik_detaylar?: Json | null
           updated_at?: string

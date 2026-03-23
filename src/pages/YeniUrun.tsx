@@ -482,6 +482,7 @@ export default function YeniUrun() {
       fiyat: fiyatTipi === "tek_fiyat" && fiyat ? parseFloat(fiyat) : null,
       para_birimi: paraBirimi,
       min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
+      siparis_birimi: isHazirGiyim ? "Adet" : (varyasyonlar.length > 0 ? varyasyonlar[0].varyant_1_value : "Adet"),
       teknik_detaylar: teknikDetaylar,
       durum: isAdminMode && originalDurum ? originalDurum : "taslak",
     };
@@ -574,6 +575,7 @@ export default function YeniUrun() {
       fiyat: fiyatTipi === "tek_fiyat" ? parseFloat(fiyat) : null,
       para_birimi: paraBirimi,
       min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
+      siparis_birimi: isHazirGiyim ? "Adet" : (varyasyonlar.length > 0 ? varyasyonlar[0].varyant_1_value : "Adet"),
       teknik_detaylar: teknikDetaylar,
       durum: isAdminMode && originalDurum ? originalDurum : "duzenleniyor",
     };

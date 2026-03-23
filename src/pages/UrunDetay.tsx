@@ -105,6 +105,7 @@ interface UrunData {
   para_birimi: string | null;
   urun_no: string;
   min_siparis_miktari: number | null;
+  siparis_birimi: string;
   teknik_detaylar: Record<string, string> | null;
   urun_kategori_id: string | null;
   urun_grup_id: string | null;
@@ -254,7 +255,7 @@ export default function UrunDetay() {
 
     const { data: directData } = await supabase
       .from("urunler")
-      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum, slug, admin_karar_sebebi, admin_karar_veren, admin_karar_tarihi, meta_title, meta_description")
+      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, siparis_birimi, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum, slug, admin_karar_sebebi, admin_karar_veren, admin_karar_tarihi, meta_title, meta_description")
       .eq(isId ? "id" : "slug", slugParam)
       .maybeSingle();
 
@@ -756,7 +757,7 @@ export default function UrunDetay() {
                         <div className="flex flex-wrap gap-4">
                           {firstComboTiers.map((tier, i) => (
                             <div key={i} className="text-center">
-                              <p className="text-sm text-muted-foreground">{tier.min_adet}-{tier.max_adet} adet</p>
+                              <p className="text-sm text-muted-foreground">{tier.min_adet}-{tier.max_adet} {urun.siparis_birimi?.toLowerCase() || "adet"}</p>
                               <p className="text-xl font-bold text-foreground">{sym}{tier.birim_fiyat.toLocaleString("tr-TR")}</p>
                             </div>
                           ))}
@@ -771,7 +772,7 @@ export default function UrunDetay() {
                   <div className="flex items-center gap-3 bg-muted rounded-lg px-4 py-3 mt-4">
                     <Package className="w-5 h-5 text-muted-foreground shrink-0" />
                     <span className="text-sm text-foreground">
-                      Minimum Sipariş Miktarı: <strong>{urun.min_siparis_miktari} Adet</strong>
+                      Minimum Sipariş Miktarı: <strong>{urun.min_siparis_miktari} {urun.siparis_birimi || "Adet"}</strong>
                     </span>
                   </div>
                 )}
@@ -1068,7 +1069,7 @@ export default function UrunDetay() {
                         <div className="flex flex-wrap gap-4">
                           {tiersToShow.map((tier, i) => (
                             <div key={i} className="text-center">
-                              <p className="text-sm text-muted-foreground">{tier.min_adet}-{tier.max_adet} adet</p>
+                              <p className="text-sm text-muted-foreground">{tier.min_adet}-{tier.max_adet} {urun.siparis_birimi?.toLowerCase() || "adet"}</p>
                               <p className="text-xl font-bold text-foreground">{sym}{tier.birim_fiyat.toLocaleString("tr-TR")}</p>
                             </div>
                           ))}
@@ -1084,7 +1085,7 @@ export default function UrunDetay() {
                   <div className="flex items-center gap-3 bg-muted rounded-lg px-4 py-3 mb-4">
                     <Package className="w-5 h-5 text-muted-foreground shrink-0" />
                     <span className="text-sm text-foreground">
-                      Minimum Sipariş Miktarı: <strong>{urun.min_siparis_miktari} Adet</strong>
+                      Minimum Sipariş Miktarı: <strong>{urun.min_siparis_miktari} {urun.siparis_birimi || "Adet"}</strong>
                     </span>
                   </div>
                 )}
