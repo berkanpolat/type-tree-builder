@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Props {
   userId: string;
   onFirmaTuruChange?: (turuId: string) => void;
+  onDataChange?: () => void;
 }
 
 interface SelectOption {
@@ -25,11 +26,14 @@ const KATEGORI_IDS = {
   IL: "61fbe0a7-638f-4900-97a0-c2c8310e01af",
 };
 
-export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props) {
+export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange, onDataChange }: Props) {
   const { toast } = useToast();
   const isAdminMode = !!localStorage.getItem("admin_token");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const isInitialLoad = useRef(true);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const kapakInputRef = useRef<HTMLInputElement>(null);
 
@@ -120,6 +124,8 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
       }
 
       setLoading(false);
+      // Mark initial load complete after a tick so auto-save doesn't fire
+      setTimeout(() => { isInitialLoad.current = false; }, 500);
     };
     if (userId) fetchAll();
   }, [userId]);
@@ -167,8 +173,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
     setUploading(false);
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  const buildPayload = useCallback(() => {
     const updatePayload: Record<string, any> = {
       firma_olcegi_id: firmaOlcegiId || null,
       kurulus_tarihi: kurulusTarihi || null,
@@ -187,8 +192,6 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
       kapak_fotografi_url: kapakUrl || null,
       firma_hakkinda: firmaHakkinda || null,
     };
-
-    // Admin mode: also save locked fields
     if (isAdminMode) {
       updatePayload.firma_turu_id = firmaTuruId;
       updatePayload.firma_tipi_id = firmaTipiId;
@@ -196,16 +199,39 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
       updatePayload.vergi_numarasi = vergiNumarasi || null;
       updatePayload.vergi_dairesi = vergiDairesi || null;
     }
+    return updatePayload;
+  }, [firmaOlcegiId, kurulusTarihi, kurulusIlId, kurulusIlceId, webSitesi, firmaIletisimNumarasi, firmaIletisimEmail, instagram, facebook, linkedin, xTwitter, tiktok, youtube, logoUrl, kapakUrl, firmaHakkinda, isAdminMode, firmaTuruId, firmaTipiId, firmaUnvani, vergiNumarasi, vergiDairesi]);
 
-    const { error } = await supabase.from("firmalar").update(updatePayload as any).eq("user_id", userId);
-
-    if (error) {
-      toast({ title: "Hata", description: "Bilgiler kaydedilemedi.", variant: "destructive" });
+  const performSave = useCallback(async (silent = false) => {
+    if (!userId) return;
+    if (silent) {
+      setAutoSaveStatus("saving");
     } else {
-      toast({ title: "Başarılı", description: "Firma bilgileri güncellendi." });
+      setSaving(true);
+    }
+    const payload = buildPayload();
+    const { error } = await supabase.from("firmalar").update(payload as any).eq("user_id", userId);
+    if (error) {
+      if (!silent) toast({ title: "Hata", description: "Bilgiler kaydedilemedi.", variant: "destructive" });
+      setAutoSaveStatus("idle");
+    } else {
+      if (!silent) toast({ title: "Başarılı", description: "Firma bilgileri güncellendi." });
+      setAutoSaveStatus("saved");
+      onDataChange?.();
+      setTimeout(() => setAutoSaveStatus("idle"), 2000);
     }
     setSaving(false);
-  };
+  }, [userId, buildPayload, toast, onDataChange]);
+
+  // Auto-save with 1.5s debounce
+  useEffect(() => {
+    if (isInitialLoad.current || loading) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      performSave(true);
+    }, 1500);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [firmaOlcegiId, kurulusTarihi, kurulusIlId, kurulusIlceId, webSitesi, firmaIletisimNumarasi, firmaIletisimEmail, instagram, facebook, linkedin, xTwitter, tiktok, youtube, logoUrl, kapakUrl, firmaHakkinda, firmaTuruId, firmaTipiId, firmaUnvani, vergiNumarasi, vergiDairesi]);
 
   if (loading) {
     return <p className="text-muted-foreground text-center py-12">Yükleniyor...</p>;
@@ -487,10 +513,16 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props
           />
         </div>
 
-        {/* Save button */}
-        <div className="flex justify-end pt-2">
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Kaydediliyor..." : "Kaydet"}
+        {/* Auto-save status indicator */}
+        <div className="flex items-center justify-end pt-2 gap-3">
+          {autoSaveStatus === "saving" && (
+            <span className="text-xs text-muted-foreground animate-pulse">Kaydediliyor...</span>
+          )}
+          {autoSaveStatus === "saved" && (
+            <span className="text-xs text-green-600">✓ Kaydedildi</span>
+          )}
+          <Button onClick={() => performSave(false)} disabled={saving} variant="outline" size="sm">
+            {saving ? "Kaydediliyor..." : "Manuel Kaydet"}
           </Button>
         </div>
       </CardContent>
