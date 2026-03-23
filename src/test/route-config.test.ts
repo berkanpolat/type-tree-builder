@@ -32,7 +32,7 @@ const PUBLIC_ROUTES = [
   "/urun-bilgileri",
   "/urun-kategorisi",
   "/giris-kayit",
-  "/urunler/:slug",
+  "/urun/:slug",
   "/firma/:slug",
   "/firmalar",
   "/ayarlar",
@@ -57,7 +57,7 @@ const ADMIN_ROUTES = [
   "/yonetim/panel",
   "/yonetim/kullanicilar",
   "/yonetim/firmalar",
-  "/yonetim/firmalar-v2",
+  "/yonetim/ihaleler",
   "/yonetim/ihaleler",
   "/yonetim/urunler",
   "/yonetim/sikayetler",
@@ -130,7 +130,7 @@ describe("Admin rota tanımları", () => {
   it("tüm admin alt rotaları tanımlı", () => {
     expect(ADMIN_ROUTES).toContain("/yonetim/panel");
     expect(ADMIN_ROUTES).toContain("/yonetim/kullanicilar");
-    expect(ADMIN_ROUTES).toContain("/yonetim/firmalar-v2");
+    expect(ADMIN_ROUTES).toContain("/yonetim/firmalar");
     expect(ADMIN_ROUTES).toContain("/yonetim/ihaleler");
     expect(ADMIN_ROUTES).toContain("/yonetim/urunler");
     expect(ADMIN_ROUTES).toContain("/yonetim/sikayetler");

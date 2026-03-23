@@ -381,7 +381,7 @@ export default function AdminSikayetler() {
                   {(() => {
                     const linkMap: Record<string, { href: string; label: string }> = {
                       profil: { href: `/firma/${viewItem.referans_id}`, label: "Firma Profilini Görüntüle" },
-                      ihale: { href: `/tekihale/${viewItem.referans_id}`, label: "İhaleyi Görüntüle" },
+                      ihale: { href: `/ihaleler/${viewItem.referans_id}`, label: "İhaleyi Görüntüle" },
                       urun: { href: `/urun/${viewItem.referans_id}`, label: "Ürünü Görüntüle" },
                       mesaj: { href: `/mesajlar`, label: "Mesajı Görüntüle" },
                     };

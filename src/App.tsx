@@ -175,7 +175,9 @@ const AppContent = () => {
             <Route path="/urunlerim/duzenle/:id" element={<YeniUrun />} />
             <Route path="/urun-kategorisi/:categoryId" element={<UrunKategorisi />} />
             <Route path="/urun/:slug" element={<UrunDetay />} />
+            <Route path="/urunler/:slug" element={<UrunDetay />} />
             <Route path="/firmalar" element={<TekRehber />} />
+            <Route path="/firma/:slug" element={<FirmaDetay />} />
             <Route path="/mesajlar" element={<Mesajlar />} />
             <Route path="/favoriler" element={<Favoriler />} />
             <Route path="/bildirimler" element={<Bildirimler />} />
@@ -200,11 +202,14 @@ const AppContent = () => {
             <Route path="/uretici-ve-tedarikci-kesfi" element={<UreticiTedarikciKesfi />} />
             <Route path="/online-ihale-platformu" element={<TekIhaleTanitim />} />
             <Route path="/online-pazar-yeri" element={<TekPazarTanitim />} />
+            <Route path="/tekihale/:slug" element={<IhaleDetay />} />
 
             <Route path="/yonetim" element={<AdminRoute />}>
               <Route path="giris" element={<AdminGiris />} />
               <Route index element={<AdminPanel />} />
+              <Route path="panel" element={<AdminPanel />} />
               <Route path="firmalar" element={<AdminFirmalarV2 />} />
+              <Route path="firmalar-v2" element={<AdminFirmalarV2 />} />
               <Route path="kullanicilar" element={<AdminKullanicilar />} />
               <Route path="urunler" element={<AdminUrunler />} />
               <Route path="ihaleler" element={<AdminIhaleler />} />
