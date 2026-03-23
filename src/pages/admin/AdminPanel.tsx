@@ -205,6 +205,53 @@ export default function AdminPanel() {
 
   const cardStyle = { background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" };
 
+  const panelData = {
+    firma: {
+      toplam: Number(data?.firma?.toplam ?? 0),
+      onay_bekleyen: Number(data?.firma?.onay_bekleyen ?? 0),
+      turDagilimi: Array.isArray(data?.firma?.turDagilimi) ? data.firma.turDagilimi : [],
+      tipDagilimi: Array.isArray(data?.firma?.tipDagilimi) ? data.firma.tipDagilimi : [],
+    },
+    ihale: {
+      toplam: Number(data?.ihale?.toplam ?? 0),
+      aktif: Number(data?.ihale?.aktif ?? 0),
+      tamamlanan: Number(data?.ihale?.tamamlanan ?? 0),
+      iptal: Number(data?.ihale?.iptal ?? 0),
+      onay_bekleyen: Number(data?.ihale?.onay_bekleyen ?? 0),
+      reddedilen: Number(data?.ihale?.reddedilen ?? 0),
+      taslak: Number(data?.ihale?.taslak ?? 0),
+      urunKatDist: Array.isArray(data?.ihale?.urunKatDist) ? data.ihale.urunKatDist : [],
+      hizmetKatDist: Array.isArray(data?.ihale?.hizmetKatDist) ? data.ihale.hizmetKatDist : [],
+    },
+    urun: {
+      toplam: Number(data?.urun?.toplam ?? 0),
+      aktif: Number(data?.urun?.aktif ?? 0),
+      pasif: Number(data?.urun?.pasif ?? 0),
+      onay_bekleyen: Number(data?.urun?.onay_bekleyen ?? 0),
+      reddedilen: Number(data?.urun?.reddedilen ?? 0),
+      taslak: Number(data?.urun?.taslak ?? 0),
+      katDist: Array.isArray(data?.urun?.katDist) ? data.urun.katDist : [],
+      turDist: Array.isArray(data?.urun?.turDist) ? data.urun.turDist : [],
+    },
+    paket: {
+      paketDist: Array.isArray(data?.paket?.paketDist) ? data.paket.paketDist : [],
+    },
+    destek: {
+      toplam: Number(data?.destek?.toplam ?? 0),
+      cozulen: Number(data?.destek?.cozulen ?? 0),
+      incelenen: Number(data?.destek?.incelenen ?? 0),
+    },
+    sikayet: {
+      toplam: Number(data?.sikayet?.toplam ?? 0),
+      mesaj: Number(data?.sikayet?.mesaj ?? 0),
+      ihale: Number(data?.sikayet?.ihale ?? 0),
+      profil: Number(data?.sikayet?.profil ?? 0),
+      urun: Number(data?.sikayet?.urun ?? 0),
+      beklemede: Number(data?.sikayet?.beklemede ?? 0),
+      cozuldu: Number(data?.sikayet?.cozuldu ?? 0),
+    },
+  };
+
   return (
     <AdminLayout title="Panel Özeti">
       <div className="space-y-6 md:space-y-8">
