@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, CSSProperties, Fragment } from "react";
+import { useState, useEffect, useCallback, useRef, CSSProperties, Fragment } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -138,7 +138,14 @@ export default function AdminFirmalarV2() {
   const [totalFirmalar, setTotalFirmalar] = useState(0);
   const [statsDays, setStatsDays] = useState(7);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Debounce search input by 400ms
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   // Selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -237,8 +244,7 @@ export default function AdminFirmalarV2() {
           paginated: true,
           page: currentPage,
           perPage: ITEMS_PER_PAGE,
-          statsDays,
-          searchTerm,
+          searchTerm: debouncedSearch,
           filterTuru,
           filterTipi,
           filterIl,
@@ -260,7 +266,7 @@ export default function AdminFirmalarV2() {
     } finally {
       setLoading(false);
     }
-  }, [token, currentPage, statsDays, searchTerm, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, activeStatCard, abonePeriod, sortField, sortDir, callApi, toast]);
+  }, [token, currentPage, statsDays, debouncedSearch, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, activeStatCard, abonePeriod, sortField, sortDir, callApi, toast]);
 
   const fetchDropdowns = useCallback(async () => {
     if (!token) return;
@@ -704,7 +710,7 @@ export default function AdminFirmalarV2() {
   const safePage = Math.min(currentPage, totalPages);
   const paginatedFirmalar = firmalar;
 
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, sortField, sortDir, activeStatCard, abonePeriod, statsDays]);
+  useEffect(() => { setCurrentPage(1); }, [debouncedSearch, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, sortField, sortDir, activeStatCard, abonePeriod, statsDays]);
 
   // İl değiştiğinde ilçeyi sıfırla
   useEffect(() => { setFilterIlce("all"); }, [filterIl]);
