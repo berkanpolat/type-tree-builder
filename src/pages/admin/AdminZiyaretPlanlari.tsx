@@ -143,6 +143,11 @@ export default function AdminZiyaretPlanlari() {
   const [editNotlar, setEditNotlar] = useState("");
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
 
+  // Staff filter for Yönetim Kurulu
+  const isYonetimKurulu = adminUser?.departman === "Yönetim Kurulu" || adminUser?.is_primary;
+  const [adminList, setAdminList] = useState<{ id: string; ad: string; soyad: string }[]>([]);
+  const [selectedAdminId, setSelectedAdminId] = useState<string>("own");
+
   // Aksiyon Ekle state
   const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
   const [aksiyonPlan, setAksiyonPlan] = useState<ZiyaretPlan | null>(null);
