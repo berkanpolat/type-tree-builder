@@ -149,6 +149,15 @@ export default function TekRehber() {
     });
   }, []);
 
+  // Fetch product taxonomy nodes for search autocomplete
+  useEffect(() => {
+    supabase.from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("kategori_id", KATEGORI_ID)
+      .order("name")
+      .then(({ data }) => setUrunTaxNodes(data || []));
+  }, []);
+
   // Fetch companies with pagination
   const fetchFirmalar = useCallback(async () => {
     setFirmaLoading(true);
