@@ -258,9 +258,9 @@ export default function AdminIhaleler() {
         supabase.rpc("admin_list_ihaleler_v2"),
         supabase.rpc("admin_ihale_stats_v2"),
       ]);
-      const parsedList = Array.isArray(ihaleList) ? ihaleList : [];
+      const parsedList = (Array.isArray(ihaleList) ? ihaleList : []) as unknown as IhaleItem[];
       setIhaleler(parsedList);
-      setStats(statsResult || null);
+      setStats((statsResult || null) as unknown as IhaleStats);
 
       const firms = parsedList.reduce((acc: any[], i: any) => {
         if (!acc.find((f: any) => f.user_id === i.user_id)) {

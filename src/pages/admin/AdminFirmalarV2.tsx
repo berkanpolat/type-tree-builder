@@ -258,7 +258,7 @@ export default function AdminFirmalarV2() {
       const parsed = firmaResult as any;
       setFirmalar(parsed?.firmalar || []);
       setTotalFirmalar(parsed?.total || 0);
-      setStats(statsResult || null);
+      setStats((statsResult || null) as unknown as FirmaStats);
     } catch {
       setLoadError(true);
       toast({ title: "Hata", description: "Veriler yüklenemedi. Tekrar deneyin.", variant: "destructive" });
