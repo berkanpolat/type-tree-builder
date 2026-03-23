@@ -210,13 +210,12 @@ const RouteStateManager = () => {
     document.addEventListener("change", saveFieldChange, true);
 
     return () => {
-      if (scrollTimerRef.current) clearTimeout(scrollTimerRef.current);
+      if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener("scroll", saveScroll);
       container?.removeEventListener("scroll", saveScroll);
       document.removeEventListener("input", saveFieldChange, true);
       document.removeEventListener("change", saveFieldChange, true);
       if (!isPop.current) {
-        // Direct save on unmount (no debounce)
         const c = getScrollContainer();
         const st = readStore();
         const prev = st[routeKey] ?? { scrollY: 0, containerScroll: 0, fields: {}, updatedAt: Date.now() };
