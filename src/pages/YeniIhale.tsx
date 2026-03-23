@@ -99,6 +99,7 @@ export default function YeniIhale() {
   const [ihaleId, setIhaleId] = useState<string | null>(null);
   const [loadingEdit, setLoadingEdit] = useState(!!editId);
   const [isAdminMode, setIsAdminMode] = useState(false);
+  const [originalDurum, setOriginalDurum] = useState<string | null>(null);
   const { isRestricted, getRestrictionMessage } = useRestrictions();
 
   // Check if selected hizmet category is "Teknik & Tasarım" (no birim/stok needed)
@@ -184,6 +185,7 @@ export default function YeniIhale() {
             fotoData = (data.fotograflar || []).map((f: any) => f.foto_url || f);
             ekDosyaData = (data.ek_dosyalar || []).map((f: any) => ({ url: f.dosya_url || f.url, adi: f.dosya_adi || f.adi }));
             setIsAdminMode(true);
+            setOriginalDurum(ihale.durum);
           }
         } catch {}
       }
@@ -557,11 +559,24 @@ export default function YeniIhale() {
             <Button variant="outline" onClick={handleBack}>Geri</Button>
           ) : <div />}
           
-          {currentStep < STEPS.length - 1 ? (
-            <Button onClick={handleNext}>İleri</Button>
-          ) : (
-            <div />
-          )}
+          <div className="flex gap-2">
+            {isAdminMode && (
+              <Button onClick={async () => {
+                setSaving(true);
+                await handleSave();
+                setSaving(false);
+                toast({ title: "Başarılı", description: "Değişiklikler kaydedildi." });
+                navigate("/yonetim/ihaleler");
+              }} disabled={saving}>
+                {saving ? "Kaydediliyor..." : "Kaydet"}
+              </Button>
+            )}
+            {currentStep < STEPS.length - 1 ? (
+              <Button onClick={handleNext}>İleri</Button>
+            ) : (
+              <div />
+            )}
+          </div>
         </div>
       </div>
     </DashboardLayout>

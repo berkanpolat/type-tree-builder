@@ -177,6 +177,7 @@ export default function YeniUrun() {
 
   // Draft ID
   const [draftId, setDraftId] = useState<string | null>(editId || null);
+  const [originalDurum, setOriginalDurum] = useState<string | null>(null);
 
   const isHazirGiyim = kategoriName?.toLowerCase().includes("hazır giyim");
   const varyant1Label = isHazirGiyim ? "Beden" : "Birim";
@@ -274,6 +275,7 @@ export default function YeniUrun() {
     const td = data.teknik_detaylar as Record<string, string | string[]> || {};
     setTeknikDetaylar(td);
     setDraftId(urunId);
+    setOriginalDurum(data.durum);
 
     // Resolve category name directly to load dependent options correctly
     let resolvedKatName = "";
@@ -439,7 +441,7 @@ export default function YeniUrun() {
       para_birimi: paraBirimi,
       min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
       teknik_detaylar: teknikDetaylar,
-      durum: "taslak",
+      durum: isAdminMode && originalDurum ? originalDurum : "taslak",
     };
     if (draftId) {
       await supabase.from("urunler").update(payload as any).eq("id", draftId);
@@ -531,7 +533,7 @@ export default function YeniUrun() {
       para_birimi: paraBirimi,
       min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
       teknik_detaylar: teknikDetaylar,
-      durum: "duzenleniyor",
+      durum: isAdminMode && originalDurum ? originalDurum : "duzenleniyor",
     };
 
     let urunId = draftId;
@@ -591,9 +593,15 @@ export default function YeniUrun() {
 
     setSaving(false);
     toast({ title: "Ürün kaydedildi!" });
-    // Fetch slug for navigation
-    const { data: savedUrun } = await supabase.from("urunler").select("slug").eq("id", urunId).single();
-    navigate(`/urun/${savedUrun?.slug || urunId}`);
+
+    if (isAdminMode) {
+      // Admin mode: go back to admin products page
+      navigate("/yonetim/urunler");
+    } else {
+      // Normal user: navigate to preview
+      const { data: savedUrun } = await supabase.from("urunler").select("slug").eq("id", urunId).single();
+      navigate(`/urun/${savedUrun?.slug || urunId}`);
+    }
   };
 
   // --- Fiyat Kademesi helpers ---
@@ -1046,7 +1054,7 @@ export default function YeniUrun() {
             {step < STEPS.length - 1 ? (
               <Button onClick={handleNext}>İleri</Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={saving}>{saving ? "Kaydediliyor..." : "İlerle ve Önizle"}</Button>
+              <Button onClick={handleSubmit} disabled={saving}>{saving ? "Kaydediliyor..." : isAdminMode ? "Kaydet" : "İlerle ve Önizle"}</Button>
             )}
           </div>
         )}
