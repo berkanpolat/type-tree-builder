@@ -26,8 +26,8 @@ const menuGroups: MenuGroup[] = [
   {
     groupLabel: null,
     items: [
-      { label: "Panel Özeti", path: "/yonetim/panel", icon: LayoutDashboard, permission: null, primaryOnly: false },
-      { label: "Firmalar", path: "/yonetim/firmalar-v2", icon: Building2, permission: "firma_goruntule", primaryOnly: false },
+      { label: "Panel Özeti", path: "/yonetim", icon: LayoutDashboard, permission: null, primaryOnly: false },
+      { label: "Firmalar", path: "/yonetim/firmalar", icon: Building2, permission: "firma_goruntule", primaryOnly: false },
     ],
   },
   {

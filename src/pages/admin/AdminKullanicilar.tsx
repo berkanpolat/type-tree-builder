@@ -499,7 +499,7 @@ export default function AdminKullanicilar() {
                                 size="sm"
                                 onClick={() => {
                                   impersonateAdmin(u as any);
-                                  navigate("/yonetim/panel");
+                                  navigate("/yonetim");
                                 }}
                                 className="text-xs gap-1 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
                                 title="Bu kullanıcı olarak paneli görüntüle"
