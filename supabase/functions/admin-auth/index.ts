@@ -3094,89 +3094,225 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ─── PANEL STATS (dashboard overview) ───
+    // ─── PANEL STATS (dashboard overview) — COUNT-only, no raw rows ───
     if (action === "panel-stats") {
-      const { token } = body;
-      const payload = verifyToken(token);
+      const { token: t, filters } = body;
+      const payload = verifyToken(t);
       const now = new Date();
-      const onlineThreshold = new Date(now.getTime() - 5 * 60 * 1000); // 5 min for active users
+      const onlineThreshold = new Date(now.getTime() - 5 * 60 * 1000);
 
-      // Helper: fetch all rows bypassing 1000-row default limit
-      async function fetchAllPaged(table: string, select: string) {
-        const PAGE_SIZE = 1000;
-        let allRows: any[] = [];
+      // Helper: build a date filter WHERE clause
+      function dateWhere(filter: string, dateRange?: { from?: string; to?: string }) {
+        if (dateRange?.from || dateRange?.to) {
+          const parts: string[] = [];
+          if (dateRange.from) parts.push(`created_at >= '${dateRange.from}'`);
+          if (dateRange.to) parts.push(`created_at <= '${dateRange.to}T23:59:59'`);
+          return parts;
+        }
+        if (!filter || filter === "all") return [];
+        const ms = filter === "24h" ? 86400000 : filter === "7d" ? 604800000 : 2592000000;
+        const threshold = new Date(now.getTime() - ms).toISOString();
+        return [`created_at >= '${threshold}'`];
+      }
+
+      // Helper: count with optional filters via Supabase query builder
+      async function countWithFilter(table: string, timeFilter: string, dateRange?: any, extraFilters?: (q: any) => any) {
+        let q = supabase.from(table).select("*", { count: "exact", head: true });
+        // Apply time filter
+        if (dateRange?.from) q = q.gte("created_at", dateRange.from);
+        if (dateRange?.to) q = q.lte("created_at", dateRange.to + "T23:59:59");
+        if (!dateRange?.from && !dateRange?.to && timeFilter && timeFilter !== "all") {
+          const ms = timeFilter === "24h" ? 86400000 : timeFilter === "7d" ? 604800000 : 2592000000;
+          q = q.gte("created_at", new Date(now.getTime() - ms).toISOString());
+        }
+        if (extraFilters) q = extraFilters(q);
+        const { count } = await q;
+        return count || 0;
+      }
+
+      // Helper: group count by a column
+      async function groupCount(table: string, groupCol: string, timeFilter: string, dateRange?: any, extraFilters?: (q: any) => any) {
+        let q = supabase.from(table).select(groupCol);
+        if (dateRange?.from) q = q.gte("created_at", dateRange.from);
+        if (dateRange?.to) q = q.lte("created_at", dateRange.to + "T23:59:59");
+        if (!dateRange?.from && !dateRange?.to && timeFilter && timeFilter !== "all") {
+          const ms = timeFilter === "24h" ? 86400000 : timeFilter === "7d" ? 604800000 : 2592000000;
+          q = q.gte("created_at", new Date(now.getTime() - ms).toISOString());
+        }
+        if (extraFilters) q = extraFilters(q);
+        // Fetch all rows but only the group column (lightweight)
+        const PAGE = 1000;
+        let all: any[] = [];
         let from = 0;
         while (true) {
-          const { data } = await supabase.from(table).select(select).range(from, from + PAGE_SIZE - 1);
+          let pq = supabase.from(table).select(groupCol).range(from, from + PAGE - 1);
+          if (dateRange?.from) pq = pq.gte("created_at", dateRange.from);
+          if (dateRange?.to) pq = pq.lte("created_at", dateRange.to + "T23:59:59");
+          if (!dateRange?.from && !dateRange?.to && timeFilter && timeFilter !== "all") {
+            const ms = timeFilter === "24h" ? 86400000 : timeFilter === "7d" ? 604800000 : 2592000000;
+            pq = pq.gte("created_at", new Date(now.getTime() - ms).toISOString());
+          }
+          if (extraFilters) pq = extraFilters(pq);
+          const { data } = await pq;
           if (!data || data.length === 0) break;
-          allRows = allRows.concat(data);
-          if (data.length < PAGE_SIZE) break;
-          from += PAGE_SIZE;
+          all = all.concat(data);
+          if (data.length < PAGE) break;
+          from += PAGE;
         }
-        return allRows;
+        const counts: Record<string, number> = {};
+        for (const row of all) {
+          const val = row[groupCol];
+          if (val) counts[val] = (counts[val] || 0) + 1;
+        }
+        return counts;
       }
 
-      // ── Firma Stats ──
-      const allFirmalar = await fetchAllPaged("firmalar", "id, firma_turu_id, firma_tipi_id, onay_durumu, created_at, user_id");
-      const { data: turler } = await supabase.from("firma_turleri").select("id, name");
-      const { data: tipler } = await supabase.from("firma_tipleri").select("id, name, firma_turu_id");
-      const { count: onlineCount } = await supabase.from("profiles").select("*", { count: "exact", head: true }).gte("last_seen", onlineThreshold.toISOString());
+      const f = filters || {};
 
-      const firmaStats = {
-        toplam: allFirmalar.length,
-        onay_bekleyen: allFirmalar.filter((f: any) => f.onay_durumu === "onay_bekliyor").length,
-        online: onlineCount || 0,
-        items: allFirmalar,
-        turler: turler || [],
-        tipler: tipler || [],
-      };
+      // ── All parallel queries ──
+      const [
+        // Firma
+        firmaToplam, firmaOnayBekleyen, onlineCount,
+        firmaTuruDist,
+        turlerRes, tiplerRes,
+        // İhale
+        ihaleDurumDist, ihaleUrunKatDist, ihaleHizmetKatDist,
+        // Ürün
+        urunDurumDist, urunKatDist, urunTurDist,
+        // Paket
+        paketDist,
+        paketlerRes,
+        // Destek
+        destekToplam, destekCozulen, destekIncelenen,
+        // Şikayet
+        sikayetTurDist, sikayetDurumDist,
+      ] = await Promise.all([
+        // Firma counts
+        countWithFilter("firmalar", f.firma?.time, f.firma?.dateRange),
+        countWithFilter("firmalar", f.firma?.time, f.firma?.dateRange, (q: any) => q.eq("onay_durumu", "onay_bekliyor")),
+        supabase.from("profiles").select("*", { count: "exact", head: true }).gte("last_seen", onlineThreshold.toISOString()).then((r: any) => r.count || 0),
+        groupCount("firmalar", "firma_turu_id", f.firma?.time, f.firma?.dateRange),
+        supabase.from("firma_turleri").select("id, name"),
+        supabase.from("firma_tipleri").select("id, name, firma_turu_id"),
+        // İhale
+        groupCount("ihaleler", "durum", f.ihale?.time, f.ihale?.dateRange),
+        groupCount("ihaleler", "urun_kategori_id", f.ihale?.time, f.ihale?.dateRange),
+        groupCount("ihaleler", "hizmet_kategori_id", f.ihale?.time, f.ihale?.dateRange),
+        // Ürün
+        groupCount("urunler", "durum", f.urun?.time, f.urun?.dateRange),
+        groupCount("urunler", "urun_kategori_id", f.urun?.time, f.urun?.dateRange),
+        groupCount("urunler", "urun_tur_id", f.urun?.time, f.urun?.dateRange),
+        // Paket
+        groupCount("kullanici_abonelikler", "paket_id", f.paket?.time, f.paket?.dateRange, (q: any) => q.eq("durum", "aktif")),
+        supabase.from("paketler").select("id, ad, slug"),
+        // Destek
+        countWithFilter("destek_talepleri", f.destek?.time, f.destek?.dateRange),
+        countWithFilter("destek_talepleri", f.destek?.time, f.destek?.dateRange, (q: any) => q.eq("durum", "cozuldu")),
+        countWithFilter("destek_talepleri", f.destek?.time, f.destek?.dateRange, (q: any) => q.eq("durum", "inceleniyor")),
+        // Şikayet
+        groupCount("sikayetler", "tur", f.sikayet?.time, f.sikayet?.dateRange),
+        groupCount("sikayetler", "durum", f.sikayet?.time, f.sikayet?.dateRange),
+      ]);
 
-      // ── İhale Stats ──
-      const { data: allIhaleler } = await supabase.from("ihaleler").select("id, durum, ihale_turu, urun_kategori_id, hizmet_kategori_id, user_id, created_at");
-      const ihaleStats = { items: allIhaleler || [] };
-
-      // ── Ürün Stats ──
-      const { data: allUrunler } = await supabase.from("urunler").select("id, durum, urun_kategori_id, urun_tur_id, created_at");
-      const urunStats = { items: allUrunler || [] };
-
-      // ── Paket Stats ──
-      const { data: allAbonelikler } = await supabase.from("kullanici_abonelikler").select("id, paket_id, user_id, durum, created_at");
-      const { data: allPaketler } = await supabase.from("paketler").select("id, ad, slug");
-      // Get firma info for subscribers
-      const subUserIds = [...new Set((allAbonelikler || []).map((a: any) => a.user_id))];
-      let subFirmalar: any[] = [];
-      if (subUserIds.length > 0) {
-        const { data } = await supabase.from("firmalar").select("user_id, firma_turu_id, firma_tipi_id").in("user_id", subUserIds);
-        subFirmalar = data || [];
-      }
-      const paketStats = { abonelikler: allAbonelikler || [], paketler: allPaketler || [], subFirmalar };
-
-      // ── Destek Stats ──
-      const { data: allDestek } = await supabase.from("destek_talepleri").select("id, durum, created_at");
-      const destekStats = { items: allDestek || [] };
-
-      // ── Şikayet Stats ──
-      const { data: allSikayetler } = await supabase.from("sikayetler").select("id, tur, durum, created_at");
-      const sikayetStats = { items: allSikayetler || [] };
-
-      // ── Kategori names for ihale/ürün ──
+      // Collect all category IDs for name resolution
       const katIds = new Set<string>();
-      for (const i of (allIhaleler || [])) { if (i.urun_kategori_id) katIds.add(i.urun_kategori_id); if (i.hizmet_kategori_id) katIds.add(i.hizmet_kategori_id); }
-      for (const u of (allUrunler || [])) { if (u.urun_kategori_id) katIds.add(u.urun_kategori_id); if (u.urun_tur_id) katIds.add(u.urun_tur_id); }
+      for (const id of Object.keys(ihaleUrunKatDist)) katIds.add(id);
+      for (const id of Object.keys(ihaleHizmetKatDist)) katIds.add(id);
+      for (const id of Object.keys(urunKatDist)) katIds.add(id);
+      for (const id of Object.keys(urunTurDist)) katIds.add(id);
       let kategoriMap: Record<string, string> = {};
       if (katIds.size > 0) {
         const { data: kats } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...katIds]);
         if (kats) kategoriMap = Object.fromEntries(kats.map((k: any) => [k.id, k.name]));
       }
 
+      const turler = turlerRes.data || [];
+      const tipler = tiplerRes.data || [];
+      const paketler = paketlerRes.data || [];
+
+      // Build firma tipi distribution (needs firma_tipi_id grouping)
+      // We'll do a lightweight query for this
+      let firmaTipiDist: Record<string, number> = {};
+      {
+        const PAGE = 1000;
+        let all: any[] = [];
+        let from = 0;
+        while (true) {
+          let q = supabase.from("firmalar").select("firma_tipi_id").range(from, from + PAGE - 1);
+          if (f.firma?.dateRange?.from) q = q.gte("created_at", f.firma.dateRange.from);
+          if (f.firma?.dateRange?.to) q = q.lte("created_at", f.firma.dateRange.to + "T23:59:59");
+          if (!f.firma?.dateRange?.from && !f.firma?.dateRange?.to && f.firma?.time && f.firma.time !== "all") {
+            const ms = f.firma.time === "24h" ? 86400000 : f.firma.time === "7d" ? 604800000 : 2592000000;
+            q = q.gte("created_at", new Date(now.getTime() - ms).toISOString());
+          }
+          const { data } = await q;
+          if (!data || data.length === 0) break;
+          all = all.concat(data);
+          if (data.length < PAGE) break;
+          from += PAGE;
+        }
+        for (const row of all) {
+          if (row.firma_tipi_id) firmaTipiDist[row.firma_tipi_id] = (firmaTipiDist[row.firma_tipi_id] || 0) + 1;
+        }
+      }
+
+      // Map distributions to named arrays
+      const mapDist = (dist: Record<string, number>, lookup: any[], nameField = "name") =>
+        lookup.map((item: any) => ({ id: item.id, name: item[nameField], count: dist[item.id] || 0 })).filter((i: any) => i.count > 0);
+
+      const mapDistWithKat = (dist: Record<string, number>) =>
+        Object.entries(dist).map(([id, count]) => ({ name: kategoriMap[id] || id, count })).filter(i => i.count > 0);
+
+      const ihaleToplam = Object.values(ihaleDurumDist).reduce((a: number, b: number) => a + b, 0);
+      const urunToplam = Object.values(urunDurumDist).reduce((a: number, b: number) => a + b, 0);
+      const sikayetToplam = Object.values(sikayetTurDist).reduce((a: number, b: number) => a + b, 0);
+
       return jsonResponse({
-        firma: firmaStats,
-        ihale: ihaleStats,
-        urun: urunStats,
-        paket: paketStats,
-        destek: destekStats,
-        sikayet: sikayetStats,
-        kategoriMap,
+        firma: {
+          toplam: firmaToplam,
+          onay_bekleyen: firmaOnayBekleyen,
+          online: onlineCount,
+          turDagilimi: mapDist(firmaTuruDist, turler),
+          tipDagilimi: mapDist(firmaTipiDist, tipler),
+        },
+        ihale: {
+          toplam: ihaleToplam,
+          aktif: ihaleDurumDist["devam_ediyor"] || 0,
+          tamamlanan: ihaleDurumDist["tamamlandi"] || 0,
+          iptal: ihaleDurumDist["iptal"] || 0,
+          onay_bekleyen: ihaleDurumDist["onay_bekliyor"] || 0,
+          reddedilen: ihaleDurumDist["reddedildi"] || 0,
+          taslak: (ihaleDurumDist["taslak"] || 0) + (ihaleDurumDist["duzenleniyor"] || 0),
+          urunKatDist: mapDistWithKat(ihaleUrunKatDist),
+          hizmetKatDist: mapDistWithKat(ihaleHizmetKatDist),
+        },
+        urun: {
+          toplam: urunToplam,
+          aktif: urunDurumDist["aktif"] || 0,
+          pasif: urunDurumDist["pasif"] || 0,
+          onay_bekleyen: urunDurumDist["onay_bekliyor"] || 0,
+          reddedilen: urunDurumDist["reddedildi"] || 0,
+          taslak: urunDurumDist["taslak"] || 0,
+          katDist: mapDistWithKat(urunKatDist),
+          turDist: mapDistWithKat(urunTurDist),
+        },
+        paket: {
+          paketDist: mapDist(paketDist, paketler, "ad"),
+        },
+        destek: {
+          toplam: destekToplam,
+          cozulen: destekCozulen,
+          incelenen: destekIncelenen,
+        },
+        sikayet: {
+          toplam: sikayetToplam,
+          mesaj: sikayetTurDist["mesaj"] || 0,
+          ihale: sikayetTurDist["ihale"] || 0,
+          profil: sikayetTurDist["profil"] || 0,
+          urun: sikayetTurDist["urun"] || 0,
+          beklemede: sikayetDurumDist["beklemede"] || 0,
+          cozuldu: sikayetDurumDist["cozuldu"] || 0,
+        },
       });
     }
 

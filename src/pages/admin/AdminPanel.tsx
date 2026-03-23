@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   Building2, Gavel, Package, HeadphonesIcon, MessageSquareWarning, ShoppingBag,
@@ -14,32 +13,7 @@ import {
 } from "lucide-react";
 
 type TimeFilter = "all" | "24h" | "7d" | "30d";
-
-interface DateRange {
-  from: string;
-  to: string;
-}
-
-function filterByTime<T extends { created_at: string }>(items: T[], filter: TimeFilter, dateRange?: DateRange): T[] {
-  let result = items;
-
-  // Date range filter takes priority if set
-  if (dateRange?.from || dateRange?.to) {
-    result = result.filter(i => {
-      const d = new Date(i.created_at);
-      if (dateRange.from && d < new Date(dateRange.from)) return false;
-      if (dateRange.to && d > new Date(dateRange.to + "T23:59:59")) return false;
-      return true;
-    });
-    return result;
-  }
-
-  if (filter === "all") return result;
-  const now = new Date();
-  const ms = filter === "24h" ? 86400000 : filter === "7d" ? 604800000 : 2592000000;
-  const threshold = new Date(now.getTime() - ms);
-  return result.filter(i => new Date(i.created_at) >= threshold);
-}
+interface DateRange { from: string; to: string; }
 
 function statColor(val: number) {
   if (val < 5) return "text-red-500";
@@ -56,9 +30,7 @@ const inputStyle = {
 function TimeFilterSelect({ value, onChange }: { value: TimeFilter; onChange: (v: TimeFilter) => void }) {
   return (
     <Select value={value} onValueChange={(v) => onChange(v as TimeFilter)}>
-      <SelectTrigger className="w-[140px] h-8 text-xs" style={inputStyle}>
-        <SelectValue />
-      </SelectTrigger>
+      <SelectTrigger className="w-[140px] h-8 text-xs" style={inputStyle}><SelectValue /></SelectTrigger>
       <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
         <SelectItem value="all" className="text-xs" style={{ color: "hsl(var(--admin-text))" }}>Tümü</SelectItem>
         <SelectItem value="24h" className="text-xs" style={{ color: "hsl(var(--admin-text))" }}>Son 24 Saat</SelectItem>
@@ -73,21 +45,9 @@ function DateRangeFilter({ value, onChange }: { value: DateRange; onChange: (v: 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <CalendarDays className="w-4 h-4 shrink-0 hidden sm:block" style={{ color: "hsl(var(--admin-muted))" }} />
-      <Input
-        type="date"
-        value={value.from}
-        onChange={e => onChange({ ...value, from: e.target.value })}
-        className="h-8 text-xs w-[120px] sm:w-[130px]"
-        style={inputStyle}
-      />
+      <Input type="date" value={value.from} onChange={e => onChange({ ...value, from: e.target.value })} className="h-8 text-xs w-[120px] sm:w-[130px]" style={inputStyle} />
       <span className="text-xs" style={{ color: "hsl(var(--admin-muted))" }}>—</span>
-      <Input
-        type="date"
-        value={value.to}
-        onChange={e => onChange({ ...value, to: e.target.value })}
-        className="h-8 text-xs w-[120px] sm:w-[130px]"
-        style={inputStyle}
-      />
+      <Input type="date" value={value.to} onChange={e => onChange({ ...value, to: e.target.value })} className="h-8 text-xs w-[120px] sm:w-[130px]" style={inputStyle} />
       {(value.from || value.to) && (
         <Button variant="ghost" size="sm" className="h-8 px-2 text-xs text-red-400 hover:text-red-300" onClick={() => onChange({ from: "", to: "" })}>
           <XCircle className="w-3 h-3" />
@@ -144,12 +104,16 @@ function SectionFilters({ timeFilter, onTimeChange, dateRange, onDateChange }: {
   );
 }
 
+const emptyDateRange: DateRange = { from: "", to: "" };
+
 export default function AdminPanel() {
   const { user, token } = useAdminAuth();
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [onlineCount, setOnlineCount] = useState(0);
 
+  // Per-section filters
   const [firmaFilter, setFirmaFilter] = useState<TimeFilter>("all");
   const [ihaleFilter, setIhaleFilter] = useState<TimeFilter>("all");
   const [urunFilter, setUrunFilter] = useState<TimeFilter>("all");
@@ -157,163 +121,74 @@ export default function AdminPanel() {
   const [destekFilter, setDestekFilter] = useState<TimeFilter>("all");
   const [sikayetFilter, setSikayetFilter] = useState<TimeFilter>("all");
 
-  const [firmaDateRange, setFirmaDateRange] = useState<DateRange>({ from: "", to: "" });
-  const [ihaleDateRange, setIhaleDateRange] = useState<DateRange>({ from: "", to: "" });
-  const [urunDateRange, setUrunDateRange] = useState<DateRange>({ from: "", to: "" });
-  const [paketDateRange, setPaketDateRange] = useState<DateRange>({ from: "", to: "" });
-  const [destekDateRange, setDestekDateRange] = useState<DateRange>({ from: "", to: "" });
-  const [sikayetDateRange, setSikayetDateRange] = useState<DateRange>({ from: "", to: "" });
+  const [firmaDateRange, setFirmaDateRange] = useState<DateRange>(emptyDateRange);
+  const [ihaleDateRange, setIhaleDateRange] = useState<DateRange>(emptyDateRange);
+  const [urunDateRange, setUrunDateRange] = useState<DateRange>(emptyDateRange);
+  const [paketDateRange, setPaketDateRange] = useState<DateRange>(emptyDateRange);
+  const [destekDateRange, setDestekDateRange] = useState<DateRange>(emptyDateRange);
+  const [sikayetDateRange, setSikayetDateRange] = useState<DateRange>(emptyDateRange);
 
-  // Firma tipi dağılımı için firma türü filtresi
-  const [firmaTipTurFilter, setFirmaTipTurFilter] = useState<string>("all");
+  // Debounce filter changes to avoid excessive API calls
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Poll online count every 30 seconds
-  const [onlineCount, setOnlineCount] = useState(0);
+  const buildFilters = useCallback(() => ({
+    firma: { time: firmaFilter, dateRange: firmaDateRange.from || firmaDateRange.to ? firmaDateRange : undefined },
+    ihale: { time: ihaleFilter, dateRange: ihaleDateRange.from || ihaleDateRange.to ? ihaleDateRange : undefined },
+    urun: { time: urunFilter, dateRange: urunDateRange.from || urunDateRange.to ? urunDateRange : undefined },
+    paket: { time: paketFilter, dateRange: paketDateRange.from || paketDateRange.to ? paketDateRange : undefined },
+    destek: { time: destekFilter, dateRange: destekDateRange.from || destekDateRange.to ? destekDateRange : undefined },
+    sikayet: { time: sikayetFilter, dateRange: sikayetDateRange.from || sikayetDateRange.to ? sikayetDateRange : undefined },
+  }), [firmaFilter, ihaleFilter, urunFilter, paketFilter, destekFilter, sikayetFilter, firmaDateRange, ihaleDateRange, urunDateRange, paketDateRange, destekDateRange, sikayetDateRange]);
 
-  useEffect(() => {
+  const fetchStats = useCallback(async () => {
     if (!token) return;
-    (async () => {
-      try {
-        const { data: res, error } = await supabase.functions.invoke("admin-auth/panel-stats", {
-          body: { token },
-        });
-        if (!error && res) {
-          setData(res);
-          setOnlineCount(res.firma?.online || 0);
-        }
-      } finally {
-        setLoading(false);
+    try {
+      const { data: res, error } = await supabase.functions.invoke("admin-auth", {
+        body: { action: "panel-stats", token, filters: buildFilters() },
+      });
+      if (!error && res) {
+        setData(res);
+        setOnlineCount(res.firma?.online || 0);
       }
-    })();
-  }, [token]);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, buildFilters]);
 
-  // Real-time online count polling
+  // Initial load
+  useEffect(() => {
+    if (token) fetchStats();
+  }, [fetchStats]);
+
+  // Debounced re-fetch on filter change (skip initial)
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => fetchStats(), 500);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [firmaFilter, ihaleFilter, urunFilter, paketFilter, destekFilter, sikayetFilter, firmaDateRange, ihaleDateRange, urunDateRange, paketDateRange, destekDateRange, sikayetDateRange]);
+
+  // Online count polling - every 60 seconds
   useEffect(() => {
     if (!token) return;
     const interval = setInterval(async () => {
       try {
-        const { data: res } = await supabase.functions.invoke("admin-auth/online-count", {
-          body: { token },
+        const { data: res } = await supabase.functions.invoke("admin-auth", {
+          body: { action: "online-count", token },
         });
         if (res?.online !== undefined) setOnlineCount(res.online);
       } catch {}
-    }, 30_000); // every 30 seconds
+    }, 60_000);
     return () => clearInterval(interval);
   }, [token]);
 
-  const firmaComputed = useMemo(() => {
-    if (!data?.firma) return null;
-    const items = filterByTime(data.firma.items, firmaFilter, firmaDateRange);
-    const tipItems = firmaTipTurFilter === "all"
-      ? items
-      : items.filter((f: any) => f.firma_turu_id === firmaTipTurFilter);
-    return {
-      toplam: data.firma.items.length, // Always total, not time-filtered
-      filtrelenmis: items.length,
-      onay_bekleyen: items.filter((f: any) => f.onay_durumu === "onay_bekliyor").length,
-      online: onlineCount,
-      turDagilimi: (data.firma.turler || []).map((t: any) => ({ name: t.name, count: items.filter((f: any) => f.firma_turu_id === t.id).length })),
-      tipDagilimi: (data.firma.tipler || []).map((t: any) => {
-        if (firmaTipTurFilter !== "all" && t.firma_turu_id !== firmaTipTurFilter) return null;
-        return { name: t.name, count: tipItems.filter((f: any) => f.firma_tipi_id === t.id).length };
-      }).filter(Boolean) as { name: string; count: number }[],
-    };
-  }, [data, firmaFilter, firmaDateRange, firmaTipTurFilter, onlineCount]);
-
-  const ihaleComputed = useMemo(() => {
-    if (!data?.ihale) return null;
-    const items = filterByTime(data.ihale.items, ihaleFilter, ihaleDateRange);
-    const byStatus = (s: string) => items.filter((i: any) => i.durum === s).length;
-    const groupBy = (field: string) => Object.entries(
-      items.filter((i: any) => i[field]).reduce((acc: Record<string, number>, i: any) => {
-        const name = data.kategoriMap?.[i[field]] || i[field];
-        acc[name] = (acc[name] || 0) + 1; return acc;
-      }, {})
-    ).map(([name, count]) => ({ name, count: count as number }));
-
-    const firmaItems = data.firma?.items || [];
-    const userFirmaMap: Record<string, any> = {};
-    for (const f of firmaItems) userFirmaMap[f.user_id || f.id] = f;
-    const ihaleUserIds = [...new Set(items.map((i: any) => i.user_id))];
-
-    return {
-      toplam: items.length, aktif: byStatus("devam_ediyor"), tamamlanan: byStatus("tamamlandi"),
-      iptal: byStatus("iptal"), onay_bekleyen: byStatus("onay_bekliyor"), reddedilen: byStatus("reddedildi"),
-      taslak: byStatus("taslak") + byStatus("duzenleniyor"),
-      urunKatDist: groupBy("urun_kategori_id"), hizmetKatDist: groupBy("hizmet_kategori_id"),
-      firmaTurDist: (data.firma?.turler || []).map((t: any) => ({ name: t.name, count: ihaleUserIds.filter((uid: string) => userFirmaMap[uid]?.firma_turu_id === t.id).length })),
-      firmaTipDist: (data.firma?.tipler || []).map((t: any) => ({ name: t.name, count: ihaleUserIds.filter((uid: string) => userFirmaMap[uid]?.firma_tipi_id === t.id).length })),
-    };
-  }, [data, ihaleFilter, ihaleDateRange]);
-
-  const urunComputed = useMemo(() => {
-    if (!data?.urun) return null;
-    const items = filterByTime(data.urun.items, urunFilter, urunDateRange);
-    const byStatus = (s: string) => items.filter((i: any) => i.durum === s).length;
-    const groupBy = (field: string) => Object.entries(
-      items.filter((i: any) => i[field]).reduce((acc: Record<string, number>, i: any) => {
-        const name = data.kategoriMap?.[i[field]] || i[field]; acc[name] = (acc[name] || 0) + 1; return acc;
-      }, {})
-    ).map(([name, count]) => ({ name, count: count as number }));
-    return {
-      toplam: items.length, aktif: byStatus("aktif"), pasif: byStatus("pasif"),
-      onay_bekleyen: byStatus("onay_bekliyor"), reddedilen: byStatus("reddedildi"), taslak: byStatus("taslak"),
-      katDist: groupBy("urun_kategori_id"), turDist: groupBy("urun_tur_id"),
-    };
-  }, [data, urunFilter, urunDateRange]);
-
-  const paketComputed = useMemo(() => {
-    if (!data?.paket) return null;
-    const abonelikler = filterByTime(data.paket.abonelikler, paketFilter, paketDateRange).filter((a: any) => a.durum === "aktif");
-    const subFirmalar = data.paket.subFirmalar || [];
-    const subFirmaMap: Record<string, any> = {};
-    for (const f of subFirmalar) subFirmaMap[f.user_id] = f;
-    const subUserIds = abonelikler.map((a: any) => a.user_id);
-    return {
-      paketDist: (data.paket.paketler || []).map((p: any) => ({ name: p.ad, count: abonelikler.filter((a: any) => a.paket_id === p.id).length })),
-      turDist: (data.firma?.turler || []).map((t: any) => ({ name: t.name, count: subUserIds.filter((uid: string) => subFirmaMap[uid]?.firma_turu_id === t.id).length })),
-      tipDist: (data.firma?.tipler || []).map((t: any) => ({ name: t.name, count: subUserIds.filter((uid: string) => subFirmaMap[uid]?.firma_tipi_id === t.id).length })),
-    };
-  }, [data, paketFilter, paketDateRange]);
-
-  const destekComputed = useMemo(() => {
-    if (!data?.destek) return null;
-    const items = filterByTime(data.destek.items, destekFilter, destekDateRange);
-    return { toplam: items.length, cozulen: items.filter((i: any) => i.durum === "cozuldu").length, incelenen: items.filter((i: any) => i.durum === "inceleniyor").length };
-  }, [data, destekFilter, destekDateRange]);
-
-  const sikayetComputed = useMemo(() => {
-    if (!data?.sikayet) return null;
-    const items = filterByTime(data.sikayet.items, sikayetFilter, sikayetDateRange);
-    return {
-      toplam: items.length, mesaj: items.filter((i: any) => i.tur === "mesaj").length,
-      ihale: items.filter((i: any) => i.tur === "ihale").length, profil: items.filter((i: any) => i.tur === "profil").length,
-      urun: items.filter((i: any) => i.tur === "urun").length, beklemede: items.filter((i: any) => i.durum === "beklemede").length,
-      cozuldu: items.filter((i: any) => i.durum === "cozuldu").length,
-    };
-  }, [data, sikayetFilter, sikayetDateRange]);
-
   // Navigation helpers
-  const goFirmalar = (filter?: string) => {
-    const params = filter ? `?durum=${filter}` : "";
-    navigate(`/yonetim/firmalar${params}`);
-  };
-  const goIhaleler = (filter?: string) => {
-    const params = filter ? `?durum=${filter}` : "";
-    navigate(`/yonetim/ihaleler${params}`);
-  };
-  const goUrunler = (filter?: string) => {
-    const params = filter ? `?durum=${filter}` : "";
-    navigate(`/yonetim/urunler${params}`);
-  };
-  const goDestek = (filter?: string) => {
-    const params = filter ? `?durum=${filter}` : "";
-    navigate(`/yonetim/destek${params}`);
-  };
-  const goSikayetler = (filter?: string) => {
-    const params = filter ? `?durum=${filter}` : "";
-    navigate(`/yonetim/sikayetler${params}`);
-  };
+  const goFirmalar = (filter?: string) => navigate(`/yonetim/firmalar${filter ? `?durum=${filter}` : ""}`);
+  const goIhaleler = (filter?: string) => navigate(`/yonetim/ihaleler${filter ? `?durum=${filter}` : ""}`);
+  const goUrunler = (filter?: string) => navigate(`/yonetim/urunler${filter ? `?durum=${filter}` : ""}`);
+  const goDestek = (filter?: string) => navigate(`/yonetim/destek${filter ? `?durum=${filter}` : ""}`);
+  const goSikayetler = (filter?: string) => navigate(`/yonetim/sikayetler${filter ? `?durum=${filter}` : ""}`);
 
   if (loading) {
     return (
@@ -346,29 +221,15 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><Building2 className="w-5 h-5 text-blue-500" /> Firma</h3>
             <SectionFilters timeFilter={firmaFilter} onTimeChange={setFirmaFilter} dateRange={firmaDateRange} onDateChange={setFirmaDateRange} />
           </div>
-          {firmaComputed && (<>
+          {data?.firma && (<>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-              <StatCard title="Toplam Kayıtlı Firma" value={firmaComputed.toplam} icon={Building2} color="from-blue-500 to-blue-600" onClick={() => goFirmalar()} />
-              <StatCard title="Onay Bekleyen" value={firmaComputed.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goFirmalar("onay_bekliyor")} />
-              <StatCard title="Çevrimiçi" value={firmaComputed.online} icon={Wifi} color="from-emerald-500 to-emerald-600" />
+              <StatCard title="Toplam Kayıtlı Firma" value={data.firma.toplam} icon={Building2} color="from-blue-500 to-blue-600" onClick={() => goFirmalar()} />
+              <StatCard title="Onay Bekleyen" value={data.firma.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goFirmalar("onay_bekliyor")} />
+              <StatCard title="Çevrimiçi" value={onlineCount} icon={Wifi} color="from-emerald-500 to-emerald-600" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Türü Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={firmaComputed.turDagilimi} /></CardContent></Card>
-              <Card style={cardStyle}>
-                <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                  <CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Tipi Dağılımı</CardTitle>
-                  <Select value={firmaTipTurFilter} onValueChange={setFirmaTipTurFilter}>
-                    <SelectTrigger className="w-[140px] h-7 text-[11px]" style={inputStyle}><SelectValue placeholder="Firma Türü" /></SelectTrigger>
-                    <SelectContent className="z-[300]" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
-                      <SelectItem value="all" className="text-xs" style={{ color: "hsl(var(--admin-text))" }}>Tüm Türler</SelectItem>
-                      {(data?.firma?.turler || []).map((t: any) => (
-                        <SelectItem key={t.id} value={t.id} className="text-xs" style={{ color: "hsl(var(--admin-text))" }}>{t.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </CardHeader>
-                <CardContent><DistributionList items={firmaComputed.tipDagilimi} /></CardContent>
-              </Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Türü Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={data.firma.turDagilimi || []} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Tipi Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={data.firma.tipDagilimi || []} /></CardContent></Card>
             </div>
           </>)}
         </section>
@@ -379,21 +240,19 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><Gavel className="w-5 h-5 text-emerald-500" /> İhale</h3>
             <SectionFilters timeFilter={ihaleFilter} onTimeChange={setIhaleFilter} dateRange={ihaleDateRange} onDateChange={setIhaleDateRange} />
           </div>
-          {ihaleComputed && (<>
+          {data?.ihale && (<>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3 mb-4">
-              <StatCard title="Toplam" value={ihaleComputed.toplam} icon={Gavel} color="from-emerald-500 to-emerald-600" onClick={() => goIhaleler()} />
-              <StatCard title="Aktif" value={ihaleComputed.aktif} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goIhaleler("devam_ediyor")} />
-              <StatCard title="Tamamlanan" value={ihaleComputed.tamamlanan} icon={CheckCircle} color="from-teal-500 to-teal-600" onClick={() => goIhaleler("tamamlandi")} />
-              <StatCard title="İptal" value={ihaleComputed.iptal} icon={XCircle} color="from-red-500 to-red-600" onClick={() => goIhaleler("iptal")} />
-              <StatCard title="Onay Bekleyen" value={ihaleComputed.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goIhaleler("onay_bekliyor")} />
-              <StatCard title="Reddedilen" value={ihaleComputed.reddedilen} icon={XCircle} color="from-orange-500 to-orange-600" onClick={() => goIhaleler("reddedildi")} />
-              <StatCard title="Taslak" value={ihaleComputed.taslak} icon={FileText} color="from-slate-400 to-slate-500" onClick={() => goIhaleler("taslak")} />
+              <StatCard title="Toplam" value={data.ihale.toplam} icon={Gavel} color="from-emerald-500 to-emerald-600" onClick={() => goIhaleler()} />
+              <StatCard title="Aktif" value={data.ihale.aktif} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goIhaleler("devam_ediyor")} />
+              <StatCard title="Tamamlanan" value={data.ihale.tamamlanan} icon={CheckCircle} color="from-teal-500 to-teal-600" onClick={() => goIhaleler("tamamlandi")} />
+              <StatCard title="İptal" value={data.ihale.iptal} icon={XCircle} color="from-red-500 to-red-600" onClick={() => goIhaleler("iptal")} />
+              <StatCard title="Onay Bekleyen" value={data.ihale.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goIhaleler("onay_bekliyor")} />
+              <StatCard title="Reddedilen" value={data.ihale.reddedilen} icon={XCircle} color="from-orange-500 to-orange-600" onClick={() => goIhaleler("reddedildi")} />
+              <StatCard title="Taslak" value={data.ihale.taslak} icon={FileText} color="from-slate-400 to-slate-500" onClick={() => goIhaleler("taslak")} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Kategorisi Bazlı</CardTitle></CardHeader><CardContent><DistributionList items={ihaleComputed.urunKatDist} /></CardContent></Card>
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Hizmet Kategorisi Bazlı</CardTitle></CardHeader><CardContent><DistributionList items={ihaleComputed.hizmetKatDist} /></CardContent></Card>
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Türü Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={ihaleComputed.firmaTurDist} /></CardContent></Card>
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Tipi Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={ihaleComputed.firmaTipDist} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Kategorisi Bazlı</CardTitle></CardHeader><CardContent><DistributionList items={data.ihale.urunKatDist || []} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Hizmet Kategorisi Bazlı</CardTitle></CardHeader><CardContent><DistributionList items={data.ihale.hizmetKatDist || []} /></CardContent></Card>
             </div>
           </>)}
         </section>
@@ -404,18 +263,18 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><ShoppingBag className="w-5 h-5 text-purple-500" /> Pazar</h3>
             <SectionFilters timeFilter={urunFilter} onTimeChange={setUrunFilter} dateRange={urunDateRange} onDateChange={setUrunDateRange} />
           </div>
-          {urunComputed && (<>
+          {data?.urun && (<>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-4">
-              <StatCard title="Toplam" value={urunComputed.toplam} icon={ShoppingBag} color="from-purple-500 to-purple-600" onClick={() => goUrunler()} />
-              <StatCard title="Aktif" value={urunComputed.aktif} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goUrunler("aktif")} />
-              <StatCard title="Pasif" value={urunComputed.pasif} icon={XCircle} color="from-slate-400 to-slate-500" onClick={() => goUrunler("pasif")} />
-              <StatCard title="Onay Bekleyen" value={urunComputed.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goUrunler("onay_bekliyor")} />
-              <StatCard title="Reddedilen" value={urunComputed.reddedilen} icon={XCircle} color="from-red-500 to-red-600" onClick={() => goUrunler("reddedildi")} />
-              <StatCard title="Taslak" value={urunComputed.taslak} icon={FileText} color="from-slate-400 to-slate-500" onClick={() => goUrunler("taslak")} />
+              <StatCard title="Toplam" value={data.urun.toplam} icon={ShoppingBag} color="from-purple-500 to-purple-600" onClick={() => goUrunler()} />
+              <StatCard title="Aktif" value={data.urun.aktif} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goUrunler("aktif")} />
+              <StatCard title="Pasif" value={data.urun.pasif} icon={XCircle} color="from-slate-400 to-slate-500" onClick={() => goUrunler("pasif")} />
+              <StatCard title="Onay Bekleyen" value={data.urun.onay_bekleyen} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goUrunler("onay_bekliyor")} />
+              <StatCard title="Reddedilen" value={data.urun.reddedilen} icon={XCircle} color="from-red-500 to-red-600" onClick={() => goUrunler("reddedildi")} />
+              <StatCard title="Taslak" value={data.urun.taslak} icon={FileText} color="from-slate-400 to-slate-500" onClick={() => goUrunler("taslak")} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Kategorisi Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={urunComputed.katDist} /></CardContent></Card>
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Türü Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={urunComputed.turDist} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Kategorisi Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={data.urun.katDist || []} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Ürün Türü Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={data.urun.turDist || []} /></CardContent></Card>
             </div>
           </>)}
         </section>
@@ -426,11 +285,9 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><Package className="w-5 h-5 text-amber-500" /> Paket</h3>
             <SectionFilters timeFilter={paketFilter} onTimeChange={setPaketFilter} dateRange={paketDateRange} onDateChange={setPaketDateRange} />
           </div>
-          {paketComputed && (
+          {data?.paket && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Paket Abone Sayısı</CardTitle></CardHeader><CardContent><DistributionList items={paketComputed.paketDist} /></CardContent></Card>
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Türü Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={paketComputed.turDist} /></CardContent></Card>
-              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Firma Tipi Dağılımı</CardTitle></CardHeader><CardContent><DistributionList items={paketComputed.tipDist} /></CardContent></Card>
+              <Card style={cardStyle}><CardHeader className="pb-2"><CardTitle className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>Paket Abone Sayısı</CardTitle></CardHeader><CardContent><DistributionList items={data.paket.paketDist || []} /></CardContent></Card>
             </div>
           )}
         </section>
@@ -441,11 +298,11 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><HeadphonesIcon className="w-5 h-5 text-cyan-500" /> Destek</h3>
             <SectionFilters timeFilter={destekFilter} onTimeChange={setDestekFilter} dateRange={destekDateRange} onDateChange={setDestekDateRange} />
           </div>
-          {destekComputed && (
+          {data?.destek && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <StatCard title="Toplam Destek Talebi" value={destekComputed.toplam} icon={HeadphonesIcon} color="from-cyan-500 to-cyan-600" onClick={() => goDestek()} />
-              <StatCard title="Çözülen" value={destekComputed.cozulen} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goDestek("cozuldu")} />
-              <StatCard title="İncelenen" value={destekComputed.incelenen} icon={Eye} color="from-yellow-500 to-yellow-600" onClick={() => goDestek("inceleniyor")} />
+              <StatCard title="Toplam Destek Talebi" value={data.destek.toplam} icon={HeadphonesIcon} color="from-cyan-500 to-cyan-600" onClick={() => goDestek()} />
+              <StatCard title="Çözülen" value={data.destek.cozulen} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goDestek("cozuldu")} />
+              <StatCard title="İncelenen" value={data.destek.incelenen} icon={Eye} color="from-yellow-500 to-yellow-600" onClick={() => goDestek("inceleniyor")} />
             </div>
           )}
         </section>
@@ -456,15 +313,15 @@ export default function AdminPanel() {
             <h3 className="text-lg font-bold flex items-center gap-2" style={{ color: "hsl(var(--admin-text))" }}><MessageSquareWarning className="w-5 h-5 text-red-500" /> Şikayet</h3>
             <SectionFilters timeFilter={sikayetFilter} onTimeChange={setSikayetFilter} dateRange={sikayetDateRange} onDateChange={setSikayetDateRange} />
           </div>
-          {sikayetComputed && (
+          {data?.sikayet && (
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 sm:gap-3">
-              <StatCard title="Toplam" value={sikayetComputed.toplam} icon={MessageSquareWarning} color="from-red-500 to-red-600" onClick={() => goSikayetler()} />
-              <StatCard title="Mesaj" value={sikayetComputed.mesaj} icon={MessageSquareWarning} color="from-blue-500 to-blue-600" onClick={() => goSikayetler("mesaj")} />
-              <StatCard title="İhale" value={sikayetComputed.ihale} icon={Gavel} color="from-emerald-500 to-emerald-600" onClick={() => goSikayetler("ihale")} />
-              <StatCard title="Profil" value={sikayetComputed.profil} icon={Users} color="from-purple-500 to-purple-600" onClick={() => goSikayetler("profil")} />
-              <StatCard title="Ürün" value={sikayetComputed.urun} icon={ShoppingBag} color="from-orange-500 to-orange-600" onClick={() => goSikayetler("urun")} />
-              <StatCard title="Beklemede" value={sikayetComputed.beklemede} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goSikayetler("beklemede")} />
-              <StatCard title="Çözüldü" value={sikayetComputed.cozuldu} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goSikayetler("cozuldu")} />
+              <StatCard title="Toplam" value={data.sikayet.toplam} icon={MessageSquareWarning} color="from-red-500 to-red-600" onClick={() => goSikayetler()} />
+              <StatCard title="Mesaj" value={data.sikayet.mesaj} icon={MessageSquareWarning} color="from-blue-500 to-blue-600" onClick={() => goSikayetler("mesaj")} />
+              <StatCard title="İhale" value={data.sikayet.ihale} icon={Gavel} color="from-emerald-500 to-emerald-600" onClick={() => goSikayetler("ihale")} />
+              <StatCard title="Profil" value={data.sikayet.profil} icon={Users} color="from-purple-500 to-purple-600" onClick={() => goSikayetler("profil")} />
+              <StatCard title="Ürün" value={data.sikayet.urun} icon={ShoppingBag} color="from-orange-500 to-orange-600" onClick={() => goSikayetler("urun")} />
+              <StatCard title="Beklemede" value={data.sikayet.beklemede} icon={Clock} color="from-yellow-500 to-yellow-600" onClick={() => goSikayetler("beklemede")} />
+              <StatCard title="Çözüldü" value={data.sikayet.cozuldu} icon={CheckCircle} color="from-green-500 to-green-600" onClick={() => goSikayetler("cozuldu")} />
             </div>
           )}
         </section>

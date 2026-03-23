@@ -270,12 +270,31 @@ export default function AdminFirmalarV2() {
 
   const fetchDropdowns = useCallback(async () => {
     if (!token) return;
+
+    // Check sessionStorage cache first
+    const CACHE_KEY = "admin-dropdown-cache-v1";
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Date.now() - parsed.ts < 10 * 60 * 1000) { // 10 min TTL
+          setTurler(parsed.turler || []);
+          setTipler((parsed.tipler || []) as any);
+          setIller(parsed.iller || []);
+          setIlceler(parsed.ilceler || []);
+          return;
+        }
+      } catch {}
+    }
+
     try {
       const dropdownData = await callApi("get-dropdown-options", { token });
-      setTurler(dropdownData.turler || []);
-      setTipler((dropdownData.tipler || []) as any);
+      const fetchedTurler = dropdownData.turler || [];
+      const fetchedTipler = (dropdownData.tipler || []) as any;
+      setTurler(fetchedTurler);
+      setTipler(fetchedTipler);
+
       const ilKatId = await getIlKategoriId();
-      // Fetch all il/ilçe rows (may exceed 1000)
       let allIlRows: any[] = [];
       let from = 0;
       const PAGE = 1000;
@@ -286,8 +305,15 @@ export default function AdminFirmalarV2() {
         if (data.length < PAGE) break;
         from += PAGE;
       }
-      setIller(allIlRows.filter((r: any) => !r.parent_id));
-      setIlceler(allIlRows.filter((r: any) => r.parent_id));
+      const fetchedIller = allIlRows.filter((r: any) => !r.parent_id);
+      const fetchedIlceler = allIlRows.filter((r: any) => r.parent_id);
+      setIller(fetchedIller);
+      setIlceler(fetchedIlceler);
+
+      // Save to cache
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), turler: fetchedTurler, tipler: fetchedTipler, iller: fetchedIller, ilceler: fetchedIlceler }));
+      } catch {}
     } catch {
       const ilKatId = await getIlKategoriId();
       const [{ data: t }, { data: tp }] = await Promise.all([
