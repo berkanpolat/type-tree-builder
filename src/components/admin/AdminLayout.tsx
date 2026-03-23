@@ -110,8 +110,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
       return true;
     };
     return menuGroups
-      .map((g) => ({ ...g, items: g.items.filter(filterItem) }))
-      .filter((g) => g.items.length > 0);
+      .map((g) => ({ ...g, items: Array.isArray(g.items) ? g.items.filter(filterItem) : [] }))
+      .filter((g) => Array.isArray(g.items) && g.items.length > 0);
   }, [user, originalUser, hasPermission]);
 
   if (loading) {
