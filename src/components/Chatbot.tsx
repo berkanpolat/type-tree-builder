@@ -362,7 +362,7 @@ export default function Chatbot() {
           {!minimized && (
             <>
               {/* Messages area */}
-              <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-gradient-to-b from-muted/30 to-background">
+              <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain px-4 py-4 space-y-4 bg-gradient-to-b from-muted/30 to-background" style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch" }}>
                 
                 {/* Welcome state */}
                 {messages.length === 0 && (
