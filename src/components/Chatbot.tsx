@@ -303,14 +303,15 @@ export default function Chatbot() {
           ref={panelRef}
           className={cn(
             "flex flex-col bg-background shadow-[0_8px_60px_-12px_rgba(0,0,0,0.25)] overflow-hidden border border-border/60",
-            // Mobile: full-screen sheet from bottom; Desktop: floating card
             "fixed z-[9999]",
+            // Mobile: true full-screen with overscroll containment
             "inset-0 rounded-none md:inset-auto md:bottom-5 md:right-5 md:rounded-2xl",
             minimized
               ? "h-auto inset-auto bottom-20 right-3 md:bottom-5 md:right-5 w-[260px] md:w-[280px] rounded-2xl"
               : "md:w-[380px] md:max-w-[calc(100vw-2rem)] md:h-[540px] md:max-h-[calc(100vh-6rem)]",
             "animate-in slide-in-from-bottom-5 fade-in duration-300"
           )}
+          style={{ touchAction: "none", overscrollBehavior: "contain" }}
         >
           {/* Header */}
           <div className="relative shrink-0 overflow-hidden select-none">
