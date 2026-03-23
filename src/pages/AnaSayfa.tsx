@@ -667,8 +667,14 @@ export default function AnaSayfa() {
     setSelectedTurId(turId || null);
   };
 
+  const [heartAnimId, setHeartAnimId] = useState<string | null>(null);
+
   const toggleFavorite = async (urunId: string, isFav: boolean) => {
     if (!currentUserId) return;
+    // Optimistic UI update
+    setUrunler(prev => prev.map(u => u.id === urunId ? { ...u, is_favorited: !isFav } : u));
+    setHeartAnimId(urunId);
+    setTimeout(() => setHeartAnimId(null), 450);
     if (isFav) {
       await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", urunId);
       toast({ title: "Favorilerden çıkarıldı" });
@@ -676,7 +682,6 @@ export default function AnaSayfa() {
       await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: urunId });
       toast({ title: "Favorilere eklendi" });
     }
-    // Favoriting updates cache optimistically - no need for local state update
   };
 
   if (authLoading) {
