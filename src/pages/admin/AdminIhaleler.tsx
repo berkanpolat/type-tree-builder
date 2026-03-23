@@ -250,15 +250,17 @@ export default function AdminIhaleler() {
 
   const fetchData = useCallback(async () => {
     if (!token) return;
+    setLoading(true);
+    setLoadError(false);
     try {
-      const [ihaleData, statsData] = await Promise.all([
-        callApi("list-ihaleler", { token }),
-        callApi("ihale-stats", { token }),
-      ]);
-      setIhaleler(ihaleData.ihaleler || []);
+      // Sequential to avoid cold-start overload
+      const ihaleData = await callApi("list-ihaleler", { token });
+      setIhaleler(ihaleData?.ihaleler || []);
+
+      const statsData = await callApi("ihale-stats", { token });
       setStats(statsData);
 
-      const firms = (ihaleData.ihaleler || []).reduce((acc: any[], i: any) => {
+      const firms = (ihaleData?.ihaleler || []).reduce((acc: any[], i: any) => {
         if (!acc.find((f: any) => f.user_id === i.user_id)) {
           acc.push({ user_id: i.user_id, firma_unvani: i.firma_unvani });
         }
@@ -266,7 +268,8 @@ export default function AdminIhaleler() {
       }, []);
       setFirmaList(firms.sort((a: any, b: any) => a.firma_unvani.localeCompare(b.firma_unvani)));
     } catch {
-      toast({ title: "Hata", description: "Veriler yüklenemedi", variant: "destructive" });
+      setLoadError(true);
+      toast({ title: "Hata", description: "Veriler yüklenemedi. Tekrar deneyin.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
