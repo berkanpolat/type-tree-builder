@@ -201,6 +201,12 @@ const PERMISSION_GROUPS: PermissionGroup[] = [
       },
       { key: "yaptirim_goruntule", label: "Yaptırımlar" },
       { key: "rapor_goruntule", label: "Raporlar" },
+      {
+        key: "seo_goruntule", label: "SEO görüntüle", parent: true,
+        children: [
+          { key: "seo_duzenle", label: "SEO düzenle" },
+        ],
+      },
     ],
   },
 ];
