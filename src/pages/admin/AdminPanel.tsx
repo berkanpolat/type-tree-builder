@@ -77,8 +77,11 @@ function StatCard({ title, value, icon: Icon, color, onClick }: { title: string;
   );
 }
 
-function DistributionList({ items }: { items: { name: string; count: number }[] }) {
-  const sorted = [...items].sort((a, b) => b.count - a.count);
+function DistributionList({ items }: { items: { name: string; count: number }[] | undefined | null }) {
+  const safeItems = Array.isArray(items)
+    ? items.filter((item): item is { name: string; count: number } => Boolean(item && typeof item.name === "string" && typeof item.count === "number"))
+    : [];
+  const sorted = [...safeItems].sort((a, b) => b.count - a.count);
   if (sorted.length === 0) return <p className="text-xs" style={{ color: "hsl(var(--admin-muted))" }}>Veri yok</p>;
   return (
     <div className="space-y-1.5 max-h-48 overflow-y-auto">
