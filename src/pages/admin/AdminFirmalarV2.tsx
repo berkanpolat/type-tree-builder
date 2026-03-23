@@ -628,8 +628,10 @@ export default function AdminFirmalarV2() {
     setExpandedLoading(true);
     setExpandedAksiyonlar([]);
     try {
-      const data = await callApi("list-firma-aksiyonlar", { token, firmaId });
-      setExpandedAksiyonlar(data.aksiyonlar || []);
+      const { data, error } = await supabase.rpc("admin_list_aksiyonlar_v2");
+      if (error) throw error;
+      const all = (data as any) || [];
+      setExpandedAksiyonlar(all.filter((a: any) => a.firma_id === firmaId));
     } catch {
       setExpandedAksiyonlar([]);
     } finally {

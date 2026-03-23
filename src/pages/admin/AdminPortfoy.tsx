@@ -242,8 +242,9 @@ export default function AdminPortfoy() {
     setSevkTargetId("");
     setSevkDialogOpen(true);
     try {
-      const data = await callApi("list-admin-users", { token });
-      const others = (data.users || []).filter((u: any) => u.id !== adminUser?.id);
+      const { data, error } = await supabase.rpc("admin_list_admin_users_v2");
+      if (error) throw error;
+      const others = ((data as any) || []).filter((u: any) => u.id !== adminUser?.id);
       setSevkAdminList(others);
     } catch {
       setSevkAdminList([]);
