@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,6 +17,7 @@ interface FavFirma {
     kurulus_il_id: string | null;
     kurulus_ilce_id: string | null;
     firma_tipi_id: string;
+    slug: string | null;
   };
 }
 
@@ -28,10 +30,12 @@ interface FavUrun {
     urun_kategori_id: string | null;
     urun_grup_id: string | null;
     user_id: string;
+    slug: string | null;
   };
 }
 
 export default function Favoriler() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [tab, setTab] = useState("firmalar");
   const [favFirmalar, setFavFirmalar] = useState<FavFirma[]>([]);
@@ -53,14 +57,14 @@ export default function Favoriler() {
     // Fetch firma favorites
     const { data: fFirmalar } = await supabase
       .from("firma_favoriler")
-      .select("id, firma_id, firmalar(firma_unvani, logo_url, kurulus_il_id, kurulus_ilce_id, firma_tipi_id)")
+      .select("id, firma_id, firmalar(firma_unvani, logo_url, kurulus_il_id, kurulus_ilce_id, firma_tipi_id, slug)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     // Fetch urun favorites
     const { data: fUrunler } = await supabase
       .from("urun_favoriler")
-      .select("id, urun_id, urunler(baslik, foto_url, urun_kategori_id, urun_grup_id, user_id)")
+      .select("id, urun_id, urunler(baslik, foto_url, urun_kategori_id, urun_grup_id, user_id, slug)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
@@ -196,29 +200,29 @@ export default function Favoriler() {
             ) : (
               <div className="divide-y divide-border">
                 {favFirmalar.map((fav) => (
-                  <div key={fav.id} className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4 px-2">
-                    <FirmaAvatar firmaUnvani={fav.firma?.firma_unvani || "-"} logoUrl={fav.firma?.logo_url} size="md" className="sm:w-12 sm:h-12 sm:text-base" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground text-sm sm:text-base truncate">{fav.firma?.firma_unvani || "-"}</p>
-                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mt-0.5 flex-wrap">
-                        <span className="flex items-center gap-1 truncate">
-                          📍 {getLocation(fav.firma?.kurulus_il_id, fav.firma?.kurulus_ilce_id)}
-                        </span>
-                        <span className="hidden sm:flex items-center gap-1">
-                          🏢 {fav.firma?.firma_tipi_id ? firmaTipiMap[fav.firma.firma_tipi_id] || "-" : "-"}
-                        </span>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" className="shrink-0 hidden sm:flex">
-                      Profili Gör
-                    </Button>
-                    <button
-                      onClick={() => removeFirmaFav(fav.id)}
-                      className="shrink-0 p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
-                    >
-                      <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-destructive fill-destructive" />
-                    </button>
-                  </div>
+                  <div key={fav.id} className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4 px-2 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => fav.firma?.slug && navigate(`/${fav.firma.slug}`)}>
+                     <FirmaAvatar firmaUnvani={fav.firma?.firma_unvani || "-"} logoUrl={fav.firma?.logo_url} size="md" className="sm:w-12 sm:h-12 sm:text-base" />
+                     <div className="flex-1 min-w-0">
+                       <p className="font-semibold text-foreground text-sm sm:text-base truncate">{fav.firma?.firma_unvani || "-"}</p>
+                       <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mt-0.5 flex-wrap">
+                         <span className="flex items-center gap-1 truncate">
+                           📍 {getLocation(fav.firma?.kurulus_il_id, fav.firma?.kurulus_ilce_id)}
+                         </span>
+                         <span className="hidden sm:flex items-center gap-1">
+                           🏢 {fav.firma?.firma_tipi_id ? firmaTipiMap[fav.firma.firma_tipi_id] || "-" : "-"}
+                         </span>
+                       </div>
+                     </div>
+                     <Button variant="outline" size="sm" className="shrink-0 hidden sm:flex" onClick={(e) => { e.stopPropagation(); fav.firma?.slug && navigate(`/${fav.firma.slug}`); }}>
+                       Profili Gör
+                     </Button>
+                     <button
+                       onClick={(e) => { e.stopPropagation(); removeFirmaFav(fav.id); }}
+                       className="shrink-0 p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
+                     >
+                       <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-destructive fill-destructive" />
+                     </button>
+                   </div>
                 ))}
               </div>
             )}
@@ -232,32 +236,32 @@ export default function Favoriler() {
             ) : (
               <div className="divide-y divide-border">
                 {favUrunler.map((fav) => (
-                  <div key={fav.id} className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4 px-2">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
-                      {fav.urun?.foto_url ? (
-                        <img src={fav.urun.foto_url} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-foreground text-sm sm:text-base truncate">{fav.urun?.baslik || "-"}</p>
-                      </div>
-                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 flex items-center gap-1 truncate">
-                        🏢 {fav.urun?.user_id ? firmaAdMap[fav.urun.user_id] || "-" : "-"}
-                      </p>
-                    </div>
-                    <Button variant="outline" size="sm" className="shrink-0 hidden sm:flex">
-                      Ürünü Gör
-                    </Button>
-                    <button
-                      onClick={() => removeUrunFav(fav.id)}
-                      className="shrink-0 p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
-                    >
-                      <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-destructive fill-destructive" />
-                    </button>
-                  </div>
+                  <div key={fav.id} className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4 px-2 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => fav.urun?.slug && navigate(`/urun/${fav.urun.slug}`)}>
+                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+                       {fav.urun?.foto_url ? (
+                         <img src={fav.urun.foto_url} alt="" className="w-full h-full object-cover" />
+                       ) : (
+                         <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                       )}
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <div className="flex items-center gap-2 flex-wrap">
+                         <p className="font-semibold text-foreground text-sm sm:text-base truncate">{fav.urun?.baslik || "-"}</p>
+                       </div>
+                       <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 flex items-center gap-1 truncate">
+                         🏢 {fav.urun?.user_id ? firmaAdMap[fav.urun.user_id] || "-" : "-"}
+                       </p>
+                     </div>
+                     <Button variant="outline" size="sm" className="shrink-0 hidden sm:flex" onClick={(e) => { e.stopPropagation(); fav.urun?.slug && navigate(`/urun/${fav.urun.slug}`); }}>
+                       Ürünü Gör
+                     </Button>
+                     <button
+                       onClick={(e) => { e.stopPropagation(); removeUrunFav(fav.id); }}
+                       className="shrink-0 p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
+                     >
+                       <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-destructive fill-destructive" />
+                     </button>
+                   </div>
                 ))}
               </div>
             )}
