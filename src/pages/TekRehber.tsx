@@ -216,10 +216,11 @@ export default function TekRehber() {
 
     // Apply search-based uretimSatisFilter (from autocomplete selection)
     if (uretimSatisFilter) {
-      const { data: usSearchData } = await supabase
-        .from("firma_uretim_satis")
-        .select("firma_id")
-        .in(uretimSatisFilter.column as any, uretimSatisFilter.ids);
+      let usQuery = supabase.from("firma_uretim_satis").select("firma_id");
+      if (uretimSatisFilter.column === "kategori_id") usQuery = usQuery.in("kategori_id", uretimSatisFilter.ids);
+      else if (uretimSatisFilter.column === "grup_id") usQuery = usQuery.in("grup_id", uretimSatisFilter.ids);
+      else usQuery = usQuery.in("tur_id", uretimSatisFilter.ids);
+      const { data: usSearchData } = await usQuery;
       if (usSearchData) {
         const usFirmaIds = new Set(usSearchData.map((d) => d.firma_id));
         if (junctionFirmaIds === null) junctionFirmaIds = [...usFirmaIds];
