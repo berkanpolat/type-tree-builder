@@ -118,6 +118,7 @@ export default function AdminIhaleler() {
   const [ihaleler, setIhaleler] = useState<IhaleItem[]>([]);
   const [stats, setStats] = useState<IhaleStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [statFilter, setStatFilter] = useState<{ type: string; value?: string }>({ type: "all" });
