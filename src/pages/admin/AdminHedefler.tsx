@@ -138,22 +138,27 @@ export default function AdminHedefler() {
     if (!user) return;
     setLoading(true);
     try {
-      const data = await callApi("list-hedefler", { token, adminId: isYK ? undefined : user.id, durum: filterDurum });
-      setHedefler(data.hedefler || []);
+      const { data, error } = await supabase.rpc("admin_list_hedefler_v2", {
+        p_admin_id: isYK ? undefined : user.id,
+        p_durum: filterDurum === "all" ? undefined : filterDurum,
+      });
+      if (error) throw error;
+      setHedefler((data as any) || []);
     } catch (e: any) {
       toast({ title: "Hata", description: e.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [user, token, filterDurum, isYK, callApi, toast]);
+  }, [user, filterDurum, isYK, toast]);
 
   const loadAdminUsers = useCallback(async () => {
     if (!isYK) return;
     try {
-      const data = await callApi("list-admin-users", { token });
-      setAdminUsers((data.users || []).filter((u: AdminUser) => u.departman !== "Yönetim Kurulu"));
+      const { data, error } = await supabase.rpc("admin_list_admin_users_v2");
+      if (error) throw error;
+      setAdminUsers(((data as any) || []).filter((u: AdminUser) => u.departman !== "Yönetim Kurulu"));
     } catch {}
-  }, [isYK, token, callApi]);
+  }, [isYK]);
 
   useEffect(() => { loadHedefler(); }, [loadHedefler]);
   useEffect(() => { loadAdminUsers(); }, [loadAdminUsers]);

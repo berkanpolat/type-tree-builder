@@ -35,7 +35,7 @@ export default function AdminIslemler() {
     supabase.rpc("admin_list_activity_log_v2")
       .then(({ data, error }) => {
         if (error) throw error;
-        setAdminLogs(data || []);
+        setAdminLogs((data as any) || []);
       })
       .catch(() => toast({ title: "Hata", description: "İşlem geçmişi yüklenemedi", variant: "destructive" }))
       .finally(() => setAdminLoading(false));

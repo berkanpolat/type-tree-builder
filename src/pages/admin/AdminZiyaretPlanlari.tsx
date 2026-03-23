@@ -185,14 +185,15 @@ export default function AdminZiyaretPlanlari() {
     if (!isYonetimKurulu || !token) return;
     const fetchAdmins = async () => {
       try {
-        const data = await callApi("list-admin-users", { token });
-        setAdminList((data.users || []).map((u: any) => ({ id: u.id, ad: u.ad, soyad: u.soyad })));
+        const { data, error } = await supabase.rpc("admin_list_admin_users_v2");
+        if (error) throw error;
+        setAdminList(((data as any) || []).map((u: any) => ({ id: u.id, ad: u.ad, soyad: u.soyad })));
       } catch {
         setAdminList([]);
       }
     };
     fetchAdmins();
-  }, [isYonetimKurulu, token, callApi]);
+  }, [isYonetimKurulu, token]);
 
   const viewingAdminId = selectedAdminId === "all" ? undefined : (selectedAdminId === "own" ? adminUser?.id : selectedAdminId);
   const isViewingOwnPlans = selectedAdminId === "own";
@@ -201,20 +202,20 @@ export default function AdminZiyaretPlanlari() {
     if (!token || !adminUser) return;
     try {
       const weekEnd = endOfWeek(selectedWeekStart, { weekStartsOn: 1 });
-      const data = await callApi("list-ziyaret-planlari", {
-        token,
-        adminId: viewingAdminId,
-        baslangic: format(selectedWeekStart, "yyyy-MM-dd"),
-        bitis: format(weekEnd, "yyyy-MM-dd"),
+      const { data, error } = await supabase.rpc("admin_list_ziyaret_planlari_v2", {
+        p_admin_id: viewingAdminId || undefined,
+        p_baslangic: format(selectedWeekStart, "yyyy-MM-dd"),
+        p_bitis: format(weekEnd, "yyyy-MM-dd"),
       });
-      setPlanlar(data?.planlar || []);
+      if (error) throw error;
+      setPlanlar((data as any) || []);
     } catch (err) {
       console.error("[ZiyaretPlanlari] fetch error:", err);
       toast({ title: "Hata", description: "Ziyaret planları yüklenemedi", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [token, adminUser, callApi, toast, selectedWeekStart, viewingAdminId]);
+  }, [token, adminUser, toast, selectedWeekStart, viewingAdminId]);
 
   useEffect(() => { setLoading(true); fetchPlanlar(); }, [fetchPlanlar]);
 

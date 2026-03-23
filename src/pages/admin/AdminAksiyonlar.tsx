@@ -66,7 +66,7 @@ export default function AdminAksiyonlar() {
         p_admin_id: adminUser.is_primary ? undefined : adminUser.id,
       });
       if (error) throw error;
-      setAksiyonlar(data || []);
+      setAksiyonlar((data as any) || []);
     } catch {
       setAksiyonlar([]);
     } finally {

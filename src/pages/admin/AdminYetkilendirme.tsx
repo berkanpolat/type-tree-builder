@@ -261,7 +261,7 @@ export default function AdminYetkilendirme() {
     try {
       const { data, error } = await supabase.rpc("admin_list_admin_users_v2");
       if (error) throw error;
-      setUsers(data || []);
+      setUsers((data as any) || []);
     } catch {
       toast({ title: "Hata", description: "Kullanıcılar yüklenemedi", variant: "destructive" });
     } finally {

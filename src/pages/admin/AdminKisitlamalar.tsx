@@ -206,9 +206,10 @@ export default function AdminKisitlamalar() {
     try {
       const { data, error } = await supabase.rpc("admin_list_kisitlamalar_all_v2");
       if (error) throw error;
-      if (data?.kisitlamalar) setKisitlamalar(data.kisitlamalar);
-      if (data?.uzaklastirmalar) setUzaklastirmalar(data.uzaklastirmalar);
-      if (data?.yasaklar) setYasaklar(data.yasaklar);
+      const result = data as any;
+      if (result?.kisitlamalar) setKisitlamalar(result.kisitlamalar);
+      if (result?.uzaklastirmalar) setUzaklastirmalar(result.uzaklastirmalar);
+      if (result?.yasaklar) setYasaklar(result.yasaklar);
     } catch {
       toast({ title: "Veri yüklenemedi", variant: "destructive" });
     }
