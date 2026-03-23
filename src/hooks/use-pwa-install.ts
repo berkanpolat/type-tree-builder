@@ -5,24 +5,45 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+function isStandalone(): boolean {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (navigator as any).standalone === true
+  );
+}
+
+function isIos(): boolean {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+
 export function usePwaInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstallable, setIsInstallable] = useState(false);
+  const [nativePromptAvailable, setNativePromptAvailable] = useState(false);
+  const [showIosTip, setShowIosTip] = useState(false);
   const [isDismissed, setIsDismissed] = useState(() => {
-    return sessionStorage.getItem("pwa_install_dismissed") === "1";
+    return localStorage.getItem("pwa_install_dismissed") === "1";
   });
 
   useEffect(() => {
-    // Already installed as standalone
-    if (window.matchMedia("(display-mode: standalone)").matches) return;
+    if (isStandalone()) return;
 
+    // Native prompt (Chrome, Edge, Samsung Internet)
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setIsInstallable(true);
+      setNativePromptAvailable(true);
     };
-
     window.addEventListener("beforeinstallprompt", handler);
+
+    // iOS fallback: show tip after 3 seconds
+    if (isIos()) {
+      const timer = setTimeout(() => setShowIosTip(true), 3000);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("beforeinstallprompt", handler);
+      };
+    }
+
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, []);
 
@@ -31,18 +52,21 @@ export function usePwaInstall() {
     await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === "accepted") {
-      setIsInstallable(false);
+      setNativePromptAvailable(false);
     }
     setDeferredPrompt(null);
   }, [deferredPrompt]);
 
   const dismiss = useCallback(() => {
     setIsDismissed(true);
-    sessionStorage.setItem("pwa_install_dismissed", "1");
+    localStorage.setItem("pwa_install_dismissed", "1");
   }, []);
 
+  const isInstallable = !isDismissed && !isStandalone() && (nativePromptAvailable || showIosTip);
+
   return {
-    isInstallable: isInstallable && !isDismissed,
+    isInstallable,
+    isIos: isIos(),
     install,
     dismiss,
   };
