@@ -152,7 +152,7 @@ const FirmaBilgilerim = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case "genel":
-        return <GenelFirmaBilgileri userId={userId} onFirmaTuruChange={handleFirmaTuruChange} />;
+        return <GenelFirmaBilgileri userId={userId} onFirmaTuruChange={handleFirmaTuruChange} onDataChange={triggerRefresh} />;
       case "urun-hizmet":
         return <UrunHizmetTab userId={userId} firmaTuruName={firmaTuruName} />;
       case "uretim-satis":
