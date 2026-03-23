@@ -32,13 +32,16 @@ export default function AdminIslemler() {
   useEffect(() => {
     if (!token) return;
     setAdminLoading(true);
-    callApi("list-activity-log", { token })
-      .then((data) => setAdminLogs(data.logs || []))
+    supabase.rpc("admin_list_activity_log_v2")
+      .then(({ data, error }) => {
+        if (error) throw error;
+        setAdminLogs(data || []);
+      })
       .catch(() => toast({ title: "Hata", description: "İşlem geçmişi yüklenemedi", variant: "destructive" }))
       .finally(() => setAdminLoading(false));
-  }, [token, callApi, toast]);
+  }, [token, toast]);
 
-  // Load user activities when tab switches
+  // Load user activities when tab switches (still uses edge function - complex query)
   useEffect(() => {
     if (activeTab !== "kullanicilar" || !token || userLoaded) return;
     setUserLoading(true);

@@ -259,14 +259,15 @@ export default function AdminYetkilendirme() {
   const fetchUsers = useCallback(async () => {
     if (!token) return;
     try {
-      const data = await callApi("list-users", { token });
-      setUsers(data.users || []);
+      const { data, error } = await supabase.rpc("admin_list_admin_users_v2");
+      if (error) throw error;
+      setUsers(data || []);
     } catch {
       toast({ title: "Hata", description: "Kullanıcılar yüklenemedi", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [token, callApi, toast]);
+  }, [token, toast]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 

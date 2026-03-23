@@ -59,17 +59,20 @@ export default function AdminAksiyonlar() {
   const callApi = useAdminApi();
 
   const fetchAksiyonlar = useCallback(async () => {
-    if (!token || !adminUser) return;
+    if (!adminUser) return;
     setLoading(true);
     try {
-      const data = await callApi("list-aksiyonlar", { token, adminId: adminUser.id });
-      setAksiyonlar(data.aksiyonlar || []);
+      const { data, error } = await supabase.rpc("admin_list_aksiyonlar_v2", {
+        p_admin_id: adminUser.is_primary ? undefined : adminUser.id,
+      });
+      if (error) throw error;
+      setAksiyonlar(data || []);
     } catch {
       setAksiyonlar([]);
     } finally {
       setLoading(false);
     }
-  }, [token, adminUser, callApi]);
+  }, [adminUser]);
 
   useEffect(() => { fetchAksiyonlar(); }, [fetchAksiyonlar]);
 
