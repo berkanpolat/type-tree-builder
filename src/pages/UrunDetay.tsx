@@ -163,6 +163,7 @@ interface BenzerUrun {
 export default function UrunDetay() {
   const { slug: slugParam } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const urunBanner = useBanner("urun-detay-alt-banner");
   const { toast } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -184,6 +185,10 @@ export default function UrunDetay() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
+  const [mobileZoomScale, setMobileZoomScale] = useState(1);
+  const [mobileZoomOrigin, setMobileZoomOrigin] = useState({ x: 50, y: 50 });
+  const [pinchStartDist, setPinchStartDist] = useState<number | null>(null);
+  const [pinchStartScale, setPinchStartScale] = useState(1);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   // Breadcrumb names
