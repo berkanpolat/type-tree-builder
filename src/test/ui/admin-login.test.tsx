@@ -89,7 +89,7 @@ describe("Admin Login Page (L5 RTL)", () => {
     fireEvent.click(screen.getByRole("button", { name: /giriş yap/i }));
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/yonetim/panel");
+      expect(mockNavigate).toHaveBeenCalledWith("/yonetim");
     });
   });
 

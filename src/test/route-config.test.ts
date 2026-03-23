@@ -130,7 +130,7 @@ describe("Admin rota tanımları", () => {
   it("tüm admin alt rotaları tanımlı", () => {
     expect(ADMIN_ROUTES).toContain("/yonetim/panel");
     expect(ADMIN_ROUTES).toContain("/yonetim/kullanicilar");
-    expect(ADMIN_ROUTES).toContain("/yonetim/firmalar-v2");
+    expect(ADMIN_ROUTES).toContain("/yonetim/firmalar");
     expect(ADMIN_ROUTES).toContain("/yonetim/ihaleler");
     expect(ADMIN_ROUTES).toContain("/yonetim/urunler");
     expect(ADMIN_ROUTES).toContain("/yonetim/sikayetler");

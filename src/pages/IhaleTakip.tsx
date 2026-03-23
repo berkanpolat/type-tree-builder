@@ -391,7 +391,7 @@ export default function IhaleTakip() {
             templateModel: {
               firma_unvani: bidderFirma?.firma_unvani || "",
               ihale_basligi: ihale.baslik,
-              ihale_linki: `${window.location.origin}/tekihale/${ihale.id}`,
+              ihale_linki: `${window.location.origin}/ihaleler/${ihale.id}`,
             },
           },
         }).catch(console.error);
