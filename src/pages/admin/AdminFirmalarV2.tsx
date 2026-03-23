@@ -1645,6 +1645,20 @@ export default function AdminFirmalarV2() {
 
       <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
 
+      {aksiyonEkleFirma && token && adminUser && (
+        <AksiyonEkleDialog
+          open={aksiyonEkleOpen}
+          onOpenChange={(o) => { setAksiyonEkleOpen(o); if (!o) setAksiyonEkleFirma(null); }}
+          firmaId={aksiyonEkleFirma.id}
+          firmaUnvani={aksiyonEkleFirma.firma_unvani}
+          onSuccess={fetchData}
+          callApi={callApi}
+          token={token}
+          adminDepartman={adminUser.departman}
+          adminIsPrimary={adminUser.is_primary}
+        />
+      )}
+
       {/* Portföy Ata Dialog */}
       <Dialog open={portfolyoAtaOpen} onOpenChange={setPortfolyoAtaOpen}>
         <DialogContent style={s.card} className="max-w-md">
