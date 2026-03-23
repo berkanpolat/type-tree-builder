@@ -30,14 +30,35 @@ serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Authorization header yok");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return jsonResponse({ subscribed: false, paket: "ucretsiz", reason: "no_auth" });
+    }
 
     const token = authHeader.replace("Bearer ", "");
+
+    // Detect if the token is actually the anon key (not a user JWT)
+    let payload: any = null;
+    try {
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        payload = JSON.parse(atob(parts[1]));
+      }
+    } catch { /* ignore parse errors */ }
+
+    if (!payload?.sub || payload?.role === "anon") {
+      return jsonResponse({ subscribed: false, paket: "ucretsiz", reason: "no_session" });
+    }
+
     const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
-    if (userError || !user) throw new Error(`Auth error: ${userError?.message || "Invalid token"}`);
+    if (userError || !user) {
+      logStep("Auth failed, returning unsubscribed", { error: userError?.message });
+      return jsonResponse({ subscribed: false, paket: "ucretsiz", reason: "auth_failed" });
+    }
 
     const userId = user.id;
-    if (!userId) throw new Error("Kullanıcı doğrulanamadı");
+    if (!userId) {
+      return jsonResponse({ subscribed: false, paket: "ucretsiz", reason: "no_user" });
+    }
 
     logStep("User authenticated", { userId });
 
