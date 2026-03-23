@@ -667,8 +667,14 @@ export default function AnaSayfa() {
     setSelectedTurId(turId || null);
   };
 
+  const [localFavOverrides, setLocalFavOverrides] = useState<Record<string, boolean>>({});
+  const [heartAnimId, setHeartAnimId] = useState<string | null>(null);
+
   const toggleFavorite = async (urunId: string, isFav: boolean) => {
     if (!currentUserId) return;
+    setLocalFavOverrides(prev => ({ ...prev, [urunId]: !isFav }));
+    setHeartAnimId(urunId);
+    setTimeout(() => setHeartAnimId(null), 450);
     if (isFav) {
       await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", urunId);
       toast({ title: "Favorilerden çıkarıldı" });
@@ -676,7 +682,6 @@ export default function AnaSayfa() {
       await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: urunId });
       toast({ title: "Favorilere eklendi" });
     }
-    // Favoriting updates cache optimistically - no need for local state update
   };
 
   if (authLoading) {
@@ -711,10 +716,10 @@ export default function AnaSayfa() {
             </div>
           )}
           <button
-            onClick={(e) => { e.stopPropagation(); toggleFavorite(urun.id, !!urun.is_favorited); }}
+            onClick={(e) => { e.stopPropagation(); const currentFav = localFavOverrides[urun.id] ?? !!urun.is_favorited; toggleFavorite(urun.id, currentFav); }}
             className="absolute top-2 right-2 p-2 bg-background/80 rounded-full hover:bg-background transition-colors"
           >
-            <Heart className={`w-4 h-4 ${urun.is_favorited ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+            <Heart className={`w-4 h-4 transition-all duration-200 ${(localFavOverrides[urun.id] ?? !!urun.is_favorited) ? "fill-destructive text-destructive" : "text-muted-foreground"} ${heartAnimId === urun.id ? "animate-heart-pop" : ""}`} />
           </button>
         </div>
         <div className="p-3 flex flex-col flex-1">

@@ -424,8 +424,13 @@ export default function UrunDetay() {
 
   useEffect(() => { fetchUrun(); }, [fetchUrun]);
 
+  const [heartAnim, setHeartAnim] = useState(false);
+
   const toggleFavorite = async () => {
     if (!currentUserId || !resolvedUrunId) return;
+    setIsFavorited(!isFavorited);
+    setHeartAnim(true);
+    setTimeout(() => setHeartAnim(false), 450);
     if (isFavorited) {
       await supabase.from("urun_favoriler").delete().eq("user_id", currentUserId).eq("urun_id", resolvedUrunId);
       toast({ title: "Favorilerden çıkarıldı" });
@@ -433,7 +438,6 @@ export default function UrunDetay() {
       await supabase.from("urun_favoriler").insert({ user_id: currentUserId, urun_id: resolvedUrunId });
       toast({ title: "Favorilere eklendi" });
     }
-    setIsFavorited(!isFavorited);
   };
 
   const handleSaticiyaSor = async () => {
@@ -709,7 +713,7 @@ export default function UrunDetay() {
                   onClick={(e) => { e.stopPropagation(); toggleFavorite(); }}
                   className="absolute top-3 right-3 p-2.5 bg-background/80 rounded-full hover:bg-background transition-colors"
                 >
-                  <Heart className={`w-5 h-5 ${isFavorited ? "fill-destructive text-destructive" : "text-muted-foreground"}`} />
+                  <Heart className={`w-5 h-5 transition-all duration-200 ${isFavorited ? "fill-destructive text-destructive" : "text-muted-foreground"} ${heartAnim ? "animate-heart-pop" : ""}`} />
                 </button>
               </div>
 
