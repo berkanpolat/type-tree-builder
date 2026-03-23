@@ -177,6 +177,7 @@ export default function YeniUrun() {
 
   // Draft ID
   const [draftId, setDraftId] = useState<string | null>(editId || null);
+  const [originalDurum, setOriginalDurum] = useState<string | null>(null);
 
   const isHazirGiyim = kategoriName?.toLowerCase().includes("hazır giyim");
   const varyant1Label = isHazirGiyim ? "Beden" : "Birim";
