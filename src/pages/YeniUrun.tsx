@@ -1020,57 +1020,50 @@ export default function YeniUrun() {
                   </div>
                 </div>
 
-                {/* Generated variations table — only photo, beden/birim, renk */}
+                {/* Generated variations — compact single row with chips */}
                 {varyasyonlar.length > 0 && (
-                  <div className="border rounded-lg overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Fotoğraf</TableHead>
-                          <TableHead>{varyant1Label}</TableHead>
-                          <TableHead>{varyant2Label}</TableHead>
-                          <TableHead className="w-10"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {varyasyonlar.map((v, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {v.foto_urls.map((url, fIdx) => (
-                                  <div key={fIdx} className="relative group">
-                                    <div className="w-12 h-12 rounded overflow-hidden border">
-                                      <img src={url} alt="" className="w-full h-full object-cover" />
-                                    </div>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleVaryasyonFotoRemove(idx, fIdx)}
-                                      className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </div>
-                                ))}
-                                <label className="cursor-pointer">
-                                  <input type="file" accept="image/*" multiple className="hidden"
-                                    onChange={e => { if (e.target.files && e.target.files.length > 0) handleVaryasyonFotoAdd(idx, e.target.files); }} />
-                                  <div className="w-12 h-12 rounded border-2 border-dashed border-muted-foreground/40 flex items-center justify-center hover:border-primary transition-colors">
-                                    <Upload className="w-4 h-4 text-muted-foreground" />
-                                  </div>
-                                </label>
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-sm font-medium">{v.varyant_1_value}</TableCell>
-                            <TableCell className="text-sm">{v.varyant_2_value}</TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeVaryasyon(idx)}>
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
+                  <div className="border rounded-lg p-4 space-y-4">
+                    {/* Photo upload area — shared across all variations */}
+                    <div>
+                      <Label className="text-sm mb-2 block">Fotoğraflar</Label>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {varyasyonlar[0]?.foto_urls.map((url, fIdx) => (
+                          <div key={fIdx} className="relative group">
+                            <div className="w-14 h-14 rounded-lg overflow-hidden border">
+                              <img src={url} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleVaryasyonFotoRemove(0, fIdx)}
+                              className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
                         ))}
-                      </TableBody>
-                    </Table>
+                        <label className="cursor-pointer">
+                          <input type="file" accept="image/*" multiple className="hidden"
+                            onChange={e => { if (e.target.files && e.target.files.length > 0) handleVaryasyonFotoAdd(0, e.target.files); }} />
+                          <div className="w-14 h-14 rounded-lg border-2 border-dashed border-muted-foreground/40 flex items-center justify-center hover:border-primary transition-colors">
+                            <Upload className="w-4 h-4 text-muted-foreground" />
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Variation chips */}
+                    <div className="flex flex-wrap gap-2">
+                      {varyasyonlar.map((v, idx) => (
+                        <Badge key={idx} variant="secondary" className="text-xs px-2.5 py-1.5 gap-1.5">
+                          <span className="font-medium">{v.varyant_1_value}</span>
+                          <span className="text-muted-foreground">/</span>
+                          <span>{v.varyant_2_value}</span>
+                          <button type="button" onClick={() => removeVaryasyon(idx)} className="ml-1 hover:text-destructive transition-colors">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
