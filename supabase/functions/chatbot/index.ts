@@ -162,7 +162,7 @@ C: /giris-kayit sayfasında "Şifremi Unuttum" linkine tıklayın. E-posta adres
 
 ## İLETİŞİM
 - E-posta: destek@tekstilas.com
-- Telefon: +90 530 965 07 07
+- Telefon: 0850 242 5700
 - Adres: İstanbul, Türkiye
 - SSS sayfası: /sss
 - İletişim sayfası: /iletisim
