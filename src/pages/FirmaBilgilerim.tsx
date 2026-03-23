@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -13,6 +13,8 @@ import ReferanslarTab from "@/components/firma-bilgileri/ReferanslarTab";
 import GaleriTab from "@/components/firma-bilgileri/GaleriTab";
 import BelgelerimTab from "@/components/firma-bilgileri/BelgelerimTab";
 import PlaceholderTab from "@/components/firma-bilgileri/PlaceholderTab";
+import { useProfileCompletion } from "@/hooks/use-profile-completion";
+import { Progress } from "@/components/ui/progress";
 import {
   ClipboardList,
   Package,
@@ -23,6 +25,7 @@ import {
   Award,
   Image,
   FolderCheck,
+  TrendingUp,
 } from "lucide-react";
 
 export interface TabItem {
@@ -95,7 +98,12 @@ const FirmaBilgilerim = () => {
   const [firmaTurleriMap, setFirmaTurleriMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { percentage, loading: completionLoading } = useProfileCompletion(refreshKey);
 
+  const triggerRefresh = useCallback(() => {
+    setRefreshKey(k => k + 1);
+  }, []);
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -131,6 +139,12 @@ const FirmaBilgilerim = () => {
         setActiveTab("genel");
       }
     }
+  };
+
+  // Refresh completion when switching tabs (user likely saved data)
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId);
+    triggerRefresh();
   };
 
   const tabs = tabsByFirmaTuru[firmaTuruName] || tabsByFirmaTuru["Hazır Giyim Üreticisi"] || [];
@@ -173,7 +187,31 @@ const FirmaBilgilerim = () => {
   return (
     <DashboardLayout title="Firma Profil Bilgilerim">
       <div className="max-w-7xl mx-auto space-y-6">
-        <FirmaTabMenu tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+        {/* Firma Doluluk Oranı */}
+        <div className="bg-card border rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              <span className="font-semibold text-sm">Firma Profil Doluluk Oranı</span>
+            </div>
+            <span className={`text-sm font-bold ${percentage >= 80 ? 'text-green-600' : percentage >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
+              {completionLoading ? '...' : `%${percentage}`}
+            </span>
+          </div>
+          <Progress value={completionLoading ? 0 : percentage} className="h-3" />
+          {!completionLoading && percentage < 100 && (
+            <p className="text-xs text-muted-foreground">
+              Firma profilinizi tamamlayarak görünürlüğünüzü artırın.
+            </p>
+          )}
+          {!completionLoading && percentage === 100 && (
+            <p className="text-xs text-green-600 font-medium">
+              🎉 Tebrikler! Firma profiliniz eksiksiz.
+            </p>
+          )}
+        </div>
+
+        <FirmaTabMenu tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
         {renderTabContent()}
       </div>
     </DashboardLayout>
