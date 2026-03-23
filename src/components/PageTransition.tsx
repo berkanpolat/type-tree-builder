@@ -5,36 +5,23 @@ interface PageTransitionProps {
   children: ReactNode;
 }
 
-const pageVariants = {
-  initial: {
-    opacity: 0,
-    x: 20,
-  },
-  in: {
-    opacity: 1,
-    x: 0,
-  },
-  out: {
-    opacity: 0,
-    x: -20,
-  },
-};
-
 const pageTransition = {
   type: "tween",
-  ease: "easeInOut",
-  duration: 0.2,
+  ease: [0.25, 0.1, 0.25, 1],
+  duration: 0.15,
 };
 
 export default function PageTransition({ children }: PageTransitionProps) {
   return (
     <motion.div
-      initial="initial"
-      animate="in"
-      exit="out"
-      variants={pageVariants}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={pageTransition}
-      style={{ width: "100%", minHeight: "100%" }}
+      style={{
+        width: "100%",
+        minHeight: "100%",
+        willChange: "opacity",
+      }}
     >
       {children}
     </motion.div>

@@ -1,11 +1,31 @@
 import { usePwaInstall } from "@/hooks/use-pwa-install";
-import { Download, X, Share } from "lucide-react";
+import { Download, X, Share, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const PwaInstallBanner = () => {
-  const { isInstallable, isIos, install, dismiss } = usePwaInstall();
+  const { isInstallable, isIos, hasNativePrompt, install, dismiss } = usePwaInstall();
 
   if (!isInstallable) return null;
+
+  const getContent = () => {
+    if (isIos) {
+      return (
+        <p className="text-xs">
+          <Share className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
+          Paylaş → Ana Ekrana Ekle ile uygulamayı yükle
+        </p>
+      );
+    }
+    if (!hasNativePrompt) {
+      return (
+        <p className="text-xs">
+          <MoreVertical className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
+          Menü → Ana ekrana ekle ile uygulamayı yükle
+        </p>
+      );
+    }
+    return <p className="text-xs font-medium">Tekstil A.Ş. uygulamasını ana ekranına ekle!</p>;
+  };
 
   return (
     <div className="fixed top-0 left-0 right-0 z-[60] animate-in slide-in-from-top-4 duration-300">
@@ -14,17 +34,10 @@ const PwaInstallBanner = () => {
           <Download className="w-4 h-4" />
         </div>
         <div className="flex-1 min-w-0">
-          {isIos ? (
-            <p className="text-xs">
-              <Share className="w-3.5 h-3.5 inline-block mr-1 -mt-0.5" />
-              Paylaş → Ana Ekrana Ekle ile uygulamayı yükle
-            </p>
-          ) : (
-            <p className="text-xs font-medium">Tekstil A.Ş. uygulamasını ana ekranına ekle!</p>
-          )}
+          {getContent()}
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {!isIos && (
+          {hasNativePrompt && (
             <Button
               size="sm"
               variant="secondary"
