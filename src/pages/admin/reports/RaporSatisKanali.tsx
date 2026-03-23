@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
 import AdminLayout from "@/components/admin/AdminLayout";
@@ -57,13 +58,13 @@ export default function RaporSatisKanali() {
     if (!token) return;
     setLoading(true);
     try {
-      const [aksiyonData, adminData] = await Promise.all([
-        callApi("list-aksiyonlar", { token }),
-        callApi("list-admin-users", { token }),
+      const [aksiyonRes, adminRes] = await Promise.all([
+        supabase.rpc("admin_list_aksiyonlar_v2"),
+        supabase.rpc("admin_list_admin_users_v2"),
       ]);
 
-      const allAksiyonlar = aksiyonData.aksiyonlar || [];
-      const admins = adminData.users || [];
+      const allAksiyonlar = (aksiyonRes.data as any) || [];
+      const admins = (adminRes.data as any) || [];
       setAdminUsers(admins);
       const adminDepartmanMap = new Map(admins.map((a: any) => [a.id, a.departman || "Bilinmeyen"]));
       const adminNameMap = new Map(admins.map((a: any) => [a.id, `${a.ad} ${a.soyad}`]));

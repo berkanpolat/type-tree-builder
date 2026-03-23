@@ -59,23 +59,26 @@ export default function AdminAksiyonlar() {
   const callApi = useAdminApi();
 
   const fetchAksiyonlar = useCallback(async () => {
-    if (!token || !adminUser) return;
+    if (!adminUser) return;
     setLoading(true);
     try {
-      const data = await callApi("list-aksiyonlar", { token, adminId: adminUser.id });
-      setAksiyonlar(data.aksiyonlar || []);
+      const { data, error } = await supabase.rpc("admin_list_aksiyonlar_v2", {
+        p_admin_id: adminUser.is_primary ? undefined : adminUser.id,
+      });
+      if (error) throw error;
+      setAksiyonlar((data as any) || []);
     } catch {
       setAksiyonlar([]);
     } finally {
       setLoading(false);
     }
-  }, [token, adminUser, callApi]);
+  }, [adminUser]);
 
   useEffect(() => { fetchAksiyonlar(); }, [fetchAksiyonlar]);
 
-  // Polling fallback: refresh every 10 seconds to catch new aksiyonlar
+  // Refresh every 30 seconds instead of 10
   useEffect(() => {
-    const interval = setInterval(() => { fetchAksiyonlar(); }, 10000);
+    const interval = setInterval(() => { fetchAksiyonlar(); }, 30000);
     return () => clearInterval(interval);
   }, [fetchAksiyonlar]);
 

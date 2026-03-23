@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, type CSSProperties } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
+import { supabase } from "@/integrations/supabase/client";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -259,14 +260,15 @@ export default function AdminYetkilendirme() {
   const fetchUsers = useCallback(async () => {
     if (!token) return;
     try {
-      const data = await callApi("list-users", { token });
-      setUsers(data.users || []);
+      const { data, error } = await supabase.rpc("admin_list_admin_users_v2");
+      if (error) throw error;
+      setUsers((data as any) || []);
     } catch {
       toast({ title: "Hata", description: "Kullanıcılar yüklenemedi", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [token, callApi, toast]);
+  }, [token, toast]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 

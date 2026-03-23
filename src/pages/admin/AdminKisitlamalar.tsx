@@ -204,19 +204,17 @@ export default function AdminKisitlamalar() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [kisitRes, uzakRes, yasakRes] = await Promise.all([
-        callApi("list-kisitlamalar", {}),
-        callApi("list-uzaklastirmalar", {}),
-        callApi("list-yasaklar", {}),
-      ]);
-      if (kisitRes?.kisitlamalar) setKisitlamalar(kisitRes.kisitlamalar);
-      if (uzakRes?.uzaklastirmalar) setUzaklastirmalar(uzakRes.uzaklastirmalar);
-      if (yasakRes?.yasaklar) setYasaklar(yasakRes.yasaklar);
+      const { data, error } = await supabase.rpc("admin_list_kisitlamalar_all_v2");
+      if (error) throw error;
+      const result = data as any;
+      if (result?.kisitlamalar) setKisitlamalar(result.kisitlamalar);
+      if (result?.uzaklastirmalar) setUzaklastirmalar(result.uzaklastirmalar);
+      if (result?.yasaklar) setYasaklar(result.yasaklar);
     } catch {
       toast({ title: "Veri yüklenemedi", variant: "destructive" });
     }
     setLoading(false);
-  }, [callApi, toast]);
+  }, [toast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 

@@ -596,8 +596,9 @@ export default function AdminFirmalarV2() {
     setPortfolyoAtaOpen(true);
     if (adminUsersList.length === 0) {
       try {
-        const data = await callApi("list-admin-users", { token });
-        setAdminUsersList(data.users || []);
+        const { data, error } = await supabase.rpc("admin_list_admin_users_v2");
+        if (error) throw error;
+        setAdminUsersList((data as any) || []);
       } catch { /* ignore */ }
     }
   };
@@ -627,8 +628,10 @@ export default function AdminFirmalarV2() {
     setExpandedLoading(true);
     setExpandedAksiyonlar([]);
     try {
-      const data = await callApi("list-firma-aksiyonlar", { token, firmaId });
-      setExpandedAksiyonlar(data.aksiyonlar || []);
+      const { data, error } = await supabase.rpc("admin_list_aksiyonlar_v2");
+      if (error) throw error;
+      const all = (data as any) || [];
+      setExpandedAksiyonlar(all.filter((a: any) => a.firma_id === firmaId));
     } catch {
       setExpandedAksiyonlar([]);
     } finally {

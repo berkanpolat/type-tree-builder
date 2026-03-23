@@ -2988,6 +2988,9 @@ export type Database = {
       admin_firma_stats_v2: { Args: never; Returns: Json }
       admin_hash_password: { Args: { p_password: string }; Returns: string }
       admin_ihale_stats_v2: { Args: never; Returns: Json }
+      admin_list_activity_log_v2: { Args: never; Returns: Json }
+      admin_list_admin_users_v2: { Args: never; Returns: Json }
+      admin_list_aksiyonlar_v2: { Args: { p_admin_id?: string }; Returns: Json }
       admin_list_firmalar_v2: {
         Args: {
           p_filter_durum?: string
@@ -3001,7 +3004,16 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_list_hedefler_v2: {
+        Args: { p_admin_id?: string; p_durum?: string }
+        Returns: Json
+      }
       admin_list_ihaleler_v2: { Args: never; Returns: Json }
+      admin_list_kisitlamalar_all_v2: { Args: never; Returns: Json }
+      admin_list_ziyaret_planlari_v2: {
+        Args: { p_admin_id?: string; p_baslangic?: string; p_bitis?: string }
+        Returns: Json
+      }
       admin_panel_stats_v2: { Args: never; Returns: Json }
       admin_verify_password: {
         Args: { p_password: string; p_username: string }
