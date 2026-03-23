@@ -176,6 +176,7 @@ Deno.serve(async (req) => {
             donem_baslangic: now.toISOString(),
             donem_bitis: donemBitis.toISOString(),
             durum: "aktif",
+            ekstra_haklar: {},
             updated_at: now.toISOString(),
           })
           .eq("user_id", userId);
