@@ -103,6 +103,12 @@ function SortablePlanItem({ plan, onAksiyonEkle, onDurumChange, onIptal, onEditN
           <DropdownMenuItem onClick={() => onAksiyonEkle(plan)} className="text-xs cursor-pointer">
             <ClipboardList className="w-3.5 h-3.5 mr-2 text-amber-500" /> Aksiyon Ekle
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => {
+            const q = encodeURIComponent(plan.firma_unvani);
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${q}`, "_blank");
+          }} className="text-xs cursor-pointer">
+            <Navigation className="w-3.5 h-3.5 mr-2 text-blue-500" /> Yol Tarifi
+          </DropdownMenuItem>
           {plan.durum === "planli" && (
             <DropdownMenuItem onClick={() => onDurumChange(plan.id, "tamamlandi")} className="text-xs cursor-pointer">
               <CheckCircle className="w-3.5 h-3.5 mr-2 text-emerald-500" /> Tamamlandı
