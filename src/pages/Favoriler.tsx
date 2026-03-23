@@ -35,6 +35,7 @@ interface FavUrun {
 }
 
 export default function Favoriler() {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [tab, setTab] = useState("firmalar");
   const [favFirmalar, setFavFirmalar] = useState<FavFirma[]>([]);
