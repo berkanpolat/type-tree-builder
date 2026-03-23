@@ -26,11 +26,14 @@ const KATEGORI_IDS = {
   IL: "61fbe0a7-638f-4900-97a0-c2c8310e01af",
 };
 
-export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange }: Props) {
+export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange, onDataChange }: Props) {
   const { toast } = useToast();
   const isAdminMode = !!localStorage.getItem("admin_token");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const isInitialLoad = useRef(true);
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
   const kapakInputRef = useRef<HTMLInputElement>(null);
 
