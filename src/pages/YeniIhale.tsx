@@ -559,11 +559,24 @@ export default function YeniIhale() {
             <Button variant="outline" onClick={handleBack}>Geri</Button>
           ) : <div />}
           
-          {currentStep < STEPS.length - 1 ? (
-            <Button onClick={handleNext}>İleri</Button>
-          ) : (
-            <div />
-          )}
+          <div className="flex gap-2">
+            {isAdminMode && (
+              <Button onClick={async () => {
+                setSaving(true);
+                await handleSave();
+                setSaving(false);
+                toast({ title: "Başarılı", description: "Değişiklikler kaydedildi." });
+                navigate("/yonetim/ihaleler");
+              }} disabled={saving}>
+                {saving ? "Kaydediliyor..." : "Kaydet"}
+              </Button>
+            )}
+            {currentStep < STEPS.length - 1 ? (
+              <Button onClick={handleNext}>İleri</Button>
+            ) : (
+              <div />
+            )}
+          </div>
         </div>
       </div>
     </DashboardLayout>
