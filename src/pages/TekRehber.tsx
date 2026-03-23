@@ -354,20 +354,16 @@ export default function TekRehber() {
     if (selectedFirmaTuru) fetchFirmalar();
   }, [fetchFirmalar, selectedFirmaTuru]);
 
-  // Trigger search on Enter or Ara button
+  // Trigger search on Enter or Ara button — search firma names
   const handleSearch = useCallback(async () => {
     const term = searchTerm.trim();
     if (!term) return;
     setShowDropdown(false);
-    const matchedTur = firmaTurleri.find((t) => t.name.toLowerCase().includes(term.toLowerCase()));
-    if (matchedTur) {
-      setSelectedFirmaTuru(matchedTur.id);
-      setSelectedFirmaTuruName(matchedTur.name);
-      setAppliedSearchTerm("");
-      return;
-    }
+    // If term matches a taxonomy item exactly, prefer dropdown selection
+    // Otherwise treat as firma name search
+    setUretimSatisFilter(null);
     setAppliedSearchTerm(term);
-  }, [searchTerm, firmaTurleri]);
+  }, [searchTerm]);
 
   // Autocomplete
   useEffect(() => {
