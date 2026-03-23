@@ -857,7 +857,7 @@ export default function FirmaDetay() {
           {/* Mobile with scroll hint */}
           <ScrollHintWrapper>
             <div className="flex items-center gap-4 py-2 px-4">
-              {MENU_ITEMS.filter(item => currentUserId || item.id !== "urunler").map((item) => (
+              {MENU_ITEMS.filter(item => item.id !== "urunler" || (currentUserId && packageInfo.paketSlug !== "ucretsiz")).map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
