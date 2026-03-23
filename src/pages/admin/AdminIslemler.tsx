@@ -32,13 +32,18 @@ export default function AdminIslemler() {
   useEffect(() => {
     if (!token) return;
     setAdminLoading(true);
-    supabase.rpc("admin_list_activity_log_v2")
-      .then(({ data, error }) => {
+    const load = async () => {
+      try {
+        const { data, error } = await supabase.rpc("admin_list_activity_log_v2");
         if (error) throw error;
         setAdminLogs((data as any) || []);
-      })
-      .catch(() => toast({ title: "Hata", description: "İşlem geçmişi yüklenemedi", variant: "destructive" }))
-      .finally(() => setAdminLoading(false));
+      } catch {
+        toast({ title: "Hata", description: "İşlem geçmişi yüklenemedi", variant: "destructive" });
+      } finally {
+        setAdminLoading(false);
+      }
+    };
+    load();
   }, [token, toast]);
 
   // Load user activities when tab switches (still uses edge function - complex query)
