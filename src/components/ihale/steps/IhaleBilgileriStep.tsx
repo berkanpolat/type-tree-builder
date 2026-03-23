@@ -51,6 +51,7 @@ function useAltSecenekler(parentId: string | null) {
 export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skipBirim }: Props) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
+  const uploadedFotoFingerprints = useRef<string[]>([]);
   const [selectedSertifikaKat, setSelectedSertifikaKat] = useState<string | null>(null);
 
   // DB-sourced dropdown options
