@@ -49,7 +49,7 @@ const mainItems = [
 ];
 
 const bottomItems = [
-  { title: "Ayarlar", url: "/ayarlar", icon: Settings },
+  { title: "Ayarlar", url: "/profil-ayarlari", icon: Settings },
 ];
 
 export function AppSidebar() {
