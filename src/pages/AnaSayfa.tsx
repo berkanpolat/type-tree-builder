@@ -601,7 +601,13 @@ export default function AnaSayfa() {
           };
         })
         .filter((item): item is SearchResult & { score: number } => !!item)
-        .sort((a, b) => b.score - a.score)
+        .sort((a, b) => {
+          const typeOrder: Record<string, number> = { "Kategori": 0, "Grup": 1, "Tür": 2 };
+          const ta = typeOrder[a.type] ?? 3;
+          const tb = typeOrder[b.type] ?? 3;
+          if (ta !== tb) return ta - tb;
+          return b.score - a.score;
+        })
         .slice(0, 5)
         .map(({ id, name, type }) => ({ id, name, type }));
 
