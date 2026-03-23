@@ -64,21 +64,21 @@ const pageTests: TestDef[] = [
   },
   {
     group: "Sayfa Erişim",
-    name: "ManuPazar sayfası yükleniyor",
+    name: "TekPazar sayfası yükleniyor",
     category: "page",
     detail: "Pazar sayfası erişilebilir",
     test: async () => {
-      const res = await fetch("/manupazar", { method: "GET", redirect: "follow" });
+      const res = await fetch("/urunlerim", { method: "GET", redirect: "follow" });
       return { ok: res.ok, detail: `Status: ${res.status}` };
     },
   },
   {
     group: "Sayfa Erişim",
-    name: "ManuIhale sayfası yükleniyor",
+    name: "Tekİhale sayfası yükleniyor",
     category: "page",
     detail: "İhale sayfası erişilebilir",
     test: async () => {
-      const res = await fetch("/manuihale", { method: "GET", redirect: "follow" });
+      const res = await fetch("/ihalelerim", { method: "GET", redirect: "follow" });
       return { ok: res.ok, detail: `Status: ${res.status}` };
     },
   },
