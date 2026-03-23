@@ -98,7 +98,12 @@ const FirmaBilgilerim = () => {
   const [firmaTurleriMap, setFirmaTurleriMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { percentage, loading: completionLoading } = useProfileCompletion(refreshKey);
 
+  const triggerRefresh = useCallback(() => {
+    setRefreshKey(k => k + 1);
+  }, []);
   useEffect(() => {
     const fetchData = async () => {
       const { data: { user } } = await supabase.auth.getUser();
