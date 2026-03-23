@@ -178,7 +178,7 @@ const Dashboard = () => {
 
           {/* Kullanıcı Kartı */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-start justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">{profile ? `${profile.ad} ${profile.soyad}` : "—"}</h2>
