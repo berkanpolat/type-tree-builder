@@ -30,10 +30,11 @@ import {
   Building2, Users, Clock, AlertCircle, CheckCircle, XCircle,
   Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp,
   CreditCard, Wifi, ArrowUpDown, ArrowUp, ArrowDown, Infinity, Eye, MessageSquare, Loader2, Trash2, ShieldCheck, Download,
-  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList, KeyRound,
+  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList, KeyRound, Plus,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
+import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
 
 // Shared style helpers
 const s = {
@@ -219,6 +220,10 @@ export default function AdminFirmalarV2() {
   const [portfolyoAtaAdminId, setPortfolyoAtaAdminId] = useState<string>("");
   const [portfolyoAtaLoading, setPortfolyoAtaLoading] = useState(false);
   const [adminUsersList, setAdminUsersList] = useState<{ id: string; ad: string; soyad: string; departman: string; pozisyon: string }[]>([]);
+
+  // Aksiyon Ekle dialog
+  const [aksiyonEkleFirma, setAksiyonEkleFirma] = useState<FirmaItem | null>(null);
+  const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
 
   const callApi = useAdminApi();
 
@@ -1105,6 +1110,11 @@ export default function AdminFirmalarV2() {
                                 <ExternalLink className="w-3.5 h-3.5 mr-2" /> Yönet (Giriş)
                               </DropdownMenuItem>
                             )}
+                            {hasPermission("portfolyo_aksiyon_ekle") && (
+                              <DropdownMenuItem onClick={() => { setAksiyonEkleFirma(firma); setAksiyonEkleOpen(true); }} className="text-xs cursor-pointer">
+                                <Plus className="w-3.5 h-3.5 mr-2 text-emerald-500" /> Aksiyon Ekle
+                              </DropdownMenuItem>
+                            )}
                             {!firma.portfolyo ? (
                               <DropdownMenuItem onClick={() => handleAddPortfolyo(firma)} className="text-xs cursor-pointer">
                                 <Briefcase className="w-3.5 h-3.5 mr-2 text-amber-500" /> Portföyüme Ekle
@@ -1634,6 +1644,20 @@ export default function AdminFirmalarV2() {
       </AlertDialog>
 
       <AksiyonDetayDialog open={!!detayAksiyon} onOpenChange={(o) => !o && setDetayAksiyon(null)} aksiyon={detayAksiyon} />
+
+      {aksiyonEkleFirma && token && adminUser && (
+        <AksiyonEkleDialog
+          open={aksiyonEkleOpen}
+          onOpenChange={(o) => { setAksiyonEkleOpen(o); if (!o) setAksiyonEkleFirma(null); }}
+          firmaId={aksiyonEkleFirma.id}
+          firmaUnvani={aksiyonEkleFirma.firma_unvani}
+          onSuccess={fetchData}
+          callApi={callApi}
+          token={token}
+          adminDepartman={adminUser.departman}
+          adminIsPrimary={adminUser.is_primary}
+        />
+      )}
 
       {/* Portföy Ata Dialog */}
       <Dialog open={portfolyoAtaOpen} onOpenChange={setPortfolyoAtaOpen}>
