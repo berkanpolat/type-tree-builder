@@ -390,10 +390,10 @@ export default function OdemeTest() {
       {/* RIGHT — Payment Form */}
       <div className="flex-1 bg-background flex items-start justify-center p-6 lg:p-10 lg:items-center">
         <div className="w-full max-w-md space-y-6">
-          {/* TEST BADGE */}
-          <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-3 flex items-center gap-3">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            <p className="text-xs text-amber-800 dark:text-amber-200"><strong>Test Modu</strong> — Gerçek ödeme alınmaz.</p>
+          {/* Security badge */}
+          <div className="rounded-lg border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/20 p-3 flex items-center gap-3">
+            <Shield className="w-4 h-4 text-emerald-600 shrink-0" />
+            <p className="text-xs text-emerald-800 dark:text-emerald-200"><strong>Güvenli Ödeme</strong> — 256-bit SSL şifreleme ile korunmaktadır.</p>
           </div>
 
           <div>
