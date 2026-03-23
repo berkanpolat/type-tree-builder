@@ -17,7 +17,7 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <header className="h-12 md:h-14 flex items-center border-b bg-background px-3 md:px-6 shrink-0">
-            <SidebarTrigger className="mr-2" />
+            <SidebarTrigger className="mr-2 md:mr-2 h-9 w-9 md:h-8 md:w-8 border border-border bg-muted/60 shadow-sm rounded-lg" />
             <MobileBackButton />
             {title && (
               <h1 className="text-base md:text-lg font-bold text-foreground truncate">{title}</h1>
