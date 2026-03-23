@@ -122,9 +122,23 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setUploading(false); return; }
 
+      // Deduplicate: track already-uploaded file fingerprints
+      const uploadedFingerprints = new Set<string>(
+        (uploadedFotoFingerprints.current || [])
+      );
+
       const newUrls: string[] = [];
+      let duplicateCount = 0;
+
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        const fp = `${file.name}__${file.size}__${file.lastModified}`;
+        if (uploadedFingerprints.has(fp)) {
+          duplicateCount++;
+          continue;
+        }
+        uploadedFingerprints.add(fp);
+
         const ext = file.name.split(".").pop();
         const path = `${user.id}/${ihaleId}/foto_${Date.now()}_${i}.${ext}`;
         const { error } = await supabase.storage.from("ihale-files").upload(path, file);
@@ -135,6 +149,12 @@ export default function IhaleBilgileriStep({ formData, updateForm, ihaleId, skip
         const { data: urlData } = supabase.storage.from("ihale-files").getPublicUrl(path);
         newUrls.push(urlData.publicUrl);
       }
+
+      if (duplicateCount > 0) {
+        toast({ title: `${duplicateCount} fotoğraf zaten ekli`, description: "Aynı fotoğraf birden fazla kez eklenemez.", variant: "destructive" });
+      }
+
+      uploadedFotoFingerprints.current = Array.from(uploadedFingerprints);
       updateForm({ fotograflar: [...formData.fotograflar, ...newUrls], foto_url: formData.fotograflar[0] || newUrls[0] || null });
       setUploading(false);
     } else {

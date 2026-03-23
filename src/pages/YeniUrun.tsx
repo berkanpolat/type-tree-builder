@@ -657,15 +657,50 @@ export default function YeniUrun() {
   };
 
   const handleVaryasyonFotoAdd = (idx: number, files: FileList) => {
-    const newFiles = Array.from(files);
-    const newPreviewUrls = newFiles.map(f => URL.createObjectURL(f));
+    const incoming = Array.from(files);
+
     setVaryasyonlar(prev => {
       const updated = [...prev];
       const existing = updated[idx];
+      const existingFiles = existing.foto_files || [];
+
+      // Build a fingerprint set from ALL variations' existing files
+      const allFingerprints = new Set<string>();
+      for (const v of prev) {
+        for (const f of v.foto_files || []) {
+          allFingerprints.add(`${f.name}__${f.size}__${f.lastModified}`);
+        }
+      }
+
+      const uniqueFiles: File[] = [];
+      const uniqueUrls: string[] = [];
+      let duplicateCount = 0;
+
+      for (const file of incoming) {
+        const fp = `${file.name}__${file.size}__${file.lastModified}`;
+        if (allFingerprints.has(fp)) {
+          duplicateCount++;
+          continue;
+        }
+        allFingerprints.add(fp);
+        uniqueFiles.push(file);
+        uniqueUrls.push(URL.createObjectURL(file));
+      }
+
+      if (duplicateCount > 0) {
+        toast({
+          title: `${duplicateCount} fotoğraf zaten ekli`,
+          description: "Aynı fotoğraf birden fazla kez eklenemez.",
+          variant: "destructive",
+        });
+      }
+
+      if (uniqueFiles.length === 0) return prev;
+
       updated[idx] = {
         ...existing,
-        foto_urls: [...existing.foto_urls, ...newPreviewUrls],
-        foto_files: [...(existing.foto_files || []), ...newFiles],
+        foto_urls: [...existing.foto_urls, ...uniqueUrls],
+        foto_files: [...existingFiles, ...uniqueFiles],
       };
       return updated;
     });
