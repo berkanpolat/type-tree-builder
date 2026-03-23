@@ -1044,8 +1044,8 @@ export default function FirmaDetay() {
               </CollapsibleBlock>
             </div>
 
-            {/* Ürünler - only for logged-in users */}
-            {currentUserId && (
+            {/* Ürünler - only for PRO users */}
+            {currentUserId && packageInfo.paketSlug !== "ucretsiz" && (
               <div ref={el => { sectionRefs.current["urunler"] = el; }}>
                 <Card className="p-6">
                   <h2 className="text-lg font-bold text-foreground mb-4">Ürünler</h2>
