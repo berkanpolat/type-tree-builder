@@ -264,7 +264,7 @@ export default function MakineParkuruTab({ userId }: MakineParkuruTabProps) {
     toast({ title: "Teknoloji silindi" });
   };
 
-  if (loading) return <div className="flex items-center justify-center h-40 text-muted-foreground">Yükleniyor...</div>;
+  if (loading) return <div className="flex items-center justify-center h-40 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>;
 
   return (
     <div className="space-y-8">

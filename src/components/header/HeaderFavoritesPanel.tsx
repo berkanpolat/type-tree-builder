@@ -89,7 +89,7 @@ export default function HeaderFavoritesPanel() {
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <p className="text-xs text-muted-foreground">Yükleniyor...</p>
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
           <Tabs defaultValue="firmalar" className="w-full">

@@ -96,7 +96,7 @@ export default function HeaderMessagePanel() {
         <div className="flex-1 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-muted-foreground">Yükleniyor...</p>
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">

@@ -234,7 +234,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange, onDataC
   }, [firmaOlcegiId, kurulusTarihi, kurulusIlId, kurulusIlceId, webSitesi, firmaIletisimNumarasi, firmaIletisimEmail, instagram, facebook, linkedin, xTwitter, tiktok, youtube, logoUrl, kapakUrl, firmaHakkinda, firmaTuruId, firmaTipiId, firmaUnvani, vergiNumarasi, vergiDairesi]);
 
   if (loading) {
-    return <p className="text-muted-foreground text-center py-12">Yükleniyor...</p>;
+    return <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />;
   }
 
   return (

@@ -575,7 +575,7 @@ export default function UretimSatisTab({ userId }: Props) {
   };
 
   if (loading) {
-    return <p className="text-muted-foreground text-center py-12">Yükleniyor...</p>;
+    return <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />;
   }
 
   const showUretim = rol === "uretici" || rol === "her_ikisi";

@@ -614,7 +614,7 @@ export default function Mesajlar() {
           <ScrollArea className="flex-1">
             <div className="px-2.5 py-2">
             {loading ? (
-              <p className="text-center py-8 text-muted-foreground text-sm">Yükleniyor...</p>
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             ) : filteredConvs.length === 0 ? (
               <p className="text-center py-8 text-muted-foreground text-sm">Henüz konuşma yok.</p>
             ) : (

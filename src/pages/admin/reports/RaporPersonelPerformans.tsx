@@ -177,7 +177,7 @@ export default function RaporPersonelPerformans() {
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={9} className="p-8 text-center" style={{ color: `hsl(var(--admin-muted))` }}>Yükleniyor...</td></tr>
+                  <tr><td colSpan={9} className="p-8 text-center" style={{ color: `hsl(var(--admin-muted))` }}><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></td></tr>
                 ) : personStats.length === 0 ? (
                   <tr><td colSpan={9} className="p-8 text-center" style={{ color: `hsl(var(--admin-muted))` }}>Veri bulunamadı</td></tr>
                 ) : (

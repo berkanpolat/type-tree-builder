@@ -113,7 +113,7 @@ export default function HeaderNotificationsPanel() {
         <div className="max-h-[360px] overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-10">
-              <p className="text-xs text-muted-foreground">Yükleniyor...</p>
+              <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center py-10">
