@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, TouchEvent as ReactTouchEvent } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -162,6 +163,7 @@ interface BenzerUrun {
 export default function UrunDetay() {
   const { slug: slugParam } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const urunBanner = useBanner("urun-detay-alt-banner");
   const { toast } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string>("");
@@ -183,6 +185,10 @@ export default function UrunDetay() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isZoomed, setIsZoomed] = useState(false);
   const [zoomPosition, setZoomPosition] = useState({ x: 50, y: 50 });
+  const [mobileZoomScale, setMobileZoomScale] = useState(1);
+  const [mobileZoomOrigin, setMobileZoomOrigin] = useState({ x: 50, y: 50 });
+  const [pinchStartDist, setPinchStartDist] = useState<number | null>(null);
+  const [pinchStartScale, setPinchStartScale] = useState(1);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
   // Breadcrumb names
@@ -484,12 +490,69 @@ export default function UrunDetay() {
   }, [navigate]);
 
   const handleImageZoomMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!imageContainerRef.current) return;
+    if (!imageContainerRef.current || isMobile) return;
     const rect = imageContainerRef.current.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     setZoomPosition({ x, y });
   };
+
+  const getTouchDistance = (touches: globalThis.TouchList) => {
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = (e: ReactTouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && imageContainerRef.current) {
+      e.preventDefault();
+      const dist = getTouchDistance(e.nativeEvent.touches);
+      setPinchStartDist(dist);
+      setPinchStartScale(mobileZoomScale);
+      const rect = imageContainerRef.current.getBoundingClientRect();
+      const midX = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left) / rect.width * 100;
+      const midY = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top) / rect.height * 100;
+      setMobileZoomOrigin({ x: midX, y: midY });
+    }
+  };
+
+  const handleTouchMove = (e: ReactTouchEvent<HTMLDivElement>) => {
+    if (e.touches.length === 2 && pinchStartDist !== null) {
+      e.preventDefault();
+      const dist = getTouchDistance(e.nativeEvent.touches);
+      const newScale = Math.min(4, Math.max(1, pinchStartScale * (dist / pinchStartDist)));
+      setMobileZoomScale(newScale);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setPinchStartDist(null);
+    if (mobileZoomScale <= 1.1) {
+      setMobileZoomScale(1);
+    }
+  };
+
+  const handleDoubleTap = (() => {
+    let lastTap = 0;
+    return (e: ReactTouchEvent<HTMLDivElement>) => {
+      const now = Date.now();
+      if (now - lastTap < 300) {
+        e.preventDefault();
+        if (mobileZoomScale > 1) {
+          setMobileZoomScale(1);
+        } else {
+          if (imageContainerRef.current) {
+            const rect = imageContainerRef.current.getBoundingClientRect();
+            const x = ((e.touches[0]?.clientX ?? e.changedTouches[0].clientX) - rect.left) / rect.width * 100;
+            const y = ((e.touches[0]?.clientY ?? e.changedTouches[0].clientY) - rect.top) / rect.height * 100;
+            setMobileZoomOrigin({ x, y });
+          }
+          setMobileZoomScale(2.5);
+        }
+      }
+      lastTap = now;
+    };
+  })();
 
   if (loading) {
     return (
@@ -602,19 +665,31 @@ export default function UrunDetay() {
               <div
                 ref={imageContainerRef}
                 className="aspect-square bg-background rounded-xl overflow-hidden border border-border relative group"
-                onMouseMove={(e) => { handleImageZoomMove(e); setIsZoomed(true); }}
-                onMouseLeave={() => setIsZoomed(false)}
-                style={{ cursor: "crosshair" }}
+                onMouseMove={!isMobile ? (e) => { handleImageZoomMove(e); setIsZoomed(true); } : undefined}
+                onMouseLeave={!isMobile ? () => setIsZoomed(false) : undefined}
+                onTouchStart={isMobile ? (e) => { handleDoubleTap(e); handleTouchStart(e); } : undefined}
+                onTouchMove={isMobile ? handleTouchMove : undefined}
+                onTouchEnd={isMobile ? handleTouchEnd : undefined}
+                style={{ cursor: isMobile ? "default" : "crosshair", touchAction: isMobile ? "pan-x" : undefined }}
               >
                 {allImages.length > 0 ? (
                   <img
                     src={allImages[selectedImageIndex]}
                     alt={urun.baslik}
                     className="w-full h-full object-contain transition-transform duration-200"
-                    style={isZoomed ? {
-                      transform: "scale(2.5)",
-                      transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
-                    } : undefined}
+                    draggable={false}
+                    style={isMobile
+                      ? {
+                          transform: `scale(${mobileZoomScale})`,
+                          transformOrigin: `${mobileZoomOrigin.x}% ${mobileZoomOrigin.y}%`,
+                        }
+                      : isZoomed
+                        ? {
+                            transform: "scale(2.5)",
+                            transformOrigin: `${zoomPosition.x}% ${zoomPosition.y}%`,
+                          }
+                        : undefined
+                    }
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -623,8 +698,8 @@ export default function UrunDetay() {
                 )}
 
                 {/* Zoom icon overlay */}
-                {!isZoomed && (
-                  <div className="absolute bottom-3 right-3 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                {!isZoomed && mobileZoomScale <= 1 && (
+                  <div className="absolute bottom-3 right-3 p-2 bg-background/80 rounded-full opacity-0 group-hover:opacity-100 md:transition-opacity">
                     <ZoomIn className="w-5 h-5 text-muted-foreground" />
                   </div>
                 )}
