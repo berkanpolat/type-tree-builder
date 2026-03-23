@@ -3010,11 +3010,13 @@ export type Database = {
       }
       admin_list_ihaleler_v2: { Args: never; Returns: Json }
       admin_list_kisitlamalar_all_v2: { Args: never; Returns: Json }
+      admin_list_urunler_v2: { Args: never; Returns: Json }
       admin_list_ziyaret_planlari_v2: {
         Args: { p_admin_id?: string; p_baslangic?: string; p_bitis?: string }
         Returns: Json
       }
       admin_panel_stats_v2: { Args: never; Returns: Json }
+      admin_urun_stats_v2: { Args: never; Returns: Json }
       admin_verify_password: {
         Args: { p_password: string; p_username: string }
         Returns: boolean
