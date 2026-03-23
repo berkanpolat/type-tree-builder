@@ -986,6 +986,14 @@ export default function AdminFirmalarV2() {
           <div className="flex items-center justify-center p-12">
             <div className="animate-spin w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full" />
           </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center p-12 gap-3">
+            <AlertCircle className="w-8 h-8 text-red-500" />
+            <p style={s.muted}>Veriler yüklenemedi</p>
+            <Button variant="outline" size="sm" onClick={fetchData} style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}>
+              <RotateCcw className="w-4 h-4 mr-2" /> Tekrar Dene
+            </Button>
+          </div>
         ) : firmalar.length === 0 ? (
           <div className="text-center py-12" style={s.muted}>Firma bulunamadı.</div>
         ) : (
