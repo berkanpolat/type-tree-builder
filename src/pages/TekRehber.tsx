@@ -378,31 +378,71 @@ export default function TekRehber() {
     }
     const timer = setTimeout(async () => {
       const results: SearchResult[] = [];
+      const lowerTerm = searchTerm.toLowerCase();
+
+      // Firma türleri
       firmaTurleri.forEach((t) => {
-        if (t.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        if (t.name.toLowerCase().includes(lowerTerm)) {
           results.push({ id: t.id, name: t.name, type: "Tür" });
         }
       });
+
+      // Product taxonomy: categories, groups, types
+      const rootNodes = urunTaxNodes.filter((n) => !n.parent_id);
+      const childOf = (parentId: string) => urunTaxNodes.filter((n) => n.parent_id === parentId);
+
+      rootNodes.forEach((kat) => {
+        if (kat.name.toLowerCase().includes(lowerTerm)) {
+          results.push({ id: kat.id, name: kat.name, type: "Kategori" });
+        }
+        childOf(kat.id).forEach((grup) => {
+          if (grup.name.toLowerCase().includes(lowerTerm)) {
+            results.push({ id: grup.id, name: `${grup.name}`, type: "Grup" });
+          }
+          childOf(grup.id).forEach((tur) => {
+            if (tur.name.toLowerCase().includes(lowerTerm)) {
+              results.push({ id: tur.id, name: `${tur.name}`, type: "Ürün Türü" });
+            }
+          });
+        });
+      });
+
+      // Firma name search
       const { data } = await supabase
         .from("firmalar")
         .select("id, firma_unvani")
         .ilike("firma_unvani", `%${searchTerm}%`)
         .limit(6);
       if (data) data.forEach((f) => results.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
-      setSearchResults(results);
+
+      // Limit and prioritize: taxonomy first, then firma
+      setSearchResults(results.slice(0, 15));
       setShowDropdown(results.length > 0);
     }, 250);
     return () => clearTimeout(timer);
-  }, [searchTerm, firmaTurleri]);
+  }, [searchTerm, firmaTurleri, urunTaxNodes]);
 
   const handleSearchResultClick = (result: SearchResult) => {
     setSearchTerm(result.name);
     setShowDropdown(false);
+    setAppliedSearchTerm("");
+
     if (result.type === "Tür") {
       setSelectedFirmaTuru(result.id);
       setSelectedFirmaTuruName(result.name);
-      setAppliedSearchTerm("");
-    } else {
+      setUretimSatisFilter(null);
+    } else if (result.type === "Kategori") {
+      // Find all child grup+tür IDs under this category
+      const childGrupIds = urunTaxNodes.filter((n) => n.parent_id === result.id).map((n) => n.id);
+      const childTurIds = urunTaxNodes.filter((n) => n.parent_id && childGrupIds.includes(n.parent_id)).map((n) => n.id);
+      setUretimSatisFilter({ column: "kategori_id", ids: [result.id] });
+    } else if (result.type === "Grup") {
+      setUretimSatisFilter({ column: "grup_id", ids: [result.id] });
+    } else if (result.type === "Ürün Türü") {
+      setUretimSatisFilter({ column: "tur_id", ids: [result.id] });
+    } else if (result.type === "Firma") {
+      // Navigate to firma
+      setUretimSatisFilter(null);
       setAppliedSearchTerm(result.name);
     }
   };
