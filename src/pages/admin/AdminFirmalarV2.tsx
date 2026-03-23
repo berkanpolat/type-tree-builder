@@ -34,6 +34,7 @@ import {
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
+import AksiyonEkleDialog from "@/components/admin/AksiyonEkleDialog";
 
 // Shared style helpers
 const s = {
