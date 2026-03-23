@@ -129,6 +129,43 @@ interface UrunVaryasyon {
   foto_files?: File[];
 }
 
+const getSortedOptionNames = (options: { name: string }[]) =>
+  sortSecenekler(options).map((option) => option.name);
+
+const getOptionSortOrder = (sortedNames: string[], value: string) => {
+  const index = sortedNames.indexOf(value);
+  return index === -1 ? Number.MAX_SAFE_INTEGER : index;
+};
+
+const sortVaryasyonList = (
+  items: UrunVaryasyon[],
+  varyant1Options: { name: string }[],
+  varyant2Options: { name: string }[]
+) => {
+  const sortedV1Names = getSortedOptionNames(varyant1Options);
+  const sortedV2Names = getSortedOptionNames(varyant2Options);
+
+  return [...items].sort((a, b) => {
+    const v1Diff =
+      getOptionSortOrder(sortedV1Names, a.varyant_1_value) -
+      getOptionSortOrder(sortedV1Names, b.varyant_1_value);
+
+    if (v1Diff !== 0) return v1Diff;
+
+    const v2Diff =
+      getOptionSortOrder(sortedV2Names, a.varyant_2_value) -
+      getOptionSortOrder(sortedV2Names, b.varyant_2_value);
+
+    if (v2Diff !== 0) return v2Diff;
+
+    return `${a.varyant_1_value} ${a.varyant_2_value}`.localeCompare(
+      `${b.varyant_1_value} ${b.varyant_2_value}`,
+      "tr",
+      { sensitivity: "base" }
+    );
+  });
+};
+
 export default function YeniUrun() {
   const navigate = useNavigate();
   const { id: editId } = useParams();
@@ -182,6 +219,11 @@ export default function YeniUrun() {
   const isHazirGiyim = kategoriName?.toLowerCase().includes("hazır giyim");
   const varyant1Label = isHazirGiyim ? "Beden" : "Birim";
   const varyant2Label = "Renk";
+
+  useEffect(() => {
+    if (varyasyonlar.length < 2) return;
+    setVaryasyonlar((prev) => sortVaryasyonList(prev, varyant1Options, renkOptions));
+  }, [varyant1Options, renkOptions]);
 
   useEffect(() => { if (editId) loadUrun(editId); else if (copyFromId) loadUrunForCopy(copyFromId); }, [editId, copyFromId]);
   useEffect(() => { fetchKategoriler(); }, []);
@@ -336,7 +378,7 @@ export default function YeniUrun() {
           priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
         }
       }
-      setVaryasyonlar(prodVars);
+      setVaryasyonlar(sortVaryasyonList(prodVars, varyant1Options, renkOptions));
       if (priceTiers.length > 0) setFiyatKademeleri(priceTiers);
     }
     setLoadingData(false);
@@ -414,7 +456,7 @@ export default function YeniUrun() {
           priceTiers.push({ min_adet: v.min_adet, max_adet: v.max_adet, birim_fiyat: v.birim_fiyat });
         }
       }
-      setVaryasyonlar(prodVars);
+      setVaryasyonlar(sortVaryasyonList(prodVars, varyant1Options, renkOptions));
       if (priceTiers.length > 0) setFiyatKademeleri(priceTiers);
     }
     setLoadingData(false);
@@ -651,7 +693,7 @@ export default function YeniUrun() {
         }
       }
     }
-    setVaryasyonlar(prev => [...prev, ...newItems]);
+    setVaryasyonlar(prev => sortVaryasyonList([...prev, ...newItems], varyant1Options, renkOptions));
     setSelectedV1([]);
     setSelectedV2([]);
   };
