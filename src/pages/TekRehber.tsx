@@ -432,9 +432,6 @@ export default function TekRehber() {
       setSelectedFirmaTuruName(result.name);
       setUretimSatisFilter(null);
     } else if (result.type === "Kategori") {
-      // Find all child grup+tür IDs under this category
-      const childGrupIds = urunTaxNodes.filter((n) => n.parent_id === result.id).map((n) => n.id);
-      const childTurIds = urunTaxNodes.filter((n) => n.parent_id && childGrupIds.includes(n.parent_id)).map((n) => n.id);
       setUretimSatisFilter({ column: "kategori_id", ids: [result.id] });
     } else if (result.type === "Grup") {
       setUretimSatisFilter({ column: "grup_id", ids: [result.id] });
