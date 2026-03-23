@@ -716,10 +716,10 @@ export default function AnaSayfa() {
             </div>
           )}
           <button
-            onClick={(e) => { e.stopPropagation(); toggleFavorite(urun.id, !!urun.is_favorited); }}
+            onClick={(e) => { e.stopPropagation(); const currentFav = localFavOverrides[urun.id] ?? !!urun.is_favorited; toggleFavorite(urun.id, currentFav); }}
             className="absolute top-2 right-2 p-2 bg-background/80 rounded-full hover:bg-background transition-colors"
           >
-            <Heart className={`w-4 h-4 transition-all duration-200 ${urun.is_favorited ? "fill-destructive text-destructive" : "text-muted-foreground"} ${heartAnimId === urun.id ? "animate-heart-pop" : ""}`} />
+            <Heart className={`w-4 h-4 transition-all duration-200 ${(localFavOverrides[urun.id] ?? !!urun.is_favorited) ? "fill-destructive text-destructive" : "text-muted-foreground"} ${heartAnimId === urun.id ? "animate-heart-pop" : ""}`} />
           </button>
         </div>
         <div className="p-3 flex flex-col flex-1">
