@@ -17,6 +17,7 @@ interface FavFirma {
     kurulus_il_id: string | null;
     kurulus_ilce_id: string | null;
     firma_tipi_id: string;
+    slug: string | null;
   };
 }
 
@@ -29,6 +30,7 @@ interface FavUrun {
     urun_kategori_id: string | null;
     urun_grup_id: string | null;
     user_id: string;
+    slug: string | null;
   };
 }
 
