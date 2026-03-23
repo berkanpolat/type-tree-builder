@@ -271,7 +271,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
         payload.periyot = proPeriod;
         payload.odemeMail = getOdemeMail();
         payload.clientOrigin = window.location.origin;
-        payload.forceTestMode = window.location.origin.includes("lovable.app") || window.location.origin.includes("localhost");
+        payload.forceTestMode = false;
       }
 
       if (isEditMode && editData) {

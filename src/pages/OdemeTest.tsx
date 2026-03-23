@@ -1,9 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Shield, Lock, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Eye, EyeOff, RotateCw, DollarSign } from "lucide-react";
+import { Shield, Lock, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Eye, EyeOff, RotateCw, DollarSign, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { PRO_FIYATLAR } from "@/lib/package-config";
 import logoImg from "@/assets/tekstil-as-logo.png";
@@ -63,6 +63,7 @@ const AYLIK_KARSILIK = Math.round((YILLIK_INDIRIMLI / 12) * 100) / 100;
 
 export default function OdemeTest() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(window.location.search);
   const period: Period = searchParams.get("periyot") === "yillik" ? "yillik" : "aylik";
   const [cardNumber, setCardNumber] = useState("");
@@ -72,11 +73,14 @@ export default function OdemeTest() {
   const [showCvv, setShowCvv] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [paymentFailed, setPaymentFailed] = useState(false);
+  const [threeDHtml, setThreeDHtml] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(true);
   const [currency, setCurrency] = useState<Currency>("USD");
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const expiryRef = useRef<HTMLInputElement>(null);
   const cvvRef = useRef<HTMLInputElement>(null);
@@ -127,6 +131,28 @@ export default function OdemeTest() {
     return errs;
   }, [rawDigits, cardHolder, expiry, cvv]);
 
+  // Listen for 3D Secure result from iframe
+  useEffect(() => {
+    const handler = (e: MessageEvent) => {
+      if (e.data?.type === "PAYTR_PAYMENT_RESULT") {
+        setThreeDHtml(null);
+        if (e.data.result === "basarili") {
+          // Verify payment and activate subscription
+          supabase.functions.invoke("verify-payment").then(({ data, error }) => {
+            if (error) console.error("verify-payment error:", error);
+          });
+          setSuccess(true);
+        } else {
+          setPaymentFailed(true);
+          toast({ title: "Ödeme Başarısız", description: "Ödeme işlemi tamamlanamadı. Lütfen tekrar deneyin.", variant: "destructive" });
+        }
+        setLoading(false);
+      }
+    };
+    window.addEventListener("message", handler);
+    return () => window.removeEventListener("message", handler);
+  }, [toast]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate();
@@ -136,10 +162,61 @@ export default function OdemeTest() {
       toast({ title: "Hata", description: "Lütfen form alanlarını kontrol edin", variant: "destructive" });
       return;
     }
+
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    setSuccess(true);
-    setLoading(false);
+    setPaymentFailed(false);
+
+    try {
+      // Get user's firma info for payment
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Hata", description: "Lütfen önce giriş yapın", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", user.id).maybeSingle();
+
+      // Get client IP
+      let clientIp = "";
+      try {
+        const ipRes = await fetch("https://api.ipify.org?format=json");
+        const ipData = await ipRes.json();
+        clientIp = ipData.ip || "";
+      } catch { /* fallback handled server-side */ }
+
+      const expiryParts = expiry.replace(/\D/g, "");
+      const expiryMonth = expiryParts.slice(0, 2);
+      const expiryYear = expiryParts.slice(2, 4);
+
+      const { data, error } = await supabase.functions.invoke("create-paytr-direct-token", {
+        body: {
+          periyot: period,
+          clientIp,
+          forceTestMode: false,
+          cc_owner: cardHolder.toUpperCase(),
+          card_number: cardNumber.replace(/\s/g, ""),
+          expiry_month: expiryMonth,
+          expiry_year: expiryYear,
+          cvv: cvv,
+          firma_unvani: firma?.firma_unvani || "",
+        },
+      });
+
+      if (error) throw new Error(error.message || "Ödeme başlatılamadı");
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.html_content) {
+        // Show 3D Secure page in iframe
+        setThreeDHtml(data.html_content);
+      } else {
+        throw new Error("3D Secure sayfası oluşturulamadı");
+      }
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      toast({ title: "Ödeme Hatası", description: err.message || "Ödeme sayfası oluşturulamadı", variant: "destructive" });
+      setLoading(false);
+    }
   };
 
   const fmt = (n: number) => n.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -153,7 +230,7 @@ export default function OdemeTest() {
           </div>
           <h1 className="text-2xl font-semibold text-foreground">Ödeme Başarılı!</h1>
           <p className="text-sm text-muted-foreground">
-            Test ödemesi başarıyla tamamlandı. Gerçek bir ödeme alınmamıştır.
+            PRO paketiniz başarıyla aktive edildi. Sınırsız erişimin keyfini çıkarın!
           </p>
           <div className="rounded-lg border border-border bg-card p-4 text-left space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Paket</span><span className="font-medium">PRO — {period === "aylik" ? "Aylık" : "Yıllık"}</span></div>
@@ -161,6 +238,48 @@ export default function OdemeTest() {
             <div className="flex justify-between"><span className="text-muted-foreground">Kart</span><span className="font-medium font-mono">•••• {rawDigits.slice(-4)}</span></div>
           </div>
           <Button asChild className="w-full"><Link to="/paketim">Paketim Sayfasına Git</Link></Button>
+        </div>
+      </div>
+    );
+  }
+
+  // 3D Secure iframe view
+  if (threeDHtml) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
+        <div className="w-full max-w-lg space-y-4">
+          <h2 className="text-lg font-semibold text-foreground text-center">3D Secure Doğrulama</h2>
+          <p className="text-sm text-muted-foreground text-center">Bankanızın güvenlik doğrulamasını tamamlayın.</p>
+          <iframe
+            ref={iframeRef}
+            srcDoc={threeDHtml}
+            className="w-full h-[500px] border border-border rounded-lg"
+            sandbox="allow-scripts allow-forms allow-same-origin allow-top-navigation allow-popups"
+            title="3D Secure"
+          />
+          <Button
+            variant="ghost"
+            className="w-full text-muted-foreground"
+            onClick={() => { setThreeDHtml(null); setLoading(false); }}
+          >
+            İptal Et
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Payment failed view
+  if (paymentFailed) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <div className="w-full max-w-md text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+            <XCircle className="w-8 h-8 text-destructive" />
+          </div>
+          <h1 className="text-2xl font-semibold text-foreground">Ödeme Başarısız</h1>
+          <p className="text-sm text-muted-foreground">Ödeme işlemi tamamlanamadı. Lütfen kart bilgilerinizi kontrol ederek tekrar deneyin.</p>
+          <Button className="w-full" onClick={() => { setPaymentFailed(false); setLoading(false); }}>Tekrar Dene</Button>
         </div>
       </div>
     );
@@ -271,10 +390,10 @@ export default function OdemeTest() {
       {/* RIGHT — Payment Form */}
       <div className="flex-1 bg-background flex items-start justify-center p-6 lg:p-10 lg:items-center">
         <div className="w-full max-w-md space-y-6">
-          {/* TEST BADGE */}
-          <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/20 p-3 flex items-center gap-3">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-            <p className="text-xs text-amber-800 dark:text-amber-200"><strong>Test Modu</strong> — Gerçek ödeme alınmaz.</p>
+          {/* Security badge */}
+          <div className="rounded-lg border border-emerald-300 bg-emerald-50 dark:bg-emerald-950/20 p-3 flex items-center gap-3">
+            <Shield className="w-4 h-4 text-emerald-600 shrink-0" />
+            <p className="text-xs text-emerald-800 dark:text-emerald-200"><strong>Güvenli Ödeme</strong> — 256-bit SSL şifreleme ile korunmaktadır.</p>
           </div>
 
           <div>
