@@ -255,7 +255,7 @@ export default function UrunDetay() {
 
     const { data: directData } = await supabase
       .from("urunler")
-      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum, slug, admin_karar_sebebi, admin_karar_veren, admin_karar_tarihi, meta_title, meta_description")
+      .select("id, baslik, aciklama, foto_url, fiyat, fiyat_tipi, para_birimi, urun_no, min_siparis_miktari, siparis_birimi, teknik_detaylar, urun_kategori_id, urun_grup_id, urun_tur_id, user_id, durum, slug, admin_karar_sebebi, admin_karar_veren, admin_karar_tarihi, meta_title, meta_description")
       .eq(isId ? "id" : "slug", slugParam)
       .maybeSingle();
 
