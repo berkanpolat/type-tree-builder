@@ -188,7 +188,7 @@ const Dashboard = () => {
                   <Pencil className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
-              <div className="mt-4 pt-4 border-t space-y-3">
+              <div className="mt-4 pt-4 border-t space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Mail className="w-4 h-4" />
                   <span>{profile?.iletisim_email || "—"}</span>
