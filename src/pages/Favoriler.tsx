@@ -57,14 +57,14 @@ export default function Favoriler() {
     // Fetch firma favorites
     const { data: fFirmalar } = await supabase
       .from("firma_favoriler")
-      .select("id, firma_id, firmalar(firma_unvani, logo_url, kurulus_il_id, kurulus_ilce_id, firma_tipi_id)")
+      .select("id, firma_id, firmalar(firma_unvani, logo_url, kurulus_il_id, kurulus_ilce_id, firma_tipi_id, slug)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
     // Fetch urun favorites
     const { data: fUrunler } = await supabase
       .from("urun_favoriler")
-      .select("id, urun_id, urunler(baslik, foto_url, urun_kategori_id, urun_grup_id, user_id)")
+      .select("id, urun_id, urunler(baslik, foto_url, urun_kategori_id, urun_grup_id, user_id, slug)")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
