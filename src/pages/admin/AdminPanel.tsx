@@ -176,10 +176,8 @@ export default function AdminPanel() {
     if (!token) return;
     const interval = setInterval(async () => {
       try {
-        const { data: res } = await supabase.functions.invoke("admin-auth", {
-          body: { action: "online-count", token },
-        });
-        if (res?.online !== undefined) setOnlineCount(res.online);
+        const { count } = await supabase.from("profiles").select("id", { count: "exact", head: true }).gt("last_seen", new Date(Date.now() - 15 * 60 * 1000).toISOString());
+        if (count !== null) setOnlineCount(count);
       } catch {}
     }, 60_000);
     return () => clearInterval(interval);
