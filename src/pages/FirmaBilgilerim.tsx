@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/DashboardLayout";
@@ -13,6 +13,8 @@ import ReferanslarTab from "@/components/firma-bilgileri/ReferanslarTab";
 import GaleriTab from "@/components/firma-bilgileri/GaleriTab";
 import BelgelerimTab from "@/components/firma-bilgileri/BelgelerimTab";
 import PlaceholderTab from "@/components/firma-bilgileri/PlaceholderTab";
+import { useProfileCompletion } from "@/hooks/use-profile-completion";
+import { Progress } from "@/components/ui/progress";
 import {
   ClipboardList,
   Package,
@@ -23,6 +25,7 @@ import {
   Award,
   Image,
   FolderCheck,
+  TrendingUp,
 } from "lucide-react";
 
 export interface TabItem {
