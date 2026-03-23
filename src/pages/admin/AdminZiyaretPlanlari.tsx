@@ -380,6 +380,14 @@ export default function AdminZiyaretPlanlari() {
               <MapPin className="w-3.5 h-3.5" style={{ color: "hsl(38 92% 50%)" }} />
               <span style={s.text}>{filteredPlanlar.length} ziyaret</span>
             </div>
+            {!isViewingOwnPlans && (
+              <div className="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2" style={{ background: "rgba(59,130,246,0.1)" }}>
+                <Users className="w-3.5 h-3.5" style={{ color: "#3b82f6" }} />
+                <span style={{ color: "#3b82f6" }}>
+                  {selectedAdminId === "all" ? "Tüm Personeller" : (() => { const a = adminList.find(x => x.id === selectedAdminId); return a ? `${a.ad} ${a.soyad}` : ""; })()}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
