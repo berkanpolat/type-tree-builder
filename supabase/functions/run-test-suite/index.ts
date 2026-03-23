@@ -607,6 +607,8 @@ async function runRealUserFlowTests(supabase: any): Promise<TestResult[]> {
             verificationSteps: ["Ürün INSERT", "urun_no trigger", "slug trigger", "durum kontrolü", "varyasyon INSERT", "varyasyon DB doğrulama", "bildirim trigger"],
             cleanupStatus: "skipped",
           });
+      }
+      }
     }
 
     // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
