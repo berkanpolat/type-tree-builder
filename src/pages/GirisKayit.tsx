@@ -155,19 +155,23 @@ const GirisKayit = () => {
                 <Label>Şifre</Label>
                 <Input type="password" placeholder="Şifre" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} required />
               </div>
-              <div className="flex items-center gap-2">
+              <label
+                htmlFor="rememberMe"
+                className="flex min-h-12 items-center gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2.5 cursor-pointer transition-colors hover:bg-muted/50"
+              >
                 <Checkbox
                   id="rememberMe"
                   checked={rememberMe}
+                  className="mt-0"
                   onCheckedChange={(checked) => {
                     setRememberMe(!!checked);
                     if (!checked) localStorage.removeItem("tekstilas_remember");
                   }}
                 />
-                <Label htmlFor="rememberMe" className="text-sm font-normal cursor-pointer text-muted-foreground">
+                <span className="text-sm leading-5 font-medium text-foreground">
                   Giriş bilgilerimi kaydet
-                </Label>
-              </div>
+                </span>
+              </label>
               <Button type="submit" className="w-full" disabled={loginLoading}>
                 {loginLoading ? "Giriş yapılıyor..." : "Giriş"}
               </Button>
