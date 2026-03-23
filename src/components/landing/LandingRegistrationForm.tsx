@@ -207,13 +207,18 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
     setSendingOtp(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-sms-otp", { body: { telefon: fullPhone } });
-      if (error) throw new Error(error.message);
+      if (error) {
+        const errMsg = typeof error === 'object' && error !== null
+          ? (error as any)?.message || "SMS gönderilemedi"
+          : String(error);
+        throw new Error(errMsg);
+      }
       if (data?.error) throw new Error(data.error);
       setOtpSent(true);
       setOtpCountdown(120);
       toast({ title: "Kod gönderildi", description: `${fullPhone} numarasına doğrulama kodu gönderildi.` });
     } catch (err: any) {
-      toast({ title: "Hata", description: err.message, variant: "destructive" });
+      toast({ title: "Hata", description: err?.message || "SMS gönderilemedi", variant: "destructive" });
     } finally {
       setSendingOtp(false);
     }
