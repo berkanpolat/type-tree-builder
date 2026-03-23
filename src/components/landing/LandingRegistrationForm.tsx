@@ -226,13 +226,21 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
       const { data, error } = await supabase.functions.invoke("verify-sms-otp", {
         body: { telefon: getFullPhone(), kod: otpCode },
       });
-      if (error) throw new Error(error.message);
+      console.log("[OTP-VERIFY] response:", { data, error });
+      if (error) {
+        // Extract message from FunctionsHttpError or generic error
+        const errMsg = typeof error === 'object' && error !== null
+          ? (error as any)?.message || (error as any)?.context?.error || "Doğrulama başarısız"
+          : String(error);
+        throw new Error(errMsg);
+      }
       if (data?.error) throw new Error(data.error);
       if (!data?.verified) throw new Error("Doğrulama başarısız");
       setPhoneVerified(true);
       toast({ title: "Başarılı", description: "Telefon numaranız doğrulandı." });
     } catch (err: any) {
-      toast({ title: "Hata", description: err.message, variant: "destructive" });
+      console.error("[OTP-VERIFY] error:", err);
+      toast({ title: "Hata", description: err?.message || "Doğrulama sırasında bir hata oluştu", variant: "destructive" });
     } finally {
       setVerifyingOtp(false);
     }
