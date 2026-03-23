@@ -1019,22 +1019,46 @@ export default function YeniUrun() {
                   </div>
                 </div>
 
-                {/* Generated variations — compact single row with chips */}
+                {/* Generated variations */}
                 {varyasyonlar.length > 0 && (
-                  <div className="border rounded-lg p-4 space-y-4">
-                    {/* Photo upload area — shared across all variations */}
+                  <div className="space-y-4">
+                    {/* Variation chips */}
                     <div>
-                      <Label className="text-sm mb-2 block">Fotoğraflar</Label>
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <Label className="text-xs text-muted-foreground mb-2 block uppercase tracking-wider">Eklenen Varyasyonlar ({varyasyonlar.length})</Label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {varyasyonlar.map((v, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium pl-3 pr-1.5 py-1 ring-1 ring-primary/20 hover:ring-primary/40 transition-all"
+                          >
+                            {v.varyant_1_value}
+                            <span className="text-primary/50">·</span>
+                            {v.varyant_2_value}
+                            <button
+                              type="button"
+                              onClick={() => removeVaryasyon(idx)}
+                              className="ml-0.5 rounded-full p-0.5 hover:bg-destructive/15 hover:text-destructive transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Photo upload area */}
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-2 block uppercase tracking-wider">Fotoğraflar</Label>
+                      <div className="flex items-center gap-3 flex-wrap">
                         {varyasyonlar[0]?.foto_urls.map((url, fIdx) => (
                           <div key={fIdx} className="relative group">
-                            <div className="w-14 h-14 rounded-lg overflow-hidden border">
+                            <div className="w-16 h-16 rounded-xl overflow-hidden ring-1 ring-border shadow-sm">
                               <img src={url} alt="" className="w-full h-full object-cover" />
                             </div>
                             <button
                               type="button"
                               onClick={() => handleVaryasyonFotoRemove(0, fIdx)}
-                              className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
                             >
                               <X className="w-3 h-3" />
                             </button>
@@ -1043,25 +1067,12 @@ export default function YeniUrun() {
                         <label className="cursor-pointer">
                           <input type="file" accept="image/*" multiple className="hidden"
                             onChange={e => { if (e.target.files && e.target.files.length > 0) handleVaryasyonFotoAdd(0, e.target.files); }} />
-                          <div className="w-14 h-14 rounded-lg border-2 border-dashed border-muted-foreground/40 flex items-center justify-center hover:border-primary transition-colors">
+                          <div className="w-16 h-16 rounded-xl border-2 border-dashed border-muted-foreground/30 flex flex-col items-center justify-center gap-1 hover:border-primary hover:bg-primary/5 transition-all">
                             <Upload className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-[10px] text-muted-foreground">Ekle</span>
                           </div>
                         </label>
                       </div>
-                    </div>
-
-                    {/* Variation chips */}
-                    <div className="flex flex-wrap gap-2">
-                      {varyasyonlar.map((v, idx) => (
-                        <Badge key={idx} variant="secondary" className="text-xs px-2.5 py-1.5 gap-1.5">
-                          <span className="font-medium">{v.varyant_1_value}</span>
-                          <span className="text-muted-foreground">/</span>
-                          <span>{v.varyant_2_value}</span>
-                          <button type="button" onClick={() => removeVaryasyon(idx)} className="ml-1 hover:text-destructive transition-colors">
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
                     </div>
                   </div>
                 )}
