@@ -2985,7 +2985,24 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_firma_stats_v2: { Args: never; Returns: Json }
       admin_hash_password: { Args: { p_password: string }; Returns: string }
+      admin_ihale_stats_v2: { Args: never; Returns: Json }
+      admin_list_firmalar_v2: {
+        Args: {
+          p_filter_durum?: string
+          p_filter_il?: string
+          p_filter_ilce?: string
+          p_filter_tipi?: string
+          p_filter_turu?: string
+          p_page?: number
+          p_per_page?: number
+          p_search?: string
+        }
+        Returns: Json
+      }
+      admin_list_ihaleler_v2: { Args: never; Returns: Json }
+      admin_panel_stats_v2: { Args: never; Returns: Json }
       admin_verify_password: {
         Args: { p_password: string; p_username: string }
         Returns: boolean
