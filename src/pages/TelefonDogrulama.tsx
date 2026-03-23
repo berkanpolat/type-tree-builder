@@ -110,15 +110,24 @@ export default function TelefonDogrulama() {
       const { data, error } = await supabase.functions.invoke("verify-sms-otp", {
         body: { telefon: fullPhone, kod: otpCode },
       });
-      if (error) throw error;
-      if (!data?.verified) throw new Error(data?.error || "Doğrulama başarısız");
+      console.log("[OTP-VERIFY] response:", { data, error });
+      if (error) {
+        const errMsg = typeof error === 'object' && error !== null
+          ? (error as any)?.message || (error as any)?.context?.error || "Doğrulama başarısız"
+          : String(error);
+        throw new Error(errMsg);
+      }
+      if (data?.error) throw new Error(data.error);
+      if (!data?.verified) throw new Error("Doğrulama başarısız");
 
       // Mark phone as verified
-      await supabase.from("profiles").update({ telefon_dogrulandi: true }).eq("user_id", userId);
+      const { error: updateError } = await supabase.from("profiles").update({ telefon_dogrulandi: true }).eq("user_id", userId);
+      if (updateError) console.error("[OTP-VERIFY] profile update error:", updateError);
 
       toast({ title: "Başarılı", description: "Telefon numaranız doğrulandı!" });
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
+      console.error("[OTP-VERIFY] error:", err);
       toast({ title: "Hata", description: err?.message || "Doğrulama başarısız", variant: "destructive" });
     } finally {
       setVerifyingOtp(false);
