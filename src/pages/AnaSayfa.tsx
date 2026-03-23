@@ -719,7 +719,7 @@ export default function AnaSayfa() {
             onClick={(e) => { e.stopPropagation(); toggleFavorite(urun.id, !!urun.is_favorited); }}
             className="absolute top-2 right-2 p-2 bg-background/80 rounded-full hover:bg-background transition-colors"
           >
-            <Heart className={`w-4 h-4 ${urun.is_favorited ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+            <Heart className={`w-4 h-4 transition-all duration-200 ${urun.is_favorited ? "fill-destructive text-destructive" : "text-muted-foreground"} ${heartAnimId === urun.id ? "animate-heart-pop" : ""}`} />
           </button>
         </div>
         <div className="p-3 flex flex-col flex-1">
