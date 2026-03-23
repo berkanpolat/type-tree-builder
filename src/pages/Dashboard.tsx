@@ -50,6 +50,8 @@ const Dashboard = () => {
   const [firma, setFirma] = useState<FirmaData | null>(null);
   const [firmaTuruName, setFirmaTuruName] = useState("");
   const [firmaTipiName, setFirmaTipiName] = useState("");
+  const [kurulusIlName, setKurulusIlName] = useState("");
+  const [kurulusIlceName, setKurulusIlceName] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeIhaleCount, setActiveIhaleCount] = useState(0);
   const [activeUrunCount, setActiveUrunCount] = useState(0);
