@@ -477,7 +477,7 @@ export default function AdminZiyaretPlanlari() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {pendingCount > 0 && (
+                      {isViewingOwnPlans && pendingCount > 0 && (
                         <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7" onClick={() => handleCompleteDay(plans)}>
                           <CheckCheck className="w-3.5 h-3.5 mr-1" /> Günü Tamamla
                         </Button>
