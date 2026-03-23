@@ -175,6 +175,15 @@ thead .sticky-action-col {
   z-index: 2;
 }
 
+/* Mobile-specific utility classes */
+@layer utilities {
+  @media (max-width: 767px) {
+    .mobile-safe-bottom {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 3.5rem);
+    }
+  }
+}
+
 @keyframes floatBadge {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-6px); }
