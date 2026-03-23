@@ -13,13 +13,12 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Pencil, FileText, Settings, Package, Plus, Trash2, X, Upload } from "lucide-react";
-
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 
 const STEPS = ["Kategori", "Ürün Bilgileri", "Teknik Detaylar", "Varyasyon"];
