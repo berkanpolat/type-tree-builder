@@ -99,10 +99,29 @@
 
   body {
     @apply bg-background text-foreground font-sans;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
 
   img {
     image-rendering: auto;
+  }
+
+  /* Mobile touch targets - minimum 44px */
+  @media (max-width: 767px) {
+    button, a, [role="button"], [role="tab"], [role="menuitem"] {
+      min-height: 36px;
+    }
+
+    /* Prevent horizontal overflow globally */
+    .max-w-7xl, .max-w-3xl, .max-w-5xl, .max-w-4xl, .max-w-6xl {
+      max-width: 100%;
+    }
+
+    /* Better input sizing on mobile */
+    input, select, textarea {
+      font-size: 16px !important; /* Prevents iOS zoom on focus */
+    }
   }
 }
 
@@ -154,6 +173,15 @@
 }
 thead .sticky-action-col {
   z-index: 2;
+}
+
+/* Mobile-specific utility classes */
+@layer utilities {
+  @media (max-width: 767px) {
+    .mobile-safe-bottom {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 3.5rem);
+    }
+  }
 }
 
 @keyframes floatBadge {

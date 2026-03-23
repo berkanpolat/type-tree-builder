@@ -80,7 +80,7 @@ export default function HeaderMessagePanel() {
           )}
         </button>
       </SheetTrigger>
-      <SheetContent className="w-[380px] sm:w-[420px] p-0 flex flex-col">
+      <SheetContent className="w-full sm:w-[420px] p-0 flex flex-col">
         <SheetHeader className="px-4 pt-4 pb-3 border-b">
           <SheetTitle className="flex items-center justify-between pr-10">
             <span>Mesajlar</span>

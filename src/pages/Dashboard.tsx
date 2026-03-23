@@ -178,17 +178,17 @@ const Dashboard = () => {
 
           {/* Kullanıcı Kartı */}
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-start justify-between">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">{profile ? `${profile.ad} ${profile.soyad}` : "—"}</h2>
                   <p className="text-sm text-muted-foreground">Firma Yetkilisi</p>
                 </div>
-                <button onClick={() => navigate("/profil-ayarlari")} className="p-2 rounded-lg hover:bg-muted transition-colors">
+                <button onClick={() => navigate("/profil-ayarlari")} className="p-2 rounded-lg hover:bg-muted transition-colors shrink-0">
                   <Pencil className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
-              <div className="mt-4 pt-4 border-t space-y-3">
+              <div className="mt-4 pt-4 border-t space-y-2 sm:space-y-3">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Mail className="w-4 h-4" />
                   <span>{profile?.iletisim_email || "—"}</span>

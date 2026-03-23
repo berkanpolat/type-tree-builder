@@ -92,7 +92,7 @@ export default function HeaderNotificationsPanel() {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-[380px] p-0" align="end">
+      <PopoverContent className="w-[calc(100vw-2rem)] sm:w-[380px] p-0" align="end">
         <div className="flex items-center justify-between px-4 pt-3 pb-2">
           <h3 className="font-semibold text-sm">Bildirimler</h3>
           <div className="flex items-center gap-3">
