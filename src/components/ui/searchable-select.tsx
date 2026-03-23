@@ -2,6 +2,7 @@ import * as React from "react";
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { useLocation, useNavigationType } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { sortSecenekler } from "@/lib/sort-utils";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -79,30 +80,9 @@ export default function SearchableSelect({
   }, [navigationType, onValueChange, options, persistKey, value]);
 
   const normalizedOptions = React.useMemo(() => {
-    const belirtmek: SearchableSelectOption[] = [];
-    const diger: SearchableSelectOption[] = [];
-    const rest: SearchableSelectOption[] = [];
-
-    for (const option of options) {
-      const normalized = normalizeOptionText(option.label);
-
-      if (normalized.includes("belirtmek istemiyorum")) {
-        belirtmek.push(option);
-      } else if (
-        normalized === "diger" ||
-        normalized.startsWith("diger ") ||
-        normalized.startsWith("diger-") ||
-        normalized.startsWith("diger/") ||
-        normalized.startsWith("diger(")
-      ) {
-        diger.push(option);
-      } else {
-        rest.push(option);
-      }
-    }
-
-    rest.sort((a, b) => a.label.localeCompare(b.label, "tr", { sensitivity: "base" }));
-    return [...belirtmek, ...rest, ...diger];
+    const sortableOptions = options.map((option) => ({ ...option, name: option.label }));
+    const sortedOptions = sortSecenekler(sortableOptions);
+    return sortedOptions.map(({ name: _name, ...option }) => option);
   }, [options]);
 
   const filtered = React.useMemo(() => {
