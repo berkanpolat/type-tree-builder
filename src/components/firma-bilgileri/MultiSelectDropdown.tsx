@@ -33,17 +33,27 @@ export default function MultiSelectDropdown({ options, selected, onChange, place
     };
   }, []);
 
+  const sortedOptions = sortSecenekler(options);
+  const sortedOptionIds = sortedOptions.map((option) => option.id);
+
   const toggle = (id: string) => {
-    onChange(selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id]);
+    const nextSelected = selected.includes(id)
+      ? selected.filter((s) => s !== id)
+      : [...selected, id];
+
+    onChange(
+      [...nextSelected].sort(
+        (a, b) => sortedOptionIds.indexOf(a) - sortedOptionIds.indexOf(b)
+      )
+    );
   };
 
-  const sortedOptions = sortSecenekler(options);
   const filteredOptions = sortedOptions.filter(o => {
     if (!search.trim()) return true;
     return o.name.toLowerCase().includes(search.toLowerCase());
   });
 
-  const selectedNames = options.filter(o => selected.includes(o.id)).map(o => o.name);
+  const selectedNames = sortedOptions.filter(o => selected.includes(o.id)).map(o => o.name);
 
   return (
     <div ref={ref} className="relative">
