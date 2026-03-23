@@ -82,7 +82,7 @@ export default function HeaderMessagePanel() {
       </SheetTrigger>
       <SheetContent className="w-[380px] sm:w-[420px] p-0 flex flex-col">
         <SheetHeader className="px-4 pt-4 pb-3 border-b">
-          <SheetTitle className="flex items-center justify-between">
+          <SheetTitle className="flex items-center justify-between pr-10">
             <span>Mesajlar</span>
             <button
               onClick={() => { setOpen(false); navigate("/mesajlar"); }}
