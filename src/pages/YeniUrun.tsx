@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import MultiSelectDropdown from "@/components/firma-bilgileri/MultiSelectDropdown";
+import { sortSecenekler } from "@/lib/sort-utils";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { usePackageQuota } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
@@ -215,12 +216,12 @@ export default function YeniUrun() {
     if (v1Res.data) {
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name")
         .eq("kategori_id", v1Res.data.id).is("parent_id", null).order("name");
-      if (data) setVaryant1Options(data);
+      if (data) setVaryant1Options(sortSecenekler(data));
     }
     if (renkRes.data) {
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name")
         .eq("kategori_id", renkRes.data.id).is("parent_id", null).order("name");
-      if (data) setRenkOptions(data);
+      if (data) setRenkOptions(sortSecenekler(data));
     }
   };
 
