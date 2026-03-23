@@ -173,8 +173,7 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange, onDataC
     setUploading(false);
   };
 
-  const handleSave = async () => {
-    setSaving(true);
+  const buildPayload = useCallback(() => {
     const updatePayload: Record<string, any> = {
       firma_olcegi_id: firmaOlcegiId || null,
       kurulus_tarihi: kurulusTarihi || null,
@@ -193,8 +192,6 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange, onDataC
       kapak_fotografi_url: kapakUrl || null,
       firma_hakkinda: firmaHakkinda || null,
     };
-
-    // Admin mode: also save locked fields
     if (isAdminMode) {
       updatePayload.firma_turu_id = firmaTuruId;
       updatePayload.firma_tipi_id = firmaTipiId;
@@ -202,16 +199,39 @@ export default function GenelFirmaBilgileri({ userId, onFirmaTuruChange, onDataC
       updatePayload.vergi_numarasi = vergiNumarasi || null;
       updatePayload.vergi_dairesi = vergiDairesi || null;
     }
+    return updatePayload;
+  }, [firmaOlcegiId, kurulusTarihi, kurulusIlId, kurulusIlceId, webSitesi, firmaIletisimNumarasi, firmaIletisimEmail, instagram, facebook, linkedin, xTwitter, tiktok, youtube, logoUrl, kapakUrl, firmaHakkinda, isAdminMode, firmaTuruId, firmaTipiId, firmaUnvani, vergiNumarasi, vergiDairesi]);
 
-    const { error } = await supabase.from("firmalar").update(updatePayload as any).eq("user_id", userId);
-
-    if (error) {
-      toast({ title: "Hata", description: "Bilgiler kaydedilemedi.", variant: "destructive" });
+  const performSave = useCallback(async (silent = false) => {
+    if (!userId) return;
+    if (silent) {
+      setAutoSaveStatus("saving");
     } else {
-      toast({ title: "Başarılı", description: "Firma bilgileri güncellendi." });
+      setSaving(true);
+    }
+    const payload = buildPayload();
+    const { error } = await supabase.from("firmalar").update(payload as any).eq("user_id", userId);
+    if (error) {
+      if (!silent) toast({ title: "Hata", description: "Bilgiler kaydedilemedi.", variant: "destructive" });
+      setAutoSaveStatus("idle");
+    } else {
+      if (!silent) toast({ title: "Başarılı", description: "Firma bilgileri güncellendi." });
+      setAutoSaveStatus("saved");
+      onDataChange?.();
+      setTimeout(() => setAutoSaveStatus("idle"), 2000);
     }
     setSaving(false);
-  };
+  }, [userId, buildPayload, toast, onDataChange]);
+
+  // Auto-save with 1.5s debounce
+  useEffect(() => {
+    if (isInitialLoad.current || loading) return;
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      performSave(true);
+    }, 1500);
+    return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
+  }, [firmaOlcegiId, kurulusTarihi, kurulusIlId, kurulusIlceId, webSitesi, firmaIletisimNumarasi, firmaIletisimEmail, instagram, facebook, linkedin, xTwitter, tiktok, youtube, logoUrl, kapakUrl, firmaHakkinda, firmaTuruId, firmaTipiId, firmaUnvani, vergiNumarasi, vergiDairesi]);
 
   if (loading) {
     return <p className="text-muted-foreground text-center py-12">Yükleniyor...</p>;
