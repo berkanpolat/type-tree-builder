@@ -601,7 +601,7 @@ export default function UrunDetay() {
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
+        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 md:flex-wrap overflow-x-auto whitespace-nowrap scrollbar-none pb-1">
           <Link to="/tekpazar" className="hover:text-foreground transition-colors">Pazar Anasayfa</Link>
           {breadcrumbKategori && (
             <>

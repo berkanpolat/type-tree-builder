@@ -947,7 +947,7 @@ export default function IhaleDetay() {
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 flex-wrap">
+        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 md:flex-wrap overflow-x-auto whitespace-nowrap scrollbar-none pb-1">
           <Link to="/ihaleler" className="hover:text-foreground transition-colors">İhale Anasayfa</Link>
           {breadcrumbKategori && (
             <>
@@ -983,7 +983,7 @@ export default function IhaleDetay() {
             </>
           )}
           <span>/</span>
-          <span className="text-foreground font-medium truncate max-w-[300px]">{ihale.baslik}</span>
+          <span className="text-foreground font-medium truncate max-w-[200px] md:max-w-[300px]">{ihale.baslik}</span>
         </nav>
 
         {/* Main Grid - Mobile: single column with specific order, Desktop: 2-column */}
