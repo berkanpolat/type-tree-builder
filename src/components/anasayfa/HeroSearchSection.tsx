@@ -184,9 +184,8 @@ const HeroSearchSection = ({
                     setTimeout(() => onShowDropdown(false), 200);
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !(e.nativeEvent as KeyboardEvent).isComposing) {
+                    if (e.key === "Enter") {
                       e.preventDefault();
-                      requestAnimationFrame(() => onSearch());
                     }
                   }}
                   className="flex-1 min-w-0 bg-transparent text-foreground text-sm h-10 px-2 outline-none placeholder:text-muted-foreground/50"
