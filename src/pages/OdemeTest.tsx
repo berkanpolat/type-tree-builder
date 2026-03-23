@@ -63,6 +63,7 @@ const AYLIK_KARSILIK = Math.round((YILLIK_INDIRIMLI / 12) * 100) / 100;
 
 export default function OdemeTest() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(window.location.search);
   const period: Period = searchParams.get("periyot") === "yillik" ? "yillik" : "aylik";
   const [cardNumber, setCardNumber] = useState("");
@@ -72,11 +73,14 @@ export default function OdemeTest() {
   const [showCvv, setShowCvv] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [paymentFailed, setPaymentFailed] = useState(false);
+  const [threeDHtml, setThreeDHtml] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [exchangeRate, setExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(true);
   const [currency, setCurrency] = useState<Currency>("USD");
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const expiryRef = useRef<HTMLInputElement>(null);
   const cvvRef = useRef<HTMLInputElement>(null);
