@@ -186,6 +186,7 @@ const HeroSearchSection = ({
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       e.preventDefault();
+                      onSearch();
                     }
                   }}
                   className="flex-1 min-w-0 bg-transparent text-foreground text-sm h-10 px-2 outline-none placeholder:text-muted-foreground/50"
