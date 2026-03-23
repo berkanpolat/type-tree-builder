@@ -289,10 +289,10 @@ export default function OdemeTest() {
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* LEFT — Blue branded summary */}
       <div className="lg:w-[40%] shrink-0 bg-[hsl(220,70%,18%)] text-white p-6 lg:p-10 lg:min-h-screen flex flex-col">
-        <Link to="/" className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity mb-8">
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity mb-8">
           <ArrowLeft className="w-4 h-4" />
           <img src={logoImg} alt="Tekstil A.Ş." className="h-6 brightness-0 invert" />
-        </Link>
+        </button>
 
         <div className="flex-1 space-y-6">
 
