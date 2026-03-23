@@ -725,7 +725,7 @@ export default function YeniUrun() {
 
   return (
     <DashboardLayout title={editId ? "Ürün Düzenle" : "Yeni Ürün"}>
-      <div className="max-w-4xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6 pb-4">
         <h2 className="text-2xl font-bold text-foreground">{editId ? "Ürün Düzenle" : "Yeni Ürün"}</h2>
 
         {/* Stepper */}
@@ -1084,7 +1084,7 @@ export default function YeniUrun() {
             <p className="text-muted-foreground">Ürün bilgileri yükleniyor...</p>
           </div>
         ) : (
-          <div className="flex items-center justify-between sticky bottom-0 bg-background py-3 border-t z-10">
+          <div className="sticky bottom-0 left-0 right-0 flex items-center justify-between bg-background py-3 px-4 border-t z-30 -mx-4 shadow-[0_-2px_8px_rgba(0,0,0,0.06)]">
             <Button variant="outline" onClick={() => step > 0 ? setStep(step - 1) : navigate("/urunlerim")}>Geri</Button>
             {step < STEPS.length - 1 ? (
               <Button onClick={handleNext}>İleri</Button>
