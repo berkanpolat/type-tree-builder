@@ -220,6 +220,11 @@ export default function YeniUrun() {
   const varyant1Label = isHazirGiyim ? "Beden" : "Birim";
   const varyant2Label = "Renk";
 
+  useEffect(() => {
+    if (varyasyonlar.length < 2) return;
+    setVaryasyonlar((prev) => sortVaryasyonList(prev, varyant1Options, renkOptions));
+  }, [varyant1Options, renkOptions]);
+
   useEffect(() => { if (editId) loadUrun(editId); else if (copyFromId) loadUrunForCopy(copyFromId); }, [editId, copyFromId]);
   useEffect(() => { fetchKategoriler(); }, []);
   useEffect(() => {
