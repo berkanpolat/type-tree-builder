@@ -200,29 +200,29 @@ export default function Favoriler() {
             ) : (
               <div className="divide-y divide-border">
                 {favFirmalar.map((fav) => (
-                  <div key={fav.id} className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4 px-2">
-                    <FirmaAvatar firmaUnvani={fav.firma?.firma_unvani || "-"} logoUrl={fav.firma?.logo_url} size="md" className="sm:w-12 sm:h-12 sm:text-base" />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground text-sm sm:text-base truncate">{fav.firma?.firma_unvani || "-"}</p>
-                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mt-0.5 flex-wrap">
-                        <span className="flex items-center gap-1 truncate">
-                          📍 {getLocation(fav.firma?.kurulus_il_id, fav.firma?.kurulus_ilce_id)}
-                        </span>
-                        <span className="hidden sm:flex items-center gap-1">
-                          🏢 {fav.firma?.firma_tipi_id ? firmaTipiMap[fav.firma.firma_tipi_id] || "-" : "-"}
-                        </span>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" className="shrink-0 hidden sm:flex">
-                      Profili Gör
-                    </Button>
-                    <button
-                      onClick={() => removeFirmaFav(fav.id)}
-                      className="shrink-0 p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
-                    >
-                      <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-destructive fill-destructive" />
-                    </button>
-                  </div>
+                  <div key={fav.id} className="flex items-center gap-3 sm:gap-4 py-3 sm:py-4 px-2 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => fav.firma?.slug && navigate(`/${fav.firma.slug}`)}>
+                     <FirmaAvatar firmaUnvani={fav.firma?.firma_unvani || "-"} logoUrl={fav.firma?.logo_url} size="md" className="sm:w-12 sm:h-12 sm:text-base" />
+                     <div className="flex-1 min-w-0">
+                       <p className="font-semibold text-foreground text-sm sm:text-base truncate">{fav.firma?.firma_unvani || "-"}</p>
+                       <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground mt-0.5 flex-wrap">
+                         <span className="flex items-center gap-1 truncate">
+                           📍 {getLocation(fav.firma?.kurulus_il_id, fav.firma?.kurulus_ilce_id)}
+                         </span>
+                         <span className="hidden sm:flex items-center gap-1">
+                           🏢 {fav.firma?.firma_tipi_id ? firmaTipiMap[fav.firma.firma_tipi_id] || "-" : "-"}
+                         </span>
+                       </div>
+                     </div>
+                     <Button variant="outline" size="sm" className="shrink-0 hidden sm:flex" onClick={(e) => { e.stopPropagation(); fav.firma?.slug && navigate(`/${fav.firma.slug}`); }}>
+                       Profili Gör
+                     </Button>
+                     <button
+                       onClick={(e) => { e.stopPropagation(); removeFirmaFav(fav.id); }}
+                       className="shrink-0 p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors"
+                     >
+                       <Heart className="w-4 h-4 sm:w-5 sm:h-5 text-destructive fill-destructive" />
+                     </button>
+                   </div>
                 ))}
               </div>
             )}
