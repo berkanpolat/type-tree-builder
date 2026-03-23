@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, CSSProperties, Fragment } from "react";
+import { useState, useEffect, useCallback, useRef, CSSProperties, Fragment } from "react";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
