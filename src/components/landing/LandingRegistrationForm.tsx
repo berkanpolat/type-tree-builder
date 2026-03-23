@@ -86,7 +86,7 @@ function validateExpiry(val: string): boolean {
   return new Date(year, month) > new Date();
 }
 
-export default function LandingRegistrationForm({ selectedPackage, billingYearly, onBack }: Props) {
+export default function LandingRegistrationForm({ selectedPackage, billingYearly, onBack, hideHeader }: Props) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
