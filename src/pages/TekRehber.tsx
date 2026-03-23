@@ -38,11 +38,18 @@ import {
 } from "lucide-react";
 
 const PER_PAGE = 20;
+const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1"; // Ana Ürün Kategorileri
 
 interface SearchResult {
   id: string;
   name: string;
-  type: "Firma" | "Tür";
+  type: "Firma" | "Tür" | "Kategori" | "Grup" | "Ürün Türü";
+}
+
+interface UrunTaxNode {
+  id: string;
+  name: string;
+  parent_id: string | null;
 }
 
 interface FirmaWithExtra {
@@ -108,13 +115,17 @@ export default function TekRehber() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
 
+  // Product taxonomy for search
+  const [urunTaxNodes, setUrunTaxNodes] = useState<UrunTaxNode[]>([]);
+  const [uretimSatisFilter, setUretimSatisFilter] = useState<{ column: string; ids: string[] } | null>(null);
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const totalPages = Math.max(1, Math.ceil(totalCount / PER_PAGE));
 
   // Reset page when filters change
-  useEffect(() => { setCurrentPage(1); }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm]);
+  useEffect(() => { setCurrentPage(1); }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter]);
 
   // Click outside
   useEffect(() => {
@@ -136,6 +147,15 @@ export default function TekRehber() {
         else if (sorted.length > 0) { setSelectedFirmaTuru(sorted[0].id); setSelectedFirmaTuruName(sorted[0].name); }
       }
     });
+  }, []);
+
+  // Fetch product taxonomy nodes for search autocomplete
+  useEffect(() => {
+    supabase.from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("kategori_id", KATEGORI_ID)
+      .order("name")
+      .then(({ data }) => setUrunTaxNodes(data || []));
   }, []);
 
   // Fetch companies with pagination
@@ -191,6 +211,20 @@ export default function TekRehber() {
           if (junctionFirmaIds === null) junctionFirmaIds = [...usFirmaIds];
           else junctionFirmaIds = junctionFirmaIds.filter((id) => usFirmaIds.has(id));
         }
+      }
+    }
+
+    // Apply search-based uretimSatisFilter (from autocomplete selection)
+    if (uretimSatisFilter) {
+      let usQuery = supabase.from("firma_uretim_satis").select("firma_id");
+      if (uretimSatisFilter.column === "kategori_id") usQuery = usQuery.in("kategori_id", uretimSatisFilter.ids);
+      else if (uretimSatisFilter.column === "grup_id") usQuery = usQuery.in("grup_id", uretimSatisFilter.ids);
+      else usQuery = usQuery.in("tur_id", uretimSatisFilter.ids);
+      const { data: usSearchData } = await usQuery;
+      if (usSearchData) {
+        const usFirmaIds = new Set(usSearchData.map((d) => d.firma_id));
+        if (junctionFirmaIds === null) junctionFirmaIds = [...usFirmaIds];
+        else junctionFirmaIds = junctionFirmaIds.filter((id) => usFirmaIds.has(id));
       }
     }
 
@@ -314,7 +348,7 @@ export default function TekRehber() {
 
     setFirmalar(enriched);
     setFirmaLoading(false);
-  }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, firmaTurleri, currentUserId, currentPage]);
+  }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter, firmaTurleri, currentUserId, currentPage]);
 
   useEffect(() => {
     if (selectedFirmaTuru) fetchFirmalar();
@@ -344,31 +378,68 @@ export default function TekRehber() {
     }
     const timer = setTimeout(async () => {
       const results: SearchResult[] = [];
+      const lowerTerm = searchTerm.toLowerCase();
+
+      // Firma türleri
       firmaTurleri.forEach((t) => {
-        if (t.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        if (t.name.toLowerCase().includes(lowerTerm)) {
           results.push({ id: t.id, name: t.name, type: "Tür" });
         }
       });
+
+      // Product taxonomy: categories, groups, types
+      const rootNodes = urunTaxNodes.filter((n) => !n.parent_id);
+      const childOf = (parentId: string) => urunTaxNodes.filter((n) => n.parent_id === parentId);
+
+      rootNodes.forEach((kat) => {
+        if (kat.name.toLowerCase().includes(lowerTerm)) {
+          results.push({ id: kat.id, name: kat.name, type: "Kategori" });
+        }
+        childOf(kat.id).forEach((grup) => {
+          if (grup.name.toLowerCase().includes(lowerTerm)) {
+            results.push({ id: grup.id, name: `${grup.name}`, type: "Grup" });
+          }
+          childOf(grup.id).forEach((tur) => {
+            if (tur.name.toLowerCase().includes(lowerTerm)) {
+              results.push({ id: tur.id, name: `${tur.name}`, type: "Ürün Türü" });
+            }
+          });
+        });
+      });
+
+      // Firma name search
       const { data } = await supabase
         .from("firmalar")
         .select("id, firma_unvani")
         .ilike("firma_unvani", `%${searchTerm}%`)
         .limit(6);
       if (data) data.forEach((f) => results.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
-      setSearchResults(results);
+
+      // Limit and prioritize: taxonomy first, then firma
+      setSearchResults(results.slice(0, 15));
       setShowDropdown(results.length > 0);
     }, 250);
     return () => clearTimeout(timer);
-  }, [searchTerm, firmaTurleri]);
+  }, [searchTerm, firmaTurleri, urunTaxNodes]);
 
   const handleSearchResultClick = (result: SearchResult) => {
     setSearchTerm(result.name);
     setShowDropdown(false);
+    setAppliedSearchTerm("");
+
     if (result.type === "Tür") {
       setSelectedFirmaTuru(result.id);
       setSelectedFirmaTuruName(result.name);
-      setAppliedSearchTerm("");
-    } else {
+      setUretimSatisFilter(null);
+    } else if (result.type === "Kategori") {
+      setUretimSatisFilter({ column: "kategori_id", ids: [result.id] });
+    } else if (result.type === "Grup") {
+      setUretimSatisFilter({ column: "grup_id", ids: [result.id] });
+    } else if (result.type === "Ürün Türü") {
+      setUretimSatisFilter({ column: "tur_id", ids: [result.id] });
+    } else if (result.type === "Firma") {
+      // Navigate to firma
+      setUretimSatisFilter(null);
       setAppliedSearchTerm(result.name);
     }
   };
@@ -464,7 +535,7 @@ export default function TekRehber() {
           label="ÜRETİCİ / TEDARİKÇİ"
           placeholder="Üretici veya tedarikçi ara..."
           searchTerm={searchTerm}
-          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) setAppliedSearchTerm(""); }}
+          onSearchTermChange={(val) => { setSearchTerm(val); if (!val) { setAppliedSearchTerm(""); setUretimSatisFilter(null); } }}
           onSearch={handleSearch}
           searchResults={searchResults}
           showDropdown={showDropdown}
@@ -476,12 +547,20 @@ export default function TekRehber() {
           onFirmaTuruChange={handleFirmaTuruChange}
         />
 
-        {appliedSearchTerm && (
+        {(appliedSearchTerm || uretimSatisFilter) && (
           <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="secondary" className="gap-1 px-3 py-1.5">
-              Arama: {appliedSearchTerm}
-              <button onClick={() => { setAppliedSearchTerm(""); setSearchTerm(""); }} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
-            </Badge>
+            {appliedSearchTerm && (
+              <Badge variant="secondary" className="gap-1 px-3 py-1.5">
+                Arama: {appliedSearchTerm}
+                <button onClick={() => { setAppliedSearchTerm(""); setSearchTerm(""); }} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
+              </Badge>
+            )}
+            {uretimSatisFilter && (
+              <Badge variant="secondary" className="gap-1 px-3 py-1.5">
+                {searchTerm || "Ürün Filtresi"}
+                <button onClick={() => { setUretimSatisFilter(null); setSearchTerm(""); }} className="ml-1 text-secondary-foreground/70 hover:text-secondary-foreground">×</button>
+              </Badge>
+            )}
           </div>
         )}
 
