@@ -840,7 +840,7 @@ export default function FirmaDetay() {
         <div className="bg-background border border-border rounded-lg">
           {/* Desktop */}
           <div className="hidden md:flex items-center gap-6 overflow-x-auto py-2 px-4">
-            {MENU_ITEMS.filter(item => currentUserId || item.id !== "urunler").map((item) => (
+            {MENU_ITEMS.filter(item => item.id !== "urunler" || (currentUserId && packageInfo.paketSlug !== "ucretsiz")).map((item) => (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
@@ -857,7 +857,7 @@ export default function FirmaDetay() {
           {/* Mobile with scroll hint */}
           <ScrollHintWrapper>
             <div className="flex items-center gap-4 py-2 px-4">
-              {MENU_ITEMS.filter(item => currentUserId || item.id !== "urunler").map((item) => (
+              {MENU_ITEMS.filter(item => item.id !== "urunler" || (currentUserId && packageInfo.paketSlug !== "ucretsiz")).map((item) => (
                 <button
                   key={item.id}
                   onClick={() => scrollToSection(item.id)}
@@ -1044,8 +1044,8 @@ export default function FirmaDetay() {
               </CollapsibleBlock>
             </div>
 
-            {/* Ürünler - only for logged-in users */}
-            {currentUserId && (
+            {/* Ürünler - only for PRO users */}
+            {currentUserId && packageInfo.paketSlug !== "ucretsiz" && (
               <div ref={el => { sectionRefs.current["urunler"] = el; }}>
                 <Card className="p-6">
                   <h2 className="text-lg font-bold text-foreground mb-4">Ürünler</h2>
