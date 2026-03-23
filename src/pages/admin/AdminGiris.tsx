@@ -26,7 +26,7 @@ export default function AdminGiris() {
     if (error) {
       toast({ title: "Giriş Başarısız", description: error, variant: "destructive" });
     } else {
-      navigate("/yonetim/panel");
+      navigate("/yonetim");
     }
   };
 
