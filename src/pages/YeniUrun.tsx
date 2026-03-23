@@ -215,12 +215,12 @@ export default function YeniUrun() {
     if (v1Res.data) {
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name")
         .eq("kategori_id", v1Res.data.id).is("parent_id", null).order("name");
-      if (data) setVaryant1Options(data);
+      if (data) setVaryant1Options(sortSecenekler(data));
     }
     if (renkRes.data) {
       const { data } = await supabase.from("firma_bilgi_secenekleri").select("id, name")
         .eq("kategori_id", renkRes.data.id).is("parent_id", null).order("name");
-      if (data) setRenkOptions(data);
+      if (data) setRenkOptions(sortSecenekler(data));
     }
   };
 
