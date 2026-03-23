@@ -17,7 +17,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   MapPin, CalendarIcon, Building2, Loader2, MoreHorizontal, Trash2, CheckCircle, Clock,
-  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown, GripVertical,
+  Search, ChevronLeft, ChevronRight, ClipboardList, CheckCheck, ChevronDown, GripVertical, Users,
 } from "lucide-react";
 import { format, addDays, startOfWeek, endOfWeek, isToday, isPast, isSameDay } from "date-fns";
 import { tr } from "date-fns/locale";
@@ -143,6 +143,11 @@ export default function AdminZiyaretPlanlari() {
   const [editNotlar, setEditNotlar] = useState("");
   const [expandedDate, setExpandedDate] = useState<string | null>(null);
 
+  // Staff filter for Yönetim Kurulu
+  const isYonetimKurulu = adminUser?.departman === "Yönetim Kurulu" || adminUser?.is_primary;
+  const [adminList, setAdminList] = useState<{ id: string; ad: string; soyad: string }[]>([]);
+  const [selectedAdminId, setSelectedAdminId] = useState<string>("own");
+
   // Aksiyon Ekle state
   const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
   const [aksiyonPlan, setAksiyonPlan] = useState<ZiyaretPlan | null>(null);
@@ -169,13 +174,30 @@ export default function AdminZiyaretPlanlari() {
 
   const callApi = useAdminApi();
 
+  // Fetch admin list for Yönetim Kurulu filter
+  useEffect(() => {
+    if (!isYonetimKurulu || !token) return;
+    const fetchAdmins = async () => {
+      try {
+        const data = await callApi("list-admin-users", { token });
+        setAdminList((data.users || []).map((u: any) => ({ id: u.id, ad: u.ad, soyad: u.soyad })));
+      } catch {
+        setAdminList([]);
+      }
+    };
+    fetchAdmins();
+  }, [isYonetimKurulu, token, callApi]);
+
+  const viewingAdminId = selectedAdminId === "all" ? undefined : (selectedAdminId === "own" ? adminUser?.id : selectedAdminId);
+  const isViewingOwnPlans = selectedAdminId === "own";
+
   const fetchPlanlar = useCallback(async () => {
     if (!token || !adminUser) return;
     try {
       const weekEnd = endOfWeek(selectedWeekStart, { weekStartsOn: 1 });
       const data = await callApi("list-ziyaret-planlari", {
         token,
-        adminId: adminUser.id,
+        adminId: viewingAdminId,
         baslangic: format(selectedWeekStart, "yyyy-MM-dd"),
         bitis: format(weekEnd, "yyyy-MM-dd"),
       });
@@ -186,7 +208,7 @@ export default function AdminZiyaretPlanlari() {
     } finally {
       setLoading(false);
     }
-  }, [token, adminUser, callApi, toast, selectedWeekStart]);
+  }, [token, adminUser, callApi, toast, selectedWeekStart, viewingAdminId]);
 
   useEffect(() => { setLoading(true); fetchPlanlar(); }, [fetchPlanlar]);
 
@@ -323,11 +345,28 @@ export default function AdminZiyaretPlanlari() {
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
               <Input placeholder="Firma ara..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 w-56 h-9 text-sm" style={s.input} />
             </div>
+            {isYonetimKurulu && adminList.length > 0 && (
+              <Select value={selectedAdminId} onValueChange={setSelectedAdminId}>
+                <SelectTrigger className="h-9 w-52 text-xs" style={s.input}>
+                  <div className="flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 flex-shrink-0" style={{ color: "hsl(38 92% 50%)" }} />
+                    <SelectValue placeholder="Personel seçin" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent style={{ ...s.card, zIndex: 9999 }}>
+                  <SelectItem value="own" className="text-xs">Benim Planlarım</SelectItem>
+                  <SelectItem value="all" className="text-xs">Tüm Personeller</SelectItem>
+                  {adminList.filter(a => a.id !== adminUser?.id).map(a => (
+                    <SelectItem key={a.id} value={a.id} className="text-xs">{a.ad} {a.soyad}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="h-8" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }} onClick={() => setSelectedWeekStart(prev => addDays(prev, -7))}><ChevronLeft className="w-4 h-4" /></Button>
@@ -341,6 +380,14 @@ export default function AdminZiyaretPlanlari() {
               <MapPin className="w-3.5 h-3.5" style={{ color: "hsl(38 92% 50%)" }} />
               <span style={s.text}>{filteredPlanlar.length} ziyaret</span>
             </div>
+            {!isViewingOwnPlans && (
+              <div className="px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2" style={{ background: "rgba(59,130,246,0.1)" }}>
+                <Users className="w-3.5 h-3.5" style={{ color: "#3b82f6" }} />
+                <span style={{ color: "#3b82f6" }}>
+                  {selectedAdminId === "all" ? "Tüm Personeller" : (() => { const a = adminList.find(x => x.id === selectedAdminId); return a ? `${a.ad} ${a.soyad}` : ""; })()}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -438,7 +485,7 @@ export default function AdminZiyaretPlanlari() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {pendingCount > 0 && (
+                      {isViewingOwnPlans && pendingCount > 0 && (
                         <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-7" onClick={() => handleCompleteDay(plans)}>
                           <CheckCheck className="w-3.5 h-3.5 mr-1" /> Günü Tamamla
                         </Button>
