@@ -36,6 +36,19 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
   const [loading3, setLoading3] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const REHBER_ORDER = ["marka", "mümessil ofis", "üretici", "tedarikçi", "fason atölye"];
+
+  const sortRehber = (items: SubItem[]) => {
+    return [...items].sort((a, b) => {
+      const aIdx = REHBER_ORDER.indexOf(a.name.toLowerCase());
+      const bIdx = REHBER_ORDER.indexOf(b.name.toLowerCase());
+      if (aIdx === -1 && bIdx === -1) return a.name.localeCompare(b.name);
+      if (aIdx === -1) return 1;
+      if (bIdx === -1) return -1;
+      return aIdx - bIdx;
+    });
+  };
+
   // Fetch level 1
   useEffect(() => {
     if (type === "tekpazar") {
@@ -58,7 +71,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
         });
     } else {
       if (rehberTurCache.length > 0) {
-        setLevel1(rehberTurCache);
+        setLevel1(sortRehber(rehberTurCache));
         return;
       }
       setLoading1(true);
@@ -69,7 +82,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
         .then(({ data }) => {
           const items = data || [];
           rehberTurCache.push(...items);
-          setLevel1(items);
+          setLevel1(sortRehber(items));
           setLoading1(false);
         });
     }
