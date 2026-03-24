@@ -183,7 +183,7 @@ export default function TekIhale() {
 
       const [firmaRes, teklifRes] = await Promise.all([
         supabase.from("firmalar").select("user_id, firma_unvani, logo_url").in("user_id", userIds),
-        supabase.from("ihale_teklifler").select("ihale_id").in("ihale_id", ihaleIds),
+        supabase.from("ihale_teklifler").select("ihale_id, teklif_veren_user_id, is_fake").in("ihale_id", ihaleIds),
       ]);
 
       const firmaMap: Record<string, { unvan: string; logo: string | null }> = {};
@@ -191,9 +191,19 @@ export default function TekIhale() {
         firmaMap[f.user_id] = { unvan: f.firma_unvani, logo: f.logo_url };
       });
 
+      // Deduplicate: count unique real users + each fake bid individually
       const teklifCount: Record<string, number> = {};
+      const seenUserPerIhale: Record<string, Set<string>> = {};
       teklifRes.data?.forEach((t) => {
-        teklifCount[t.ihale_id] = (teklifCount[t.ihale_id] || 0) + 1;
+        if (t.is_fake) {
+          teklifCount[t.ihale_id] = (teklifCount[t.ihale_id] || 0) + 1;
+        } else {
+          if (!seenUserPerIhale[t.ihale_id]) seenUserPerIhale[t.ihale_id] = new Set();
+          if (!seenUserPerIhale[t.ihale_id].has(t.teklif_veren_user_id)) {
+            seenUserPerIhale[t.ihale_id].add(t.teklif_veren_user_id);
+            teklifCount[t.ihale_id] = (teklifCount[t.ihale_id] || 0) + 1;
+          }
+        }
       });
 
       const enriched: IhaleWithExtra[] = ihaleData.map((i) => ({

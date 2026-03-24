@@ -593,8 +593,8 @@ export default function IhaleDetay() {
           latestPerUser.set(t.teklif_veren_user_id, t);
         }
       }
-      // Show ALL real bids (no deduplication) to match listing counts
-      const uniqueRealTeklifler = realTeklifler;
+      // Deduplicate: show only latest bid per real user
+      const uniqueRealTeklifler = Array.from(latestPerUser.values());
 
       // Enrich real bids with firma names
       const enrichedReal: TeklifForList[] = uniqueRealTeklifler.map(t => ({
