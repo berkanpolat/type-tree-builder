@@ -424,11 +424,11 @@ export default function ManuPazar() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Yükleniyor...</TableCell>
+                    <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">Yükleniyor...</TableCell>
                   </TableRow>
                 ) : filteredUrunler.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Henüz ürün bulunmamaktadır.</TableCell>
+                    <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">Henüz ürün bulunmamaktadır.</TableCell>
                   </TableRow>
                 ) : (
                   filteredUrunler.map((urun) => (
