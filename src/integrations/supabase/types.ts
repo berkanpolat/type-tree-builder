@@ -535,6 +535,7 @@ export type Database = {
       conversations: {
         Row: {
           created_at: string
+          deleted_by: string[]
           id: string
           last_message_at: string
           user1_id: string
@@ -542,6 +543,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_by?: string[]
           id?: string
           last_message_at?: string
           user1_id: string
@@ -549,6 +551,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_by?: string[]
           id?: string
           last_message_at?: string
           user1_id?: string

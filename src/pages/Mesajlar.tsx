@@ -171,6 +171,7 @@ export default function Mesajlar() {
       .from("conversations")
       .select("*")
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+      .not("deleted_by", "cs", `{${userId}}`)
       .order("last_message_at", { ascending: false });
 
     if (!convs || convs.length === 0) {
@@ -446,9 +447,10 @@ export default function Mesajlar() {
     console.log("[Mesajlar] Message inserted successfully");
     import("@/hooks/use-last-seen").then(m => m.updateLastSeen());
 
+    // Clear deleted_by when a new message is sent (so conversation reappears for the other user)
     const { error: updateError } = await supabase
       .from("conversations")
-      .update({ last_message_at: new Date().toISOString() })
+      .update({ last_message_at: new Date().toISOString(), deleted_by: [] } as any)
       .eq("id", selectedConv.id);
 
     if (updateError) {
@@ -543,8 +545,13 @@ export default function Mesajlar() {
 
   const handleDeleteConversation = async () => {
     if (!deleteConvTarget || !currentUserId) return;
-    await supabase.from("messages").delete().eq("conversation_id", deleteConvTarget.id);
-    await supabase.from("conversations").delete().eq("id", deleteConvTarget.id);
+    // Soft delete: add current user to deleted_by array
+    const currentDeletedBy = (deleteConvTarget as any).deleted_by || [];
+    const newDeletedBy = [...new Set([...currentDeletedBy, currentUserId])];
+    await supabase
+      .from("conversations")
+      .update({ deleted_by: newDeletedBy } as any)
+      .eq("id", deleteConvTarget.id);
     setConversations((prev) => prev.filter((c) => c.id !== deleteConvTarget.id));
     if (selectedConv?.id === deleteConvTarget.id) {
       setSelectedConv(null);
