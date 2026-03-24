@@ -10,6 +10,7 @@ import { Upload, FileText, Loader2, CheckCircle, XCircle, Clock } from "lucide-r
 
 interface BelgelerimTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
 interface BelgeRecord {
