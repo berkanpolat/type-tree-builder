@@ -157,20 +157,86 @@ export default function LandingHeroSearch() {
   const searchFirma = useCallback(async (term: string) => {
     setLoading(true);
     try {
-      // Search by firma name
+      const results: Suggestion[] = [];
+      const seen = new Set<string>();
+
+      // 1) Search firma_tipleri (e.g. "Kumaş Tedarikçisi") — show these first
+      const { data: matchingTipleri } = await supabase
+        .from("firma_tipleri")
+        .select("id, name, firma_turu_id, firma_turleri!inner(name)")
+        .ilike("name", `%${term}%`)
+        .limit(5);
+
+      if (matchingTipleri && matchingTipleri.length > 0) {
+        for (const tip of matchingTipleri) {
+          // Find firms with this firma_tipi_id
+          const { data: firmsOfType } = await supabase
+            .from("firmalar")
+            .select("id, firma_unvani, slug")
+            .eq("firma_tipi_id", tip.id)
+            .limit(3);
+
+          const turName = (tip.firma_turleri as any)?.name || "";
+          if (firmsOfType) {
+            for (const firma of firmsOfType) {
+              if (!seen.has(firma.id)) {
+                seen.add(firma.id);
+                results.push({
+                  id: firma.id,
+                  name: firma.firma_unvani,
+                  type: `${turName} › ${tip.name}`,
+                });
+              }
+            }
+          }
+        }
+      }
+
+      // 2) Search firma_turleri (e.g. "Tedarikçi")
+      const { data: matchingTurleri } = await supabase
+        .from("firma_turleri")
+        .select("id, name")
+        .ilike("name", `%${term}%`)
+        .limit(3);
+
+      if (matchingTurleri && matchingTurleri.length > 0) {
+        for (const tur of matchingTurleri) {
+          const { data: firmsOfTur } = await supabase
+            .from("firmalar")
+            .select("id, firma_unvani, slug")
+            .eq("firma_turu_id", tur.id)
+            .limit(3);
+
+          if (firmsOfTur) {
+            for (const firma of firmsOfTur) {
+              if (!seen.has(firma.id)) {
+                seen.add(firma.id);
+                results.push({
+                  id: firma.id,
+                  name: firma.firma_unvani,
+                  type: `Firma Türü: ${tur.name}`,
+                });
+              }
+            }
+          }
+        }
+      }
+
+      // 3) Search by firma name
       const { data: firmaByName } = await supabase
         .from("firmalar")
         .select("id, firma_unvani, slug")
         .ilike("firma_unvani", `%${term}%`)
         .limit(6);
 
-      const results: Suggestion[] = (firmaByName || []).map((f) => ({
-        id: f.id,
-        name: f.firma_unvani,
-        type: "Firma Adı",
-      }));
+      for (const f of firmaByName || []) {
+        if (!seen.has(f.id)) {
+          seen.add(f.id);
+          results.push({ id: f.id, name: f.firma_unvani, type: "Firma Adı" });
+        }
+      }
 
-      // Search in firma_bilgi_secenekleri for matching option names
+      // 4) Search in üretim/satış taxonomy
       const { data: matchingOptions } = await supabase
         .from("firma_bilgi_secenekleri")
         .select("id, name")
@@ -180,28 +246,24 @@ export default function LandingHeroSearch() {
       if (matchingOptions && matchingOptions.length > 0) {
         const optionIds = matchingOptions.map((o) => o.id);
         const optionMap = Object.fromEntries(matchingOptions.map((o) => [o.id, o.name]));
-        const seen = new Set(results.map((r) => r.id));
 
-        // Search by tur_id (Tür)
-        const { data: turMatches } = await supabase
-          .from("firma_uretim_satis")
-          .select("firma_id, tip, tur_id, firmalar!inner(id, firma_unvani, slug)")
-          .in("tur_id", optionIds)
-          .limit(10);
-
-        // Search by grup_id (Grup)
-        const { data: grupMatches } = await supabase
-          .from("firma_uretim_satis")
-          .select("firma_id, tip, grup_id, firmalar!inner(id, firma_unvani, slug)")
-          .in("grup_id", optionIds)
-          .limit(10);
-
-        // Search by kategori_id (Kategori)
-        const { data: katMatches } = await supabase
-          .from("firma_uretim_satis")
-          .select("firma_id, tip, kategori_id, firmalar!inner(id, firma_unvani, slug)")
-          .in("kategori_id", optionIds)
-          .limit(10);
+        const [{ data: turMatches }, { data: grupMatches }, { data: katMatches }] = await Promise.all([
+          supabase
+            .from("firma_uretim_satis")
+            .select("firma_id, tip, tur_id, firmalar!inner(id, firma_unvani, slug)")
+            .in("tur_id", optionIds)
+            .limit(10),
+          supabase
+            .from("firma_uretim_satis")
+            .select("firma_id, tip, grup_id, firmalar!inner(id, firma_unvani, slug)")
+            .in("grup_id", optionIds)
+            .limit(10),
+          supabase
+            .from("firma_uretim_satis")
+            .select("firma_id, tip, kategori_id, firmalar!inner(id, firma_unvani, slug)")
+            .in("kategori_id", optionIds)
+            .limit(10),
+        ]);
 
         const addMatches = (matches: any[] | null, field: string, levelLabel: string) => {
           if (!matches) return;
