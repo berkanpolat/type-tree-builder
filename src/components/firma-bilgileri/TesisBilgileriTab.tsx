@@ -172,6 +172,7 @@ export default function TesisBilgileriTab({ userId, onDataChange }: TesisBilgile
         makine_gucu: makineGucu,
       }]);
       toast({ title: "Tesis eklendi" });
+      onDataChange?.();
     }
 
     // Update optionsMap for il/ilce
