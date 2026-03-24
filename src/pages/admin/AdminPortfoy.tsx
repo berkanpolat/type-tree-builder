@@ -533,7 +533,7 @@ export default function AdminPortfoy() {
                               <MoreHorizontal className="w-4 h-4" style={s.muted} />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" style={s.card} className="min-w-[160px]">
+                          <DropdownMenuContent align="end" style={{ ...s.card, zIndex: 99999 }} className="min-w-[160px]">
                             {hasPermission("portfolyo_aksiyon_ekle") && (
                               <DropdownMenuItem onClick={() => { setSelectedFirma(firma); setAksiyonEkleOpen(true); }} className="text-xs cursor-pointer">
                                 <Plus className="w-3.5 h-3.5 mr-2" /> Aksiyon Ekle
