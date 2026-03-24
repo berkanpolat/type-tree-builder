@@ -26,9 +26,10 @@ interface Sertifika {
 
 interface SertifikalarTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-export default function SertifikalarTab({ userId }: SertifikalarTabProps) {
+export default function SertifikalarTab({ userId, onDataChange }: SertifikalarTabProps) {
   const [firmaId, setFirmaId] = useState("");
   const [loading, setLoading] = useState(true);
   const [optionsMap, setOptionsMap] = useState<Record<string, string>>({});
