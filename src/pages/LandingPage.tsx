@@ -6,7 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
 import heroImg from "@/assets/landing-hero-anim.gif";
-import logoIconImg from "@/assets/tekstilas-logo-icon.webp";
+import logoIconImg from "@/assets/tekstilas-logo-icon.png";
 import tekihaleImg from "@/assets/landing-tekihale.png";
 import tekrehberImg from "@/assets/landing-tekrehber.png";
 import tekpazarImg from "@/assets/landing-tekpazar.png";
