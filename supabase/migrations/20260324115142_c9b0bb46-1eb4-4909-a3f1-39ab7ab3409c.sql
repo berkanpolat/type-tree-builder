@@ -1,0 +1,1 @@
+ALTER TABLE public.lead_basvurular ADD COLUMN arandi boolean NOT NULL DEFAULT false;

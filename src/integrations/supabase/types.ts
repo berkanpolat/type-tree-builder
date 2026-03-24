@@ -1978,6 +1978,7 @@ export type Database = {
       lead_basvurular: {
         Row: {
           ad: string
+          arandi: boolean
           created_at: string
           email: string
           id: string
@@ -1987,6 +1988,7 @@ export type Database = {
         }
         Insert: {
           ad: string
+          arandi?: boolean
           created_at?: string
           email: string
           id?: string
@@ -1996,6 +1998,7 @@ export type Database = {
         }
         Update: {
           ad?: string
+          arandi?: boolean
           created_at?: string
           email?: string
           id?: string
