@@ -189,7 +189,7 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
 
   return (
     <AdminTitleContext.Provider value={{ title: contextTitle, setTitle: setContextTitle }}>
-      <div className="h-screen flex overflow-hidden bg-muted/30">
+      <div className="admin-light h-screen flex overflow-hidden bg-muted/30">
         {/* Desktop Sidebar */}
         {!isMobile && (
           <aside className="w-64 border-r border-border flex flex-col shrink-0 h-full bg-background">
