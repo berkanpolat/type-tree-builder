@@ -114,17 +114,16 @@ export default function ManuPazar() {
       .order("created_at", { ascending: false });
 
     if (data) {
-      // Get favori counts per urun
+      // Get favori counts per urun via RPC (bypasses RLS)
       const urunIds = data.map(u => u.id);
       let favCountMap: Record<string, number> = {};
       if (urunIds.length > 0) {
-        const { data: favData } = await supabase
-          .from("urun_favoriler")
-          .select("urun_id")
-          .in("urun_id", urunIds);
-        favData?.forEach(f => {
-          favCountMap[f.urun_id] = (favCountMap[f.urun_id] || 0) + 1;
-        });
+        const { data: favData } = await supabase.rpc("count_urun_favoriler", { p_urun_ids: urunIds });
+        if (Array.isArray(favData)) {
+          favData.forEach((f: any) => {
+            favCountMap[f.urun_id] = f.cnt;
+          });
+        }
       }
 
       const enriched = data.map(u => ({
@@ -132,7 +131,6 @@ export default function ManuPazar() {
         favori_sayisi: (favCountMap[u.id] || 0) + (u.fake_favori_sayisi || 0),
       }));
       setUrunler(enriched);
-      setUrunler(data);
       // Collect all secenek IDs to resolve names
       const ids = new Set<string>();
       data.forEach((u) => {
