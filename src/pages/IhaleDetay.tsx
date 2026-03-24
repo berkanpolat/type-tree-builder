@@ -575,26 +575,43 @@ export default function IhaleDetay() {
     // Teklifler - only latest per user counts
     const allTeklifler = (teklifRes.data || []) as any[];
     if (allTeklifler.length > 0) {
-      const teklifUserIds = [...new Set(allTeklifler.map(t => t.teklif_veren_user_id))];
-      let firmaNameMap: Record<string, string> = {};
-      const { data: fData } = await supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", teklifUserIds);
-      fData?.forEach(f => { firmaNameMap[f.user_id] = f.firma_unvani; });
+      // Separate fake and real bids
+      const fakeTeklifler = allTeklifler.filter(t => t.is_fake);
+      const realTeklifler = allTeklifler.filter(t => !t.is_fake);
 
-      // Deduplicate: keep only latest teklif per user (already sorted desc by created_at)
+      const teklifUserIds = [...new Set(realTeklifler.map(t => t.teklif_veren_user_id))];
+      let firmaNameMap: Record<string, string> = {};
+      if (teklifUserIds.length > 0) {
+        const { data: fData } = await supabase.from("firmalar").select("user_id, firma_unvani").in("user_id", teklifUserIds);
+        fData?.forEach(f => { firmaNameMap[f.user_id] = f.firma_unvani; });
+      }
+
+      // Deduplicate real bids: keep only latest teklif per user (already sorted desc by created_at)
       const latestPerUser = new Map<string, any>();
-      for (const t of allTeklifler) {
+      for (const t of realTeklifler) {
         if (!latestPerUser.has(t.teklif_veren_user_id)) {
           latestPerUser.set(t.teklif_veren_user_id, t);
         }
       }
-      const uniqueTeklifler = Array.from(latestPerUser.values());
+      const uniqueRealTeklifler = Array.from(latestPerUser.values());
 
-      const enriched: TeklifForList[] = uniqueTeklifler.map(t => ({
+      // Enrich real bids with firma names
+      const enrichedReal: TeklifForList[] = uniqueRealTeklifler.map(t => ({
         ...t,
         firma_unvani: firmaNameMap[t.teklif_veren_user_id] || "",
       }));
 
-      setTeklifler(enriched);
+      // Enrich fake bids with their stored firma names (each fake bid is individual)
+      const enrichedFake: TeklifForList[] = fakeTeklifler.map(t => ({
+        ...t,
+        firma_unvani: t.fake_firma_adi || "Anonim Firma",
+      }));
+
+      const uniqueTeklifler = [...enrichedReal, ...enrichedFake].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setTeklifler(uniqueTeklifler);
 
       // Min/max based on latest per user only
       const tutarlar = uniqueTeklifler.map(t => t.tutar);
