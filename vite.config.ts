@@ -4,7 +4,7 @@ import { promisify } from "node:util";
 import react from "@vitejs/plugin-react";
 import { componentTagger } from "lovable-tagger";
 import { defineConfig, loadEnv, type PluginOption } from "vite";
-import { VitePWA } from "vite-plugin-pwa";
+
 
 const execFileAsync = promisify(execFile);
 
