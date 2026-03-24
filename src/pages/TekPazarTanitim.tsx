@@ -80,7 +80,7 @@ export default function TekPazarTanitim() {
             Üreticiler ve tedarikçiler ürünlerini sergiler; markalar ve alıcılar doğru ürüne, doğru koşullarla ulaşır.
             Tüm toptan ticaret süreci tek panelden, kontrollü şekilde yönetilir.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
               size="lg"
               className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold px-8"
@@ -88,6 +88,15 @@ export default function TekPazarTanitim() {
             >
               <ShoppingBag className="w-4 h-4 mr-2" />
               Ürünleri Keşfet
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-secondary/50 text-primary-foreground hover:bg-secondary/10 font-semibold px-8"
+              onClick={() => setLeadDialogOpen(true)}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Tanıtım PDF İndir
             </Button>
           </div>
         </div>
