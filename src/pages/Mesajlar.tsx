@@ -544,8 +544,13 @@ export default function Mesajlar() {
 
   const handleDeleteConversation = async () => {
     if (!deleteConvTarget || !currentUserId) return;
-    await supabase.from("messages").delete().eq("conversation_id", deleteConvTarget.id);
-    await supabase.from("conversations").delete().eq("id", deleteConvTarget.id);
+    // Soft delete: add current user to deleted_by array
+    const currentDeletedBy = (deleteConvTarget as any).deleted_by || [];
+    const newDeletedBy = [...new Set([...currentDeletedBy, currentUserId])];
+    await supabase
+      .from("conversations")
+      .update({ deleted_by: newDeletedBy } as any)
+      .eq("id", deleteConvTarget.id);
     setConversations((prev) => prev.filter((c) => c.id !== deleteConvTarget.id));
     if (selectedConv?.id === deleteConvTarget.id) {
       setSelectedConv(null);
