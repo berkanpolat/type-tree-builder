@@ -65,8 +65,9 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
         .order("name")
         .then(({ data }) => {
           const items = data || [];
-          pazarKatCache.push(...items);
-          setLevel1(items);
+          const filtered = items.filter(i => i.name !== "Hazır Giyim (Üretim)");
+          pazarKatCache.push(...filtered);
+          setLevel1(filtered);
           setLoading1(false);
         });
     } else {
