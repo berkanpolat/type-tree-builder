@@ -254,3 +254,17 @@ thead .sticky-action-col {
 .animate-heart-pop {
   animation: heart-pop 0.4s ease-out;
 }
+
+@keyframes logo-pulse {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 15px rgba(234, 161, 43, 0.4));
+  }
+  50% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 35px rgba(234, 161, 43, 0.7));
+  }
+}
+.animate-logo-pulse {
+  animation: logo-pulse 3s ease-in-out infinite;
+}
