@@ -3114,6 +3114,7 @@ export type Database = {
         Args: { p_email: string; p_exclude_user_id?: string; p_phone?: string }
         Returns: Json
       }
+      count_urun_favoriler: { Args: { p_urun_ids: string[] }; Returns: Json }
       generate_firma_slug: { Args: { p_unvani: string }; Returns: string }
       generate_slug: {
         Args: { p_existing_id?: string; p_table: string; p_text: string }
