@@ -95,6 +95,7 @@ export default function ReferanslarTab({ userId, onDataChange }: ReferanslarTabP
         logo_url: logoUrl || r.logo_url,
       } : r));
       toast({ title: "Güncellendi" });
+      onDataChange?.();
     } else {
       const { data, error } = await supabase.from("firma_referanslar").insert({
         firma_id: firmaId,
