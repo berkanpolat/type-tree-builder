@@ -45,8 +45,15 @@ export default function LeadCaptureDialog({ open, onOpenChange, kaynak }: LeadCa
         kaynak,
       } as any);
       if (error) throw error;
-      toast({ title: "Başarılı", description: "Bilgileriniz alındı. PDF indirme bağlantısı hazırlanıyor." });
+      toast({ title: "Başarılı", description: "Bilgileriniz alındı. PDF indiriliyor..." });
       onOpenChange(false);
+      // Trigger PDF download
+      const link = document.createElement("a");
+      link.href = "/Tekstil_AS_Kurumsal_Sunum_v2.pdf";
+      link.download = "Tekstil_AS_Kurumsal_Sunum_v2.pdf";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       setForm({ ad: "", soyad: "", email: "", telefon: "" });
       setErrors({});
     } catch (err: any) {
