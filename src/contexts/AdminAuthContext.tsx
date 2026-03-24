@@ -164,10 +164,12 @@ export function AdminAuthProvider({ children }: { children: React.ReactNode }) {
 
   const callEdgeFunction = useCallback(async (action: string, body: Record<string, unknown>) => {
     const maxRetries = 2;
+    const enrichedBody = { ...body, action };
+
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        const { data, error } = await supabase.functions.invoke(`admin-auth/${action}`, {
-          body,
+        const { data, error } = await supabase.functions.invoke("admin-auth", {
+          body: enrichedBody,
         });
         if (error) {
           const status = (error as any)?.status || (error as any)?.context?.status;
