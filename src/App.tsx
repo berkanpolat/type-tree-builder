@@ -107,6 +107,7 @@ const AdminPerformans = lazyRetry(() => import("./pages/admin/AdminPerformans"))
 const AdminTestMerkezi = lazyRetry(() => import("./pages/admin/AdminTestMerkezi"));
 const AdminSistemLoglari = lazyRetry(() => import("./pages/admin/AdminSistemLoglari"));
 const AdminSeo = lazyRetry(() => import("./pages/admin/AdminSeo"));
+const AdminVersiyonlar = lazyRetry(() => import("./pages/admin/AdminVersiyonlar"));
 const OdemeTest = lazyRetry(() => import("./pages/OdemeTest"));
 const OdemeTestYillik = lazyRetry(() => import("./pages/OdemeTestYillik"));
 const OdemeSonuc = lazyRetry(() => import("./pages/OdemeSonuc"));
