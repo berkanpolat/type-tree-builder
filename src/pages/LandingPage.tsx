@@ -327,9 +327,7 @@ const LandingPage = () => {
             {/* Left: Title + Search (75%) */}
             <div>
               <h1 className="text-3xl md:text-4xl lg:text-[3.25rem] font-extrabold text-foreground leading-[1.15] tracking-tight mb-3 md:mb-5">
-                İşiniz Tekstilse,
-                <br />
-                Yeriniz{" "}
+                İşiniz Tekstilse, Yeriniz{" "}
                 <span className="text-secondary">Tekstil A.Ş.</span>
               </h1>
               <p className="text-base md:text-lg text-muted-foreground mb-6 md:mb-8 max-w-xl leading-relaxed">
@@ -339,24 +337,6 @@ const LandingPage = () => {
               {/* Search */}
               <div className="mb-5 max-w-2xl">
                 <LandingHeroSearch />
-              </div>
-
-              {/* Popular searches */}
-              <div className="mb-8">
-                <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase mb-2 block">
-                  Popüler Aramalar
-                </span>
-                <div className="flex flex-wrap gap-2">
-                  {["Kumaş üretimi", "Fason dikim", "İplik tedarik", "Aksesuar", "Örme kumaş"].map((chip) => (
-                    <span
-                      key={chip}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground text-sm rounded-full border border-border cursor-default transition-colors"
-                    >
-                      <Search className="w-3 h-3 text-muted-foreground" />
-                      {chip}
-                    </span>
-                  ))}
-                </div>
               </div>
 
               {/* CTA buttons */}
