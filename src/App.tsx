@@ -228,39 +228,41 @@ const AppContent = () => {
 
                 <Route path="/yonetim" element={<AdminRoute />}>
                   <Route path="giris" element={<AdminGiris />} />
-                  <Route index element={<AdminPanel />} />
-                  <Route path="panel" element={<AdminPanel />} />
-                  <Route path="firmalar" element={<AdminFirmalarV2 />} />
-                  <Route path="firmalar-v2" element={<AdminFirmalarV2 />} />
-                  <Route path="kullanicilar" element={<AdminKullanicilar />} />
-                  <Route path="urunler" element={<AdminUrunler />} />
-                  <Route path="ihaleler" element={<AdminIhaleler />} />
-                  <Route path="destek" element={<AdminDestek />} />
-                  <Route path="islemler" element={<AdminIslemler />} />
-                  <Route path="paketler" element={<AdminPaketler />} />
-                  <Route path="reklam" element={<AdminReklam />} />
-                  <Route path="yetkilendirme" element={<AdminYetkilendirme />} />
-                  <Route path="kisitlamalar" element={<AdminKisitlamalar />} />
-                  <Route path="sikayetler" element={<AdminSikayetler />} />
-                  <Route path="aksiyonlar" element={<AdminAksiyonlar />} />
-                  <Route path="ajanda" element={<AdminAjanda />} />
-                  <Route path="hedefler" element={<AdminHedefler />} />
-                  <Route path="portfolyo" element={<AdminPortfoy />} />
-                  <Route path="ziyaret-planlari" element={<AdminZiyaretPlanlari />} />
-                  <Route path="canli-harita" element={<AdminCanliHarita />} />
-                  <Route path="kaynak-raporu" element={<AdminKaynakRaporu />} />
-                  <Route path="tekbot" element={<AdminTekBot />} />
-                  <Route path="raporlar" element={<AdminRaporlar />} />
-                  <Route path="raporlar/satis-kanali" element={<RaporSatisKanali />} />
-                  <Route path="raporlar/musteri-tipi" element={<RaporMusteriTipi />} />
-                  <Route path="raporlar/personel-performans" element={<RaporPersonelPerformans />} />
-                  <Route path="raporlar/aksiyon-turu" element={<RaporAksiyonTuru />} />
-                  <Route path="raporlar/hedef-prim" element={<RaporHedefPrim />} />
-                  <Route path="performans" element={<AdminPerformans />} />
-                  <Route path="test-merkezi" element={<AdminTestMerkezi />} />
-                  <Route path="sistem-loglari" element={<AdminSistemLoglari />} />
-                  <Route path="seo" element={<AdminSeo />} />
-                  <Route path="versiyonlar" element={<AdminVersiyonlar />} />
+                  <Route element={<AdminLayoutRoute />}>
+                    <Route index element={<AdminPanel />} />
+                    <Route path="panel" element={<AdminPanel />} />
+                    <Route path="firmalar" element={<AdminFirmalarV2 />} />
+                    <Route path="firmalar-v2" element={<AdminFirmalarV2 />} />
+                    <Route path="kullanicilar" element={<AdminKullanicilar />} />
+                    <Route path="urunler" element={<AdminUrunler />} />
+                    <Route path="ihaleler" element={<AdminIhaleler />} />
+                    <Route path="destek" element={<AdminDestek />} />
+                    <Route path="islemler" element={<AdminIslemler />} />
+                    <Route path="paketler" element={<AdminPaketler />} />
+                    <Route path="reklam" element={<AdminReklam />} />
+                    <Route path="yetkilendirme" element={<AdminYetkilendirme />} />
+                    <Route path="kisitlamalar" element={<AdminKisitlamalar />} />
+                    <Route path="sikayetler" element={<AdminSikayetler />} />
+                    <Route path="aksiyonlar" element={<AdminAksiyonlar />} />
+                    <Route path="ajanda" element={<AdminAjanda />} />
+                    <Route path="hedefler" element={<AdminHedefler />} />
+                    <Route path="portfolyo" element={<AdminPortfoy />} />
+                    <Route path="ziyaret-planlari" element={<AdminZiyaretPlanlari />} />
+                    <Route path="canli-harita" element={<AdminCanliHarita />} />
+                    <Route path="kaynak-raporu" element={<AdminKaynakRaporu />} />
+                    <Route path="tekbot" element={<AdminTekBot />} />
+                    <Route path="raporlar" element={<AdminRaporlar />} />
+                    <Route path="raporlar/satis-kanali" element={<RaporSatisKanali />} />
+                    <Route path="raporlar/musteri-tipi" element={<RaporMusteriTipi />} />
+                    <Route path="raporlar/personel-performans" element={<RaporPersonelPerformans />} />
+                    <Route path="raporlar/aksiyon-turu" element={<RaporAksiyonTuru />} />
+                    <Route path="raporlar/hedef-prim" element={<RaporHedefPrim />} />
+                    <Route path="performans" element={<AdminPerformans />} />
+                    <Route path="test-merkezi" element={<AdminTestMerkezi />} />
+                    <Route path="sistem-loglari" element={<AdminSistemLoglari />} />
+                    <Route path="seo" element={<AdminSeo />} />
+                    <Route path="versiyonlar" element={<AdminVersiyonlar />} />
+                  </Route>
                 </Route>
 
                 <Route path="/:slug" element={<FirmaDetay />} />
