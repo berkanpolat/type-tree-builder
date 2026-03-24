@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import LeadCaptureDialog from "@/components/LeadCaptureDialog";
 import HeaderMegaMenu from "@/components/HeaderMegaMenu";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { useNavigate, Link } from "react-router-dom";
