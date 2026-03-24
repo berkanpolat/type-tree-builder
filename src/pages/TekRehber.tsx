@@ -137,29 +137,35 @@ export default function TekRehber() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  // Read location.state for pre-applied filters (from landing popüler aramalar)
+  const locationState = location.state as { firmaTurId?: string; firmaTipId?: string; firmaTurName?: string } | null;
+  const hasIncomingState = !!(locationState?.firmaTurId);
+
   // Fetch firma türleri
   useEffect(() => {
     supabase.from("firma_turleri").select("id, name").order("name").then(({ data }) => {
       if (data) {
         const sorted = sortFirmaTurleri(data);
         setFirmaTurleri(sorted);
-        const tedarikci = sorted.find((t) => t.name.toLowerCase().includes("tedarikçi"));
-        if (tedarikci) { setSelectedFirmaTuru(tedarikci.id); setSelectedFirmaTuruName(tedarikci.name); }
-        else if (sorted.length > 0) { setSelectedFirmaTuru(sorted[0].id); setSelectedFirmaTuruName(sorted[0].name); }
+        // Only set default if no incoming state
+        if (!hasIncomingState) {
+          const tedarikci = sorted.find((t) => t.name.toLowerCase().includes("tedarikçi"));
+          if (tedarikci) { setSelectedFirmaTuru(tedarikci.id); setSelectedFirmaTuruName(tedarikci.name); }
+          else if (sorted.length > 0) { setSelectedFirmaTuru(sorted[0].id); setSelectedFirmaTuruName(sorted[0].name); }
+        }
       }
     });
   }, []);
 
-  // Read location.state for pre-applied filters (from landing popüler aramalar)
+  // Apply incoming state filters
   useEffect(() => {
-    const state = location.state as { firmaTurId?: string; firmaTipId?: string; firmaTurName?: string } | null;
-    if (state?.firmaTurId) {
-      setSelectedFirmaTuru(state.firmaTurId);
-      if (state.firmaTurName) setSelectedFirmaTuruName(state.firmaTurName);
-      if (state.firmaTipId) {
+    if (locationState?.firmaTurId) {
+      setSelectedFirmaTuru(locationState.firmaTurId);
+      if (locationState.firmaTurName) setSelectedFirmaTuruName(locationState.firmaTurName);
+      if (locationState.firmaTipId) {
         setFirmaFilterState((prev: FirmaFilterState | null) => ({
           ...(prev || { firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
-          firmaTipleri: [state.firmaTipId!],
+          firmaTipleri: [locationState.firmaTipId!],
         }));
       }
       window.history.replaceState({}, document.title);
