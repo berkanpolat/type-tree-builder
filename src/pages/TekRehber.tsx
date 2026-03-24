@@ -76,6 +76,7 @@ interface FirmaWithExtra {
 export default function TekRehber() {
   useSeoMeta({ slug: "/firmalar", fallbackTitle: "TekRehber | Tekstil Firma Rehberi | Tekstil A.Ş." });
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
