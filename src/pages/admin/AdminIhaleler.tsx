@@ -2,6 +2,7 @@ import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import FakeTeklifDialog from "@/components/admin/FakeTeklifDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { Button } from "@/components/ui/button";
