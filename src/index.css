@@ -172,6 +172,15 @@
     --admin-input-bg: 220 14% 96%;
     --admin-hover: 220 14% 93%;
   }
+
+  /* Ensure all portal-rendered Radix elements have solid opaque backgrounds */
+  .admin-portal-fix [data-radix-popper-content-wrapper] > *,
+  .admin-portal-fix [data-radix-menu-content],
+  .admin-portal-fix [role="listbox"],
+  .admin-portal-fix [data-radix-select-content] {
+    background-color: hsl(0 0% 100%) !important;
+    opacity: 1 !important;
+  }
 }
 
 /* Sticky action column for horizontally scrollable tables */

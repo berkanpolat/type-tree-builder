@@ -102,6 +102,38 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
     setMobileOpen(false);
   }, [location.pathname]);
 
+  // Ensure portal-rendered elements (dropdown, popover, select, context menu)
+  // have solid opaque backgrounds by overriding :root CSS variables for admin pages
+  useEffect(() => {
+    const root = document.documentElement;
+    root.style.setProperty("--popover", "0 0% 100%");
+    root.style.setProperty("--popover-foreground", "228 49% 24%");
+    root.style.setProperty("--background", "0 0% 100%");
+    root.style.setProperty("--foreground", "228 49% 24%");
+    root.style.setProperty("--card", "0 0% 100%");
+    root.style.setProperty("--card-foreground", "228 49% 24%");
+    root.style.setProperty("--muted", "220 20% 96%");
+    root.style.setProperty("--muted-foreground", "0 0% 40%");
+    root.style.setProperty("--accent", "32 92% 54%");
+    root.style.setProperty("--accent-foreground", "0 0% 100%");
+    root.style.setProperty("--border", "220 20% 90%");
+    root.classList.add("admin-portal-fix");
+    return () => {
+      root.style.removeProperty("--popover");
+      root.style.removeProperty("--popover-foreground");
+      root.style.removeProperty("--background");
+      root.style.removeProperty("--foreground");
+      root.style.removeProperty("--card");
+      root.style.removeProperty("--card-foreground");
+      root.style.removeProperty("--muted");
+      root.style.removeProperty("--muted-foreground");
+      root.style.removeProperty("--accent");
+      root.style.removeProperty("--accent-foreground");
+      root.style.removeProperty("--border");
+      root.classList.remove("admin-portal-fix");
+    };
+  }, []);
+
   const visibleGroups = useMemo(() => {
     if (!user) return [];
     const filterItem = (item: MenuItem) => {
