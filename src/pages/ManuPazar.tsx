@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePackageQuota } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
 import {
-  Layers, CheckCircle2, XCircle, Plus, Search, Pencil, Trash2, ImageIcon, Copy,
+  Layers, CheckCircle2, XCircle, Plus, Search, Pencil, Trash2, ImageIcon, Copy, Eye, Heart,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
