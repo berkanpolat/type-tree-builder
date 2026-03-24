@@ -12,6 +12,7 @@ import MultiSelectDropdown from "./MultiSelectDropdown";
 interface Props {
   userId: string;
   firmaTuruName: string;
+  onDataChange?: () => void;
 }
 
 interface SelectOption {
