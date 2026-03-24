@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Package, Activity, XCircle, Clock, FileEdit, Ban, Users, ShoppingBag, Tag, Building2,
   Search, Filter, RotateCcw, ArrowUpDown, ExternalLink, Eye, ChevronLeft, ChevronRight,
-  Image as ImageIcon, X, ChevronDown, Pencil, Trash2, ToggleLeft
+  Image as ImageIcon, X, ChevronDown, Pencil, Trash2, ToggleLeft, Heart, Loader2
 } from "lucide-react";
 
 /* ── Theme-aware style helpers ── */
