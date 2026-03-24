@@ -1,0 +1,1 @@
+CREATE POLICY "Herkes lead güncelleyebilir" ON public.lead_basvurular FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
