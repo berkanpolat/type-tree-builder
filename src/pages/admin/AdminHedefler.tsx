@@ -127,6 +127,7 @@ export default function AdminHedefler() {
 
   const token = user ? localStorage.getItem("admin_token") || "" : "";
   const isYK = user?.departman === "Yönetim Kurulu";
+  useAdminTitle(isYK ? "PKL Yönetimi" : "PKL Hedeflerim");
   const callApi = useAdminApi();
 
   const loadPaketler = useCallback(async () => {
