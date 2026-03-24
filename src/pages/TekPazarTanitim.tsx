@@ -5,8 +5,10 @@ import { useSeoMeta } from "@/hooks/use-seo-meta";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
-import { ShoppingBag, Users, Eye, Store, Search, MessageSquare, ShieldCheck, MonitorSmartphone } from "lucide-react";
+import { ShoppingBag, Users, Eye, Store, Search, MessageSquare, ShieldCheck, MonitorSmartphone, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import LeadCaptureDialog from "@/components/LeadCaptureDialog";
 
 export default function TekPazarTanitim() {
   useSeoMeta({ slug: "/tekpazar-tanitim", fallbackTitle: "TekPazar Nedir? | Tekstil A.Ş." });

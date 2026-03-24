@@ -5,8 +5,10 @@ import { useSeoMeta } from "@/hooks/use-seo-meta";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
-import { Gavel, TrendingDown, Factory, Clock, Eye, Bell, SlidersHorizontal, Scale, MonitorSmartphone, Rocket } from "lucide-react";
+import { Gavel, TrendingDown, Factory, Clock, Eye, Bell, SlidersHorizontal, Scale, MonitorSmartphone, Rocket, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import LeadCaptureDialog from "@/components/LeadCaptureDialog";
 
 export default function TekIhaleTanitim() {
   useSeoMeta({ slug: "/tekihale-tanitim", fallbackTitle: "Tekİhale | Tekstil İhale Platformu" });
