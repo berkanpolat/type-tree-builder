@@ -99,11 +99,12 @@ interface Props {
   firmaTuruId: string;
   firmaTuruName: string;
   onFilterChange: (state: FirmaFilterState) => void;
+  initialSelections?: Record<string, string[]>;
 }
 
 const optionsCache: Record<string, Option[]> = {};
 
-export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterChange }: Props) {
+export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterChange, initialSelections }: Props) {
   const [firmaTipleri, setFirmaTipleri] = useState<Option[]>([]);
   const [kategoriOptions, setKategoriOptions] = useState<Record<string, Option[]>>({});
   const [ilOptions, setIlOptions] = useState<Option[]>([]);
@@ -125,7 +126,7 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
   const filters = FILTER_CONFIG[firmaTuruName] || FILTER_CONFIG["Tedarikçi"] || [];
 
   useEffect(() => {
-    setSelections({});
+    setSelections(initialSelections || {});
     setMoq("");
     setUsSelectedKategoriler([]);
     setUsSelectedGruplar([]);
