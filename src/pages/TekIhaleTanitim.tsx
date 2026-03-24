@@ -15,6 +15,7 @@ export default function TekIhaleTanitim() {
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
 
   useEffect(() => {
     const init = async () => {
