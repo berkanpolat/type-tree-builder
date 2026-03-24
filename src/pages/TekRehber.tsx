@@ -3,7 +3,7 @@ import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { sortFirmaTurleri } from "@/lib/sort-utils";
 import { useBanner } from "@/hooks/use-banner";
@@ -76,6 +76,7 @@ interface FirmaWithExtra {
 export default function TekRehber() {
   useSeoMeta({ slug: "/firmalar", fallbackTitle: "TekRehber | Tekstil Firma Rehberi | Tekstil A.Ş." });
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
@@ -149,7 +150,22 @@ export default function TekRehber() {
     });
   }, []);
 
-  // Fetch product taxonomy nodes for search autocomplete
+  // Read location.state for pre-applied filters (from landing popüler aramalar)
+  useEffect(() => {
+    const state = location.state as { firmaTurId?: string; firmaTipId?: string; firmaTurName?: string } | null;
+    if (state?.firmaTurId) {
+      setSelectedFirmaTuru(state.firmaTurId);
+      if (state.firmaTurName) setSelectedFirmaTuruName(state.firmaTurName);
+      if (state.firmaTipId) {
+        setFirmaFilterState((prev: FirmaFilterState | null) => ({
+          ...(prev || { firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
+          firmaTipleri: [state.firmaTipId!],
+        }));
+      }
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     supabase.from("firma_bilgi_secenekleri")
       .select("id, name, parent_id")
