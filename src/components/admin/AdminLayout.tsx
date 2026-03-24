@@ -106,6 +106,7 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
   // have solid opaque backgrounds by overriding :root CSS variables for admin pages
   useEffect(() => {
     const root = document.documentElement;
+    // Standard shadcn tokens for portal elements
     root.style.setProperty("--popover", "0 0% 100%");
     root.style.setProperty("--popover-foreground", "228 49% 24%");
     root.style.setProperty("--background", "0 0% 100%");
@@ -117,19 +118,28 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
     root.style.setProperty("--accent", "32 92% 54%");
     root.style.setProperty("--accent-foreground", "0 0% 100%");
     root.style.setProperty("--border", "220 20% 90%");
+    // Admin-specific tokens for portal-rendered admin dialogs/popovers
+    root.style.setProperty("--admin-bg", "220 14% 96%");
+    root.style.setProperty("--admin-sidebar", "0 0% 100%");
+    root.style.setProperty("--admin-card-bg", "0 0% 100%");
+    root.style.setProperty("--admin-header", "0 0% 100%");
+    root.style.setProperty("--admin-text", "217 33% 17%");
+    root.style.setProperty("--admin-text-secondary", "215 16% 47%");
+    root.style.setProperty("--admin-muted", "215 16% 57%");
+    root.style.setProperty("--admin-border", "220 13% 91%");
+    root.style.setProperty("--admin-input-bg", "220 14% 96%");
+    root.style.setProperty("--admin-hover", "220 14% 93%");
     root.classList.add("admin-portal-fix");
     return () => {
-      root.style.removeProperty("--popover");
-      root.style.removeProperty("--popover-foreground");
-      root.style.removeProperty("--background");
-      root.style.removeProperty("--foreground");
-      root.style.removeProperty("--card");
-      root.style.removeProperty("--card-foreground");
-      root.style.removeProperty("--muted");
-      root.style.removeProperty("--muted-foreground");
-      root.style.removeProperty("--accent");
-      root.style.removeProperty("--accent-foreground");
-      root.style.removeProperty("--border");
+      const props = [
+        "--popover", "--popover-foreground", "--background", "--foreground",
+        "--card", "--card-foreground", "--muted", "--muted-foreground",
+        "--accent", "--accent-foreground", "--border",
+        "--admin-bg", "--admin-sidebar", "--admin-card-bg", "--admin-header",
+        "--admin-text", "--admin-text-secondary", "--admin-muted",
+        "--admin-border", "--admin-input-bg", "--admin-hover",
+      ];
+      props.forEach((p) => root.style.removeProperty(p));
       root.classList.remove("admin-portal-fix");
     };
   }, []);
