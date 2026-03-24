@@ -24,10 +24,10 @@ import { Progress } from "@/components/ui/progress";
 interface PaketOption { id: string; ad: string; slug: string; }
 
 const s = {
-  card: { background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.75rem" } as CSSProperties,
-  text: { color: "hsl(var(--admin-text))" } as CSSProperties,
-  muted: { color: "hsl(var(--admin-muted))" } as CSSProperties,
-  input: { background: "hsl(var(--admin-input-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" } as CSSProperties,
+  card: { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "0.75rem" } as CSSProperties,
+  text: { color: "hsl(var(--foreground))" } as CSSProperties,
+  muted: { color: "hsl(var(--muted-foreground))" } as CSSProperties,
+  input: { backgroundColor: "hsl(var(--background))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" } as CSSProperties,
 };
 
 interface Kademe {
