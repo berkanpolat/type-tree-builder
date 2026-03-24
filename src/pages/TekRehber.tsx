@@ -36,6 +36,8 @@ import {
   ArrowRight,
   Bookmark,
   Factory,
+  ExternalLink,
+  Package,
   Building2,
 } from "lucide-react";
 
