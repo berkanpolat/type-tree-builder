@@ -160,31 +160,31 @@ export default function LandingHeroSearch() {
       const results: Suggestion[] = [];
       const seen = new Set<string>();
 
-      // 1) Search firma_tipleri (e.g. "Kumaş Tedarikçisi") — show these first
-      const { data: matchingTipleri } = await supabase
-        .from("firma_tipleri")
-        .select("id, name, firma_turu_id, firma_turleri!inner(name)")
+      // 1) Search firma_turleri first — if term matches a türü, show its tipleri
+      const { data: matchingTurleri } = await supabase
+        .from("firma_turleri")
+        .select("id, name")
         .ilike("name", `%${term}%`)
         .limit(5);
 
-      if (matchingTipleri && matchingTipleri.length > 0) {
-        for (const tip of matchingTipleri) {
-          // Find firms with this firma_tipi_id
-          const { data: firmsOfType } = await supabase
-            .from("firmalar")
-            .select("id, firma_unvani, slug")
-            .eq("firma_tipi_id", tip.id)
-            .limit(3);
+      if (matchingTurleri && matchingTurleri.length > 0) {
+        for (const tur of matchingTurleri) {
+          const { data: tipleri } = await supabase
+            .from("firma_tipleri")
+            .select("id, name")
+            .eq("firma_turu_id", tur.id)
+            .order("name")
+            .limit(10);
 
-          const turName = (tip.firma_turleri as any)?.name || "";
-          if (firmsOfType) {
-            for (const firma of firmsOfType) {
-              if (!seen.has(firma.id)) {
-                seen.add(firma.id);
+          if (tipleri) {
+            for (const tip of tipleri) {
+              const key = `tip-${tip.id}`;
+              if (!seen.has(key)) {
+                seen.add(key);
                 results.push({
-                  id: firma.id,
-                  name: firma.firma_unvani,
-                  type: `${turName} › ${tip.name}`,
+                  id: `tip:${tip.id}:${tur.id}`,
+                  name: tip.name,
+                  type: `${tur.name} › Firma Tipi`,
                 });
               }
             }
@@ -192,32 +192,24 @@ export default function LandingHeroSearch() {
         }
       }
 
-      // 2) Search firma_turleri (e.g. "Tedarikçi")
-      const { data: matchingTurleri } = await supabase
-        .from("firma_turleri")
-        .select("id, name")
+      // 2) Search firma_tipleri directly (e.g. "Kumaş Tedarikçisi")
+      const { data: matchingTipleri } = await supabase
+        .from("firma_tipleri")
+        .select("id, name, firma_turu_id, firma_turleri!inner(name)")
         .ilike("name", `%${term}%`)
-        .limit(3);
+        .limit(8);
 
-      if (matchingTurleri && matchingTurleri.length > 0) {
-        for (const tur of matchingTurleri) {
-          const { data: firmsOfTur } = await supabase
-            .from("firmalar")
-            .select("id, firma_unvani, slug")
-            .eq("firma_turu_id", tur.id)
-            .limit(3);
-
-          if (firmsOfTur) {
-            for (const firma of firmsOfTur) {
-              if (!seen.has(firma.id)) {
-                seen.add(firma.id);
-                results.push({
-                  id: firma.id,
-                  name: firma.firma_unvani,
-                  type: `Firma Türü: ${tur.name}`,
-                });
-              }
-            }
+      if (matchingTipleri && matchingTipleri.length > 0) {
+        for (const tip of matchingTipleri) {
+          const key = `tip-${tip.id}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            const turName = (tip.firma_turleri as any)?.name || "";
+            results.push({
+              id: `tip:${tip.id}:${tip.firma_turu_id}`,
+              name: tip.name,
+              type: `${turName} › Firma Tipi`,
+            });
           }
         }
       }
@@ -232,7 +224,7 @@ export default function LandingHeroSearch() {
       for (const f of firmaByName || []) {
         if (!seen.has(f.id)) {
           seen.add(f.id);
-          results.push({ id: f.id, name: f.firma_unvani, type: "Firma Adı" });
+          results.push({ id: f.id, name: f.firma_unvani, type: "Firma" });
         }
       }
 
@@ -287,7 +279,7 @@ export default function LandingHeroSearch() {
         addMatches(katMatches, "kategori_id", "Kategori");
       }
 
-      return results.slice(0, 8);
+      return results.slice(0, 10);
     } finally {
       setLoading(false);
     }
@@ -354,12 +346,18 @@ export default function LandingHeroSearch() {
   const handleSelect = async (item: Suggestion) => {
     setShowDropdown(false);
     if (tab === "firma") {
-      const { data } = await supabase
-        .from("firmalar")
-        .select("slug")
-        .eq("id", item.id)
-        .single();
-      if (data?.slug) navigate(`/${data.slug}`);
+      // Check if it's a firma tipi result (tip:tipId:turId)
+      if (item.id.startsWith("tip:")) {
+        const [, tipId, turId] = item.id.split(":");
+        navigate("/firmalar", { state: { firmaTipId: tipId, firmaTurId: turId } });
+      } else {
+        const { data } = await supabase
+          .from("firmalar")
+          .select("slug")
+          .eq("id", item.id)
+          .single();
+        if (data?.slug) navigate(`/${data.slug}`);
+      }
     } else {
       if (item.type === "Kategori") {
         navigate("/tekpazar", { state: { kategori: item.name } });
