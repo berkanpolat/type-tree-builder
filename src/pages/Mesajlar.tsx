@@ -447,9 +447,10 @@ export default function Mesajlar() {
     console.log("[Mesajlar] Message inserted successfully");
     import("@/hooks/use-last-seen").then(m => m.updateLastSeen());
 
-    const { error: updateError } = await supabase
+    // Clear deleted_by when a new message is sent (so conversation reappears for the other user)
+    await supabase
       .from("conversations")
-      .update({ last_message_at: new Date().toISOString() })
+      .update({ last_message_at: new Date().toISOString(), deleted_by: [] } as any)
       .eq("id", selectedConv.id);
 
     if (updateError) {

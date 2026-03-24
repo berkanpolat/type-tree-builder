@@ -32,6 +32,7 @@ export default function HeaderMessagePanel() {
       .from("conversations")
       .select("*")
       .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+      .not("deleted_by", "cs", `{${user.id}}`)
       .order("last_message_at", { ascending: false })
       .limit(10);
 

@@ -17,7 +17,8 @@ export function useUnreadMessages() {
       const { data: convs } = await supabase
         .from("conversations")
         .select("id")
-        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`);
+        .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+        .not("deleted_by", "cs", `{${user.id}}`);
 
       if (!convs || convs.length === 0) { setCount(0); return; }
 
