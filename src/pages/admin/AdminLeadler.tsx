@@ -44,11 +44,15 @@ export default function AdminLeadler() {
   const [aksiyonSaving, setAksiyonSaving] = useState(false);
 
   const fetchLeads = async () => {
-    const { data } = await supabase
-      .from("lead_basvurular" as any)
+    const { data, error } = await supabase
+      .from("lead_basvurular")
       .select("*")
       .order("created_at", { ascending: false });
-    setLeads((data as any[]) || []);
+    console.log("Lead fetch result:", { data, error });
+    if (error) {
+      console.error("Lead fetch error:", error);
+    }
+    setLeads((data as LeadRecord[]) || []);
     setLoading(false);
   };
 
