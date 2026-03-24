@@ -125,7 +125,7 @@ export default function TekRehber() {
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
-  const [cardDesign, setCardDesign] = useState<"current" | "new">("current");
+  const [cardDesign, setCardDesign] = useState<"current" | "new" | "v3">("current");
 
   // Product taxonomy for search
   const [urunTaxNodes, setUrunTaxNodes] = useState<UrunTaxNode[]>([]);
