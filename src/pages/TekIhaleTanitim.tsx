@@ -160,6 +160,7 @@ export default function TekIhaleTanitim() {
       </section>
 
       <Footer />
+      <LeadCaptureDialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen} kaynak="tekihale_tanitim" />
     </div>
   );
 }
