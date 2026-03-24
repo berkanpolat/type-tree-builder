@@ -7,8 +7,8 @@ import { Calendar, Clock, User, Building2, FileText, Tag, CheckCircle, XCircle, 
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
 
 const s = {
-  text: { color: "hsl(var(--admin-text))" } as CSSProperties,
-  muted: { color: "hsl(var(--admin-muted))" } as CSSProperties,
+  text: { color: "hsl(var(--foreground))" } as CSSProperties,
+  muted: { color: "hsl(var(--muted-foreground))" } as CSSProperties,
 };
 
 export interface AksiyonDetay {

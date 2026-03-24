@@ -9,11 +9,11 @@ import { TUR_CONFIG } from "@/lib/aksiyon-config";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
 
 const s = {
-  text: { color: "hsl(var(--admin-text))" } as CSSProperties,
-  muted: { color: "hsl(var(--admin-muted))" } as CSSProperties,
+  text: { color: "hsl(var(--foreground))" } as CSSProperties,
+  muted: { color: "hsl(var(--muted-foreground))" } as CSSProperties,
   card: {
-    background: "hsl(var(--admin-card-bg))",
-    border: "1px solid hsl(var(--admin-border))",
+    backgroundColor: "hsl(var(--card))",
+    border: "1px solid hsl(var(--border))",
   } as CSSProperties,
 };
 
