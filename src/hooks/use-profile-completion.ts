@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-// Genel Firma Bilgileri fields (excluding zero-weight: firma_unvani, firma_turu_id,
-// firma_tipi_id, vergi_numarasi, vergi_dairesi, social media)
+// Genel Firma Bilgileri fields
 const FIRMA_FIELDS = [
   "firma_olcegi_id",
   "kurulus_tarihi",
@@ -16,7 +15,6 @@ const FIRMA_FIELDS = [
   "firma_hakkinda",
 ] as const;
 
-// Ağırlık sabitleri
 const GENEL_ALAN_AGIRLIK = 2;     // Her genel bilgi alanı 2 puan
 const TAB_AGIRLIKLARI = {
   urunHizmet: 6,
@@ -29,8 +27,73 @@ const TAB_AGIRLIKLARI = {
   makineler: 1,
 } as const;
 
-// Firma types that have Makine Parkuru tab
 const FIRMA_TYPES_WITH_MAKINE = ["Hazır Giyim Üreticisi", "Fason Atölye"];
+
+// Ürün/Hizmet kategori ID'leri
+const UH = {
+  FAALIYET_ALANI: "a0000001-0000-0000-0000-000000000002",
+  URETIM_MODELI: "a0000001-0000-0000-0000-000000000003",
+  URUN_SEGMENTI: "a0000001-0000-0000-0000-000000000004",
+  URETIM_YETKINLIKLERI: "a0000001-0000-0000-0000-000000000005",
+  UZMAN_URUN_GRUPLARI: "a0000001-0000-0000-0000-000000000007",
+  TEMSIL_TIPI: "a0000001-0000-0000-0000-000000000008",
+  TEDARIK_HIZMET_TIPI: "a0000001-0000-0000-0000-000000000012",
+  FAALIYET_ALANI_TEDARIKCI: "a0000001-0000-0000-0000-000000000013",
+  MEVCUT_PAZARLAR: "a0000001-0000-0000-0000-000000000019",
+  HEDEFLENEN_PAZARLAR: "a0000001-0000-0000-0000-000000000020",
+  ONLINE_SATIS: "a0000001-0000-0000-0000-000000000021",
+  SECIM_KRITERLERI: "a0000001-0000-0000-0000-000000000022",
+  TERCIH_BOLGE: "a0000001-0000-0000-0000-000000000099",
+};
+
+type FieldDef = { type: "cat"; id: string } | { type: "col"; name: string };
+
+// Her firma türü için Ürün/Hizmet altındaki input alanları
+const UH_FIELDS: Record<string, FieldDef[]> = {
+  "Hazır Giyim Üreticisi": [
+    { type: "cat", id: UH.FAALIYET_ALANI },
+    { type: "cat", id: UH.URETIM_MODELI },
+    { type: "cat", id: UH.URUN_SEGMENTI },
+    { type: "cat", id: UH.URETIM_YETKINLIKLERI },
+    { type: "col", name: "moq" },
+    { type: "col", name: "aylik_uretim_kapasitesi" },
+  ],
+  "Marka": [
+    { type: "cat", id: UH.FAALIYET_ALANI },
+    { type: "cat", id: UH.URUN_SEGMENTI },
+    { type: "cat", id: UH.URETIM_MODELI },
+    { type: "cat", id: UH.MEVCUT_PAZARLAR },
+    { type: "cat", id: UH.HEDEFLENEN_PAZARLAR },
+    { type: "cat", id: UH.ONLINE_SATIS },
+    { type: "cat", id: UH.SECIM_KRITERLERI },
+    { type: "cat", id: UH.TERCIH_BOLGE },
+    { type: "col", name: "fiziksel_magaza_sayisi" },
+  ],
+  "Mümessil Ofis": [
+    { type: "cat", id: UH.FAALIYET_ALANI },
+    { type: "cat", id: UH.URUN_SEGMENTI },
+    { type: "cat", id: UH.TEMSIL_TIPI },
+    { type: "cat", id: UH.TEDARIK_HIZMET_TIPI },
+    { type: "cat", id: UH.UZMAN_URUN_GRUPLARI },
+  ],
+  "Fason Atölye": [
+    { type: "cat", id: UH.FAALIYET_ALANI },
+    { type: "cat", id: UH.URUN_SEGMENTI },
+    { type: "cat", id: UH.URETIM_MODELI },
+    { type: "cat", id: UH.UZMAN_URUN_GRUPLARI },
+    { type: "col", name: "uretim_vardiyasi_id" },
+    { type: "col", name: "bagimsiz_denetim_id" },
+    { type: "col", name: "hizli_numune_id" },
+    { type: "col", name: "moq" },
+    { type: "col", name: "aylik_uretim_kapasitesi" },
+  ],
+  "Tedarikçi": [
+    { type: "cat", id: UH.FAALIYET_ALANI_TEDARIKCI },
+    { type: "cat", id: UH.TEDARIK_HIZMET_TIPI },
+    { type: "col", name: "aylik_tedarik_sayisi" },
+    { type: "col", name: "aylik_tedarik_birim_id" },
+  ],
+};
 
 export function useProfileCompletion(refreshKey?: number) {
   const [percentage, setPercentage] = useState(0);
@@ -62,14 +125,16 @@ export function useProfileCompletion(refreshKey?: number) {
     const firmaTuruName = (firma.firma_turleri as any)?.name || "";
     const hasMakine = FIRMA_TYPES_WITH_MAKINE.includes(firmaTuruName);
 
+    // Genel bilgi alanları
     let filledGenel = 0;
     for (const field of FIRMA_FIELDS) {
       const val = (firma as Record<string, unknown>)[field];
       if (val !== null && val !== undefined && val !== "") filledGenel++;
     }
 
-    const [urunHizmet, uretimSatis, tesisler, referanslar, sertifikalar, galeri, belgeler] = await Promise.all([
-      supabase.from("firma_urun_hizmet_secimler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
+    // Ürün/Hizmet: her bir input alanı ayrı puanlanır
+    const [uhSelections, uretimSatis, tesisler, referanslar, sertifikalar, galeri, belgeler] = await Promise.all([
+      supabase.from("firma_urun_hizmet_secimler").select("kategori_id").eq("firma_id", firmaId),
       supabase.from("firma_uretim_satis").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
       supabase.from("firma_tesisler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
       supabase.from("firma_referanslar").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
@@ -78,17 +143,31 @@ export function useProfileCompletion(refreshKey?: number) {
       supabase.from("firma_belgeler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
     ]);
 
+    // Ürün/Hizmet oransal puan hesaplama
+    const filledCats = new Set((uhSelections.data || []).map(r => r.kategori_id));
+    const uhFields = UH_FIELDS[firmaTuruName] || [];
+    let uhFilledCount = 0;
+    for (const f of uhFields) {
+      if (f.type === "cat") {
+        if (filledCats.has(f.id)) uhFilledCount++;
+      } else {
+        const val = (firma as Record<string, unknown>)[f.name];
+        if (val !== null && val !== undefined && val !== "" && val !== 0) uhFilledCount++;
+      }
+    }
+    const uhScore = uhFields.length > 0
+      ? (uhFilledCount / uhFields.length) * TAB_AGIRLIKLARI.urunHizmet
+      : 0;
+
     let makinelerCount = 0;
     if (hasMakine) {
       const makineler = await supabase.from("firma_makineler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId);
       makinelerCount = makineler.count ?? 0;
     }
 
-    // Ağırlıklı puan hesaplama
     const genelPuan = filledGenel * GENEL_ALAN_AGIRLIK;
     
-    let tabPuan = 0;
-    if ((urunHizmet.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.urunHizmet;
+    let tabPuan = uhScore;
     if ((uretimSatis.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.uretimSatis;
     if ((galeri.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.galeri;
     if ((sertifikalar.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.sertifikalar;
@@ -97,7 +176,7 @@ export function useProfileCompletion(refreshKey?: number) {
     if ((belgeler.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.belgeler;
     if (hasMakine && makinelerCount > 0) tabPuan += TAB_AGIRLIKLARI.makineler;
 
-    const maxGenel = FIRMA_FIELDS.length * GENEL_ALAN_AGIRLIK; // 10 * 2 = 20
+    const maxGenel = FIRMA_FIELDS.length * GENEL_ALAN_AGIRLIK;
     const maxTab = TAB_AGIRLIKLARI.urunHizmet + TAB_AGIRLIKLARI.uretimSatis + 
                    TAB_AGIRLIKLARI.galeri + TAB_AGIRLIKLARI.sertifikalar + 
                    TAB_AGIRLIKLARI.referanslar + TAB_AGIRLIKLARI.tesisler + 
