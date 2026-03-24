@@ -14,6 +14,7 @@ import { BrowserRouter, Outlet, Route, Routes, useLocation } from "react-router-
 import { AnimatePresence } from "framer-motion";
 import PageTransition from "./components/PageTransition";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
+import AdminLayout from "./components/admin/AdminLayout";
 import RouteStateManager from "./components/RouteStateManager";
 import RoutePreloader from "./components/RoutePreloader";
 import AuthRedirectHandler from "./components/AuthRedirectHandler";
