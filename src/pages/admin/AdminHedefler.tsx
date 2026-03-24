@@ -612,7 +612,7 @@ export default function AdminHedefler() {
 
         {/* PKL Oluştur Dialog */}
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
-          <DialogContent style={{ ...s.card, maxHeight: "90vh", overflowY: "auto" }} className="max-w-lg [&_[data-radix-popper-content-wrapper]]:!z-[9999]">
+          <DialogContent style={{ ...s.card, maxHeight: "90vh", overflowY: "auto" }} className="max-w-lg !bg-card [&_[data-radix-popper-content-wrapper]]:!z-[99999]">
             <DialogHeader>
               <DialogTitle style={s.text}>Yeni PKL Ata</DialogTitle>
               <DialogDescription style={s.muted}>Personele Prim Kazanma Limiti belirleyin</DialogDescription>
