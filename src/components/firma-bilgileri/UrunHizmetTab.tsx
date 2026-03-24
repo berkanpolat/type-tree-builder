@@ -297,6 +297,7 @@ export default function UrunHizmetTab({ userId, firmaTuruName, onDataChange }: P
       }
 
       toast({ title: "Başarılı", description: "Ürün/Hizmet bilgileri güncellendi." });
+      onDataChange?.();
     } catch {
       toast({ title: "Hata", description: "Bilgiler kaydedilemedi.", variant: "destructive" });
     }

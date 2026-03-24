@@ -564,6 +564,7 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
       }
 
       toast({ title: "Başarılı", description: "Üretim/Satış bilgileri güncellendi." });
+      onDataChange?.();
     } catch (e: any) {
       toast({
         title: "Hata",
