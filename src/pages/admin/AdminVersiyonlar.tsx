@@ -144,7 +144,7 @@ export default function AdminVersiyonlar() {
     setSaving(true);
     try {
       await callApi("create-release", {
-        token: user.token,
+        token,
         versiyon: versiyon.trim(),
         baslik: baslik.trim(),
         aciklama: aciklama.trim(),
