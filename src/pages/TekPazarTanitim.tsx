@@ -159,6 +159,7 @@ export default function TekPazarTanitim() {
       </section>
 
       <Footer />
+      <LeadCaptureDialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen} kaynak="tekpazar_tanitim" />
     </div>
   );
 }
