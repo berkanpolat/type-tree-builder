@@ -7,7 +7,6 @@ import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
 import { Gavel, TrendingDown, Factory, Clock, Eye, Bell, SlidersHorizontal, Scale, MonitorSmartphone, Rocket, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import LeadCaptureDialog from "@/components/LeadCaptureDialog";
 
 export default function TekIhaleTanitim() {
