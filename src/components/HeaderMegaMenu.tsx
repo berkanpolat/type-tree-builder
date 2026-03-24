@@ -220,7 +220,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
 
       {/* Level 2 */}
       {showLevel2 && (
-        <div className={`w-56 py-2 shrink-0 overflow-y-auto ${showLevel3 ? "border-r border-border" : ""}`}>
+        <div className={`w-56 py-2 shrink-0 ${showLevel3 ? "border-r border-border" : ""}`}>
           {loading2 ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
