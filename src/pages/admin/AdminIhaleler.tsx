@@ -111,7 +111,7 @@ type SortDir = "asc" | "desc";
 
 export default function AdminIhaleler() {
   useAdminTitle("İhaleler");
-  const { token, hasPermission } = useAdminAuth();
+  const { token, hasPermission, user } = useAdminAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
