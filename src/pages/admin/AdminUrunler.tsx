@@ -160,6 +160,11 @@ export default function AdminUrunler() {
   const [removeDialog, setRemoveDialog] = useState<{ open: boolean; urunId: string; baslik: string }>({ open: false, urunId: "", baslik: "" });
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Fake view/favori state (superadmin only)
+  const [fakeUrunDialog, setFakeUrunDialog] = useState<{ open: boolean; urunId: string; baslik: string; type: "goruntuleme" | "favori"; current: number } | null>(null);
+  const [fakeUrunAmount, setFakeUrunAmount] = useState("");
+  const [fakeUrunLoading, setFakeUrunLoading] = useState(false);
+
   const callApi = useAdminApi();
 
   // Derived: filtered groups based on selected categories
