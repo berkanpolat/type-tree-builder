@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useCallback } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,6 +58,7 @@ const LAYER_OPTIONS = [
 ] as const;
 
 export default function AdminTestMerkezi() {
+  useAdminTitle("Test Merkezi v2");
   const { user } = useAdminAuth();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<TestSummary | null>(null);
@@ -220,8 +221,7 @@ export default function AdminTestMerkezi() {
   })).filter(g => g.items.length > 0);
 
   return (
-    <AdminLayout title="Test Merkezi v2">
-      <div className="space-y-4 max-w-6xl">
+    <div className="space-y-4 max-w-6xl">
         {/* Alarm Banner */}
         <TestAlarmBanner />
 
@@ -361,6 +361,5 @@ export default function AdminTestMerkezi() {
         {/* Test Detail Dialog */}
         <TestDetailDialog test={selectedTest} open={detailOpen} onOpenChange={setDetailOpen} />
       </div>
-    </AdminLayout>
   );
 }

@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
@@ -13,6 +13,7 @@ const s = {
 };
 
 export default function AdminIslemler() {
+  useAdminTitle("İşlemler");
   const { token, user, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"yonetim" | "kullanicilar">("yonetim");
@@ -58,17 +59,14 @@ export default function AdminIslemler() {
 
   if (!hasPermission("islem_goruntule")) {
     return (
-      <AdminLayout title="İşlemler">
-        <div className="flex items-center justify-center h-64" style={s.text}>
+      <div className="flex items-center justify-center h-64" style={s.text}>
           <p>Bu sayfayı görüntülemek için yetkiniz bulunmamaktadır.</p>
         </div>
-      </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout title="İşlem Geçmişi">
-      <div className="space-y-4">
+    <div className="space-y-4">
         {/* Tab Switch */}
         <div className="flex items-center rounded-lg p-1 gap-1" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
           <button
@@ -104,6 +102,5 @@ export default function AdminIslemler() {
           <UserActivityPanel activities={userActivities} loading={userLoading} />
         )}
       </div>
-    </AdminLayout>
   );
 }

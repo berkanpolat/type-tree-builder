@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, useRef, CSSProperties, Fragment } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
@@ -129,6 +129,7 @@ type SortDir = "asc" | "desc";
 const ITEMS_PER_PAGE = 20;
 
 export default function AdminFirmalarV2() {
+  useAdminTitle("Firmalar");
   const { token, hasPermission, user: adminUser } = useAdminAuth();
   const { toast } = useToast();
   const [firmalar, setFirmalar] = useState<FirmaItem[]>([]);
@@ -889,8 +890,7 @@ export default function AdminFirmalarV2() {
   const selectedCount = selectedIds.size;
 
   return (
-    <AdminLayout title="Firmalar">
-      <div className="space-y-4">
+    <div className="space-y-4">
         {/* Action Bar */}
         <div className="flex flex-wrap items-center justify-between gap-2 md:gap-3">
           <div className="flex items-center gap-2 text-xs" style={s.muted}>
@@ -1742,7 +1742,6 @@ export default function AdminFirmalarV2() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
   );
 }
 

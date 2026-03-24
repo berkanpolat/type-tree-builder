@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
@@ -139,6 +139,7 @@ const IPTAL_SEBEPLERI = [
 ];
 
 export default function AdminZiyaretPlanlari() {
+  useAdminTitle("Ziyaret Planları");
   const { token, user: adminUser } = useAdminAuth();
   const { toast } = useToast();
   const [planlar, setPlanlar] = useState<ZiyaretPlan[]>([]);
@@ -348,8 +349,7 @@ export default function AdminZiyaretPlanlari() {
   }));
 
   return (
-    <AdminLayout title="Ziyaret Planları">
-      <div className="space-y-4">
+    <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3 flex-wrap">
@@ -643,6 +643,5 @@ export default function AdminZiyaretPlanlari() {
           onSuccess={handleAksiyonSuccess}
         />
       )}
-    </AdminLayout>
   );
 }

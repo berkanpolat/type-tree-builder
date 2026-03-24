@@ -1,7 +1,7 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
-import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
@@ -20,6 +20,7 @@ const TUR_LABELS: Record<string, string> = {};
 AKSIYON_TURLERI.forEach(t => { TUR_LABELS[t.value] = t.label; });
 
 export default function RaporAksiyonTuru() {
+  useAdminTitle("Aksiyon Türü Raporları");
   const navigate = useNavigate();
   const { token } = useAdminAuth();
   const callApi = useAdminApi();
@@ -81,8 +82,7 @@ export default function RaporAksiyonTuru() {
   const totalBasarisiz = aksiyonlar.filter((a: any) => a.sonuc === "satis_kapanmadi").length;
 
   return (
-    <AdminLayout title="Aksiyon Türü Raporları">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
           <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
         </button>
@@ -160,6 +160,5 @@ export default function RaporAksiyonTuru() {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 }

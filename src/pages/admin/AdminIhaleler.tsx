@@ -1,6 +1,6 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
@@ -109,6 +109,7 @@ type SortDir = "asc" | "desc";
 
 
 export default function AdminIhaleler() {
+  useAdminTitle("İhaleler");
   const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -421,8 +422,7 @@ export default function AdminIhaleler() {
     : firmaList;
 
   return (
-    <AdminLayout title="İhaleler">
-      <div className="space-y-5">
+    <div className="space-y-5">
         {/* ── Summary Stats ── */}
         {stats && (
           <div className="space-y-3">
@@ -906,7 +906,6 @@ export default function AdminIhaleler() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
   );
 }
 

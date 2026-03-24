@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -170,6 +170,7 @@ function UserSearchField({ formUserId, formUserLabel, setFormUserId, setFormUser
 }
 
 export default function AdminKisitlamalar() {
+  useAdminTitle("Yaptırım Yönetimi");
   const { token, user: adminUser } = useAdminAuth();
   const { toast } = useToast();
 
@@ -380,8 +381,7 @@ export default function AdminKisitlamalar() {
 
   // ─── RENDER ───
   return (
-    <AdminLayout title="Yaptırım Yönetimi">
-      <div className="space-y-4">
+    <div className="space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -602,7 +602,6 @@ export default function AdminKisitlamalar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
   );
 }
 

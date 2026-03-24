@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useEffect, useState, useRef, useCallback, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -259,8 +259,7 @@ const AdminDestek = () => {
   };
 
   return (
-    <AdminLayout title="Destek Talepleri">
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {statsCards.map((stat) => (
@@ -542,7 +541,6 @@ const AdminDestek = () => {
           )}
         </DialogContent>
       </Dialog>
-    </AdminLayout>
   );
 };
 

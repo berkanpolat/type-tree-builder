@@ -1,13 +1,11 @@
+import { useAdminTitle, useAdminTheme } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminGeolocation } from "@/hooks/use-admin-geolocation";
 import { supabase } from "@/integrations/supabase/client";
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from "@react-google-maps/api";
 import { MapPin, RefreshCw, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAdminTheme } from "@/components/admin/AdminLayout";
-
 const GOOGLE_MAPS_API_KEY = "AIzaSyDGjcnNQRg5RHWYV1N-d6qJ6ztNoVbFXLE";
 
 const MAP_CONTAINER = { width: "100%", height: "100%" };
@@ -33,6 +31,7 @@ const darkMapStyle = [
 ];
 
 export default function AdminCanliHarita() {
+  useAdminTitle("Canlı Harita");
   const { token } = useAdminAuth();
   const lightMode = useAdminTheme();
 
@@ -92,8 +91,7 @@ export default function AdminCanliHarita() {
   };
 
   return (
-    <AdminLayout title="Canlı Harita">
-      <div className="flex flex-col h-[calc(100vh-8rem)] gap-4">
+    <div className="flex flex-col h-[calc(100vh-8rem)] gap-4">
         {/* Top bar */}
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
@@ -215,6 +213,5 @@ export default function AdminCanliHarita() {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 }

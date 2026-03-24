@@ -1,7 +1,6 @@
+import { useAdminTitle, useAdminTheme } from "@/components/admin/AdminLayout";
 import { useEffect, useState, useCallback } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
-import { useAdminTheme } from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { Card, CardContent } from "@/components/ui/card";
@@ -77,6 +76,7 @@ const emptyPaket: Omit<Paket, "id" | "created_at"> = {
 };
 
 export default function AdminPaketler() {
+  useAdminTitle("Paket Yönetimi");
   const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [paketler, setPaketler] = useState<Paket[]>([]);
@@ -182,8 +182,7 @@ export default function AdminPaketler() {
   };
 
   return (
-    <AdminLayout title="Paket Yönetimi">
-      <PaketContent
+    <PaketContent
         paketler={paketler}
         stats={stats}
         loading={loading}
@@ -203,7 +202,6 @@ export default function AdminPaketler() {
         setDeletingId={setDeletingId}
         hasPermission={hasPermission}
       />
-    </AdminLayout>
   );
 }
 

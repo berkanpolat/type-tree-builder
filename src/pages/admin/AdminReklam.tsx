@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useEffect, useState, useRef, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +52,7 @@ async function adminCall(action: string, body: Record<string, any>) {
 }
 
 export default function AdminReklam() {
+  useAdminTitle("Reklam Yönetimi");
   const { toast } = useToast();
   const { user } = useAdminAuth();
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -158,8 +159,7 @@ export default function AdminReklam() {
   }, {});
 
   return (
-    <AdminLayout title="Reklam Yönetimi">
-      <input
+    <input
         ref={fileInputRef}
         type="file"
         accept="image/*"
@@ -330,6 +330,5 @@ export default function AdminReklam() {
           ))
         )}
       </div>
-    </AdminLayout>
   );
 }

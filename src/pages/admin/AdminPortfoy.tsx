@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties, Fragment } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
@@ -108,6 +108,7 @@ function durumBadge(durum: string) {
 }
 
 export default function AdminPortfoy() {
+  useAdminTitle("Portföyüm");
   const { token, user: adminUser, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [allFirmalar, setAllFirmalar] = useState<FirmaItem[]>([]);
@@ -328,8 +329,7 @@ export default function AdminPortfoy() {
   const paginatedFirmalar = sorted.slice((safePage - 1) * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE);
 
   return (
-    <AdminLayout title="Portföyüm">
-      <div className="space-y-4">
+    <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 flex-wrap">
@@ -779,6 +779,5 @@ export default function AdminPortfoy() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
   );
 }

@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
@@ -47,6 +47,7 @@ interface Aksiyon {
 }
 
 export default function AdminAksiyonlar() {
+  useAdminTitle("Aksiyonlarım");
   const { token, user: adminUser } = useAdminAuth();
   const [aksiyonlar, setAksiyonlar] = useState<Aksiyon[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,8 +118,7 @@ export default function AdminAksiyonlar() {
   };
 
   return (
-    <AdminLayout title="Aksiyonlarım">
-      <div className="space-y-4">
+    <div className="space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -177,7 +177,6 @@ export default function AdminAksiyonlar() {
         />
       )}
       </div>
-    </AdminLayout>
   );
 }
 

@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties, useRef } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
@@ -119,6 +119,7 @@ type SortDir = "asc" | "desc";
 type StatFilterType = "all" | "aktif" | "pasif" | "onay_bekliyor" | "reddedildi" | "taslak" | "kategori" | "tur";
 
 export default function AdminUrunler() {
+  useAdminTitle("Ürünler");
   const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
 
@@ -375,17 +376,14 @@ export default function AdminUrunler() {
 
   if (loading) {
     return (
-      <AdminLayout title="Ürünler">
-        <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64">
           <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
         </div>
-      </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout title="Ürünler">
-      <div className="space-y-5">
+    <div className="space-y-5">
         {/* ── Summary Stats ── */}
         {stats && (
           <div className="space-y-3">
@@ -869,7 +867,6 @@ export default function AdminUrunler() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </AdminLayout>
   );
 }
 
