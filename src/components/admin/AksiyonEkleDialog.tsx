@@ -421,7 +421,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
                     {format(tarih, "dd MMM yyyy", { locale: tr })}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" style={{ ...s.card, zIndex: 9999 }}>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" style={{ ...s.card, zIndex: 99999 }}>
                   <Calendar
                     mode="single"
                     selected={tarih}
