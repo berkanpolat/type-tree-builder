@@ -23,7 +23,7 @@ import Footer from "@/components/Footer";
 import LandingHeroSearch from "@/components/landing/LandingHeroSearch";
 import LandingRegistrationForm from "@/components/landing/LandingRegistrationForm";
 import { PAKET_OZELLIKLERI, PRO_FIYATLAR } from "@/lib/package-config";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Search } from "lucide-react";
 import {
   BadgeDollarSign,
   Globe,
