@@ -359,7 +359,7 @@ const LandingPage = () => {
               </div>
             </div>
 
-            {/* Right: Hero image (25%) */}
+            {/* Right: Hero image + animated logo */}
             <div className="hidden lg:block relative">
               <img
                 src={heroImg}
@@ -368,6 +368,14 @@ const LandingPage = () => {
                 fetchPriority="high"
                 decoding="async"
               />
+              {/* Animated logo overlay */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <img
+                  src={logoIconImg}
+                  alt="Tekstil A.Ş. Logo"
+                  className="w-28 h-28 object-contain animate-logo-pulse drop-shadow-[0_0_25px_rgba(234,161,43,0.5)]"
+                />
+              </div>
             </div>
           </div>
         </div>
