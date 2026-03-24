@@ -287,7 +287,7 @@ export default function TekRehber() {
 
     // Fetch actual firma data for the sorted IDs
     const { data } = await supabase.from("firmalar")
-      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id, belge_onayli, slug")
+      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id, belge_onayli, slug, firma_hakkinda, uretim_satis_rolu")
       .in("id", sortedIds);
 
     if (!data) {
