@@ -2,6 +2,7 @@ import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
+import FakeTeklifDialog from "@/components/admin/FakeTeklifDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Gavel, Eye, Clock, Filter, Search, RotateCcw, Package, HeadphonesIcon,
   ExternalLink, Pencil, Trash2, ArrowUpDown, FileText, ChevronLeft, ChevronRight,
-  Image as ImageIcon, X, ChevronDown, Activity, CheckCircle2, XCircle, ClockIcon, FileEdit, MessageSquare, Loader2
+  Image as ImageIcon, X, ChevronDown, Activity, CheckCircle2, XCircle, ClockIcon, FileEdit, MessageSquare, Loader2, Bot
 } from "lucide-react";
 
 /* ── Theme-aware style helpers ── */
@@ -110,7 +111,7 @@ type SortDir = "asc" | "desc";
 
 export default function AdminIhaleler() {
   useAdminTitle("İhaleler");
-  const { token, hasPermission } = useAdminAuth();
+  const { token, hasPermission, user } = useAdminAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -168,6 +169,7 @@ export default function AdminIhaleler() {
   // Confirm dialog
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; desc: string; action: () => void }>({ open: false, title: "", desc: "", action: () => {} });
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [fakeTeklifTarget, setFakeTeklifTarget] = useState<{ id: string; baslik: string } | null>(null);
 
   const callApi = useAdminApi();
 
@@ -849,6 +851,17 @@ export default function AdminIhaleler() {
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         )}
+
+                        {user?.is_primary && (
+                          <Button
+                            onClick={() => setFakeTeklifTarget({ id: ihale.id, baslik: ihale.baslik })}
+                            variant="outline" size="sm"
+                            className="text-[11px] h-7 px-2.5 gap-1"
+                            style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                          >
+                            <Bot className="w-3 h-3" /> Yapay Teklif
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -907,6 +920,15 @@ export default function AdminIhaleler() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Fake Teklif Dialog */}
+      <FakeTeklifDialog
+        open={!!fakeTeklifTarget}
+        onOpenChange={(open) => { if (!open) setFakeTeklifTarget(null); }}
+        ihaleId={fakeTeklifTarget?.id || ""}
+        ihaleBaslik={fakeTeklifTarget?.baslik || ""}
+        onSuccess={fetchData}
+      />
     </>
   );
 }

@@ -1749,8 +1749,10 @@ export type Database = {
           durum: string
           ek_dosya_adi: string | null
           ek_dosya_url: string | null
+          fake_firma_adi: string | null
           id: string
           ihale_id: string
+          is_fake: boolean
           kargo_masrafi: string | null
           odeme_secenekleri: string | null
           odeme_vadesi: string | null
@@ -1762,8 +1764,10 @@ export type Database = {
           durum?: string
           ek_dosya_adi?: string | null
           ek_dosya_url?: string | null
+          fake_firma_adi?: string | null
           id?: string
           ihale_id: string
+          is_fake?: boolean
           kargo_masrafi?: string | null
           odeme_secenekleri?: string | null
           odeme_vadesi?: string | null
@@ -1775,8 +1779,10 @@ export type Database = {
           durum?: string
           ek_dosya_adi?: string | null
           ek_dosya_url?: string | null
+          fake_firma_adi?: string | null
           id?: string
           ihale_id?: string
+          is_fake?: boolean
           kargo_masrafi?: string | null
           odeme_secenekleri?: string | null
           odeme_vadesi?: string | null

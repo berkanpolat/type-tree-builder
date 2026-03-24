@@ -5403,6 +5403,78 @@ Deno.serve(async (req) => {
       return jsonResponse({ logs: logs || [], since: sinceDate });
     }
 
+    // ─── FAKE TEKLIF: ADD ───
+    if (action === "add-fake-teklif") {
+      const { token, ihaleId, teklifler } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+
+      if (!ihaleId || !Array.isArray(teklifler) || teklifler.length === 0) {
+        return jsonResponse({ error: "ihaleId ve teklifler gerekli" }, 400);
+      }
+
+      // We need a fake user_id — use a deterministic UUID for fake bids
+      const FAKE_USER_ID = "00000000-0000-0000-0000-000000000000";
+
+      const rows = teklifler.map((t: any) => ({
+        ihale_id: ihaleId,
+        teklif_veren_user_id: FAKE_USER_ID,
+        tutar: t.tutar,
+        created_at: t.tarih || new Date().toISOString(),
+        is_fake: true,
+        fake_firma_adi: t.firma_adi || "Anonim Firma",
+        durum: "inceleniyor",
+      }));
+
+      const { error } = await supabase.from("ihale_teklifler").insert(rows);
+      if (error) return jsonResponse({ error: error.message }, 500);
+
+      await logActivity(supabase, payload, "add-fake-teklif", {
+        target_type: "ihale",
+        target_id: ihaleId,
+        details: { count: teklifler.length },
+      });
+
+      return jsonResponse({ success: true });
+    }
+
+    // ─── FAKE TEKLIF: LIST ───
+    if (action === "list-fake-teklifler") {
+      const { token, ihaleId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+
+      const { data, error } = await supabase
+        .from("ihale_teklifler")
+        .select("id, tutar, created_at, fake_firma_adi")
+        .eq("ihale_id", ihaleId)
+        .eq("is_fake", true)
+        .order("created_at", { ascending: false });
+
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse({ teklifler: data || [] });
+    }
+
+    // ─── FAKE TEKLIF: DELETE ───
+    if (action === "delete-fake-teklif") {
+      const { token, teklifId } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+
+      const { error } = await supabase
+        .from("ihale_teklifler")
+        .delete()
+        .eq("id", teklifId)
+        .eq("is_fake", true);
+
+      if (error) return jsonResponse({ error: error.message }, 500);
+      await logActivity(supabase, payload, "delete-fake-teklif", {
+        target_type: "ihale_teklif",
+        target_id: teklifId,
+      });
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
