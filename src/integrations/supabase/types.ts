@@ -2379,6 +2379,50 @@ export type Database = {
         }
         Relationships: []
       }
+      releases: {
+        Row: {
+          aciklama: string
+          admin_ad: string
+          admin_id: string
+          baslik: string
+          created_at: string
+          degisiklikler: Json | null
+          id: string
+          ortam: string
+          versiyon: string
+        }
+        Insert: {
+          aciklama?: string
+          admin_ad?: string
+          admin_id: string
+          baslik?: string
+          created_at?: string
+          degisiklikler?: Json | null
+          id?: string
+          ortam?: string
+          versiyon: string
+        }
+        Update: {
+          aciklama?: string
+          admin_ad?: string
+          admin_id?: string
+          baslik?: string
+          created_at?: string
+          degisiklikler?: Json | null
+          id?: string
+          ortam?: string
+          versiyon?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "releases_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seo_meta: {
         Row: {
           aktif: boolean

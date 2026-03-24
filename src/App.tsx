@@ -107,6 +107,7 @@ const AdminPerformans = lazyRetry(() => import("./pages/admin/AdminPerformans"))
 const AdminTestMerkezi = lazyRetry(() => import("./pages/admin/AdminTestMerkezi"));
 const AdminSistemLoglari = lazyRetry(() => import("./pages/admin/AdminSistemLoglari"));
 const AdminSeo = lazyRetry(() => import("./pages/admin/AdminSeo"));
+const AdminVersiyonlar = lazyRetry(() => import("./pages/admin/AdminVersiyonlar"));
 const OdemeTest = lazyRetry(() => import("./pages/OdemeTest"));
 const OdemeTestYillik = lazyRetry(() => import("./pages/OdemeTestYillik"));
 const OdemeSonuc = lazyRetry(() => import("./pages/OdemeSonuc"));
@@ -244,6 +245,7 @@ const AppContent = () => {
                   <Route path="test-merkezi" element={<AdminTestMerkezi />} />
                   <Route path="sistem-loglari" element={<AdminSistemLoglari />} />
                   <Route path="seo" element={<AdminSeo />} />
+                  <Route path="versiyonlar" element={<AdminVersiyonlar />} />
                 </Route>
 
                 <Route path="/:slug" element={<FirmaDetay />} />
