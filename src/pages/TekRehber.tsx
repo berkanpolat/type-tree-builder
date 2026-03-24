@@ -594,14 +594,30 @@ export default function TekRehber() {
           />
 
           <div className="flex-1 min-w-0 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{totalCount}</span> firma bulundu
-              {totalPages > 1 && (
-                <span className="ml-1">
-                  (Sayfa {currentPage}/{totalPages})
-                </span>
-              )}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{totalCount}</span> firma bulundu
+                {totalPages > 1 && (
+                  <span className="ml-1">
+                    (Sayfa {currentPage}/{totalPages})
+                  </span>
+                )}
+              </p>
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                <button
+                  onClick={() => setCardDesign("current")}
+                  className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${cardDesign === "current" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Mevcut
+                </button>
+                <button
+                  onClick={() => setCardDesign("new")}
+                  className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${cardDesign === "new" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Yeni ✨
+                </button>
+              </div>
+            </div>
             {firmaLoading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
