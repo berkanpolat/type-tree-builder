@@ -49,6 +49,7 @@ interface Urun {
   goruntuleme_sayisi?: number;
   fake_favori_sayisi?: number;
   favori_sayisi?: number; // computed
+  slug?: string | null;
 }
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
