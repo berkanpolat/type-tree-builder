@@ -448,7 +448,7 @@ export default function Mesajlar() {
     import("@/hooks/use-last-seen").then(m => m.updateLastSeen());
 
     // Clear deleted_by when a new message is sent (so conversation reappears for the other user)
-    await supabase
+    const { error: updateError } = await supabase
       .from("conversations")
       .update({ last_message_at: new Date().toISOString(), deleted_by: [] } as any)
       .eq("id", selectedConv.id);
