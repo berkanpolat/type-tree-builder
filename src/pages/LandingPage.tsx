@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import LeadCaptureDialog from "@/components/LeadCaptureDialog";
 import HeaderMegaMenu from "@/components/HeaderMegaMenu";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { useNavigate, Link } from "react-router-dom";
@@ -110,6 +111,7 @@ const LandingPage = () => {
   const [productSlide, setProductSlide] = useState(0);
   const [billingYearly, setBillingYearly] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState<"ucretsiz" | "pro">("ucretsiz");
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
@@ -347,13 +349,12 @@ const LandingPage = () => {
                 >
                   Ücretsiz Kayıt Ol
                 </a>
-                <a
-                  href="/Tekstil_AS_Kurumsal_Sunum_v2.pdf"
-                  download
+                <button
+                  onClick={() => setLeadDialogOpen(true)}
                   className="px-8 py-3 rounded-lg bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/90 transition-colors"
                 >
                   Tanıtım PDF İndir
-                </a>
+                </button>
               </div>
             </div>
 
@@ -697,6 +698,7 @@ const LandingPage = () => {
       </section>
 
       <Footer />
+      <LeadCaptureDialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen} kaynak="landing_page" />
     </div>
   );
 };
