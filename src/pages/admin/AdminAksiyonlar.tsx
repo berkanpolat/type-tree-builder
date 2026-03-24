@@ -57,23 +57,60 @@ export default function AdminAksiyonlar() {
   const [editAksiyon, setEditAksiyon] = useState<EditAksiyonData | null>(null);
   const [editFirma, setEditFirma] = useState<{ id: string; unvani: string } | null>(null);
 
+  // Department/personnel filters for Yönetim Kurulu / is_primary
+  const canFilterByPersonnel = adminUser?.is_primary || adminUser?.departman === "Yönetim Kurulu";
+  const [adminList, setAdminList] = useState<{ id: string; ad: string; soyad: string; departman: string; pozisyon: string }[]>([]);
+  const [filterDepartman, setFilterDepartman] = useState<string>("all");
+  const [filterPersonel, setFilterPersonel] = useState<string>("all");
+
   const callApi = useAdminApi();
+
+  // Fetch admin users for department/personnel filtering
+  useEffect(() => {
+    if (!canFilterByPersonnel) return;
+    supabase.rpc("admin_list_admin_users_v2").then(({ data }) => {
+      setAdminList((data as any) || []);
+    });
+  }, [canFilterByPersonnel]);
 
   const fetchAksiyonlar = useCallback(async () => {
     if (!adminUser) return;
     setLoading(true);
     try {
+      // Determine which admin_id(s) to filter by
+      let adminIdParam: string | undefined;
+      if (canFilterByPersonnel) {
+        if (filterPersonel !== "all") {
+          adminIdParam = filterPersonel;
+        } else if (filterDepartman !== "all") {
+          // Will fetch for all admins in dept, then merge
+          adminIdParam = undefined; // fetch all, filter client-side
+        } else {
+          adminIdParam = undefined; // fetch all
+        }
+      } else {
+        adminIdParam = adminUser.id;
+      }
+
       const { data, error } = await supabase.rpc("admin_list_aksiyonlar_v2", {
-        p_admin_id: adminUser.is_primary ? undefined : adminUser.id,
+        p_admin_id: adminIdParam,
       });
       if (error) throw error;
-      setAksiyonlar((data as any) || []);
+      let result = (data as any) || [];
+
+      // Client-side department filter when no specific personnel selected
+      if (canFilterByPersonnel && filterDepartman !== "all" && filterPersonel === "all") {
+        const deptAdminIds = new Set(adminList.filter(a => a.departman === filterDepartman).map(a => a.id));
+        result = result.filter((a: Aksiyon) => deptAdminIds.has(a.admin_id));
+      }
+
+      setAksiyonlar(result);
     } catch {
       setAksiyonlar([]);
     } finally {
       setLoading(false);
     }
-  }, [adminUser]);
+  }, [adminUser, canFilterByPersonnel, filterPersonel, filterDepartman, adminList]);
 
   useEffect(() => { fetchAksiyonlar(); }, [fetchAksiyonlar]);
 
