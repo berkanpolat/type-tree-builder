@@ -333,7 +333,10 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+      <DialogContent
+        className="max-w-md max-h-[85vh] overflow-y-auto !bg-card"
+        style={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", opacity: 1 }}
+      >
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold" style={s.text}>{isEditMode ? "Aksiyonu Düzenle" : "Aksiyon Ekle"}</DialogTitle>
           <p className="text-xs" style={s.muted}>{firmaUnvani}</p>
