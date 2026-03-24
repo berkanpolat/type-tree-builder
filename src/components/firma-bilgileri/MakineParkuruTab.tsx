@@ -31,9 +31,10 @@ interface Teknoloji {
 
 interface MakineParkuruTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-export default function MakineParkuruTab({ userId }: MakineParkuruTabProps) {
+export default function MakineParkuruTab({ userId, onDataChange }: MakineParkuruTabProps) {
   const [firmaId, setFirmaId] = useState("");
   const [loading, setLoading] = useState(true);
   const [optionsMap, setOptionsMap] = useState<Record<string, string>>({});
