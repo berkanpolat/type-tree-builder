@@ -173,6 +173,7 @@ export default function AdminAjanda() {
   });
 
   return (
+    <>
     <div className="max-w-3xl mx-auto">
         {/* Day Navigation */}
         <div className="flex items-center justify-between mb-5">
@@ -390,5 +391,6 @@ export default function AdminAjanda() {
           </div>
         </DialogContent>
       </Dialog>
+    </>
   );
 }

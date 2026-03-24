@@ -436,6 +436,7 @@ export default function AdminKullanicilar() {
   } as CSSProperties;
 
   return (
+    <>
     <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <p className="text-sm" style={sMuted}>Yönetim paneline erişimi olan kullanıcıları yönetin.</p>
@@ -662,5 +663,6 @@ export default function AdminKullanicilar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
   );
 }

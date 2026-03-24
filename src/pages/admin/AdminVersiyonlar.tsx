@@ -164,6 +164,7 @@ export default function AdminVersiyonlar() {
   };
 
   return (
+    <>
     <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -319,5 +320,6 @@ export default function AdminVersiyonlar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
   );
 }

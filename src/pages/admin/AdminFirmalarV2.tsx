@@ -890,6 +890,7 @@ export default function AdminFirmalarV2() {
   const selectedCount = selectedIds.size;
 
   return (
+    <>
     <div className="space-y-4">
         {/* Action Bar */}
         <div className="flex flex-wrap items-center justify-between gap-2 md:gap-3">
@@ -1742,6 +1743,7 @@ export default function AdminFirmalarV2() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
   );
 }
 

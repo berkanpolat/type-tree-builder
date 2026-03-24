@@ -259,6 +259,7 @@ const AdminDestek = () => {
   };
 
   return (
+    <>
     <div className="space-y-6">
         {/* Summary Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -541,6 +542,7 @@ const AdminDestek = () => {
           )}
         </DialogContent>
       </Dialog>
+    </>
   );
 };
 

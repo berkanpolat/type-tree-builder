@@ -567,6 +567,7 @@ export default function AdminFirmalar() {
   const filteredTipler = tipler.filter(t => yeniFirma.firma_turu_id === "" || t.firma_turu_id === yeniFirma.firma_turu_id);
 
   return (
+    <>
     <div className="space-y-6">
         {/* Action Bar */}
         <div className="flex justify-end">
@@ -1365,6 +1366,7 @@ export default function AdminFirmalar() {
           )}
         </DialogContent>
       </Dialog>
+    </>
   );
 }
 

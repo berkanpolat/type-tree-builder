@@ -422,6 +422,7 @@ export default function AdminIhaleler() {
     : firmaList;
 
   return (
+    <>
     <div className="space-y-5">
         {/* ── Summary Stats ── */}
         {stats && (
@@ -906,6 +907,7 @@ export default function AdminIhaleler() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </>
   );
 }
 

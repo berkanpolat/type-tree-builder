@@ -159,6 +159,7 @@ export default function AdminReklam() {
   }, {});
 
   return (
+    <>
     <input
         ref={fileInputRef}
         type="file"
@@ -330,5 +331,6 @@ export default function AdminReklam() {
           ))
         )}
       </div>
+    </>
   );
 }
