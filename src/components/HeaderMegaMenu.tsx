@@ -36,6 +36,19 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
   const [loading3, setLoading3] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const REHBER_ORDER = ["marka", "mümessil ofis", "üretici", "tedarikçi", "fason atölye"];
+
+  const sortRehber = (items: SubItem[]) => {
+    return [...items].sort((a, b) => {
+      const aIdx = REHBER_ORDER.indexOf(a.name.toLowerCase());
+      const bIdx = REHBER_ORDER.indexOf(b.name.toLowerCase());
+      if (aIdx === -1 && bIdx === -1) return a.name.localeCompare(b.name);
+      if (aIdx === -1) return 1;
+      if (bIdx === -1) return -1;
+      return aIdx - bIdx;
+    });
+  };
+
   // Fetch level 1
   useEffect(() => {
     if (type === "tekpazar") {
@@ -58,7 +71,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
         });
     } else {
       if (rehberTurCache.length > 0) {
-        setLevel1(rehberTurCache);
+        setLevel1(sortRehber(rehberTurCache));
         return;
       }
       setLoading1(true);
@@ -69,7 +82,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
         .then(({ data }) => {
           const items = data || [];
           rehberTurCache.push(...items);
-          setLevel1(items);
+          setLevel1(sortRehber(items));
           setLoading1(false);
         });
     }
@@ -205,13 +218,13 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
                 setHoveredL2(null);
               }}
               onClick={() => handleL1Click(item)}
-              className={`w-full flex items-center justify-between pl-4 pr-2 py-2 text-sm transition-colors text-left ${
+              className={`w-full flex items-center gap-1 pl-4 pr-2 py-2 text-sm transition-colors text-left ${
                 hoveredL1 === item.id
                   ? "bg-muted text-secondary font-semibold"
                   : "text-foreground hover:bg-muted/50"
               }`}
             >
-              <span>{displayName(item.name)}</span>
+              <span className="flex-1">{displayName(item.name)}</span>
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             </button>
           ))
@@ -231,16 +244,16 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
                 key={item.id}
                 onMouseEnter={() => type === "tekpazar" && setHoveredL2(item.id)}
                 onClick={() => handleL2Click(item)}
-                className={`w-full flex items-center justify-between pl-4 pr-2 py-2 text-sm transition-colors text-left ${
-                  hoveredL2 === item.id
-                    ? "bg-muted text-secondary font-semibold"
-                    : "text-foreground hover:bg-muted/50"
-                }`}
-              >
-                <span>{item.name}</span>
-                {type === "tekpazar" && (
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                )}
+              className={`w-full flex items-center gap-1 pl-4 pr-2 py-2 text-sm transition-colors text-left ${
+                hoveredL2 === item.id
+                  ? "bg-muted text-secondary font-semibold"
+                  : "text-foreground hover:bg-muted/50"
+              }`}
+            >
+              <span className="flex-1">{item.name}</span>
+              {type === "tekpazar" && (
+                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              )}
               </button>
             ))
           )}
