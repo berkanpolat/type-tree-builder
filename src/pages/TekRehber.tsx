@@ -834,6 +834,190 @@ export default function TekRehber() {
                     );
                   }
 
+                  if (cardDesign === "v3") {
+                    // ─── V3: 3-COLUMN CARD DESIGN ───
+                    const descriptionExcerptV3 = firma.firma_hakkinda
+                      ? firma.firma_hakkinda.length > 200
+                        ? firma.firma_hakkinda.slice(0, 200) + "…"
+                        : firma.firma_hakkinda
+                      : null;
+
+                    const uretimItems = (firma.uretimSatisItems || []).filter((i) => i.tip === "uretim");
+                    const satisItems = (firma.uretimSatisItems || []).filter((i) => i.tip === "satis");
+
+                    return (
+                      <article
+                        key={firma.id}
+                        className="group rounded-xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-200 overflow-hidden"
+                        itemScope
+                        itemType="https://schema.org/Organization"
+                      >
+                        <script
+                          type="application/ld+json"
+                          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                        />
+
+                        {/* Header: Logo + Name + Badges */}
+                        <div className="flex items-center gap-3 px-4 pt-4 pb-3 sm:px-5">
+                          <div className="relative shrink-0">
+                            {firma.logo_url ? (
+                              <img
+                                src={firma.logo_url}
+                                alt={`${firma.firma_unvani} logosu`}
+                                title={firma.firma_unvani}
+                                loading="lazy"
+                                width={56}
+                                height={56}
+                                className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-border object-contain bg-muted p-1"
+                                itemProp="logo"
+                              />
+                            ) : (
+                              <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={null} size="lg" className="w-12 h-12 sm:w-14 sm:h-14 border border-border" />
+                            )}
+                            {firma.belge_onayli && (
+                              <div className="absolute -bottom-1 -right-1">
+                                <VerifiedBadge />
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h2 className="font-bold text-foreground text-base sm:text-lg leading-tight truncate" itemProp="name">
+                              <Link
+                                to={firmaUrl}
+                                title={`${firma.firma_unvani} - Firma Profili`}
+                                aria-label={`${firma.firma_unvani} firma profilini görüntüle`}
+                                className="hover:text-primary transition-colors"
+                              >
+                                {firma.firma_unvani}
+                              </Link>
+                            </h2>
+                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                              {firma.uretim_satis_rolu && (
+                                <Badge className="bg-secondary/15 text-secondary border-secondary/25 text-[10px] font-semibold gap-1">
+                                  <Factory className="w-3 h-3" aria-hidden="true" />
+                                  {firma.uretim_satis_rolu}
+                                </Badge>
+                              )}
+                              {(firma.firma_turu_name || firma.firma_tipi_name) && (
+                                <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
+                                  {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* 3-Column Body (desktop) / stacked (mobile) */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border-t border-border/50">
+                          {/* LEFT: Info fields */}
+                          <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 space-y-2">
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
+                              <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                              <span className="truncate" itemProp="addressLocality">{locationText || "Belirtilmemiş"}</span>
+                            </div>
+                            {scaleText && (
+                              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                                <Users className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                                <span className="truncate">{scaleText}</span>
+                              </div>
+                            )}
+                            {firma.kurulus_tarihi && (
+                              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                                <CalendarDays className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                                <span>Kuruluş: {firma.kurulus_tarihi}</span>
+                              </div>
+                            )}
+                            {firma.web_sitesi && (
+                              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                                <ExternalLink className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                                <a
+                                  href={firma.web_sitesi.startsWith("http") ? firma.web_sitesi : `https://${firma.web_sitesi}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="truncate hover:text-primary transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  {firma.web_sitesi.replace(/^https?:\/\/(www\.)?/, "")}
+                                </a>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* MIDDLE: Firma Hakkında */}
+                          <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 border-t sm:border-t-0">
+                            {descriptionExcerptV3 ? (
+                              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed" itemProp="description">
+                                {descriptionExcerptV3}
+                              </p>
+                            ) : (
+                              <p className="text-xs sm:text-sm text-muted-foreground/50 italic">Firma hakkında bilgi eklenmemiş.</p>
+                            )}
+                          </div>
+
+                          {/* RIGHT: Actions */}
+                          <div className="px-4 py-3 sm:px-5 flex flex-row sm:flex-col items-center sm:items-stretch gap-2 border-t sm:border-t-0" onClick={(e) => e.stopPropagation()}>
+                            <Link
+                              to={firmaUrl}
+                              className="flex-1 sm:flex-none"
+                              title={`${firma.firma_unvani} firma profilini görüntüle`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Button size="sm" className="w-full gap-1.5 h-8 text-xs">
+                                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" /> Firmayı İncele
+                              </Button>
+                            </Link>
+                            <Button size="sm" variant="outline" className="flex-1 sm:flex-none gap-1.5 h-8 text-xs" onClick={() => handleMessageFirma(firma.user_id)} aria-label={`${firma.firma_unvani} firmasına mesaj gönder`}>
+                              <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Mesaj
+                            </Button>
+                            <button
+                              onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)}
+                              aria-label={firma.is_favorited ? "Favorilerden çıkar" : "Favorilere ekle"}
+                              className="p-1.5 hover:bg-muted rounded-md transition-colors sm:self-center"
+                            >
+                              <Bookmark className={`w-5 h-5 ${firma.is_favorited ? "fill-primary text-primary" : "text-muted-foreground/40 group-hover:text-muted-foreground/70"}`} aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Bottom bar: Üretim/Satış ürünleri */}
+                        {(uretimItems.length > 0 || satisItems.length > 0) && (
+                          <div className="border-t border-border/50 px-4 py-2.5 sm:px-5 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                            {uretimItems.length > 0 && (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-wide flex items-center gap-1">
+                                  <Factory className="w-3 h-3" aria-hidden="true" /> Üretici:
+                                </span>
+                                {uretimItems.slice(0, 4).map((item, i) => (
+                                  <Badge key={`u-${i}`} variant="outline" className="text-[10px] font-normal py-0 px-1.5">
+                                    {item.turName}
+                                  </Badge>
+                                ))}
+                                {uretimItems.length > 4 && (
+                                  <span className="text-[10px] text-muted-foreground">+{uretimItems.length - 4}</span>
+                                )}
+                              </div>
+                            )}
+                            {satisItems.length > 0 && (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-semibold text-secondary/80 uppercase tracking-wide flex items-center gap-1">
+                                  <Package className="w-3 h-3" aria-hidden="true" /> Satıcı:
+                                </span>
+                                {satisItems.slice(0, 4).map((item, i) => (
+                                  <Badge key={`s-${i}`} variant="outline" className="text-[10px] font-normal py-0 px-1.5">
+                                    {item.turName}
+                                  </Badge>
+                                ))}
+                                {satisItems.length > 4 && (
+                                  <span className="text-[10px] text-muted-foreground">+{satisItems.length - 4}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </article>
+                    );
+                  }
+
                   // ─── CURRENT (OLD) CARD DESIGN ───
                   return (
                     <article
