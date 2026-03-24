@@ -370,13 +370,17 @@ export default function ManuPazar() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                      <Switch
-                        checked={urun.durum === "aktif"}
-                        onCheckedChange={() => handleToggleDurum(urun)}
-                        disabled={urun.durum === "taslak" || urun.durum === "onay_bekliyor"}
-                      />
-                      <span>{format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <Switch
+                          checked={urun.durum === "aktif"}
+                          onCheckedChange={() => handleToggleDurum(urun)}
+                          disabled={urun.durum === "taslak" || urun.durum === "onay_bekliyor"}
+                        />
+                        <span>{format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}</span>
+                      </div>
+                      <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{urun.goruntuleme_sayisi ?? 0}</span>
+                      <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{urun.favori_sayisi ?? 0}</span>
                     </div>
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
