@@ -245,6 +245,7 @@ export default function MakineParkuruTab({ userId, onDataChange }: MakineParkuru
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
       setTeknolojiler(prev => [...prev, { id: data.id, teknoloji_kategori_id: tkKategoriId, teknoloji_tur_id: tkTurId }]);
       toast({ title: "Teknoloji eklendi" });
+      onDataChange?.();
     }
     resetTkForm();
   };
