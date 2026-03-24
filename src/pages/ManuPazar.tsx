@@ -46,6 +46,9 @@ interface Urun {
   para_birimi: string | null;
   durum: string;
   updated_at: string;
+  goruntuleme_sayisi?: number;
+  fake_favori_sayisi?: number;
+  favori_sayisi?: number; // computed
 }
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";

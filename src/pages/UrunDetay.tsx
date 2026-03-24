@@ -420,6 +420,11 @@ export default function UrunDetay() {
       }
     }
 
+    // Increment view count via security definer function (bypasses RLS)
+    if (urunData?.id) {
+      await supabase.rpc("increment_urun_view", { p_urun_id: urunData.id });
+    }
+
     setLoading(false);
   }, [slugParam, currentUserId]);
 
