@@ -249,7 +249,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
 
       {/* Level 3 (tekpazar only) */}
       {showLevel3 && (
-        <div className="flex-1 p-4 overflow-y-auto min-w-[200px]">
+        <div className="flex-1 p-4 overflow-y-auto min-w-[200px] max-h-[400px]">
           {loading3 ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
