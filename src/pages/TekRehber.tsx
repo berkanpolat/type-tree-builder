@@ -902,7 +902,7 @@ export default function TekRehber() {
                         </div>
 
                         {/* 3-Column Body (desktop) / stacked (mobile) */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border-t border-border/50">
+                        <div className="grid grid-cols-1 sm:grid-cols-[2fr_2fr_1fr] gap-0 border-t border-border/50">
                           {/* LEFT: Info fields */}
                           <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 space-y-2">
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
