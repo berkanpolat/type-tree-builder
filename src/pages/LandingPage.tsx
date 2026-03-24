@@ -359,23 +359,13 @@ const LandingPage = () => {
               </div>
             </div>
 
-            {/* Right: Hero image + animated logo */}
-            <div className="hidden lg:block relative">
+            {/* Right: Animated logo */}
+            <div className="hidden lg:flex items-center justify-center">
               <img
-                src={heroImg}
-                alt="Tekstil sektörü profesyonelleri"
-                className="rounded-2xl shadow-xl w-full object-cover aspect-[3/4]"
-                fetchPriority="high"
-                decoding="async"
+                src={logoIconImg}
+                alt="Tekstil A.Ş. Logo"
+                className="w-56 h-56 object-contain animate-logo-pulse"
               />
-              {/* Animated logo overlay */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <img
-                  src={logoIconImg}
-                  alt="Tekstil A.Ş. Logo"
-                  className="w-28 h-28 object-contain animate-logo-pulse drop-shadow-[0_0_25px_rgba(234,161,43,0.5)]"
-                />
-              </div>
             </div>
           </div>
         </div>
