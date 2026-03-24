@@ -455,6 +455,8 @@ export default function ManuPazar() {
                           ? `${urun.fiyat.toLocaleString("tr-TR")} ${paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi}`
                           : urun.fiyat_tipi === "varyasyonlu" ? "Varyasyonlu" : "-"}
                       </TableCell>
+                      <TableCell className="text-sm text-center text-muted-foreground">{urun.goruntuleme_sayisi ?? 0}</TableCell>
+                      <TableCell className="text-sm text-center text-muted-foreground">{urun.favori_sayisi ?? 0}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}
                       </TableCell>
