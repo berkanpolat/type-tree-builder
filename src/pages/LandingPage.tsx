@@ -337,7 +337,7 @@ const LandingPage = () => {
               </p>
 
               {/* Search */}
-              <div className="mb-5">
+              <div className="mb-5 max-w-2xl">
                 <LandingHeroSearch />
               </div>
 
