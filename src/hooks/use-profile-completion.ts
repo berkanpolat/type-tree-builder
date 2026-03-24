@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Genel Firma Bilgileri fields (excluding zero-weight: firma_unvani, firma_turu_id,
@@ -36,9 +36,14 @@ export function useProfileCompletion(refreshKey?: number) {
   const [percentage, setPercentage] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const calc = async () => {
+  const calc = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) { setLoading(false); return; }
+    if (!session?.user) {
+      setPercentage(0);
+      setLoading(false);
+      return;
+    }
+
     const user = session.user;
 
     const { data: firma } = await supabase
@@ -47,7 +52,11 @@ export function useProfileCompletion(refreshKey?: number) {
       .eq("user_id", user.id)
       .single();
 
-    if (!firma) { setLoading(false); return; }
+    if (!firma) {
+      setPercentage(0);
+      setLoading(false);
+      return;
+    }
 
     const firmaId = firma.id;
     const firmaTuruName = (firma.firma_turleri as any)?.name || "";
@@ -98,11 +107,103 @@ export function useProfileCompletion(refreshKey?: number) {
 
     setPercentage(Math.round((filled / total) * 100));
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
-    calc();
-  }, [refreshKey]);
+    void calc();
+  }, [calc, refreshKey]);
+
+  useEffect(() => {
+    let isMounted = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    const refreshCompletion = () => {
+      if (!isMounted) return;
+      void calc();
+    };
+
+    const setupRealtime = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user || !isMounted) return;
+
+      const { data: firma } = await supabase
+        .from("firmalar")
+        .select("id")
+        .eq("user_id", session.user.id)
+        .single();
+
+      if (!firma || !isMounted) return;
+
+      channel = supabase
+        .channel(`profile-completion:${session.user.id}:${firma.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "firmalar", filter: `user_id=eq.${session.user.id}` },
+          refreshCompletion,
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "firma_urun_hizmet_secimler", filter: `firma_id=eq.${firma.id}` },
+          refreshCompletion,
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "firma_uretim_satis", filter: `firma_id=eq.${firma.id}` },
+          refreshCompletion,
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "firma_tesisler", filter: `firma_id=eq.${firma.id}` },
+          refreshCompletion,
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "firma_referanslar", filter: `firma_id=eq.${firma.id}` },
+          refreshCompletion,
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "firma_sertifikalar", filter: `firma_id=eq.${firma.id}` },
+          refreshCompletion,
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "firma_galeri", filter: `firma_id=eq.${firma.id}` },
+          refreshCompletion,
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "firma_belgeler", filter: `firma_id=eq.${firma.id}` },
+          refreshCompletion,
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "firma_makineler", filter: `firma_id=eq.${firma.id}` },
+          refreshCompletion,
+        )
+        .subscribe();
+    };
+
+    const handleWindowFocus = () => refreshCompletion();
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshCompletion();
+      }
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    void setupRealtime();
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener("focus", handleWindowFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (channel) {
+        void supabase.removeChannel(channel);
+      }
+    };
+  }, [calc]);
 
   return { percentage, loading, refresh: () => calc() };
 }
