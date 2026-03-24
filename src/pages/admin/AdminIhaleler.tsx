@@ -170,6 +170,9 @@ export default function AdminIhaleler() {
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; desc: string; action: () => void }>({ open: false, title: "", desc: "", action: () => {} });
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [fakeTeklifTarget, setFakeTeklifTarget] = useState<{ id: string; baslik: string } | null>(null);
+  const [fakeViewTarget, setFakeViewTarget] = useState<{ id: string; baslik: string; current: number } | null>(null);
+  const [fakeViewAmount, setFakeViewAmount] = useState("");
+  const [fakeViewLoading, setFakeViewLoading] = useState(false);
 
   const callApi = useAdminApi();
 
