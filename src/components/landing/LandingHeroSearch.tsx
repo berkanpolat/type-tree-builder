@@ -20,6 +20,22 @@ type TabType = "firma" | "urun";
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 const HIDDEN_KATEGORILER = ["Hazır Giyim (Üretim)"];
 
+const FIRMA_POPULER = [
+  { label: "Kumaş Tedarikçisi", path: "/firmalar?tur=tedarikci&alan=kumas" },
+  { label: "Örme Penye Giyim Üreticisi", path: "/firmalar?tur=uretici&alan=orme-penye" },
+  { label: "Dokuma Giyim Üreticisi", path: "/firmalar?tur=uretici&alan=dokuma" },
+  { label: "Denim Giyim Üreticisi", path: "/firmalar?tur=uretici&alan=denim" },
+  { label: "İplik Tedarikçisi", path: "/firmalar?tur=tedarikci&alan=iplik" },
+];
+
+const URUN_POPULER = [
+  { label: "Hazır Giyim", path: "/tekpazar?kategori=hazir-giyim" },
+  { label: "İplik", path: "/tekpazar?kategori=iplik" },
+  { label: "Kumaş", path: "/tekpazar?kategori=kumas" },
+  { label: "Makine ve Yedek Parça", path: "/tekpazar?kategori=makine" },
+  { label: "Aksesuar", path: "/tekpazar?kategori=aksesuar" },
+];
+
 export default function LandingHeroSearch() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabType>("firma");
@@ -137,31 +153,70 @@ export default function LandingHeroSearch() {
     return "Tür";
   }, [kategoriById]);
 
-  // --- Firma search ---
+  // --- Firma search: firma adı + üretim/satış bilgisi ---
   const searchFirma = useCallback(async (term: string) => {
     setLoading(true);
     try {
-      const { data } = await supabase
+      // Search by firma name
+      const { data: firmaByName } = await supabase
         .from("firmalar")
         .select("id, firma_unvani, slug")
         .ilike("firma_unvani", `%${term}%`)
-        .limit(8);
-      return (data || []).map((f) => ({
+        .limit(6);
+
+      const nameResults: Suggestion[] = (firmaByName || []).map((f) => ({
         id: f.id,
         name: f.firma_unvani,
-        type: "Firma",
+        type: "Firma Adı",
       }));
+
+      // Search in üretim/satış taxonomy for matching product names
+      const normalizedTerm = term.toLocaleLowerCase("tr-TR");
+      const { data: matchingOptions } = await supabase
+        .from("firma_bilgi_secenekleri")
+        .select("id, name")
+        .ilike("name", `%${term}%`)
+        .limit(50);
+
+      if (matchingOptions && matchingOptions.length > 0) {
+        const optionIds = matchingOptions.map((o) => o.id);
+        
+        // Find firms that produce or sell these
+        const { data: uretimMatches } = await supabase
+          .from("firma_uretim_satis")
+          .select("firma_id, tip, tur_id, firmalar!inner(id, firma_unvani, slug)")
+          .in("tur_id", optionIds)
+          .limit(10);
+
+        if (uretimMatches) {
+          const seen = new Set(nameResults.map((r) => r.id));
+          for (const match of uretimMatches) {
+            const firma = match.firmalar as any;
+            if (firma && !seen.has(firma.id)) {
+              seen.add(firma.id);
+              const turName = matchingOptions.find((o) => o.id === match.tur_id)?.name || "";
+              const tipLabel = match.tip === "uretim" ? "Ürettiği" : "Sattığı";
+              nameResults.push({
+                id: firma.id,
+                name: firma.firma_unvani,
+                type: `${tipLabel}: ${turName}`,
+              });
+            }
+          }
+        }
+      }
+
+      return nameResults.slice(0, 8);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // --- Ürün search (taxonomy + products, same as TekPazar) ---
+  // --- Ürün search (taxonomy) ---
   const searchUrun = useCallback((term: string): Suggestion[] => {
     if (kategoriNodes.length === 0) return [];
     const minScore = getMinMatchScore(term);
 
-    // Taxonomy results (Kategori > Grup > Tür)
     const taxonomyResults = kategoriNodes
       .map((node) => {
         const rootName = getRootCategoryName(node.id);
@@ -225,12 +280,9 @@ export default function LandingHeroSearch() {
         .single();
       if (data?.slug) navigate(`/${data.slug}`);
     } else {
-      // Navigate to TekPazar with the selected taxonomy
       if (item.type === "Kategori") {
         navigate("/tekpazar", { state: { kategori: item.name } });
       } else if (item.type === "Grup") {
-        const node = kategoriById[item.id];
-        const parentName = node?.parent_id ? kategoriById[node.parent_id]?.name : null;
         const rootName = getRootCategoryName(item.id);
         navigate("/tekpazar", { state: { kategori: rootName, grupId: item.id } });
       } else if (item.type === "Tür") {
@@ -241,9 +293,11 @@ export default function LandingHeroSearch() {
     }
   };
 
+  const populerItems = tab === "firma" ? FIRMA_POPULER : URUN_POPULER;
+
   return (
     <div ref={containerRef} className="w-full max-w-2xl mb-6">
-      {/* Tabs - pill style like Clutch */}
+      {/* Tabs - pill style */}
       <div className="flex mb-4">
         <div className="inline-flex bg-muted rounded-full p-1 border border-border">
           <button
@@ -271,7 +325,7 @@ export default function LandingHeroSearch() {
         </div>
       </div>
 
-      {/* Search Input - larger */}
+      {/* Search Input */}
       <div className="relative">
         <div className="flex items-center bg-background rounded-2xl border-2 border-border shadow-xl px-5 py-1.5 focus-within:border-secondary focus-within:shadow-[0_0_0_4px_rgba(245,154,35,0.12)] transition-all">
           <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
@@ -287,7 +341,7 @@ export default function LandingHeroSearch() {
             }}
             placeholder={
               tab === "firma"
-                ? "Firma adı ile arayın..."
+                ? "Firma adı, ürettiği veya sattığı ürün ile arayın..."
                 : "Ürün kategorisi, grubu veya türü arayın..."
             }
             className="flex-1 min-w-0 bg-transparent text-foreground text-base h-12 px-3 outline-none placeholder:text-muted-foreground/50"
@@ -322,11 +376,32 @@ export default function LandingHeroSearch() {
                   <Search className="w-3.5 h-3.5 text-muted-foreground/40 flex-shrink-0" />
                   <span className="text-sm text-foreground">{item.name}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{item.type}</span>
+                <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full flex-shrink-0">
+                  {item.type}
+                </span>
               </button>
             ))}
           </div>
         )}
+      </div>
+
+      {/* Popular searches as buttons */}
+      <div className="mt-4">
+        <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase mb-2 block">
+          Popüler Aramalar
+        </span>
+        <div className="flex flex-wrap gap-2">
+          {populerItems.map((item) => (
+            <button
+              key={item.label}
+              onClick={() => navigate(item.path)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary/10 hover:border-secondary/40 text-foreground text-sm rounded-full border border-border transition-colors cursor-pointer"
+            >
+              <Search className="w-3 h-3 text-muted-foreground" />
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
