@@ -139,6 +139,7 @@ export default function SertifikalarTab({ userId, onDataChange }: SertifikalarTa
         gecerlilik_tarihi: payload.gecerlilik_tarihi,
       }]);
       toast({ title: "Sertifika eklendi" });
+      onDataChange?.();
     }
     resetForm();
   };
