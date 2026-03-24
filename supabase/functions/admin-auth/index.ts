@@ -311,6 +311,30 @@ Deno.serve(async (req) => {
       await logActivity(supabase, payload, "delete-user", { target_type: "admin_user", target_id: userId });
       return jsonResponse({ success: true });
     }
+
+    // ─── LIST LEADS ───
+    if (action === "list-leads") {
+      verifyToken(body.token);
+      const { data, error } = await supabase
+        .from("lead_basvurular")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ leads: data || [] });
+    }
+
+    // ─── UPDATE LEAD ───
+    if (action === "update-lead") {
+      const payload = verifyToken(body.token);
+      const { leadId, arandi } = body;
+      if (!leadId) return jsonResponse({ error: "leadId gerekli" }, 400);
+      const { error } = await supabase
+        .from("lead_basvurular")
+        .update({ arandi: !!arandi })
+        .eq("id", leadId);
+      if (error) return jsonResponse({ error: error.message }, 400);
+      return jsonResponse({ success: true });
+    }
     if (action === "list-firmalar") {
       const payload = verifyToken(body.token);
 
