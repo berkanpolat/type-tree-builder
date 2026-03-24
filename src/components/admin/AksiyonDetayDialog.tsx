@@ -7,8 +7,8 @@ import { Calendar, Clock, User, Building2, FileText, Tag, CheckCircle, XCircle, 
 import { TUR_CONFIG } from "@/lib/aksiyon-config";
 
 const s = {
-  text: { color: "hsl(var(--admin-text))" } as CSSProperties,
-  muted: { color: "hsl(var(--admin-muted))" } as CSSProperties,
+  text: { color: "hsl(var(--foreground))" } as CSSProperties,
+  muted: { color: "hsl(var(--muted-foreground))" } as CSSProperties,
 };
 
 export interface AksiyonDetay {
@@ -90,8 +90,8 @@ export default function AksiyonDetayDialog({ open, onOpenChange, aksiyon }: Aksi
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-md"
-        style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}
+        className="max-w-md !bg-card"
+        style={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))" }}
       >
         <DialogHeader>
           <div className="flex items-center gap-2.5">
