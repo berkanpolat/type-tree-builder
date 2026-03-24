@@ -364,6 +364,27 @@ export default function TekRehber() {
       });
     }
 
+    // Build üretim/satış map per firma
+    const uretimSatisMap: Record<string, UretimSatisItem[]> = {};
+    const usData2 = uretimSatisRes.data || [];
+    if (usData2.length > 0) {
+      const usTurIds2 = [...new Set(usData2.map((d: any) => d.tur_id))];
+      const missingUsTurIds = usTurIds2.filter((id) => !newSecenekMap[id as string]) as string[];
+      if (missingUsTurIds.length > 0) {
+        const { data: usTurNames } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", missingUsTurIds);
+        if (usTurNames) usTurNames.forEach((n) => { newSecenekMap[n.id] = n.name; });
+      }
+      usData2.forEach((d: any) => {
+        if (!uretimSatisMap[d.firma_id]) uretimSatisMap[d.firma_id] = [];
+        const turName = newSecenekMap[d.tur_id];
+        if (turName) {
+          // Avoid duplicates
+          const exists = uretimSatisMap[d.firma_id].some((i) => i.turName === turName && i.tip === d.tip);
+          if (!exists) uretimSatisMap[d.firma_id].push({ tip: d.tip, turName });
+        }
+      });
+    }
+
     let favSet = new Set<string>();
     (favsRes.data || []).forEach((f: any) => favSet.add(f.firma_id));
     setFirmaFavSet(favSet);
@@ -382,6 +403,7 @@ export default function TekRehber() {
         firma_tipi_name: newSecenekMap[f!.firma_tipi_id] || "",
         faaliyet_alani: faaliyetMap[f!.id] || "",
         is_favorited: favSet.has(f!.id),
+        uretimSatisItems: uretimSatisMap[f!.id] || [],
       }));
 
     setFirmalar(enriched);
