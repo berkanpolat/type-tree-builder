@@ -259,39 +259,7 @@ const LandingPage = () => {
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4 md:gap-8">
-            <img src={logoImg} alt="Tekstil A.Ş." className="h-7 object-contain" />
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/firmalar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekRehber</Link>
-              <Link to="/tekpazar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekPazar</Link>
-              <Link to="/ihaleler" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Tekİhale</Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-5">
-            <nav className="flex md:hidden items-center gap-1 mr-1">
-              <Link to="/firmalar" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">Rehber</Link>
-              <Link to="/tekpazar" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">Pazar</Link>
-              <Link to="/ihaleler" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">İhale</Link>
-            </nav>
-            <a href="#kayit" className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Fiyatlandırma</a>
-            <Link to="/hakkimizda" className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Hakkımızda</Link>
-            <Link
-              to="/giris-kayit"
-              className="px-3 md:px-5 py-2.5 rounded-lg border border-primary text-primary text-xs md:text-sm font-medium hover:bg-primary/10 transition-colors"
-            >
-              Giriş Yap
-            </Link>
-            <a
-              href="#kayit"
-              className="px-3 md:px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-xs md:text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              Kayıt Ol
-            </a>
-          </div>
-        </div>
-      </header>
+      <LandingHeader logoImg={logoImg} />
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-background via-background to-muted">
