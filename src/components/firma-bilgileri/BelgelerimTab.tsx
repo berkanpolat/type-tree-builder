@@ -108,6 +108,7 @@ export default function BelgelerimTab({ userId, onDataChange }: BelgelerimTabPro
       }
 
       toast({ title: "Başarılı", description: "Belge yüklendi ve incelemeye alındı." });
+      onDataChange?.();
       fetchBelgeler();
     } catch (err: any) {
       toast({ title: "Hata", description: err?.message || "Yükleme başarısız", variant: "destructive" });

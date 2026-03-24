@@ -133,6 +133,7 @@ export default function ReferanslarTab({ userId, onDataChange }: ReferanslarTabP
     setReferanslar(prev => prev.filter(r => r.id !== id));
     if (editingId === id) resetForm();
     toast({ title: "Referans silindi" });
+    onDataChange?.();
   };
 
   if (loading) return <div className="flex items-center justify-center h-40 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>;

@@ -94,6 +94,7 @@ export default function GaleriTab({ userId, onDataChange }: GaleriTabProps) {
 
     setFotolar(prev => prev.filter(f => f.id !== foto.id));
     toast({ title: "Fotoğraf silindi" });
+    onDataChange?.();
   };
 
   const handleEditName = async (id: string) => {

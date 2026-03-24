@@ -267,6 +267,7 @@ export default function MakineParkuruTab({ userId, onDataChange }: MakineParkuru
     setTeknolojiler(prev => prev.filter(t => t.id !== id));
     if (tkEditingId === id) resetTkForm();
     toast({ title: "Teknoloji silindi" });
+    onDataChange?.();
   };
 
   if (loading) return <div className="flex items-center justify-center h-40 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>;
