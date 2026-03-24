@@ -21,19 +21,19 @@ const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 const HIDDEN_KATEGORILER = ["Hazır Giyim (Üretim)"];
 
 const FIRMA_POPULER = [
-  { label: "Kumaş Tedarikçisi", path: "/firmalar?tur=tedarikci&alan=kumas" },
-  { label: "Örme Penye Giyim Üreticisi", path: "/firmalar?tur=uretici&alan=orme-penye" },
-  { label: "Dokuma Giyim Üreticisi", path: "/firmalar?tur=uretici&alan=dokuma" },
-  { label: "Denim Giyim Üreticisi", path: "/firmalar?tur=uretici&alan=denim" },
-  { label: "İplik Tedarikçisi", path: "/firmalar?tur=tedarikci&alan=iplik" },
+  { label: "Kumaş Tedarikçisi", state: { firmaTurId: "a1000000-0000-0000-0000-000000000002", firmaTipId: "81220f45-77c8-4d00-b978-da9741839e60", firmaTurName: "Tedarikçi" } },
+  { label: "Örme Penye Giyim Üreticisi", state: { firmaTurId: "a1000000-0000-0000-0000-000000000001", firmaTipId: "6ad25a72-ba78-41c2-aa20-2ea982a4fc43", firmaTurName: "Hazır Giyim Üreticisi" } },
+  { label: "Dokuma Giyim Üreticisi", state: { firmaTurId: "a1000000-0000-0000-0000-000000000001", firmaTipId: "bf8ec378-c8bc-4e86-88fe-031cfc9d932e", firmaTurName: "Hazır Giyim Üreticisi" } },
+  { label: "Denim Giyim Üreticisi", state: { firmaTurId: "a1000000-0000-0000-0000-000000000001", firmaTipId: "bed607a7-4c2d-4263-a441-b20603963b6b", firmaTurName: "Hazır Giyim Üreticisi" } },
+  { label: "Kumaş Hazırlık Atölyesi", state: { firmaTurId: "a1000000-0000-0000-0000-000000000003", firmaTipId: "8658b0e4-210e-4d6f-856d-81f15f4bb818", firmaTurName: "Fason Atölye" } },
 ];
 
 const URUN_POPULER = [
-  { label: "Hazır Giyim", path: "/tekpazar?kategori=hazir-giyim" },
-  { label: "İplik", path: "/tekpazar?kategori=iplik" },
-  { label: "Kumaş", path: "/tekpazar?kategori=kumas" },
-  { label: "Makine ve Yedek Parça", path: "/tekpazar?kategori=makine" },
-  { label: "Aksesuar", path: "/tekpazar?kategori=aksesuar" },
+  { label: "Hazır Giyim", state: { kategori: "Hazır Giyim (Satış)" } },
+  { label: "İplik", state: { kategori: "İplik" } },
+  { label: "Kumaş", state: { kategori: "Kumaş" } },
+  { label: "Makine ve Yedek Parça", state: { kategori: "Makine ve Yedek Parça" } },
+  { label: "Aksesuar", state: { kategori: "Aksesuar" } },
 ];
 
 export default function LandingHeroSearch() {
