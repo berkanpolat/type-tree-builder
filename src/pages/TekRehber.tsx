@@ -150,7 +150,22 @@ export default function TekRehber() {
     });
   }, []);
 
-  // Fetch product taxonomy nodes for search autocomplete
+  // Read location.state for pre-applied filters (from landing popüler aramalar)
+  useEffect(() => {
+    const state = location.state as { firmaTurId?: string; firmaTipId?: string; firmaTurName?: string } | null;
+    if (state?.firmaTurId) {
+      setSelectedFirmaTuru(state.firmaTurId);
+      if (state.firmaTurName) setSelectedFirmaTuruName(state.firmaTurName);
+      if (state.firmaTipId) {
+        setFirmaFilterState((prev: FirmaFilterState | null) => ({
+          ...(prev || { firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
+          firmaTipleri: [state.firmaTipId!],
+        }));
+      }
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   useEffect(() => {
     supabase.from("firma_bilgi_secenekleri")
       .select("id, name, parent_id")
