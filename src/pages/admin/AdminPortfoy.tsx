@@ -140,40 +140,73 @@ export default function AdminPortfoy() {
   const [expandedLoading, setExpandedLoading] = useState(false);
   const [detayAksiyon, setDetayAksiyon] = useState<AksiyonDetay | null>(null);
 
+  // Department/personnel filters for Yönetim Kurulu / is_primary
+  const canFilterByPersonnel = adminUser?.is_primary || adminUser?.departman === "Yönetim Kurulu";
+  const [adminList, setAdminList] = useState<{ id: string; ad: string; soyad: string; departman: string; pozisyon: string }[]>([]);
+  const [filterDepartman, setFilterDepartman] = useState<string>("all");
+  const [filterPersonel, setFilterPersonel] = useState<string>("all");
+
   const callApi = useAdminApi();
 
-  const fetchData = useCallback(async () => {
-    if (!token || !adminUser?.id) return;
-    try {
-      // Fetch all portfolio firms using pagination to bypass limits
-      let allFirms: FirmaItem[] = [];
-      let page = 1;
-      const perPage = 500;
-      let hasMore = true;
+  // Fetch admin users for department/personnel filtering
+  useEffect(() => {
+    if (!canFilterByPersonnel) return;
+    supabase.rpc("admin_list_admin_users_v2").then(({ data }) => {
+      setAdminList((data as any) || []);
+    });
+  }, [canFilterByPersonnel]);
 
-      while (hasMore) {
-        const firmaData = await callApi("list-firmalar", {
-          token,
-          paginated: true,
-          page,
-          perPage,
-          filterPortfolyo: adminUser.id,
-        });
-        const firms = firmaData.firmalar || [];
-        allFirms = allFirms.concat(firms);
-        const total = firmaData.total || 0;
-        setTotalCount(total);
-        hasMore = allFirms.length < total;
-        page++;
+  const effectiveAdminId = canFilterByPersonnel && filterPersonel !== "all" ? filterPersonel : adminUser?.id;
+
+  const fetchData = useCallback(async () => {
+    if (!token || !effectiveAdminId) return;
+    setLoading(true);
+    try {
+      // If filtering by department (not specific personnel), get all admins in that dept
+      let adminIdsToFetch: string[] = [];
+      if (canFilterByPersonnel && filterDepartman !== "all" && filterPersonel === "all") {
+        adminIdsToFetch = adminList.filter(a => a.departman === filterDepartman).map(a => a.id);
+      } else {
+        adminIdsToFetch = [effectiveAdminId];
       }
 
+      let allFirms: FirmaItem[] = [];
+      for (const adminId of adminIdsToFetch) {
+        let page = 1;
+        const perPage = 500;
+        let hasMore = true;
+        while (hasMore) {
+          const firmaData = await callApi("list-firmalar", {
+            token,
+            paginated: true,
+            page,
+            perPage,
+            filterPortfolyo: adminId,
+          });
+          const firms = firmaData.firmalar || [];
+          allFirms = allFirms.concat(firms);
+          const total = firmaData.total || 0;
+          hasMore = (page * perPage) < total;
+          page++;
+        }
+      }
+
+      // Deduplicate by firma id
+      const seen = new Set<string>();
+      allFirms = allFirms.filter(f => {
+        if (seen.has(f.id)) return false;
+        seen.add(f.id);
+        return true;
+      });
+
       setAllFirmalar(allFirms);
+      setTotalCount(allFirms.length);
     } catch {
       toast({ title: "Hata", description: "Veriler yüklenemedi", variant: "destructive" });
     } finally {
       setLoading(false);
     }
-  }, [token, adminUser?.id, callApi, toast]);
+  }, [token, effectiveAdminId, filterDepartman, filterPersonel, adminList, canFilterByPersonnel, callApi, toast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -333,6 +366,35 @@ export default function AdminPortfoy() {
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 flex-wrap">
+            {canFilterByPersonnel && (
+              <>
+                <Select value={filterDepartman} onValueChange={v => { setFilterDepartman(v); setFilterPersonel("all"); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-40 h-9 text-xs" style={s.input}>
+                    <SelectValue placeholder="Departman" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tüm Departmanlar</SelectItem>
+                    {[...new Set(adminList.map(a => a.departman))].sort((a, b) => a.localeCompare(b, "tr")).map(d => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={filterPersonel} onValueChange={v => { setFilterPersonel(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-44 h-9 text-xs" style={s.input}>
+                    <SelectValue placeholder="Personel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tüm Personeller</SelectItem>
+                    {adminList
+                      .filter(a => filterDepartman === "all" || a.departman === filterDepartman)
+                      .sort((a, b) => `${a.ad} ${a.soyad}`.localeCompare(`${b.ad} ${b.soyad}`, "tr"))
+                      .map(a => (
+                        <SelectItem key={a.id} value={a.id}>{a.ad} {a.soyad}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
               <Input
