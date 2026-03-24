@@ -54,6 +54,11 @@ interface UrunTaxNode {
   parent_id: string | null;
 }
 
+interface UretimSatisItem {
+  tip: string; // "uretim" | "satis"
+  turName: string;
+}
+
 interface FirmaWithExtra {
   id: string;
   firma_unvani: string;
@@ -75,6 +80,7 @@ interface FirmaWithExtra {
   firma_tipi_name?: string;
   faaliyet_alani?: string;
   is_favorited?: boolean;
+  uretimSatisItems?: UretimSatisItem[];
 }
 
 export default function TekRehber() {
