@@ -218,13 +218,13 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
                 setHoveredL2(null);
               }}
               onClick={() => handleL1Click(item)}
-              className={`w-full flex items-center gap-1 pl-4 pr-2 py-2 text-sm transition-colors text-left ${
+              className={`w-full flex items-center gap-1 pl-4 pr-3 py-2 text-sm transition-colors text-left whitespace-nowrap ${
                 hoveredL1 === item.id
                   ? "bg-muted text-secondary font-semibold"
                   : "text-foreground hover:bg-muted/50"
               }`}
             >
-              <span className="flex-1">{displayName(item.name)}</span>
+              <span>{displayName(item.name)}</span>
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             </button>
           ))
