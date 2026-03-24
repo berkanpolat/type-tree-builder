@@ -431,7 +431,7 @@ export default function ManuPazar() {
                   </TableRow>
                 ) : (
                   filteredUrunler.map((urun) => (
-                    <TableRow key={urun.id} className="cursor-pointer" onClick={() => navigate(`/urun/${urun.slug || urun.id}`)}>
+                    <TableRow key={urun.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
