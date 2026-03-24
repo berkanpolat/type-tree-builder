@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import PwaInstallBanner from "@/components/PwaInstallBanner";
+
 import { useVisitorSource } from "@/hooks/use-visitor-source";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { initErrorTracker } from "@/lib/error-tracker";
