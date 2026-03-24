@@ -697,6 +697,7 @@ const LandingPage = () => {
       </section>
 
       <Footer />
+      <LeadCaptureDialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen} kaynak="landing_page" />
     </div>
   );
 };
