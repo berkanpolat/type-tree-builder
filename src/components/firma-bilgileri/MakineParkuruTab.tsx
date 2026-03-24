@@ -185,6 +185,7 @@ export default function MakineParkuruTab({ userId, onDataChange }: MakineParkuru
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
       setMakineler(prev => prev.map(m => m.id === mkEditingId ? { ...m, ...payload, makine_sayisi: mkSayisi, tesis_id: mkTesisId || null } : m));
       toast({ title: "Güncellendi" });
+      onDataChange?.();
     } else {
       const { data, error } = await supabase.from("firma_makineler").insert(payload).select().single();
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
