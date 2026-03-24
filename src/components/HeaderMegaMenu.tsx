@@ -36,7 +36,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
   const [loading3, setLoading3] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const REHBER_ORDER = ["marka", "mümessil ofis", "üretici", "tedarikçi", "fason atölye"];
+  const REHBER_ORDER = ["marka", "mümessil ofis", "hazır giyim", "üretici", "tedarikçi", "fason atölye"];
 
   const sortRehber = (items: SubItem[]) => {
     return [...items].sort((a, b) => {
