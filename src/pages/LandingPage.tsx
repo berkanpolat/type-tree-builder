@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import HeaderMegaMenu from "@/components/HeaderMegaMenu";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -258,39 +259,7 @@ const LandingPage = () => {
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4 md:gap-8">
-            <img src={logoImg} alt="Tekstil A.Ş." className="h-7 object-contain" />
-            <nav className="hidden md:flex items-center gap-6">
-              <Link to="/firmalar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekRehber</Link>
-              <Link to="/tekpazar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekPazar</Link>
-              <Link to="/ihaleler" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Tekİhale</Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-5">
-            <nav className="flex md:hidden items-center gap-1 mr-1">
-              <Link to="/firmalar" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">Rehber</Link>
-              <Link to="/tekpazar" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">Pazar</Link>
-              <Link to="/ihaleler" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">İhale</Link>
-            </nav>
-            <a href="#kayit" className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Fiyatlandırma</a>
-            <Link to="/hakkimizda" className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Hakkımızda</Link>
-            <Link
-              to="/giris-kayit"
-              className="px-3 md:px-5 py-2.5 rounded-lg border border-primary text-primary text-xs md:text-sm font-medium hover:bg-primary/10 transition-colors"
-            >
-              Giriş Yap
-            </Link>
-            <a
-              href="#kayit"
-              className="px-3 md:px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-xs md:text-sm font-medium hover:bg-primary/90 transition-colors"
-            >
-              Kayıt Ol
-            </a>
-          </div>
-        </div>
-      </header>
+      <LandingHeader logoImg={logoImg} />
 
       {/* Hero */}
       <section className="bg-gradient-to-br from-background via-background to-muted">
@@ -683,5 +652,63 @@ const LandingPage = () => {
     </div>
   );
 };
+
+function LandingHeader({ logoImg }: { logoImg: string }) {
+  const [openMenu, setOpenMenu] = useState<"tekrehber" | "tekpazar" | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMouseEnter = (menu: "tekrehber" | "tekpazar") => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setOpenMenu(menu);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => setOpenMenu(null), 150);
+  };
+
+  const handleMenuMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  };
+
+  return (
+    <header className="sticky top-0 z-50 bg-background border-b border-border">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-4 md:gap-8">
+          <img src={logoImg} alt="Tekstil A.Ş." className="h-7 object-contain" />
+          <nav className="hidden md:flex items-center gap-6">
+            <div className="relative" onMouseEnter={() => handleMouseEnter("tekrehber")} onMouseLeave={handleMouseLeave}>
+              <Link to="/firmalar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekRehber</Link>
+              {openMenu === "tekrehber" && (
+                <div onMouseEnter={handleMenuMouseEnter} onMouseLeave={handleMouseLeave}>
+                  <HeaderMegaMenu type="tekrehber" onClose={() => setOpenMenu(null)} />
+                </div>
+              )}
+            </div>
+            <div className="relative" onMouseEnter={() => handleMouseEnter("tekpazar")} onMouseLeave={handleMouseLeave}>
+              <Link to="/tekpazar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekPazar</Link>
+              {openMenu === "tekpazar" && (
+                <div onMouseEnter={handleMenuMouseEnter} onMouseLeave={handleMouseLeave}>
+                  <HeaderMegaMenu type="tekpazar" onClose={() => setOpenMenu(null)} />
+                </div>
+              )}
+            </div>
+            <Link to="/ihaleler" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Tekİhale</Link>
+          </nav>
+        </div>
+        <div className="flex items-center gap-5">
+          <nav className="flex md:hidden items-center gap-1 mr-1">
+            <Link to="/firmalar" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">Rehber</Link>
+            <Link to="/tekpazar" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">Pazar</Link>
+            <Link to="/ihaleler" className="text-[11px] font-medium px-1.5 py-1 rounded text-muted-foreground hover:bg-muted">İhale</Link>
+          </nav>
+          <a href="#kayit" className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Fiyatlandırma</a>
+          <Link to="/hakkimizda" className="hidden md:inline text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Hakkımızda</Link>
+          <Link to="/giris-kayit" className="px-3 md:px-5 py-2.5 rounded-lg border border-primary text-primary text-xs md:text-sm font-medium hover:bg-primary/10 transition-colors">Giriş Yap</Link>
+          <a href="#kayit" className="px-3 md:px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-xs md:text-sm font-medium hover:bg-primary/90 transition-colors">Kayıt Ol</a>
+        </div>
+      </div>
+    </header>
+  );
+}
 
 export default LandingPage;
