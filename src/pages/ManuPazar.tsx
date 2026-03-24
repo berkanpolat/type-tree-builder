@@ -49,6 +49,7 @@ interface Urun {
   goruntuleme_sayisi?: number;
   fake_favori_sayisi?: number;
   favori_sayisi?: number; // computed
+  slug?: string | null;
 }
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
@@ -338,7 +339,7 @@ export default function ManuPazar() {
             <div className="text-center py-10 text-muted-foreground">Henüz ürün bulunmamaktadır.</div>
           ) : (
             filteredUrunler.map((urun) => (
-              <Card key={urun.id} className="cursor-pointer" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
+              <Card key={urun.id} className="cursor-pointer" onClick={() => navigate(`/urun/${urun.slug || urun.id}`)}>
                 <CardContent className="p-4 space-y-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
@@ -430,7 +431,7 @@ export default function ManuPazar() {
                   </TableRow>
                 ) : (
                   filteredUrunler.map((urun) => (
-                    <TableRow key={urun.id}>
+                    <TableRow key={urun.id} className="cursor-pointer" onClick={() => navigate(`/urun/${urun.slug || urun.id}`)}>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
