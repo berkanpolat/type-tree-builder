@@ -5,8 +5,9 @@ import { useSeoMeta } from "@/hooks/use-seo-meta";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
-import { ShoppingBag, Users, Eye, Store, Search, MessageSquare, ShieldCheck, MonitorSmartphone } from "lucide-react";
+import { ShoppingBag, Users, Eye, Store, Search, MessageSquare, ShieldCheck, MonitorSmartphone, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LeadCaptureDialog from "@/components/LeadCaptureDialog";
 
 export default function TekPazarTanitim() {
   useSeoMeta({ slug: "/tekpazar-tanitim", fallbackTitle: "TekPazar Nedir? | Tekstil A.Ş." });
@@ -14,6 +15,7 @@ export default function TekPazarTanitim() {
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -78,7 +80,7 @@ export default function TekPazarTanitim() {
             Üreticiler ve tedarikçiler ürünlerini sergiler; markalar ve alıcılar doğru ürüne, doğru koşullarla ulaşır.
             Tüm toptan ticaret süreci tek panelden, kontrollü şekilde yönetilir.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
               size="lg"
               className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-semibold px-8"
@@ -86,6 +88,15 @@ export default function TekPazarTanitim() {
             >
               <ShoppingBag className="w-4 h-4 mr-2" />
               Ürünleri Keşfet
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-secondary/50 text-primary-foreground hover:bg-secondary/10 font-semibold px-8"
+              onClick={() => setLeadDialogOpen(true)}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Tanıtım PDF İndir
             </Button>
           </div>
         </div>
@@ -148,6 +159,7 @@ export default function TekPazarTanitim() {
       </section>
 
       <Footer />
+      <LeadCaptureDialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen} kaynak="tekpazar_tanitim" />
     </div>
   );
 }

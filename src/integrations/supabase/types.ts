@@ -1975,6 +1975,36 @@ export type Database = {
           },
         ]
       }
+      lead_basvurular: {
+        Row: {
+          ad: string
+          created_at: string
+          email: string
+          id: string
+          kaynak: string
+          soyad: string
+          telefon: string
+        }
+        Insert: {
+          ad: string
+          created_at?: string
+          email: string
+          id?: string
+          kaynak?: string
+          soyad: string
+          telefon: string
+        }
+        Update: {
+          ad?: string
+          created_at?: string
+          email?: string
+          id?: string
+          kaynak?: string
+          soyad?: string
+          telefon?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

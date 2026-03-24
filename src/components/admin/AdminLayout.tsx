@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2, Menu, Megaphone, Bot, Briefcase, ClipboardList, MapPin, Target, Map, BarChart3, FileBarChart, CalendarDays, Gauge, FlaskConical, Server, Globe, GitBranch, CreditCard, Activity
+  Gavel, Package, HeadphonesIcon, Building2, Menu, Megaphone, Bot, Briefcase, ClipboardList, MapPin, Target, Map, BarChart3, FileBarChart, CalendarDays, Gauge, FlaskConical, Server, Globe, GitBranch, CreditCard, Activity, UserPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -69,6 +69,7 @@ const menuGroups: MenuGroup[] = [
       { label: "Canlı Harita", path: "/yonetim/canli-harita", icon: Map, permission: "harita_goruntule", primaryOnly: false },
       { label: "Paket Yönetimi", path: "/yonetim/paketler", icon: CreditCard, permission: "paket_detay_goruntule", primaryOnly: false },
       { label: "Reklam", path: "/yonetim/reklam", icon: Megaphone, permission: "reklam_goruntule", primaryOnly: false },
+      { label: "Leadler", path: "/yonetim/leadler", icon: UserPlus, permission: null, primaryOnly: false },
       { label: "TekBot", path: "/yonetim/tekbot", icon: Bot, permission: "tekbot_goruntule", primaryOnly: false },
       { label: "SEO", path: "/yonetim/seo", icon: Globe, permission: "seo_goruntule", primaryOnly: false },
       { label: "Kaynak Raporu", path: "/yonetim/kaynak-raporu", icon: BarChart3, permission: null, primaryOnly: true },

@@ -5,8 +5,9 @@ import { useSeoMeta } from "@/hooks/use-seo-meta";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
-import { Gavel, TrendingDown, Factory, Clock, Eye, Bell, SlidersHorizontal, Scale, MonitorSmartphone, Rocket } from "lucide-react";
+import { Gavel, TrendingDown, Factory, Clock, Eye, Bell, SlidersHorizontal, Scale, MonitorSmartphone, Rocket, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import LeadCaptureDialog from "@/components/LeadCaptureDialog";
 
 export default function TekIhaleTanitim() {
   useSeoMeta({ slug: "/tekihale-tanitim", fallbackTitle: "Tekİhale | Tekstil İhale Platformu" });
@@ -14,6 +15,7 @@ export default function TekIhaleTanitim() {
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -88,6 +90,15 @@ export default function TekIhaleTanitim() {
               <Gavel className="w-4 h-4 mr-2" />
               İhaleleri Keşfet
             </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-secondary/50 text-primary-foreground hover:bg-secondary/10 font-semibold px-8"
+              onClick={() => setLeadDialogOpen(true)}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Tanıtım PDF İndir
+            </Button>
           </div>
         </div>
       </section>
@@ -149,6 +160,7 @@ export default function TekIhaleTanitim() {
       </section>
 
       <Footer />
+      <LeadCaptureDialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen} kaynak="tekihale_tanitim" />
     </div>
   );
 }
