@@ -36,7 +36,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
   const [loading3, setLoading3] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const REHBER_ORDER = ["marka", "mümessil ofis", "üretici", "tedarikçi", "fason atölye"];
+  const REHBER_ORDER = ["marka", "mümessil ofis", "hazır giyim", "üretici", "tedarikçi", "fason atölye"];
 
   const sortRehber = (items: SubItem[]) => {
     return [...items].sort((a, b) => {
@@ -204,7 +204,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
       onMouseLeave={handleMouseLeave}
     >
       {/* Level 1 */}
-      <div className={`w-56 py-2 shrink-0 ${showLevel2 ? "border-r border-border" : ""}`}>
+      <div className={`py-2 shrink-0 ${showLevel2 ? "border-r border-border" : ""}`}>
         {loading1 ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
@@ -218,13 +218,13 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
                 setHoveredL2(null);
               }}
               onClick={() => handleL1Click(item)}
-              className={`w-full flex items-center gap-1 pl-4 pr-2 py-2 text-sm transition-colors text-left ${
+              className={`w-full flex items-center gap-1 pl-4 pr-3 py-2 text-sm transition-colors text-left whitespace-nowrap ${
                 hoveredL1 === item.id
                   ? "bg-muted text-secondary font-semibold"
                   : "text-foreground hover:bg-muted/50"
               }`}
             >
-              <span className="flex-1">{displayName(item.name)}</span>
+              <span>{displayName(item.name)}</span>
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             </button>
           ))
