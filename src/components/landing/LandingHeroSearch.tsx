@@ -242,39 +242,39 @@ export default function LandingHeroSearch() {
   };
 
   return (
-    <div ref={containerRef} className="w-full max-w-xl mx-auto mb-6">
-      {/* Tabs */}
-      <div className="flex justify-center mb-3">
-        <div className="inline-flex bg-muted/50 rounded-lg p-0.5 border border-border">
+    <div ref={containerRef} className="w-full max-w-2xl mb-6">
+      {/* Tabs - pill style like Clutch */}
+      <div className="flex mb-4">
+        <div className="inline-flex bg-muted rounded-full p-1 border border-border">
           <button
             onClick={() => handleTabChange("firma")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
               tab === "firma"
-                ? "bg-background text-secondary shadow-sm"
+                ? "bg-secondary text-secondary-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Building2 className="w-4 h-4" />
-            Firma
+            Firma Ara
           </button>
           <button
             onClick={() => handleTabChange("urun")}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-semibold transition-all ${
               tab === "urun"
-                ? "bg-background text-secondary shadow-sm"
+                ? "bg-secondary text-secondary-foreground shadow-md"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <ShoppingBag className="w-4 h-4" />
-            Ürün
+            Ürün Ara
           </button>
         </div>
       </div>
 
-      {/* Search Input */}
+      {/* Search Input - larger */}
       <div className="relative">
-        <div className="flex items-center bg-background rounded-xl border border-border shadow-lg px-4 py-1 focus-within:border-secondary focus-within:shadow-[0_0_0_3px_rgba(245,154,35,0.12)] transition-all">
-          <Search className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+        <div className="flex items-center bg-background rounded-2xl border-2 border-border shadow-xl px-5 py-1.5 focus-within:border-secondary focus-within:shadow-[0_0_0_4px_rgba(245,154,35,0.12)] transition-all">
+          <Search className="w-5 h-5 text-muted-foreground flex-shrink-0" />
           <input
             type="text"
             value={query}
@@ -290,7 +290,7 @@ export default function LandingHeroSearch() {
                 ? "Firma adı ile arayın..."
                 : "Ürün kategorisi, grubu veya türü arayın..."
             }
-            className="flex-1 min-w-0 bg-transparent text-foreground text-sm h-10 px-2 outline-none placeholder:text-muted-foreground/50"
+            className="flex-1 min-w-0 bg-transparent text-foreground text-base h-12 px-3 outline-none placeholder:text-muted-foreground/50"
           />
           {query && (
             <button
@@ -299,13 +299,13 @@ export default function LandingHeroSearch() {
                 setSuggestions([]);
                 setShowDropdown(false);
               }}
-              className="text-muted-foreground text-xs bg-muted rounded px-1.5 py-0.5 hover:bg-muted-foreground/20 flex-shrink-0"
+              className="text-muted-foreground text-xs bg-muted rounded-full px-2 py-1 hover:bg-muted-foreground/20 flex-shrink-0"
             >
               ✕
             </button>
           )}
           {loading && (
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-secondary flex-shrink-0 ml-1" />
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-secondary flex-shrink-0 ml-1" />
           )}
         </div>
 

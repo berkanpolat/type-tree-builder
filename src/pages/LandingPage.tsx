@@ -4,7 +4,7 @@ import { useSeoMeta } from "@/hooks/use-seo-meta";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
-import heroImg from "@/assets/landing-hero.jpg";
+import heroImg from "@/assets/landing-hero-anim.gif";
 import tekihaleImg from "@/assets/landing-tekihale.png";
 import tekrehberImg from "@/assets/landing-tekrehber.png";
 import tekpazarImg from "@/assets/landing-tekpazar.png";
@@ -337,7 +337,7 @@ const LandingPage = () => {
               </p>
 
               {/* Search */}
-              <div className="mb-5">
+              <div className="mb-5 max-w-2xl">
                 <LandingHeroSearch />
               </div>
 
