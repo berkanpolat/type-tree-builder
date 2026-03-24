@@ -164,14 +164,13 @@ export default function LandingHeroSearch() {
         .ilike("firma_unvani", `%${term}%`)
         .limit(6);
 
-      const nameResults: Suggestion[] = (firmaByName || []).map((f) => ({
+      const results: Suggestion[] = (firmaByName || []).map((f) => ({
         id: f.id,
         name: f.firma_unvani,
         type: "Firma Adı",
       }));
 
-      // Search in üretim/satış taxonomy for matching product names
-      const normalizedTerm = term.toLocaleLowerCase("tr-TR");
+      // Search in firma_bilgi_secenekleri for matching option names
       const { data: matchingOptions } = await supabase
         .from("firma_bilgi_secenekleri")
         .select("id, name")
@@ -180,33 +179,53 @@ export default function LandingHeroSearch() {
 
       if (matchingOptions && matchingOptions.length > 0) {
         const optionIds = matchingOptions.map((o) => o.id);
-        
-        // Find firms that produce or sell these
-        const { data: uretimMatches } = await supabase
+        const optionMap = Object.fromEntries(matchingOptions.map((o) => [o.id, o.name]));
+        const seen = new Set(results.map((r) => r.id));
+
+        // Search by tur_id (Tür)
+        const { data: turMatches } = await supabase
           .from("firma_uretim_satis")
           .select("firma_id, tip, tur_id, firmalar!inner(id, firma_unvani, slug)")
           .in("tur_id", optionIds)
           .limit(10);
 
-        if (uretimMatches) {
-          const seen = new Set(nameResults.map((r) => r.id));
-          for (const match of uretimMatches) {
+        // Search by grup_id (Grup)
+        const { data: grupMatches } = await supabase
+          .from("firma_uretim_satis")
+          .select("firma_id, tip, grup_id, firmalar!inner(id, firma_unvani, slug)")
+          .in("grup_id", optionIds)
+          .limit(10);
+
+        // Search by kategori_id (Kategori)
+        const { data: katMatches } = await supabase
+          .from("firma_uretim_satis")
+          .select("firma_id, tip, kategori_id, firmalar!inner(id, firma_unvani, slug)")
+          .in("kategori_id", optionIds)
+          .limit(10);
+
+        const addMatches = (matches: any[] | null, field: string, levelLabel: string) => {
+          if (!matches) return;
+          for (const match of matches) {
             const firma = match.firmalar as any;
             if (firma && !seen.has(firma.id)) {
               seen.add(firma.id);
-              const turName = matchingOptions.find((o) => o.id === match.tur_id)?.name || "";
+              const matchName = optionMap[match[field]] || "";
               const tipLabel = match.tip === "uretim" ? "Ürettiği" : "Sattığı";
-              nameResults.push({
+              results.push({
                 id: firma.id,
                 name: firma.firma_unvani,
-                type: `${tipLabel}: ${turName}`,
+                type: `${tipLabel} ${levelLabel}: ${matchName}`,
               });
             }
           }
-        }
+        };
+
+        addMatches(turMatches, "tur_id", "Tür");
+        addMatches(grupMatches, "grup_id", "Grup");
+        addMatches(katMatches, "kategori_id", "Kategori");
       }
 
-      return nameResults.slice(0, 8);
+      return results.slice(0, 8);
     } finally {
       setLoading(false);
     }
