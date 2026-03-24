@@ -20,6 +20,7 @@ import iso22301Img from "@/assets/iso-22301.png";
 import kosgebImg from "@/assets/kosgeb.png";
 import indirimBadge from "@/assets/indirim-badge.png";
 import Footer from "@/components/Footer";
+import LandingHeroSearch from "@/components/landing/LandingHeroSearch";
 import LandingRegistrationForm from "@/components/landing/LandingRegistrationForm";
 import { PAKET_OZELLIKLERI, PRO_FIYATLAR } from "@/lib/package-config";
 import { Mail, Phone, MapPin } from "lucide-react";
