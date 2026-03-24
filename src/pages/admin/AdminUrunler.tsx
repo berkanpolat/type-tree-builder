@@ -809,7 +809,7 @@ export default function AdminUrunler() {
                             <Eye className="w-3.5 h-3.5" />
                           </Button>
                           <Button
-                            onClick={() => setFakeUrunDialog({ open: true, urunId: urun.id, baslik: urun.baslik, type: "favori", current: 0 })}
+                            onClick={() => setFakeUrunDialog({ open: true, urunId: urun.id, baslik: urun.baslik, type: "favori", current: (urun.gercek_favori_sayisi ?? 0) + (urun.fake_favori_sayisi ?? 0) })}
                             variant="ghost" size="sm" className="h-7 w-7 p-0" style={s.muted} title="Yapay Favori"
                           >
                             <Heart className="w-3.5 h-3.5" />
