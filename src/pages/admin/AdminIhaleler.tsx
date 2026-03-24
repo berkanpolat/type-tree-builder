@@ -865,6 +865,17 @@ export default function AdminIhaleler() {
                             <Bot className="w-3 h-3" /> Yapay Teklif
                           </Button>
                         )}
+
+                        {user?.is_primary && (
+                          <Button
+                            onClick={() => setFakeViewTarget({ id: ihale.id, baslik: ihale.baslik, current: ihale.goruntuleme_sayisi })}
+                            variant="outline" size="sm"
+                            className="text-[11px] h-7 px-2.5 gap-1"
+                            style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                          >
+                            <Eye className="w-3 h-3" /> Yapay Görüntülenme
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
