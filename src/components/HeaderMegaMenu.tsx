@@ -186,12 +186,12 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
 
   return (
     <div
-      className="absolute left-0 top-full mt-0 bg-background border border-border rounded-b-xl shadow-xl z-50 flex max-h-[400px] min-w-[280px]"
+      className="absolute left-0 top-full mt-0 bg-background border border-border rounded-b-xl shadow-xl z-50 flex min-w-[280px]"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       {/* Level 1 */}
-      <div className={`w-56 py-2 shrink-0 overflow-y-auto ${showLevel2 ? "border-r border-border" : ""}`}>
+      <div className={`w-56 py-2 shrink-0 ${showLevel2 ? "border-r border-border" : ""}`}>
         {loading1 ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
@@ -205,7 +205,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
                 setHoveredL2(null);
               }}
               onClick={() => handleL1Click(item)}
-              className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors text-left ${
+              className={`w-full flex items-center justify-between pl-4 pr-2 py-2 text-sm transition-colors text-left ${
                 hoveredL1 === item.id
                   ? "bg-muted text-secondary font-semibold"
                   : "text-foreground hover:bg-muted/50"
@@ -220,7 +220,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
 
       {/* Level 2 */}
       {showLevel2 && (
-        <div className={`w-56 py-2 shrink-0 overflow-y-auto ${showLevel3 ? "border-r border-border" : ""}`}>
+        <div className={`w-56 py-2 shrink-0 ${showLevel3 ? "border-r border-border" : ""}`}>
           {loading2 ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
@@ -231,7 +231,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
                 key={item.id}
                 onMouseEnter={() => type === "tekpazar" && setHoveredL2(item.id)}
                 onClick={() => handleL2Click(item)}
-                className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors text-left ${
+                className={`w-full flex items-center justify-between pl-4 pr-2 py-2 text-sm transition-colors text-left ${
                   hoveredL2 === item.id
                     ? "bg-muted text-secondary font-semibold"
                     : "text-foreground hover:bg-muted/50"
@@ -249,13 +249,13 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
 
       {/* Level 3 (tekpazar only) */}
       {showLevel3 && (
-        <div className="flex-1 p-4 overflow-y-auto min-w-[200px]">
+        <div className="flex-1 p-4 overflow-y-auto min-w-[200px] max-h-[400px]">
           {loading3 ? (
             <div className="flex items-center justify-center h-full">
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
             </div>
           ) : level3.length > 0 ? (
-            <div className="grid grid-cols-2 gap-x-6 gap-y-0.5">
+            <div className="grid grid-cols-1 gap-y-0.5">
               {level3.map((item) => (
                 <button
                   key={item.id}
