@@ -88,7 +88,7 @@ export default function FirmaAksiyonlarDialog({ open, onOpenChange, firmaId, fir
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+      <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto !bg-card" style={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))" }}>
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div>
