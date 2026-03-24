@@ -473,7 +473,13 @@ export default function LandingHeroSearch() {
           {populerItems.map((item) => (
             <button
               key={item.label}
-              onClick={() => navigate(item.path)}
+              onClick={() => {
+                if (tab === "firma") {
+                  navigate("/firmalar", { state: (item as typeof FIRMA_POPULER[0]).state });
+                } else {
+                  navigate("/tekpazar", { state: (item as typeof URUN_POPULER[0]).state });
+                }
+              }}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-secondary/10 hover:border-secondary/40 text-foreground text-sm rounded-full border border-border transition-colors cursor-pointer"
             >
               <Search className="w-3 h-3 text-muted-foreground" />
