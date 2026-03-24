@@ -120,7 +120,7 @@ type StatFilterType = "all" | "aktif" | "pasif" | "onay_bekliyor" | "reddedildi"
 
 export default function AdminUrunler() {
   useAdminTitle("Ürünler");
-  const { token, hasPermission } = useAdminAuth();
+  const { token, hasPermission, user } = useAdminAuth();
   const { toast } = useToast();
 
   const noPermission = () => toast({ title: "Yetkisiz", description: "Buna yetkiniz yok", variant: "destructive" });
