@@ -851,6 +851,17 @@ export default function AdminIhaleler() {
                             <Trash2 className="w-3 h-3" />
                           </Button>
                         )}
+
+                        {user?.is_primary && (
+                          <Button
+                            onClick={() => setFakeTeklifTarget({ id: ihale.id, baslik: ihale.baslik })}
+                            variant="outline" size="sm"
+                            className="text-[11px] h-7 px-2.5 gap-1"
+                            style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                          >
+                            <Bot className="w-3 h-3" /> Yapay Teklif
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
