@@ -639,18 +639,15 @@ export default function TekRehber() {
                 )}
               </p>
               <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-                <button
-                  onClick={() => setCardDesign("current")}
-                  className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${cardDesign === "current" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  Mevcut
-                </button>
-                <button
-                  onClick={() => setCardDesign("new")}
-                  className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${cardDesign === "new" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  Yeni ✨
-                </button>
+                {(["current", "new", "v3"] as const).map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => setCardDesign(key)}
+                    className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${cardDesign === key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                  >
+                    {key === "current" ? "Mevcut" : key === "new" ? "Yeni ✨" : "V3 🏗️"}
+                  </button>
+                ))}
               </div>
             </div>
             {firmaLoading ? (
