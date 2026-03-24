@@ -7,12 +7,13 @@
 const SUPABASE_HOST = "bctoawgovyyueifnmwhq.supabase.co";
 const PROXY_HOST = "api.tekstilas.com";
 
-// Only enable proxy in production (not in Lovable preview / localhost)
+// Only enable proxy on the real production domain, never in Lovable preview/local environments
 const isProduction =
   typeof window !== "undefined" &&
   !window.location.hostname.includes("localhost") &&
   !window.location.hostname.includes("lovable.app") &&
-  !window.location.hostname.includes("lovable.dev");
+  !window.location.hostname.includes("lovable.dev") &&
+  !window.location.hostname.includes("lovableproject.com");
 
 export function installSupabaseProxy() {
   if (!isProduction) return;
