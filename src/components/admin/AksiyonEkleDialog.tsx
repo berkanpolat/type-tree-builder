@@ -16,15 +16,15 @@ import { toast } from "sonner";
 
 const s = {
   card: {
-    background: "hsl(var(--admin-card-bg))",
-    border: "1px solid hsl(var(--admin-border))",
+    backgroundColor: "hsl(var(--card))",
+    border: "1px solid hsl(var(--border))",
   } as CSSProperties,
-  text: { color: "hsl(var(--admin-text))" } as CSSProperties,
-  muted: { color: "hsl(var(--admin-muted))" } as CSSProperties,
+  text: { color: "hsl(var(--foreground))" } as CSSProperties,
+  muted: { color: "hsl(var(--muted-foreground))" } as CSSProperties,
   input: {
-    background: "hsl(var(--admin-input-bg))",
-    borderColor: "hsl(var(--admin-border))",
-    color: "hsl(var(--admin-text))",
+    backgroundColor: "hsl(var(--background))",
+    borderColor: "hsl(var(--border))",
+    color: "hsl(var(--foreground))",
   } as CSSProperties,
 };
 
@@ -350,7 +350,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
               <SelectTrigger className="h-9 text-sm" style={s.input}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
+              <SelectContent style={{ ...s.card, zIndex: 99999 }} className="pointer-events-auto">
                 {turler.map(t => (
                   <SelectItem key={t.value} value={t.value} className="text-sm">{t.label}</SelectItem>
                 ))}
@@ -397,7 +397,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
               <SelectTrigger className="h-9 text-sm" style={s.input}>
                 <SelectValue placeholder="Seçiniz (opsiyonel)" />
               </SelectTrigger>
-              <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
+              <SelectContent style={{ ...s.card, zIndex: 99999 }} className="pointer-events-auto">
                 <SelectItem value="none" className="text-sm">Seçilmedi</SelectItem>
                 {yetkililerLoading ? (
                   <div className="flex justify-center py-2"><Loader2 className="w-3.5 h-3.5 animate-spin text-amber-500" /></div>
@@ -421,7 +421,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
                     {format(tarih, "dd MMM yyyy", { locale: tr })}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" style={{ ...s.card, zIndex: 9999 }}>
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start" style={{ ...s.card, zIndex: 999999 }}>
                   <Calendar
                     mode="single"
                     selected={tarih}
@@ -454,7 +454,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
               <SelectTrigger className={cn("h-9 text-sm", !sonuc && "text-muted-foreground")} style={s.input}>
                 <SelectValue placeholder="Seçiniz..." />
               </SelectTrigger>
-              <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
+              <SelectContent style={{ ...s.card, zIndex: 99999 }} className="pointer-events-auto">
                 <SelectItem value="satis_kapatildi" className="text-sm">Satış Kapatıldı</SelectItem>
                 <SelectItem value="satis_kapanmadi" className="text-sm">Satış Kapanmadı</SelectItem>
               </SelectContent>
@@ -469,7 +469,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
                 <SelectTrigger className={cn("h-9 text-sm", !sonucPaketId && "text-muted-foreground")} style={s.input}>
                   <SelectValue placeholder="Paket seçiniz..." />
                 </SelectTrigger>
-                <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
+                <SelectContent style={{ ...s.card, zIndex: 99999 }} className="pointer-events-auto">
                   {paketler.map(p => (
                     <SelectItem key={p.id} value={p.id} className="text-sm">{p.ad}</SelectItem>
                   ))}
@@ -493,7 +493,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
                   <SelectTrigger className="h-9 text-sm" style={s.input}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
+                  <SelectContent style={{ ...s.card, zIndex: 99999 }} className="pointer-events-auto">
                     <SelectItem value="aylik" className="text-sm">Aylık — $199/ay</SelectItem>
                     <SelectItem value="yillik" className="text-sm">Yıllık — $1.299/yıl</SelectItem>
                   </SelectContent>
@@ -510,7 +510,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
                   <SelectTrigger className="h-9 text-sm" style={s.input}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto">
+                  <SelectContent style={{ ...s.card, zIndex: 99999 }} className="pointer-events-auto">
                     <SelectItem value="default" className="text-sm">
                       {firmaEmail || "Firma e-postası yükleniyor..."}
                     </SelectItem>
@@ -543,7 +543,7 @@ export default function AksiyonEkleDialog({ open, onOpenChange, firmaId, firmaUn
                 <SelectTrigger className={cn("h-9 text-sm", !sonucNeden && "text-muted-foreground")} style={s.input}>
                   <SelectValue placeholder="Neden seçiniz..." />
                 </SelectTrigger>
-                <SelectContent style={{ ...s.card, zIndex: 9999 }} className="pointer-events-auto max-h-[200px]">
+                <SelectContent style={{ ...s.card, zIndex: 99999 }} className="pointer-events-auto max-h-[200px]">
                   {SATIS_KAPANMADI_NEDENLERI.map(n => (
                     <SelectItem key={n} value={n} className="text-sm">{n}</SelectItem>
                   ))}
