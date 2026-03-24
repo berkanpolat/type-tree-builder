@@ -652,10 +652,8 @@ export default function IhaleDetay() {
       setBenzerIhaleler(benzer || []);
     }
 
-    // Increment view count
-    await supabase.from("ihaleler").update({
-      goruntuleme_sayisi: (ihaleData.goruntuleme_sayisi || 0) + 1,
-    } as any).eq("id", ihaleId);
+    // Increment view count via security definer function (bypasses RLS)
+    await supabase.rpc("increment_ihale_view", { p_ihale_id: ihaleId });
 
     setLoading(false);
   }, [slugParam, currentUserId]);
