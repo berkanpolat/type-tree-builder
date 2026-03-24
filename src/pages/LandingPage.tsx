@@ -111,6 +111,7 @@ const LandingPage = () => {
   const [productSlide, setProductSlide] = useState(0);
   const [billingYearly, setBillingYearly] = useState(true);
   const [selectedPackage, setSelectedPackage] = useState<"ucretsiz" | "pro">("ucretsiz");
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
 
   useEffect(() => {
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
