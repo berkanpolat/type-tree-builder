@@ -104,7 +104,7 @@ interface Props {
 
 const optionsCache: Record<string, Option[]> = {};
 
-export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterChange }: Props) {
+export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterChange, initialSelections }: Props) {
   const [firmaTipleri, setFirmaTipleri] = useState<Option[]>([]);
   const [kategoriOptions, setKategoriOptions] = useState<Record<string, Option[]>>({});
   const [ilOptions, setIlOptions] = useState<Option[]>([]);
