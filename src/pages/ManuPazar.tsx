@@ -433,12 +433,12 @@ export default function ManuPazar() {
                   filteredUrunler.map((urun) => (
                     <TableRow key={urun.id}>
                       <TableCell>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/urun/${urun.slug || urun.id}`)}>
                           <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                             {urun.foto_url ? <img src={urun.foto_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
                           </div>
                           <div>
-                            <p className="font-medium text-foreground text-sm truncate max-w-[200px]">{urun.baslik}</p>
+                            <p className="font-medium text-foreground text-sm truncate max-w-[200px] hover:underline">{urun.baslik}</p>
                             <p className="text-xs text-muted-foreground">{urun.urun_no}</p>
                           </div>
                         </div>
