@@ -102,6 +102,8 @@ function hasKademeler(h: Hedef): boolean {
 
 export default function AdminHedefler() {
   const { user } = useAdminAuth();
+  const isYK = user?.is_primary ?? false;
+  useAdminTitle(isYK ? "PKL Yönetimi" : "PKL Hedeflerim");
   const { toast } = useToast();
   const [hedefler, setHedefler] = useState<Hedef[]>([]);
   const [loading, setLoading] = useState(true);
