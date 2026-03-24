@@ -191,6 +191,7 @@ export default function MakineParkuruTab({ userId, onDataChange }: MakineParkuru
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
       setMakineler(prev => [...prev, { id: data.id, makine_kategori_id: mkKategoriId, makine_tur_id: mkTurId, makine_sayisi: mkSayisi, tesis_id: mkTesisId || null }]);
       toast({ title: "Makine eklendi" });
+      onDataChange?.();
     }
     resetMkForm();
   };
