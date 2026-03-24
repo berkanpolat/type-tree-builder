@@ -78,6 +78,8 @@ interface UrunItem {
   urun_grup_id: string | null;
   urun_tur_id: string | null;
   goruntuleme_sayisi?: number;
+  gercek_favori_sayisi?: number;
+  fake_favori_sayisi?: number;
   slug?: string | null;
 }
 
@@ -807,7 +809,7 @@ export default function AdminUrunler() {
                             <Eye className="w-3.5 h-3.5" />
                           </Button>
                           <Button
-                            onClick={() => setFakeUrunDialog({ open: true, urunId: urun.id, baslik: urun.baslik, type: "favori", current: 0 })}
+                            onClick={() => setFakeUrunDialog({ open: true, urunId: urun.id, baslik: urun.baslik, type: "favori", current: (urun.gercek_favori_sayisi ?? 0) + (urun.fake_favori_sayisi ?? 0) })}
                             variant="ghost" size="sm" className="h-7 w-7 p-0" style={s.muted} title="Yapay Favori"
                           >
                             <Heart className="w-3.5 h-3.5" />
@@ -825,6 +827,10 @@ export default function AdminUrunler() {
                     <span className="flex items-center gap-1 shrink-0">
                       <Eye className="w-3.5 h-3.5" />
                       {urun.goruntuleme_sayisi ?? 0}
+                    </span>
+                    <span className="flex items-center gap-1 shrink-0">
+                      <Heart className="w-3.5 h-3.5" />
+                      {(urun.gercek_favori_sayisi ?? 0) + (urun.fake_favori_sayisi ?? 0)}
                     </span>
                     {urun.fiyat !== null && (
                       <span className="font-bold text-emerald-500 shrink-0">
