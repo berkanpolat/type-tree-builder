@@ -416,7 +416,7 @@ function SearchableMultiSelect({
   );
 }
 
-export default function UretimSatisTab({ userId }: Props) {
+export default function UretimSatisTab({ userId, onDataChange }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
