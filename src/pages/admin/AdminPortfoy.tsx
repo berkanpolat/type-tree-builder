@@ -366,6 +366,35 @@ export default function AdminPortfoy() {
         {/* Header */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 flex-wrap">
+            {canFilterByPersonnel && (
+              <>
+                <Select value={filterDepartman} onValueChange={v => { setFilterDepartman(v); setFilterPersonel("all"); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-40 h-9 text-xs" style={s.input}>
+                    <SelectValue placeholder="Departman" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tüm Departmanlar</SelectItem>
+                    {[...new Set(adminList.map(a => a.departman))].sort((a, b) => a.localeCompare(b, "tr")).map(d => (
+                      <SelectItem key={d} value={d}>{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={filterPersonel} onValueChange={v => { setFilterPersonel(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-44 h-9 text-xs" style={s.input}>
+                    <SelectValue placeholder="Personel" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tüm Personeller</SelectItem>
+                    {adminList
+                      .filter(a => filterDepartman === "all" || a.departman === filterDepartman)
+                      .sort((a, b) => `${a.ad} ${a.soyad}`.localeCompare(`${b.ad} ${b.soyad}`, "tr"))
+                      .map(a => (
+                        <SelectItem key={a.id} value={a.id}>{a.ad} {a.soyad}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
               <Input
