@@ -216,6 +216,7 @@ export default function MakineParkuruTab({ userId, onDataChange }: MakineParkuru
     setMakineler(prev => prev.filter(m => m.id !== id));
     if (mkEditingId === id) resetMkForm();
     toast({ title: "Makine silindi" });
+    onDataChange?.();
   };
 
   // ---- TEKNOLOJİ CRUD ----
