@@ -157,7 +157,32 @@ export default function AdminAksiyonlar() {
   return (
     <div className="space-y-4">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {canFilterByPersonnel && (
+              <>
+                <Select value={filterDepartman} onValueChange={v => { setFilterDepartman(v); setFilterPersonel("all"); }}>
+                  <SelectTrigger className="w-40 h-9 text-xs" style={s.input}><SelectValue placeholder="Departman" /></SelectTrigger>
+                  <SelectContent style={s.card}>
+                    <SelectItem value="all" className="text-xs">Tüm Departmanlar</SelectItem>
+                    {[...new Set(adminList.map(a => a.departman))].sort((a, b) => a.localeCompare(b, "tr")).map(d => (
+                      <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={filterPersonel} onValueChange={setFilterPersonel}>
+                  <SelectTrigger className="w-44 h-9 text-xs" style={s.input}><SelectValue placeholder="Personel" /></SelectTrigger>
+                  <SelectContent style={s.card}>
+                    <SelectItem value="all" className="text-xs">Tüm Personeller</SelectItem>
+                    {adminList
+                      .filter(a => filterDepartman === "all" || a.departman === filterDepartman)
+                      .sort((a, b) => `${a.ad} ${a.soyad}`.localeCompare(`${b.ad} ${b.soyad}`, "tr"))
+                      .map(a => (
+                        <SelectItem key={a.id} value={a.id} className="text-xs">{a.ad} {a.soyad}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </>
+            )}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={s.muted} />
               <Input placeholder="Aksiyon veya firma ara..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9 w-56 h-9 text-sm" style={s.input} />
