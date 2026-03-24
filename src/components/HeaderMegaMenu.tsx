@@ -255,7 +255,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
             </div>
           ) : level3.length > 0 ? (
-            <div className="grid grid-cols-2 gap-x-6 gap-y-0.5">
+            <div className="grid grid-cols-1 gap-y-0.5">
               {level3.map((item) => (
                 <button
                   key={item.id}
