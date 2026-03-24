@@ -99,6 +99,7 @@ interface Props {
   firmaTuruId: string;
   firmaTuruName: string;
   onFilterChange: (state: FirmaFilterState) => void;
+  initialSelections?: Record<string, string[]>;
 }
 
 const optionsCache: Record<string, Option[]> = {};
