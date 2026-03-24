@@ -346,12 +346,18 @@ export default function LandingHeroSearch() {
   const handleSelect = async (item: Suggestion) => {
     setShowDropdown(false);
     if (tab === "firma") {
-      const { data } = await supabase
-        .from("firmalar")
-        .select("slug")
-        .eq("id", item.id)
-        .single();
-      if (data?.slug) navigate(`/${data.slug}`);
+      // Check if it's a firma tipi result (tip:tipId:turId)
+      if (item.id.startsWith("tip:")) {
+        const [, tipId, turId] = item.id.split(":");
+        navigate("/firmalar", { state: { firmaTipId: tipId, firmaTurId: turId } });
+      } else {
+        const { data } = await supabase
+          .from("firmalar")
+          .select("slug")
+          .eq("id", item.id)
+          .single();
+        if (data?.slug) navigate(`/${data.slug}`);
+      }
     } else {
       if (item.type === "Kategori") {
         navigate("/tekpazar", { state: { kategori: item.name } });
