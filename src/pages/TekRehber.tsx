@@ -319,7 +319,7 @@ export default function TekRehber() {
     const firmaIds = data.map((f) => f.id);
 
     // Run ALL lookup queries in parallel instead of sequentially
-    const [secenekRes, tipRes, faaliyetRes, favsRes] = await Promise.all([
+    const [secenekRes, tipRes, faaliyetRes, favsRes, uretimSatisRes] = await Promise.all([
       secenekIds.size > 0
         ? supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...secenekIds])
         : Promise.resolve({ data: null }),
@@ -331,6 +331,9 @@ export default function TekRehber() {
         : Promise.resolve({ data: null }),
       currentUserId
         ? supabase.from("firma_favoriler").select("firma_id").eq("user_id", currentUserId)
+        : Promise.resolve({ data: null }),
+      firmaIds.length > 0
+        ? supabase.from("firma_uretim_satis").select("firma_id, tip, tur_id").in("firma_id", firmaIds)
         : Promise.resolve({ data: null }),
     ]);
 
