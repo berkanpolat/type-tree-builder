@@ -78,6 +78,8 @@ interface UrunItem {
   urun_grup_id: string | null;
   urun_tur_id: string | null;
   goruntuleme_sayisi?: number;
+  gercek_favori_sayisi?: number;
+  fake_favori_sayisi?: number;
   slug?: string | null;
 }
 
