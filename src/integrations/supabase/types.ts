@@ -2924,6 +2924,7 @@ export type Database = {
           baslik: string
           created_at: string
           durum: string
+          fake_favori_sayisi: number
           fiyat: number | null
           fiyat_tipi: string
           foto_url: string | null
@@ -2951,6 +2952,7 @@ export type Database = {
           baslik: string
           created_at?: string
           durum?: string
+          fake_favori_sayisi?: number
           fiyat?: number | null
           fiyat_tipi?: string
           foto_url?: string | null
@@ -2978,6 +2980,7 @@ export type Database = {
           baslik?: string
           created_at?: string
           durum?: string
+          fake_favori_sayisi?: number
           fiyat?: number | null
           fiyat_tipi?: string
           foto_url?: string | null
@@ -3164,6 +3167,7 @@ export type Database = {
         Returns: boolean
       }
       increment_ihale_view: { Args: { p_ihale_id: string }; Returns: undefined }
+      increment_urun_view: { Args: { p_urun_id: string }; Returns: undefined }
       is_ihale_owner: {
         Args: { _ihale_id: string; _user_id: string }
         Returns: boolean

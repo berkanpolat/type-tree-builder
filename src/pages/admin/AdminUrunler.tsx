@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Package, Activity, XCircle, Clock, FileEdit, Ban, Users, ShoppingBag, Tag, Building2,
   Search, Filter, RotateCcw, ArrowUpDown, ExternalLink, Eye, ChevronLeft, ChevronRight,
-  Image as ImageIcon, X, ChevronDown, Pencil, Trash2, ToggleLeft
+  Image as ImageIcon, X, ChevronDown, Pencil, Trash2, ToggleLeft, Heart, Loader2
 } from "lucide-react";
 
 /* ── Theme-aware style helpers ── */
@@ -120,7 +120,7 @@ type StatFilterType = "all" | "aktif" | "pasif" | "onay_bekliyor" | "reddedildi"
 
 export default function AdminUrunler() {
   useAdminTitle("Ürünler");
-  const { token, hasPermission } = useAdminAuth();
+  const { token, hasPermission, user } = useAdminAuth();
   const { toast } = useToast();
 
   const noPermission = () => toast({ title: "Yetkisiz", description: "Buna yetkiniz yok", variant: "destructive" });
@@ -159,6 +159,11 @@ export default function AdminUrunler() {
   // Action dialogs
   const [removeDialog, setRemoveDialog] = useState<{ open: boolean; urunId: string; baslik: string }>({ open: false, urunId: "", baslik: "" });
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Fake view/favori state (superadmin only)
+  const [fakeUrunDialog, setFakeUrunDialog] = useState<{ open: boolean; urunId: string; baslik: string; type: "goruntuleme" | "favori"; current: number } | null>(null);
+  const [fakeUrunAmount, setFakeUrunAmount] = useState("");
+  const [fakeUrunLoading, setFakeUrunLoading] = useState(false);
 
   const callApi = useAdminApi();
 
@@ -793,6 +798,22 @@ export default function AdminUrunler() {
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       )}
+                      {user?.is_primary && (
+                        <>
+                          <Button
+                            onClick={() => setFakeUrunDialog({ open: true, urunId: urun.id, baslik: urun.baslik, type: "goruntuleme", current: urun.goruntuleme_sayisi ?? 0 })}
+                            variant="ghost" size="sm" className="h-7 w-7 p-0" style={s.muted} title="Yapay Görüntülenme"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            onClick={() => setFakeUrunDialog({ open: true, urunId: urun.id, baslik: urun.baslik, type: "favori", current: 0 })}
+                            variant="ghost" size="sm" className="h-7 w-7 p-0" style={s.muted} title="Yapay Favori"
+                          >
+                            <Heart className="w-3.5 h-3.5" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -864,6 +885,53 @@ export default function AdminUrunler() {
             <AlertDialogCancel>İptal</AlertDialogCancel>
             <AlertDialogAction onClick={handleRemove} disabled={actionLoading} className="bg-red-600 hover:bg-red-700">
               {actionLoading ? "Kaldırılıyor..." : "Kaldır"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Fake Görüntülenme / Favori Dialog */}
+      <AlertDialog open={!!fakeUrunDialog} onOpenChange={(open) => { if (!open) { setFakeUrunDialog(null); setFakeUrunAmount(""); } }}>
+        <AlertDialogContent style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+          <AlertDialogHeader>
+            <AlertDialogTitle style={{ color: "hsl(var(--admin-text))" }}>
+              Yapay {fakeUrunDialog?.type === "goruntuleme" ? "Görüntülenme" : "Favori"} Ekle
+            </AlertDialogTitle>
+            <AlertDialogDescription style={{ color: "hsl(var(--admin-text-secondary))" }}>
+              <strong>{fakeUrunDialog?.baslik}</strong> ürününe yapay {fakeUrunDialog?.type === "goruntuleme" ? "görüntülenme" : "favori"} ekleyin.
+              {fakeUrunDialog?.type === "goruntuleme" && <><br />Mevcut: <strong>{fakeUrunDialog?.current ?? 0}</strong></>}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Label style={{ color: "hsl(var(--admin-text-secondary))" }}>Eklenecek Sayı</Label>
+            <Input
+              type="number" min="1" placeholder="Örn: 50"
+              value={fakeUrunAmount} onChange={(e) => setFakeUrunAmount(e.target.value)}
+              style={{ background: "hsl(var(--admin-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={fakeUrunLoading}>İptal</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={fakeUrunLoading || !fakeUrunAmount || parseInt(fakeUrunAmount) < 1}
+              onClick={async (e) => {
+                e.preventDefault();
+                setFakeUrunLoading(true);
+                try {
+                  const actionName = fakeUrunDialog?.type === "goruntuleme" ? "add-fake-urun-goruntuleme" : "add-fake-urun-favori";
+                  await callApi(actionName, { token, urunId: fakeUrunDialog?.urunId, miktar: fakeUrunAmount });
+                  toast({ title: "Başarılı", description: `${fakeUrunAmount} yapay ${fakeUrunDialog?.type === "goruntuleme" ? "görüntülenme" : "favori"} eklendi.` });
+                  setFakeUrunDialog(null);
+                  setFakeUrunAmount("");
+                  fetchData();
+                } catch (err: any) {
+                  toast({ title: "Hata", description: err.message, variant: "destructive" });
+                } finally {
+                  setFakeUrunLoading(false);
+                }
+              }}
+            >
+              {fakeUrunLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ekle"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

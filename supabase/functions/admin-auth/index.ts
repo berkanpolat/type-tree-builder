@@ -5506,6 +5506,44 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true, yeni_toplam: (ihale.goruntuleme_sayisi || 0) + amount });
     }
 
+    // ── Fake Ürün Görüntülenme Ekleme ──
+    if (action === "add-fake-urun-goruntuleme") {
+      const { token, urunId, miktar } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+
+      const amount = parseInt(miktar, 10);
+      if (!urunId || !amount || amount < 1) return jsonResponse({ error: "Geçersiz parametreler" }, 400);
+
+      const { data: urun, error: fetchErr } = await supabase.from("urunler").select("goruntuleme_sayisi").eq("id", urunId).single();
+      if (fetchErr || !urun) return jsonResponse({ error: "Ürün bulunamadı" }, 404);
+
+      const { error: updateErr } = await supabase.from("urunler").update({ goruntuleme_sayisi: (urun.goruntuleme_sayisi || 0) + amount }).eq("id", urunId);
+      if (updateErr) return jsonResponse({ error: updateErr.message }, 500);
+
+      await logActivity(supabase, payload, "add-fake-urun-goruntuleme", { target_type: "urun", target_id: urunId, details: { miktar: amount } });
+      return jsonResponse({ success: true });
+    }
+
+    // ── Fake Ürün Favori Ekleme ──
+    if (action === "add-fake-urun-favori") {
+      const { token, urunId, miktar } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+
+      const amount = parseInt(miktar, 10);
+      if (!urunId || !amount || amount < 1) return jsonResponse({ error: "Geçersiz parametreler" }, 400);
+
+      const { data: urun, error: fetchErr } = await supabase.from("urunler").select("fake_favori_sayisi").eq("id", urunId).single();
+      if (fetchErr || !urun) return jsonResponse({ error: "Ürün bulunamadı" }, 404);
+
+      const { error: updateErr } = await supabase.from("urunler").update({ fake_favori_sayisi: (urun.fake_favori_sayisi || 0) + amount }).eq("id", urunId);
+      if (updateErr) return jsonResponse({ error: updateErr.message }, 500);
+
+      await logActivity(supabase, payload, "add-fake-urun-favori", { target_type: "urun", target_id: urunId, details: { miktar: amount } });
+      return jsonResponse({ success: true });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {

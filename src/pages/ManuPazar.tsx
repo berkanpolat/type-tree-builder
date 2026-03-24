@@ -17,7 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePackageQuota } from "@/hooks/use-package-quota";
 import UpgradeDialog from "@/components/UpgradeDialog";
 import {
-  Layers, CheckCircle2, XCircle, Plus, Search, Pencil, Trash2, ImageIcon, Copy,
+  Layers, CheckCircle2, XCircle, Plus, Search, Pencil, Trash2, ImageIcon, Copy, Eye, Heart,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -46,6 +46,9 @@ interface Urun {
   para_birimi: string | null;
   durum: string;
   updated_at: string;
+  goruntuleme_sayisi?: number;
+  fake_favori_sayisi?: number;
+  favori_sayisi?: number; // computed
 }
 
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
@@ -111,6 +114,24 @@ export default function ManuPazar() {
       .order("created_at", { ascending: false });
 
     if (data) {
+      // Get favori counts per urun
+      const urunIds = data.map(u => u.id);
+      let favCountMap: Record<string, number> = {};
+      if (urunIds.length > 0) {
+        const { data: favData } = await supabase
+          .from("urun_favoriler")
+          .select("urun_id")
+          .in("urun_id", urunIds);
+        favData?.forEach(f => {
+          favCountMap[f.urun_id] = (favCountMap[f.urun_id] || 0) + 1;
+        });
+      }
+
+      const enriched = data.map(u => ({
+        ...u,
+        favori_sayisi: (favCountMap[u.id] || 0) + (u.fake_favori_sayisi || 0),
+      }));
+      setUrunler(enriched);
       setUrunler(data);
       // Collect all secenek IDs to resolve names
       const ids = new Set<string>();
@@ -349,13 +370,17 @@ export default function ManuPazar() {
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                      <Switch
-                        checked={urun.durum === "aktif"}
-                        onCheckedChange={() => handleToggleDurum(urun)}
-                        disabled={urun.durum === "taslak" || urun.durum === "onay_bekliyor"}
-                      />
-                      <span>{format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <Switch
+                          checked={urun.durum === "aktif"}
+                          onCheckedChange={() => handleToggleDurum(urun)}
+                          disabled={urun.durum === "taslak" || urun.durum === "onay_bekliyor"}
+                        />
+                        <span>{format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}</span>
+                      </div>
+                      <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{urun.goruntuleme_sayisi ?? 0}</span>
+                      <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{urun.favori_sayisi ?? 0}</span>
                     </div>
                     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
@@ -385,6 +410,12 @@ export default function ManuPazar() {
                   <TableHead>Kategori</TableHead>
                   <TableHead>Grup</TableHead>
                   <TableHead>Fiyat</TableHead>
+                  <TableHead className="text-center">
+                    <Eye className="w-3.5 h-3.5 inline mr-1" />Gör.
+                  </TableHead>
+                  <TableHead className="text-center">
+                    <Heart className="w-3.5 h-3.5 inline mr-1" />Fav.
+                  </TableHead>
                   <TableHead>Güncelleme</TableHead>
                   <TableHead>Durum</TableHead>
                   <TableHead className="text-center sticky-action-col">İşlemler</TableHead>
@@ -393,11 +424,11 @@ export default function ManuPazar() {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Yükleniyor...</TableCell>
+                    <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">Yükleniyor...</TableCell>
                   </TableRow>
                 ) : filteredUrunler.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Henüz ürün bulunmamaktadır.</TableCell>
+                    <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">Henüz ürün bulunmamaktadır.</TableCell>
                   </TableRow>
                 ) : (
                   filteredUrunler.map((urun) => (
@@ -424,6 +455,8 @@ export default function ManuPazar() {
                           ? `${urun.fiyat.toLocaleString("tr-TR")} ${paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi}`
                           : urun.fiyat_tipi === "varyasyonlu" ? "Varyasyonlu" : "-"}
                       </TableCell>
+                      <TableCell className="text-sm text-center text-muted-foreground">{urun.goruntuleme_sayisi ?? 0}</TableCell>
+                      <TableCell className="text-sm text-center text-muted-foreground">{urun.favori_sayisi ?? 0}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {format(new Date(urun.updated_at), "dd MMM yyyy", { locale: tr })}
                       </TableCell>
