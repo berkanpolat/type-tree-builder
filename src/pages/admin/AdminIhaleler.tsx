@@ -920,6 +920,15 @@ export default function AdminIhaleler() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Fake Teklif Dialog */}
+      <FakeTeklifDialog
+        open={!!fakeTeklifTarget}
+        onOpenChange={(open) => { if (!open) setFakeTeklifTarget(null); }}
+        ihaleId={fakeTeklifTarget?.id || ""}
+        ihaleBaslik={fakeTeklifTarget?.baslik || ""}
+        onSuccess={fetchData}
+      />
     </>
   );
 }
