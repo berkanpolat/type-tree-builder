@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Gavel, Eye, Clock, Filter, Search, RotateCcw, Package, HeadphonesIcon,
   ExternalLink, Pencil, Trash2, ArrowUpDown, FileText, ChevronLeft, ChevronRight,
-  Image as ImageIcon, X, ChevronDown, Activity, CheckCircle2, XCircle, ClockIcon, FileEdit, MessageSquare, Loader2
+  Image as ImageIcon, X, ChevronDown, Activity, CheckCircle2, XCircle, ClockIcon, FileEdit, MessageSquare, Loader2, Bot
 } from "lucide-react";
 
 /* ── Theme-aware style helpers ── */
