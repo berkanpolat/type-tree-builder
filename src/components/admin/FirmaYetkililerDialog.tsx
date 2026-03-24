@@ -9,16 +9,16 @@ import { tr } from "date-fns/locale";
 import { Loader2, Plus, Trash2, User, Phone, Mail, MapPin, Linkedin, ChevronDown, ChevronUp, Edit2, X, Check } from "lucide-react";
 
 const s = {
-  text: { color: "hsl(var(--admin-text))" } as CSSProperties,
-  muted: { color: "hsl(var(--admin-muted))" } as CSSProperties,
+  text: { color: "hsl(var(--foreground))" } as CSSProperties,
+  muted: { color: "hsl(var(--muted-foreground))" } as CSSProperties,
   card: {
-    background: "hsl(var(--admin-card-bg))",
-    border: "1px solid hsl(var(--admin-border))",
+    backgroundColor: "hsl(var(--card))",
+    border: "1px solid hsl(var(--border))",
   } as CSSProperties,
   input: {
-    background: "hsl(var(--admin-input-bg))",
-    borderColor: "hsl(var(--admin-border))",
-    color: "hsl(var(--admin-text))",
+    backgroundColor: "hsl(var(--background))",
+    borderColor: "hsl(var(--border))",
+    color: "hsl(var(--foreground))",
   } as CSSProperties,
 };
 
