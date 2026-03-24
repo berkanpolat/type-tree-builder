@@ -93,7 +93,7 @@ const HAS_SINGLE_SELECTS = ["Fason Atölye"];
 const IS_MARKA = (name: string) => name === "Marka";
 const IS_TEDARIKCI = (name: string) => name === "Tedarikçi";
 
-export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
+export default function UrunHizmetTab({ userId, firmaTuruName, onDataChange }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
