@@ -975,7 +975,7 @@ export default function AdminIhaleler() {
                 e.preventDefault();
                 setFakeViewLoading(true);
                 try {
-                  await callApi("add-fake-goruntuleme", { ihaleId: fakeViewTarget?.id, miktar: fakeViewAmount });
+                  await callApi("add-fake-goruntuleme", { token, ihaleId: fakeViewTarget?.id, miktar: fakeViewAmount });
                   toast({ title: "Başarılı", description: `${fakeViewAmount} yapay görüntülenme eklendi.` });
                   setFakeViewTarget(null);
                   setFakeViewAmount("");
