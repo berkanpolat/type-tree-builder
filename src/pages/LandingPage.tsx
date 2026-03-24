@@ -359,12 +359,12 @@ const LandingPage = () => {
               </div>
             </div>
 
-            {/* Right: Animated logo */}
+            {/* Right: Logo */}
             <div className="hidden lg:flex items-center justify-center">
               <img
                 src={logoIconImg}
                 alt="Tekstil A.Ş. Logo"
-                className="w-[56rem] h-[56rem] object-contain animate-logo-pulse"
+                className="w-72 h-72 object-contain"
               />
             </div>
           </div>
