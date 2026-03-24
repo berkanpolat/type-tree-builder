@@ -28,9 +28,10 @@ interface Tesis {
 
 interface TesisBilgileriTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-export default function TesisBilgileriTab({ userId }: TesisBilgileriTabProps) {
+export default function TesisBilgileriTab({ userId, onDataChange }: TesisBilgileriTabProps) {
   const [firmaId, setFirmaId] = useState("");
   const [tesisler, setTesisler] = useState<Tesis[]>([]);
   const [tesisAdlari, setTesisAdlari] = useState<Option[]>([]);
