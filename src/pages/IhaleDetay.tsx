@@ -586,14 +586,15 @@ export default function IhaleDetay() {
         fData?.forEach(f => { firmaNameMap[f.user_id] = f.firma_unvani; });
       }
 
-      // Deduplicate real bids: keep only latest teklif per user (already sorted desc by created_at)
+      // Build map for "my teklif" lookup (latest per user)
       const latestPerUser = new Map<string, any>();
       for (const t of realTeklifler) {
         if (!latestPerUser.has(t.teklif_veren_user_id)) {
           latestPerUser.set(t.teklif_veren_user_id, t);
         }
       }
-      const uniqueRealTeklifler = Array.from(latestPerUser.values());
+      // Show ALL real bids (no deduplication) to match listing counts
+      const uniqueRealTeklifler = realTeklifler;
 
       // Enrich real bids with firma names
       const enrichedReal: TeklifForList[] = uniqueRealTeklifler.map(t => ({
