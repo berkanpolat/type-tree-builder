@@ -891,19 +891,13 @@ export default function TekRehber() {
                                 {firma.firma_unvani}
                               </Link>
                             </h2>
-                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                              {firma.uretim_satis_rolu && (
-                                <Badge className="bg-secondary/15 text-secondary border-secondary/25 text-[10px] font-semibold gap-1">
-                                  <Factory className="w-3 h-3" aria-hidden="true" />
-                                  {firma.uretim_satis_rolu}
-                                </Badge>
-                              )}
-                              {(firma.firma_turu_name || firma.firma_tipi_name) && (
+                            {(firma.firma_turu_name || firma.firma_tipi_name) && (
+                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                 <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
                                   {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
                                 </Badge>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
