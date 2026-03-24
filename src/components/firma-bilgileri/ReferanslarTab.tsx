@@ -14,9 +14,10 @@ interface Referans {
 
 interface ReferanslarTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-export default function ReferanslarTab({ userId }: ReferanslarTabProps) {
+export default function ReferanslarTab({ userId, onDataChange }: ReferanslarTabProps) {
   const [firmaId, setFirmaId] = useState("");
   const [loading, setLoading] = useState(true);
   const [referanslar, setReferanslar] = useState<Referans[]>([]);
