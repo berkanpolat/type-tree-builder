@@ -409,7 +409,7 @@ export default function IhaleDetay() {
       supabase.from("firmalar").select("firma_unvani, logo_url, firma_iletisim_numarasi, firma_iletisim_email, web_sitesi, instagram, facebook, linkedin, x_twitter, tiktok, kurulus_il_id, kurulus_ilce_id, user_id").eq("user_id", ihaleData.user_id).maybeSingle(),
       supabase.from("ihale_stok").select("*").eq("ihale_id", ihaleId),
       supabase.from("ihale_filtreler").select("filtre_tipi, secenek_id").eq("ihale_id", ihaleId),
-      supabase.from("ihale_teklifler").select("id, tutar, created_at, teklif_veren_user_id, odeme_secenekleri, kargo_masrafi, odeme_vadesi, ek_dosya_url, ek_dosya_adi").eq("ihale_id", ihaleId).order("created_at", { ascending: false }),
+      supabase.from("ihale_teklifler").select("id, tutar, created_at, teklif_veren_user_id, odeme_secenekleri, kargo_masrafi, odeme_vadesi, ek_dosya_url, ek_dosya_adi, is_fake, fake_firma_adi").eq("ihale_id", ihaleId).order("created_at", { ascending: false }),
     ]);
 
     setFirma(firmaRes.data);
