@@ -93,7 +93,7 @@ export default function AdminVersiyonlar() {
     if (!user) return;
     setLoading(true);
     try {
-      const data = await callApi("list-releases", { token: user.token });
+      const data = await callApi("list-releases", { token });
       setReleases(Array.isArray(data) ? data : []);
     } catch (e: any) {
       toast({ title: "Hata", description: e.message, variant: "destructive" });
