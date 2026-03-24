@@ -16,6 +16,19 @@ const FIRMA_FIELDS = [
   "firma_hakkinda",
 ] as const;
 
+// Ağırlık sabitleri
+const GENEL_ALAN_AGIRLIK = 2;     // Her genel bilgi alanı 2 puan
+const TAB_AGIRLIKLARI = {
+  urunHizmet: 6,
+  uretimSatis: 7,
+  galeri: 3,
+  sertifikalar: 2,
+  referanslar: 2,
+  tesisler: 1,
+  belgeler: 1,
+  makineler: 1,
+} as const;
+
 // Firma types that have Makine Parkuru tab
 const FIRMA_TYPES_WITH_MAKINE = ["Hazır Giyim Üreticisi", "Fason Atölye"];
 
@@ -56,22 +69,32 @@ export function useProfileCompletion(refreshKey?: number) {
       supabase.from("firma_belgeler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId),
     ]);
 
-    const tabCounts = [urunHizmet, uretimSatis, tesisler, referanslar, sertifikalar, galeri, belgeler];
-
+    let makinelerCount = 0;
     if (hasMakine) {
       const makineler = await supabase.from("firma_makineler").select("id", { count: "exact", head: true }).eq("firma_id", firmaId);
-      tabCounts.push(makineler);
+      makinelerCount = makineler.count ?? 0;
     }
 
-    let filledTabs = 0;
-    for (const res of tabCounts) {
-      if ((res.count ?? 0) > 0) filledTabs++;
-    }
+    // Ağırlıklı puan hesaplama
+    const genelPuan = filledGenel * GENEL_ALAN_AGIRLIK;
+    
+    let tabPuan = 0;
+    if ((urunHizmet.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.urunHizmet;
+    if ((uretimSatis.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.uretimSatis;
+    if ((galeri.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.galeri;
+    if ((sertifikalar.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.sertifikalar;
+    if ((referanslar.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.referanslar;
+    if ((tesisler.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.tesisler;
+    if ((belgeler.count ?? 0) > 0) tabPuan += TAB_AGIRLIKLARI.belgeler;
+    if (hasMakine && makinelerCount > 0) tabPuan += TAB_AGIRLIKLARI.makineler;
 
-    const totalFields = FIRMA_FIELDS.length;
-    const totalTabs = hasMakine ? 8 : 7;
-    const total = totalFields + totalTabs;
-    const filled = filledGenel + filledTabs;
+    const maxGenel = FIRMA_FIELDS.length * GENEL_ALAN_AGIRLIK; // 10 * 2 = 20
+    const maxTab = TAB_AGIRLIKLARI.urunHizmet + TAB_AGIRLIKLARI.uretimSatis + 
+                   TAB_AGIRLIKLARI.galeri + TAB_AGIRLIKLARI.sertifikalar + 
+                   TAB_AGIRLIKLARI.referanslar + TAB_AGIRLIKLARI.tesisler + 
+                   TAB_AGIRLIKLARI.belgeler + (hasMakine ? TAB_AGIRLIKLARI.makineler : 0);
+    const total = maxGenel + maxTab;
+    const filled = genelPuan + tabPuan;
 
     setPercentage(Math.round((filled / total) * 100));
     setLoading(false);
