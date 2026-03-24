@@ -3163,6 +3163,7 @@ export type Database = {
         Args: { _ihale_id: string; _user_id: string }
         Returns: boolean
       }
+      increment_ihale_view: { Args: { p_ihale_id: string }; Returns: undefined }
       is_ihale_owner: {
         Args: { _ihale_id: string; _user_id: string }
         Returns: boolean
