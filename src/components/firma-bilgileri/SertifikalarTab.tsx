@@ -127,6 +127,7 @@ export default function SertifikalarTab({ userId, onDataChange }: SertifikalarTa
         gecerlilik_tarihi: payload.gecerlilik_tarihi,
       } : s));
       toast({ title: "Güncellendi" });
+      onDataChange?.();
     } else {
       const { data, error } = await supabase.from("firma_sertifikalar").insert(payload).select().single();
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
