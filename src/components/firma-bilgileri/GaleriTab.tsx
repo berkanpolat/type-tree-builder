@@ -77,7 +77,10 @@ export default function GaleriTab({ userId, onDataChange }: GaleriTabProps) {
     }
 
     setFotolar(prev => [...prev, ...newFotolar]);
-    if (newFotolar.length > 0) toast({ title: `${newFotolar.length} fotoğraf yüklendi` });
+    if (newFotolar.length > 0) {
+      toast({ title: `${newFotolar.length} fotoğraf yüklendi` });
+      onDataChange?.();
+    }
     setUploading(false);
     e.target.value = "";
   };
