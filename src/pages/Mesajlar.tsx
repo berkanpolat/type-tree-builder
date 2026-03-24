@@ -171,6 +171,7 @@ export default function Mesajlar() {
       .from("conversations")
       .select("*")
       .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
+      .not("deleted_by", "cs", `{${userId}}`)
       .order("last_message_at", { ascending: false });
 
     if (!convs || convs.length === 0) {
