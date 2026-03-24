@@ -29,7 +29,7 @@ const BELGE_TURLERI = [
   { key: "imza_sirkusu", label: "İmza Sirküsü" },
 ];
 
-export default function BelgelerimTab({ userId }: BelgelerimTabProps) {
+export default function BelgelerimTab({ userId, onDataChange }: BelgelerimTabProps) {
   const { toast } = useToast();
   const [belgeler, setBelgeler] = useState<BelgeRecord[]>([]);
   const [firmaId, setFirmaId] = useState("");
