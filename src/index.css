@@ -177,7 +177,8 @@
   .admin-portal-fix [data-radix-popper-content-wrapper] > *,
   .admin-portal-fix [data-radix-menu-content],
   .admin-portal-fix [role="listbox"],
-  .admin-portal-fix [data-radix-select-content] {
+  .admin-portal-fix [data-radix-select-content],
+  .admin-portal-fix [data-radix-dialog-content] {
     background-color: hsl(0 0% 100%) !important;
     opacity: 1 !important;
   }
