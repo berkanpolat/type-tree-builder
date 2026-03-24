@@ -339,14 +339,14 @@ export default function ManuPazar() {
             <div className="text-center py-10 text-muted-foreground">Henüz ürün bulunmamaktadır.</div>
           ) : (
             filteredUrunler.map((urun) => (
-              <Card key={urun.id} className="cursor-pointer" onClick={() => navigate(`/urun/${urun.slug || urun.id}`)}>
+              <Card key={urun.id}>
                 <CardContent className="p-4 space-y-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/urun/${urun.slug || urun.id}`)}>
                     <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                       {urun.foto_url ? <img src={urun.foto_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground text-sm truncate">{urun.baslik}</p>
+                      <p className="font-medium text-foreground text-sm truncate hover:underline">{urun.baslik}</p>
                       <p className="text-xs text-muted-foreground">{urun.urun_no}</p>
                     </div>
                     <Badge
@@ -370,7 +370,7 @@ export default function ManuPazar() {
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center gap-2">
                         <Switch
                           checked={urun.durum === "aktif"}
                           onCheckedChange={() => handleToggleDurum(urun)}
@@ -381,7 +381,7 @@ export default function ManuPazar() {
                       <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{urun.goruntuleme_sayisi ?? 0}</span>
                       <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{urun.favori_sayisi ?? 0}</span>
                     </div>
-                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
@@ -431,14 +431,14 @@ export default function ManuPazar() {
                   </TableRow>
                 ) : (
                   filteredUrunler.map((urun) => (
-                    <TableRow key={urun.id} className="cursor-pointer" onClick={() => navigate(`/urun/${urun.slug || urun.id}`)}>
+                    <TableRow key={urun.id}>
                       <TableCell>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/urun/${urun.slug || urun.id}`)}>
                           <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0 overflow-hidden">
                             {urun.foto_url ? <img src={urun.foto_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-5 h-5 text-muted-foreground" />}
                           </div>
                           <div>
-                            <p className="font-medium text-foreground text-sm truncate max-w-[200px]">{urun.baslik}</p>
+                            <p className="font-medium text-foreground text-sm truncate max-w-[200px] hover:underline">{urun.baslik}</p>
                             <p className="text-xs text-muted-foreground">{urun.urun_no}</p>
                           </div>
                         </div>
