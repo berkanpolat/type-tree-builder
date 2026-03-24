@@ -20,6 +20,7 @@ import iso22301Img from "@/assets/iso-22301.png";
 import kosgebImg from "@/assets/kosgeb.png";
 import indirimBadge from "@/assets/indirim-badge.png";
 import Footer from "@/components/Footer";
+import LandingHeroSearch from "@/components/landing/LandingHeroSearch";
 import LandingRegistrationForm from "@/components/landing/LandingRegistrationForm";
 import { PAKET_OZELLIKLERI, PRO_FIYATLAR } from "@/lib/package-config";
 import { Mail, Phone, MapPin } from "lucide-react";
@@ -323,6 +324,7 @@ const LandingPage = () => {
       <section className="bg-gradient-to-br from-background via-background to-muted">
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-10 md:py-16 lg:py-24 grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
           <div>
+            <LandingHeroSearch />
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-4 md:mb-6">
               İşiniz Tekstilse, Yeriniz <span className="text-secondary">Tekstil A.Ş.</span>
             </h1>
