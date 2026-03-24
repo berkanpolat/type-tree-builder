@@ -16,6 +16,19 @@ const FIRMA_FIELDS = [
   "firma_hakkinda",
 ] as const;
 
+// Ağırlık sabitleri
+const GENEL_ALAN_AGIRLIK = 2;     // Her genel bilgi alanı 2 puan
+const TAB_AGIRLIKLARI = {
+  urunHizmet: 6,
+  uretimSatis: 7,
+  galeri: 3,
+  sertifikalar: 2,
+  referanslar: 2,
+  tesisler: 1,
+  belgeler: 1,
+  makineler: 1,
+} as const;
+
 // Firma types that have Makine Parkuru tab
 const FIRMA_TYPES_WITH_MAKINE = ["Hazır Giyim Üreticisi", "Fason Atölye"];
 
