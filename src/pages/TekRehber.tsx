@@ -35,6 +35,8 @@ import {
   MessageSquare,
   ArrowRight,
   Bookmark,
+  Factory,
+  Building2,
 } from "lucide-react";
 
 const PER_PAGE = 20;
@@ -67,6 +69,8 @@ interface FirmaWithExtra {
   user_id: string;
   belge_onayli: boolean;
   slug: string | null;
+  firma_hakkinda: string | null;
+  uretim_satis_rolu: string | null;
   firma_turu_name?: string;
   firma_tipi_name?: string;
   faaliyet_alani?: string;
@@ -115,6 +119,7 @@ export default function TekRehber() {
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
+  const [cardDesign, setCardDesign] = useState<"current" | "new">("current");
 
   // Product taxonomy for search
   const [urunTaxNodes, setUrunTaxNodes] = useState<UrunTaxNode[]>([]);
@@ -285,7 +290,7 @@ export default function TekRehber() {
 
     // Fetch actual firma data for the sorted IDs
     const { data } = await supabase.from("firmalar")
-      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id, belge_onayli, slug")
+      .select("id, firma_unvani, logo_url, firma_tipi_id, firma_turu_id, firma_olcegi_id, kurulus_il_id, kurulus_ilce_id, web_sitesi, kurulus_tarihi, moq, user_id, belge_onayli, slug, firma_hakkinda, uretim_satis_rolu")
       .in("id", sortedIds);
 
     if (!data) {
@@ -591,14 +596,30 @@ export default function TekRehber() {
           />
 
           <div className="flex-1 min-w-0 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{totalCount}</span> firma bulundu
-              {totalPages > 1 && (
-                <span className="ml-1">
-                  (Sayfa {currentPage}/{totalPages})
-                </span>
-              )}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{totalCount}</span> firma bulundu
+                {totalPages > 1 && (
+                  <span className="ml-1">
+                    (Sayfa {currentPage}/{totalPages})
+                  </span>
+                )}
+              </p>
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                <button
+                  onClick={() => setCardDesign("current")}
+                  className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${cardDesign === "current" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Mevcut
+                </button>
+                <button
+                  onClick={() => setCardDesign("new")}
+                  className={`px-3 py-1 text-xs rounded-md font-medium transition-colors ${cardDesign === "new" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  Yeni ✨
+                </button>
+              </div>
+            </div>
             {firmaLoading ? (
               <div className="flex justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -634,6 +655,156 @@ export default function TekRehber() {
                     ...(firma.kurulus_tarihi ? { "foundingDate": firma.kurulus_tarihi } : {}),
                   };
 
+                  if (cardDesign === "new") {
+                    // ─── NEW SEO-OPTIMIZED CARD DESIGN ───
+                    const descriptionExcerpt = firma.firma_hakkinda
+                      ? firma.firma_hakkinda.length > 120
+                        ? firma.firma_hakkinda.slice(0, 120) + "…"
+                        : firma.firma_hakkinda
+                      : null;
+
+                    return (
+                      <article
+                        key={firma.id}
+                        className="group rounded-xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-200 overflow-hidden cursor-pointer"
+                        onClick={() => navigate(firmaUrl)}
+                        itemScope
+                        itemType="https://schema.org/Organization"
+                      >
+                        <script
+                          type="application/ld+json"
+                          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                        />
+                        {/* Top color accent bar */}
+                        <div className="h-1 bg-gradient-to-r from-primary to-secondary" />
+                        
+                        <div className="p-4 sm:p-5">
+                          <div className="flex items-start gap-3 sm:gap-4">
+                            {/* Logo */}
+                            <div className="relative shrink-0">
+                              {firma.logo_url ? (
+                                <img
+                                  src={firma.logo_url}
+                                  alt={`${firma.firma_unvani} logosu`}
+                                  title={firma.firma_unvani}
+                                  loading="lazy"
+                                  width={80}
+                                  height={80}
+                                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl border border-border object-contain bg-muted p-1"
+                                  itemProp="logo"
+                                />
+                              ) : (
+                                <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={null} size="xl" className="w-16 h-16 sm:w-20 sm:h-20 sm:text-xl border border-border" />
+                              )}
+                              {firma.belge_onayli && (
+                                <div className="absolute -bottom-1 -right-1">
+                                  <VerifiedBadge />
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              {/* Header row */}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                  <h2 className="font-bold text-foreground text-base sm:text-lg leading-tight" itemProp="name">
+                                    <Link
+                                      to={firmaUrl}
+                                      title={`${firma.firma_unvani} - Firma Profili`}
+                                      aria-label={`${firma.firma_unvani} firma profilini görüntüle`}
+                                      className="hover:text-primary transition-colors"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      {firma.firma_unvani}
+                                    </Link>
+                                  </h2>
+                                  {/* Role + Type badges */}
+                                  <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                    {firma.uretim_satis_rolu && (
+                                      <Badge className="bg-secondary/15 text-secondary border-secondary/25 text-[10px] sm:text-xs font-semibold gap-1">
+                                        <Factory className="w-3 h-3" aria-hidden="true" />
+                                        {firma.uretim_satis_rolu}
+                                      </Badge>
+                                    )}
+                                    {(firma.firma_turu_name || firma.firma_tipi_name) && (
+                                      <Badge variant="outline" className="text-[10px] sm:text-xs font-medium text-muted-foreground">
+                                        {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                </div>
+                                {/* Desktop favorite */}
+                                <div className="hidden sm:flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                                  <button onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)} aria-label={firma.is_favorited ? `${firma.firma_unvani} favorilerden çıkar` : `${firma.firma_unvani} favorilere ekle`} className="p-1 hover:bg-muted rounded-md transition-colors">
+                                    <Bookmark className={`w-5 h-5 ${firma.is_favorited ? "fill-primary text-primary" : "text-muted-foreground/40 group-hover:text-muted-foreground/70"}`} aria-hidden="true" />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Description excerpt - SEO critical */}
+                              {descriptionExcerpt && (
+                                <p className="hidden sm:block text-sm text-muted-foreground mt-2 leading-relaxed" itemProp="description">
+                                  {descriptionExcerpt}
+                                </p>
+                              )}
+
+                              {/* Info grid */}
+                              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
+                                {locationText && (
+                                  <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+                                    <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                                    <span className="truncate" itemProp="addressLocality">{locationText}</span>
+                                  </div>
+                                )}
+                                {scaleText && (
+                                  <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
+                                    <Building2 className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                                    <span className="truncate">{scaleText}</span>
+                                  </div>
+                                )}
+                                {firma.faaliyet_alani && (
+                                  <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
+                                    <Globe className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                                    <span className="truncate">{firma.faaliyet_alani}</span>
+                                  </div>
+                                )}
+                                {firma.kurulus_tarihi && (
+                                  <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
+                                    <CalendarDays className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                                    <span>{firma.kurulus_tarihi}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Bottom action bar */}
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+                            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                              <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs" onClick={() => handleMessageFirma(firma.user_id)} aria-label={`${firma.firma_unvani} firmasına mesaj gönder`}>
+                                <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Mesaj
+                              </Button>
+                              <button className="sm:hidden p-1.5" onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)} aria-label={firma.is_favorited ? "Favorilerden çıkar" : "Favorilere ekle"}>
+                                <Bookmark className={`w-4 h-4 ${firma.is_favorited ? "fill-primary text-primary" : "text-muted-foreground/50"}`} aria-hidden="true" />
+                              </button>
+                            </div>
+                            <Link
+                              to={firmaUrl}
+                              className="flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                              title={`${firma.firma_unvani} firma profilini görüntüle`}
+                              aria-label={`${firma.firma_unvani} profilini görüntüle`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              Profili İncele <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Link>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  }
+
+                  // ─── CURRENT (OLD) CARD DESIGN ───
                   return (
                     <article
                       key={firma.id}
