@@ -14,6 +14,7 @@ import { BrowserRouter, Outlet, Route, Routes, useLocation } from "react-router-
 import { AnimatePresence } from "framer-motion";
 import PageTransition from "./components/PageTransition";
 import { AdminAuthProvider } from "./contexts/AdminAuthContext";
+import AdminLayout from "./components/admin/AdminLayout";
 import RouteStateManager from "./components/RouteStateManager";
 import RoutePreloader from "./components/RoutePreloader";
 import AuthRedirectHandler from "./components/AuthRedirectHandler";
@@ -134,6 +135,20 @@ const AdminRoute = () => (
   <AdminAuthProvider>
     <Outlet />
   </AdminAuthProvider>
+);
+
+const AdminLayoutRoute = () => (
+  <AdminLayout>
+    <Suspense fallback={<AdminPageLoader />}>
+      <Outlet />
+    </Suspense>
+  </AdminLayout>
+);
+
+const AdminPageLoader = () => (
+  <div className="flex items-center justify-center h-64">
+    <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+  </div>
 );
 
 const PageLoader = () => (

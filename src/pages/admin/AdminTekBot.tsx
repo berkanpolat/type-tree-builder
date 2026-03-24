@@ -1,6 +1,5 @@
+import { useAdminTitle, useAdminTheme } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, useRef } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
-import { useAdminTheme } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -32,10 +31,9 @@ type Msg = { role: "user" | "assistant"; content: string };
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chatbot`;
 
 export default function AdminTekBot() {
+  useAdminTitle("TekBot Yönetimi");
   return (
-    <AdminLayout title="TekBot Yönetimi">
-      <Inner />
-    </AdminLayout>
+    <Inner />
   );
 }
 

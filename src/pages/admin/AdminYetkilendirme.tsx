@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, type CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { supabase } from "@/integrations/supabase/client";
@@ -240,6 +240,7 @@ function countEnabled(perms: Record<string, boolean>, items: PermissionItem[]): 
 }
 
 export default function AdminYetkilendirme() {
+  useAdminTitle("Yetkilendirme");
   const { token, user: currentUser, originalUser, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const callApi = useAdminApi();
@@ -407,8 +408,7 @@ export default function AdminYetkilendirme() {
   };
 
   return (
-    <AdminLayout title="Yetkilendirme">
-      <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
+    <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
         {/* Left: User List */}
         <div className="w-full lg:w-80 shrink-0 flex flex-col gap-3" style={{ maxHeight: "100%" }}>
           <div className="relative">
@@ -637,6 +637,5 @@ export default function AdminYetkilendirme() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AdminLayout>
   );
 }

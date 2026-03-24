@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,6 +88,7 @@ interface SikayetItem {
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminSikayetler() {
+  useAdminTitle("Şikayetler");
   const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [sikayetler, setSikayetler] = useState<SikayetItem[]>([]);
@@ -168,8 +169,9 @@ export default function AdminSikayetler() {
   };
 
   return (
-    <AdminLayout title="Şikayetler">
-      {/* Stat Cards */}
+    <>
+      <>
+    {/* Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
         {statCards.map((c) => (
           <div key={c.label} className="p-4 rounded-xl" style={s.card}>
@@ -480,6 +482,7 @@ export default function AdminSikayetler() {
         item={actionItem}
         onSuccess={fetchData}
       />
-    </AdminLayout>
+      </>
+    </>
   );
 }

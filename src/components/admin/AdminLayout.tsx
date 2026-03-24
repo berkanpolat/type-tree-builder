@@ -2,17 +2,27 @@ import { useEffect, useState, useMemo, useCallback, createContext, useContext } 
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2, Sun, Moon, CreditCard, Activity, Menu, Megaphone, Bot, Briefcase, ClipboardList, MapPin, Target, Map, BarChart3, FileBarChart, CalendarDays, Gauge, FlaskConical, Server, Globe, GitBranch
+  Gavel, Package, HeadphonesIcon, Building2, Menu, Megaphone, Bot, Briefcase, ClipboardList, MapPin, Target, Map, BarChart3, FileBarChart, CalendarDays, Gauge, FlaskConical, Server, Globe, GitBranch, CreditCard, Activity
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const AdminThemeContext = createContext<boolean>(false);
-export const useAdminTheme = () => useContext(AdminThemeContext);
+// Title context so child pages can set the header title
+const AdminTitleContext = createContext<{ title: string; setTitle: (t: string) => void }>({ title: "", setTitle: () => {} });
+
+export function useAdminTitle(title: string) {
+  const { setTitle } = useContext(AdminTitleContext);
+  useEffect(() => {
+    setTitle(title);
+    return () => setTitle("");
+  }, [title, setTitle]);
+}
+
+// Keep backward compat export (no-op now, always light)
+export const useAdminTheme = () => false;
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -71,31 +81,21 @@ const menuGroups: MenuGroup[] = [
   },
 ];
 
-export default function AdminLayout({ children, title }: AdminLayoutProps) {
+export default function AdminLayout({ children, title: propTitle }: AdminLayoutProps) {
   const { user, loading, logout, hasPermission, isImpersonating, impersonatedUser, stopImpersonating, originalUser } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [lightMode, setLightMode] = useState(() => {
-    return localStorage.getItem("admin-theme") === "light";
-  });
+  const [contextTitle, setContextTitle] = useState("");
+
+  const displayTitle = propTitle || contextTitle;
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/yonetim/giris");
     }
   }, [user, loading, navigate]);
-
-  useEffect(() => {
-    localStorage.setItem("admin-theme", lightMode ? "light" : "dark");
-    const root = document.documentElement;
-    root.classList.remove("admin-dark", "admin-light");
-    root.classList.add(lightMode ? "admin-light" : "admin-dark");
-    return () => {
-      root.classList.remove("admin-dark", "admin-light");
-    };
-  }, [lightMode]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -117,15 +117,13 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(217 33% 12%)" }}>
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   if (!user) return null;
-
-  const t = lightMode;
 
   const renderLink = (item: MenuItem) => {
     const isActive = location.pathname === item.path;
@@ -135,11 +133,10 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         to={item.path}
         className={cn(
           "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-          isActive && "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+          isActive
+            ? "bg-amber-500/10 text-amber-600 border border-amber-500/20"
+            : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
         )}
-        style={!isActive ? { color: `hsl(var(--admin-muted))` } : undefined}
-        onMouseEnter={(e) => { if (!isActive) e.currentTarget.style.background = `hsl(var(--admin-hover))`; }}
-        onMouseLeave={(e) => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
       >
         <item.icon className="w-4 h-4 shrink-0" />
         {item.label}
@@ -149,14 +146,14 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
 
   const sidebarContent = (
     <>
-      <div className="p-4 border-b" style={{ borderColor: `hsl(var(--admin-border))` }}>
+      <div className="p-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0">
             <Shield className="w-5 h-5 text-white" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-sm font-bold truncate" style={{ color: `hsl(var(--admin-text))` }}>Yönetim Paneli</h2>
-            <p className="text-xs truncate" style={{ color: `hsl(var(--admin-muted))` }}>{user.ad} {user.soyad}</p>
+            <h2 className="text-sm font-bold truncate text-foreground">Yönetim Paneli</h2>
+            <p className="text-xs truncate text-muted-foreground">{user.ad} {user.soyad}</p>
           </div>
         </div>
       </div>
@@ -166,8 +163,8 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
           <div key={gi}>
             {group.groupLabel && (
               <>
-                {gi > 0 && <div className="my-2 border-t" style={{ borderColor: `hsl(var(--admin-border))` }} />}
-                <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider" style={{ color: `hsl(var(--admin-muted))` }}>
+                {gi > 0 && <div className="my-2 border-t border-border" />}
+                <p className="px-3 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {group.groupLabel}
                 </p>
               </>
@@ -177,21 +174,7 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
         ))}
       </nav>
 
-      <div className="p-3 border-t space-y-3" style={{ borderColor: `hsl(var(--admin-border))` }}>
-        <div className="flex items-center justify-between px-3 py-1">
-          <div className="flex items-center gap-2">
-            {lightMode ? <Sun className="w-4 h-4 text-amber-500" /> : <Moon className="w-4 h-4 text-blue-400" />}
-            <span className="text-xs" style={{ color: `hsl(var(--admin-muted))` }}>
-              {lightMode ? "Aydınlık" : "Koyu"}
-            </span>
-          </div>
-          <Switch
-            checked={lightMode}
-            onCheckedChange={setLightMode}
-            className="data-[state=checked]:bg-amber-500 data-[state=unchecked]:bg-slate-600"
-          />
-        </div>
-
+      <div className="p-3 border-t border-border">
         <Button
           variant="ghost"
           onClick={() => { logout(); navigate("/yonetim"); }}
@@ -205,32 +188,26 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
   );
 
   return (
-    <AdminThemeContext.Provider value={lightMode}>
-      <div className={cn("h-screen flex overflow-hidden", t ? "admin-light" : "admin-dark")}>
+    <AdminTitleContext.Provider value={{ title: contextTitle, setTitle: setContextTitle }}>
+      <div className="h-screen flex overflow-hidden bg-muted/30">
         {/* Desktop Sidebar */}
         {!isMobile && (
-          <aside
-            className="w-64 border-r flex flex-col shrink-0 h-full"
-            style={{
-              background: `hsl(var(--admin-sidebar))`,
-              borderColor: `hsl(var(--admin-border))`,
-            }}
-          >
+          <aside className="w-64 border-r border-border flex flex-col shrink-0 h-full bg-background">
             {sidebarContent}
           </aside>
         )}
 
         {/* Main */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden" style={{ background: `hsl(var(--admin-bg))` }}>
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Impersonation Banner */}
           {isImpersonating && impersonatedUser && (
-            <div className="flex items-center justify-between px-4 py-2 shrink-0" style={{ background: "hsl(30 100% 50% / 0.15)", borderBottom: "1px solid hsl(30 100% 50% / 0.3)" }}>
+            <div className="flex items-center justify-between px-4 py-2 shrink-0 bg-amber-50 border-b border-amber-200">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-amber-500" />
-                <span className="text-sm font-medium text-amber-500">
+                <Users className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-medium text-amber-700">
                   {impersonatedUser.ad} {impersonatedUser.soyad} olarak görüntülüyorsunuz
                 </span>
-                <span className="text-xs" style={{ color: "hsl(var(--admin-muted))" }}>
+                <span className="text-xs text-amber-600/70">
                   ({impersonatedUser.departman} — {impersonatedUser.pozisyon})
                 </span>
               </div>
@@ -238,46 +215,33 @@ export default function AdminLayout({ children, title }: AdminLayoutProps) {
                 size="sm"
                 variant="outline"
                 onClick={() => { stopImpersonating(); navigate("/yonetim/kullanicilar"); }}
-                className="text-xs border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400"
+                className="text-xs border-amber-400 text-amber-700 hover:bg-amber-100"
               >
                 Kendi Hesabıma Dön
               </Button>
             </div>
           )}
 
-          <header
-            className="h-14 flex items-center border-b px-4 md:px-6 gap-3 shrink-0"
-            style={{
-              background: `hsl(var(--admin-header))`,
-              borderColor: `hsl(var(--admin-border))`,
-            }}
-          >
+          <header className="h-14 flex items-center border-b border-border px-4 md:px-6 gap-3 shrink-0 bg-background">
             {isMobile && (
               <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="shrink-0" style={{ color: `hsl(var(--admin-text))` }}>
+                  <Button variant="ghost" size="icon" className="shrink-0">
                     <Menu className="w-5 h-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent
-                  side="left"
-                  className="w-64 p-0 flex flex-col"
-                  style={{
-                    background: `hsl(var(--admin-sidebar))`,
-                    borderColor: `hsl(var(--admin-border))`,
-                  }}
-                >
+                <SheetContent side="left" className="w-64 p-0 flex flex-col bg-background border-border">
                   {sidebarContent}
                 </SheetContent>
               </Sheet>
             )}
-            {title && <h1 className="text-base md:text-lg font-bold truncate" style={{ color: `hsl(var(--admin-text))` }}>{title}</h1>}
+            {displayTitle && <h1 className="text-base md:text-lg font-bold truncate text-foreground">{displayTitle}</h1>}
           </header>
           <main className="flex-1 overflow-y-auto p-3 md:p-6">
             {children}
           </main>
         </div>
       </div>
-    </AdminThemeContext.Provider>
+    </AdminTitleContext.Provider>
   );
 }

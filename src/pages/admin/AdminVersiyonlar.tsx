@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { Button } from "@/components/ui/button";
@@ -73,6 +73,7 @@ function generateAutoComment(logs: ChangeLog[]): string {
 }
 
 export default function AdminVersiyonlar() {
+  useAdminTitle("Versiyonlar");
   const { user, token } = useAdminAuth();
   const callApi = useAdminApi();
   const { toast } = useToast();
@@ -163,8 +164,8 @@ export default function AdminVersiyonlar() {
   };
 
   return (
-    <AdminLayout title="Versiyonlar">
-      <div className="space-y-6">
+    <>
+    <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -319,6 +320,6 @@ export default function AdminVersiyonlar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </>
   );
 }

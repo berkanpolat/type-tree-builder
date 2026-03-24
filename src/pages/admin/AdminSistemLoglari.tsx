@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { useToast } from "@/hooks/use-toast";
@@ -66,6 +66,7 @@ const formatDate = (d: string) =>
   });
 
 export default function AdminSistemLoglari() {
+  useAdminTitle("Sistem Logları");
   const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const callApi = useAdminApi();
@@ -130,17 +131,14 @@ export default function AdminSistemLoglari() {
 
   if (!hasPermission("islem_goruntule")) {
     return (
-      <AdminLayout title="Sistem Logları">
-        <div className="flex items-center justify-center h-64" style={s.text}>
+      <div className="flex items-center justify-center h-64" style={s.text}>
           <p>Bu sayfayı görüntülemek için yetkiniz bulunmamaktadır.</p>
         </div>
-      </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout title="Sistem Logları">
-      <div className="space-y-4">
+    <div className="space-y-4">
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[
@@ -329,6 +327,5 @@ export default function AdminSistemLoglari() {
           </div>
         )}
       </div>
-    </AdminLayout>
   );
 }

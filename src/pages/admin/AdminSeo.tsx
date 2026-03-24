@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
@@ -166,6 +166,7 @@ function auditSeoEntry(entry: SeoEntry): SeoAuditResult {
 }
 
 export default function AdminSeo() {
+  useAdminTitle("SEO Yönetimi");
   const callApi = useAdminApi();
   const { token } = useAdminAuth();
   const { toast } = useToast();
@@ -267,8 +268,7 @@ export default function AdminSeo() {
   const sectionHeadingClass = "text-sm font-semibold text-[hsl(var(--admin-text-secondary))] flex items-center gap-1.5";
 
   return (
-    <AdminLayout title="SEO Yönetimi">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="bg-[hsl(var(--admin-card-bg))] border border-[hsl(var(--admin-border))]">
             <TabsTrigger
@@ -728,6 +728,5 @@ export default function AdminSeo() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
   );
 }

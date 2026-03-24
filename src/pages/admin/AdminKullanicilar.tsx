@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, type CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
@@ -229,6 +229,7 @@ const DEFAULT_PERMISSIONS = Object.fromEntries(ALL_PERMISSION_KEYS.map(k => [k, 
 const USERS_PER_PAGE = 10;
 
 export default function AdminKullanicilar() {
+  useAdminTitle("Panel Kullanıcıları");
   const { token, user: currentUser, impersonateAdmin, originalUser, hasPermission } = useAdminAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -435,8 +436,8 @@ export default function AdminKullanicilar() {
   } as CSSProperties;
 
   return (
-    <AdminLayout title="Panel Kullanıcıları">
-      <div className="space-y-6">
+    <>
+    <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <p className="text-sm" style={sMuted}>Yönetim paneline erişimi olan kullanıcıları yönetin.</p>
           {canManage && (
@@ -662,6 +663,6 @@ export default function AdminKullanicilar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </>
   );
 }

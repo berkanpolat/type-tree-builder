@@ -1,6 +1,5 @@
+import { useAdminTitle, useAdminTheme } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
-import { useAdminTheme } from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { useAdminApi } from "@/hooks/use-admin-api";
 import { Button } from "@/components/ui/button";
@@ -54,6 +53,7 @@ function parseDate(s: string) {
 }
 
 export default function AdminAjanda() {
+  useAdminTitle("Ajanda");
   const lightMode = useAdminTheme();
   const { user } = useAdminAuth();
   const callApi = useAdminApi();
@@ -173,8 +173,8 @@ export default function AdminAjanda() {
   });
 
   return (
-    <AdminLayout title="Ajanda">
-      <div className="max-w-3xl mx-auto">
+    <>
+    <div className="max-w-3xl mx-auto">
         {/* Day Navigation */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-1">
@@ -391,6 +391,6 @@ export default function AdminAjanda() {
           </div>
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </>
   );
 }

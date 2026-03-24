@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useEffect, useState, useMemo, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ interface VisitorRow {
 const ITEMS_PER_PAGE = 25;
 
 export default function AdminKaynakRaporu() {
+  useAdminTitle("Kaynak Raporu");
   const [data, setData] = useState<VisitorRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30d");
@@ -128,8 +129,7 @@ export default function AdminKaynakRaporu() {
   const maxKanalCount = kanalStats.length > 0 ? kanalStats[0][1] : 1;
 
   return (
-    <AdminLayout title="Kaynak Raporu">
-      <div className="space-y-4 md:space-y-6">
+    <div className="space-y-4 md:space-y-6">
         {/* Header Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div style={s.card} className="p-4 text-center">
@@ -349,6 +349,5 @@ export default function AdminKaynakRaporu() {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 }

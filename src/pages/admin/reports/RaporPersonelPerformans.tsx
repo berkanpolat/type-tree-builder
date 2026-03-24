@@ -1,7 +1,7 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
-import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
@@ -13,6 +13,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } fro
 const SUCCESS_RESULTS = new Set(["satis_kapatildi", "satis_kapandi"]);
 
 export default function RaporPersonelPerformans() {
+  useAdminTitle("Personel Performans Raporları");
   const navigate = useNavigate();
   const { token } = useAdminAuth();
   const callApi = useAdminApi();
@@ -125,8 +126,7 @@ export default function RaporPersonelPerformans() {
   const totalSatis = totalAksiyonSatis + totalPaketSatis;
 
   return (
-    <AdminLayout title="Personel Performans Raporları">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
           <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
         </button>
@@ -202,6 +202,5 @@ export default function RaporPersonelPerformans() {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 }

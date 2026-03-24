@@ -1,5 +1,4 @@
-import AdminLayout from "@/components/admin/AdminLayout";
-import { useAdminTheme } from "@/components/admin/AdminLayout";
+import { useAdminTitle, useAdminTheme } from "@/components/admin/AdminLayout";
 import { Link } from "react-router-dom";
 import { TrendingUp, Users, UserCheck, ClipboardList, Target } from "lucide-react";
 
@@ -42,11 +41,11 @@ const reportCards = [
 ];
 
 export default function AdminRaporlar() {
+  useAdminTitle("Raporlar");
   const lightMode = useAdminTheme();
 
   return (
-    <AdminLayout title="Raporlar">
-      <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto">
         <p className="text-sm mb-6" style={{ color: `hsl(var(--admin-muted))` }}>
           Detaylı analiz ve raporlama araçlarına aşağıdan erişebilirsiniz.
         </p>
@@ -75,6 +74,5 @@ export default function AdminRaporlar() {
           ))}
         </div>
       </div>
-    </AdminLayout>
   );
 }

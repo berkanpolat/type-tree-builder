@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
@@ -113,6 +113,7 @@ type SortDir = "asc" | "desc";
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminFirmalar() {
+  useAdminTitle("Firmalar");
   const { token, hasPermission } = useAdminAuth();
   const { toast } = useToast();
   const [firmalar, setFirmalar] = useState<FirmaItem[]>([]);
@@ -566,8 +567,8 @@ export default function AdminFirmalar() {
   const filteredTipler = tipler.filter(t => yeniFirma.firma_turu_id === "" || t.firma_turu_id === yeniFirma.firma_turu_id);
 
   return (
-    <AdminLayout title="Firmalar">
-      <div className="space-y-6">
+    <>
+    <div className="space-y-6">
         {/* Action Bar */}
         <div className="flex justify-end">
           <Button onClick={() => setYeniFirmaOpen(true)} className="bg-amber-500 hover:bg-amber-600 text-white">
@@ -1365,7 +1366,7 @@ export default function AdminFirmalar() {
           )}
         </DialogContent>
       </Dialog>
-    </AdminLayout>
+    </>
   );
 }
 

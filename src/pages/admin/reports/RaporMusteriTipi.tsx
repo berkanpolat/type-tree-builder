@@ -1,7 +1,7 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
-import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Ba
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16"];
 
 export default function RaporMusteriTipi() {
+  useAdminTitle("Müşteri Tipi Raporları");
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange>({ from: startOfMonth(new Date()), to: new Date() });
   const [firmalar, setFirmalar] = useState<any[]>([]);
@@ -56,8 +57,7 @@ export default function RaporMusteriTipi() {
   const tipChartData = Array.from(tipMap.entries()).map(([name, value]) => ({ name, value })).sort((a,b) => b.value - a.value);
 
   return (
-    <AdminLayout title="Müşteri Tipi Raporları">
-      <div className="space-y-6">
+    <div className="space-y-6">
         <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
           <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
         </button>
@@ -129,6 +129,5 @@ export default function RaporMusteriTipi() {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 }

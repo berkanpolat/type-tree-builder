@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, CSSProperties } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminApi } from "@/hooks/use-admin-api";
@@ -127,6 +127,7 @@ export default function AdminHedefler() {
 
   const token = user ? localStorage.getItem("admin_token") || "" : "";
   const isYK = user?.departman === "Yönetim Kurulu";
+  useAdminTitle(isYK ? "PKL Yönetimi" : "PKL Hedeflerim");
   const callApi = useAdminApi();
 
   const loadPaketler = useCallback(async () => {
@@ -274,8 +275,7 @@ export default function AdminHedefler() {
   };
 
   return (
-    <AdminLayout title={isYK ? "PKL Yönetimi" : "PKL Hedeflerim"}>
-      <div className="p-4 md:p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -718,6 +718,5 @@ export default function AdminHedefler() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
   );
 }

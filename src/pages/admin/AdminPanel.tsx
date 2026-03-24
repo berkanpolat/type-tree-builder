@@ -1,6 +1,6 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -110,6 +110,7 @@ function SectionFilters({ timeFilter, onTimeChange, dateRange, onDateChange }: {
 const emptyDateRange: DateRange = { from: "", to: "" };
 
 export default function AdminPanel() {
+  useAdminTitle("Panel Özeti");
   const { user, token } = useAdminAuth();
   const navigate = useNavigate();
   const [data, setData] = useState<any>(null);
@@ -192,11 +193,9 @@ export default function AdminPanel() {
 
   if (loading) {
     return (
-      <AdminLayout title="Panel Özeti">
-        <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-500" />
         </div>
-      </AdminLayout>
     );
   }
 
@@ -250,8 +249,7 @@ export default function AdminPanel() {
   };
 
   return (
-    <AdminLayout title="Panel Özeti">
-      <div className="space-y-6 md:space-y-8">
+    <div className="space-y-6 md:space-y-8">
         {/* Welcome */}
         <div className="rounded-xl p-4 md:p-6" style={{ background: "linear-gradient(to right, hsla(30,90%,55%,0.1), hsla(25,90%,55%,0.1))", border: "1px solid hsla(30,90%,55%,0.2)" }}>
           <h2 className="text-lg md:text-xl font-bold" style={{ color: "hsl(var(--admin-text))" }}>
@@ -367,6 +365,5 @@ export default function AdminPanel() {
           </div>
         </section>
       </div>
-    </AdminLayout>
   );
 }

@@ -1,8 +1,8 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { startOfMonth } from "date-fns";
-import AdminLayout from "@/components/admin/AdminLayout";
 import ReportDateFilter, { DateRange } from "@/components/admin/reports/ReportDateFilter";
 import ReportKPICard from "@/components/admin/reports/ReportKPICard";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
@@ -44,6 +44,7 @@ const NEDEN_LABELS: Record<string, string> = {
 };
 
 export default function RaporSatisKanali() {
+  useAdminTitle("Satış Kanalı Raporları");
   const navigate = useNavigate();
   const { token } = useAdminAuth();
   const callApi = useAdminApi();
@@ -170,8 +171,7 @@ export default function RaporSatisKanali() {
   };
 
   return (
-    <AdminLayout title="Satış Kanalı Raporları">
-      <div className="space-y-4">
+    <div className="space-y-4">
         <div className="flex items-center justify-between">
           <button onClick={() => navigate("/yonetim/raporlar")} className="flex items-center gap-1.5 text-xs font-medium transition-colors hover:opacity-80" style={{ color: "hsl(var(--admin-muted))" }}>
             <ArrowLeft className="w-3.5 h-3.5" /> Raporlara Dön
@@ -381,6 +381,5 @@ export default function RaporSatisKanali() {
           </div>
         </div>
       </div>
-    </AdminLayout>
   );
 }

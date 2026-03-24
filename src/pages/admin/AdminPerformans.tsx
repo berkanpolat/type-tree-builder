@@ -1,5 +1,5 @@
+import { useAdminTitle } from "@/components/admin/AdminLayout";
 import { useState, useEffect, useCallback, useRef } from "react";
-import AdminLayout from "@/components/admin/AdminLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAdminAuth } from "@/contexts/AdminAuthContext";
 import { Button } from "@/components/ui/button";
@@ -93,6 +93,7 @@ async function callPerfApi(token: string, action: string, extra: Record<string, 
 }
 
 export default function AdminPerformans() {
+  useAdminTitle("Performans İzleme");
   const { token } = useAdminAuth();
   const [running, setRunning] = useState(false);
   const [history, setHistory] = useState<TestResult[]>([]);
@@ -230,17 +231,14 @@ export default function AdminPerformans() {
 
   if (loading) {
     return (
-      <AdminLayout title="Performans İzleme">
-        <div className="flex items-center justify-center h-64">
+      <div className="flex items-center justify-center h-64">
           <div className="animate-spin w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full" />
         </div>
-      </AdminLayout>
     );
   }
 
   return (
-    <AdminLayout title="Performans İzleme">
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Header Actions */}
         <div className="flex flex-wrap items-center gap-3 justify-between">
           <div className="flex items-center gap-3">
@@ -688,7 +686,6 @@ export default function AdminPerformans() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
   );
 }
 
