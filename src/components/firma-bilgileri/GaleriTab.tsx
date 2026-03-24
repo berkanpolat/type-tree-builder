@@ -14,9 +14,10 @@ interface Foto {
 
 interface GaleriTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-export default function GaleriTab({ userId }: GaleriTabProps) {
+export default function GaleriTab({ userId, onDataChange }: GaleriTabProps) {
   const [firmaId, setFirmaId] = useState("");
   const [loading, setLoading] = useState(true);
   const [fotolar, setFotolar] = useState<Foto[]>([]);
