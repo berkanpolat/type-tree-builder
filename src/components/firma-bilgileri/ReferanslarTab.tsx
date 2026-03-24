@@ -105,6 +105,7 @@ export default function ReferanslarTab({ userId, onDataChange }: ReferanslarTabP
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); setUploading(false); return; }
       setReferanslar(prev => [...prev, { id: data.id, referans_adi: referansAdi, logo_url: logoUrl }]);
       toast({ title: "Referans eklendi" });
+      onDataChange?.();
     }
 
     setUploading(false);
