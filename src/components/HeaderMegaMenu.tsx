@@ -205,7 +205,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
                 setHoveredL2(null);
               }}
               onClick={() => handleL1Click(item)}
-              className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors text-left ${
+              className={`w-full flex items-center justify-between pl-4 pr-2 py-2 text-sm transition-colors text-left ${
                 hoveredL1 === item.id
                   ? "bg-muted text-secondary font-semibold"
                   : "text-foreground hover:bg-muted/50"
