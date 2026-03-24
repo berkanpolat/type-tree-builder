@@ -410,6 +410,12 @@ export default function ManuPazar() {
                   <TableHead>Kategori</TableHead>
                   <TableHead>Grup</TableHead>
                   <TableHead>Fiyat</TableHead>
+                  <TableHead className="text-center">
+                    <Eye className="w-3.5 h-3.5 inline mr-1" />Gör.
+                  </TableHead>
+                  <TableHead className="text-center">
+                    <Heart className="w-3.5 h-3.5 inline mr-1" />Fav.
+                  </TableHead>
                   <TableHead>Güncelleme</TableHead>
                   <TableHead>Durum</TableHead>
                   <TableHead className="text-center sticky-action-col">İşlemler</TableHead>
