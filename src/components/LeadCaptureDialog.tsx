@@ -37,13 +37,13 @@ export default function LeadCaptureDialog({ open, onOpenChange, kaynak }: LeadCa
     if (!validate()) return;
     setLoading(true);
     try {
-      const { error } = await supabase.from("lead_basvurular" as any).insert({
+      const { error } = await supabase.from("lead_basvurular").insert({
         ad: form.ad.trim(),
         soyad: form.soyad.trim(),
         email: form.email.trim().toLowerCase(),
         telefon: form.telefon.trim(),
         kaynak,
-      } as any);
+      });
       if (error) throw error;
       toast({ title: "Başarılı", description: "Bilgileriniz alındı. PDF indiriliyor..." });
       onOpenChange(false);

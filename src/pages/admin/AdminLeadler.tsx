@@ -28,6 +28,7 @@ interface LeadRecord {
 const KAYNAK_LABELS: Record<string, string> = {
   tekihale_tanitim: "Tekİhale Tanıtım",
   tekpazar_tanitim: "TekPazar Tanıtım",
+  landing_page: "Ana Sayfa",
   genel: "Genel",
 };
 
