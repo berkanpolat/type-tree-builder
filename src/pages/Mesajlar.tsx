@@ -482,16 +482,25 @@ export default function Mesajlar() {
           },
         }).catch(console.error);
 
-        // Send SMS notification to recipient
-        supabase.functions.invoke("send-notification-sms", {
-          body: {
-            type: "yeni_mesaj",
-            userId: recipientUserId,
-            firmaUnvani: recipientFirma.firma_unvani || "",
-            gonderenAdi: senderFirma?.firma_unvani || "Bir kullanıcı",
-            mesajLinki: `${window.location.origin}/mesajlar?conv=${selectedConv.id}`,
-          },
-        }).catch(console.error);
+        // Send SMS only for the FIRST message from this sender in this conversation
+        const { count: prevMsgCount } = await supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .eq("conversation_id", selectedConv.id)
+          .eq("sender_id", currentUserId);
+
+        // count > 1 because the current message is already inserted
+        if ((prevMsgCount ?? 0) <= 1) {
+          supabase.functions.invoke("send-notification-sms", {
+            body: {
+              type: "yeni_mesaj",
+              userId: recipientUserId,
+              firmaUnvani: recipientFirma.firma_unvani || "",
+              gonderenAdi: senderFirma?.firma_unvani || "Bir kullanıcı",
+              mesajLinki: `${window.location.origin}/mesajlar?conv=${selectedConv.id}`,
+            },
+          }).catch(console.error);
+        }
       }
     } catch (e) {
       console.error("[Mesajlar] Notification error:", e);
