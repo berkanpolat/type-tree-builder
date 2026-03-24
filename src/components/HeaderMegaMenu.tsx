@@ -231,7 +231,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
                 key={item.id}
                 onMouseEnter={() => type === "tekpazar" && setHoveredL2(item.id)}
                 onClick={() => handleL2Click(item)}
-                className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors text-left ${
+                className={`w-full flex items-center justify-between pl-4 pr-2 py-2 text-sm transition-colors text-left ${
                   hoveredL2 === item.id
                     ? "bg-muted text-secondary font-semibold"
                     : "text-foreground hover:bg-muted/50"
