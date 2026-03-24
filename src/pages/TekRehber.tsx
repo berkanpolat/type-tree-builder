@@ -67,6 +67,8 @@ interface FirmaWithExtra {
   user_id: string;
   belge_onayli: boolean;
   slug: string | null;
+  firma_hakkinda: string | null;
+  uretim_satis_rolu: string | null;
   firma_turu_name?: string;
   firma_tipi_name?: string;
   faaliyet_alani?: string;
