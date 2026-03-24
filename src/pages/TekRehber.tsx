@@ -939,10 +939,16 @@ export default function TekRehber() {
 
                           {/* MIDDLE: Firma Hakkında */}
                           <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 border-t sm:border-t-0">
-                            {descriptionExcerptV3 ? (
-                              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed" itemProp="description">
-                                {descriptionExcerptV3}
-                              </p>
+                            {firma.firma_hakkinda ? (
+                              <>
+                                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed" itemProp="description">
+                                  {descriptionExcerptV3}
+                                </p>
+                                {/* Full description for SEO crawlers, visually hidden */}
+                                {firma.firma_hakkinda.length > 200 && (
+                                  <span className="sr-only" aria-hidden="true">{firma.firma_hakkinda}</span>
+                                )}
+                              </>
                             ) : (
                               <p className="text-xs sm:text-sm text-muted-foreground/50 italic">Firma hakkında bilgi eklenmemiş.</p>
                             )}
