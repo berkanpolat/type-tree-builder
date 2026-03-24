@@ -128,7 +128,7 @@ export default function AdminVersiyonlar() {
     if (!user) return;
     setAutoLoading(true);
     try {
-      const data = await callApi("get-recent-changes", { token: user.token });
+      const data = await callApi("get-recent-changes", { token });
       const logs = data?.logs || [];
       setRecentLogs(logs);
       setAciklama(generateAutoComment(logs));
