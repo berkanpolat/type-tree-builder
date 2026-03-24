@@ -5338,6 +5338,46 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    if (action === "list-releases") {
+      verifyToken(body.token);
+      const { data, error } = await supabase.from("releases").select("*").order("created_at", { ascending: false }).limit(100);
+      if (error) return jsonResponse({ error: error.message }, 500);
+      return jsonResponse(data || []);
+    }
+
+    if (action === "create-release") {
+      const payload = verifyToken(body.token);
+      const actingId = getActingId(payload, body);
+      const { versiyon, baslik, aciklama, degisiklikler, ortam } = body;
+      if (!versiyon) return jsonResponse({ error: "Versiyon zorunlu" }, 400);
+      const { error } = await supabase.from("releases").insert({
+        versiyon,
+        baslik: baslik || "",
+        aciklama: aciklama || "",
+        degisiklikler: degisiklikler || [],
+        admin_id: actingId,
+        admin_ad: `${payload.ad} ${payload.soyad}`,
+        ortam: ortam || "production",
+      });
+      if (error) return jsonResponse({ error: error.message }, 500);
+      await logActivity(supabase, payload, "release_olustur", { target_type: "release", target_label: versiyon, details: { baslik, ortam } });
+      return jsonResponse({ success: true });
+    }
+
+    if (action === "get-recent-changes") {
+      verifyToken(body.token);
+      // Get last release date
+      const { data: lastRelease } = await supabase.from("releases").select("created_at").order("created_at", { ascending: false }).limit(1).single();
+      const sinceDate = lastRelease?.created_at || new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      // Get activity logs since last release
+      const { data: logs } = await supabase.from("admin_activity_log")
+        .select("action, admin_ad, admin_soyad, target_type, target_label, created_at")
+        .gte("created_at", sinceDate)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      return jsonResponse({ logs: logs || [], since: sinceDate });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
