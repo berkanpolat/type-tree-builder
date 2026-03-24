@@ -68,6 +68,16 @@
     --sidebar-accent-foreground: 224 50% 22%;
     --sidebar-border: 220 20% 92%;
     --sidebar-ring: 32 92% 54%;
+    --admin-bg: 220 14% 96%;
+    --admin-sidebar: 0 0% 100%;
+    --admin-card-bg: 0 0% 100%;
+    --admin-header: 0 0% 100%;
+    --admin-text: 217 33% 17%;
+    --admin-text-secondary: 215 16% 47%;
+    --admin-muted: 215 16% 57%;
+    --admin-border: 220 13% 91%;
+    --admin-input-bg: 220 14% 96%;
+    --admin-hover: 220 14% 93%;
     --font-sans: Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
   }
 
