@@ -23,7 +23,7 @@ import Footer from "@/components/Footer";
 import LandingHeroSearch from "@/components/landing/LandingHeroSearch";
 import LandingRegistrationForm from "@/components/landing/LandingRegistrationForm";
 import { PAKET_OZELLIKLERI, PRO_FIYATLAR } from "@/lib/package-config";
-import { Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin, Search } from "lucide-react";
 import {
   BadgeDollarSign,
   Globe,
@@ -321,63 +321,71 @@ const LandingPage = () => {
       <LandingHeader logoImg={logoImg} />
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-background via-background to-muted">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-10 md:py-16 lg:py-24 grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
-          <div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground leading-tight mb-4 md:mb-6">
-              İşiniz Tekstilse, Yeriniz <span className="text-secondary">Tekstil A.Ş.</span>
-            </h1>
-            <LandingHeroSearch />
-            <p className="text-base md:text-lg text-muted-foreground mb-6 md:mb-10 leading-relaxed">
-              Markalar, üreticiler, tedarikçiler, mümessil ofisler ve fason atölyeler tek panelde
-              buluşuyor. Doğru firmaya hızlıca ulaşın, teklif alın, teklif verin, yeni iş fırsatlarını
-              yakalayın!
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <a
-                 href="#kayit"
-                className="px-10 py-3.5 rounded-lg bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-colors"
-              >
-                Ücretsiz Kayıt Ol
-              </a>
-              <a href="/Tekstil_AS_Kurumsal_Sunum_v2.pdf" download className="px-10 py-3.5 rounded-lg bg-secondary text-secondary-foreground font-semibold text-base hover:bg-secondary/90 transition-colors">
-                Tanıtım PDF İndir
-              </a>
+      <section className="bg-gradient-to-b from-muted/40 via-background to-background">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-20 lg:py-28">
+          <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-8 lg:gap-12 items-center">
+            {/* Left: Title + Search (75%) */}
+            <div>
+              <h1 className="text-3xl md:text-4xl lg:text-[3.25rem] font-extrabold text-foreground leading-[1.15] tracking-tight mb-3 md:mb-5">
+                İşiniz Tekstilse,
+                <br />
+                Yeriniz{" "}
+                <span className="text-secondary">Tekstil A.Ş.</span>
+              </h1>
+              <p className="text-base md:text-lg text-muted-foreground mb-6 md:mb-8 max-w-xl leading-relaxed">
+                Doğru firmaya hızlıca ulaşın, teklif alın, teklif verin.
+              </p>
+
+              {/* Search */}
+              <div className="mb-5">
+                <LandingHeroSearch />
+              </div>
+
+              {/* Popular searches */}
+              <div className="mb-8">
+                <span className="text-xs font-semibold text-muted-foreground tracking-widest uppercase mb-2 block">
+                  Popüler Aramalar
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {["Kumaş üretimi", "Fason dikim", "İplik tedarik", "Aksesuar", "Örme kumaş"].map((chip) => (
+                    <span
+                      key={chip}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted hover:bg-muted/80 text-foreground text-sm rounded-full border border-border cursor-default transition-colors"
+                    >
+                      <Search className="w-3 h-3 text-muted-foreground" />
+                      {chip}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* CTA buttons */}
+              <div className="flex flex-wrap gap-3">
+                <a
+                  href="#kayit"
+                  className="px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:bg-primary/90 transition-colors"
+                >
+                  Ücretsiz Kayıt Ol
+                </a>
+                <a
+                  href="/Tekstil_AS_Kurumsal_Sunum_v2.pdf"
+                  download
+                  className="px-8 py-3 rounded-lg bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/90 transition-colors"
+                >
+                  Tanıtım PDF İndir
+                </a>
+              </div>
             </div>
-          </div>
-          <div className="relative">
-            <div className="absolute -top-6 -left-2 z-10 bg-background rounded-xl shadow-lg p-4 hidden lg:block">
-              <div className="flex items-center gap-4 mb-2 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-primary inline-block" /> 2024</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-secondary inline-block" /> 2025</span>
-              </div>
-              <div className="flex items-end gap-2 h-20">
-                {[3, 5, 8, 6, 10, 12].map((h, i) => (
-                  <div key={i} className="flex gap-0.5">
-                    <div className="w-3 rounded-t bg-primary/60" style={{ height: `${h * 5}px` }} />
-                    <div className="w-3 rounded-t bg-secondary/70" style={{ height: `${(h + 2) * 5}px` }} />
-                  </div>
-                ))}
-              </div>
-            </div>
-            <img
-              src={heroImg}
-              alt="Tekstil sektörü profesyonelleri"
-              className="rounded-2xl shadow-xl w-full object-cover aspect-[4/3]"
-              fetchPriority="high"
-              decoding="async"
-            />
-            <div className="absolute -bottom-6 -right-2 z-10 bg-background rounded-xl shadow-lg p-4 hidden lg:block">
-              <div className="h-16 w-40 flex items-end">
-                <svg viewBox="0 0 160 60" className="w-full h-full">
-                  <polyline
-                    fill="none"
-                    stroke="hsl(190, 70%, 55%)"
-                    strokeWidth="2"
-                    points="0,50 30,40 60,42 90,30 120,28 150,15"
-                  />
-                </svg>
-              </div>
+
+            {/* Right: Hero image (25%) */}
+            <div className="hidden lg:block relative">
+              <img
+                src={heroImg}
+                alt="Tekstil sektörü profesyonelleri"
+                className="rounded-2xl shadow-xl w-full object-cover aspect-[3/4]"
+                fetchPriority="high"
+                decoding="async"
+              />
             </div>
           </div>
         </div>
