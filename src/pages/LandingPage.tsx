@@ -348,13 +348,12 @@ const LandingPage = () => {
                 >
                   Ücretsiz Kayıt Ol
                 </a>
-                <a
-                  href="/Tekstil_AS_Kurumsal_Sunum_v2.pdf"
-                  download
+                <button
+                  onClick={() => setLeadDialogOpen(true)}
                   className="px-8 py-3 rounded-lg bg-secondary text-secondary-foreground font-semibold text-sm hover:bg-secondary/90 transition-colors"
                 >
                   Tanıtım PDF İndir
-                </a>
+                </button>
               </div>
             </div>
 
