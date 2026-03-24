@@ -133,12 +133,16 @@ const queryClient = new QueryClient({
 
 const AdminRoute = () => (
   <AdminAuthProvider>
-    <AdminLayout>
-      <Suspense fallback={<AdminPageLoader />}>
-        <Outlet />
-      </Suspense>
-    </AdminLayout>
+    <Outlet />
   </AdminAuthProvider>
+);
+
+const AdminLayoutRoute = () => (
+  <AdminLayout>
+    <Suspense fallback={<AdminPageLoader />}>
+      <Outlet />
+    </Suspense>
+  </AdminLayout>
 );
 
 const AdminPageLoader = () => (
