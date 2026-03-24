@@ -381,7 +381,7 @@ export default function ManuPazar() {
                       <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{urun.goruntuleme_sayisi ?? 0}</span>
                       <span className="flex items-center gap-1"><Heart className="w-3 h-3" />{urun.favori_sayisi ?? 0}</span>
                     </div>
-                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-1">
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(`/urunlerim/duzenle/${urun.id}`)}>
                         <Pencil className="w-3.5 h-3.5" />
                       </Button>
