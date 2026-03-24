@@ -413,7 +413,7 @@ export default function AdminHedefler() {
 
         {/* Detay Dialog */}
         <Dialog open={!!showDetail} onOpenChange={() => setShowDetail(null)}>
-          <DialogContent style={s.card} className="max-w-lg">
+          <DialogContent style={s.card} className="max-w-lg !bg-card">
             <DialogHeader>
               <DialogTitle style={s.text}>PKL Detayı</DialogTitle>
               <DialogDescription style={s.muted}>Prim Kazanma Limiti detay bilgileri</DialogDescription>

@@ -336,7 +336,7 @@ export default function AdminAjanda() {
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+        <DialogContent className="max-w-md !bg-card" style={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))" }}>
           <DialogHeader>
             <DialogTitle className="text-sm font-semibold" style={{ color: "hsl(var(--admin-text))" }}>
               {editNote ? "Notu Düzenle" : "Yeni Not"}

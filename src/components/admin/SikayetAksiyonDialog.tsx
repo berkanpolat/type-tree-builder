@@ -172,7 +172,7 @@ export default function SikayetAksiyonDialog({ open, onClose, item, onSuccess }:
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto !bg-card" style={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))" }}>
         <DialogHeader>
           <DialogTitle style={s.text}>İşlem Yap — {item.sikayet_no}</DialogTitle>
           <p className="text-xs mt-1" style={s.muted}>

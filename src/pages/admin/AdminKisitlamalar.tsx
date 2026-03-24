@@ -534,7 +534,7 @@ export default function AdminKisitlamalar() {
 
       {/* ─── EDIT DIALOG (kisitlama & uzaklastirma only) ─── */}
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" style={{ ...s.card, background: "hsl(var(--admin-card-bg))" }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto !bg-card" style={{ ...s.card, backgroundColor: "hsl(var(--card))" }}>
           <DialogHeader>
             <DialogTitle style={s.text}>{activeTab === "kisitlama" ? "Kısıtlamayı Düzenle" : "Uzaklaştırmayı Düzenle"}</DialogTitle>
           </DialogHeader>

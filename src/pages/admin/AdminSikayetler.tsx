@@ -349,7 +349,7 @@ export default function AdminSikayetler() {
 
       {/* View Dialog */}
       <Dialog open={!!viewItem} onOpenChange={() => setViewItem(null)}>
-        <DialogContent className="sm:max-w-lg" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+        <DialogContent className="sm:max-w-lg !bg-card" style={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))" }}>
           <DialogHeader>
             <DialogTitle style={s.text}>Şikayet Detayı — {viewItem?.sikayet_no}</DialogTitle>
           </DialogHeader>
