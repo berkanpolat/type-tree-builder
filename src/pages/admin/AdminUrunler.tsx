@@ -798,6 +798,22 @@ export default function AdminUrunler() {
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       )}
+                      {user?.is_primary && (
+                        <>
+                          <Button
+                            onClick={() => setFakeUrunDialog({ open: true, urunId: urun.id, baslik: urun.baslik, type: "goruntuleme", current: urun.goruntuleme_sayisi ?? 0 })}
+                            variant="ghost" size="sm" className="h-7 w-7 p-0" style={s.muted} title="Yapay Görüntülenme"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            onClick={() => setFakeUrunDialog({ open: true, urunId: urun.id, baslik: urun.baslik, type: "favori", current: 0 })}
+                            variant="ghost" size="sm" className="h-7 w-7 p-0" style={s.muted} title="Yapay Favori"
+                          >
+                            <Heart className="w-3.5 h-3.5" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   </div>
 
