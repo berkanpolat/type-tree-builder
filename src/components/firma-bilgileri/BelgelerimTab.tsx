@@ -10,6 +10,7 @@ import { Upload, FileText, Loader2, CheckCircle, XCircle, Clock } from "lucide-r
 
 interface BelgelerimTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
 interface BelgeRecord {
@@ -28,7 +29,7 @@ const BELGE_TURLERI = [
   { key: "imza_sirkusu", label: "İmza Sirküsü" },
 ];
 
-export default function BelgelerimTab({ userId }: BelgelerimTabProps) {
+export default function BelgelerimTab({ userId, onDataChange }: BelgelerimTabProps) {
   const { toast } = useToast();
   const [belgeler, setBelgeler] = useState<BelgeRecord[]>([]);
   const [firmaId, setFirmaId] = useState("");
@@ -107,6 +108,7 @@ export default function BelgelerimTab({ userId }: BelgelerimTabProps) {
       }
 
       toast({ title: "Başarılı", description: "Belge yüklendi ve incelemeye alındı." });
+      onDataChange?.();
       fetchBelgeler();
     } catch (err: any) {
       toast({ title: "Hata", description: err?.message || "Yükleme başarısız", variant: "destructive" });

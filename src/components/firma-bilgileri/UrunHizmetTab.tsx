@@ -12,6 +12,7 @@ import MultiSelectDropdown from "./MultiSelectDropdown";
 interface Props {
   userId: string;
   firmaTuruName: string;
+  onDataChange?: () => void;
 }
 
 interface SelectOption {
@@ -92,7 +93,7 @@ const HAS_SINGLE_SELECTS = ["Fason Atölye"];
 const IS_MARKA = (name: string) => name === "Marka";
 const IS_TEDARIKCI = (name: string) => name === "Tedarikçi";
 
-export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
+export default function UrunHizmetTab({ userId, firmaTuruName, onDataChange }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -296,6 +297,7 @@ export default function UrunHizmetTab({ userId, firmaTuruName }: Props) {
       }
 
       toast({ title: "Başarılı", description: "Ürün/Hizmet bilgileri güncellendi." });
+      onDataChange?.();
     } catch {
       toast({ title: "Hata", description: "Bilgiler kaydedilemedi.", variant: "destructive" });
     }

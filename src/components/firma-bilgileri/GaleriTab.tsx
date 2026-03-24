@@ -14,9 +14,10 @@ interface Foto {
 
 interface GaleriTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-export default function GaleriTab({ userId }: GaleriTabProps) {
+export default function GaleriTab({ userId, onDataChange }: GaleriTabProps) {
   const [firmaId, setFirmaId] = useState("");
   const [loading, setLoading] = useState(true);
   const [fotolar, setFotolar] = useState<Foto[]>([]);
@@ -76,7 +77,10 @@ export default function GaleriTab({ userId }: GaleriTabProps) {
     }
 
     setFotolar(prev => [...prev, ...newFotolar]);
-    if (newFotolar.length > 0) toast({ title: `${newFotolar.length} fotoğraf yüklendi` });
+    if (newFotolar.length > 0) {
+      toast({ title: `${newFotolar.length} fotoğraf yüklendi` });
+      onDataChange?.();
+    }
     setUploading(false);
     e.target.value = "";
   };
@@ -90,6 +94,7 @@ export default function GaleriTab({ userId }: GaleriTabProps) {
 
     setFotolar(prev => prev.filter(f => f.id !== foto.id));
     toast({ title: "Fotoğraf silindi" });
+    onDataChange?.();
   };
 
   const handleEditName = async (id: string) => {

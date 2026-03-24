@@ -26,9 +26,10 @@ interface Sertifika {
 
 interface SertifikalarTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-export default function SertifikalarTab({ userId }: SertifikalarTabProps) {
+export default function SertifikalarTab({ userId, onDataChange }: SertifikalarTabProps) {
   const [firmaId, setFirmaId] = useState("");
   const [loading, setLoading] = useState(true);
   const [optionsMap, setOptionsMap] = useState<Record<string, string>>({});
@@ -126,6 +127,7 @@ export default function SertifikalarTab({ userId }: SertifikalarTabProps) {
         gecerlilik_tarihi: payload.gecerlilik_tarihi,
       } : s));
       toast({ title: "Güncellendi" });
+      onDataChange?.();
     } else {
       const { data, error } = await supabase.from("firma_sertifikalar").insert(payload).select().single();
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
@@ -137,6 +139,7 @@ export default function SertifikalarTab({ userId }: SertifikalarTabProps) {
         gecerlilik_tarihi: payload.gecerlilik_tarihi,
       }]);
       toast({ title: "Sertifika eklendi" });
+      onDataChange?.();
     }
     resetForm();
   };
@@ -160,6 +163,7 @@ export default function SertifikalarTab({ userId }: SertifikalarTabProps) {
     setSertifikalar(prev => prev.filter(s => s.id !== id));
     if (editingId === id) resetForm();
     toast({ title: "Sertifika silindi" });
+    onDataChange?.();
   };
 
   if (loading) return <div className="flex items-center justify-center h-40 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>;

@@ -154,21 +154,21 @@ const FirmaBilgilerim = () => {
       case "genel":
         return <GenelFirmaBilgileri userId={userId} onFirmaTuruChange={handleFirmaTuruChange} onDataChange={triggerRefresh} />;
       case "urun-hizmet":
-        return <UrunHizmetTab userId={userId} firmaTuruName={firmaTuruName} />;
+        return <UrunHizmetTab userId={userId} firmaTuruName={firmaTuruName} onDataChange={triggerRefresh} />;
       case "uretim-satis":
-        return <UretimSatisTab userId={userId} />;
+        return <UretimSatisTab userId={userId} onDataChange={triggerRefresh} />;
       case "tesis":
-        return <TesisBilgileriTab userId={userId} />;
+        return <TesisBilgileriTab userId={userId} onDataChange={triggerRefresh} />;
       case "makine":
-        return <MakineParkuruTab userId={userId} />;
+        return <MakineParkuruTab userId={userId} onDataChange={triggerRefresh} />;
       case "sertifikalar":
-        return <SertifikalarTab userId={userId} />;
+        return <SertifikalarTab userId={userId} onDataChange={triggerRefresh} />;
       case "referanslar":
-        return <ReferanslarTab userId={userId} />;
+        return <ReferanslarTab userId={userId} onDataChange={triggerRefresh} />;
       case "galeri":
-        return <GaleriTab userId={userId} />;
+        return <GaleriTab userId={userId} onDataChange={triggerRefresh} />;
       case "belgelerim":
-        return <BelgelerimTab userId={userId} />;
+        return <BelgelerimTab userId={userId} onDataChange={triggerRefresh} />;
       default:
         return <PlaceholderTab label={tabs.find(t => t.id === activeTab)?.label || activeTab} />;
     }

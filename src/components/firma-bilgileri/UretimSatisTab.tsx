@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 interface Props {
   userId: string;
+  onDataChange?: () => void;
 }
 
 interface Option {
@@ -415,7 +416,7 @@ function SearchableMultiSelect({
   );
 }
 
-export default function UretimSatisTab({ userId }: Props) {
+export default function UretimSatisTab({ userId, onDataChange }: Props) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -563,6 +564,7 @@ export default function UretimSatisTab({ userId }: Props) {
       }
 
       toast({ title: "Başarılı", description: "Üretim/Satış bilgileri güncellendi." });
+      onDataChange?.();
     } catch (e: any) {
       toast({
         title: "Hata",

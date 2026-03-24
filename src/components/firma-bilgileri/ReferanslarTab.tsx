@@ -14,9 +14,10 @@ interface Referans {
 
 interface ReferanslarTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-export default function ReferanslarTab({ userId }: ReferanslarTabProps) {
+export default function ReferanslarTab({ userId, onDataChange }: ReferanslarTabProps) {
   const [firmaId, setFirmaId] = useState("");
   const [loading, setLoading] = useState(true);
   const [referanslar, setReferanslar] = useState<Referans[]>([]);
@@ -94,6 +95,7 @@ export default function ReferanslarTab({ userId }: ReferanslarTabProps) {
         logo_url: logoUrl || r.logo_url,
       } : r));
       toast({ title: "Güncellendi" });
+      onDataChange?.();
     } else {
       const { data, error } = await supabase.from("firma_referanslar").insert({
         firma_id: firmaId,
@@ -103,6 +105,7 @@ export default function ReferanslarTab({ userId }: ReferanslarTabProps) {
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); setUploading(false); return; }
       setReferanslar(prev => [...prev, { id: data.id, referans_adi: referansAdi, logo_url: logoUrl }]);
       toast({ title: "Referans eklendi" });
+      onDataChange?.();
     }
 
     setUploading(false);
@@ -130,6 +133,7 @@ export default function ReferanslarTab({ userId }: ReferanslarTabProps) {
     setReferanslar(prev => prev.filter(r => r.id !== id));
     if (editingId === id) resetForm();
     toast({ title: "Referans silindi" });
+    onDataChange?.();
   };
 
   if (loading) return <div className="flex items-center justify-center h-40 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>;

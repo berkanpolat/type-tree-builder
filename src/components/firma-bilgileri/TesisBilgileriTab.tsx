@@ -28,9 +28,10 @@ interface Tesis {
 
 interface TesisBilgileriTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-export default function TesisBilgileriTab({ userId }: TesisBilgileriTabProps) {
+export default function TesisBilgileriTab({ userId, onDataChange }: TesisBilgileriTabProps) {
   const [firmaId, setFirmaId] = useState("");
   const [tesisler, setTesisler] = useState<Tesis[]>([]);
   const [tesisAdlari, setTesisAdlari] = useState<Option[]>([]);
@@ -157,6 +158,7 @@ export default function TesisBilgileriTab({ userId }: TesisBilgileriTabProps) {
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
       setTesisler(prev => prev.map(t => t.id === editingId ? { ...t, ...payload, tesis_adresi: tesisAdresi, makine_gucu: makineGucu } : t));
       toast({ title: "Güncellendi" });
+      onDataChange?.();
     } else {
       const { data, error } = await supabase.from("firma_tesisler").insert(payload).select().single();
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
@@ -170,6 +172,7 @@ export default function TesisBilgileriTab({ userId }: TesisBilgileriTabProps) {
         makine_gucu: makineGucu,
       }]);
       toast({ title: "Tesis eklendi" });
+      onDataChange?.();
     }
 
     // Update optionsMap for il/ilce
@@ -208,6 +211,7 @@ export default function TesisBilgileriTab({ userId }: TesisBilgileriTabProps) {
     setTesisler(prev => prev.filter(t => t.id !== id));
     if (editingId === id) resetForm();
     toast({ title: "Tesis silindi" });
+    onDataChange?.();
   };
 
   if (loading) return <div className="flex items-center justify-center h-40 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>;

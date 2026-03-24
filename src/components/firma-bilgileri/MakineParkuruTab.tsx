@@ -31,9 +31,10 @@ interface Teknoloji {
 
 interface MakineParkuruTabProps {
   userId: string;
+  onDataChange?: () => void;
 }
 
-export default function MakineParkuruTab({ userId }: MakineParkuruTabProps) {
+export default function MakineParkuruTab({ userId, onDataChange }: MakineParkuruTabProps) {
   const [firmaId, setFirmaId] = useState("");
   const [loading, setLoading] = useState(true);
   const [optionsMap, setOptionsMap] = useState<Record<string, string>>({});
@@ -184,11 +185,13 @@ export default function MakineParkuruTab({ userId }: MakineParkuruTabProps) {
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
       setMakineler(prev => prev.map(m => m.id === mkEditingId ? { ...m, ...payload, makine_sayisi: mkSayisi, tesis_id: mkTesisId || null } : m));
       toast({ title: "Güncellendi" });
+      onDataChange?.();
     } else {
       const { data, error } = await supabase.from("firma_makineler").insert(payload).select().single();
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
       setMakineler(prev => [...prev, { id: data.id, makine_kategori_id: mkKategoriId, makine_tur_id: mkTurId, makine_sayisi: mkSayisi, tesis_id: mkTesisId || null }]);
       toast({ title: "Makine eklendi" });
+      onDataChange?.();
     }
     resetMkForm();
   };
@@ -213,6 +216,7 @@ export default function MakineParkuruTab({ userId }: MakineParkuruTabProps) {
     setMakineler(prev => prev.filter(m => m.id !== id));
     if (mkEditingId === id) resetMkForm();
     toast({ title: "Makine silindi" });
+    onDataChange?.();
   };
 
   // ---- TEKNOLOJİ CRUD ----
@@ -241,6 +245,7 @@ export default function MakineParkuruTab({ userId }: MakineParkuruTabProps) {
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
       setTeknolojiler(prev => [...prev, { id: data.id, teknoloji_kategori_id: tkKategoriId, teknoloji_tur_id: tkTurId }]);
       toast({ title: "Teknoloji eklendi" });
+      onDataChange?.();
     }
     resetTkForm();
   };
@@ -262,6 +267,7 @@ export default function MakineParkuruTab({ userId }: MakineParkuruTabProps) {
     setTeknolojiler(prev => prev.filter(t => t.id !== id));
     if (tkEditingId === id) resetTkForm();
     toast({ title: "Teknoloji silindi" });
+    onDataChange?.();
   };
 
   if (loading) return <div className="flex items-center justify-center h-40 text-muted-foreground"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" /></div>;
