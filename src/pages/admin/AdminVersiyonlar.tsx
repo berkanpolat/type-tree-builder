@@ -73,7 +73,7 @@ function generateAutoComment(logs: ChangeLog[]): string {
 }
 
 export default function AdminVersiyonlar() {
-  const { user } = useAdminAuth();
+  const { user, token } = useAdminAuth();
   const callApi = useAdminApi();
   const { toast } = useToast();
 
