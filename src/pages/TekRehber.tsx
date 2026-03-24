@@ -587,6 +587,7 @@ export default function TekRehber() {
             firmaTuruId={selectedFirmaTuru}
             firmaTuruName={selectedFirmaTuruName}
             onFilterChange={setFirmaFilterState}
+            initialSelections={firmaFilterState?.firmaTipleri?.length ? { firmaTipi: firmaFilterState.firmaTipleri } : undefined}
           />
 
           <div className="flex-1 min-w-0 space-y-4">
