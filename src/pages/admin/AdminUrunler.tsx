@@ -889,6 +889,53 @@ export default function AdminUrunler() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Fake Görüntülenme / Favori Dialog */}
+      <AlertDialog open={!!fakeUrunDialog} onOpenChange={(open) => { if (!open) { setFakeUrunDialog(null); setFakeUrunAmount(""); } }}>
+        <AlertDialogContent style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+          <AlertDialogHeader>
+            <AlertDialogTitle style={{ color: "hsl(var(--admin-text))" }}>
+              Yapay {fakeUrunDialog?.type === "goruntuleme" ? "Görüntülenme" : "Favori"} Ekle
+            </AlertDialogTitle>
+            <AlertDialogDescription style={{ color: "hsl(var(--admin-text-secondary))" }}>
+              <strong>{fakeUrunDialog?.baslik}</strong> ürününe yapay {fakeUrunDialog?.type === "goruntuleme" ? "görüntülenme" : "favori"} ekleyin.
+              {fakeUrunDialog?.type === "goruntuleme" && <><br />Mevcut: <strong>{fakeUrunDialog?.current ?? 0}</strong></>}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Label style={{ color: "hsl(var(--admin-text-secondary))" }}>Eklenecek Sayı</Label>
+            <Input
+              type="number" min="1" placeholder="Örn: 50"
+              value={fakeUrunAmount} onChange={(e) => setFakeUrunAmount(e.target.value)}
+              style={{ background: "hsl(var(--admin-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={fakeUrunLoading}>İptal</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={fakeUrunLoading || !fakeUrunAmount || parseInt(fakeUrunAmount) < 1}
+              onClick={async (e) => {
+                e.preventDefault();
+                setFakeUrunLoading(true);
+                try {
+                  const actionName = fakeUrunDialog?.type === "goruntuleme" ? "add-fake-urun-goruntuleme" : "add-fake-urun-favori";
+                  await callApi(actionName, { token, urunId: fakeUrunDialog?.urunId, miktar: fakeUrunAmount });
+                  toast({ title: "Başarılı", description: `${fakeUrunAmount} yapay ${fakeUrunDialog?.type === "goruntuleme" ? "görüntülenme" : "favori"} eklendi.` });
+                  setFakeUrunDialog(null);
+                  setFakeUrunAmount("");
+                  fetchData();
+                } catch (err: any) {
+                  toast({ title: "Hata", description: err.message, variant: "destructive" });
+                } finally {
+                  setFakeUrunLoading(false);
+                }
+              }}
+            >
+              {fakeUrunLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ekle"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
