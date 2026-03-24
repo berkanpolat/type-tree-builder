@@ -158,6 +158,7 @@ export default function TesisBilgileriTab({ userId, onDataChange }: TesisBilgile
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
       setTesisler(prev => prev.map(t => t.id === editingId ? { ...t, ...payload, tesis_adresi: tesisAdresi, makine_gucu: makineGucu } : t));
       toast({ title: "Güncellendi" });
+      onDataChange?.();
     } else {
       const { data, error } = await supabase.from("firma_tesisler").insert(payload).select().single();
       if (error) { toast({ title: "Hata", description: error.message, variant: "destructive" }); return; }
