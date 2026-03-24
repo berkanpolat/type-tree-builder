@@ -169,6 +169,7 @@ export default function AdminSikayetler() {
   };
 
   return (
+      <>
     {/* Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-6">
         {statCards.map((c) => (
@@ -480,5 +481,6 @@ export default function AdminSikayetler() {
         item={actionItem}
         onSuccess={fetchData}
       />
+      </>
   );
 }
