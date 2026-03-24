@@ -35,6 +35,8 @@ import {
   MessageSquare,
   ArrowRight,
   Bookmark,
+  Factory,
+  Building2,
 } from "lucide-react";
 
 const PER_PAGE = 20;
