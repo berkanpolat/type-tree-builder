@@ -5475,6 +5475,37 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ── Fake Görüntülenme Ekleme ──
+    if (action === "add-fake-goruntuleme") {
+      const { token, ihaleId, miktar } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary) return jsonResponse({ error: "Yetkisiz" }, 401);
+
+      const amount = parseInt(miktar, 10);
+      if (!ihaleId || !amount || amount < 1) return jsonResponse({ error: "Geçersiz parametreler" }, 400);
+
+      // Get current count
+      const { data: ihale, error: fetchErr } = await supabase
+        .from("ihaleler")
+        .select("goruntuleme_sayisi")
+        .eq("id", ihaleId)
+        .single();
+      if (fetchErr || !ihale) return jsonResponse({ error: "İhale bulunamadı" }, 404);
+
+      const { error: updateErr } = await supabase
+        .from("ihaleler")
+        .update({ goruntuleme_sayisi: (ihale.goruntuleme_sayisi || 0) + amount })
+        .eq("id", ihaleId);
+      if (updateErr) return jsonResponse({ error: updateErr.message }, 500);
+
+      await logActivity(supabase, payload, "add-fake-goruntuleme", {
+        target_type: "ihale",
+        target_id: ihaleId,
+        details: { miktar: amount },
+      });
+      return jsonResponse({ success: true, yeni_toplam: (ihale.goruntuleme_sayisi || 0) + amount });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {

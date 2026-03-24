@@ -170,6 +170,9 @@ export default function AdminIhaleler() {
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; title: string; desc: string; action: () => void }>({ open: false, title: "", desc: "", action: () => {} });
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [fakeTeklifTarget, setFakeTeklifTarget] = useState<{ id: string; baslik: string } | null>(null);
+  const [fakeViewTarget, setFakeViewTarget] = useState<{ id: string; baslik: string; current: number } | null>(null);
+  const [fakeViewAmount, setFakeViewAmount] = useState("");
+  const [fakeViewLoading, setFakeViewLoading] = useState(false);
 
   const callApi = useAdminApi();
 
@@ -862,6 +865,17 @@ export default function AdminIhaleler() {
                             <Bot className="w-3 h-3" /> Yapay Teklif
                           </Button>
                         )}
+
+                        {user?.is_primary && (
+                          <Button
+                            onClick={() => setFakeViewTarget({ id: ihale.id, baslik: ihale.baslik, current: ihale.goruntuleme_sayisi })}
+                            variant="outline" size="sm"
+                            className="text-[11px] h-7 px-2.5 gap-1"
+                            style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                          >
+                            <Eye className="w-3 h-3" /> Yapay Görüntülenme
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -929,6 +943,55 @@ export default function AdminIhaleler() {
         ihaleBaslik={fakeTeklifTarget?.baslik || ""}
         onSuccess={fetchData}
       />
+
+      {/* Fake Görüntülenme Dialog */}
+      <AlertDialog open={!!fakeViewTarget} onOpenChange={(open) => { if (!open) { setFakeViewTarget(null); setFakeViewAmount(""); } }}>
+        <AlertDialogContent style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+          <AlertDialogHeader>
+            <AlertDialogTitle style={{ color: "hsl(var(--admin-text))" }}>Yapay Görüntülenme Ekle</AlertDialogTitle>
+            <AlertDialogDescription style={{ color: "hsl(var(--admin-text-secondary))" }}>
+              <strong>{fakeViewTarget?.baslik}</strong> ihalesine yapay görüntülenme ekleyin.
+              <br />Mevcut: <strong>{fakeViewTarget?.current ?? 0}</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <Label style={{ color: "hsl(var(--admin-text-secondary))" }}>Eklenecek Görüntülenme Sayısı</Label>
+            <Input
+              type="number" min="1" placeholder="Örn: 50"
+              value={fakeViewAmount} onChange={(e) => setFakeViewAmount(e.target.value)}
+              style={{ background: "hsl(var(--admin-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+            />
+            {fakeViewAmount && parseInt(fakeViewAmount) > 0 && (
+              <p className="text-xs mt-1" style={{ color: "hsl(var(--admin-text-secondary))" }}>
+                Yeni toplam: <strong>{(fakeViewTarget?.current ?? 0) + parseInt(fakeViewAmount)}</strong>
+              </p>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={fakeViewLoading}>İptal</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={fakeViewLoading || !fakeViewAmount || parseInt(fakeViewAmount) < 1}
+              onClick={async (e) => {
+                e.preventDefault();
+                setFakeViewLoading(true);
+                try {
+                  await callApi("add-fake-goruntuleme", { ihaleId: fakeViewTarget?.id, miktar: fakeViewAmount });
+                  toast({ title: "Başarılı", description: `${fakeViewAmount} yapay görüntülenme eklendi.` });
+                  setFakeViewTarget(null);
+                  setFakeViewAmount("");
+                  fetchData();
+                } catch (err: any) {
+                  toast({ title: "Hata", description: err.message, variant: "destructive" });
+                } finally {
+                  setFakeViewLoading(false);
+                }
+              }}
+            >
+              {fakeViewLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Ekle"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
