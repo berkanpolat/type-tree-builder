@@ -568,7 +568,7 @@ export default function AdminHedefler() {
                           <label className="text-xs mb-1 block" style={s.muted}>Birim</label>
                           <Select value={k.birimi} onValueChange={v => updateKademe(i, "birimi", v)}>
                             <SelectTrigger style={s.input} className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                            <SelectContent style={{ ...s.card, zIndex: 9999 }} position="popper" sideOffset={4}>
+                            <SelectContent style={{ ...s.card, zIndex: 99999 }} position="popper" sideOffset={4}>
                               <SelectItem value="tl">₺ TL</SelectItem>
                               <SelectItem value="usd">$ USD</SelectItem>
                               <SelectItem value="yuzde">% Yüzde</SelectItem>
