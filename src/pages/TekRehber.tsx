@@ -989,13 +989,36 @@ export default function TekRehber() {
                               <Factory className="w-3 h-3" aria-hidden="true" /> Üretici:
                             </span>
                             {uretimItems.slice(0, 4).map((item, i) => (
-                              <Badge key={`u-${i}`} variant="outline" className="text-[10px] font-normal py-0 px-1.5">
+                              <button
+                                key={`u-${i}`}
+                                type="button"
+                                className="inline-flex items-center rounded-md border border-border bg-transparent px-1.5 py-0 text-[10px] font-normal text-foreground cursor-default"
+                                tabIndex={-1}
+                              >
                                 {item.turName}
-                              </Badge>
+                              </button>
                             ))}
                             {uretimItems.length > 4 && (
-                              <span className="text-[10px] text-muted-foreground">+{uretimItems.length - 4}</span>
+                              <button
+                                type="button"
+                                className="inline-flex items-center rounded-md border border-border bg-transparent px-1.5 py-0 text-[10px] font-normal text-muted-foreground cursor-default"
+                                tabIndex={-1}
+                              >
+                                +{uretimItems.length - 4}
+                              </button>
                             )}
+                            {/* All items in DOM for SEO, visually hidden beyond visible limit */}
+                            {uretimItems.length > 4 && uretimItems.slice(4).map((item, i) => (
+                              <button
+                                key={`uh-${i}`}
+                                type="button"
+                                className="sr-only"
+                                tabIndex={-1}
+                                aria-hidden="true"
+                              >
+                                {item.turName}
+                              </button>
+                            ))}
                           </div>
                         )}
                       </article>
