@@ -70,7 +70,7 @@ const HeroSearchSection = ({
       <div className="absolute -bottom-24 -left-10 w-48 h-48 rounded-full bg-[radial-gradient(circle,rgba(60,100,255,0.08)_0%,transparent_65%)] pointer-events-none" />
 
       <div className="relative z-10 px-6 md:px-12 py-8">
-        <div className="grid <div className="grid grid-cols-1 lg:grid-cols-[1fr_3fr_1fr] gap-6 lg:gap-8 items-center"> gap-6 lg:gap-8 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_3fr_1fr] gap-6 lg:gap-8 items-center">
           {/* LEFT: Slogan */}
           <div className="hidden lg:block text-primary-foreground text-xl font-light leading-relaxed whitespace-nowrap">
             İşiniz Tekstilse,
