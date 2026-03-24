@@ -516,7 +516,7 @@ export default function AdminHedefler() {
 
         {/* Kademe Prim Ayarla Dialog */}
         <Dialog open={!!showPrim} onOpenChange={() => { setShowPrim(null); setPrimKademeler([]); }}>
-          <DialogContent style={{ ...s.card, maxHeight: "90vh", overflowY: "auto" }} className="max-w-xl [&_[data-radix-popper-content-wrapper]]:!z-[9999]">
+          <DialogContent style={{ ...s.card, maxHeight: "90vh", overflowY: "auto" }} className="max-w-xl !bg-card [&_[data-radix-popper-content-wrapper]]:!z-[99999]">
             <DialogHeader>
               <DialogTitle style={s.text}>Prim Kademeleri</DialogTitle>
               <DialogDescription style={s.muted}>
