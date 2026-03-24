@@ -11,12 +11,12 @@ import { toast } from "sonner";
 import { ShieldAlert, Clock, Ban, AlertTriangle, Loader2 } from "lucide-react";
 
 const s = {
-  text: { color: "hsl(var(--admin-text))" } as CSSProperties,
-  muted: { color: "hsl(var(--admin-muted))" } as CSSProperties,
+  text: { color: "hsl(var(--foreground))" } as CSSProperties,
+  muted: { color: "hsl(var(--muted-foreground))" } as CSSProperties,
   input: {
-    background: "hsl(var(--admin-input-bg))",
-    borderColor: "hsl(var(--admin-border))",
-    color: "hsl(var(--admin-text))",
+    backgroundColor: "hsl(var(--background))",
+    borderColor: "hsl(var(--border))",
+    color: "hsl(var(--foreground))",
   } as CSSProperties,
 };
 
@@ -172,7 +172,7 @@ export default function SikayetAksiyonDialog({ open, onClose, item, onSuccess }:
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto" style={{ background: "hsl(var(--admin-card-bg))", borderColor: "hsl(var(--admin-border))" }}>
+      <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto !bg-card" style={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))" }}>
         <DialogHeader>
           <DialogTitle style={s.text}>İşlem Yap — {item.sikayet_no}</DialogTitle>
           <p className="text-xs mt-1" style={s.muted}>

@@ -24,10 +24,10 @@ import { Progress } from "@/components/ui/progress";
 interface PaketOption { id: string; ad: string; slug: string; }
 
 const s = {
-  card: { background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))", borderRadius: "0.75rem" } as CSSProperties,
-  text: { color: "hsl(var(--admin-text))" } as CSSProperties,
-  muted: { color: "hsl(var(--admin-muted))" } as CSSProperties,
-  input: { background: "hsl(var(--admin-input-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" } as CSSProperties,
+  card: { backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "0.75rem" } as CSSProperties,
+  text: { color: "hsl(var(--foreground))" } as CSSProperties,
+  muted: { color: "hsl(var(--muted-foreground))" } as CSSProperties,
+  input: { backgroundColor: "hsl(var(--background))", borderColor: "hsl(var(--border))", color: "hsl(var(--foreground))" } as CSSProperties,
 };
 
 interface Kademe {
@@ -413,7 +413,7 @@ export default function AdminHedefler() {
 
         {/* Detay Dialog */}
         <Dialog open={!!showDetail} onOpenChange={() => setShowDetail(null)}>
-          <DialogContent style={s.card} className="max-w-lg">
+          <DialogContent style={s.card} className="max-w-lg !bg-card">
             <DialogHeader>
               <DialogTitle style={s.text}>PKL Detayı</DialogTitle>
               <DialogDescription style={s.muted}>Prim Kazanma Limiti detay bilgileri</DialogDescription>
@@ -516,7 +516,7 @@ export default function AdminHedefler() {
 
         {/* Kademe Prim Ayarla Dialog */}
         <Dialog open={!!showPrim} onOpenChange={() => { setShowPrim(null); setPrimKademeler([]); }}>
-          <DialogContent style={{ ...s.card, maxHeight: "90vh", overflowY: "auto" }} className="max-w-xl [&_[data-radix-popper-content-wrapper]]:!z-[9999]">
+          <DialogContent style={{ ...s.card, maxHeight: "90vh", overflowY: "auto" }} className="max-w-xl !bg-card [&_[data-radix-popper-content-wrapper]]:!z-[99999]">
             <DialogHeader>
               <DialogTitle style={s.text}>Prim Kademeleri</DialogTitle>
               <DialogDescription style={s.muted}>
@@ -568,7 +568,7 @@ export default function AdminHedefler() {
                           <label className="text-xs mb-1 block" style={s.muted}>Birim</label>
                           <Select value={k.birimi} onValueChange={v => updateKademe(i, "birimi", v)}>
                             <SelectTrigger style={s.input} className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                            <SelectContent style={{ ...s.card, zIndex: 9999 }} position="popper" sideOffset={4}>
+                            <SelectContent style={{ ...s.card, zIndex: 99999 }} position="popper" sideOffset={4}>
                               <SelectItem value="tl">₺ TL</SelectItem>
                               <SelectItem value="usd">$ USD</SelectItem>
                               <SelectItem value="yuzde">% Yüzde</SelectItem>
@@ -612,7 +612,7 @@ export default function AdminHedefler() {
 
         {/* PKL Oluştur Dialog */}
         <Dialog open={showCreate} onOpenChange={setShowCreate}>
-          <DialogContent style={{ ...s.card, maxHeight: "90vh", overflowY: "auto" }} className="max-w-lg [&_[data-radix-popper-content-wrapper]]:!z-[9999]">
+          <DialogContent style={{ ...s.card, maxHeight: "90vh", overflowY: "auto" }} className="max-w-lg !bg-card [&_[data-radix-popper-content-wrapper]]:!z-[99999]">
             <DialogHeader>
               <DialogTitle style={s.text}>Yeni PKL Ata</DialogTitle>
               <DialogDescription style={s.muted}>Personele Prim Kazanma Limiti belirleyin</DialogDescription>
