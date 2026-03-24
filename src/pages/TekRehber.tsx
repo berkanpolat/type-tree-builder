@@ -963,13 +963,16 @@ export default function TekRehber() {
                             <Button size="sm" variant="outline" className="flex-1 sm:flex-none gap-1.5 h-8 text-xs" onClick={() => handleMessageFirma(firma.user_id)} aria-label={`${firma.firma_unvani} firmasına mesaj gönder`}>
                               <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Mesaj
                             </Button>
-                            <button
+                            <Button
+                              size="sm"
+                              variant={firma.is_favorited ? "secondary" : "outline"}
+                              className="flex-1 sm:flex-none gap-1.5 h-8 text-xs"
                               onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)}
                               aria-label={firma.is_favorited ? "Favorilerden çıkar" : "Favorilere ekle"}
-                              className="p-1.5 hover:bg-muted rounded-md transition-colors sm:self-center"
                             >
-                              <Bookmark className={`w-5 h-5 ${firma.is_favorited ? "fill-primary text-primary" : "text-muted-foreground/40 group-hover:text-muted-foreground/70"}`} aria-hidden="true" />
-                            </button>
+                              <Bookmark className={`w-3.5 h-3.5 ${firma.is_favorited ? "fill-primary text-primary" : ""}`} aria-hidden="true" />
+                              {firma.is_favorited ? "Favorilerde" : "Favorilere Ekle"}
+                            </Button>
                           </div>
                         </div>
 
