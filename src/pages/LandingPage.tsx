@@ -364,7 +364,7 @@ const LandingPage = () => {
               <img
                 src={logoIconImg}
                 alt="Tekstil A.Ş. Logo"
-                className="w-56 h-56 object-contain animate-logo-pulse"
+                className="w-80 h-80 object-contain animate-logo-pulse"
               />
             </div>
           </div>
