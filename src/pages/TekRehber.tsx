@@ -891,24 +891,18 @@ export default function TekRehber() {
                                 {firma.firma_unvani}
                               </Link>
                             </h2>
-                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                              {firma.uretim_satis_rolu && (
-                                <Badge className="bg-secondary/15 text-secondary border-secondary/25 text-[10px] font-semibold gap-1">
-                                  <Factory className="w-3 h-3" aria-hidden="true" />
-                                  {firma.uretim_satis_rolu}
-                                </Badge>
-                              )}
-                              {(firma.firma_turu_name || firma.firma_tipi_name) && (
+                            {(firma.firma_turu_name || firma.firma_tipi_name) && (
+                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                                 <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
                                   {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
                                 </Badge>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
                         </div>
 
                         {/* 3-Column Body (desktop) / stacked (mobile) */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 border-t border-border/50">
+                        <div className="grid grid-cols-1 sm:grid-cols-[2fr_2fr_1fr] gap-0 border-t border-border/50">
                           {/* LEFT: Info fields */}
                           <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 space-y-2">
                             <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
@@ -969,48 +963,32 @@ export default function TekRehber() {
                             <Button size="sm" variant="outline" className="flex-1 sm:flex-none gap-1.5 h-8 text-xs" onClick={() => handleMessageFirma(firma.user_id)} aria-label={`${firma.firma_unvani} firmasına mesaj gönder`}>
                               <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Mesaj
                             </Button>
-                            <button
+                            <Button
+                              size="sm"
+                              variant={firma.is_favorited ? "secondary" : "outline"}
+                              className="flex-1 sm:flex-none gap-1.5 h-8 text-xs"
                               onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)}
                               aria-label={firma.is_favorited ? "Favorilerden çıkar" : "Favorilere ekle"}
-                              className="p-1.5 hover:bg-muted rounded-md transition-colors sm:self-center"
                             >
-                              <Bookmark className={`w-5 h-5 ${firma.is_favorited ? "fill-primary text-primary" : "text-muted-foreground/40 group-hover:text-muted-foreground/70"}`} aria-hidden="true" />
-                            </button>
+                              <Bookmark className={`w-3.5 h-3.5 ${firma.is_favorited ? "fill-primary text-primary" : ""}`} aria-hidden="true" />
+                              {firma.is_favorited ? "Favorilerde" : "Favorilere Ekle"}
+                            </Button>
                           </div>
                         </div>
 
                         {/* Bottom bar: Üretim/Satış ürünleri */}
-                        {(uretimItems.length > 0 || satisItems.length > 0) && (
-                          <div className="border-t border-border/50 px-4 py-2.5 sm:px-5 flex flex-wrap items-center gap-x-4 gap-y-1.5">
-                            {uretimItems.length > 0 && (
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-wide flex items-center gap-1">
-                                  <Factory className="w-3 h-3" aria-hidden="true" /> Üretici:
-                                </span>
-                                {uretimItems.slice(0, 4).map((item, i) => (
-                                  <Badge key={`u-${i}`} variant="outline" className="text-[10px] font-normal py-0 px-1.5">
-                                    {item.turName}
-                                  </Badge>
-                                ))}
-                                {uretimItems.length > 4 && (
-                                  <span className="text-[10px] text-muted-foreground">+{uretimItems.length - 4}</span>
-                                )}
-                              </div>
-                            )}
-                            {satisItems.length > 0 && (
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-[10px] font-semibold text-secondary/80 uppercase tracking-wide flex items-center gap-1">
-                                  <Package className="w-3 h-3" aria-hidden="true" /> Satıcı:
-                                </span>
-                                {satisItems.slice(0, 4).map((item, i) => (
-                                  <Badge key={`s-${i}`} variant="outline" className="text-[10px] font-normal py-0 px-1.5">
-                                    {item.turName}
-                                  </Badge>
-                                ))}
-                                {satisItems.length > 4 && (
-                                  <span className="text-[10px] text-muted-foreground">+{satisItems.length - 4}</span>
-                                )}
-                              </div>
+                        {uretimItems.length > 0 && (
+                          <div className="border-t border-border/50 px-4 py-2.5 sm:px-5 flex flex-wrap items-center gap-1.5">
+                            <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-wide flex items-center gap-1">
+                              <Factory className="w-3 h-3" aria-hidden="true" /> Üretici:
+                            </span>
+                            {uretimItems.slice(0, 4).map((item, i) => (
+                              <Badge key={`u-${i}`} variant="outline" className="text-[10px] font-normal py-0 px-1.5">
+                                {item.turName}
+                              </Badge>
+                            ))}
+                            {uretimItems.length > 4 && (
+                              <span className="text-[10px] text-muted-foreground">+{uretimItems.length - 4}</span>
                             )}
                           </div>
                         )}
