@@ -186,7 +186,7 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
 
   return (
     <div
-      className="absolute left-0 top-full mt-0 bg-background border border-border rounded-b-xl shadow-xl z-50 flex max-h-[400px] min-w-[280px]"
+      className="absolute left-0 top-full mt-0 bg-background border border-border rounded-b-xl shadow-xl z-50 flex min-w-[280px]"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
