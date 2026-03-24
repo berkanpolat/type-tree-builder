@@ -126,7 +126,7 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
   const filters = FILTER_CONFIG[firmaTuruName] || FILTER_CONFIG["Tedarikçi"] || [];
 
   useEffect(() => {
-    setSelections({});
+    setSelections(initialSelections || {});
     setMoq("");
     setUsSelectedKategoriler([]);
     setUsSelectedGruplar([]);
