@@ -256,15 +256,27 @@ thead .sticky-action-col {
 }
 
 @keyframes logo-pulse {
-  0%, 100% {
+  0% {
     transform: scale(1);
     filter: drop-shadow(0 0 15px rgba(234, 161, 43, 0.4));
   }
-  50% {
+  15% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 40px rgba(234, 161, 43, 0.8));
+  }
+  30% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 15px rgba(234, 161, 43, 0.4));
+  }
+  45% {
     transform: scale(1.08);
-    filter: drop-shadow(0 0 35px rgba(234, 161, 43, 0.7));
+    filter: drop-shadow(0 0 30px rgba(234, 161, 43, 0.6));
+  }
+  60%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 15px rgba(234, 161, 43, 0.4));
   }
 }
 .animate-logo-pulse {
-  animation: logo-pulse 3s ease-in-out infinite;
+  animation: logo-pulse 1.4s ease-in-out infinite;
 }
