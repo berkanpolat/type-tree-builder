@@ -70,18 +70,31 @@ const HeroSearchSection = ({
       <div className="absolute -bottom-24 -left-10 w-48 h-48 rounded-full bg-[radial-gradient(circle,rgba(60,100,255,0.08)_0%,transparent_65%)] pointer-events-none" />
 
       <div className="relative z-10 px-6 md:px-12 py-8">
-        {/* Slogan above search */}
-        <div className="text-center mb-4">
-          <h1 className="text-primary-foreground text-xl md:text-2xl font-light leading-relaxed">
-            İşiniz Tekstilse, Yeriniz{" "}
-            <span className="inline-block bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground font-bold px-2 py-0.5 rounded-md text-lg md:text-xl">
-              Tekstil A.Ş.
-            </span>
-          </h1>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr_1fr] gap-6 lg:gap-8 items-center">
 
-        <div className="grid grid-cols-1 lg:grid-cols-[3fr_1fr] gap-6 lg:gap-8 items-center">
-          {/* LEFT: Search */}
+          {/* LEFT: Slogan */}
+          <div className="hidden lg:flex flex-col items-start justify-center">
+            <h1 className="text-primary-foreground text-xl font-light leading-relaxed">
+              İşiniz Tekstilse,
+              <br />
+              Yeriniz{" "}
+              <span className="inline-block bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground font-bold px-2 py-0.5 rounded-md text-lg">
+                Tekstil A.Ş.
+              </span>
+            </h1>
+          </div>
+
+          {/* Mobile slogan (above search) */}
+          <div className="lg:hidden text-center">
+            <h1 className="text-primary-foreground text-xl font-light leading-relaxed">
+              İşiniz Tekstilse, Yeriniz{" "}
+              <span className="inline-block bg-gradient-to-r from-secondary to-[hsl(32,85%,47%)] text-primary-foreground font-bold px-2 py-0.5 rounded-md text-lg">
+                Tekstil A.Ş.
+              </span>
+            </h1>
+          </div>
+
+          {/* CENTER: Search */}
           <div ref={searchRef}>
             {/* Label badge */}
             <div className="flex justify-center mb-2">
@@ -221,8 +234,8 @@ const HeroSearchSection = ({
             </div>
           </div>
 
-          {/* RIGHT: %0 Badge */}
-          <div className="hidden lg:flex items-center justify-end gap-3.5">
+          {/* RIGHT: Animated %0 Badge */}
+          <div className="hidden lg:flex items-center justify-center">
             <div className="animate-[floatBadge_4s_ease-in-out_infinite] flex items-center gap-3.5">
               <div className="relative w-[90px] h-[90px] flex items-center justify-center">
                 <div className="absolute inset-0 rounded-full border-[1.5px] border-dashed border-secondary/35 animate-[spin_8s_linear_infinite]">
@@ -245,6 +258,7 @@ const HeroSearchSection = ({
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </div>
