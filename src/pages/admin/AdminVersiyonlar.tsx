@@ -94,7 +94,8 @@ export default function AdminVersiyonlar() {
     setLoading(true);
     try {
       const data = await callApi("list-releases", { token });
-      setReleases(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : (data?.data && Array.isArray(data.data) ? data.data : []);
+      setReleases(list);
     } catch (e: any) {
       toast({ title: "Hata", description: e.message, variant: "destructive" });
     } finally {
