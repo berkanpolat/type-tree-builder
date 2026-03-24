@@ -90,6 +90,15 @@ export default function TekIhaleTanitim() {
               <Gavel className="w-4 h-4 mr-2" />
               İhaleleri Keşfet
             </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-secondary/50 text-primary-foreground hover:bg-secondary/10 font-semibold px-8"
+              onClick={() => setLeadDialogOpen(true)}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Tanıtım PDF İndir
+            </Button>
           </div>
         </div>
       </section>
