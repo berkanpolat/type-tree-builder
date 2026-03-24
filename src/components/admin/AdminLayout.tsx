@@ -66,6 +66,7 @@ const menuGroups: MenuGroup[] = [
       { label: "Performans", path: "/yonetim/performans", icon: Gauge, permission: null, primaryOnly: true },
       { label: "Test Merkezi", path: "/yonetim/test-merkezi", icon: FlaskConical, permission: null, primaryOnly: false },
       { label: "Sistem Logları", path: "/yonetim/sistem-loglari", icon: Server, permission: "islem_goruntule", primaryOnly: false },
+      { label: "Versiyonlar", path: "/yonetim/versiyonlar", icon: GitBranch, permission: null, primaryOnly: true },
     ],
   },
 ];

@@ -245,6 +245,7 @@ const AppContent = () => {
                   <Route path="test-merkezi" element={<AdminTestMerkezi />} />
                   <Route path="sistem-loglari" element={<AdminSistemLoglari />} />
                   <Route path="seo" element={<AdminSeo />} />
+                  <Route path="versiyonlar" element={<AdminVersiyonlar />} />
                 </Route>
 
                 <Route path="/:slug" element={<FirmaDetay />} />
