@@ -294,17 +294,8 @@ export default function FirmaDetay() {
     setActiveMenu(sectionId);
     const el = sectionRefs.current[sectionId];
     if (el) {
-      // Find the nearest scrollable ancestor (for mobile app-shell layout)
-      const scrollParent = el.closest('.overflow-y-auto') || window;
-      if (scrollParent instanceof HTMLElement) {
-        const containerRect = scrollParent.getBoundingClientRect();
-        const elRect = el.getBoundingClientRect();
-        const offset = elRect.top - containerRect.top + scrollParent.scrollTop - 120;
-        scrollParent.scrollTo({ top: offset, behavior: "smooth" });
-      } else {
-        const top = el.getBoundingClientRect().top + window.scrollY - 120;
-        window.scrollTo({ top, behavior: "smooth" });
-      }
+      const top = el.getBoundingClientRect().top + window.scrollY - 120;
+      window.scrollTo({ top, behavior: "smooth" });
     }
   };
 
