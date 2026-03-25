@@ -695,6 +695,67 @@ export default function TekRehber() {
                     ...(firma.kurulus_tarihi ? { "foundingDate": firma.kurulus_tarihi } : {}),
                   };
 
+                  if (cardView === "v2") {
+                    // ─── V2: COMPACT CARD WITH COMPLETION BAR ───
+                    const MAX_PROFILE_SCORE = 43;
+                    const completionPct = Math.min(100, Math.round(((firma.profile_score ?? 0) / MAX_PROFILE_SCORE) * 100));
+                    const completionColor = completionPct >= 75 ? "text-emerald-600" : completionPct >= 40 ? "text-amber-600" : "text-destructive";
+                    const progressColor = completionPct >= 75 ? "[&>div]:bg-emerald-500" : completionPct >= 40 ? "[&>div]:bg-amber-500" : "[&>div]:bg-destructive";
+
+                    return (
+                      <article
+                        key={firma.id}
+                        className="group rounded-xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-200 overflow-hidden cursor-pointer"
+                        onClick={() => navigate(firmaUrl)}
+                      >
+                        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+                        <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
+                          {/* Logo */}
+                          <div className="relative shrink-0">
+                            {firma.logo_url ? (
+                              <img src={firma.logo_url} alt={`${firma.firma_unvani} logosu`} loading="lazy" width={48} height={48} className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl border border-border object-contain bg-muted p-1" />
+                            ) : (
+                              <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={null} size="md" className="w-11 h-11 sm:w-12 sm:h-12 border border-border" />
+                            )}
+                            {firma.belge_onayli && (
+                              <div className="absolute -bottom-1 -right-1"><VerifiedBadge /></div>
+                            )}
+                          </div>
+
+                          {/* Name + Type */}
+                          <div className="flex-1 min-w-0">
+                            <h2 className="font-bold text-foreground text-sm sm:text-base leading-tight truncate">
+                              <Link to={firmaUrl} className="hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
+                                {firma.firma_unvani}
+                              </Link>
+                            </h2>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              {(firma.firma_turu_name || firma.firma_tipi_name) && (
+                                <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
+                                  {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
+                                </Badge>
+                              )}
+                              {locationText && (
+                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                  <MapPin className="w-3 h-3" /> {locationText}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Completion */}
+                          <div className="shrink-0 flex flex-col items-end gap-1 min-w-[100px] sm:min-w-[130px]">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-sm sm:text-base font-bold ${completionColor}`}>{completionPct}%</span>
+                              <span className="text-[10px] text-muted-foreground hidden sm:inline">Profil Doluluk</span>
+                            </div>
+                            <Progress value={completionPct} className={`h-2 w-full bg-muted ${progressColor}`} />
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  }
+
                   {
                     // ─── V3: 3-COLUMN CARD DESIGN ───
                     const descriptionExcerptV3 = firma.firma_hakkinda
