@@ -679,7 +679,7 @@ export default function TekRehber() {
                     ...(firma.kurulus_tarihi ? { "foundingDate": firma.kurulus_tarihi } : {}),
                   };
 
-                  {
+                  
                     const completionPctV3 = Math.min(100, firma.profile_score ?? 0);
                     const descriptionExcerptV3 = firma.firma_hakkinda
                       ? firma.firma_hakkinda.length > 200
@@ -873,6 +873,7 @@ export default function TekRehber() {
                       </article>
                     );
                 })}
+
 
                 {/* Pagination */}
                 {totalPages > 1 && (
