@@ -819,6 +819,12 @@ export default function FirmaDetay() {
               </div>
             </div>
 
+            {/* Gauge Chart */}
+            <div className="shrink-0 flex flex-col items-center">
+              <GaugeChart value={profileScore} size={80} strokeWidth={7} />
+              <span className="text-[10px] text-muted-foreground mt-0.5 leading-tight text-center">Profil Doluluk Oranı</span>
+            </div>
+
             <div className="flex flex-wrap items-center gap-2 shrink-0 mt-3 md:mt-0">
               <Button variant="outline" size="sm" className="gap-1.5" onClick={toggleFavorite}>
                 <Bookmark className={`w-4 h-4 ${isFavorited ? "fill-secondary text-secondary" : ""}`} />
