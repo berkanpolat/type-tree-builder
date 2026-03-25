@@ -43,6 +43,7 @@ import {
   LayoutList,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import GaugeChart from "@/components/GaugeChart";
 
 const PER_PAGE = 20;
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1"; // Ana Ürün Kategorileri
@@ -131,7 +132,7 @@ export default function TekRehber() {
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
-  const [cardView, setCardView] = useSessionState<"v1" | "v2">("firmaCardView", "v1");
+  const [cardView, setCardView] = useSessionState<"v1" | "v2" | "v3">("firmaCardView", "v1");
 
   // Product taxonomy for search
   const [urunTaxNodes, setUrunTaxNodes] = useState<UrunTaxNode[]>([]);
@@ -657,6 +658,12 @@ export default function TekRehber() {
                   className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${cardView === "v2" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <LayoutGrid className="w-3.5 h-3.5" /> Doluluk
+                </button>
+                <button
+                  onClick={() => setCardView("v3")}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${cardView === "v3" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" /> Gauge
                 </button>
               </div>
             </div>
