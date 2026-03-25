@@ -903,7 +903,7 @@ export default function TekRehber() {
                           {/* Gauge Chart */}
                           <div className="shrink-0 flex flex-col items-center">
                             <GaugeChart value={completionPctV3} size={80} strokeWidth={7} />
-                            <span className="text-[10px] text-muted-foreground -mt-1">Doluluk</span>
+                            <span className="text-[10px] text-muted-foreground mt-0.5 leading-tight text-center">Profil Doluluk Oranı</span>
                           </div>
                         </div>
 

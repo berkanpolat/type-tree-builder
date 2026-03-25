@@ -34,7 +34,7 @@ export default function GaugeChart({ value, size = 64, strokeWidth = 6, classNam
           <path d={valueArc} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="butt" className="transition-all duration-500" />
         )}
       </svg>
-      <span className="absolute font-bold text-foreground" style={{ bottom: 2, fontSize: size * 0.2 }}>
+      <span className="absolute font-bold text-foreground" style={{ bottom: 0, fontSize: size * 0.22, lineHeight: 1 }}>
         %{clampedValue}
       </span>
     </div>
