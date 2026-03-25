@@ -4,9 +4,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const navTabs = [
-  { label: "Rehber", path: "/firmalar", icon: Building2 },
-  { label: "Pazar", path: "/tekpazar", icon: ShoppingBag },
-  { label: "İhale", path: "/ihaleler", icon: Gavel },
+  { label: "TekRehber", path: "/firmalar", icon: Building2 },
+  { label: "TekPazar", path: "/tekpazar", icon: ShoppingBag },
+  { label: "Tekİhale", path: "/ihaleler", icon: Gavel },
 ];
 
 export default function MobileBottomNav() {
