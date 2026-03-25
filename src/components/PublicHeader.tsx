@@ -33,9 +33,9 @@ export default function PublicHeader() {
         <div className="flex items-center gap-2 lg:gap-8 min-w-0">
           <MobileBackButton />
           <Link to="/" className="shrink-0 flex items-center">
-            <img src={logoImg} alt="Tekstil A.Ş." className="h-8 object-contain" />
+            <img src={logoImg} alt="Tekstil A.Ş." className="h-8 md:h-10 object-contain" />
           </Link>
-          <nav className="hidden lg:flex items-center gap-5">
+          <nav className="hidden md:flex items-center gap-5">
             {/* TekRehber with mega menu */}
             <div
               className="relative flex items-center"
@@ -99,13 +99,13 @@ export default function PublicHeader() {
         <div className="flex items-center gap-2 lg:gap-4 shrink-0">
           <Link
             to="/#kayit"
-            className="hidden lg:inline-block text-sm font-medium text-muted-foreground hover:text-secondary transition-colors whitespace-nowrap"
+            className="hidden xl:inline-block text-sm font-medium text-muted-foreground hover:text-secondary transition-colors whitespace-nowrap"
           >
             Fiyatlandırma
           </Link>
           <Link
             to="/hakkimizda"
-            className={`hidden lg:inline-block text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`hidden xl:inline-block text-sm font-medium transition-colors whitespace-nowrap ${
               isActive("/hakkimizda") ? "text-secondary" : "text-muted-foreground hover:text-secondary"
             }`}
           >
