@@ -78,7 +78,7 @@ export default function PazarHeader({ firmaUnvani: propUnvani, firmaLogoUrl: pro
       <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2 md:gap-8">
           <MobileBackButton />
-          <Link to="/tekpazar">
+          <Link to="/">
             <img src={logoImg} alt="Tekstil A.Ş." className="h-6 md:h-7 object-contain" />
           </Link>
           {/* Desktop nav */}
