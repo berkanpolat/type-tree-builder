@@ -735,7 +735,7 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
         type="button"
         className="w-full h-12 text-sm font-semibold"
         onClick={handleSubmit}
-        disabled={(!isPro ? !canSubmit : !canSubmit) || registerLoading}
+        disabled={(isPro ? !canSubmitPro : !canSubmit) || registerLoading}
       >
         {registerLoading ? (
           <><Loader2 className="w-4 h-4 animate-spin mr-2" /> İşleniyor...</>
