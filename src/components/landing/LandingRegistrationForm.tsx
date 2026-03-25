@@ -323,7 +323,11 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
       if (rpcError) throw rpcError;
 
       if (isPro) {
-        // PRO: Go directly to payment — emails sent AFTER payment success via paytr-callback
+        // PRO: Sign in to get a valid session JWT before calling payment edge function
+        // signUp alone doesn't create a session when email confirmation is required
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: randomPassword });
+        if (signInError) throw new Error("Oturum oluşturulamadı: " + signInError.message);
+        // Now we have a valid JWT — proceed to payment
         await initiateDirectPayment();
       } else {
         // FREE: Send "başvuru alındı" email & SMS, then show completion screen
