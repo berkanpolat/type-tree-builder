@@ -807,26 +807,26 @@ export default function TekRehber() {
                           <div className="px-4 py-3 sm:px-5 flex flex-row sm:flex-col items-center sm:items-stretch gap-2 border-t sm:border-t-0" onClick={(e) => e.stopPropagation()}>
                             <Link
                               to={firmaUrl}
-                              className="flex-1 sm:flex-none"
+                              className="flex-1 sm:flex-none min-w-0"
                               title={`${firma.firma_unvani} firma profilini görüntüle`}
                               onClick={(e) => e.stopPropagation()}
                             >
-                              <Button size="sm" className="w-full gap-1.5 h-8 text-xs">
-                                <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" /> Firmayı İncele
+                              <Button size="sm" className="w-full gap-1 h-8 text-xs">
+                                <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> <span className="truncate">İncele</span>
                               </Button>
                             </Link>
-                            <Button size="sm" variant="outline" className="flex-1 sm:flex-none gap-1.5 h-8 text-xs" onClick={() => handleMessageFirma(firma.user_id)} aria-label={`${firma.firma_unvani} firmasına mesaj gönder`}>
-                              <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Mesaj
+                            <Button size="sm" variant="outline" className="flex-1 sm:flex-none min-w-0 gap-1 h-8 text-xs" onClick={() => handleMessageFirma(firma.user_id)} aria-label={`${firma.firma_unvani} firmasına mesaj gönder`}>
+                              <MessageSquare className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> <span className="truncate">Mesaj</span>
                             </Button>
                             <Button
                               size="sm"
                               variant={firma.is_favorited ? "secondary" : "outline"}
-                              className="flex-1 sm:flex-none gap-1.5 h-8 text-xs"
+                              className="flex-1 sm:flex-none min-w-0 gap-1 h-8 text-xs"
                               onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)}
                               aria-label={firma.is_favorited ? "Favorilerden çıkar" : "Favorilere ekle"}
                             >
-                              <Bookmark className={`w-3.5 h-3.5 ${firma.is_favorited ? "fill-primary text-primary" : ""}`} aria-hidden="true" />
-                              {firma.is_favorited ? "Favorilerde" : "Favorilere Ekle"}
+                              <Bookmark className={`w-3.5 h-3.5 shrink-0 ${firma.is_favorited ? "fill-primary text-primary" : ""}`} aria-hidden="true" />
+                              <span className="truncate">{firma.is_favorited ? "Favorilerde" : "Favori"}</span>
                             </Button>
                           </div>
                         </div>
