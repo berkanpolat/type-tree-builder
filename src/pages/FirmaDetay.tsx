@@ -820,7 +820,7 @@ export default function FirmaDetay() {
             </div>
 
             {/* Gauge Chart - centered between name and buttons */}
-            <div className="shrink-0 flex flex-col items-center">
+            <div className="flex-1 flex flex-col items-center justify-center">
               <GaugeChart value={profileScore} size={64} strokeWidth={6} />
               <span className="text-[9px] text-muted-foreground mt-0.5 leading-tight text-center">Profil Doluluk Oranı</span>
             </div>
