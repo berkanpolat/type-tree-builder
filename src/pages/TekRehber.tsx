@@ -697,8 +697,7 @@ export default function TekRehber() {
 
                   if (cardView === "v2") {
                     // ─── V2: SAME AS V1 + COMPLETION BAR ───
-                    const MAX_PROFILE_SCORE = 43;
-                    const completionPct = Math.min(100, Math.round(((firma.profile_score ?? 0) / MAX_PROFILE_SCORE) * 100));
+                    const completionPct = Math.min(100, firma.profile_score ?? 0);
                     const completionColor = completionPct >= 75 ? "text-emerald-600" : completionPct >= 40 ? "text-amber-600" : "text-destructive";
                     const progressColor = completionPct >= 75 ? "[&>div]:bg-emerald-500" : completionPct >= 40 ? "[&>div]:bg-amber-500" : "[&>div]:bg-destructive";
 
