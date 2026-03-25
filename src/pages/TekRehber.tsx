@@ -297,6 +297,8 @@ export default function TekRehber() {
     }
 
     const sortedIds = (sortedData as any[]).map((s: any) => s.firma_id);
+    const scoreMap = new Map<string, number>();
+    (sortedData as any[]).forEach((s: any) => { scoreMap.set(s.firma_id, s.profile_score ?? 0); });
     const newTotalCount = Number((sortedData as any[])[0]?.total_count || 0);
     setTotalCount(newTotalCount);
 
