@@ -89,14 +89,14 @@ function LandingHeader({ logoImg: logoSrc }: { logoImg: string }) {
           </nav>
         </div>
         <div className="flex items-center gap-3 md:gap-5">
-          <nav className="flex md:hidden items-center gap-2 mr-1">
-            <Link to="/firmalar" className="text-xs font-medium px-2 py-1.5 rounded text-muted-foreground hover:bg-muted whitespace-nowrap">TekRehber</Link>
-            <Link to="/tekpazar" className="text-xs font-medium px-2 py-1.5 rounded text-muted-foreground hover:bg-muted whitespace-nowrap">TekPazar</Link>
-            <Link to="/ihaleler" className="text-xs font-medium px-2 py-1.5 rounded text-muted-foreground hover:bg-muted whitespace-nowrap">Tekİhale</Link>
+          <nav className="flex md:hidden items-center gap-1.5">
+            <Link to="/firmalar" className="inline-flex items-center text-xs font-medium px-2 py-2 rounded text-muted-foreground hover:bg-muted whitespace-nowrap">TekRehber</Link>
+            <Link to="/tekpazar" className="inline-flex items-center text-xs font-medium px-2 py-2 rounded text-muted-foreground hover:bg-muted whitespace-nowrap">TekPazar</Link>
+            <Link to="/ihaleler" className="inline-flex items-center text-xs font-medium px-2 py-2 rounded text-muted-foreground hover:bg-muted whitespace-nowrap">Tekİhale</Link>
           </nav>
-          <a href="#kayit" className="hidden lg:inline text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Fiyatlandırma</a>
-          <Link to="/hakkimizda" className="hidden lg:inline text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Hakkımızda</Link>
-          <Link to="/giris-kayit" className="px-3 md:px-5 py-2.5 rounded-lg bg-primary text-primary-foreground text-xs md:text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap">Giriş / Kayıt</Link>
+          <a href="#kayit" className="hidden lg:inline-flex items-center text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Fiyatlandırma</a>
+          <Link to="/hakkimizda" className="hidden lg:inline-flex items-center text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">Hakkımızda</Link>
+          <Link to="/giris-kayit" className="inline-flex items-center justify-center px-3 md:px-5 py-2 rounded-lg bg-primary text-primary-foreground text-xs md:text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap">Giriş / Kayıt</Link>
         </div>
       </div>
     </header>
