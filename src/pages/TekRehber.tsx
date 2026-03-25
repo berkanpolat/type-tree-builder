@@ -43,6 +43,7 @@ import {
   LayoutList,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import GaugeChart from "@/components/GaugeChart";
 
 const PER_PAGE = 20;
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1"; // Ana Ürün Kategorileri
@@ -131,7 +132,7 @@ export default function TekRehber() {
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
-  const [cardView, setCardView] = useSessionState<"v1" | "v2">("firmaCardView", "v1");
+  const [cardView, setCardView] = useSessionState<"v1" | "v2" | "v3">("firmaCardView", "v1");
 
   // Product taxonomy for search
   const [urunTaxNodes, setUrunTaxNodes] = useState<UrunTaxNode[]>([]);
@@ -658,6 +659,12 @@ export default function TekRehber() {
                 >
                   <LayoutGrid className="w-3.5 h-3.5" /> Doluluk
                 </button>
+                <button
+                  onClick={() => setCardView("v3")}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${cardView === "v3" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" /> Gauge
+                </button>
               </div>
             </div>
             {firmaLoading ? (
@@ -828,8 +835,9 @@ export default function TekRehber() {
                     );
                   }
 
-                  {
-                    // ─── V3: 3-COLUMN CARD DESIGN ───
+                  if (cardView === "v3") {
+                    // ─── V3: SAME AS V1 + GAUGE CHART ───
+                    const completionPctV3 = Math.min(100, firma.profile_score ?? 0);
                     const descriptionExcerptV3 = firma.firma_hakkinda
                       ? firma.firma_hakkinda.length > 200
                         ? firma.firma_hakkinda.slice(0, 200) + "…"
@@ -837,7 +845,6 @@ export default function TekRehber() {
                       : null;
 
                     const uretimItems = (firma.uretimSatisItems || []).filter((i) => i.tip === "uretim");
-                    const satisItems = (firma.uretimSatisItems || []).filter((i) => i.tip === "satis");
 
                     return (
                       <article
@@ -851,7 +858,7 @@ export default function TekRehber() {
                           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                         />
 
-                        {/* Header: Logo + Name + Badges */}
+                        {/* Header: Logo + Name + Badges + Gauge */}
                         <div className="flex items-center gap-3 px-4 pt-4 pb-3 sm:px-5">
                           <div className="relative shrink-0">
                             {firma.logo_url ? (
@@ -892,6 +899,11 @@ export default function TekRehber() {
                                 </Badge>
                               </div>
                             )}
+                          </div>
+                          {/* Gauge Chart */}
+                          <div className="shrink-0 flex flex-col items-center">
+                            <GaugeChart value={completionPctV3} size={80} strokeWidth={7} />
+                            <span className="text-[10px] text-muted-foreground -mt-1">Doluluk</span>
                           </div>
                         </div>
 
