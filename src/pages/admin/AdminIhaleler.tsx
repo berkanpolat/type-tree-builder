@@ -19,8 +19,16 @@ import { useToast } from "@/hooks/use-toast";
 import {
   Gavel, Eye, Clock, Filter, Search, RotateCcw, Package, HeadphonesIcon,
   ExternalLink, Pencil, Trash2, ArrowUpDown, FileText, ChevronLeft, ChevronRight,
-  Image as ImageIcon, X, ChevronDown, Activity, CheckCircle2, XCircle, ClockIcon, FileEdit, MessageSquare, Loader2, Bot
+  Image as ImageIcon, X, ChevronDown, Activity, CheckCircle2, XCircle, ClockIcon, FileEdit, MessageSquare, Loader2, Bot, CalendarIcon
 } from "lucide-react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose,
+} from "@/components/ui/dialog";
 
 /* ── Theme-aware style helpers ── */
 const s = {
@@ -173,6 +181,12 @@ export default function AdminIhaleler() {
   const [fakeViewTarget, setFakeViewTarget] = useState<{ id: string; baslik: string; current: number } | null>(null);
   const [fakeViewAmount, setFakeViewAmount] = useState("");
   const [fakeViewLoading, setFakeViewLoading] = useState(false);
+
+  // Date edit dialog
+  const [dateEditTarget, setDateEditTarget] = useState<{ id: string; baslik: string; baslangic: string | null; bitis: string | null } | null>(null);
+  const [dateEditBaslangic, setDateEditBaslangic] = useState<Date | undefined>(undefined);
+  const [dateEditBitis, setDateEditBitis] = useState<Date | undefined>(undefined);
+  const [dateEditLoading, setDateEditLoading] = useState(false);
 
   const callApi = useAdminApi();
 
@@ -876,6 +890,21 @@ export default function AdminIhaleler() {
                             <Eye className="w-3 h-3" /> Yapay Görüntülenme
                           </Button>
                         )}
+
+                        {user?.is_primary && (
+                          <Button
+                            onClick={() => {
+                              setDateEditTarget({ id: ihale.id, baslik: ihale.baslik, baslangic: ihale.baslangic_tarihi, bitis: ihale.bitis_tarihi });
+                              setDateEditBaslangic(ihale.baslangic_tarihi ? new Date(ihale.baslangic_tarihi) : undefined);
+                              setDateEditBitis(ihale.bitis_tarihi ? new Date(ihale.bitis_tarihi) : undefined);
+                            }}
+                            variant="outline" size="sm"
+                            className="text-[11px] h-7 px-2.5 gap-1"
+                            style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text-secondary))" }}
+                          >
+                            <CalendarIcon className="w-3 h-3" /> Tarih Düzenle
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -992,6 +1021,97 @@ export default function AdminIhaleler() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Date Edit Dialog */}
+      <Dialog open={!!dateEditTarget} onOpenChange={(open) => { if (!open) setDateEditTarget(null); }}>
+        <DialogContent style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }} className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle style={{ color: "hsl(var(--admin-text))" }}>Tarih Düzenle</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm" style={{ color: "hsl(var(--admin-text-secondary))" }}>
+            <strong>{dateEditTarget?.baslik}</strong>
+          </p>
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="text-xs mb-1.5 block" style={{ color: "hsl(var(--admin-text-secondary))" }}>Başlangıç Tarihi</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn("w-full justify-start text-left font-normal text-sm", !dateEditBaslangic && "text-muted-foreground")}
+                    style={{ background: "hsl(var(--admin-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateEditBaslangic ? format(dateEditBaslangic, "dd MMM yyyy HH:mm", { locale: tr }) : "Tarih seçin"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <Calendar
+                    mode="single"
+                    selected={dateEditBaslangic}
+                    onSelect={setDateEditBaslangic}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <Label className="text-xs mb-1.5 block" style={{ color: "hsl(var(--admin-text-secondary))" }}>Bitiş Tarihi</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn("w-full justify-start text-left font-normal text-sm", !dateEditBitis && "text-muted-foreground")}
+                    style={{ background: "hsl(var(--admin-bg))", borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-text))" }}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {dateEditBitis ? format(dateEditBitis, "dd MMM yyyy HH:mm", { locale: tr }) : "Tarih seçin"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start" style={{ background: "hsl(var(--admin-card-bg))", border: "1px solid hsl(var(--admin-border))" }}>
+                  <Calendar
+                    mode="single"
+                    selected={dateEditBitis}
+                    onSelect={setDateEditBitis}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" style={{ borderColor: "hsl(var(--admin-border))", color: "hsl(var(--admin-muted))" }}>Vazgeç</Button>
+            </DialogClose>
+            <Button
+              disabled={dateEditLoading}
+              className="bg-amber-500 hover:bg-amber-600 text-white"
+              onClick={async () => {
+                if (!dateEditTarget) return;
+                setDateEditLoading(true);
+                try {
+                  const updates: Record<string, string | null> = {};
+                  if (dateEditBaslangic) updates.baslangic_tarihi = dateEditBaslangic.toISOString();
+                  else updates.baslangic_tarihi = null;
+                  if (dateEditBitis) updates.bitis_tarihi = dateEditBitis.toISOString();
+                  else updates.bitis_tarihi = null;
+
+                  await callApi("update-ihale", { token, ihaleId: dateEditTarget.id, updates });
+                  toast({ title: "Başarılı", description: "Tarihler güncellendi." });
+                  setDateEditTarget(null);
+                  fetchData();
+                } catch (err: any) {
+                  toast({ title: "Hata", description: err?.message || "Güncelleme başarısız", variant: "destructive" });
+                } finally {
+                  setDateEditLoading(false);
+                }
+              }}
+            >
+              {dateEditLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Kaydet
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
