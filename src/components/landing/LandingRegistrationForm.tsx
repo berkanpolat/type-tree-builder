@@ -346,9 +346,9 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
   const initiateDirectPayment = async (userId: string, userEmail: string) => {
     try {
       const periyot = billingYearly ? "yillik" : "aylik";
-      const expiryParts = expiry.split("/");
-      const expiryMonth = expiryParts[0] || "";
-      const expiryYear = expiryParts[1] || "";
+      const expiryDigits = expiry.replace(/\D/g, "");
+      const expiryMonth = expiryDigits.slice(0, 2);
+      const expiryYear = expiryDigits.slice(2, 4);
 
       let clientIp = "";
       try {
