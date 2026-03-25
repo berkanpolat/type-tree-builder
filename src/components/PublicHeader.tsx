@@ -99,13 +99,13 @@ export default function PublicHeader() {
         <div className="flex items-center gap-2 lg:gap-4 shrink-0">
           <Link
             to="/#kayit"
-            className="hidden xl:inline-block text-sm font-medium text-muted-foreground hover:text-secondary transition-colors whitespace-nowrap"
+            className="hidden lg:inline-block text-sm font-medium text-muted-foreground hover:text-secondary transition-colors whitespace-nowrap"
           >
             Fiyatlandırma
           </Link>
           <Link
             to="/hakkimizda"
-            className={`hidden xl:inline-block text-sm font-medium transition-colors whitespace-nowrap ${
+            className={`hidden lg:inline-block text-sm font-medium transition-colors whitespace-nowrap ${
               isActive("/hakkimizda") ? "text-secondary" : "text-muted-foreground hover:text-secondary"
             }`}
           >
@@ -113,15 +113,9 @@ export default function PublicHeader() {
           </Link>
           <Link
             to="/giris-kayit"
-            className="inline-flex items-center justify-center px-3 lg:px-4 py-1.5 lg:py-2 rounded-lg border border-primary text-primary text-xs lg:text-sm font-medium hover:bg-primary/10 transition-colors whitespace-nowrap"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap"
           >
-            Giriş Yap
-          </Link>
-          <Link
-            to="/#kayit"
-            className="inline-flex items-center justify-center px-3 lg:px-4 py-1.5 lg:py-2 rounded-lg bg-primary text-primary-foreground text-xs lg:text-sm font-medium hover:bg-primary/90 transition-colors whitespace-nowrap"
-          >
-            Kayıt Ol
+            Giriş / Kayıt
           </Link>
         </div>
       </div>
