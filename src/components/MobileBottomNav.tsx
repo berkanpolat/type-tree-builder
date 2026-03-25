@@ -45,7 +45,7 @@ export default function MobileBottomNav() {
               }`}
             >
               <tab.icon className="w-5 h-5" />
-              <span className="text-[10px] font-medium">{tab.label}</span>
+              <span className="text-[11px] font-medium">{tab.label}</span>
             </Link>
           );
         })}
