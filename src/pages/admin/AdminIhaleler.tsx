@@ -1096,11 +1096,7 @@ export default function AdminIhaleler() {
                   if (dateEditBitis) updates.bitis_tarihi = dateEditBitis.toISOString();
                   else updates.bitis_tarihi = null;
 
-                  const { error } = await supabase
-                    .from("ihaleler")
-                    .update(updates)
-                    .eq("id", dateEditTarget.id);
-                  if (error) throw error;
+                  await callApi("update-ihale", { token, ihaleId: dateEditTarget.id, updates });
                   toast({ title: "Başarılı", description: "Tarihler güncellendi." });
                   setDateEditTarget(null);
                   fetchData();
