@@ -39,7 +39,10 @@ import {
   ExternalLink,
   Package,
   Building2,
+  LayoutGrid,
+  LayoutList,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 const PER_PAGE = 20;
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1"; // Ana Ürün Kategorileri
