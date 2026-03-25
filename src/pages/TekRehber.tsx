@@ -410,6 +410,7 @@ export default function TekRehber() {
         faaliyet_alani: faaliyetMap[f!.id] || "",
         is_favorited: favSet.has(f!.id),
         uretimSatisItems: uretimSatisMap[f!.id] || [],
+        profile_score: scoreMap.get(f!.id) ?? 0,
       }));
 
     setFirmalar(enriched);
