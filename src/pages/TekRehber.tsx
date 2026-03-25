@@ -39,10 +39,7 @@ import {
   ExternalLink,
   Package,
   Building2,
-  LayoutGrid,
-  LayoutList,
 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import GaugeChart from "@/components/GaugeChart";
 
 const PER_PAGE = 20;
@@ -132,7 +129,7 @@ export default function TekRehber() {
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
-  const [cardView, setCardView] = useSessionState<"v1" | "v2" | "v3">("firmaCardView", "v1");
+  
 
   // Product taxonomy for search
   const [urunTaxNodes, setUrunTaxNodes] = useState<UrunTaxNode[]>([]);
@@ -646,26 +643,6 @@ export default function TekRehber() {
                   </span>
                 )}
               </p>
-              <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-                <button
-                  onClick={() => setCardView("v1")}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${cardView === "v1" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <LayoutList className="w-3.5 h-3.5" /> Detaylı
-                </button>
-                <button
-                  onClick={() => setCardView("v2")}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${cardView === "v2" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" /> Doluluk
-                </button>
-                <button
-                  onClick={() => setCardView("v3")}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${cardView === "v3" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  <LayoutGrid className="w-3.5 h-3.5" /> Gauge
-                </button>
-              </div>
             </div>
             {firmaLoading ? (
               <div className="flex justify-center py-12">
@@ -702,141 +679,7 @@ export default function TekRehber() {
                     ...(firma.kurulus_tarihi ? { "foundingDate": firma.kurulus_tarihi } : {}),
                   };
 
-                  if (cardView === "v2") {
-                    // ─── V2: SAME AS V1 + COMPLETION BAR ───
-                    const completionPct = Math.min(100, firma.profile_score ?? 0);
-                    const completionColor = completionPct >= 75 ? "text-emerald-600" : completionPct >= 40 ? "text-amber-600" : "text-destructive";
-                    const progressColor = completionPct >= 75 ? "[&>div]:bg-emerald-500" : completionPct >= 40 ? "[&>div]:bg-amber-500" : "[&>div]:bg-destructive";
-
-                    const descriptionExcerptV2 = firma.firma_hakkinda
-                      ? firma.firma_hakkinda.length > 200
-                        ? firma.firma_hakkinda.slice(0, 200) + "…"
-                        : firma.firma_hakkinda
-                      : null;
-
-                    const uretimItemsV2 = (firma.uretimSatisItems || []).filter((i) => i.tip === "uretim");
-
-                    return (
-                      <article
-                        key={firma.id}
-                        className="group rounded-xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-200 overflow-hidden"
-                        itemScope
-                        itemType="https://schema.org/Organization"
-                      >
-                        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
-                        {/* Header: Logo + Name + Badges + Completion */}
-                        <div className="flex items-center gap-3 px-4 pt-4 pb-3 sm:px-5">
-                          <div className="relative shrink-0">
-                            {firma.logo_url ? (
-                              <img src={firma.logo_url} alt={`${firma.firma_unvani} logosu`} title={firma.firma_unvani} loading="lazy" width={56} height={56} className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-border object-contain bg-muted p-1" itemProp="logo" />
-                            ) : (
-                              <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={null} size="lg" className="w-12 h-12 sm:w-14 sm:h-14 border border-border" />
-                            )}
-                            {firma.belge_onayli && (
-                              <div className="absolute -bottom-1 -right-1"><VerifiedBadge /></div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h2 className="font-bold text-foreground text-base sm:text-lg leading-tight truncate" itemProp="name">
-                              <Link to={firmaUrl} title={`${firma.firma_unvani} - Firma Profili`} aria-label={`${firma.firma_unvani} firma profilini görüntüle`} className="hover:text-primary transition-colors">
-                                {firma.firma_unvani}
-                              </Link>
-                            </h2>
-                            {(firma.firma_turu_name || firma.firma_tipi_name) && (
-                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
-                                  {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                          {/* Completion indicator */}
-                          <div className="shrink-0 flex flex-col items-end gap-1 min-w-[90px] sm:min-w-[120px]">
-                            <div className="flex items-center gap-1.5">
-                              <span className={`text-sm sm:text-base font-bold ${completionColor}`}>{completionPct}%</span>
-                              <span className="text-[10px] text-muted-foreground hidden sm:inline">Doluluk</span>
-                            </div>
-                            <Progress value={completionPct} className={`h-2 w-full bg-muted ${progressColor}`} />
-                          </div>
-                        </div>
-
-                        {/* 3-Column Body */}
-                        <div className="grid grid-cols-1 sm:grid-cols-[2fr_2fr_1fr] gap-0 border-t border-border/50">
-                          <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 space-y-2">
-                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
-                              <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
-                              <span className="truncate" itemProp="addressLocality">{locationText || "Belirtilmemiş"}</span>
-                            </div>
-                            {scaleText && (
-                              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                                <Users className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
-                                <span className="truncate">{scaleText}</span>
-                              </div>
-                            )}
-                            {firma.kurulus_tarihi && (
-                              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                                <CalendarDays className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
-                                <span>Kuruluş: {firma.kurulus_tarihi}</span>
-                              </div>
-                            )}
-                            {firma.web_sitesi && (
-                              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                                <ExternalLink className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
-                                <a href={firma.web_sitesi.startsWith("http") ? firma.web_sitesi : `https://${firma.web_sitesi}`} target="_blank" rel="noopener noreferrer" className="truncate hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
-                                  {firma.web_sitesi.replace(/^https?:\/\/(www\.)?/, "")}
-                                </a>
-                              </div>
-                            )}
-                          </div>
-
-                          <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 border-t sm:border-t-0">
-                            {firma.firma_hakkinda ? (
-                              <>
-                                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed" itemProp="description">{descriptionExcerptV2}</p>
-                                {firma.firma_hakkinda.length > 200 && <span className="sr-only" aria-hidden="true">{firma.firma_hakkinda}</span>}
-                              </>
-                            ) : (
-                              <p className="text-xs sm:text-sm text-muted-foreground/50 italic">Firma hakkında bilgi eklenmemiş.</p>
-                            )}
-                          </div>
-
-                          <div className="px-4 py-3 sm:px-5 flex flex-row sm:flex-col items-center sm:items-stretch gap-2 border-t sm:border-t-0" onClick={(e) => e.stopPropagation()}>
-                            <Link to={firmaUrl} className="flex-1 sm:flex-none" title={`${firma.firma_unvani} firma profilini görüntüle`} onClick={(e) => e.stopPropagation()}>
-                              <Button size="sm" className="w-full gap-1.5 h-8 text-xs"><ArrowRight className="w-3.5 h-3.5" aria-hidden="true" /> Firmayı İncele</Button>
-                            </Link>
-                            <Button size="sm" variant="outline" className="flex-1 sm:flex-none gap-1.5 h-8 text-xs" onClick={() => handleMessageFirma(firma.user_id)} aria-label={`${firma.firma_unvani} firmasına mesaj gönder`}>
-                              <MessageSquare className="w-3.5 h-3.5" aria-hidden="true" /> Mesaj
-                            </Button>
-                            <Button size="sm" variant={firma.is_favorited ? "secondary" : "outline"} className="flex-1 sm:flex-none gap-1.5 h-8 text-xs" onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)} aria-label={firma.is_favorited ? "Favorilerden çıkar" : "Favorilere ekle"}>
-                              <Bookmark className={`w-3.5 h-3.5 ${firma.is_favorited ? "fill-primary text-primary" : ""}`} aria-hidden="true" />
-                              {firma.is_favorited ? "Favorilerde" : "Favorilere Ekle"}
-                            </Button>
-                          </div>
-                        </div>
-
-                        {uretimItemsV2.length > 0 && (
-                          <div className="border-t border-border/50 px-4 py-2.5 sm:px-5 flex flex-wrap items-center gap-1.5">
-                            <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-wide flex items-center gap-1">
-                              <Factory className="w-3 h-3" aria-hidden="true" /> Üretici:
-                            </span>
-                            {uretimItemsV2.slice(0, 4).map((item, i) => (
-                              <button key={`u2-${i}`} type="button" className="inline-flex items-center rounded-md border border-border bg-transparent px-1.5 py-0 text-[10px] font-normal text-foreground cursor-default" tabIndex={-1}>{item.turName}</button>
-                            ))}
-                            {uretimItemsV2.length > 4 && (
-                              <button type="button" className="inline-flex items-center rounded-md border border-border bg-transparent px-1.5 py-0 text-[10px] font-normal text-muted-foreground cursor-default" tabIndex={-1}>+{uretimItemsV2.length - 4}</button>
-                            )}
-                            {uretimItemsV2.length > 4 && uretimItemsV2.slice(4).map((item, i) => (
-                              <button key={`uh2-${i}`} type="button" className="sr-only" tabIndex={-1} aria-hidden="true">{item.turName}</button>
-                            ))}
-                          </div>
-                        )}
-                      </article>
-                    );
-                  }
-
-                  if (cardView === "v3") {
-                    // ─── V3: SAME AS V1 + GAUGE CHART ───
+                  
                     const completionPctV3 = Math.min(100, firma.profile_score ?? 0);
                     const descriptionExcerptV3 = firma.firma_hakkinda
                       ? firma.firma_hakkinda.length > 200
@@ -1029,8 +872,8 @@ export default function TekRehber() {
                         )}
                       </article>
                     );
-                  }
                 })}
+
 
                 {/* Pagination */}
                 {totalPages > 1 && (
