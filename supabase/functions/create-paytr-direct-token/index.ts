@@ -104,6 +104,11 @@ serve(async (req) => {
     const user = { id: userId, email: userEmail };
 
     // Validate inputs
+    console.log("[PAYTR-DIRECT] Body fields check:", { 
+      has_cc_owner: !!cc_owner, has_card_number: !!card_number, 
+      has_expiry_month: !!expiry_month, has_expiry_year: !!expiry_year, has_cvv: !!cvv,
+      periyot, bodyUserId: !!bodyUserId 
+    });
     if (!periyot || !["aylik", "yillik"].includes(periyot)) throw new Error("Geçersiz periyot");
     if (!cc_owner || !card_number || !expiry_month || !expiry_year || !cvv) {
       throw new Error("Kart bilgileri eksik");
