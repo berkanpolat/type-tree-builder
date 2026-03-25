@@ -906,9 +906,6 @@ export default function TekRehber() {
                             <span className="text-[10px] text-muted-foreground -mt-1">Doluluk</span>
                           </div>
                         </div>
-                            )}
-                          </div>
-                        </div>
 
                         {/* 3-Column Body (desktop) / stacked (mobile) */}
                         <div className="grid grid-cols-1 sm:grid-cols-[2fr_2fr_1fr] gap-0 border-t border-border/50">
