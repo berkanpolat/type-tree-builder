@@ -567,9 +567,9 @@ export default function FirmaDetay() {
       );
 
       // Fetch profile score
-      const { data: scoreData } = await supabase.rpc("get_firma_sort_scores", { p_firma_ids: [firmaId] });
-      if (scoreData && scoreData.length > 0) {
-        setProfileScore(Math.min(100, scoreData[0].profile_score ?? 0));
+      const { data: scoreData } = await supabase.rpc("get_sorted_firmalar", { p_firma_ids: [firmaId], p_page: 1, p_per_page: 1 });
+      if (scoreData && Array.isArray(scoreData) && scoreData.length > 0) {
+        setProfileScore(Math.min(100, (scoreData[0] as any).profile_score ?? 0));
       }
 
       setLoading(false);
