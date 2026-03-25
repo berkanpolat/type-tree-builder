@@ -121,10 +121,7 @@ serve(async (req) => {
 
     console.log("[PAYTR-DIRECT] Price calc:", { periyot, usdPrice, usdTryRate: usdTryRate.toFixed(4), toplamTl: toplamTl.toFixed(2), paymentAmountKurus });
 
-    const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    // supabaseAdmin already created above
 
     const { data: profile } = await supabaseAdmin.from("profiles").select("ad, soyad, iletisim_numarasi").eq("user_id", user.id).single();
     // Use firma_unvani from request body (firma not yet created for PRO)
