@@ -835,8 +835,9 @@ export default function TekRehber() {
                     );
                   }
 
-                  {
-                    // ─── V3: 3-COLUMN CARD DESIGN ───
+                  if (cardView === "v3") {
+                    // ─── V3: SAME AS V1 + GAUGE CHART ───
+                    const completionPctV3 = Math.min(100, firma.profile_score ?? 0);
                     const descriptionExcerptV3 = firma.firma_hakkinda
                       ? firma.firma_hakkinda.length > 200
                         ? firma.firma_hakkinda.slice(0, 200) + "…"
@@ -844,7 +845,6 @@ export default function TekRehber() {
                       : null;
 
                     const uretimItems = (firma.uretimSatisItems || []).filter((i) => i.tip === "uretim");
-                    const satisItems = (firma.uretimSatisItems || []).filter((i) => i.tip === "satis");
 
                     return (
                       <article
@@ -858,7 +858,7 @@ export default function TekRehber() {
                           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
                         />
 
-                        {/* Header: Logo + Name + Badges */}
+                        {/* Header: Logo + Name + Badges + Gauge */}
                         <div className="flex items-center gap-3 px-4 pt-4 pb-3 sm:px-5">
                           <div className="relative shrink-0">
                             {firma.logo_url ? (
@@ -898,6 +898,14 @@ export default function TekRehber() {
                                   {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
                                 </Badge>
                               </div>
+                            )}
+                          </div>
+                          {/* Gauge Chart */}
+                          <div className="shrink-0 flex flex-col items-center">
+                            <GaugeChart value={completionPctV3} size={80} strokeWidth={7} />
+                            <span className="text-[10px] text-muted-foreground -mt-1">Doluluk</span>
+                          </div>
+                        </div>
                             )}
                           </div>
                         </div>
