@@ -280,7 +280,20 @@ export default function AdminIhaleler() {
       ]);
       const parsedList = (Array.isArray(ihaleList) ? ihaleList : []) as unknown as IhaleItem[];
       setIhaleler(parsedList);
-      setStats((statsResult || null) as unknown as IhaleStats);
+      const rawStats = statsResult as any;
+      setStats(rawStats ? {
+        total: rawStats.total ?? 0,
+        active: rawStats.active ?? 0,
+        completed: rawStats.completed ?? 0,
+        cancelled: rawStats.cancelled ?? 0,
+        pendingApproval: rawStats.pendingApproval ?? rawStats.pending_approval ?? 0,
+        draft: rawStats.draft ?? 0,
+        totalTeklifler: rawStats.totalTeklifler ?? rawStats.total_teklifler ?? 0,
+        urunKategoriDagilimi: Array.isArray(rawStats.urunKategoriDagilimi) ? rawStats.urunKategoriDagilimi
+          : Array.isArray(rawStats.urun_kategori_dagilimi) ? rawStats.urun_kategori_dagilimi : [],
+        hizmetKategoriDagilimi: Array.isArray(rawStats.hizmetKategoriDagilimi) ? rawStats.hizmetKategoriDagilimi
+          : Array.isArray(rawStats.hizmet_kategori_dagilimi) ? rawStats.hizmet_kategori_dagilimi : [],
+      } : null);
 
       const firms = parsedList.reduce((acc: any[], i: any) => {
         if (!acc.find((f: any) => f.user_id === i.user_id)) {
