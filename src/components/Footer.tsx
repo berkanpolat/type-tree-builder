@@ -64,6 +64,9 @@ export default function Footer() {
                 <FooterLink to="/hakkimizda">Hakkımızda</FooterLink>
               </li>
               <li>
+                <FooterLink to="/#kayit">Fiyatlandırma</FooterLink>
+              </li>
+              <li>
                 <FooterLink to="/iletisim">İletişim</FooterLink>
               </li>
             </ul>
