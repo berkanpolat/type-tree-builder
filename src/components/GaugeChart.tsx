@@ -12,6 +12,7 @@ export default function GaugeChart({ value, size = 64, strokeWidth = 6, classNam
   const radius = (size - strokeWidth) / 2;
   const cx = size / 2;
   const cy = size / 2;
+  const halfHeight = cy + strokeWidth / 2;
 
   const color =
     clampedValue >= 75
@@ -20,54 +21,34 @@ export default function GaugeChart({ value, size = 64, strokeWidth = 6, classNam
         ? "hsl(38, 92%, 50%)"
         : "hsl(var(--destructive))";
 
-  const halfHeight = size / 2 + strokeWidth / 2;
+  // Arc from left (180°) to right (0°) = full semicircle
+  const bgArc = makeArc(cx, cy, radius, Math.PI, 0);
+  const valueEndAngle = Math.PI - (clampedValue / 100) * Math.PI;
+  const valueArc = clampedValue > 0 ? makeArc(cx, cy, radius, Math.PI, valueEndAngle) : "";
 
   return (
     <div className={`relative inline-flex flex-col items-center ${className}`} style={{ width: size, height: halfHeight }}>
-      <svg
-        width={size}
-        height={halfHeight}
-        viewBox={`0 0 ${size} ${halfHeight}`}
-        style={{ overflow: "hidden" }}
-      >
-        {/* Background arc - full 180° */}
-        <path
-          d={describeArc(cx, cy, radius, 180, 360)}
-          fill="none"
-          stroke="hsl(var(--muted))"
-          strokeWidth={strokeWidth}
-          strokeLinecap="butt"
-        />
-        {/* Value arc */}
+      <svg width={size} height={halfHeight} viewBox={`0 0 ${size} ${halfHeight}`}>
+        <path d={bgArc} fill="none" stroke="hsl(var(--muted))" strokeWidth={strokeWidth} strokeLinecap="butt" />
         {clampedValue > 0 && (
-          <path
-            d={describeArc(cx, cy, radius, 180, 180 + (clampedValue / 100) * 180)}
-            fill="none"
-            stroke={color}
-            strokeWidth={strokeWidth}
-            strokeLinecap="butt"
-            className="transition-all duration-500"
-          />
+          <path d={valueArc} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="butt" className="transition-all duration-500" />
         )}
       </svg>
-      <span
-        className="absolute font-bold text-foreground"
-        style={{ bottom: 2, fontSize: size * 0.2 }}
-      >
+      <span className="absolute font-bold text-foreground" style={{ bottom: 2, fontSize: size * 0.2 }}>
         %{clampedValue}
       </span>
     </div>
   );
 }
 
-function polarToCartesian(cx: number, cy: number, r: number, angleDeg: number) {
-  const rad = ((angleDeg - 90) * Math.PI) / 180;
-  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
-}
-
-function describeArc(cx: number, cy: number, r: number, startAngle: number, endAngle: number) {
-  const start = polarToCartesian(cx, cy, r, endAngle);
-  const end = polarToCartesian(cx, cy, r, startAngle);
-  const largeArc = endAngle - startAngle <= 180 ? "0" : "1";
-  return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 0 ${end.x} ${end.y}`;
+/** Build an SVG arc path from startAngle to endAngle (radians, 0 = right, PI = left, counterclockwise is negative y). */
+function makeArc(cx: number, cy: number, r: number, startRad: number, endRad: number): string {
+  const x1 = cx + r * Math.cos(startRad);
+  const y1 = cy - r * Math.sin(startRad);
+  const x2 = cx + r * Math.cos(endRad);
+  const y2 = cy - r * Math.sin(endRad);
+  // sweep-flag 1 = clockwise in SVG (which is our left-to-right upper semicircle)
+  const diff = startRad - endRad;
+  const largeArc = Math.abs(diff) > Math.PI ? 1 : 0;
+  return `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
 }
