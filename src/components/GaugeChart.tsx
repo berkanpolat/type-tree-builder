@@ -10,45 +10,49 @@ interface GaugeChartProps {
 export default function GaugeChart({ value, size = 64, strokeWidth = 6, className = "" }: GaugeChartProps) {
   const clampedValue = Math.min(100, Math.max(0, value));
   const radius = (size - strokeWidth) / 2;
-  const circumference = Math.PI * radius; // half circle
-  const offset = circumference - (clampedValue / 100) * circumference;
+  const cx = size / 2;
+  const cy = size / 2;
 
   const color =
     clampedValue >= 75
-      ? "hsl(152, 69%, 41%)"  // emerald-500
+      ? "hsl(152, 69%, 41%)"
       : clampedValue >= 40
-        ? "hsl(38, 92%, 50%)"  // amber-500
+        ? "hsl(38, 92%, 50%)"
         : "hsl(var(--destructive))";
 
+  const halfHeight = size / 2 + strokeWidth / 2;
+
   return (
-    <div className={`relative inline-flex flex-col items-center ${className}`} style={{ width: size, height: size * 0.6 }}>
+    <div className={`relative inline-flex flex-col items-center ${className}`} style={{ width: size, height: halfHeight }}>
       <svg
         width={size}
-        height={size * 0.6}
-        viewBox={`0 0 ${size} ${size * 0.6}`}
-        className="overflow-visible"
+        height={halfHeight}
+        viewBox={`0 0 ${size} ${halfHeight}`}
+        style={{ overflow: "hidden" }}
       >
-        {/* Background arc */}
+        {/* Background arc - full 180° */}
         <path
-          d={describeArc(size / 2, size * 0.55, radius, 180, 360)}
+          d={describeArc(cx, cy, radius, 180, 360)}
           fill="none"
           stroke="hsl(var(--muted))"
           strokeWidth={strokeWidth}
-          strokeLinecap="round"
+          strokeLinecap="butt"
         />
         {/* Value arc */}
-        <path
-          d={describeArc(size / 2, size * 0.55, radius, 180, 180 + (clampedValue / 100) * 180)}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          className="transition-all duration-500"
-        />
+        {clampedValue > 0 && (
+          <path
+            d={describeArc(cx, cy, radius, 180, 180 + (clampedValue / 100) * 180)}
+            fill="none"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="butt"
+            className="transition-all duration-500"
+          />
+        )}
       </svg>
       <span
         className="absolute font-bold text-foreground"
-        style={{ bottom: 0, fontSize: size * 0.22 }}
+        style={{ bottom: 2, fontSize: size * 0.2 }}
       >
         %{clampedValue}
       </span>
