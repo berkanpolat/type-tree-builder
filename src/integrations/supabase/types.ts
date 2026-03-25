@@ -3113,6 +3113,21 @@ export type Database = {
         Args: { p_password: string; p_username: string }
         Returns: boolean
       }
+      calc_uh_score: {
+        Args: {
+          p_aylik_tedarik_birim_id: string
+          p_aylik_tedarik_sayisi: number
+          p_aylik_uretim_kapasitesi: number
+          p_bagimsiz_denetim_id: string
+          p_firma_id: string
+          p_firma_turu_name: string
+          p_fiziksel_magaza_sayisi: number
+          p_hizli_numune_id: string
+          p_moq: number
+          p_uretim_vardiyasi_id: string
+        }
+        Returns: number
+      }
       check_registration_duplicate: {
         Args: { p_email: string; p_exclude_user_id?: string; p_phone?: string }
         Returns: Json
