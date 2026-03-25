@@ -19,6 +19,7 @@ import adBannerImg from "@/assets/ad-banner.jpg";
 import { useBanner } from "@/hooks/use-banner";
 import BildirDialog from "@/components/BildirDialog";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import GaugeChart from "@/components/GaugeChart";
 import {
   MessageSquare,
   Phone,
@@ -278,6 +279,7 @@ export default function FirmaDetay() {
 
   const [activeMenu, setActiveMenu] = useState("hakkinda");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [profileScore, setProfileScore] = useState<number>(0);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // SEO meta tags
@@ -563,6 +565,12 @@ export default function FirmaDetay() {
           secenek: textOrBelirtilmedi(sMap[u.secenek_id]),
         }))
       );
+
+      // Fetch profile score
+      const { data: scoreData } = await supabase.rpc("get_firma_sort_scores", { p_firma_ids: [firmaId] });
+      if (scoreData && scoreData.length > 0) {
+        setProfileScore(Math.min(100, scoreData[0].profile_score ?? 0));
+      }
 
       setLoading(false);
     };
