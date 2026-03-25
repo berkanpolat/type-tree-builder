@@ -39,7 +39,10 @@ import {
   ExternalLink,
   Package,
   Building2,
+  LayoutGrid,
+  LayoutList,
 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 const PER_PAGE = 20;
 const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1"; // Ana Ürün Kategorileri
@@ -83,6 +86,7 @@ interface FirmaWithExtra {
   faaliyet_alani?: string;
   is_favorited?: boolean;
   uretimSatisItems?: UretimSatisItem[];
+  profile_score?: number;
 }
 
 export default function TekRehber() {
@@ -127,7 +131,7 @@ export default function TekRehber() {
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
-  
+  const [cardView, setCardView] = useSessionState<"v1" | "v2">("firmaCardView", "v1");
 
   // Product taxonomy for search
   const [urunTaxNodes, setUrunTaxNodes] = useState<UrunTaxNode[]>([]);
@@ -293,6 +297,8 @@ export default function TekRehber() {
     }
 
     const sortedIds = (sortedData as any[]).map((s: any) => s.firma_id);
+    const scoreMap = new Map<string, number>();
+    (sortedData as any[]).forEach((s: any) => { scoreMap.set(s.firma_id, s.profile_score ?? 0); });
     const newTotalCount = Number((sortedData as any[])[0]?.total_count || 0);
     setTotalCount(newTotalCount);
 
@@ -404,6 +410,7 @@ export default function TekRehber() {
         faaliyet_alani: faaliyetMap[f!.id] || "",
         is_favorited: favSet.has(f!.id),
         uretimSatisItems: uretimSatisMap[f!.id] || [],
+        profile_score: scoreMap.get(f!.id) ?? 0,
       }));
 
     setFirmalar(enriched);
@@ -638,6 +645,20 @@ export default function TekRehber() {
                   </span>
                 )}
               </p>
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                <button
+                  onClick={() => setCardView("v1")}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${cardView === "v1" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <LayoutList className="w-3.5 h-3.5" /> Detaylı
+                </button>
+                <button
+                  onClick={() => setCardView("v2")}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${cardView === "v2" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" /> Doluluk
+                </button>
+              </div>
             </div>
             {firmaLoading ? (
               <div className="flex justify-center py-12">
@@ -673,6 +694,67 @@ export default function TekRehber() {
                     ...(firma.web_sitesi ? { "sameAs": [firma.web_sitesi] } : {}),
                     ...(firma.kurulus_tarihi ? { "foundingDate": firma.kurulus_tarihi } : {}),
                   };
+
+                  if (cardView === "v2") {
+                    // ─── V2: COMPACT CARD WITH COMPLETION BAR ───
+                    const MAX_PROFILE_SCORE = 43;
+                    const completionPct = Math.min(100, Math.round(((firma.profile_score ?? 0) / MAX_PROFILE_SCORE) * 100));
+                    const completionColor = completionPct >= 75 ? "text-emerald-600" : completionPct >= 40 ? "text-amber-600" : "text-destructive";
+                    const progressColor = completionPct >= 75 ? "[&>div]:bg-emerald-500" : completionPct >= 40 ? "[&>div]:bg-amber-500" : "[&>div]:bg-destructive";
+
+                    return (
+                      <article
+                        key={firma.id}
+                        className="group rounded-xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-200 overflow-hidden cursor-pointer"
+                        onClick={() => navigate(firmaUrl)}
+                      >
+                        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+                        <div className="flex items-center gap-3 px-4 py-3 sm:px-5">
+                          {/* Logo */}
+                          <div className="relative shrink-0">
+                            {firma.logo_url ? (
+                              <img src={firma.logo_url} alt={`${firma.firma_unvani} logosu`} loading="lazy" width={48} height={48} className="w-11 h-11 sm:w-12 sm:h-12 rounded-xl border border-border object-contain bg-muted p-1" />
+                            ) : (
+                              <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={null} size="md" className="w-11 h-11 sm:w-12 sm:h-12 border border-border" />
+                            )}
+                            {firma.belge_onayli && (
+                              <div className="absolute -bottom-1 -right-1"><VerifiedBadge /></div>
+                            )}
+                          </div>
+
+                          {/* Name + Type */}
+                          <div className="flex-1 min-w-0">
+                            <h2 className="font-bold text-foreground text-sm sm:text-base leading-tight truncate">
+                              <Link to={firmaUrl} className="hover:text-primary transition-colors" onClick={(e) => e.stopPropagation()}>
+                                {firma.firma_unvani}
+                              </Link>
+                            </h2>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              {(firma.firma_turu_name || firma.firma_tipi_name) && (
+                                <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
+                                  {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
+                                </Badge>
+                              )}
+                              {locationText && (
+                                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                  <MapPin className="w-3 h-3" /> {locationText}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Completion */}
+                          <div className="shrink-0 flex flex-col items-end gap-1 min-w-[100px] sm:min-w-[130px]">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`text-sm sm:text-base font-bold ${completionColor}`}>{completionPct}%</span>
+                              <span className="text-[10px] text-muted-foreground hidden sm:inline">Profil Doluluk</span>
+                            </div>
+                            <Progress value={completionPct} className={`h-2 w-full bg-muted ${progressColor}`} />
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  }
 
                   {
                     // ─── V3: 3-COLUMN CARD DESIGN ───
