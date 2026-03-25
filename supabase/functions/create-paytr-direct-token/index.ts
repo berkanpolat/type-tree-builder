@@ -165,7 +165,7 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "";
     const referer = req.headers.get("referer") || "";
-    const isPreview = Boolean(forceTestMode) || origin.includes("lovable.app") || origin.includes("localhost") || referer.includes("lovable.app");
+    const isPreview = Boolean(forceTestMode) || origin.includes("lovable.app") || origin.includes("lovableproject.com") || origin.includes("localhost") || referer.includes("lovable.app") || referer.includes("lovableproject.com");
     const testMode = isPreview ? "1" : "0";
 
     const siteUrl = origin || Deno.env.get("PAYTR_SITE_URL") || "https://tekstilas.com";
