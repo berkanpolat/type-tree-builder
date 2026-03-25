@@ -645,6 +645,20 @@ export default function TekRehber() {
                   </span>
                 )}
               </p>
+              <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+                <button
+                  onClick={() => setCardView("v1")}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${cardView === "v1" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <LayoutList className="w-3.5 h-3.5" /> Detaylı
+                </button>
+                <button
+                  onClick={() => setCardView("v2")}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all ${cardView === "v2" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" /> Doluluk
+                </button>
+              </div>
             </div>
             {firmaLoading ? (
               <div className="flex justify-center py-12">
