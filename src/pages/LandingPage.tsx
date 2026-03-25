@@ -65,9 +65,9 @@ function LandingHeader({ logoImg: logoSrc }: { logoImg: string }) {
 
   return (
     <header className="sticky top-0 z-50 bg-background border-b border-border">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-4 md:gap-8">
-          <img src={logoSrc} alt="Tekstil A.Ş." className="h-7 object-contain" />
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 md:gap-8 min-w-0">
+          <img src={logoSrc} alt="Tekstil A.Ş." className="h-7 md:h-10 object-contain shrink-0" />
           <nav className="hidden md:flex items-center gap-6">
             <div className="relative" onMouseEnter={() => handleMouseEnter("tekrehber")} onMouseLeave={handleMouseLeave}>
               <Link to="/firmalar" className="text-sm font-medium text-muted-foreground hover:text-secondary transition-colors">TekRehber</Link>
