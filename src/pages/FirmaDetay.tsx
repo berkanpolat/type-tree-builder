@@ -805,7 +805,7 @@ export default function FirmaDetay() {
             <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={firma.logo_url} size="xl" className="w-20 h-20 text-2xl -mt-14 border border-border" />
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 justify-center">
                 <h1 className="text-xl font-bold text-foreground flex items-center gap-1.5">
                   {firma.firma_unvani}
                   {(firma as any).belge_onayli && <VerifiedBadge size="md" />}
