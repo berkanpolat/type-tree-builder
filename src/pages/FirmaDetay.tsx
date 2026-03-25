@@ -805,17 +805,10 @@ export default function FirmaDetay() {
             <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={firma.logo_url} size="xl" className="w-20 h-20 text-2xl -mt-14 border border-border" />
 
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 justify-center">
-                <h1 className="text-xl font-bold text-foreground flex items-center gap-1.5">
-                  {firma.firma_unvani}
-                  {(firma as any).belge_onayli && <VerifiedBadge size="md" />}
-                </h1>
-                {/* Gauge Chart */}
-                <div className="shrink-0 flex flex-col items-center">
-                  <GaugeChart value={profileScore} size={64} strokeWidth={6} />
-                  <span className="text-[9px] text-muted-foreground mt-0.5 leading-tight text-center">Profil Doluluk Oranı</span>
-                </div>
-              </div>
+              <h1 className="text-xl font-bold text-foreground flex items-center gap-1.5">
+                {firma.firma_unvani}
+                {(firma as any).belge_onayli && <VerifiedBadge size="md" />}
+              </h1>
               <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                 <Badge className="bg-secondary text-secondary-foreground text-xs">{firmaTuruName}</Badge>
                 <Badge variant="outline" className="text-xs border-secondary text-secondary">{firmaTipiName}</Badge>
@@ -824,6 +817,12 @@ export default function FirmaDetay() {
                   {ilIlce}
                 </span>
               </div>
+            </div>
+
+            {/* Gauge Chart - centered between name and buttons */}
+            <div className="shrink-0 flex flex-col items-center">
+              <GaugeChart value={profileScore} size={64} strokeWidth={6} />
+              <span className="text-[9px] text-muted-foreground mt-0.5 leading-tight text-center">Profil Doluluk Oranı</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 shrink-0 mt-3 md:mt-0">
