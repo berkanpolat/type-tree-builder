@@ -548,117 +548,144 @@ export default function YeniUrun() {
   };
 
   const handleSubmit = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // Check aktif ürün quota (only for new products, not edits)
-    if (!editId && !isAdminMode) {
-      if (packageInfo.loading) {
-        toast({ title: "Paket bilgisi yükleniyor", description: "Lütfen birkaç saniye sonra tekrar deneyin.", variant: "destructive" });
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast({ title: "Oturum bulunamadı", description: "Lütfen tekrar giriş yapın.", variant: "destructive" });
         return;
       }
 
-      const aktifLimit = packageInfo.limits.aktif_urun_limiti;
-      const { count: aktifSayisi = 0 } = await supabase
-        .from("urunler")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("durum", "aktif");
-
-      if (aktifLimit !== null && aktifSayisi >= aktifLimit) {
-        setUpgradeMessage(`Aktif ürün limitiniz dolmuştur (${aktifSayisi}/${aktifLimit}). PRO pakete yükselterek daha fazla aktif ürün yayınlayabilirsiniz.`);
-        setUpgradeOpen(true);
-        return;
-      }
-    }
-
-    if (varyasyonlar.length === 0) {
-      toast({ title: "En az bir ürün varyasyonu ekleyiniz.", variant: "destructive" }); return;
-    }
-    const hasAnyVaryasyonPhoto = varyasyonlar.some(v => v.foto_urls.length > 0 || (v.foto_files && v.foto_files.length > 0));
-    if (!hasAnyVaryasyonPhoto) {
-      toast({ title: "En az bir varyasyona fotoğraf eklemelisiniz.", variant: "destructive" }); return;
-    }
-
-    setSaving(true);
-
-    const payload = {
-      user_id: user.id, baslik, aciklama,
-      urun_kategori_id: selectedKategori, urun_grup_id: selectedGrup, urun_tur_id: selectedTur,
-      fiyat_tipi: fiyatTipi,
-      fiyat: fiyatTipi === "tek_fiyat" ? parseFloat(fiyat) : null,
-      para_birimi: paraBirimi,
-      min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
-      siparis_birimi: isHazirGiyim ? "Adet" : (varyasyonlar.length > 0 ? varyasyonlar[0].varyant_1_value : "Adet"),
-      teknik_detaylar: teknikDetaylar,
-      durum: isAdminMode && originalDurum ? originalDurum : "duzenleniyor",
-    };
-
-    let urunId = draftId;
-    if (urunId) {
-      await supabase.from("urunler").update(payload as any).eq("id", urunId);
-    } else {
-      const { data } = await supabase.from("urunler").insert([payload as any]).select("id").single();
-      urunId = data?.id || null;
-    }
-
-    if (urunId) {
-      await supabase.from("urun_varyasyonlar").delete().eq("urun_id", urunId);
-      const dbRows = [];
-      for (const v of varyasyonlar) {
-        // Upload all new files
-        const uploadedUrls: string[] = [];
-        if (v.foto_files && v.foto_files.length > 0) {
-          for (const file of v.foto_files) {
-            const uploaded = await uploadVaryasyonFoto(file);
-            if (uploaded) uploadedUrls.push(uploaded);
-          }
+      // Check aktif ürün quota (only for new products, not edits)
+      if (!editId && !isAdminMode) {
+        if (packageInfo.loading) {
+          toast({ title: "Paket bilgisi yükleniyor", description: "Lütfen birkaç saniye sonra tekrar deneyin.", variant: "destructive" });
+          return;
         }
-        // Combine existing URLs (non-blob) with newly uploaded
-        const existingUrls = v.foto_urls.filter(u => !u.startsWith("blob:"));
-        const allFotoUrls = [...existingUrls, ...uploadedUrls];
-        const primaryFoto = allFotoUrls[0] || "";
 
-        // For varyasyonlu, save each variation with price tiers
-        if (fiyatTipi === "varyasyonlu") {
-          for (const k of fiyatKademeleri) {
+        const aktifLimit = packageInfo.limits.aktif_urun_limiti;
+        const { count: aktifSayisi = 0 } = await supabase
+          .from("urunler")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("durum", "aktif");
+
+        if (aktifLimit !== null && aktifSayisi >= aktifLimit) {
+          setUpgradeMessage(`Aktif ürün limitiniz dolmuştur (${aktifSayisi}/${aktifLimit}). PRO pakete yükselterek daha fazla aktif ürün yayınlayabilirsiniz.`);
+          setUpgradeOpen(true);
+          return;
+        }
+      }
+
+      if (varyasyonlar.length === 0) {
+        toast({ title: "En az bir ürün varyasyonu ekleyiniz.", variant: "destructive" }); return;
+      }
+      const hasAnyVaryasyonPhoto = varyasyonlar.some(v => v.foto_urls.length > 0 || (v.foto_files && v.foto_files.length > 0));
+      if (!hasAnyVaryasyonPhoto) {
+        toast({ title: "En az bir varyasyona fotoğraf eklemelisiniz.", variant: "destructive" }); return;
+      }
+
+      setSaving(true);
+
+      const payload = {
+        user_id: user.id, baslik, aciklama,
+        urun_kategori_id: selectedKategori, urun_grup_id: selectedGrup, urun_tur_id: selectedTur,
+        fiyat_tipi: fiyatTipi,
+        fiyat: fiyatTipi === "tek_fiyat" ? parseFloat(fiyat) : null,
+        para_birimi: paraBirimi,
+        min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
+        siparis_birimi: isHazirGiyim ? "Adet" : (varyasyonlar.length > 0 ? varyasyonlar[0].varyant_1_value : "Adet"),
+        teknik_detaylar: teknikDetaylar,
+        durum: isAdminMode && originalDurum ? originalDurum : "duzenleniyor",
+      };
+
+      let urunId = draftId;
+      if (urunId) {
+        const { error } = await supabase.from("urunler").update(payload as any).eq("id", urunId);
+        if (error) {
+          console.error("[handleSubmit] Update error:", error);
+          toast({ title: "Ürün güncellenemedi", description: error.message, variant: "destructive" });
+          setSaving(false);
+          return;
+        }
+      } else {
+        const { data, error } = await supabase.from("urunler").insert([payload as any]).select("id").single();
+        if (error) {
+          console.error("[handleSubmit] Insert error:", error);
+          toast({ title: "Ürün kaydedilemedi", description: error.message, variant: "destructive" });
+          setSaving(false);
+          return;
+        }
+        urunId = data?.id || null;
+      }
+
+      if (urunId) {
+        await supabase.from("urun_varyasyonlar").delete().eq("urun_id", urunId);
+        const dbRows = [];
+        for (const v of varyasyonlar) {
+          // Upload all new files
+          const uploadedUrls: string[] = [];
+          if (v.foto_files && v.foto_files.length > 0) {
+            for (const file of v.foto_files) {
+              const uploaded = await uploadVaryasyonFoto(file);
+              if (uploaded) uploadedUrls.push(uploaded);
+            }
+          }
+          // Combine existing URLs (non-blob) with newly uploaded
+          const existingUrls = v.foto_urls.filter(u => !u.startsWith("blob:"));
+          const allFotoUrls = [...existingUrls, ...uploadedUrls];
+          const primaryFoto = allFotoUrls[0] || "";
+
+          // For varyasyonlu, save each variation with price tiers
+          if (fiyatTipi === "varyasyonlu") {
+            for (const k of fiyatKademeleri) {
+              dbRows.push({
+                urun_id: urunId,
+                varyant_1_label: v.varyant_1_label, varyant_1_value: v.varyant_1_value,
+                varyant_2_label: v.varyant_2_label, varyant_2_value: v.varyant_2_value,
+                min_adet: k.min_adet, max_adet: k.max_adet, birim_fiyat: k.birim_fiyat,
+                foto_url: primaryFoto,
+              });
+            }
+          } else {
             dbRows.push({
               urun_id: urunId,
               varyant_1_label: v.varyant_1_label, varyant_1_value: v.varyant_1_value,
               varyant_2_label: v.varyant_2_label, varyant_2_value: v.varyant_2_value,
-              min_adet: k.min_adet, max_adet: k.max_adet, birim_fiyat: k.birim_fiyat,
+              min_adet: 1, max_adet: 1, birim_fiyat: parseFloat(fiyat) || 0,
               foto_url: primaryFoto,
             });
           }
-        } else {
-          dbRows.push({
-            urun_id: urunId,
-            varyant_1_label: v.varyant_1_label, varyant_1_value: v.varyant_1_value,
-            varyant_2_label: v.varyant_2_label, varyant_2_value: v.varyant_2_value,
-            min_adet: 1, max_adet: 1, birim_fiyat: parseFloat(fiyat) || 0,
-            foto_url: primaryFoto,
-          });
+        }
+        if (dbRows.length > 0) {
+          const { error: varError } = await supabase.from("urun_varyasyonlar").insert(dbRows as any);
+          if (varError) {
+            console.error("[handleSubmit] Varyasyon insert error:", varError);
+            toast({ title: "Varyasyonlar kaydedilemedi", description: varError.message, variant: "destructive" });
+            setSaving(false);
+            return;
+          }
+        }
+
+        // Set first variation photo as main product photo if not already set
+        const firstFoto = dbRows[0]?.foto_url;
+        if (firstFoto) {
+          await supabase.from("urunler").update({ foto_url: firstFoto }).eq("id", urunId);
         }
       }
-      if (dbRows.length > 0) await supabase.from("urun_varyasyonlar").insert(dbRows as any);
 
-      // Set first variation photo as main product photo if not already set
-      const firstFoto = dbRows[0]?.foto_url;
-      if (firstFoto) {
-        await supabase.from("urunler").update({ foto_url: firstFoto }).eq("id", urunId);
+      setSaving(false);
+      toast({ title: "Ürün kaydedildi!" });
+
+      if (isAdminMode) {
+        navigate("/yonetim/urunler");
+      } else {
+        const { data: savedUrun } = await supabase.from("urunler").select("slug").eq("id", urunId).single();
+        navigate(`/urun/${savedUrun?.slug || urunId}`);
       }
-    }
-
-    setSaving(false);
-    toast({ title: "Ürün kaydedildi!" });
-
-    if (isAdminMode) {
-      // Admin mode: go back to admin products page
-      navigate("/yonetim/urunler");
-    } else {
-      // Normal user: navigate to preview
-      const { data: savedUrun } = await supabase.from("urunler").select("slug").eq("id", urunId).single();
-      navigate(`/urun/${savedUrun?.slug || urunId}`);
+    } catch (err: any) {
+      console.error("[handleSubmit] Unexpected error:", err);
+      setSaving(false);
+      toast({ title: "Beklenmeyen hata", description: err?.message || "Ürün kaydedilirken hata oluştu", variant: "destructive" });
     }
   };
 
