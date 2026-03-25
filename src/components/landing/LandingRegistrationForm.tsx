@@ -78,10 +78,10 @@ function formatExpiry(value: string): string {
   return digits;
 }
 function validateExpiry(val: string): boolean {
-  const parts = val.split("/");
-  if (parts.length !== 2) return false;
-  const month = parseInt(parts[0], 10);
-  const year = parseInt("20" + parts[1], 10);
+  const digits = val.replace(/\D/g, "");
+  if (digits.length !== 4) return false;
+  const month = parseInt(digits.slice(0, 2), 10);
+  const year = parseInt("20" + digits.slice(2, 4), 10);
   if (month < 1 || month > 12) return false;
   return new Date(year, month) > new Date();
 }
