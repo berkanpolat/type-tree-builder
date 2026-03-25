@@ -469,28 +469,42 @@ export default function YeniUrun() {
   };
 
   const saveDraft = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const payload = {
-      user_id: user.id,
-      baslik: baslik || "Taslak Ürün",
-      aciklama,
-      urun_kategori_id: selectedKategori || null,
-      urun_grup_id: selectedGrup || null,
-      urun_tur_id: selectedTur || null,
-      fiyat_tipi: fiyatTipi,
-      fiyat: fiyatTipi === "tek_fiyat" && fiyat ? parseFloat(fiyat) : null,
-      para_birimi: paraBirimi,
-      min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
-      siparis_birimi: isHazirGiyim ? "Adet" : (varyasyonlar.length > 0 ? varyasyonlar[0].varyant_1_value : "Adet"),
-      teknik_detaylar: teknikDetaylar,
-      durum: isAdminMode && originalDurum ? originalDurum : "taslak",
-    };
-    if (draftId) {
-      await supabase.from("urunler").update(payload as any).eq("id", draftId);
-    } else {
-      const { data } = await supabase.from("urunler").insert([payload as any]).select("id").single();
-      if (data) setDraftId(data.id);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const payload = {
+        user_id: user.id,
+        baslik: baslik || "Taslak Ürün",
+        aciklama,
+        urun_kategori_id: selectedKategori || null,
+        urun_grup_id: selectedGrup || null,
+        urun_tur_id: selectedTur || null,
+        fiyat_tipi: fiyatTipi,
+        fiyat: fiyatTipi === "tek_fiyat" && fiyat ? parseFloat(fiyat) : null,
+        para_birimi: paraBirimi,
+        min_siparis_miktari: minSiparisMiktari ? parseInt(minSiparisMiktari) : null,
+        siparis_birimi: isHazirGiyim ? "Adet" : (varyasyonlar.length > 0 ? varyasyonlar[0].varyant_1_value : "Adet"),
+        teknik_detaylar: teknikDetaylar,
+        durum: isAdminMode && originalDurum ? originalDurum : "taslak",
+      };
+      if (draftId) {
+        const { error } = await supabase.from("urunler").update(payload as any).eq("id", draftId);
+        if (error) {
+          console.error("[saveDraft] Update error:", error);
+          toast({ title: "Taslak kaydedilemedi", description: error.message, variant: "destructive" });
+        }
+      } else {
+        const { data, error } = await supabase.from("urunler").insert([payload as any]).select("id").single();
+        if (error) {
+          console.error("[saveDraft] Insert error:", error);
+          toast({ title: "Taslak oluşturulamadı", description: error.message, variant: "destructive" });
+        } else if (data) {
+          setDraftId(data.id);
+        }
+      }
+    } catch (err: any) {
+      console.error("[saveDraft] Unexpected error:", err);
+      toast({ title: "Taslak kaydedilemedi", description: err?.message || "Beklenmeyen hata", variant: "destructive" });
     }
   };
 
