@@ -19,6 +19,7 @@ import adBannerImg from "@/assets/ad-banner.jpg";
 import { useBanner } from "@/hooks/use-banner";
 import BildirDialog from "@/components/BildirDialog";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import GaugeChart from "@/components/GaugeChart";
 import {
   MessageSquare,
   Phone,
@@ -278,6 +279,7 @@ export default function FirmaDetay() {
 
   const [activeMenu, setActiveMenu] = useState("hakkinda");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [profileScore, setProfileScore] = useState<number>(0);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // SEO meta tags
@@ -564,6 +566,12 @@ export default function FirmaDetay() {
         }))
       );
 
+      // Fetch profile score
+      const { data: scoreData } = await supabase.rpc("get_sorted_firmalar", { p_firma_ids: [firmaId], p_page: 1, p_per_page: 1 });
+      if (scoreData && Array.isArray(scoreData) && scoreData.length > 0) {
+        setProfileScore(Math.min(100, (scoreData[0] as any).profile_score ?? 0));
+      }
+
       setLoading(false);
     };
 
@@ -809,6 +817,12 @@ export default function FirmaDetay() {
                   {ilIlce}
                 </span>
               </div>
+            </div>
+
+            {/* Gauge Chart */}
+            <div className="shrink-0 flex flex-col items-center">
+              <GaugeChart value={profileScore} size={80} strokeWidth={7} />
+              <span className="text-[10px] text-muted-foreground mt-0.5 leading-tight text-center">Profil Doluluk Oranı</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-2 shrink-0 mt-3 md:mt-0">
