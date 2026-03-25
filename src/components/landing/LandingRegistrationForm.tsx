@@ -323,12 +323,9 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
       if (rpcError) throw rpcError;
 
       if (isPro) {
-        // PRO: Sign in to get a valid session JWT before calling payment edge function
-        // signUp alone doesn't create a session when email confirmation is required
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password: randomPassword });
-        if (signInError) throw new Error("Oturum oluşturulamadı: " + signInError.message);
-        // Now we have a valid JWT — proceed to payment
-        await initiateDirectPayment();
+        // PRO: Pass userId to payment function since email confirmation is required
+        // and signUp doesn't create a session without confirmed email
+        await initiateDirectPayment(userId, email);
       } else {
         // FREE: Send "başvuru alındı" email & SMS, then show completion screen
         try { await supabase.functions.invoke("send-email", { body: { type: "basvuru_alindi", to: email, templateModel: { firma_unvani: firmaUnvani } } }); } catch { }
@@ -346,7 +343,7 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
     }
   };
 
-  const initiateDirectPayment = async () => {
+  const initiateDirectPayment = async (userId: string, userEmail: string) => {
     try {
       const periyot = billingYearly ? "yillik" : "aylik";
       const expiryParts = expiry.split("/");
@@ -371,6 +368,8 @@ export default function LandingRegistrationForm({ selectedPackage, billingYearly
           expiry_year: expiryYear,
           cvv,
           firma_unvani: firmaUnvani,
+          user_id: userId,
+          user_email: userEmail,
         },
       });
 

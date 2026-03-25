@@ -47,13 +47,13 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
   );
 
-  try {
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("Kullanıcı doğrulanamadı");
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
 
+  try {
     const {
       periyot,
       clientIp: rawClientIp,
@@ -64,7 +64,44 @@ serve(async (req) => {
       expiry_year,
       cvv,
       firma_unvani,
+      user_id: bodyUserId,
+      user_email: bodyUserEmail,
     } = await req.json();
+
+    // Try JWT auth first, fall back to user_id from body (for landing page registration
+    // where email confirmation is required and no session exists yet)
+    let userId: string;
+    let userEmail: string;
+
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace("Bearer ", "");
+    let jwtAuthOk = false;
+
+    if (token && !token.includes("eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6")) {
+      // Token exists and is not the anon key — try JWT auth
+      try {
+        const { data } = await supabaseClient.auth.getUser(token);
+        if (data.user?.id && data.user?.email) {
+          userId = data.user.id;
+          userEmail = data.user.email;
+          jwtAuthOk = true;
+        }
+      } catch { /* fall through to body auth */ }
+    }
+
+    if (!jwtAuthOk) {
+      // Fallback: verify user_id from body exists in auth.users via admin
+      if (!bodyUserId || !bodyUserEmail) throw new Error("Kullanıcı doğrulanamadı");
+      const { data: adminUser, error: adminErr } = await supabaseAdmin.auth.admin.getUserById(bodyUserId);
+      if (adminErr || !adminUser?.user) throw new Error("Kullanıcı doğrulanamadı");
+      // Verify email matches to prevent spoofing
+      if (adminUser.user.email !== bodyUserEmail) throw new Error("Kullanıcı doğrulanamadı");
+      userId = adminUser.user.id;
+      userEmail = adminUser.user.email;
+      console.log("[PAYTR-DIRECT] Auth via body user_id fallback", { userId });
+    }
+
+    const user = { id: userId, email: userEmail };
 
     // Validate inputs
     if (!periyot || !["aylik", "yillik"].includes(periyot)) throw new Error("Geçersiz periyot");
