@@ -6,11 +6,13 @@ import { MessageSquare } from "lucide-react";
 import { useUnreadMessages } from "@/hooks/use-unread-messages";
 import { formatDistanceToNow } from "date-fns";
 import { tr } from "date-fns/locale";
+import FirmaAvatar from "@/components/FirmaAvatar";
 
 interface ConversationItem {
   id: string;
   otherUserId: string;
   firmaUnvani: string;
+  logoUrl: string | null;
   lastMessage: string;
   lastMessageAt: string;
   unreadCount: number;
@@ -44,7 +46,7 @@ export default function HeaderMessagePanel() {
       const otherUserId = conv.user1_id === user.id ? conv.user2_id : conv.user1_id;
 
       const [firmaRes, msgRes, unreadRes] = await Promise.all([
-        supabase.from("firmalar").select("firma_unvani").eq("user_id", otherUserId).single(),
+        supabase.from("firmalar").select("firma_unvani, logo_url").eq("user_id", otherUserId).single(),
         supabase.from("messages").select("content, created_at").eq("conversation_id", conv.id).order("created_at", { ascending: false }).limit(1),
         supabase.from("messages").select("id", { count: "exact", head: true }).eq("conversation_id", conv.id).neq("sender_id", user.id).eq("is_read", false),
       ]);
@@ -55,6 +57,7 @@ export default function HeaderMessagePanel() {
         id: conv.id,
         otherUserId,
         firmaUnvani: firmaRes.data?.firma_unvani || "Bilinmeyen",
+        logoUrl: firmaRes.data?.logo_url || null,
         lastMessage: msgRes.data[0].content,
         lastMessageAt: msgRes.data[0].created_at,
         unreadCount: unreadRes.count || 0,
@@ -113,9 +116,7 @@ export default function HeaderMessagePanel() {
                   className={`w-full text-left px-4 py-3 hover:bg-muted/50 transition-colors ${conv.unreadCount > 0 ? "bg-primary/[0.03]" : ""}`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center shrink-0 text-sm font-semibold text-muted-foreground">
-                      {conv.firmaUnvani.charAt(0).toUpperCase()}
-                    </div>
+                    <FirmaAvatar firmaUnvani={conv.firmaUnvani} logoUrl={conv.logoUrl} size="sm" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
                         <span className={`text-sm truncate ${conv.unreadCount > 0 ? "font-semibold text-foreground" : "font-medium text-foreground"}`}>
