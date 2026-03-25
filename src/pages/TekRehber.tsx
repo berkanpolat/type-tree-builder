@@ -83,6 +83,7 @@ interface FirmaWithExtra {
   faaliyet_alani?: string;
   is_favorited?: boolean;
   uretimSatisItems?: UretimSatisItem[];
+  profile_score?: number;
 }
 
 export default function TekRehber() {
