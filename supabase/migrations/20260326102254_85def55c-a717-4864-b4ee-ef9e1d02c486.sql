@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.admin_list_firmalar_v2(integer, integer, text, text, text, text, text, text);

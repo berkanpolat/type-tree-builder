@@ -3092,36 +3092,22 @@ export type Database = {
       admin_list_activity_log_v2: { Args: never; Returns: Json }
       admin_list_admin_users_v2: { Args: never; Returns: Json }
       admin_list_aksiyonlar_v2: { Args: { p_admin_id?: string }; Returns: Json }
-      admin_list_firmalar_v2:
-        | {
-            Args: {
-              p_abone_period?: string
-              p_filter_durum?: string
-              p_filter_il?: string
-              p_filter_ilce?: string
-              p_filter_tipi?: string
-              p_filter_turu?: string
-              p_page?: number
-              p_per_page?: number
-              p_search?: string
-              p_stat_card?: string
-              p_stat_days?: number
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              p_filter_durum?: string
-              p_filter_il?: string
-              p_filter_ilce?: string
-              p_filter_tipi?: string
-              p_filter_turu?: string
-              p_page?: number
-              p_per_page?: number
-              p_search?: string
-            }
-            Returns: Json
-          }
+      admin_list_firmalar_v2: {
+        Args: {
+          p_abone_period?: string
+          p_filter_durum?: string
+          p_filter_il?: string
+          p_filter_ilce?: string
+          p_filter_tipi?: string
+          p_filter_turu?: string
+          p_page?: number
+          p_per_page?: number
+          p_search?: string
+          p_stat_card?: string
+          p_stat_days?: number
+        }
+        Returns: Json
+      }
       admin_list_hedefler_v2: {
         Args: { p_admin_id?: string; p_durum?: string }
         Returns: Json
