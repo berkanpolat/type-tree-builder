@@ -583,7 +583,9 @@ export default function UrunDetay() {
 
   const sym = paraBirimiSymbol[urun.para_birimi || "TRY"] || "₺";
   let priceDisplay: React.ReactNode;
-  if (urun.fiyat_tipi === "varyasyonlu" && varyasyonlar.length > 0) {
+  if (urun.fiyat_tipi === "fiyat_sorunuz") {
+    priceDisplay = <span className="text-2xl font-bold text-primary">Fiyat Sorunuz</span>;
+  } else if (urun.fiyat_tipi === "varyasyonlu" && varyasyonlar.length > 0) {
     const prices = varyasyonlar.map(v => v.birim_fiyat);
     const minP = Math.min(...prices);
     const maxP = Math.max(...prices);

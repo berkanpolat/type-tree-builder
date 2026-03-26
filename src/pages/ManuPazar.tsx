@@ -363,7 +363,9 @@ export default function ManuPazar() {
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">{urun.urun_kategori_id ? secenekMap[urun.urun_kategori_id] || "-" : "-"}</span>
                     <span className="font-medium text-foreground">
-                      {urun.fiyat != null
+                      {urun.fiyat_tipi === "fiyat_sorunuz"
+                        ? "Fiyat Sorunuz"
+                        : urun.fiyat != null
                         ? `${urun.fiyat.toLocaleString("tr-TR")} ${paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi}`
                         : urun.fiyat_tipi === "varyasyonlu" ? "Varyasyonlu" : "-"}
                     </span>
@@ -450,7 +452,9 @@ export default function ManuPazar() {
                         {urun.urun_grup_id ? secenekMap[urun.urun_grup_id] || "-" : "-"}
                       </TableCell>
                       <TableCell className="text-sm font-medium">
-                        {urun.fiyat != null
+                        {urun.fiyat_tipi === "fiyat_sorunuz"
+                          ? "Fiyat Sorunuz"
+                          : urun.fiyat != null
                           ? `${urun.fiyat.toLocaleString("tr-TR")} ${paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi}`
                           : urun.fiyat_tipi === "varyasyonlu" ? "Varyasyonlu" : "-"}
                       </TableCell>
