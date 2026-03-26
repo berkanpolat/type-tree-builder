@@ -66,6 +66,7 @@ interface KategoriNode {
   id: string;
   name: string;
   parent_id: string | null;
+  slug?: string | null;
 }
 
 interface UrunListItem {
