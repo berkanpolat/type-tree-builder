@@ -147,29 +147,42 @@ export default function ProfilAyarlari() {
     setPasswordLoading(false);
   };
 
+  // Email change - password dialog state
+  const [emailPassword, setEmailPassword] = useState("");
+
   const handleEmailChange = async () => {
     if (!newEmail.trim() || !newEmail.includes("@")) {
       toast({ title: "Hata", description: "Geçerli bir e-posta adresi giriniz.", variant: "destructive" });
       return;
     }
+    if (!emailPassword) {
+      toast({ title: "Hata", description: "Mevcut şifrenizi giriniz.", variant: "destructive" });
+      return;
+    }
 
     setEmailLoading(true);
 
-    const { error } = await supabase.auth.updateUser(
-      { email: newEmail.trim() },
-      { emailRedirectTo: window.location.origin }
-    );
-
-    if (error) {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
-    } else {
-      toast({
-        title: "Onay E-postası Gönderildi",
-        description: "Yeni e-posta adresinize bir onay bağlantısı gönderildi. Lütfen onaylayın.",
+    try {
+      const { data, error } = await supabase.functions.invoke("change-email", {
+        body: { currentPassword: emailPassword, newEmail: newEmail.trim() },
       });
-      setEmailOpen(false);
-      setNewEmail("");
+
+      if (error) {
+        const msg = (error as any)?.context?.json?.error || error.message || "E-posta güncellenemedi.";
+        toast({ title: "Hata", description: msg, variant: "destructive" });
+      } else if (data?.error) {
+        toast({ title: "Hata", description: data.error, variant: "destructive" });
+      } else {
+        toast({ title: "Başarılı", description: "E-posta adresiniz başarıyla güncellendi." });
+        setAuthEmail(newEmail.trim());
+        setEmailOpen(false);
+        setNewEmail("");
+        setEmailPassword("");
+      }
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "Beklenmeyen bir hata oluştu.", variant: "destructive" });
     }
+
     setEmailLoading(false);
   };
 
@@ -358,13 +371,19 @@ export default function ProfilAyarlari() {
                 placeholder="yeni@eposta.com"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Yeni e-posta adresinize bir onay bağlantısı gönderilecektir.
-            </p>
+            <div className="space-y-1.5">
+              <Label>Mevcut Şifre</Label>
+              <Input
+                type="password"
+                value={emailPassword}
+                onChange={(e) => setEmailPassword(e.target.value)}
+                placeholder="Güvenlik için mevcut şifrenizi giriniz"
+              />
+            </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setEmailOpen(false)}>İptal</Button>
+              <Button variant="outline" onClick={() => { setEmailOpen(false); setEmailPassword(""); }}>İptal</Button>
               <Button onClick={handleEmailChange} disabled={emailLoading}>
-                {emailLoading ? "Gönderiliyor..." : "Onay Gönder"}
+                {emailLoading ? "Güncelleniyor..." : "E-postayı Güncelle"}
               </Button>
             </div>
           </div>
