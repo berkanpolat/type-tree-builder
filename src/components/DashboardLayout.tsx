@@ -7,6 +7,7 @@ import { Menu, RefreshCw } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState, useCallback } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 function MobileMenuButton() {
   const { toggleSidebar } = useSidebar();
@@ -49,8 +50,12 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, title }: DashboardLayoutProps) {
   useLastSeen();
+  const isMobile = useIsMobile();
+  // On tablet/mobile, default to collapsed unless user previously expanded (cookie)
+  const hasCookie = typeof document !== "undefined" && document.cookie.includes("sidebar:state=");
+  const defaultOpen = hasCookie ? undefined : !isMobile;
   return (
-    <SidebarProvider>
+    <SidebarProvider {...(defaultOpen !== undefined ? { defaultOpen } : {})}>
       <div className="h-[100dvh] flex w-full overflow-hidden">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
