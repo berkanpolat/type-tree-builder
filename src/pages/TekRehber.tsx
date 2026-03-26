@@ -163,7 +163,7 @@ export default function TekRehber() {
   useEffect(() => {
     supabase.from("firma_turleri").select("id, name, slug").order("name").then(({ data }) => {
       if (data) {
-        const sorted = sortFirmaTurleri(data as any);
+        const sorted = sortFirmaTurleri(data.map(d => ({ id: d.id, name: d.name })));
         setFirmaTurleri(sorted);
 
         // Resolve URL slug to set filter
