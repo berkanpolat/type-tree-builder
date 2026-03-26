@@ -253,7 +253,10 @@ export default function AdminFirmalarV2() {
           p_filter_il: filterIl !== "all" ? filterIl : null,
           p_filter_ilce: filterIlce !== "all" ? filterIlce : null,
           p_filter_durum: filterDurum !== "all" ? filterDurum : null,
-        }),
+          p_stat_card: activeStatCard || null,
+          p_stat_days: statsDays,
+          p_abone_period: abonePeriod,
+        } as any),
         supabase.rpc("admin_firma_stats_v2"),
       ]);
       const parsed = firmaResult as any;
@@ -266,7 +269,7 @@ export default function AdminFirmalarV2() {
     } finally {
       setLoading(false);
     }
-  }, [token, currentPage, debouncedSearch, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, toast]);
+  }, [token, currentPage, debouncedSearch, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, activeStatCard, statsDays, abonePeriod, toast]);
 
   const fetchDropdowns = useCallback(async () => {
     if (!token) return;
