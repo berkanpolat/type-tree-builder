@@ -173,7 +173,7 @@ export default function AdminFirmalarV2() {
   const [filterPaket, setFilterPaket] = useState<string>("all");
 
   // Sorting
-  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortField, setSortField] = useState<SortField | null>("created_at");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   // Stat card filter
@@ -737,7 +737,37 @@ export default function AdminFirmalarV2() {
   const sorted = firmalar;
   const totalPages = Math.max(1, Math.ceil(totalFirmalar / ITEMS_PER_PAGE));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedFirmalar = firmalar;
+  const paginatedFirmalar = (() => {
+    if (!sortField) return firmalar;
+    const sorted = [...firmalar].sort((a, b) => {
+      let aVal: any;
+      let bVal: any;
+      switch (sortField) {
+        case "firma_unvani":
+          aVal = (a.firma_unvani || "").toLocaleLowerCase("tr");
+          bVal = (b.firma_unvani || "").toLocaleLowerCase("tr");
+          return sortDir === "asc" ? aVal.localeCompare(bVal, "tr") : bVal.localeCompare(aVal, "tr");
+        case "ihale_sayisi":
+          aVal = a.ihale_sayisi ?? 0; bVal = b.ihale_sayisi ?? 0; break;
+        case "teklif_sayisi":
+          aVal = a.teklif_sayisi ?? 0; bVal = b.teklif_sayisi ?? 0; break;
+        case "urun_sayisi":
+          aVal = a.urun_sayisi ?? 0; bVal = b.urun_sayisi ?? 0; break;
+        case "profil_doluluk":
+          aVal = a.profil_doluluk ?? 0; bVal = b.profil_doluluk ?? 0; break;
+        case "created_at":
+          aVal = new Date(a.created_at).getTime(); bVal = new Date(b.created_at).getTime(); break;
+        case "last_seen":
+          aVal = a.profile?.last_seen ? new Date(a.profile.last_seen).getTime() : 0;
+          bVal = b.profile?.last_seen ? new Date(b.profile.last_seen).getTime() : 0;
+          break;
+        default:
+          return 0;
+      }
+      return sortDir === "asc" ? aVal - bVal : bVal - aVal;
+    });
+    return sorted;
+  })();
 
   useEffect(() => { setCurrentPage(1); }, [debouncedSearch, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, filterPaket, sortField, sortDir, activeStatCard, abonePeriod, statsDays]);
 
