@@ -2,7 +2,8 @@ import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useSessionState } from "@/hooks/use-session-state";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link, useParams } from "react-router-dom";
+import { slugifyTr } from "@/lib/slugify";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import logoImg from "@/assets/tekstil-as-logo.png";
@@ -65,6 +66,7 @@ interface KategoriNode {
   id: string;
   name: string;
   parent_id: string | null;
+  slug?: string | null;
 }
 
 interface UrunListItem {
@@ -105,6 +107,7 @@ export default function AnaSayfa() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
+  const { kategoriSlug, grupSlug, turSlug: urlTurSlug } = useParams<{ kategoriSlug?: string; grupSlug?: string; turSlug?: string }>();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const bannerAna = useBanner("anasayfa-ana-banner", bannerKomisyonFallback);
   const bannerAlt1 = useBanner("anasayfa-alt-1", bannerStoktanFallback);
@@ -113,6 +116,7 @@ export default function AnaSayfa() {
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const urlAppliedRef = useRef(false);
 
   useEffect(() => {
     const check = async () => {
@@ -169,7 +173,39 @@ export default function AnaSayfa() {
     [urunKategoriNodes]
   );
 
-  // Determine if we're in "filtered" mode (category selected)
+  // Sync URL when filters change
+  useEffect(() => {
+    // Don't update URL during initial URL resolution
+    if (kategoriSlug && !urlAppliedRef.current) return;
+    
+    if (!selectedKategori) {
+      if (location.pathname !== "/tekpazar") {
+        navigate("/tekpazar", { replace: true });
+      }
+      return;
+    }
+
+    const katNode = urunKategoriNodes.find(n => !n.parent_id && n.name === selectedKategori);
+    if (!katNode?.slug) return;
+
+    let path = `/tekpazar/${katNode.slug}`;
+    
+    if (selectedGrupId) {
+      const grupNode = urunKategoriNodes.find(n => n.id === selectedGrupId);
+      if (grupNode?.slug) {
+        path += `/${grupNode.slug}`;
+        if (selectedTurId) {
+          const turNode = urunKategoriNodes.find(n => n.id === selectedTurId);
+          if (turNode?.slug) path += `/${turNode.slug}`;
+        }
+      }
+    }
+
+    if (location.pathname !== path) {
+      navigate(path, { replace: true });
+    }
+  }, [selectedKategori, selectedGrupId, selectedTurId, urunKategoriNodes]);
+
   const isFiltered = !!selectedKategori || !!activeFilter || !!appliedSearchTerm;
 
   // Click outside
@@ -181,11 +217,11 @@ export default function AnaSayfa() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Fetch ürün kategori/grup/tür tree
+  // Fetch ürün kategori/grup/tür tree + resolve URL slugs
   useEffect(() => {
     supabase
       .from("firma_bilgi_secenekleri")
-      .select("id, name, parent_id")
+      .select("id, name, parent_id, slug")
       .eq("kategori_id", KATEGORI_ID)
       .order("name")
       .then(({ data }) => {
@@ -196,8 +232,35 @@ export default function AnaSayfa() {
             .filter((n) => !n.parent_id)
             .map((n) => ({ id: n.id, name: n.name }))
         );
+
+        // Resolve URL slugs to set filters
+        if (kategoriSlug && !urlAppliedRef.current) {
+          const rootNodes = allNodes.filter(n => !n.parent_id);
+          const matchedKat = rootNodes.find(n => n.slug === kategoriSlug);
+          if (matchedKat) {
+            // Map slug display name (e.g. "Hazır Giyim (Satış)" → display as "Hazır Giyim")
+            setSelectedKategori(matchedKat.name);
+            urlAppliedRef.current = true;
+
+            if (grupSlug) {
+              const grupNodes = allNodes.filter(n => n.parent_id === matchedKat.id);
+              const matchedGrup = grupNodes.find(n => n.slug === grupSlug);
+              if (matchedGrup) {
+                setSelectedGrupId(matchedGrup.id);
+
+                if (urlTurSlug) {
+                  const turNodes = allNodes.filter(n => n.parent_id === matchedGrup.id);
+                  const matchedTur = turNodes.find(n => n.slug === urlTurSlug);
+                  if (matchedTur) {
+                    setSelectedTurId(matchedTur.id);
+                  }
+                }
+              }
+            }
+          }
+        }
       });
-  }, []);
+  }, [kategoriSlug, grupSlug, urlTurSlug]);
 
   // Fetch products with react-query for caching (instant on back navigation)
   const urunQueryKey = useMemo(() => [

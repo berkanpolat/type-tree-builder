@@ -8,6 +8,7 @@ const URUN_KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 interface SubItem {
   id: string;
   name: string;
+  slug?: string | null;
 }
 
 // Caches
@@ -59,12 +60,12 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
       setLoading1(true);
       supabase
         .from("firma_bilgi_secenekleri")
-        .select("id, name")
+        .select("id, name, slug")
         .eq("kategori_id", URUN_KATEGORI_ID)
         .is("parent_id", null)
         .order("name")
         .then(({ data }) => {
-          const items = data || [];
+          const items = (data || []) as SubItem[];
           const filtered = items.filter(i => i.name !== "Hazır Giyim (Üretim)");
           pazarKatCache.push(...filtered);
           setLevel1(filtered);
@@ -78,10 +79,10 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
       setLoading1(true);
       supabase
         .from("firma_turleri")
-        .select("id, name")
+        .select("id, name, slug")
         .order("name")
         .then(({ data }) => {
-          const items = data || [];
+          const items = (data || []) as SubItem[];
           rehberTurCache.push(...items);
           setLevel1(sortRehber(items));
           setLoading1(false);
@@ -106,11 +107,11 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
       setLoading2(true);
       supabase
         .from("firma_bilgi_secenekleri")
-        .select("id, name")
+        .select("id, name, slug")
         .eq("parent_id", hoveredL1)
         .order("name")
         .then(({ data }) => {
-          const items = data || [];
+          const items = (data || []) as SubItem[];
           pazarGrupCache[hoveredL1] = items;
           setLevel2(items);
           setLoading2(false);
@@ -123,11 +124,11 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
       setLoading2(true);
       supabase
         .from("firma_tipleri")
-        .select("id, name")
+        .select("id, name, slug")
         .eq("firma_turu_id", hoveredL1)
         .order("name")
         .then(({ data }) => {
-          const items = data || [];
+          const items = (data || []) as SubItem[];
           rehberTipCache[hoveredL1] = items;
           setLevel2(items);
           setLoading2(false);
@@ -148,11 +149,11 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
     setLoading3(true);
     supabase
       .from("firma_bilgi_secenekleri")
-      .select("id, name")
+      .select("id, name, slug")
       .eq("parent_id", hoveredL2)
       .order("name")
       .then(({ data }) => {
-        const items = data || [];
+        const items = (data || []) as SubItem[];
         pazarTurCache[hoveredL2] = items;
         setLevel3(items);
         setLoading3(false);
@@ -172,26 +173,32 @@ export default function HeaderMegaMenu({ type, onClose }: Props) {
   const displayName = (name: string) =>
     name === "Hazır Giyim (Satış)" ? "Hazır Giyim" : name;
 
+  // --- Navigation helpers using slugs ---
+  const getL1Slug = (id: string) => level1.find(i => i.id === id)?.slug || id;
+
   const handleL1Click = (item: SubItem) => {
     if (type === "tekpazar") {
-      navigate(`/tekpazar`);
+      navigate(`/tekpazar/${item.slug || item.id}`);
     } else {
-      navigate(`/firmalar`);
+      navigate(`/firmalar/${item.slug || item.id}`);
     }
     onClose();
   };
 
   const handleL2Click = (item: SubItem) => {
+    const l1Slug = hoveredL1 ? getL1Slug(hoveredL1) : "";
     if (type === "tekpazar") {
-      navigate(`/tekpazar`);
+      navigate(`/tekpazar/${l1Slug}/${item.slug || item.id}`);
     } else {
-      navigate(`/firmalar`);
+      navigate(`/firmalar/${l1Slug}/${item.slug || item.id}`);
     }
     onClose();
   };
 
   const handleL3Click = (item: SubItem) => {
-    navigate(`/tekpazar`);
+    const l1Slug = hoveredL1 ? getL1Slug(hoveredL1) : "";
+    const l2Slug = hoveredL2 ? (level2.find(i => i.id === hoveredL2)?.slug || hoveredL2) : "";
+    navigate(`/tekpazar/${l1Slug}/${l2Slug}/${item.slug || item.id}`);
     onClose();
   };
 
