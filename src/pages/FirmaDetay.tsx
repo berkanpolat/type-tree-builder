@@ -819,26 +819,30 @@ export default function FirmaDetay() {
               </div>
             </div>
 
-            {/* Gauge Chart - centered between name and buttons */}
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <GaugeChart value={profileScore} size={64} strokeWidth={6} />
-              <span className="text-[9px] text-muted-foreground mt-0.5 leading-tight text-center">Profil Doluluk Oranı</span>
-            </div>
+            {/* Gauge + Buttons row: same line on mobile/tablet, gauge centered on desktop */}
+            <div className="w-full md:w-auto md:contents flex items-center justify-between gap-2 mt-3 md:mt-0">
+              {/* Gauge Chart */}
+              <div className="flex flex-col items-center justify-center md:flex-1">
+                <GaugeChart value={profileScore} size={64} strokeWidth={6} />
+                <span className="text-[9px] text-muted-foreground mt-0.5 leading-tight text-center">Profil Doluluk Oranı</span>
+              </div>
 
-            <div className="flex flex-wrap items-center gap-2 shrink-0 mt-3 md:mt-0">
-              <Button variant="outline" size="sm" className="gap-1.5" onClick={toggleFavorite}>
-                <Bookmark className={`w-4 h-4 ${isFavorited ? "fill-secondary text-secondary" : ""}`} />
-                <span className="hidden sm:inline">Kaydet</span>
-              </Button>
-              <Button size="sm" className="gap-1.5 bg-primary" onClick={handleMessage}>
-                <MessageSquare className="w-4 h-4" />
-                Mesaj
-              </Button>
-              {currentUserId && (
-                <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setBildirOpen(true)} title="Bildir">
-                  <Flag className="w-4 h-4 text-muted-foreground" />
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-2 shrink-0 md:mt-0">
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={toggleFavorite}>
+                  <Bookmark className={`w-4 h-4 ${isFavorited ? "fill-secondary text-secondary" : ""}`} />
+                  <span className="hidden sm:inline">Kaydet</span>
                 </Button>
-              )}
+                <Button size="sm" className="gap-1.5 bg-primary" onClick={handleMessage}>
+                  <MessageSquare className="w-4 h-4" />
+                  Mesaj
+                </Button>
+                {currentUserId && (
+                  <Button variant="outline" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" onClick={() => setBildirOpen(true)} title="Bildir">
+                    <Flag className="w-4 h-4 text-muted-foreground" />
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
