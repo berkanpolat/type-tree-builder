@@ -371,13 +371,19 @@ export default function ProfilAyarlari() {
                 placeholder="yeni@eposta.com"
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Yeni e-posta adresinize bir onay bağlantısı gönderilecektir.
-            </p>
+            <div className="space-y-1.5">
+              <Label>Mevcut Şifre</Label>
+              <Input
+                type="password"
+                value={emailPassword}
+                onChange={(e) => setEmailPassword(e.target.value)}
+                placeholder="Güvenlik için mevcut şifrenizi giriniz"
+              />
+            </div>
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setEmailOpen(false)}>İptal</Button>
+              <Button variant="outline" onClick={() => { setEmailOpen(false); setEmailPassword(""); }}>İptal</Button>
               <Button onClick={handleEmailChange} disabled={emailLoading}>
-                {emailLoading ? "Gönderiliyor..." : "Onay Gönder"}
+                {emailLoading ? "Güncelleniyor..." : "E-postayı Güncelle"}
               </Button>
             </div>
           </div>
