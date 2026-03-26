@@ -173,7 +173,39 @@ export default function AnaSayfa() {
     [urunKategoriNodes]
   );
 
-  // Determine if we're in "filtered" mode (category selected)
+  // Sync URL when filters change
+  useEffect(() => {
+    // Don't update URL during initial URL resolution
+    if (kategoriSlug && !urlAppliedRef.current) return;
+    
+    if (!selectedKategori) {
+      if (location.pathname !== "/tekpazar") {
+        navigate("/tekpazar", { replace: true });
+      }
+      return;
+    }
+
+    const katNode = urunKategoriNodes.find(n => !n.parent_id && n.name === selectedKategori);
+    if (!katNode?.slug) return;
+
+    let path = `/tekpazar/${katNode.slug}`;
+    
+    if (selectedGrupId) {
+      const grupNode = urunKategoriNodes.find(n => n.id === selectedGrupId);
+      if (grupNode?.slug) {
+        path += `/${grupNode.slug}`;
+        if (selectedTurId) {
+          const turNode = urunKategoriNodes.find(n => n.id === selectedTurId);
+          if (turNode?.slug) path += `/${turNode.slug}`;
+        }
+      }
+    }
+
+    if (location.pathname !== path) {
+      navigate(path, { replace: true });
+    }
+  }, [selectedKategori, selectedGrupId, selectedTurId, urunKategoriNodes]);
+
   const isFiltered = !!selectedKategori || !!activeFilter || !!appliedSearchTerm;
 
   // Click outside
