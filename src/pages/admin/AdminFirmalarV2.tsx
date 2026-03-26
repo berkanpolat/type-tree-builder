@@ -423,7 +423,59 @@ export default function AdminFirmalarV2() {
     }
   };
 
-    const openPaketDialog = async (firma: FirmaItem) => {
+  const openContactEdit = (firma: FirmaItem) => {
+    setContactEditFirma(firma);
+    setContactNewEmail(firma.profile?.iletisim_email || "");
+    setContactNewPhone(firma.profile?.iletisim_numarasi || "");
+    setContactEditOpen(true);
+  };
+
+  const handleContactUpdate = async () => {
+    if (!contactEditFirma) return;
+    setContactSaving(true);
+    try {
+      const emailChanged = contactNewEmail.trim() !== (contactEditFirma.profile?.iletisim_email || "");
+      const phoneChanged = contactNewPhone.trim() !== (contactEditFirma.profile?.iletisim_numarasi || "");
+
+      if (!emailChanged && !phoneChanged) {
+        toast({ title: "Bilgi", description: "Değişiklik yapılmadı." });
+        setContactSaving(false);
+        return;
+      }
+
+      const res = await callApi("update-user-contact", {
+        token,
+        userId: contactEditFirma.user_id,
+        ...(emailChanged ? { newEmail: contactNewEmail.trim() } : {}),
+        ...(phoneChanged ? { newPhone: contactNewPhone.trim() } : {}),
+      });
+
+      if (res?.error) throw new Error(res.error);
+
+      toast({ title: "Başarılı", description: "İletişim bilgileri güncellendi." });
+
+      // Update local state
+      setFirmalar(prev => prev.map(f => {
+        if (f.id !== contactEditFirma.id) return f;
+        return {
+          ...f,
+          profile: f.profile ? {
+            ...f.profile,
+            ...(emailChanged ? { iletisim_email: contactNewEmail.trim() } : {}),
+            ...(phoneChanged ? { iletisim_numarasi: contactNewPhone.trim() } : {}),
+          } : f.profile,
+        };
+      }));
+
+      setContactEditOpen(false);
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "Güncelleme başarısız", variant: "destructive" });
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
+  const openPaketDialog = async (firma: FirmaItem) => {
     setPaketDialogFirma(firma);
     setPaketDialogOpen(true);
     setPaketDialogLoading(true);
