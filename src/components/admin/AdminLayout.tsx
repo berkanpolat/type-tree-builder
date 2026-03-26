@@ -341,7 +341,6 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
             )}
             {displayTitle && <h1 className="text-base md:text-lg font-bold truncate text-foreground">{displayTitle}</h1>}
           </header>
-          </header>
           <main className="flex-1 overflow-y-auto p-3 md:p-6">
             {children}
           </main>
