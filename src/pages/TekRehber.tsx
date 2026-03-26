@@ -539,6 +539,9 @@ export default function TekRehber() {
     setSelectedFirmaTuru(value);
     const turName = firmaTurleri.find((t) => t.id === value)?.name || "";
     setSelectedFirmaTuruName(turName);
+    // Update URL with slug
+    const slug = slugifyTr(turName);
+    if (slug) navigate(`/firmalar/${slug}`, { replace: true });
   };
 
   const toggleFirmaFavorite = async (firmaId: string, isFav: boolean) => {
