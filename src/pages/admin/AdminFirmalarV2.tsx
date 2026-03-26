@@ -30,7 +30,7 @@ import {
   Building2, Users, Clock, AlertCircle, CheckCircle, XCircle,
   Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp,
   CreditCard, Wifi, ArrowUpDown, ArrowUp, ArrowDown, Infinity, Eye, MessageSquare, Loader2, Trash2, ShieldCheck, Download,
-  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList, KeyRound, Plus,
+  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList, KeyRound, Plus, Mail, Phone,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
@@ -232,6 +232,13 @@ export default function AdminFirmalarV2() {
   // Aksiyon Ekle dialog
   const [aksiyonEkleFirma, setAksiyonEkleFirma] = useState<FirmaItem | null>(null);
   const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
+
+  // İletişim düzenleme dialog
+  const [contactEditOpen, setContactEditOpen] = useState(false);
+  const [contactEditFirma, setContactEditFirma] = useState<FirmaItem | null>(null);
+  const [contactNewEmail, setContactNewEmail] = useState("");
+  const [contactNewPhone, setContactNewPhone] = useState("");
+  const [contactSaving, setContactSaving] = useState(false);
 
   const callApi = useAdminApi();
 
