@@ -170,7 +170,7 @@ export default function AdminReklam() {
 
       <div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           <div className="p-5 rounded-xl" style={s.card}>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
@@ -219,7 +219,7 @@ export default function AdminReklam() {
                 <Badge variant="secondary" className="text-xs" style={{ background: "hsl(var(--admin-hover))", color: "hsl(var(--admin-text))" }}>{items.length} alan</Badge>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {items.map((banner) => (
                   <div key={banner.id} className="rounded-xl overflow-hidden" style={s.card}>
                     <div className="relative h-40 flex items-center justify-center overflow-hidden" style={{ background: "hsl(var(--admin-input-bg))" }}>
@@ -300,10 +300,10 @@ export default function AdminReklam() {
                         </div>
                       )}
 
-                      <div className="flex gap-2 pt-1">
+                      <div className="flex flex-wrap gap-2 pt-1">
                         <Button
                           size="sm"
-                          className="flex-1 gap-1.5 bg-amber-500 hover:bg-amber-600 text-white"
+                          className="flex-1 min-w-[120px] gap-1.5 bg-amber-500 hover:bg-amber-600 text-white"
                           disabled={uploadingId === banner.id}
                           onClick={() => handleFileSelect(banner.id)}
                         >

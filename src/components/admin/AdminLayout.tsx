@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   Shield, Users, LogOut, LayoutDashboard, MessageSquareWarning,
-  Gavel, Package, HeadphonesIcon, Building2, Menu, Megaphone, Bot, Briefcase, ClipboardList, MapPin, Target, Map, BarChart3, FileBarChart, CalendarDays, Gauge, FlaskConical, Server, Globe, GitBranch, CreditCard, Activity, UserPlus
+  Gavel, Package, HeadphonesIcon, Building2, Menu, Megaphone, Bot, Briefcase, ClipboardList, MapPin, Target, Map, BarChart3, FileBarChart, CalendarDays, Gauge, FlaskConical, Server, Globe, GitBranch, CreditCard, Activity, UserPlus, PanelLeftClose, PanelLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -88,6 +88,9 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return sessionStorage.getItem("admin-sidebar-collapsed") === "true"; } catch { return false; }
+  });
   const [contextTitle, setContextTitle] = useState("");
 
   const displayTitle = propTitle || contextTitle;
@@ -235,8 +238,53 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
       <div className="admin-light h-screen flex overflow-hidden bg-muted/30">
         {/* Desktop Sidebar */}
         {!isMobile && (
-          <aside className="w-64 border-r border-border flex flex-col shrink-0 h-full bg-background">
-            {sidebarContent}
+          <aside className={cn(
+            "border-r border-border flex flex-col shrink-0 h-full bg-background transition-all duration-200",
+            sidebarCollapsed ? "w-16" : "w-64"
+          )}>
+            {sidebarCollapsed ? (
+              <>
+                <div className="p-3 border-b border-border flex justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shrink-0">
+                    <Shield className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+                <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+                  {visibleGroups.map((group, gi) => (
+                    <div key={gi}>
+                      {group.groupLabel && gi > 0 && <div className="my-2 border-t border-border" />}
+                      {group.items.map((item) => {
+                        const isActive = location.pathname === item.path;
+                        return (
+                          <Link
+                            key={item.path}
+                            to={item.path}
+                            title={item.label}
+                            className={cn(
+                              "flex items-center justify-center p-2 rounded-lg transition-colors",
+                              isActive
+                                ? "bg-amber-500/10 text-amber-600"
+                                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                            )}
+                          >
+                            <item.icon className="w-4 h-4 shrink-0" />
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </nav>
+                <div className="p-2 border-t border-border">
+                  <button
+                    onClick={() => { logout(); navigate("/yonetim"); }}
+                    title="Çıkış Yap"
+                    className="flex items-center justify-center p-2 rounded-lg w-full text-red-500 hover:text-red-600 hover:bg-red-500/10 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              </>
+            ) : sidebarContent}
           </aside>
         )}
 
@@ -266,7 +314,7 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
           )}
 
           <header className="h-14 flex items-center border-b border-border px-4 md:px-6 gap-3 shrink-0 bg-background">
-            {isMobile && (
+            {isMobile ? (
               <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="shrink-0">
@@ -277,6 +325,19 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
                   {sidebarContent}
                 </SheetContent>
               </Sheet>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                onClick={() => {
+                  const next = !sidebarCollapsed;
+                  setSidebarCollapsed(next);
+                  try { sessionStorage.setItem("admin-sidebar-collapsed", String(next)); } catch {}
+                }}
+              >
+                {sidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+              </Button>
             )}
             {displayTitle && <h1 className="text-base md:text-lg font-bold truncate text-foreground">{displayTitle}</h1>}
           </header>
