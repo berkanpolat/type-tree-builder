@@ -1426,7 +1426,7 @@ export default function AdminFirmalarV2() {
 
       {/* Yeni Firma Dialog */}
       <Dialog open={yeniFirmaOpen} onOpenChange={setYeniFirmaOpen}>
-        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogContent style={s.card} className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle style={s.text}>Yeni Firma Oluştur</DialogTitle>
             <DialogDescription style={s.muted}>E-posta onayı olmadan yeni firma hesabı oluşturun</DialogDescription>
@@ -1525,7 +1525,7 @@ export default function AdminFirmalarV2() {
 
       {/* Delete Firma Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) { setDeleteFirma(null); setDeleteConfirmText(""); } }}>
-        <DialogContent style={s.card} className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
+        <DialogContent style={s.card} className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-red-500 flex items-center gap-2"><Trash2 className="w-5 h-5" /> Firmayı Sil</DialogTitle>
             <DialogDescription style={s.muted}>Bu işlem geri alınamaz.</DialogDescription>
