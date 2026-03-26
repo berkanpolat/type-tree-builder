@@ -1819,7 +1819,7 @@ export default function AdminFirmalarV2() {
               <SelectTrigger style={s.input}>
                 <SelectValue placeholder="Personel seçin" />
               </SelectTrigger>
-              <SelectContent style={s.card}>
+              <SelectContent style={{ ...s.card, zIndex: 9999 }}>
                 {adminUsersList.map(u => (
                   <SelectItem key={u.id} value={u.id}>
                     {u.ad} {u.soyad} — {u.pozisyon}
