@@ -1280,6 +1280,11 @@ export default function AdminFirmalarV2() {
                                 <KeyRound className="w-3.5 h-3.5 mr-2" /> Şifre Gönder
                               </DropdownMenuItem>
                             )}
+                            {hasPermission("firma_impersonate") && (
+                              <DropdownMenuItem onClick={() => openContactEdit(firma)} className="text-xs cursor-pointer">
+                                <Mail className="w-3.5 h-3.5 mr-2" /> İletişim Düzenle
+                              </DropdownMenuItem>
+                            )}
                             {hasPermission("firma_sil") && (
                               <>
                                 <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
@@ -1831,6 +1836,50 @@ export default function AdminFirmalarV2() {
             >
               {portfolyoAtaLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Ata
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* İletişim Düzenle Dialog */}
+      <Dialog open={contactEditOpen} onOpenChange={setContactEditOpen}>
+        <DialogContent style={s.card} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle style={s.text} className="flex items-center gap-2">
+              <Mail className="w-5 h-5" /> İletişim Bilgilerini Düzenle
+            </DialogTitle>
+            <DialogDescription style={s.muted}>
+              <span className="font-medium" style={s.text}>{contactEditFirma?.firma_unvani}</span> firmasının iletişim bilgilerini güncelleyin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label style={s.text} className="text-sm">E-posta Adresi</Label>
+              <Input
+                type="email"
+                value={contactNewEmail}
+                onChange={(e) => setContactNewEmail(e.target.value)}
+                placeholder="E-posta adresi"
+                style={s.input}
+              />
+              <p className="text-[10px]" style={s.muted}>Auth, profil ve firma tablosundaki e-posta güncellenir.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label style={s.text} className="text-sm">Telefon Numarası</Label>
+              <Input
+                type="tel"
+                value={contactNewPhone}
+                onChange={(e) => setContactNewPhone(e.target.value)}
+                placeholder="+90 5XX XXX XX XX"
+                style={s.input}
+              />
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setContactEditOpen(false)} style={s.input}>İptal</Button>
+            <Button onClick={handleContactUpdate} disabled={contactSaving}>
+              {contactSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Güncelle
             </Button>
           </DialogFooter>
         </DialogContent>
