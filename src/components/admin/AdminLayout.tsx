@@ -314,7 +314,7 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
           )}
 
           <header className="h-14 flex items-center border-b border-border px-4 md:px-6 gap-3 shrink-0 bg-background">
-            {isMobile && (
+            {isMobile ? (
               <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="shrink-0">
@@ -325,8 +325,22 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
                   {sidebarContent}
                 </SheetContent>
               </Sheet>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0"
+                onClick={() => {
+                  const next = !sidebarCollapsed;
+                  setSidebarCollapsed(next);
+                  try { sessionStorage.setItem("admin-sidebar-collapsed", String(next)); } catch {}
+                }}
+              >
+                {sidebarCollapsed ? <PanelLeft className="w-5 h-5" /> : <PanelLeftClose className="w-5 h-5" />}
+              </Button>
             )}
             {displayTitle && <h1 className="text-base md:text-lg font-bold truncate text-foreground">{displayTitle}</h1>}
+          </header>
           </header>
           <main className="flex-1 overflow-y-auto p-3 md:p-6">
             {children}
