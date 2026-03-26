@@ -269,7 +269,7 @@ export default function AdminFirmalarV2() {
     } finally {
       setLoading(false);
     }
-  }, [token, currentPage, debouncedSearch, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, toast]);
+  }, [token, currentPage, debouncedSearch, filterTuru, filterTipi, filterIl, filterIlce, filterDurum, activeStatCard, statsDays, abonePeriod, toast]);
 
   const fetchDropdowns = useCallback(async () => {
     if (!token) return;
