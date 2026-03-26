@@ -106,6 +106,7 @@ export default function AnaSayfa() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();
+  const { kategoriSlug, grupSlug, turSlug: urlTurSlug } = useParams<{ kategoriSlug?: string; grupSlug?: string; turSlug?: string }>();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const bannerAna = useBanner("anasayfa-ana-banner", bannerKomisyonFallback);
   const bannerAlt1 = useBanner("anasayfa-alt-1", bannerStoktanFallback);
@@ -114,6 +115,7 @@ export default function AnaSayfa() {
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const urlAppliedRef = useRef(false);
 
   useEffect(() => {
     const check = async () => {
