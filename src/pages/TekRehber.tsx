@@ -218,11 +218,25 @@ export default function TekRehber() {
   }, [location.state]);
 
   useEffect(() => {
-    supabase.from("firma_bilgi_secenekleri")
-      .select("id, name, parent_id")
-      .eq("kategori_id", KATEGORI_ID)
-      .order("name")
-      .then(({ data }) => setUrunTaxNodes(data || []));
+    const fetchAllTaxNodes = async () => {
+      let allNodes: UrunTaxNode[] = [];
+      let from = 0;
+      const PAGE = 1000;
+      while (true) {
+        const { data } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name, parent_id")
+          .eq("kategori_id", KATEGORI_ID)
+          .order("name")
+          .range(from, from + PAGE - 1);
+        if (!data || data.length === 0) break;
+        allNodes = allNodes.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+      setUrunTaxNodes(allNodes);
+    };
+    fetchAllTaxNodes();
   }, []);
 
   // Fetch companies with pagination

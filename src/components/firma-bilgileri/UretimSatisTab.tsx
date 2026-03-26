@@ -119,7 +119,6 @@ function SearchableSelect({
 function ProductSection({
   title,
   tip,
-  allOptions,
   items,
   onAdd,
   onRemoveItem,
@@ -127,7 +126,6 @@ function ProductSection({
 }: {
   title: string;
   tip: string;
-  allOptions: Option[];
   items: AddedItem[];
   onAdd: (tip: string, item: AddedItem) => void;
   onRemoveItem: (tip: string, turId: string) => void;
@@ -136,21 +134,44 @@ function ProductSection({
   const [kategoriId, setKategoriId] = useState("");
   const [grupId, setGrupId] = useState("");
   const [selectedTurIds, setSelectedTurIds] = useState<string[]>([]);
+  const [kategoriler, setKategoriler] = useState<Option[]>([]);
+  const [gruplar, setGruplar] = useState<Option[]>([]);
+  const [turler, setTurler] = useState<Option[]>([]);
 
-  const kategoriler = useMemo(
-    () => allOptions.filter((o) => o.parent_id === null),
-    [allOptions]
-  );
+  // Fetch kategoriler (root level)
+  useEffect(() => {
+    supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("kategori_id", URUN_KATEGORI_ID)
+      .is("parent_id", null)
+      .order("name")
+      .then(({ data }) => setKategoriler(data || []));
+  }, []);
 
-  const gruplar = useMemo(
-    () => (kategoriId ? allOptions.filter((o) => o.parent_id === kategoriId) : []),
-    [allOptions, kategoriId]
-  );
+  // Fetch gruplar when kategori changes
+  useEffect(() => {
+    if (!kategoriId) { setGruplar([]); return; }
+    supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("kategori_id", URUN_KATEGORI_ID)
+      .eq("parent_id", kategoriId)
+      .order("name")
+      .then(({ data }) => setGruplar(data || []));
+  }, [kategoriId]);
 
-  const turler = useMemo(
-    () => (grupId ? allOptions.filter((o) => o.parent_id === grupId) : []),
-    [allOptions, grupId]
-  );
+  // Fetch türler when grup changes
+  useEffect(() => {
+    if (!grupId) { setTurler([]); return; }
+    supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("kategori_id", URUN_KATEGORI_ID)
+      .eq("parent_id", grupId)
+      .order("name")
+      .then(({ data }) => setTurler(data || []));
+  }, [grupId]);
 
   // Filter out already added türler
   const availableTurler = useMemo(
@@ -422,7 +443,7 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
   const [saving, setSaving] = useState(false);
   const [firmaId, setFirmaId] = useState("");
   const [rol, setRol] = useState<RolType | "">("");
-  const [allOptions, setAllOptions] = useState<Option[]>([]);
+  
   const [uretimItems, setUretimItems] = useState<AddedItem[]>([]);
   const [satisItems, setSatisItems] = useState<AddedItem[]>([]);
 
@@ -443,14 +464,7 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
       setFirmaId(firma.id);
       setRol(((firma as any).uretim_satis_rolu as RolType) || "");
 
-      // Fetch all product hierarchy options
-      const { data: options } = await supabase
-        .from("firma_bilgi_secenekleri")
-        .select("id, name, parent_id")
-        .eq("kategori_id", URUN_KATEGORI_ID)
-        .order("name");
-
-      setAllOptions(options || []);
+      // Resolve names for existing selections by fetching only the needed IDs
 
       // Fetch existing selections
       const { data: existing } = await supabase
@@ -458,8 +472,20 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
         .select("id, tip, kategori_id, grup_id, tur_id")
         .eq("firma_id", firma.id);
 
-      if (existing && options) {
-        const optMap = new Map(options.map((o) => [o.id, o.name]));
+      if (existing && existing.length > 0) {
+        // Collect all unique IDs to resolve names
+        const idsToResolve = new Set<string>();
+        existing.forEach((row) => {
+          idsToResolve.add(row.kategori_id);
+          idsToResolve.add(row.grup_id);
+          idsToResolve.add(row.tur_id);
+        });
+        const { data: nameRows } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name")
+          .in("id", [...idsToResolve]);
+        const optMap = new Map((nameRows || []).map((o) => [o.id, o.name]));
+
         const uretim: AddedItem[] = [];
         const satis: AddedItem[] = [];
 
@@ -617,7 +643,6 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
         <ProductSection
           title="Ne Üretiyorsunuz"
           tip="uretim"
-          allOptions={allOptions}
           items={uretimItems}
           onAdd={handleAdd}
           onRemoveItem={handleRemoveItem}
@@ -629,7 +654,7 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
         <ProductSection
           title="Ne Satıyorsunuz"
           tip="satis"
-          allOptions={allOptions}
+          
           items={satisItems}
           onAdd={handleAdd}
           onRemoveItem={handleRemoveItem}
