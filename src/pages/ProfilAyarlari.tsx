@@ -174,7 +174,9 @@ export default function ProfilAyarlari() {
         toast({ title: "Hata", description: data.error, variant: "destructive" });
       } else {
         toast({ title: "Başarılı", description: "E-posta adresiniz başarıyla güncellendi." });
-        setAuthEmail(newEmail.trim());
+        const updatedEmail = newEmail.trim();
+        setAuthEmail(updatedEmail);
+        setEmail(updatedEmail);
         setEmailOpen(false);
         setNewEmail("");
         setEmailPassword("");
