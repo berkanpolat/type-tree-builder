@@ -185,11 +185,11 @@ export default function AnaSayfa() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Fetch ürün kategori/grup/tür tree
+  // Fetch ürün kategori/grup/tür tree + resolve URL slugs
   useEffect(() => {
     supabase
       .from("firma_bilgi_secenekleri")
-      .select("id, name, parent_id")
+      .select("id, name, parent_id, slug")
       .eq("kategori_id", KATEGORI_ID)
       .order("name")
       .then(({ data }) => {
@@ -200,8 +200,35 @@ export default function AnaSayfa() {
             .filter((n) => !n.parent_id)
             .map((n) => ({ id: n.id, name: n.name }))
         );
+
+        // Resolve URL slugs to set filters
+        if (kategoriSlug && !urlAppliedRef.current) {
+          const rootNodes = allNodes.filter(n => !n.parent_id);
+          const matchedKat = rootNodes.find(n => n.slug === kategoriSlug);
+          if (matchedKat) {
+            // Map slug display name (e.g. "Hazır Giyim (Satış)" → display as "Hazır Giyim")
+            setSelectedKategori(matchedKat.name);
+            urlAppliedRef.current = true;
+
+            if (grupSlug) {
+              const grupNodes = allNodes.filter(n => n.parent_id === matchedKat.id);
+              const matchedGrup = grupNodes.find(n => n.slug === grupSlug);
+              if (matchedGrup) {
+                setSelectedGrupId(matchedGrup.id);
+
+                if (urlTurSlug) {
+                  const turNodes = allNodes.filter(n => n.parent_id === matchedGrup.id);
+                  const matchedTur = turNodes.find(n => n.slug === urlTurSlug);
+                  if (matchedTur) {
+                    setSelectedTurId(matchedTur.id);
+                  }
+                }
+              }
+            }
+          }
+        }
       });
-  }, []);
+  }, [kategoriSlug, grupSlug, urlTurSlug]);
 
   // Fetch products with react-query for caching (instant on back navigation)
   const urunQueryKey = useMemo(() => [
