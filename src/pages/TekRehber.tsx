@@ -92,12 +92,14 @@ export default function TekRehber() {
   useSeoMeta({ slug: "/firmalar", fallbackTitle: "TekRehber | Tekstil Firma Rehberi | Tekstil A.Ş." });
   const navigate = useNavigate();
   const location = useLocation();
+  const { turSlug, tipSlug } = useParams<{ turSlug?: string; tipSlug?: string }>();
   const { toast } = useToast();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
   const rehberSidebarBanner = useBanner("tekrehber-sidebar");
   const [authLoading, setAuthLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
+  const urlAppliedRef = useRef(false);
 
   useEffect(() => {
     const check = async () => {
