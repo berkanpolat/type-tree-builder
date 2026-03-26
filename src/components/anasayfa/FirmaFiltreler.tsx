@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -125,15 +125,32 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
   const isMobile = useIsMobile();
   const filters = FILTER_CONFIG[firmaTuruName] || FILTER_CONFIG["Tedarikçi"] || [];
 
+  // Reset filters when firma türü changes
+  const prevTuruRef = useRef(firmaTuruName);
   useEffect(() => {
-    setSelections(initialSelections || {});
-    setMoq("");
-    setUsSelectedKategoriler([]);
-    setUsSelectedGruplar([]);
-    setUsSelectedTurler([]);
-    setSearchTerms({});
-    setExpandedSections({});
-  }, [firmaTuruName]);
+    if (prevTuruRef.current !== firmaTuruName) {
+      prevTuruRef.current = firmaTuruName;
+      setSelections(initialSelections || {});
+      setMoq("");
+      setUsSelectedKategoriler([]);
+      setUsSelectedGruplar([]);
+      setUsSelectedTurler([]);
+      setSearchTerms({});
+      setExpandedSections({});
+    }
+  }, [firmaTuruName, initialSelections]);
+
+  // Sync initialSelections when they arrive late (e.g. URL slug resolution)
+  useEffect(() => {
+    if (initialSelections) {
+      setSelections(prev => {
+        const hasChanges = Object.keys(initialSelections).some(
+          key => JSON.stringify(prev[key]) !== JSON.stringify(initialSelections[key])
+        );
+        return hasChanges ? { ...prev, ...initialSelections } : prev;
+      });
+    }
+  }, [initialSelections]);
 
   useEffect(() => {
     if (!firmaTuruId) return;
