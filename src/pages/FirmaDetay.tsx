@@ -802,7 +802,12 @@ export default function FirmaDetay() {
         {/* Header Card */}
         <div className="bg-card border border-t-0 border-border rounded-b-xl shadow-sm p-5">
           <div className="flex flex-col md:flex-row items-start gap-4">
-            <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={firma.logo_url} size="xl" className="w-20 h-20 text-2xl -mt-14 border border-border" />
+            {firma.logo_url ? (
+              <img src={firma.logo_url} alt={`${firma.firma_unvani} logosu`} loading="lazy"
+                className="w-20 h-20 -mt-14 rounded-xl border border-border object-contain bg-muted p-1.5" />
+            ) : (
+              <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={null} size="xl" className="w-20 h-20 text-2xl -mt-14 rounded-xl border border-border" />
+            )}
 
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold text-foreground flex items-center gap-1.5">
