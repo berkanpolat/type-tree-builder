@@ -184,6 +184,9 @@ const AppContent = () => {
                 <Route path="/test-index" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/tekpazar" element={<AnaSayfa />} />
+                <Route path="/tekpazar/:kategoriSlug" element={<AnaSayfa />} />
+                <Route path="/tekpazar/:kategoriSlug/:grupSlug" element={<AnaSayfa />} />
+                <Route path="/tekpazar/:kategoriSlug/:grupSlug/:turSlug" element={<AnaSayfa />} />
                 <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
                 <Route path="/ihalelerim" element={<ManuIhale />} />
                 <Route path="/ihalelerim/yeni" element={<YeniIhale />} />
@@ -200,6 +203,8 @@ const AppContent = () => {
                 <Route path="/urun/:slug" element={<UrunDetay />} />
                 <Route path="/urunler/:slug" element={<UrunDetay />} />
                 <Route path="/firmalar" element={<TekRehber />} />
+                <Route path="/firmalar/:turSlug" element={<TekRehber />} />
+                <Route path="/firmalar/:turSlug/:tipSlug" element={<TekRehber />} />
                 <Route path="/firma/:slug" element={<FirmaDetay />} />
                 <Route path="/mesajlar" element={<Mesajlar />} />
                 <Route path="/favoriler" element={<Favoriler />} />
