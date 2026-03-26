@@ -30,7 +30,7 @@ import {
   Building2, Users, Clock, AlertCircle, CheckCircle, XCircle,
   Search, Filter, ExternalLink, Gavel, FileText, Package, ShieldAlert, HeadphonesIcon, RotateCcw, TrendingUp,
   CreditCard, Wifi, ArrowUpDown, ArrowUp, ArrowDown, Infinity, Eye, MessageSquare, Loader2, Trash2, ShieldCheck, Download,
-  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList, KeyRound, Plus,
+  MoreHorizontal, CheckCheck, ChevronDown, ChevronUp, Briefcase, ClipboardList, KeyRound, Plus, Mail, Phone,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import AksiyonDetayDialog, { type AksiyonDetay } from "@/components/admin/AksiyonDetayDialog";
@@ -233,6 +233,13 @@ export default function AdminFirmalarV2() {
   const [aksiyonEkleFirma, setAksiyonEkleFirma] = useState<FirmaItem | null>(null);
   const [aksiyonEkleOpen, setAksiyonEkleOpen] = useState(false);
 
+  // İletişim düzenleme dialog
+  const [contactEditOpen, setContactEditOpen] = useState(false);
+  const [contactEditFirma, setContactEditFirma] = useState<FirmaItem | null>(null);
+  const [contactNewEmail, setContactNewEmail] = useState("");
+  const [contactNewPhone, setContactNewPhone] = useState("");
+  const [contactSaving, setContactSaving] = useState(false);
+
   const callApi = useAdminApi();
 
   const [loadError, setLoadError] = useState(false);
@@ -416,7 +423,59 @@ export default function AdminFirmalarV2() {
     }
   };
 
-    const openPaketDialog = async (firma: FirmaItem) => {
+  const openContactEdit = (firma: FirmaItem) => {
+    setContactEditFirma(firma);
+    setContactNewEmail(firma.profile?.iletisim_email || "");
+    setContactNewPhone(firma.profile?.iletisim_numarasi || "");
+    setContactEditOpen(true);
+  };
+
+  const handleContactUpdate = async () => {
+    if (!contactEditFirma) return;
+    setContactSaving(true);
+    try {
+      const emailChanged = contactNewEmail.trim() !== (contactEditFirma.profile?.iletisim_email || "");
+      const phoneChanged = contactNewPhone.trim() !== (contactEditFirma.profile?.iletisim_numarasi || "");
+
+      if (!emailChanged && !phoneChanged) {
+        toast({ title: "Bilgi", description: "Değişiklik yapılmadı." });
+        setContactSaving(false);
+        return;
+      }
+
+      const res = await callApi("update-user-contact", {
+        token,
+        userId: contactEditFirma.user_id,
+        ...(emailChanged ? { newEmail: contactNewEmail.trim() } : {}),
+        ...(phoneChanged ? { newPhone: contactNewPhone.trim() } : {}),
+      });
+
+      if (res?.error) throw new Error(res.error);
+
+      toast({ title: "Başarılı", description: "İletişim bilgileri güncellendi." });
+
+      // Update local state
+      setFirmalar(prev => prev.map(f => {
+        if (f.id !== contactEditFirma.id) return f;
+        return {
+          ...f,
+          profile: f.profile ? {
+            ...f.profile,
+            ...(emailChanged ? { iletisim_email: contactNewEmail.trim() } : {}),
+            ...(phoneChanged ? { iletisim_numarasi: contactNewPhone.trim() } : {}),
+          } : f.profile,
+        };
+      }));
+
+      setContactEditOpen(false);
+    } catch (err: any) {
+      toast({ title: "Hata", description: err?.message || "Güncelleme başarısız", variant: "destructive" });
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
+  const openPaketDialog = async (firma: FirmaItem) => {
     setPaketDialogFirma(firma);
     setPaketDialogOpen(true);
     setPaketDialogLoading(true);
@@ -1221,6 +1280,11 @@ export default function AdminFirmalarV2() {
                                 <KeyRound className="w-3.5 h-3.5 mr-2" /> Şifre Gönder
                               </DropdownMenuItem>
                             )}
+                            {hasPermission("firma_impersonate") && (
+                              <DropdownMenuItem onClick={() => openContactEdit(firma)} className="text-xs cursor-pointer">
+                                <Mail className="w-3.5 h-3.5 mr-2" /> İletişim Düzenle
+                              </DropdownMenuItem>
+                            )}
                             {hasPermission("firma_sil") && (
                               <>
                                 <DropdownMenuSeparator style={{ background: "hsl(var(--admin-border))" }} />
@@ -1772,6 +1836,50 @@ export default function AdminFirmalarV2() {
             >
               {portfolyoAtaLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Ata
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* İletişim Düzenle Dialog */}
+      <Dialog open={contactEditOpen} onOpenChange={setContactEditOpen}>
+        <DialogContent style={s.card} className="max-w-md">
+          <DialogHeader>
+            <DialogTitle style={s.text} className="flex items-center gap-2">
+              <Mail className="w-5 h-5" /> İletişim Bilgilerini Düzenle
+            </DialogTitle>
+            <DialogDescription style={s.muted}>
+              <span className="font-medium" style={s.text}>{contactEditFirma?.firma_unvani}</span> firmasının iletişim bilgilerini güncelleyin.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div className="space-y-1.5">
+              <Label style={s.text} className="text-sm">E-posta Adresi</Label>
+              <Input
+                type="email"
+                value={contactNewEmail}
+                onChange={(e) => setContactNewEmail(e.target.value)}
+                placeholder="E-posta adresi"
+                style={s.input}
+              />
+              <p className="text-[10px]" style={s.muted}>Auth, profil ve firma tablosundaki e-posta güncellenir.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label style={s.text} className="text-sm">Telefon Numarası</Label>
+              <Input
+                type="tel"
+                value={contactNewPhone}
+                onChange={(e) => setContactNewPhone(e.target.value)}
+                placeholder="+90 5XX XXX XX XX"
+                style={s.input}
+              />
+            </div>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setContactEditOpen(false)} style={s.input}>İptal</Button>
+            <Button onClick={handleContactUpdate} disabled={contactSaving}>
+              {contactSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Güncelle
             </Button>
           </DialogFooter>
         </DialogContent>

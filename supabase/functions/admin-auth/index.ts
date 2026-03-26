@@ -5544,6 +5544,66 @@ Deno.serve(async (req) => {
       return jsonResponse({ success: true });
     }
 
+    // ── Update User Contact (Email / Phone) ──
+    if (action === "update-user-contact") {
+      const { token, userId, newEmail, newPhone } = body;
+      const payload = verifyToken(token);
+      if (!payload.is_primary && !payload.permissions?.firma_impersonate) {
+        return jsonResponse({ error: "Yetkisiz" }, 401);
+      }
+
+      if (!userId) return jsonResponse({ error: "userId gerekli" }, 400);
+
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+      // Get current user info for logging
+      const { data: firma } = await supabase.from("firmalar").select("firma_unvani").eq("user_id", userId).single();
+      const { data: profile } = await supabase.from("profiles").select("iletisim_email, iletisim_numarasi").eq("user_id", userId).single();
+
+      const changes: string[] = [];
+
+      // Update auth email if provided
+      if (newEmail && newEmail.trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(newEmail.trim())) {
+          return jsonResponse({ error: "Geçerli bir e-posta adresi giriniz." }, 400);
+        }
+
+        const { error: authErr } = await adminClient.auth.admin.updateUserById(userId, {
+          email: newEmail.trim(),
+          email_confirm: true,
+        });
+        if (authErr) return jsonResponse({ error: authErr.message }, 500);
+
+        // Update profiles table
+        await supabase.from("profiles").update({ iletisim_email: newEmail.trim() }).eq("user_id", userId);
+        // Update firmalar table
+        await supabase.from("firmalar").update({ firma_iletisim_email: newEmail.trim() }).eq("user_id", userId);
+
+        changes.push(`E-posta: ${profile?.iletisim_email || "?"} → ${newEmail.trim()}`);
+      }
+
+      // Update phone if provided
+      if (newPhone && newPhone.trim()) {
+        await supabase.from("profiles").update({ iletisim_numarasi: newPhone.trim() }).eq("user_id", userId);
+        await supabase.from("firmalar").update({ firma_iletisim_numarasi: newPhone.trim() }).eq("user_id", userId);
+        changes.push(`Telefon: ${profile?.iletisim_numarasi || "?"} → ${newPhone.trim()}`);
+      }
+
+      if (changes.length === 0) return jsonResponse({ error: "Güncellenecek bilgi belirtilmedi." }, 400);
+
+      await logActivity(supabase, payload, "update-user-contact", {
+        target_type: "firma",
+        target_id: userId,
+        target_label: firma?.firma_unvani || "?",
+        details: { changes },
+      });
+
+      return jsonResponse({ success: true, changes });
+    }
+
     return jsonResponse({ error: "Geçersiz istek" }, 400);
   } catch (err) {
     return new Response(JSON.stringify({ error: err.message }), {
