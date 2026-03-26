@@ -764,7 +764,9 @@ export default function AnaSayfa() {
   const renderProductCard = (urun: UrunWithExtra) => {
     const sym = paraBirimiSymbol[urun.para_birimi || "TRY"] || urun.para_birimi || "₺";
     let priceDisplay: React.ReactNode = <span className="text-sm text-muted-foreground">—</span>;
-    if (urun.fiyat_tipi === "varyasyonlu" && urun.min_varyant_fiyat != null && urun.max_varyant_fiyat != null) {
+    if (urun.fiyat_tipi === "fiyat_sorunuz") {
+      priceDisplay = <span className="text-sm font-bold text-primary">Fiyat Sorunuz</span>;
+    } else if (urun.fiyat_tipi === "varyasyonlu" && urun.min_varyant_fiyat != null && urun.max_varyant_fiyat != null) {
       if (urun.min_varyant_fiyat === urun.max_varyant_fiyat) {
         priceDisplay = <span className="text-sm font-bold text-foreground">{sym}{urun.min_varyant_fiyat.toFixed(2)}</span>;
       } else {

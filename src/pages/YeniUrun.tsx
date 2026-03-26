@@ -515,6 +515,7 @@ export default function YeniUrun() {
     if (step === 1) {
       if (!baslik.trim()) { toast({ title: "Ürün başlığı zorunludur.", variant: "destructive" }); return; }
       if (fiyatTipi === "tek_fiyat" && !fiyat) { toast({ title: "Fiyat zorunludur.", variant: "destructive" }); return; }
+      // fiyat_sorunuz: no price validation needed
       if (fiyatTipi === "varyasyonlu") {
         for (const k of fiyatKademeleri) {
           if (k.max_adet <= k.min_adet || k.birim_fiyat <= 0) {
@@ -909,7 +910,7 @@ export default function YeniUrun() {
                   {/* Fiyat Tipi */}
                   <div>
                     <Label>Fiyat Tipi</Label>
-                    <div className="grid grid-cols-2 gap-3 mt-2">
+                    <div className="grid grid-cols-3 gap-3 mt-2">
                       <button type="button" onClick={() => setFiyatTipi("tek_fiyat")}
                         className={`p-4 rounded-lg border-2 text-left transition-all ${fiyatTipi === "tek_fiyat" ? "border-primary bg-primary/5" : "border-border"}`}>
                         <div className={`w-5 h-5 rounded-full border-2 mb-2 flex items-center justify-center ${fiyatTipi === "tek_fiyat" ? "border-primary" : "border-muted-foreground/40"}`}>
@@ -925,6 +926,14 @@ export default function YeniUrun() {
                         </div>
                         <p className="font-semibold text-foreground">Varyasyonlu Fiyat</p>
                         <p className="text-xs text-muted-foreground">Sipariş adedine göre kademeli fiyatlandırma</p>
+                      </button>
+                      <button type="button" onClick={() => { setFiyatTipi("fiyat_sorunuz"); setFiyat(""); }}
+                        className={`p-4 rounded-lg border-2 text-left transition-all ${fiyatTipi === "fiyat_sorunuz" ? "border-primary bg-primary/5" : "border-border"}`}>
+                        <div className={`w-5 h-5 rounded-full border-2 mb-2 flex items-center justify-center ${fiyatTipi === "fiyat_sorunuz" ? "border-primary" : "border-muted-foreground/40"}`}>
+                          {fiyatTipi === "fiyat_sorunuz" && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+                        </div>
+                        <p className="font-semibold text-foreground">Fiyat Sorunuz</p>
+                        <p className="text-xs text-muted-foreground">Fiyat bilgisi gösterilmez, alıcılar iletişime geçer</p>
                       </button>
                     </div>
                   </div>
