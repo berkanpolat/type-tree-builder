@@ -723,6 +723,7 @@ export type Database = {
           kategori_id: string
           name: string
           parent_id: string | null
+          slug: string | null
         }
         Insert: {
           created_at?: string
@@ -730,6 +731,7 @@ export type Database = {
           kategori_id: string
           name: string
           parent_id?: string | null
+          slug?: string | null
         }
         Update: {
           created_at?: string
@@ -737,6 +739,7 @@ export type Database = {
           kategori_id?: string
           name?: string
           parent_id?: string | null
+          slug?: string | null
         }
         Relationships: [
           {
@@ -1127,18 +1130,21 @@ export type Database = {
           firma_turu_id: string
           id: string
           name: string
+          slug: string | null
         }
         Insert: {
           created_at?: string
           firma_turu_id: string
           id?: string
           name: string
+          slug?: string | null
         }
         Update: {
           created_at?: string
           firma_turu_id?: string
           id?: string
           name?: string
+          slug?: string | null
         }
         Relationships: [
           {
@@ -1155,16 +1161,19 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          slug: string | null
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
+          slug?: string | null
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
+          slug?: string | null
         }
         Relationships: []
       }
@@ -3229,6 +3238,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      slugify_tr: { Args: { input: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
