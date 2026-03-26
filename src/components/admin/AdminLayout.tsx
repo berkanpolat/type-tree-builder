@@ -88,6 +88,9 @@ export default function AdminLayout({ children, title: propTitle }: AdminLayoutP
   const location = useLocation();
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return sessionStorage.getItem("admin-sidebar-collapsed") === "true"; } catch { return false; }
+  });
   const [contextTitle, setContextTitle] = useState("");
 
   const displayTitle = propTitle || contextTitle;
