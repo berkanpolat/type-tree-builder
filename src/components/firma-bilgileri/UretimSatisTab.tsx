@@ -119,7 +119,6 @@ function SearchableSelect({
 function ProductSection({
   title,
   tip,
-  allOptions,
   items,
   onAdd,
   onRemoveItem,
@@ -127,7 +126,6 @@ function ProductSection({
 }: {
   title: string;
   tip: string;
-  allOptions: Option[];
   items: AddedItem[];
   onAdd: (tip: string, item: AddedItem) => void;
   onRemoveItem: (tip: string, turId: string) => void;
@@ -136,21 +134,44 @@ function ProductSection({
   const [kategoriId, setKategoriId] = useState("");
   const [grupId, setGrupId] = useState("");
   const [selectedTurIds, setSelectedTurIds] = useState<string[]>([]);
+  const [kategoriler, setKategoriler] = useState<Option[]>([]);
+  const [gruplar, setGruplar] = useState<Option[]>([]);
+  const [turler, setTurler] = useState<Option[]>([]);
 
-  const kategoriler = useMemo(
-    () => allOptions.filter((o) => o.parent_id === null),
-    [allOptions]
-  );
+  // Fetch kategoriler (root level)
+  useEffect(() => {
+    supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("kategori_id", URUN_KATEGORI_ID)
+      .is("parent_id", null)
+      .order("name")
+      .then(({ data }) => setKategoriler(data || []));
+  }, []);
 
-  const gruplar = useMemo(
-    () => (kategoriId ? allOptions.filter((o) => o.parent_id === kategoriId) : []),
-    [allOptions, kategoriId]
-  );
+  // Fetch gruplar when kategori changes
+  useEffect(() => {
+    if (!kategoriId) { setGruplar([]); return; }
+    supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("kategori_id", URUN_KATEGORI_ID)
+      .eq("parent_id", kategoriId)
+      .order("name")
+      .then(({ data }) => setGruplar(data || []));
+  }, [kategoriId]);
 
-  const turler = useMemo(
-    () => (grupId ? allOptions.filter((o) => o.parent_id === grupId) : []),
-    [allOptions, grupId]
-  );
+  // Fetch türler when grup changes
+  useEffect(() => {
+    if (!grupId) { setTurler([]); return; }
+    supabase
+      .from("firma_bilgi_secenekleri")
+      .select("id, name, parent_id")
+      .eq("kategori_id", URUN_KATEGORI_ID)
+      .eq("parent_id", grupId)
+      .order("name")
+      .then(({ data }) => setTurler(data || []));
+  }, [grupId]);
 
   // Filter out already added türler
   const availableTurler = useMemo(
