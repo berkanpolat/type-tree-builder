@@ -1,7 +1,6 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
-import { useSessionState } from "@/hooks/use-session-state";
 import HeroSearchSection from "@/components/anasayfa/HeroSearchSection";
 import { useNavigate, useLocation, Link, useParams } from "react-router-dom";
 import { slugifyTr } from "@/lib/slugify";
@@ -10,7 +9,7 @@ import { sortFirmaTurleri } from "@/lib/sort-utils";
 import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
-import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
+import FirmaFiltreler, { type FirmaFilterState, JUNCTION_FILTER_KEYS } from "@/components/anasayfa/FirmaFiltreler";
 import SeoBreadcrumb, { type BreadcrumbItem } from "@/components/SeoBreadcrumb";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
@@ -45,7 +44,11 @@ import {
 import GaugeChart from "@/components/GaugeChart";
 
 const PER_PAGE = 20;
-const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1"; // Ana Ürün Kategorileri
+const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
+
+// Map junction filter keys to their URL param slugs (reverse lookup)
+const JUNCTION_PARAM_TO_KEY: Record<string, string> = {};
+JUNCTION_FILTER_KEYS.forEach(k => { JUNCTION_PARAM_TO_KEY[slugifyTr(k)] = k; });
 
 interface SearchResult {
   id: string;
@@ -60,7 +63,7 @@ interface UrunTaxNode {
 }
 
 interface UretimSatisItem {
-  tip: string; // "uretim" | "satis"
+  tip: string;
   turName: string;
 }
 
@@ -95,13 +98,13 @@ export default function TekRehber() {
   const location = useLocation();
   const { turSlug, tipSlug } = useParams<{ turSlug?: string; tipSlug?: string }>();
   const { toast } = useToast();
+
+  // Auth state
+  const [currentUserId, setCurrentUserId] = useState("");
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
-  const rehberSidebarBanner = useBanner("tekrehber-sidebar");
   const [authLoading, setAuthLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string>("");
-  const urlAppliedRef = useRef(false);
-  const [initialized, setInitialized] = useState(false);
+  const rehberSidebarBanner = useBanner("tekrehber-sidebar");
 
   useEffect(() => {
     const check = async () => {
@@ -116,25 +119,143 @@ export default function TekRehber() {
     check();
   }, []);
 
-  const [searchTerm, setSearchTerm] = useSessionState("searchTerm", "");
-  const [appliedSearchTerm, setAppliedSearchTerm] = useSessionState("appliedSearchTerm", "");
+  // === SLUG MAPS ===
+  const [idToSlug, setIdToSlug] = useState<Record<string, string>>({});
+  const [slugToId, setSlugToId] = useState<Record<string, string>>({});
+  const [slugsReady, setSlugsReady] = useState(false);
+
+  useEffect(() => {
+    const fetchSlugs = async () => {
+      const [secRes, tipRes] = await Promise.all([
+        supabase.from("firma_bilgi_secenekleri").select("id, slug"),
+        supabase.from("firma_tipleri").select("id, slug"),
+      ]);
+      const i2s: Record<string, string> = {};
+      const s2i: Record<string, string> = {};
+      [...(secRes.data || []), ...(tipRes.data || [])].forEach((r: any) => {
+        if (r.slug) { i2s[r.id] = r.slug; s2i[r.slug] = r.id; }
+      });
+      setIdToSlug(i2s);
+      setSlugToId(s2i);
+      setSlugsReady(true);
+    };
+    fetchSlugs();
+  }, []);
+
+  // === FIRMA TÜRLERİ ===
+  const [firmaTurleriAll, setFirmaTurleriAll] = useState<{ id: string; name: string; slug: string | null }[]>([]);
+
+  useEffect(() => {
+    supabase.from("firma_turleri").select("id, name, slug").order("name").then(({ data }) => {
+      if (data) setFirmaTurleriAll(data);
+    });
+  }, []);
+
+  // Sorted for dropdown
+  const firmaTurleri = useMemo(
+    () => sortFirmaTurleri(firmaTurleriAll.map(t => ({ id: t.id, name: t.name }))),
+    [firmaTurleriAll]
+  );
+
+  // === DERIVED STATE FROM URL ===
+  const selectedTur = useMemo(() => {
+    if (!turSlug || firmaTurleriAll.length === 0) return null;
+    return firmaTurleriAll.find(t => t.slug === turSlug) || null;
+  }, [turSlug, firmaTurleriAll]);
+
+  const selectedFirmaTuru = selectedTur?.id || "";
+  const selectedFirmaTuruName = selectedTur?.name || "";
+
+  // Firma tipleri for URL building
+  const [firmaTipleriData, setFirmaTipleriData] = useState<{ id: string; name: string; slug: string | null }[]>([]);
+  useEffect(() => {
+    if (!selectedFirmaTuru) { setFirmaTipleriData([]); return; }
+    supabase.from("firma_tipleri").select("id, name, slug")
+      .eq("firma_turu_id", selectedFirmaTuru).order("name")
+      .then(({ data }) => setFirmaTipleriData((data || []) as any));
+  }, [selectedFirmaTuru]);
+
+  // Derive filter state from URL (tipSlug + query params)
+  const firmaFilterState = useMemo<FirmaFilterState>(() => {
+    const params = new URLSearchParams(location.search);
+    const resolveIds = (val: string) => val.split(",").filter(Boolean).map(s => slugToId[s] || s);
+
+    let firmaTipleri: string[] = [];
+    if (tipSlug) {
+      const tipId = slugToId[tipSlug];
+      if (tipId) firmaTipleri = [tipId];
+    } else {
+      const tipParam = params.get("tip");
+      if (tipParam) firmaTipleri = resolveIds(tipParam);
+    }
+
+    const firmaOlcekleri = params.get("olcek") ? resolveIds(params.get("olcek")!) : [];
+    const iller = params.get("il") ? resolveIds(params.get("il")!) : [];
+    const moqVal = params.get("moq") || "";
+    const uretimSatisKategoriIds = params.get("us_kategori") ? resolveIds(params.get("us_kategori")!) : [];
+    const uretimSatisGrupIds = params.get("us_grup") ? resolveIds(params.get("us_grup")!) : [];
+    const uretimSatisTurIds = params.get("us_tur") ? resolveIds(params.get("us_tur")!) : [];
+
+    const junctionFilters: Record<string, string[]> = {};
+    params.forEach((value, key) => {
+      if (JUNCTION_PARAM_TO_KEY[key]) {
+        junctionFilters[JUNCTION_PARAM_TO_KEY[key]] = resolveIds(value);
+      }
+    });
+
+    return { firmaTipleri, firmaOlcekleri, iller, moq: moqVal, junctionFilters, uretimSatisKategoriIds, uretimSatisGrupIds, uretimSatisTurIds };
+  }, [tipSlug, location.search, slugToId]);
+
+  // === REDIRECTS ===
+  const locationState = location.state as { firmaTurId?: string; firmaTipId?: string; firmaTurName?: string } | null;
+
+  useEffect(() => {
+    if (firmaTurleriAll.length === 0) return;
+
+    // Handle incoming state (from landing page etc.)
+    if (locationState?.firmaTurId) {
+      const tur = firmaTurleriAll.find(t => t.id === locationState.firmaTurId);
+      if (tur?.slug) {
+        let path = `/firmalar/${tur.slug}`;
+        if (locationState.firmaTipId) {
+          const tipSlugVal = idToSlug[locationState.firmaTipId];
+          if (tipSlugVal) path += `/${tipSlugVal}`;
+          else if (!slugsReady) return; // wait for slug map
+        }
+        window.history.replaceState({}, document.title);
+        navigate(path, { replace: true });
+        return;
+      }
+    }
+
+    // No turSlug → redirect to default
+    if (!turSlug) {
+      const tedarikci = firmaTurleriAll.find(t => t.name.toLowerCase().includes("tedarikçi"));
+      const def = tedarikci || firmaTurleriAll[0];
+      if (def?.slug) navigate(`/firmalar/${def.slug}`, { replace: true });
+      return;
+    }
+
+    // Invalid turSlug → redirect to default
+    if (!selectedTur) {
+      const tedarikci = firmaTurleriAll.find(t => t.name.toLowerCase().includes("tedarikçi"));
+      const def = tedarikci || firmaTurleriAll[0];
+      if (def?.slug) navigate(`/firmalar/${def.slug}`, { replace: true });
+    }
+  }, [firmaTurleriAll, turSlug, selectedTur, locationState, idToSlug, slugsReady, navigate]);
+
+  // === SEARCH (ephemeral) ===
+  const [searchTerm, setSearchTerm] = useState("");
+  const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
+  // Display state
   const [firmalar, setFirmalar] = useState<FirmaWithExtra[]>([]);
   const [firmaLoading, setFirmaLoading] = useState(false);
-  const [firmaTurleri, setFirmaTurleri] = useState<{ id: string; name: string }[]>([]);
-  const [selectedFirmaTuru, setSelectedFirmaTuru] = useSessionState("selectedFirmaTuru", "");
-  const [selectedFirmaTuruName, setSelectedFirmaTuruName] = useSessionState("selectedFirmaTuruName", "");
-  const [firmaFilterState, setFirmaFilterState] = useSessionState<FirmaFilterState | null>("firmaFilterState", null);
   const [firmaFavSet, setFirmaFavSet] = useState<Set<string>>(new Set());
-  const [firmaTipleriData, setFirmaTipleriData] = useState<{ id: string; name: string; slug: string | null }[]>([]);
-
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
-  // Bidirectional slug maps for readable URLs
-  const [idToSlug, setIdToSlug] = useState<Record<string, string>>({});
-  const [slugToId, setSlugToId] = useState<Record<string, string>>({});
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
@@ -151,89 +272,9 @@ export default function TekRehber() {
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter]);
 
-  // Fetch all slug mappings once (firma_bilgi_secenekleri + firma_tipleri)
-  useEffect(() => {
-    const fetchSlugs = async () => {
-      const [secRes, tipRes] = await Promise.all([
-        supabase.from("firma_bilgi_secenekleri").select("id, slug"),
-        supabase.from("firma_tipleri").select("id, slug"),
-      ]);
-      const i2s: Record<string, string> = {};
-      const s2i: Record<string, string> = {};
-      [...(secRes.data || []), ...(tipRes.data || [])].forEach((r: any) => {
-        if (r.slug) { i2s[r.id] = r.slug; s2i[r.slug] = r.id; }
-      });
-      setIdToSlug(i2s);
-      setSlugToId(s2i);
-    };
-    fetchSlugs();
-  }, []);
-
-  // Fetch firma tipleri for the selected tür (for URL slugs)
-  useEffect(() => {
-    if (!selectedFirmaTuru) { setFirmaTipleriData([]); return; }
-    supabase.from("firma_tipleri").select("id, name, slug").eq("firma_turu_id", selectedFirmaTuru).order("name").then(({ data }) => {
-      setFirmaTipleriData((data || []) as { id: string; name: string; slug: string | null }[]);
-    });
-  }, [selectedFirmaTuru]);
-
-  // Helper: convert array of IDs to slugs (fallback to id if no slug found)
   const idsToSlugs = useCallback((ids: string[]) => ids.map(id => idToSlug[id] || id), [idToSlug]);
-  const slugsToIds = useCallback((slugs: string[]) => slugs.map(s => slugToId[s] || s), [slugToId]);
 
-  // Sync URL when filters change (path + query params)
-  useEffect(() => {
-    // Don't sync URL until initialization is complete
-    if (!urlAppliedRef.current) return;
-    if (Object.keys(idToSlug).length === 0) return; // wait for slug map
-
-    if (!selectedFirmaTuru || !selectedFirmaTuruName) {
-      if (location.pathname !== "/firmalar") {
-        navigate("/firmalar", { replace: true });
-      }
-      return;
-    }
-
-    const turNameSlug = slugifyTr(selectedFirmaTuruName);
-    if (!turNameSlug) return;
-
-    let path = `/firmalar/${turNameSlug}`;
-
-    // Add tip slug if exactly one tip is selected
-    const selectedTipIds = firmaFilterState?.firmaTipleri || [];
-    if (selectedTipIds.length === 1 && firmaTipleriData.length > 0) {
-      const tipData = firmaTipleriData.find(t => t.id === selectedTipIds[0]);
-      if (tipData?.slug) {
-        path += `/${tipData.slug}`;
-      }
-    }
-
-    // Build query params from firmaFilterState (using slugs)
-    const params = new URLSearchParams();
-    if (firmaFilterState) {
-      if (firmaFilterState.firmaTipleri?.length > 1) params.set("tip", idsToSlugs(firmaFilterState.firmaTipleri).join(","));
-      if (firmaFilterState.firmaOlcekleri?.length) params.set("olcek", idsToSlugs(firmaFilterState.firmaOlcekleri).join(","));
-      if (firmaFilterState.iller?.length) params.set("il", idsToSlugs(firmaFilterState.iller).join(","));
-      if (firmaFilterState.moq) params.set("moq", firmaFilterState.moq);
-      if (firmaFilterState.junctionFilters) {
-        Object.entries(firmaFilterState.junctionFilters).forEach(([key, values]) => {
-          if (values.length > 0) params.set(slugifyTr(key), idsToSlugs(values).join(","));
-        });
-      }
-      if (firmaFilterState.uretimSatisKategoriIds?.length) params.set("us_kategori", idsToSlugs(firmaFilterState.uretimSatisKategoriIds).join(","));
-      if (firmaFilterState.uretimSatisGrupIds?.length) params.set("us_grup", idsToSlugs(firmaFilterState.uretimSatisGrupIds).join(","));
-      if (firmaFilterState.uretimSatisTurIds?.length) params.set("us_tur", idsToSlugs(firmaFilterState.uretimSatisTurIds).join(","));
-    }
-
-    const qs = params.toString();
-    const fullPath = qs ? `${path}?${qs}` : path;
-
-    if (location.pathname + location.search !== fullPath) {
-      navigate(fullPath, { replace: true });
-    }
-  }, [selectedFirmaTuru, selectedFirmaTuruName, firmaFilterState, firmaTipleriData, idToSlug]);
-
-  // Click outside
+  // Click outside search
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowDropdown(false);
@@ -242,114 +283,7 @@ export default function TekRehber() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Read location.state for pre-applied filters (from landing popüler aramalar)
-  const locationState = location.state as { firmaTurId?: string; firmaTipId?: string; firmaTurName?: string } | null;
-  const hasIncomingState = !!(locationState?.firmaTurId);
-
-  // Fetch firma türleri + resolve URL slugs (runs once on mount)
-  useEffect(() => {
-    // Only run initialization once
-    if (urlAppliedRef.current) return;
-
-    // Wait for slug map if there are query params to resolve
-    if (Object.keys(slugToId).length === 0 && location.search) return;
-
-    supabase.from("firma_turleri").select("id, name, slug").order("name").then(({ data }) => {
-      if (!data || urlAppliedRef.current) return;
-      const sorted = sortFirmaTurleri(data.map(d => ({ id: d.id, name: d.name })));
-      setFirmaTurleri(sorted);
-
-      // Case 1: URL has turSlug → resolve from URL
-      if (turSlug) {
-        const matchedTur = (data as any[]).find((t: any) => t.slug === turSlug);
-        if (matchedTur) {
-          setSelectedFirmaTuru(matchedTur.id);
-          setSelectedFirmaTuruName(matchedTur.name);
-
-          const searchParams = new URLSearchParams(location.search);
-          const hasQueryParams = searchParams.toString().length > 0;
-
-          // Resolve tipSlug if present
-          if (tipSlug) {
-            supabase.from("firma_tipleri").select("id, name, slug").eq("firma_turu_id", matchedTur.id).then(({ data: tipData }) => {
-              if (tipData) {
-                const matchedTip = (tipData as any[]).find((t: any) => t.slug === tipSlug);
-                if (matchedTip) {
-                  setFirmaFilterState((prev: FirmaFilterState | null) => ({
-                    ...(prev || { firmaTipleri: [], firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
-                    firmaTipleri: [matchedTip.id],
-                  }));
-                }
-              }
-              setInitialized(true);
-            });
-          } else if (hasQueryParams) {
-            // Restore filters from query params (slugs → IDs)
-            const restored: Partial<FirmaFilterState> = {};
-            const tipParam = searchParams.get("tip");
-            if (tipParam) restored.firmaTipleri = slugsToIds(tipParam.split(",").filter(Boolean));
-            const olcekParam = searchParams.get("olcek");
-            if (olcekParam) restored.firmaOlcekleri = slugsToIds(olcekParam.split(",").filter(Boolean));
-            const ilParam = searchParams.get("il");
-            if (ilParam) restored.iller = slugsToIds(ilParam.split(",").filter(Boolean));
-            const moqParam = searchParams.get("moq");
-            if (moqParam) restored.moq = moqParam;
-            const usKategori = searchParams.get("us_kategori");
-            if (usKategori) restored.uretimSatisKategoriIds = slugsToIds(usKategori.split(",").filter(Boolean));
-            const usGrup = searchParams.get("us_grup");
-            if (usGrup) restored.uretimSatisGrupIds = slugsToIds(usGrup.split(",").filter(Boolean));
-            const usTur = searchParams.get("us_tur");
-            if (usTur) restored.uretimSatisTurIds = slugsToIds(usTur.split(",").filter(Boolean));
-
-            const hasFilters = Object.values(restored).some(v => v && (typeof v === "string" ? v.length > 0 : (v as string[]).length > 0));
-            if (hasFilters) {
-              setFirmaFilterState((prev: FirmaFilterState | null) => ({
-                ...(prev || { firmaTipleri: [], firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
-                ...restored,
-              }));
-            }
-            setInitialized(true);
-          } else {
-            // turSlug only, no tipSlug, no query params → clear stale session filters
-            setFirmaFilterState(null);
-            setInitialized(true);
-          }
-        }
-      }
-      // Case 2: Incoming state from navigation (popüler aramalar etc.)
-      else if (hasIncomingState) {
-        // Will be handled by the separate incoming state effect
-      }
-      // Case 3: No URL slug, no incoming state → always default to "Tedarikçi"
-      else {
-        const tedarikci = sorted.find((t) => t.name.toLowerCase().includes("tedarikçi"));
-        if (tedarikci) { setSelectedFirmaTuru(tedarikci.id); setSelectedFirmaTuruName(tedarikci.name); }
-        else if (sorted.length > 0) { setSelectedFirmaTuru(sorted[0].id); setSelectedFirmaTuruName(sorted[0].name); }
-        // Clear stale session filters when landing fresh
-        setFirmaFilterState(null);
-        setInitialized(true);
-      }
-
-      // Mark initialization as done — prevents re-running on subsequent param changes
-      urlAppliedRef.current = true;
-    });
-  }, [slugToId]);
-
-  // Apply incoming state filters
-  useEffect(() => {
-    if (locationState?.firmaTurId) {
-      setSelectedFirmaTuru(locationState.firmaTurId);
-      if (locationState.firmaTurName) setSelectedFirmaTuruName(locationState.firmaTurName);
-      if (locationState.firmaTipId) {
-        setFirmaFilterState((prev: FirmaFilterState | null) => ({
-          ...(prev || { firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
-          firmaTipleri: [locationState.firmaTipId!],
-        }));
-      }
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
-
+  // Fetch product taxonomy nodes for search
   useEffect(() => {
     const fetchAllTaxNodes = async () => {
       let allNodes: UrunTaxNode[] = [];
@@ -372,7 +306,7 @@ export default function TekRehber() {
     fetchAllTaxNodes();
   }, []);
 
-  // Fetch companies with pagination
+  // === FETCH COMPANIES ===
   const fetchFirmalar = useCallback(async () => {
     setFirmaLoading(true);
     const fs = firmaFilterState;
@@ -403,25 +337,16 @@ export default function TekRehber() {
       const usGrupIds = fs.uretimSatisGrupIds || [];
       const usKatIds = fs.uretimSatisKategoriIds || [];
       if (usTurIds.length > 0 || usGrupIds.length > 0 || usKatIds.length > 0) {
-        // Build OR filter: most specific level takes priority
-        // If türler selected → filter by tür; else if gruplar → filter by grup; else kategori
         const filterColumn = usTurIds.length > 0 ? "tur_id" : usGrupIds.length > 0 ? "grup_id" : "kategori_id";
         const filterValues = usTurIds.length > 0 ? usTurIds : usGrupIds.length > 0 ? usGrupIds : usKatIds;
-        
-        console.log("[FirmaFilter] Üretim/Satış filter:", { filterColumn, filterValues, usTurIds, usGrupIds, usKatIds });
-        
-        const { data: usData, error: usError } = await supabase
+
+        const { data: usData } = await supabase
           .from("firma_uretim_satis")
           .select("firma_id")
           .in(filterColumn, filterValues);
-        
-        if (usError) {
-          console.error("[FirmaFilter] Üretim/Satış query error:", usError);
-        }
-        
+
         if (usData) {
           const usFirmaIds = new Set(usData.map((d) => d.firma_id));
-          console.log("[FirmaFilter] Üretim/Satış matched firma count:", usFirmaIds.size, [...usFirmaIds]);
           if (junctionFirmaIds === null) junctionFirmaIds = [...usFirmaIds];
           else junctionFirmaIds = junctionFirmaIds.filter((id) => usFirmaIds.has(id));
         }
@@ -499,7 +424,6 @@ export default function TekRehber() {
     const tipIds = [...new Set(data.map((f) => f.firma_tipi_id))];
     const firmaIds = data.map((f) => f.id);
 
-    // Run ALL lookup queries in parallel instead of sequentially
     const [secenekRes, tipRes, faaliyetRes, favsRes, uretimSatisRes] = await Promise.all([
       secenekIds.size > 0
         ? supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...secenekIds])
@@ -525,12 +449,11 @@ export default function TekRehber() {
     const turNameMap: Record<string, string> = {};
     firmaTurleri.forEach((t) => { turNameMap[t.id] = t.name; });
 
-    // Build faaliyet map - need secondary lookup for secenek names
+    // Build faaliyet map
     const faaliyetMap: Record<string, string> = {};
     const faaliyetData = faaliyetRes.data || [];
     if (faaliyetData.length > 0) {
       const faaliyetSecIds = [...new Set(faaliyetData.map((f: any) => f.secenek_id))];
-      // Check if we already have names in secenekMap, only fetch missing ones
       const missingIds = faaliyetSecIds.filter((id) => !newSecenekMap[id as string]) as string[];
       if (missingIds.length > 0) {
         const { data: faaliyetNames } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", missingIds);
@@ -559,7 +482,6 @@ export default function TekRehber() {
         if (!uretimSatisMap[d.firma_id]) uretimSatisMap[d.firma_id] = [];
         const turName = newSecenekMap[d.tur_id];
         if (turName) {
-          // Avoid duplicates
           const exists = uretimSatisMap[d.firma_id].some((i) => i.turName === turName && i.tip === d.tip);
           if (!exists) uretimSatisMap[d.firma_id].push({ tip: d.tip, turName });
         }
@@ -571,7 +493,6 @@ export default function TekRehber() {
     setFirmaFavSet(favSet);
     setSecenekMap(newSecenekMap);
 
-    // Build firma map and preserve RPC sort order
     const firmaMap = new Map<string, typeof data[0]>();
     data.forEach((f) => firmaMap.set(f.id, f));
 
@@ -590,19 +511,18 @@ export default function TekRehber() {
 
     setFirmalar(enriched);
     setFirmaLoading(false);
-  }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter, currentUserId, currentPage]);
+  }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter, currentUserId, currentPage, firmaTurleri]);
 
+  // Trigger fetch when ready
   useEffect(() => {
-    if (initialized && selectedFirmaTuru) fetchFirmalar();
-  }, [fetchFirmalar, initialized, selectedFirmaTuru]);
+    if (selectedFirmaTuru && slugsReady) fetchFirmalar();
+  }, [fetchFirmalar, selectedFirmaTuru, slugsReady]);
 
-  // Trigger search on Enter or Ara button — search firma names
+  // === SEARCH HANDLERS ===
   const handleSearch = useCallback(async () => {
     const term = searchTerm.trim();
     if (!term) return;
     setShowDropdown(false);
-    // If term matches a taxonomy item exactly, prefer dropdown selection
-    // Otherwise treat as firma name search
     setUretimSatisFilter(null);
     setAppliedSearchTerm(term);
   }, [searchTerm]);
@@ -618,14 +538,12 @@ export default function TekRehber() {
       const results: SearchResult[] = [];
       const lowerTerm = searchTerm.toLowerCase();
 
-      // Firma türleri
       firmaTurleri.forEach((t) => {
         if (t.name.toLowerCase().includes(lowerTerm)) {
           results.push({ id: t.id, name: t.name, type: "Tür" });
         }
       });
 
-      // Product taxonomy: categories, groups, types
       const rootNodes = urunTaxNodes.filter((n) => !n.parent_id);
       const childOf = (parentId: string) => urunTaxNodes.filter((n) => n.parent_id === parentId);
 
@@ -645,7 +563,6 @@ export default function TekRehber() {
         });
       });
 
-      // Firma name search
       const { data } = await supabase
         .from("firmalar")
         .select("id, firma_unvani")
@@ -653,7 +570,6 @@ export default function TekRehber() {
         .limit(6);
       if (data) data.forEach((f) => results.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
 
-      // Limit and prioritize: taxonomy first, then firma
       setSearchResults(results.slice(0, 15));
       setShowDropdown(results.length > 0);
     }, 250);
@@ -666,8 +582,8 @@ export default function TekRehber() {
     setAppliedSearchTerm("");
 
     if (result.type === "Tür") {
-      setSelectedFirmaTuru(result.id);
-      setSelectedFirmaTuruName(result.name);
+      const tur = firmaTurleriAll.find(t => t.id === result.id);
+      if (tur?.slug) navigate(`/firmalar/${tur.slug}`);
       setUretimSatisFilter(null);
     } else if (result.type === "Kategori") {
       setUretimSatisFilter({ column: "kategori_id", ids: [result.id] });
@@ -676,21 +592,54 @@ export default function TekRehber() {
     } else if (result.type === "Ürün Türü") {
       setUretimSatisFilter({ column: "tur_id", ids: [result.id] });
     } else if (result.type === "Firma") {
-      // Navigate to firma
       setUretimSatisFilter(null);
       setAppliedSearchTerm(result.name);
     }
   };
 
-  const handleFirmaTuruChange = (value: string) => {
-    setSelectedFirmaTuru(value);
-    const turName = firmaTurleri.find((t) => t.id === value)?.name || "";
-    setSelectedFirmaTuruName(turName);
-    // Reset tip filter when tür changes
-    setFirmaFilterState(null);
-    // URL will be updated by the sync effect
-  };
+  // === FILTER CHANGE → URL NAVIGATION ===
+  const handleFirmaTuruChange = useCallback((turId: string) => {
+    const tur = firmaTurleriAll.find(t => t.id === turId);
+    if (tur?.slug) navigate(`/firmalar/${tur.slug}`);
+  }, [firmaTurleriAll, navigate]);
 
+  const handleFilterChange = useCallback((newState: FirmaFilterState) => {
+    if (!selectedFirmaTuruName) return;
+    const turNameSlug = slugifyTr(selectedFirmaTuruName);
+    if (!turNameSlug) return;
+
+    let path = `/firmalar/${turNameSlug}`;
+
+    // Single tip → path segment
+    if (newState.firmaTipleri.length === 1) {
+      const tipSlugVal = idToSlug[newState.firmaTipleri[0]];
+      if (tipSlugVal) path += `/${tipSlugVal}`;
+    }
+
+    // Build query params
+    const params = new URLSearchParams();
+    if (newState.firmaTipleri.length > 1) params.set("tip", idsToSlugs(newState.firmaTipleri).join(","));
+    if (newState.firmaOlcekleri.length) params.set("olcek", idsToSlugs(newState.firmaOlcekleri).join(","));
+    if (newState.iller.length) params.set("il", idsToSlugs(newState.iller).join(","));
+    if (newState.moq) params.set("moq", newState.moq);
+    if (newState.junctionFilters) {
+      Object.entries(newState.junctionFilters).forEach(([key, values]) => {
+        if (values.length > 0) params.set(slugifyTr(key), idsToSlugs(values).join(","));
+      });
+    }
+    if (newState.uretimSatisKategoriIds?.length) params.set("us_kategori", idsToSlugs(newState.uretimSatisKategoriIds).join(","));
+    if (newState.uretimSatisGrupIds?.length) params.set("us_grup", idsToSlugs(newState.uretimSatisGrupIds).join(","));
+    if (newState.uretimSatisTurIds?.length) params.set("us_tur", idsToSlugs(newState.uretimSatisTurIds).join(","));
+
+    const qs = params.toString();
+    const fullPath = qs ? `${path}?${qs}` : path;
+
+    if (location.pathname + location.search !== fullPath) {
+      navigate(fullPath); // push for back button support
+    }
+  }, [selectedFirmaTuruName, idToSlug, idsToSlugs, navigate, location.pathname, location.search]);
+
+  // === FAVORITES & MESSAGING ===
   const toggleFirmaFavorite = async (firmaId: string, isFav: boolean) => {
     if (!currentUserId) { navigate("/giris-kayit"); return; }
     if (isFav) {
@@ -742,7 +691,6 @@ export default function TekRehber() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Generate page numbers to show
   const getPageNumbers = () => {
     const pages: (number | "ellipsis")[] = [];
     if (totalPages <= 7) {
@@ -828,8 +776,8 @@ export default function TekRehber() {
           <FirmaFiltreler
             firmaTuruId={selectedFirmaTuru}
             firmaTuruName={selectedFirmaTuruName}
-            onFilterChange={setFirmaFilterState}
-            initialSelections={firmaFilterState?.firmaTipleri?.length ? { firmaTipi: firmaFilterState.firmaTipleri } : undefined}
+            value={firmaFilterState}
+            onFilterChange={handleFilterChange}
           />
 
           <div className="flex-1 min-w-0 space-y-4">
@@ -860,7 +808,6 @@ export default function TekRehber() {
                     : null;
                   const scaleText = (firma.firma_olcegi_id && secenekMap[firma.firma_olcegi_id]) || null;
 
-                  // JSON-LD structured data for each firm
                   const jsonLd = {
                     "@context": "https://schema.org",
                     "@type": "Organization",
@@ -878,201 +825,197 @@ export default function TekRehber() {
                     ...(firma.kurulus_tarihi ? { "foundingDate": firma.kurulus_tarihi } : {}),
                   };
 
-                  
-                    const completionPctV3 = Math.min(100, firma.profile_score ?? 0);
-                    const descriptionExcerptV3 = firma.firma_hakkinda
-                      ? firma.firma_hakkinda.length > 200
-                        ? firma.firma_hakkinda.slice(0, 200) + "…"
-                        : firma.firma_hakkinda
-                      : null;
+                  const completionPctV3 = Math.min(100, firma.profile_score ?? 0);
+                  const descriptionExcerptV3 = firma.firma_hakkinda
+                    ? firma.firma_hakkinda.length > 200
+                      ? firma.firma_hakkinda.slice(0, 200) + "…"
+                      : firma.firma_hakkinda
+                    : null;
 
-                    const uretimItems = (firma.uretimSatisItems || []).filter((i) => i.tip === "uretim");
+                  const uretimItems = (firma.uretimSatisItems || []).filter((i) => i.tip === "uretim");
 
-                    return (
-                      <article
-                        key={firma.id}
-                        className="group rounded-xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-200 overflow-hidden"
-                        itemScope
-                        itemType="https://schema.org/Organization"
-                      >
-                        <script
-                          type="application/ld+json"
-                          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-                        />
+                  return (
+                    <article
+                      key={firma.id}
+                      className="group rounded-xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-200 overflow-hidden"
+                      itemScope
+                      itemType="https://schema.org/Organization"
+                    >
+                      <script
+                        type="application/ld+json"
+                        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                      />
 
-                        {/* Header: Logo + Name + Badges + Gauge */}
-                        <div className="flex items-center gap-3 px-4 pt-4 pb-3 sm:px-5">
-                          <div className="relative shrink-0">
-                            {firma.logo_url ? (
-                              <img
-                                src={firma.logo_url}
-                                alt={`${firma.firma_unvani} logosu`}
-                                title={firma.firma_unvani}
-                                loading="lazy"
-                                width={56}
-                                height={56}
-                                className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-border object-contain bg-muted p-1"
-                                itemProp="logo"
-                              />
-                            ) : (
-                              <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={null} size="lg" className="w-12 h-12 sm:w-14 sm:h-14 border border-border" />
-                            )}
-                            {firma.belge_onayli && (
-                              <div className="absolute -bottom-1 -right-1">
-                                <VerifiedBadge />
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h2 className="font-bold text-foreground text-base sm:text-lg leading-tight truncate" itemProp="name">
-                              <Link
-                                to={firmaUrl}
-                                title={`${firma.firma_unvani} - Firma Profili`}
-                                aria-label={`${firma.firma_unvani} firma profilini görüntüle`}
-                                className="hover:text-primary transition-colors"
-                              >
-                                {firma.firma_unvani}
-                              </Link>
-                            </h2>
-                            {(firma.firma_turu_name || firma.firma_tipi_name) && (
-                              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                                <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
-                                  {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
-                                </Badge>
-                              </div>
-                            )}
-                          </div>
-                          {/* Gauge Chart */}
-                          <div className="shrink-0 flex flex-col items-center">
-                            <GaugeChart value={completionPctV3} size={80} strokeWidth={7} />
-                            <span className="text-[10px] text-muted-foreground mt-0.5 leading-tight text-center">Profil Doluluk Oranı</span>
-                          </div>
-                        </div>
-
-                        {/* 3-Column Body (desktop) / stacked (mobile) */}
-                        <div className="grid grid-cols-1 sm:grid-cols-[2fr_2fr_1fr] gap-0 border-t border-border/50">
-                          {/* LEFT: Info fields */}
-                          <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 space-y-2">
-                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
-                              <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
-                              <span className="truncate" itemProp="addressLocality">{locationText || "Belirtilmemiş"}</span>
+                      {/* Header: Logo + Name + Badges + Gauge */}
+                      <div className="flex items-center gap-3 px-4 pt-4 pb-3 sm:px-5">
+                        <div className="relative shrink-0">
+                          {firma.logo_url ? (
+                            <img
+                              src={firma.logo_url}
+                              alt={`${firma.firma_unvani} logosu`}
+                              title={firma.firma_unvani}
+                              loading="lazy"
+                              width={56}
+                              height={56}
+                              className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl border border-border object-contain bg-muted p-1"
+                              itemProp="logo"
+                            />
+                          ) : (
+                            <FirmaAvatar firmaUnvani={firma.firma_unvani} logoUrl={null} size="lg" className="w-12 h-12 sm:w-14 sm:h-14 border border-border" />
+                          )}
+                          {firma.belge_onayli && (
+                            <div className="absolute -bottom-1 -right-1">
+                              <VerifiedBadge />
                             </div>
-                            {scaleText && (
-                              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                                <Users className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
-                                <span className="truncate">{scaleText}</span>
-                              </div>
-                            )}
-                            {firma.kurulus_tarihi && (
-                              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                                <CalendarDays className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
-                                <span>Kuruluş: {firma.kurulus_tarihi}</span>
-                              </div>
-                            )}
-                            {firma.web_sitesi && (
-                              <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
-                                <ExternalLink className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
-                                <a
-                                  href={firma.web_sitesi.startsWith("http") ? firma.web_sitesi : `https://${firma.web_sitesi}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="truncate hover:text-primary transition-colors"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  {firma.web_sitesi.replace(/^https?:\/\/(www\.)?/, "")}
-                                </a>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* MIDDLE: Firma Hakkında */}
-                          <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 border-t sm:border-t-0">
-                            {firma.firma_hakkinda ? (
-                              <>
-                                <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed" itemProp="description">
-                                  {descriptionExcerptV3}
-                                </p>
-                                {/* Full description for SEO crawlers, visually hidden */}
-                                {firma.firma_hakkinda.length > 200 && (
-                                  <span className="sr-only" aria-hidden="true">{firma.firma_hakkinda}</span>
-                                )}
-                              </>
-                            ) : (
-                              <p className="text-xs sm:text-sm text-muted-foreground/50 italic">Firma hakkında bilgi eklenmemiş.</p>
-                            )}
-                          </div>
-
-                          {/* RIGHT: Actions */}
-                          <div className="px-4 py-3 sm:px-5 flex flex-row sm:flex-col items-center sm:items-stretch gap-2 border-t sm:border-t-0" onClick={(e) => e.stopPropagation()}>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h2 className="font-bold text-foreground text-base sm:text-lg leading-tight truncate" itemProp="name">
                             <Link
                               to={firmaUrl}
-                              className="flex-1 sm:flex-none min-w-0"
-                              title={`${firma.firma_unvani} firma profilini görüntüle`}
-                              onClick={(e) => e.stopPropagation()}
+                              title={`${firma.firma_unvani} - Firma Profili`}
+                              aria-label={`${firma.firma_unvani} firma profilini görüntüle`}
+                              className="hover:text-primary transition-colors"
                             >
-                              <Button size="sm" className="w-full gap-1 h-8 text-xs">
-                                <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> <span className="truncate">İncele</span>
-                              </Button>
+                              {firma.firma_unvani}
                             </Link>
-                            <Button size="sm" variant="outline" className="flex-1 sm:flex-none min-w-0 gap-1 h-8 text-xs" onClick={() => handleMessageFirma(firma.user_id)} aria-label={`${firma.firma_unvani} firmasına mesaj gönder`}>
-                              <MessageSquare className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> <span className="truncate">Mesaj</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant={firma.is_favorited ? "secondary" : "outline"}
-                              className="flex-1 sm:flex-none min-w-0 gap-1 h-8 text-xs"
-                              onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)}
-                              aria-label={firma.is_favorited ? "Favorilerden çıkar" : "Favorilere ekle"}
-                            >
-                              <Bookmark className={`w-3.5 h-3.5 shrink-0 ${firma.is_favorited ? "fill-primary text-primary" : ""}`} aria-hidden="true" />
-                              <span className="truncate">{firma.is_favorited ? "Favorilerde" : "Favori"}</span>
-                            </Button>
+                          </h2>
+                          {(firma.firma_turu_name || firma.firma_tipi_name) && (
+                            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                              <Badge variant="outline" className="text-[10px] font-medium text-muted-foreground">
+                                {[firma.firma_turu_name, firma.firma_tipi_name].filter(Boolean).join(" / ")}
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                        {/* Gauge Chart */}
+                        <div className="shrink-0 flex flex-col items-center">
+                          <GaugeChart value={completionPctV3} size={80} strokeWidth={7} />
+                          <span className="text-[10px] text-muted-foreground mt-0.5 leading-tight text-center">Profil Doluluk Oranı</span>
+                        </div>
+                      </div>
+
+                      {/* 3-Column Body */}
+                      <div className="grid grid-cols-1 sm:grid-cols-[2fr_2fr_1fr] gap-0 border-t border-border/50">
+                        {/* LEFT: Info fields */}
+                        <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 space-y-2">
+                          <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground" itemProp="address" itemScope itemType="https://schema.org/PostalAddress">
+                            <MapPin className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                            <span className="truncate" itemProp="addressLocality">{locationText || "Belirtilmemiş"}</span>
                           </div>
+                          {scaleText && (
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <Users className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                              <span className="truncate">{scaleText}</span>
+                            </div>
+                          )}
+                          {firma.kurulus_tarihi && (
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <CalendarDays className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                              <span>Kuruluş: {firma.kurulus_tarihi}</span>
+                            </div>
+                          )}
+                          {firma.web_sitesi && (
+                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                              <ExternalLink className="w-3.5 h-3.5 shrink-0 text-primary/60" aria-hidden="true" />
+                              <a
+                                href={firma.web_sitesi.startsWith("http") ? firma.web_sitesi : `https://${firma.web_sitesi}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="truncate hover:text-primary transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                {firma.web_sitesi.replace(/^https?:\/\/(www\.)?/, "")}
+                              </a>
+                            </div>
+                          )}
                         </div>
 
-                        {/* Bottom bar: Üretim/Satış ürünleri */}
-                        {uretimItems.length > 0 && (
-                          <div className="border-t border-border/50 px-4 py-2.5 sm:px-5 flex flex-wrap items-center gap-1.5">
-                            <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-wide flex items-center gap-1">
-                              <Factory className="w-3 h-3" aria-hidden="true" /> Üretici:
-                            </span>
-                            {uretimItems.slice(0, 4).map((item, i) => (
-                              <button
-                                key={`u-${i}`}
-                                type="button"
-                                className="inline-flex items-center rounded-md border border-border bg-transparent px-1.5 py-0 text-[10px] font-normal text-foreground cursor-default"
-                                tabIndex={-1}
-                              >
-                                {item.turName}
-                              </button>
-                            ))}
-                            {uretimItems.length > 4 && (
-                              <button
-                                type="button"
-                                className="inline-flex items-center rounded-md border border-border bg-transparent px-1.5 py-0 text-[10px] font-normal text-muted-foreground cursor-default"
-                                tabIndex={-1}
-                              >
-                                +{uretimItems.length - 4}
-                              </button>
-                            )}
-                            {/* All items in DOM for SEO, visually hidden beyond visible limit */}
-                            {uretimItems.length > 4 && uretimItems.slice(4).map((item, i) => (
-                              <button
-                                key={`uh-${i}`}
-                                type="button"
-                                className="sr-only"
-                                tabIndex={-1}
-                                aria-hidden="true"
-                              >
-                                {item.turName}
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </article>
-                    );
-                })}
+                        {/* MIDDLE: Firma Hakkında */}
+                        <div className="px-4 py-3 sm:px-5 sm:border-r border-border/50 border-t sm:border-t-0">
+                          {firma.firma_hakkinda ? (
+                            <>
+                              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed" itemProp="description">
+                                {descriptionExcerptV3}
+                              </p>
+                              {firma.firma_hakkinda.length > 200 && (
+                                <span className="sr-only" aria-hidden="true">{firma.firma_hakkinda}</span>
+                              )}
+                            </>
+                          ) : (
+                            <p className="text-xs sm:text-sm text-muted-foreground/50 italic">Firma hakkında bilgi eklenmemiş.</p>
+                          )}
+                        </div>
 
+                        {/* RIGHT: Actions */}
+                        <div className="px-4 py-3 sm:px-5 flex flex-row sm:flex-col items-center sm:items-stretch gap-2 border-t sm:border-t-0" onClick={(e) => e.stopPropagation()}>
+                          <Link
+                            to={firmaUrl}
+                            className="flex-1 sm:flex-none min-w-0"
+                            title={`${firma.firma_unvani} firma profilini görüntüle`}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Button size="sm" className="w-full gap-1 h-8 text-xs">
+                              <ArrowRight className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> <span className="truncate">İncele</span>
+                            </Button>
+                          </Link>
+                          <Button size="sm" variant="outline" className="flex-1 sm:flex-none min-w-0 gap-1 h-8 text-xs" onClick={() => handleMessageFirma(firma.user_id)} aria-label={`${firma.firma_unvani} firmasına mesaj gönder`}>
+                            <MessageSquare className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> <span className="truncate">Mesaj</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant={firma.is_favorited ? "secondary" : "outline"}
+                            className="flex-1 sm:flex-none min-w-0 gap-1 h-8 text-xs"
+                            onClick={() => toggleFirmaFavorite(firma.id, !!firma.is_favorited)}
+                            aria-label={firma.is_favorited ? "Favorilerden çıkar" : "Favorilere ekle"}
+                          >
+                            <Bookmark className={`w-3.5 h-3.5 shrink-0 ${firma.is_favorited ? "fill-primary text-primary" : ""}`} aria-hidden="true" />
+                            <span className="truncate">{firma.is_favorited ? "Favorilerde" : "Favori"}</span>
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Bottom bar: Üretim/Satış ürünleri */}
+                      {uretimItems.length > 0 && (
+                        <div className="border-t border-border/50 px-4 py-2.5 sm:px-5 flex flex-wrap items-center gap-1.5">
+                          <span className="text-[10px] font-semibold text-primary/80 uppercase tracking-wide flex items-center gap-1">
+                            <Factory className="w-3 h-3" aria-hidden="true" /> Üretici:
+                          </span>
+                          {uretimItems.slice(0, 4).map((item, i) => (
+                            <button
+                              key={`u-${i}`}
+                              type="button"
+                              className="inline-flex items-center rounded-md border border-border bg-transparent px-1.5 py-0 text-[10px] font-normal text-foreground cursor-default"
+                              tabIndex={-1}
+                            >
+                              {item.turName}
+                            </button>
+                          ))}
+                          {uretimItems.length > 4 && (
+                            <button
+                              type="button"
+                              className="inline-flex items-center rounded-md border border-border bg-transparent px-1.5 py-0 text-[10px] font-normal text-muted-foreground cursor-default"
+                              tabIndex={-1}
+                            >
+                              +{uretimItems.length - 4}
+                            </button>
+                          )}
+                          {uretimItems.length > 4 && uretimItems.slice(4).map((item, i) => (
+                            <button
+                              key={`uh-${i}`}
+                              type="button"
+                              className="sr-only"
+                              tabIndex={-1}
+                              aria-hidden="true"
+                            >
+                              {item.turName}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })}
 
                 {/* Pagination */}
                 {totalPages > 1 && (

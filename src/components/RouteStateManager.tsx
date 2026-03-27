@@ -136,7 +136,7 @@ const RouteStateManager = () => {
   const navigationType = useNavigationType();
 
   // Skip state management entirely on admin routes — no scroll/field restore needed
-  const isAdmin = location.pathname.startsWith("/yonetim");
+  const isAdmin = location.pathname.startsWith("/yonetim") || location.pathname.startsWith("/firmalar");
 
   const routeKey = getRouteKey(location.pathname, location.search);
   const isPop = useRef(navigationType === "POP");
