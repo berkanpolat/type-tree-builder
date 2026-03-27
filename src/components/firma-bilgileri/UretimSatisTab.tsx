@@ -553,31 +553,17 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
       // Delete existing
       await supabase.from("firma_uretim_satis").delete().eq("firma_id", firmaId);
 
-      // Build inserts based on role
+      // Build inserts
       const inserts: any[] = [];
 
-      if (rol === "uretici" || rol === "her_ikisi") {
-        for (const item of uretimItems) {
-          inserts.push({
-            firma_id: firmaId,
-            tip: "uretim",
-            kategori_id: item.kategori_id,
-            grup_id: item.grup_id,
-            tur_id: item.tur_id,
-          });
-        }
-      }
-
-      if (rol === "satici" || rol === "her_ikisi") {
-        for (const item of satisItems) {
-          inserts.push({
-            firma_id: firmaId,
-            tip: "satis",
-            kategori_id: item.kategori_id,
-            grup_id: item.grup_id,
-            tur_id: item.tur_id,
-          });
-        }
+      for (const item of uretimItems) {
+        inserts.push({
+          firma_id: firmaId,
+          tip: "uretim",
+          kategori_id: item.kategori_id,
+          grup_id: item.grup_id,
+          tur_id: item.tur_id,
+        });
       }
 
       if (inserts.length > 0) {
