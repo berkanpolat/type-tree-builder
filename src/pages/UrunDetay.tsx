@@ -642,44 +642,24 @@ export default function UrunDetay() {
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6 md:flex-wrap overflow-x-auto whitespace-nowrap scrollbar-none pb-1">
-          <Link to="/tekpazar" className="hover:text-foreground transition-colors">Pazar Anasayfa</Link>
-          {breadcrumbKategori && (
-            <>
-              <span>/</span>
-              <button
-                onClick={() => navigate("/tekpazar", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id } })}
-                className="hover:text-foreground transition-colors"
-              >
-                {breadcrumbKategori}
-              </button>
-            </>
-          )}
-          {breadcrumbGrup && (
-            <>
-              <span>/</span>
-              <button
-                onClick={() => navigate("/tekpazar", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id, grupId: urun.urun_grup_id } })}
-                className="hover:text-foreground transition-colors"
-              >
-                {breadcrumbGrup}
-              </button>
-            </>
-          )}
-          {breadcrumbTur && (
-            <>
-              <span>/</span>
-              <button
-                onClick={() => navigate("/tekpazar", { state: { kategori: breadcrumbKategori, kategoriId: urun.urun_kategori_id, grupId: urun.urun_grup_id, turId: urun.urun_tur_id } })}
-                className="hover:text-foreground transition-colors"
-              >
-                {breadcrumbTur}
-              </button>
-            </>
-          )}
-          <span>/</span>
-          <span className="text-foreground font-medium truncate max-w-[200px]">{urun.baslik}</span>
-        </nav>
+        <div className="mb-6">
+          <SeoBreadcrumb items={(() => {
+            const items: BreadcrumbItem[] = [
+              { label: "TekPazar", href: "/tekpazar" },
+            ];
+            if (breadcrumbKategori && breadcrumbKategoriSlug) {
+              items.push({ label: breadcrumbKategori, href: `/tekpazar/${breadcrumbKategoriSlug}` });
+            }
+            if (breadcrumbGrup && breadcrumbGrupSlug && breadcrumbKategoriSlug) {
+              items.push({ label: breadcrumbGrup, href: `/tekpazar/${breadcrumbKategoriSlug}/${breadcrumbGrupSlug}` });
+            }
+            if (breadcrumbTur && breadcrumbTurSlug && breadcrumbKategoriSlug && breadcrumbGrupSlug) {
+              items.push({ label: breadcrumbTur, href: `/tekpazar/${breadcrumbKategoriSlug}/${breadcrumbGrupSlug}/${breadcrumbTurSlug}` });
+            }
+            items.push({ label: urun.baslik });
+            return items;
+          })()} />
+        </div>
 
         {/* Main Content - Mobile: single column with specific order, Desktop: 2-column */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8">
