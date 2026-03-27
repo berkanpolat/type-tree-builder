@@ -182,7 +182,8 @@ export default function TekRehber() {
 
   // Sync URL when filters change (path + query params)
   useEffect(() => {
-    if (turSlug && !urlAppliedRef.current) return;
+    // Don't sync URL until initialization is complete
+    if (!urlAppliedRef.current) return;
     if (Object.keys(idToSlug).length === 0) return; // wait for slug map
 
     if (!selectedFirmaTuru || !selectedFirmaTuruName) {
