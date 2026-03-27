@@ -176,9 +176,14 @@ export default function TekRehber() {
     });
   }, [selectedFirmaTuru]);
 
+  // Helper: convert array of IDs to slugs (fallback to id if no slug found)
+  const idsToSlugs = useCallback((ids: string[]) => ids.map(id => idToSlug[id] || id), [idToSlug]);
+  const slugsToIds = useCallback((slugs: string[]) => slugs.map(s => slugToId[s] || s), [slugToId]);
+
   // Sync URL when filters change (path + query params)
   useEffect(() => {
     if (turSlug && !urlAppliedRef.current) return;
+    if (Object.keys(idToSlug).length === 0) return; // wait for slug map
 
     if (!selectedFirmaTuru || !selectedFirmaTuruName) {
       if (location.pathname !== "/firmalar") {
@@ -201,21 +206,21 @@ export default function TekRehber() {
       }
     }
 
-    // Build query params from firmaFilterState
+    // Build query params from firmaFilterState (using slugs)
     const params = new URLSearchParams();
     if (firmaFilterState) {
-      if (firmaFilterState.firmaTipleri?.length > 1) params.set("tip", firmaFilterState.firmaTipleri.join(","));
-      if (firmaFilterState.firmaOlcekleri?.length) params.set("olcek", firmaFilterState.firmaOlcekleri.join(","));
-      if (firmaFilterState.iller?.length) params.set("il", firmaFilterState.iller.join(","));
+      if (firmaFilterState.firmaTipleri?.length > 1) params.set("tip", idsToSlugs(firmaFilterState.firmaTipleri).join(","));
+      if (firmaFilterState.firmaOlcekleri?.length) params.set("olcek", idsToSlugs(firmaFilterState.firmaOlcekleri).join(","));
+      if (firmaFilterState.iller?.length) params.set("il", idsToSlugs(firmaFilterState.iller).join(","));
       if (firmaFilterState.moq) params.set("moq", firmaFilterState.moq);
       if (firmaFilterState.junctionFilters) {
         Object.entries(firmaFilterState.junctionFilters).forEach(([key, values]) => {
-          if (values.length > 0) params.set(slugifyTr(key), values.join(","));
+          if (values.length > 0) params.set(slugifyTr(key), idsToSlugs(values).join(","));
         });
       }
-      if (firmaFilterState.uretimSatisKategoriIds?.length) params.set("us_kategori", firmaFilterState.uretimSatisKategoriIds.join(","));
-      if (firmaFilterState.uretimSatisGrupIds?.length) params.set("us_grup", firmaFilterState.uretimSatisGrupIds.join(","));
-      if (firmaFilterState.uretimSatisTurIds?.length) params.set("us_tur", firmaFilterState.uretimSatisTurIds.join(","));
+      if (firmaFilterState.uretimSatisKategoriIds?.length) params.set("us_kategori", idsToSlugs(firmaFilterState.uretimSatisKategoriIds).join(","));
+      if (firmaFilterState.uretimSatisGrupIds?.length) params.set("us_grup", idsToSlugs(firmaFilterState.uretimSatisGrupIds).join(","));
+      if (firmaFilterState.uretimSatisTurIds?.length) params.set("us_tur", idsToSlugs(firmaFilterState.uretimSatisTurIds).join(","));
     }
 
     const qs = params.toString();
@@ -224,7 +229,7 @@ export default function TekRehber() {
     if (location.pathname + location.search !== fullPath) {
       navigate(fullPath, { replace: true });
     }
-  }, [selectedFirmaTuru, selectedFirmaTuruName, firmaFilterState, firmaTipleriData]);
+  }, [selectedFirmaTuru, selectedFirmaTuruName, firmaFilterState, firmaTipleriData, idToSlug]);
 
   // Click outside
   useEffect(() => {
