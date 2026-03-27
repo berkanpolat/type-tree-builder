@@ -527,6 +527,51 @@ export default function TekRehber() {
     const term = searchTerm.trim();
     if (!term) return;
     setShowDropdown(false);
+
+    // Search firma_uretim_satis taxonomy for matching product names
+    const { data: uretimRows } = await supabase
+      .from("firma_uretim_satis")
+      .select("kategori_id, grup_id, tur_id");
+
+    if (uretimRows && uretimRows.length > 0) {
+      const allIds = new Set<string>();
+      uretimRows.forEach((r) => { allIds.add(r.kategori_id); allIds.add(r.grup_id); allIds.add(r.tur_id); });
+
+      const { data: nameRows } = await supabase
+        .from("firma_bilgi_secenekleri")
+        .select("id, name")
+        .in("id", [...allIds]);
+
+      if (nameRows) {
+        const lowerTerm = term.toLowerCase();
+        // Check tür first (most specific), then grup, then kategori
+        const turIds = new Set(uretimRows.map((r) => r.tur_id));
+        const matchingTurIds = nameRows.filter((n) => turIds.has(n.id) && n.name.toLowerCase().includes(lowerTerm)).map((n) => n.id);
+        if (matchingTurIds.length > 0) {
+          setUretimSatisFilter({ column: "tur_id", ids: matchingTurIds });
+          setAppliedSearchTerm("");
+          return;
+        }
+
+        const grupIds = new Set(uretimRows.map((r) => r.grup_id));
+        const matchingGrupIds = nameRows.filter((n) => grupIds.has(n.id) && n.name.toLowerCase().includes(lowerTerm)).map((n) => n.id);
+        if (matchingGrupIds.length > 0) {
+          setUretimSatisFilter({ column: "grup_id", ids: matchingGrupIds });
+          setAppliedSearchTerm("");
+          return;
+        }
+
+        const kategoriIds = new Set(uretimRows.map((r) => r.kategori_id));
+        const matchingKatIds = nameRows.filter((n) => kategoriIds.has(n.id) && n.name.toLowerCase().includes(lowerTerm)).map((n) => n.id);
+        if (matchingKatIds.length > 0) {
+          setUretimSatisFilter({ column: "kategori_id", ids: matchingKatIds });
+          setAppliedSearchTerm("");
+          return;
+        }
+      }
+    }
+
+    // Fallback: search by firma name
     setUretimSatisFilter(null);
     setAppliedSearchTerm(term);
   }, [searchTerm]);
