@@ -177,8 +177,12 @@ const AppContent = () => {
 
       <div className={showPublicChrome ? "pb-20 md:pb-0 h-[100dvh] md:h-auto overflow-y-auto md:overflow-visible overscroll-none" : ""}>
         <Suspense fallback={<PageLoader />}>
-          <AnimatePresence initial={false}>
-            <PageTransition key={location.pathname}>
+      <AnimatePresence initial={false}>
+            <PageTransition key={
+              location.pathname.startsWith("/firmalar") ? "/firmalar"
+              : location.pathname.startsWith("/tekpazar") ? "/tekpazar"
+              : location.pathname
+            }>
               <Routes location={location}>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/test-index" element={<Index />} />
