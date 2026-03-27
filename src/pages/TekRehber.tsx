@@ -753,8 +753,8 @@ export default function TekRehber() {
           onSearchResultClick={handleSearchResultClick}
           searchRef={searchRef as React.RefObject<HTMLDivElement>}
           firmaTuruOptions={firmaTurleri}
-          selectedFirmaTuru={selectedFirmaTuru}
-          onFirmaTuruChange={handleFirmaTuruChange}
+          selectedFirmaTuru={searchFirmaTuru}
+          onFirmaTuruChange={setSearchFirmaTuru}
         />
 
         {(appliedSearchTerm || uretimSatisFilter) && (
