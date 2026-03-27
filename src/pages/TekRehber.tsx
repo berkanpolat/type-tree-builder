@@ -150,6 +150,24 @@ export default function TekRehber() {
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter]);
 
+  // Fetch all slug mappings once (firma_bilgi_secenekleri + firma_tipleri)
+  useEffect(() => {
+    const fetchSlugs = async () => {
+      const [secRes, tipRes] = await Promise.all([
+        supabase.from("firma_bilgi_secenekleri").select("id, slug"),
+        supabase.from("firma_tipleri").select("id, slug"),
+      ]);
+      const i2s: Record<string, string> = {};
+      const s2i: Record<string, string> = {};
+      [...(secRes.data || []), ...(tipRes.data || [])].forEach((r: any) => {
+        if (r.slug) { i2s[r.id] = r.slug; s2i[r.slug] = r.id; }
+      });
+      setIdToSlug(i2s);
+      setSlugToId(s2i);
+    };
+    fetchSlugs();
+  }, []);
+
   // Fetch firma tipleri for the selected tür (for URL slugs)
   useEffect(() => {
     if (!selectedFirmaTuru) { setFirmaTipleriData([]); return; }
