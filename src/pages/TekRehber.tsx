@@ -274,24 +274,24 @@ export default function TekRehber() {
               });
             }
 
-            // Restore filters from query params
+            // Restore filters from query params (slugs → IDs)
             const searchParams = new URLSearchParams(location.search);
             if (searchParams.toString()) {
               const restored: Partial<FirmaFilterState> = {};
               const tipParam = searchParams.get("tip");
-              if (tipParam) restored.firmaTipleri = tipParam.split(",").filter(Boolean);
+              if (tipParam) restored.firmaTipleri = slugsToIds(tipParam.split(",").filter(Boolean));
               const olcekParam = searchParams.get("olcek");
-              if (olcekParam) restored.firmaOlcekleri = olcekParam.split(",").filter(Boolean);
+              if (olcekParam) restored.firmaOlcekleri = slugsToIds(olcekParam.split(",").filter(Boolean));
               const ilParam = searchParams.get("il");
-              if (ilParam) restored.iller = ilParam.split(",").filter(Boolean);
+              if (ilParam) restored.iller = slugsToIds(ilParam.split(",").filter(Boolean));
               const moqParam = searchParams.get("moq");
               if (moqParam) restored.moq = moqParam;
               const usKategori = searchParams.get("us_kategori");
-              if (usKategori) restored.uretimSatisKategoriIds = usKategori.split(",").filter(Boolean);
+              if (usKategori) restored.uretimSatisKategoriIds = slugsToIds(usKategori.split(",").filter(Boolean));
               const usGrup = searchParams.get("us_grup");
-              if (usGrup) restored.uretimSatisGrupIds = usGrup.split(",").filter(Boolean);
+              if (usGrup) restored.uretimSatisGrupIds = slugsToIds(usGrup.split(",").filter(Boolean));
               const usTur = searchParams.get("us_tur");
-              if (usTur) restored.uretimSatisTurIds = usTur.split(",").filter(Boolean);
+              if (usTur) restored.uretimSatisTurIds = slugsToIds(usTur.split(",").filter(Boolean));
 
               const hasFilters = Object.values(restored).some(v => v && (typeof v === "string" ? v.length > 0 : (v as string[]).length > 0));
               if (hasFilters) {
