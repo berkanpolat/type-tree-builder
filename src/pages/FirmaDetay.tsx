@@ -294,6 +294,20 @@ export default function FirmaDetay() {
     fallbackDescription: "Firma profili, üretim kapasitesi ve iletişim bilgileri.",
   });
 
+  // LocalBusiness JSON-LD
+  useEffect(() => {
+    if (!firma) return;
+    injectJsonLd("seo-localbiz-ld", buildLocalBusinessSchema({
+      name: firma.firma_unvani,
+      description: firma.firma_hakkinda || undefined,
+      logo: firma.logo_url || undefined,
+      url: `https://tekstilas.com/${slug || ""}`,
+      phone: firma.firma_iletisim_numarasi || undefined,
+      email: firma.firma_iletisim_email || undefined,
+    }));
+    return () => removeJsonLd("seo-localbiz-ld");
+  }, [firma, slug]);
+
   const scrollToSection = (sectionId: string) => {
     setActiveMenu(sectionId);
     const el = sectionRefs.current[sectionId];
