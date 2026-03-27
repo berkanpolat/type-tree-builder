@@ -244,8 +244,9 @@ export default function TekRehber() {
   const locationState = location.state as { firmaTurId?: string; firmaTipId?: string; firmaTurName?: string } | null;
   const hasIncomingState = !!(locationState?.firmaTurId);
 
-  // Fetch firma türleri + resolve URL slugs
+  // Fetch firma türleri + resolve URL slugs (wait for slug map)
   useEffect(() => {
+    if (Object.keys(slugToId).length === 0 && location.search) return; // wait for slug map if there are query params
     supabase.from("firma_turleri").select("id, name, slug").order("name").then(({ data }) => {
       if (data) {
         const sorted = sortFirmaTurleri(data.map(d => ({ id: d.id, name: d.name })));
