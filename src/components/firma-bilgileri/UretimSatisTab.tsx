@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import { useToast } from "@/hooks/use-toast";
 import { Factory, Plus, X, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ interface AddedItem {
   kategori_name: string;
 }
 
-type RolType = "uretici" | "satici" | "her_ikisi";
+type RolType = "uretici";
 
 const URUN_KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 
@@ -602,8 +602,6 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
     return <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />;
   }
 
-  const showUretim = rol === "uretici" || rol === "her_ikisi";
-  const showSatis = rol === "satici" || rol === "her_ikisi";
 
   return (
     <div className="space-y-6">
