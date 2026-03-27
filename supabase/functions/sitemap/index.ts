@@ -26,45 +26,111 @@ function formatDate(d: string): string {
   return d ? new Date(d).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
 }
 
-serve(async () => {
+function buildUrlEntry(loc: string, lastmod: string, changefreq: string, priority: string): string {
+  return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`;
+}
+
+function wrapUrlset(urls: string[]): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
+}
+
+const xmlHeaders = {
+  "Content-Type": "application/xml; charset=utf-8",
+  "Cache-Control": "public, max-age=3600",
+  "Access-Control-Allow-Origin": "*",
+};
+
+serve(async (req) => {
   try {
+    const url = new URL(req.url);
+    const segment = url.searchParams.get("segment");
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(supabaseUrl, supabaseKey);
+    const today = new Date().toISOString().split("T")[0];
 
+    // Sitemap Index — returns list of sub-sitemaps
+    if (!segment) {
+      const sitemapIndex = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>${BASE_URL}/sitemap.xml?segment=statik</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/sitemap.xml?segment=firmalar</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/sitemap.xml?segment=urunler</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>${BASE_URL}/sitemap.xml?segment=ihaleler</loc>
+    <lastmod>${today}</lastmod>
+  </sitemap>
+</sitemapindex>`;
+      return new Response(sitemapIndex, { headers: xmlHeaders });
+    }
+
+    // Static pages segment
+    if (segment === "statik") {
+      const urls = STATIC_PAGES.map(p =>
+        buildUrlEntry(`${BASE_URL}${p.path}`, today, p.changefreq, p.priority)
+      );
+      return new Response(wrapUrlset(urls), { headers: xmlHeaders });
+    }
+
+    // Firmalar segment
+    if (segment === "firmalar") {
+      const { data } = await sb.from("firmalar").select("slug, updated_at").not("slug", "is", null);
+      const urls = (data || []).map(f =>
+        buildUrlEntry(`${BASE_URL}/${escapeXml(f.slug)}`, formatDate(f.updated_at), "weekly", "0.8")
+      );
+      return new Response(wrapUrlset(urls), { headers: xmlHeaders });
+    }
+
+    // Urunler segment
+    if (segment === "urunler") {
+      const { data } = await sb.from("urunler").select("slug, updated_at, durum").eq("durum", "aktif").not("slug", "is", null);
+      const urls = (data || []).map(u =>
+        buildUrlEntry(`${BASE_URL}/urunler/${escapeXml(u.slug)}`, formatDate(u.updated_at), "weekly", "0.8")
+      );
+      return new Response(wrapUrlset(urls), { headers: xmlHeaders });
+    }
+
+    // Ihaleler segment
+    if (segment === "ihaleler") {
+      const { data } = await sb.from("ihaleler").select("slug, updated_at, durum").eq("durum", "devam_ediyor").not("slug", "is", null);
+      const urls = (data || []).map(i =>
+        buildUrlEntry(`${BASE_URL}/ihaleler/${escapeXml(i.slug)}`, formatDate(i.updated_at), "weekly", "0.8")
+      );
+      return new Response(wrapUrlset(urls), { headers: xmlHeaders });
+    }
+
+    // Unknown segment — return all in one (backward compat)
     const [firmaRes, ihaleRes, urunRes] = await Promise.all([
       sb.from("firmalar").select("slug, updated_at").not("slug", "is", null),
       sb.from("ihaleler").select("slug, updated_at, durum").eq("durum", "devam_ediyor").not("slug", "is", null),
       sb.from("urunler").select("slug, updated_at, durum").eq("durum", "aktif").not("slug", "is", null),
     ]);
 
-    const today = new Date().toISOString().split("T")[0];
-
     let urls = STATIC_PAGES.map(p =>
-      `  <url>\n    <loc>${BASE_URL}${p.path}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${p.changefreq}</changefreq>\n    <priority>${p.priority}</priority>\n  </url>`
+      buildUrlEntry(`${BASE_URL}${p.path}`, today, p.changefreq, p.priority)
     );
 
     for (const f of firmaRes.data || []) {
-      urls.push(`  <url>\n    <loc>${BASE_URL}/${escapeXml(f.slug)}</loc>\n    <lastmod>${formatDate(f.updated_at)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+      urls.push(buildUrlEntry(`${BASE_URL}/${escapeXml(f.slug)}`, formatDate(f.updated_at), "weekly", "0.8"));
     }
-
     for (const i of ihaleRes.data || []) {
-      urls.push(`  <url>\n    <loc>${BASE_URL}/ihaleler/${escapeXml(i.slug)}</loc>\n    <lastmod>${formatDate(i.updated_at)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+      urls.push(buildUrlEntry(`${BASE_URL}/ihaleler/${escapeXml(i.slug)}`, formatDate(i.updated_at), "weekly", "0.8"));
     }
-
     for (const u of urunRes.data || []) {
-      urls.push(`  <url>\n    <loc>${BASE_URL}/urunler/${escapeXml(u.slug)}</loc>\n    <lastmod>${formatDate(u.updated_at)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+      urls.push(buildUrlEntry(`${BASE_URL}/urunler/${escapeXml(u.slug)}`, formatDate(u.updated_at), "weekly", "0.8"));
     }
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join("\n")}\n</urlset>`;
-
-    return new Response(xml, {
-      headers: {
-        "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
+    return new Response(wrapUrlset(urls), { headers: xmlHeaders });
   } catch (e) {
     console.error("Sitemap error:", e);
     return new Response("Internal Server Error", { status: 500 });
