@@ -11,6 +11,7 @@ import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
+import SeoBreadcrumb, { type BreadcrumbItem } from "@/components/SeoBreadcrumb";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import VerifiedBadge from "@/components/VerifiedBadge";
