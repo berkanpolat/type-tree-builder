@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef, TouchEvent as ReactTouchEvent } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
+import { injectJsonLd, removeJsonLd, buildProductSchema } from "@/lib/seo-jsonld";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -214,6 +215,22 @@ export default function UrunDetay() {
     fallbackTitle: "Ürün Detay | TekPazar | Tekstil A.Ş.",
     fallbackDescription: "Ürün detayları, fiyatları ve teknik özellikleri.",
   });
+
+  // Product JSON-LD
+  useEffect(() => {
+    if (!urun) return;
+    injectJsonLd("seo-product-ld", buildProductSchema({
+      name: urun.baslik,
+      description: urun.aciklama || undefined,
+      image: urun.foto_url || undefined,
+      price: urun.fiyat || undefined,
+      currency: urun.para_birimi || "TRY",
+      sku: urun.urun_no,
+      slug: slugParam || undefined,
+      sellerName: firma?.firma_unvani || undefined,
+    }));
+    return () => removeJsonLd("seo-product-ld");
+  }, [urun, firma, slugParam]);
 
   useEffect(() => {
     const init = async () => {

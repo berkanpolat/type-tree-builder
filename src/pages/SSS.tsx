@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
+import { injectJsonLd, removeJsonLd, buildFAQSchema } from "@/lib/seo-jsonld";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import Footer from "@/components/Footer";
@@ -79,6 +80,14 @@ const sssData = [
 
 export default function SSS() {
   useSeoMeta({ slug: "/sss", fallbackTitle: "Sıkça Sorulan Sorular | Tekstil A.Ş." });
+
+  // FAQPage JSON-LD
+  useEffect(() => {
+    injectJsonLd("seo-faq-ld", buildFAQSchema(
+      sssData.map((item) => ({ question: item.q, answer: item.a }))
+    ));
+    return () => removeJsonLd("seo-faq-ld");
+  }, []);
   const navigate = useNavigate();
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);

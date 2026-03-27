@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
+import { injectJsonLd, removeJsonLd, buildEventSchema } from "@/lib/seo-jsonld";
 import ihaleDefaultCover from "@/assets/ihale-default-cover.png";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
@@ -276,6 +277,21 @@ export default function IhaleDetay() {
     fallbackTitle: "İhale Detay | Tekstil A.Ş.",
     fallbackDescription: "İhale detayları, şartları ve başvuru bilgileri.",
   });
+
+  // Event JSON-LD for ihale
+  useEffect(() => {
+    if (!ihale) return;
+    injectJsonLd("seo-event-ld", buildEventSchema({
+      name: ihale.baslik,
+      description: ihale.aciklama || undefined,
+      startDate: ihale.baslangic_tarihi || undefined,
+      endDate: ihale.bitis_tarihi || undefined,
+      slug: slugParam || undefined,
+      image: allImages[0] || undefined,
+      organizerName: firma?.firma_unvani || undefined,
+    }));
+    return () => removeJsonLd("seo-event-ld");
+  }, [ihale, firma, slugParam, allImages]);
 
   const countdown = useCountdown(ihale?.bitis_tarihi);
   const isOwner = currentUserId && ihale?.user_id === currentUserId;
