@@ -609,7 +609,7 @@ export default function TekRehber() {
       setShowDropdown(results.length > 0);
     }, 250);
     return () => clearTimeout(timer);
-  }, [searchTerm, firmaTurleri, urunTaxNodes]);
+  }, [searchTerm]);
 
   const handleSearchResultClick = (result: SearchResult) => {
     setSearchTerm(result.name);
