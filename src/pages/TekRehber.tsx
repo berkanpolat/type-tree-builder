@@ -678,8 +678,8 @@ export default function TekRehber() {
   const handleFilterChange = useCallback((newState: FirmaFilterState) => {
     let path = selectedFirmaTuruName ? `/firmalar/${slugifyTr(selectedFirmaTuruName)}` : `/firmalar`;
 
-    // Single tip → path segment
-    if (newState.firmaTipleri.length === 1) {
+    // Single tip → path segment (only if firma türü is selected)
+    if (selectedFirmaTuruName && newState.firmaTipleri.length === 1) {
       const tipSlugVal = idToSlug[newState.firmaTipleri[0]];
       if (tipSlugVal) path += `/${tipSlugVal}`;
     }
