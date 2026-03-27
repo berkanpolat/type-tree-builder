@@ -406,7 +406,7 @@ const LandingPage = () => {
         <div className="relative max-w-7xl mx-auto px-6 py-20">
           <div className="grid lg:grid-cols-2 gap-8 mb-12">
             <h2 className="text-3xl lg:text-4xl font-bold text-primary-foreground">
-              Tekstil A.Ş. Üyesi Olmanın Avantajları:
+              Tekstil B2B Platformu Üyelik Avantajları
             </h2>
             <p className="text-primary-foreground/80 text-lg leading-relaxed">
               Tedarikçi veya müşteri aramaya son. Aradığınız üretim kapasitesine, sertifikalara ve ürün
@@ -430,7 +430,7 @@ const LandingPage = () => {
       {/* How It Works */}
       <section className="bg-muted py-20">
         <div className="max-w-7xl mx-auto px-6">
-          <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">Nasıl Çalışır?</h2>
+          <h2 className="text-3xl lg:text-4xl font-bold text-foreground mb-4">B2B Tekstil Platformu Nasıl Çalışır?</h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-2xl">
             Tekstil sektörünün tüm paydaşlarını tek platformda buluşturan Tekstil A.Ş.
             iş yapmayı hızlandırır, süreci sadeleştirir ve doğru bağlantıyı kurmanı sağlar.
@@ -518,7 +518,7 @@ const LandingPage = () => {
       <section className="bg-background py-20">
         <div className="max-w-7xl mx-auto px-6">
           <h2 className="text-3xl lg:text-4xl font-bold text-foreground text-center mb-8">
-            Sizin İçin Neler Var?
+            Tekstil Tedarik Zinciriniz İçin Neler Var?
           </h2>
           <div className="flex justify-center mb-8 md:mb-12">
             <div className="inline-flex items-center bg-muted rounded-full p-1 gap-1 overflow-x-auto max-w-full scrollbar-hide">
@@ -588,7 +588,7 @@ const LandingPage = () => {
               Tekstil Profesyonellerine Özel
             </span>
             <h2 className="text-3xl lg:text-4xl font-bold text-foreground">
-              Sektör Liderlerinin Arasına<br />Girmeye Hazırsan
+              Tekstil Sektöründe Dijital<br />Dönüşüme Hazırsan
             </h2>
           </div>
 

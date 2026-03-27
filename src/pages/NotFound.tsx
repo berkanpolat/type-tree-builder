@@ -106,6 +106,19 @@ const NotFound = () => {
               </Link>
             ))}
           </div>
+
+          {/* Bize Ulaşın */}
+          <p className="text-muted-foreground text-xs">
+            Bir hata olduğunu düşünüyorsanız{" "}
+            <Link to="/iletisim" className="text-secondary hover:underline font-medium">
+              bize ulaşın
+            </Link>{" "}
+            veya{" "}
+            <a href="mailto:destek@tekstilas.com" className="text-secondary hover:underline font-medium">
+              destek@tekstilas.com
+            </a>{" "}
+            adresine yazın.
+          </p>
         </div>
       </main>
 
