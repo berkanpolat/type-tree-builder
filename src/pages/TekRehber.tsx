@@ -228,29 +228,16 @@ export default function TekRehber() {
       }
     }
 
-    // No turSlug → redirect to default
-    if (!turSlug) {
-      const tedarikci = firmaTurleriAll.find(t => t.name.toLowerCase().includes("tedarikçi"));
-      const def = tedarikci || firmaTurleriAll[0];
-      if (def?.slug) navigate(`/firmalar/${def.slug}`, { replace: true });
-      return;
-    }
-
-    // Invalid turSlug → redirect to default
-    if (!selectedTur) {
-      const tedarikci = firmaTurleriAll.find(t => t.name.toLowerCase().includes("tedarikçi"));
-      const def = tedarikci || firmaTurleriAll[0];
-      if (def?.slug) navigate(`/firmalar/${def.slug}`, { replace: true });
+    // No turSlug → show all firms (no redirect)
+    // Invalid turSlug → redirect to /firmalar
+    if (turSlug && !selectedTur) {
+      navigate(`/firmalar`, { replace: true });
     }
   }, [firmaTurleriAll, turSlug, selectedTur, locationState, idToSlug, slugsReady, navigate]);
 
   // === SEARCH (ephemeral) ===
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
-  // Hero dropdown firma türü — only affects search, NOT the firma list
-  const [searchFirmaTuru, setSearchFirmaTuru] = useState(selectedFirmaTuru);
-  // Keep searchFirmaTuru in sync when URL-derived selectedFirmaTuru changes
-  useEffect(() => { setSearchFirmaTuru(selectedFirmaTuru); }, [selectedFirmaTuru]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -679,19 +666,20 @@ export default function TekRehber() {
 
   // === FILTER CHANGE → URL NAVIGATION ===
   const handleFirmaTuruChange = useCallback((turId: string) => {
+    // Toggle: if already selected, deselect by going to /firmalar
+    if (turId === selectedFirmaTuru) {
+      navigate(`/firmalar`);
+      return;
+    }
     const tur = firmaTurleriAll.find(t => t.id === turId);
     if (tur?.slug) navigate(`/firmalar/${tur.slug}`);
-  }, [firmaTurleriAll, navigate]);
+  }, [firmaTurleriAll, selectedFirmaTuru, navigate]);
 
   const handleFilterChange = useCallback((newState: FirmaFilterState) => {
-    if (!selectedFirmaTuruName) return;
-    const turNameSlug = slugifyTr(selectedFirmaTuruName);
-    if (!turNameSlug) return;
+    let path = selectedFirmaTuruName ? `/firmalar/${slugifyTr(selectedFirmaTuruName)}` : `/firmalar`;
 
-    let path = `/firmalar/${turNameSlug}`;
-
-    // Single tip → path segment
-    if (newState.firmaTipleri.length === 1) {
+    // Single tip → path segment (only if firma türü is selected)
+    if (selectedFirmaTuruName && newState.firmaTipleri.length === 1) {
       const tipSlugVal = idToSlug[newState.firmaTipleri[0]];
       if (tipSlugVal) path += `/${tipSlugVal}`;
     }
@@ -829,10 +817,7 @@ export default function TekRehber() {
           showDropdown={showDropdown}
           onShowDropdown={setShowDropdown}
           onSearchResultClick={handleSearchResultClick}
-          searchRef={searchRef as React.RefObject<HTMLDivElement>}
-          firmaTuruOptions={firmaTurleri}
-          selectedFirmaTuru={searchFirmaTuru}
-          onFirmaTuruChange={setSearchFirmaTuru}
+           searchRef={searchRef as React.RefObject<HTMLDivElement>}
         />
 
         {(appliedSearchTerm || uretimSatisFilter) && (
