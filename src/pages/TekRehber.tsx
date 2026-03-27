@@ -11,6 +11,7 @@ import { useBanner } from "@/hooks/use-banner";
 import PazarHeader from "@/components/PazarHeader";
 import PublicHeader from "@/components/PublicHeader";
 import FirmaFiltreler, { type FirmaFilterState } from "@/components/anasayfa/FirmaFiltreler";
+import SeoBreadcrumb, { type BreadcrumbItem } from "@/components/SeoBreadcrumb";
 import Footer from "@/components/Footer";
 import { useToast } from "@/hooks/use-toast";
 import VerifiedBadge from "@/components/VerifiedBadge";
@@ -127,12 +128,12 @@ export default function TekRehber() {
   const [selectedFirmaTuruName, setSelectedFirmaTuruName] = useSessionState("selectedFirmaTuruName", "");
   const [firmaFilterState, setFirmaFilterState] = useSessionState<FirmaFilterState | null>("firmaFilterState", null);
   const [firmaFavSet, setFirmaFavSet] = useState<Set<string>>(new Set());
+  const [firmaTipleriData, setFirmaTipleriData] = useState<{ id: string; name: string; slug: string | null }[]>([]);
 
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
-  
 
   // Product taxonomy for search
   const [urunTaxNodes, setUrunTaxNodes] = useState<UrunTaxNode[]>([]);
@@ -145,6 +146,64 @@ export default function TekRehber() {
 
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter]);
+
+  // Fetch firma tipleri for the selected tür (for URL slugs)
+  useEffect(() => {
+    if (!selectedFirmaTuru) { setFirmaTipleriData([]); return; }
+    supabase.from("firma_tipleri").select("id, name, slug").eq("firma_turu_id", selectedFirmaTuru).order("name").then(({ data }) => {
+      setFirmaTipleriData((data || []) as { id: string; name: string; slug: string | null }[]);
+    });
+  }, [selectedFirmaTuru]);
+
+  // Sync URL when filters change (path + query params)
+  useEffect(() => {
+    if (turSlug && !urlAppliedRef.current) return;
+
+    if (!selectedFirmaTuru || !selectedFirmaTuruName) {
+      if (location.pathname !== "/firmalar") {
+        navigate("/firmalar", { replace: true });
+      }
+      return;
+    }
+
+    const turNameSlug = slugifyTr(selectedFirmaTuruName);
+    if (!turNameSlug) return;
+
+    let path = `/firmalar/${turNameSlug}`;
+
+    // Add tip slug if exactly one tip is selected
+    const selectedTipIds = firmaFilterState?.firmaTipleri || [];
+    if (selectedTipIds.length === 1 && firmaTipleriData.length > 0) {
+      const tipData = firmaTipleriData.find(t => t.id === selectedTipIds[0]);
+      if (tipData?.slug) {
+        path += `/${tipData.slug}`;
+      }
+    }
+
+    // Build query params from firmaFilterState
+    const params = new URLSearchParams();
+    if (firmaFilterState) {
+      if (firmaFilterState.firmaTipleri?.length > 1) params.set("tip", firmaFilterState.firmaTipleri.join(","));
+      if (firmaFilterState.firmaOlcekleri?.length) params.set("olcek", firmaFilterState.firmaOlcekleri.join(","));
+      if (firmaFilterState.iller?.length) params.set("il", firmaFilterState.iller.join(","));
+      if (firmaFilterState.moq) params.set("moq", firmaFilterState.moq);
+      if (firmaFilterState.junctionFilters) {
+        Object.entries(firmaFilterState.junctionFilters).forEach(([key, values]) => {
+          if (values.length > 0) params.set(slugifyTr(key), values.join(","));
+        });
+      }
+      if (firmaFilterState.uretimSatisKategoriIds?.length) params.set("us_kategori", firmaFilterState.uretimSatisKategoriIds.join(","));
+      if (firmaFilterState.uretimSatisGrupIds?.length) params.set("us_grup", firmaFilterState.uretimSatisGrupIds.join(","));
+      if (firmaFilterState.uretimSatisTurIds?.length) params.set("us_tur", firmaFilterState.uretimSatisTurIds.join(","));
+    }
+
+    const qs = params.toString();
+    const fullPath = qs ? `${path}?${qs}` : path;
+
+    if (location.pathname + location.search !== fullPath) {
+      navigate(fullPath, { replace: true });
+    }
+  }, [selectedFirmaTuru, selectedFirmaTuruName, firmaFilterState, firmaTipleriData]);
 
   // Click outside
   useEffect(() => {
@@ -181,12 +240,40 @@ export default function TekRehber() {
                   const matchedTip = (tipData as any[]).find((t: any) => t.slug === tipSlug);
                   if (matchedTip) {
                     setFirmaFilterState((prev: FirmaFilterState | null) => ({
-                      ...(prev || { firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
+                      ...(prev || { firmaTipleri: [], firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
                       firmaTipleri: [matchedTip.id],
                     }));
                   }
                 }
               });
+            }
+
+            // Restore filters from query params
+            const searchParams = new URLSearchParams(location.search);
+            if (searchParams.toString()) {
+              const restored: Partial<FirmaFilterState> = {};
+              const tipParam = searchParams.get("tip");
+              if (tipParam) restored.firmaTipleri = tipParam.split(",").filter(Boolean);
+              const olcekParam = searchParams.get("olcek");
+              if (olcekParam) restored.firmaOlcekleri = olcekParam.split(",").filter(Boolean);
+              const ilParam = searchParams.get("il");
+              if (ilParam) restored.iller = ilParam.split(",").filter(Boolean);
+              const moqParam = searchParams.get("moq");
+              if (moqParam) restored.moq = moqParam;
+              const usKategori = searchParams.get("us_kategori");
+              if (usKategori) restored.uretimSatisKategoriIds = usKategori.split(",").filter(Boolean);
+              const usGrup = searchParams.get("us_grup");
+              if (usGrup) restored.uretimSatisGrupIds = usGrup.split(",").filter(Boolean);
+              const usTur = searchParams.get("us_tur");
+              if (usTur) restored.uretimSatisTurIds = usTur.split(",").filter(Boolean);
+
+              const hasFilters = Object.values(restored).some(v => v && (typeof v === "string" ? v.length > 0 : (v as string[]).length > 0));
+              if (hasFilters) {
+                setFirmaFilterState((prev: FirmaFilterState | null) => ({
+                  ...(prev || { firmaTipleri: [], firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
+                  ...restored,
+                }));
+              }
             }
             return;
           }
@@ -553,9 +640,9 @@ export default function TekRehber() {
     setSelectedFirmaTuru(value);
     const turName = firmaTurleri.find((t) => t.id === value)?.name || "";
     setSelectedFirmaTuruName(turName);
-    // Update URL with slug
-    const slug = slugifyTr(turName);
-    if (slug) navigate(`/firmalar/${slug}`, { replace: true });
+    // Reset tip filter when tür changes
+    setFirmaFilterState(null);
+    // URL will be updated by the sync effect
   };
 
   const toggleFirmaFavorite = async (firmaId: string, isFav: boolean) => {
@@ -639,6 +726,25 @@ export default function TekRehber() {
       {currentUserId ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
+        {/* SEO Breadcrumb */}
+        <SeoBreadcrumb items={(() => {
+          const items: BreadcrumbItem[] = [
+            { label: "TekRehber", href: "/firmalar" },
+          ];
+          if (selectedFirmaTuruName) {
+            const turSlugVal = slugifyTr(selectedFirmaTuruName);
+            items.push({ label: selectedFirmaTuruName, href: `/firmalar/${turSlugVal}` });
+
+            const selectedTipIds = firmaFilterState?.firmaTipleri || [];
+            if (selectedTipIds.length === 1 && firmaTipleriData.length > 0) {
+              const tipData = firmaTipleriData.find(t => t.id === selectedTipIds[0]);
+              if (tipData) {
+                items.push({ label: tipData.name, href: `/firmalar/${turSlugVal}/${tipData.slug || slugifyTr(tipData.name)}` });
+              }
+            }
+          }
+          return items;
+        })()} />
         <HeroSearchSection
           label="ÜRETİCİ / TEDARİKÇİ"
           placeholder="Üretici veya tedarikçi ara..."
