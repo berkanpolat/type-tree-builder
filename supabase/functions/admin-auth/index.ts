@@ -4682,8 +4682,16 @@ Deno.serve(async (req) => {
       const paketIds = [...new Set((data || []).filter((a: any) => a.sonuc_paket_id).map((a: any) => a.sonuc_paket_id))];
       const paketRes = paketIds.length > 0 ? await supabase.from("paketler").select("id, ad").in("id", paketIds) : { data: [] };
       const paketMap = new Map((paketRes.data || []).map((p: any) => [p.id, p.ad]));
+
+      const yetkiliIds = [...new Set((data || []).filter((a: any) => a.yetkili_id).map((a: any) => a.yetkili_id))];
+      const yetkiliRes = yetkiliIds.length > 0 ? await supabase.from("firma_yetkililer").select("id, ad, soyad").in("id", yetkiliIds) : { data: [] };
+      const yetkiliMap = new Map((yetkiliRes.data || []).map((y: any) => [y.id, `${y.ad} ${y.soyad}`]));
+
+      // Get firma name
+      const firmaRes = await supabase.from("firmalar").select("id, firma_unvani").eq("id", firmaId).single();
+      const firmaUnvani = firmaRes.data?.firma_unvani || "";
       
-      const enriched = (data || []).map((a: any) => ({ ...a, admin_ad: adminMap.get(a.admin_id) || "—", sonuc_paket_ad: a.sonuc_paket_id ? paketMap.get(a.sonuc_paket_id) || null : null }));
+      const enriched = (data || []).map((a: any) => ({ ...a, admin_ad: adminMap.get(a.admin_id) || "—", firma_unvani: firmaUnvani, sonuc_paket_ad: a.sonuc_paket_id ? paketMap.get(a.sonuc_paket_id) || null : null, yetkili_ad: a.yetkili_id ? yetkiliMap.get(a.yetkili_id) || null : null }));
       return jsonResponse({ aksiyonlar: enriched });
     }
 
