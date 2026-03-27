@@ -194,10 +194,13 @@ export default function UrunDetay() {
   const [pinchStartScale, setPinchStartScale] = useState(1);
   const imageContainerRef = useRef<HTMLDivElement>(null);
 
-  // Breadcrumb names
+  // Breadcrumb names + slugs
   const [breadcrumbKategori, setBreadcrumbKategori] = useState("");
   const [breadcrumbGrup, setBreadcrumbGrup] = useState("");
   const [breadcrumbTur, setBreadcrumbTur] = useState("");
+  const [breadcrumbKategoriSlug, setBreadcrumbKategoriSlug] = useState("");
+  const [breadcrumbGrupSlug, setBreadcrumbGrupSlug] = useState("");
+  const [breadcrumbTurSlug, setBreadcrumbTurSlug] = useState("");
 
   // Admin state
   const [isAdminViewing, setIsAdminViewing] = useState(false);
