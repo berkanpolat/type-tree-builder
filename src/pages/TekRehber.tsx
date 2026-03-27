@@ -240,12 +240,40 @@ export default function TekRehber() {
                   const matchedTip = (tipData as any[]).find((t: any) => t.slug === tipSlug);
                   if (matchedTip) {
                     setFirmaFilterState((prev: FirmaFilterState | null) => ({
-                      ...(prev || { firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
+                      ...(prev || { firmaTipleri: [], firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
                       firmaTipleri: [matchedTip.id],
                     }));
                   }
                 }
               });
+            }
+
+            // Restore filters from query params
+            const searchParams = new URLSearchParams(location.search);
+            if (searchParams.toString()) {
+              const restored: Partial<FirmaFilterState> = {};
+              const tipParam = searchParams.get("tip");
+              if (tipParam) restored.firmaTipleri = tipParam.split(",").filter(Boolean);
+              const olcekParam = searchParams.get("olcek");
+              if (olcekParam) restored.firmaOlcekleri = olcekParam.split(",").filter(Boolean);
+              const ilParam = searchParams.get("il");
+              if (ilParam) restored.iller = ilParam.split(",").filter(Boolean);
+              const moqParam = searchParams.get("moq");
+              if (moqParam) restored.moq = moqParam;
+              const usKategori = searchParams.get("us_kategori");
+              if (usKategori) restored.uretimSatisKategoriIds = usKategori.split(",").filter(Boolean);
+              const usGrup = searchParams.get("us_grup");
+              if (usGrup) restored.uretimSatisGrupIds = usGrup.split(",").filter(Boolean);
+              const usTur = searchParams.get("us_tur");
+              if (usTur) restored.uretimSatisTurIds = usTur.split(",").filter(Boolean);
+
+              const hasFilters = Object.values(restored).some(v => v && (typeof v === "string" ? v.length > 0 : (v as string[]).length > 0));
+              if (hasFilters) {
+                setFirmaFilterState((prev: FirmaFilterState | null) => ({
+                  ...(prev || { firmaTipleri: [], firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
+                  ...restored,
+                }));
+              }
             }
             return;
           }
