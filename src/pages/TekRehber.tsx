@@ -726,6 +726,25 @@ export default function TekRehber() {
       {currentUserId ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       <main className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
+        {/* SEO Breadcrumb */}
+        <SeoBreadcrumb items={(() => {
+          const items: BreadcrumbItem[] = [
+            { label: "TekRehber", href: "/firmalar" },
+          ];
+          if (selectedFirmaTuruName) {
+            const turSlugVal = slugifyTr(selectedFirmaTuruName);
+            items.push({ label: selectedFirmaTuruName, href: `/firmalar/${turSlugVal}` });
+
+            const selectedTipIds = firmaFilterState?.firmaTipleri || [];
+            if (selectedTipIds.length === 1 && firmaTipleriData.length > 0) {
+              const tipData = firmaTipleriData.find(t => t.id === selectedTipIds[0]);
+              if (tipData) {
+                items.push({ label: tipData.name, href: `/firmalar/${turSlugVal}/${tipData.slug || slugifyTr(tipData.name)}` });
+              }
+            }
+          }
+          return items;
+        })()} />
         <HeroSearchSection
           label="ÜRETİCİ / TEDARİKÇİ"
           placeholder="Üretici veya tedarikçi ara..."
