@@ -128,12 +128,12 @@ export default function TekRehber() {
   const [selectedFirmaTuruName, setSelectedFirmaTuruName] = useSessionState("selectedFirmaTuruName", "");
   const [firmaFilterState, setFirmaFilterState] = useSessionState<FirmaFilterState | null>("firmaFilterState", null);
   const [firmaFavSet, setFirmaFavSet] = useState<Set<string>>(new Set());
+  const [firmaTipleriData, setFirmaTipleriData] = useState<{ id: string; name: string; slug: string | null }[]>([]);
 
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
-  
 
   // Product taxonomy for search
   const [urunTaxNodes, setUrunTaxNodes] = useState<UrunTaxNode[]>([]);
