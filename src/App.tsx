@@ -202,9 +202,7 @@ const AppContent = () => {
                 <Route path="/urun-kategorisi/:categoryId" element={<UrunKategorisi />} />
                 <Route path="/urun/:slug" element={<UrunDetay />} />
                 <Route path="/urunler/:slug" element={<UrunDetay />} />
-                <Route path="/firmalar" element={<TekRehber />} />
-                <Route path="/firmalar/:turSlug" element={<TekRehber />} />
-                <Route path="/firmalar/:turSlug/:tipSlug" element={<TekRehber />} />
+                <Route path="/firmalar/:turSlug?/:tipSlug?" element={<TekRehber />} />
                 <Route path="/firma/:slug" element={<FirmaDetay />} />
                 <Route path="/mesajlar" element={<Mesajlar />} />
                 <Route path="/favoriler" element={<Favoriler />} />
