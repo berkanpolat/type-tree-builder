@@ -247,6 +247,10 @@ export default function TekRehber() {
   // === SEARCH (ephemeral) ===
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
+  // Hero dropdown firma türü — only affects search, NOT the firma list
+  const [searchFirmaTuru, setSearchFirmaTuru] = useState(selectedFirmaTuru);
+  // Keep searchFirmaTuru in sync when URL-derived selectedFirmaTuru changes
+  useEffect(() => { setSearchFirmaTuru(selectedFirmaTuru); }, [selectedFirmaTuru]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -751,8 +755,8 @@ export default function TekRehber() {
           onSearchResultClick={handleSearchResultClick}
           searchRef={searchRef as React.RefObject<HTMLDivElement>}
           firmaTuruOptions={firmaTurleri}
-          selectedFirmaTuru={selectedFirmaTuru}
-          onFirmaTuruChange={handleFirmaTuruChange}
+          selectedFirmaTuru={searchFirmaTuru}
+          onFirmaTuruChange={setSearchFirmaTuru}
         />
 
         {(appliedSearchTerm || uretimSatisFilter) && (
@@ -778,6 +782,8 @@ export default function TekRehber() {
             firmaTuruName={selectedFirmaTuruName}
             value={firmaFilterState}
             onFilterChange={handleFilterChange}
+            firmaTurleri={firmaTurleri}
+            onFirmaTuruChange={handleFirmaTuruChange}
           />
 
           <div className="flex-1 min-w-0 space-y-4">

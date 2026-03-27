@@ -100,11 +100,13 @@ interface Props {
   firmaTuruName: string;
   value: FirmaFilterState;
   onFilterChange: (state: FirmaFilterState) => void;
+  firmaTurleri?: { id: string; name: string }[];
+  onFirmaTuruChange?: (id: string) => void;
 }
 
 const optionsCache: Record<string, Option[]> = {};
 
-export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, value, onFilterChange }: Props) {
+export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, value, onFilterChange, firmaTurleri: firmaTurleriProp, onFirmaTuruChange }: Props) {
   // Option loading state (UI only)
   const [firmaTipleri, setFirmaTipleri] = useState<Option[]>([]);
   const [kategoriOptions, setKategoriOptions] = useState<Record<string, Option[]>>({});
@@ -399,6 +401,29 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, value, onFi
           </Button>
         )}
       </div>
+
+      {/* Firma Türü filter */}
+      {firmaTurleriProp && firmaTurleriProp.length > 0 && onFirmaTuruChange && (
+        <div className="mb-4 pb-4 border-b border-border">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Firma Türü</p>
+          <div className="flex flex-wrap gap-1.5">
+            {firmaTurleriProp.map((tur) => (
+              <button
+                key={tur.id}
+                onClick={() => onFirmaTuruChange(tur.id)}
+                className={cn(
+                  "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
+                  firmaTuruId === tur.id
+                    ? "bg-secondary text-secondary-foreground border-secondary shadow-sm"
+                    : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"
+                )}
+              >
+                {tur.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {filters.map((filterDef) => {
         if (filterDef.type === "firma_tipleri") {
