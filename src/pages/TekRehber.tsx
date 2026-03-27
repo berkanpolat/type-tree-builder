@@ -247,6 +247,8 @@ export default function TekRehber() {
   // === SEARCH (ephemeral) ===
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
+  // Hero dropdown firma türü — only affects search, NOT the firma list
+  const [searchFirmaTuru, setSearchFirmaTuru] = useState(selectedFirmaTuru);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
