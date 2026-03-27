@@ -173,13 +173,14 @@ export default function AnaSayfa() {
     [urunKategoriNodes]
   );
 
-  // Sync URL when filters change
+  // Sync URL when filters change (path + query params)
   useEffect(() => {
     // Don't update URL during initial URL resolution
     if (kategoriSlug && !urlAppliedRef.current) return;
     
     if (!selectedKategori) {
-      if (location.pathname !== "/tekpazar") {
+      const currentUrl = location.pathname + location.search;
+      if (currentUrl !== "/tekpazar") {
         navigate("/tekpazar", { replace: true });
       }
       return;
@@ -201,10 +202,30 @@ export default function AnaSayfa() {
       }
     }
 
-    if (location.pathname !== path) {
-      navigate(path, { replace: true });
+    // Build query params from filterState
+    const params = new URLSearchParams();
+    if (filterState) {
+      if (filterState.minFiyat) params.set("min_fiyat", filterState.minFiyat);
+      if (filterState.maxFiyat) params.set("max_fiyat", filterState.maxFiyat);
+      if (filterState.renkFiltreler?.length) params.set("renk", filterState.renkFiltreler.join(","));
+      if (filterState.bedenFiltreler?.length) params.set("beden", filterState.bedenFiltreler.join(","));
+      if (filterState.teknikFiltreler) {
+        Object.entries(filterState.teknikFiltreler).forEach(([key, values]) => {
+          if (values.length > 0) {
+            params.set(slugifyTr(key), values.join(","));
+          }
+        });
+      }
     }
-  }, [selectedKategori, selectedGrupId, selectedTurId, urunKategoriNodes]);
+    if (sortBy && sortBy !== "newest") params.set("siralama", sortBy);
+
+    const qs = params.toString();
+    const fullPath = qs ? `${path}?${qs}` : path;
+
+    if (location.pathname + location.search !== fullPath) {
+      navigate(fullPath, { replace: true });
+    }
+  }, [selectedKategori, selectedGrupId, selectedTurId, urunKategoriNodes, filterState, sortBy]);
 
   const isFiltered = !!selectedKategori || !!activeFilter || !!appliedSearchTerm;
 
