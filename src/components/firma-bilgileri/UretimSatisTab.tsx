@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import { useToast } from "@/hooks/use-toast";
 import { Factory, Plus, X, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ interface AddedItem {
   kategori_name: string;
 }
 
-type RolType = "uretici" | "satici" | "her_ikisi";
+type RolType = "uretici";
 
 const URUN_KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 
@@ -442,7 +442,7 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [firmaId, setFirmaId] = useState("");
-  const [rol, setRol] = useState<RolType | "">("");
+  const [rol, setRol] = useState<RolType>("uretici");
   
   const [uretimItems, setUretimItems] = useState<AddedItem[]>([]);
   const [satisItems, setSatisItems] = useState<AddedItem[]>([]);
@@ -462,7 +462,7 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
         return;
       }
       setFirmaId(firma.id);
-      setRol(((firma as any).uretim_satis_rolu as RolType) || "");
+      setRol("uretici");
 
       // Resolve names for existing selections by fetching only the needed IDs
 
@@ -541,10 +541,6 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
   };
 
   const handleSave = async () => {
-    if (!rol) {
-      toast({ title: "Uyarı", description: "Lütfen bir rol seçin.", variant: "destructive" });
-      return;
-    }
     setSaving(true);
 
     try {
@@ -557,31 +553,17 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
       // Delete existing
       await supabase.from("firma_uretim_satis").delete().eq("firma_id", firmaId);
 
-      // Build inserts based on role
+      // Build inserts
       const inserts: any[] = [];
 
-      if (rol === "uretici" || rol === "her_ikisi") {
-        for (const item of uretimItems) {
-          inserts.push({
-            firma_id: firmaId,
-            tip: "uretim",
-            kategori_id: item.kategori_id,
-            grup_id: item.grup_id,
-            tur_id: item.tur_id,
-          });
-        }
-      }
-
-      if (rol === "satici" || rol === "her_ikisi") {
-        for (const item of satisItems) {
-          inserts.push({
-            firma_id: firmaId,
-            tip: "satis",
-            kategori_id: item.kategori_id,
-            grup_id: item.grup_id,
-            tur_id: item.tur_id,
-          });
-        }
+      for (const item of uretimItems) {
+        inserts.push({
+          firma_id: firmaId,
+          tip: "uretim",
+          kategori_id: item.kategori_id,
+          grup_id: item.grup_id,
+          tur_id: item.tur_id,
+        });
       }
 
       if (inserts.length > 0) {
@@ -606,8 +588,6 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
     return <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />;
   }
 
-  const showUretim = rol === "uretici" || rol === "her_ikisi";
-  const showSatis = rol === "satici" || rol === "her_ikisi";
 
   return (
     <div className="space-y-6">
@@ -618,51 +598,19 @@ export default function UretimSatisTab({ userId, onDataChange }: Props) {
             <h2 className="text-lg font-semibold text-foreground">Üretim / Satış Bilgileri</h2>
           </div>
 
-          <RadioGroup
-            value={rol}
-            onValueChange={(v) => setRol(v as RolType)}
-            className="flex flex-wrap gap-6"
-          >
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="uretici" id="uretici" />
-              <Label htmlFor="uretici" className="cursor-pointer">Üreticiyim</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="satici" id="satici" />
-              <Label htmlFor="satici" className="cursor-pointer">Satıcıyım</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <RadioGroupItem value="her_ikisi" id="her_ikisi" />
-              <Label htmlFor="her_ikisi" className="cursor-pointer">Hem Üretici Hem Satıcıyım</Label>
-            </div>
-          </RadioGroup>
         </CardContent>
       </Card>
 
-      {showUretim && (
-        <ProductSection
-          title="Ne Üretiyorsunuz"
-          tip="uretim"
-          items={uretimItems}
-          onAdd={handleAdd}
-          onRemoveItem={handleRemoveItem}
-          onRemoveGroup={handleRemoveGroup}
-        />
-      )}
+      <ProductSection
+        title="Ne Üretiyorum"
+        tip="uretim"
+        items={uretimItems}
+        onAdd={handleAdd}
+        onRemoveItem={handleRemoveItem}
+        onRemoveGroup={handleRemoveGroup}
+      />
 
-      {showSatis && (
-        <ProductSection
-          title="Ne Satıyorsunuz"
-          tip="satis"
-          
-          items={satisItems}
-          onAdd={handleAdd}
-          onRemoveItem={handleRemoveItem}
-          onRemoveGroup={handleRemoveGroup}
-        />
-      )}
-
-      {rol && (
+      {(
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={saving} className="min-w-[140px]">
             {saving ? "Kaydediliyor..." : "Kaydet"}
