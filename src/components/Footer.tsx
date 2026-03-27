@@ -31,7 +31,6 @@ export default function Footer() {
                 <Mail className="w-4 h-4 shrink-0" />
                 <span>destek@tekstilas.com</span>
               </div>
-              </div>
               <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
                 <Phone className="w-4 h-4 shrink-0" />
                 <span>+90 850 242 5700</span>

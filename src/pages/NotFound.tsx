@@ -5,12 +5,11 @@ import PublicHeader from "@/components/PublicHeader";
 import PazarHeader from "@/components/PazarHeader";
 import Footer from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Home, Building2, ShoppingBag, Gavel } from "lucide-react";
+import { Home, Building2, ShoppingBag, Gavel } from "lucide-react";
+import LandingHeroSearch from "@/components/landing/LandingHeroSearch";
 
 const NotFound = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [firmaUnvani, setFirmaUnvani] = useState("");
   const [firmaLogoUrl, setFirmaLogoUrl] = useState<string | null>(null);
@@ -59,13 +58,6 @@ const NotFound = () => {
     init();
   }, []);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/firmalar?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
-  };
-
   const quickLinks = [
     { to: "/", label: "Ana Sayfa", icon: Home, desc: "Platformun ana sayfasına dön" },
     { to: "/firmalar", label: "TekRehber", icon: Building2, desc: "Firma rehberinde ara" },
@@ -78,7 +70,7 @@ const NotFound = () => {
       {isLoggedIn ? <PazarHeader firmaUnvani={firmaUnvani} firmaLogoUrl={firmaLogoUrl} /> : <PublicHeader />}
 
       <main className="flex-1 flex items-center justify-center px-4 py-16 md:py-24">
-        <div className="max-w-lg w-full text-center space-y-8">
+        <div className="max-w-2xl w-full text-center space-y-8">
           {/* 404 Badge */}
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-secondary/10 mx-auto">
             <span className="text-4xl font-bold text-secondary">404</span>
@@ -95,25 +87,10 @@ const NotFound = () => {
             </p>
           </div>
 
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="relative">
-            <div className="flex items-center bg-muted/50 border border-border rounded-xl px-4 py-1 focus-within:ring-2 focus-within:ring-secondary/30 focus-within:border-secondary transition-all">
-              <Search className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Firma, ürün veya hizmet ara..."
-                className="flex-1 bg-transparent text-foreground text-sm h-10 px-2 outline-none placeholder:text-muted-foreground/50"
-              />
-              <button
-                type="submit"
-                className="px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground text-xs font-medium hover:bg-secondary/90 transition-colors shrink-0"
-              >
-                Ara
-              </button>
-            </div>
-          </form>
+          {/* Landing Page Search */}
+          <div className="flex justify-center">
+            <LandingHeroSearch />
+          </div>
 
           {/* Quick Links */}
           <div className="grid grid-cols-2 gap-3">
