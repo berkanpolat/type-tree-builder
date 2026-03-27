@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import LeadCaptureDialog from "@/components/LeadCaptureDialog";
 import HeaderMegaMenu from "@/components/HeaderMegaMenu";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
+import { injectJsonLd, removeJsonLd, buildWebSiteSchema, buildOrganizationSchema } from "@/lib/seo-jsonld";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import logoImg from "@/assets/tekstil-as-logo.png";
@@ -105,6 +106,16 @@ function LandingHeader({ logoImg: logoSrc }: { logoImg: string }) {
 
 const LandingPage = () => {
   useSeoMeta({ slug: "/", fallbackTitle: "Tekstil A.Ş. | Türkiye'nin B2B Tekstil Platformu" });
+
+  // WebSite + Organization JSON-LD
+  useEffect(() => {
+    injectJsonLd("seo-website-ld", buildWebSiteSchema());
+    injectJsonLd("seo-org-ld", buildOrganizationSchema());
+    return () => {
+      removeJsonLd("seo-website-ld");
+      removeJsonLd("seo-org-ld");
+    };
+  }, []);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("tedarikci");
