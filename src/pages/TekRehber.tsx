@@ -370,7 +370,7 @@ export default function TekRehber() {
       p_page: currentPage,
       p_per_page: PER_PAGE,
     };
-    if (selectedFirmaTuru && !uretimSatisFilter) rpcParams.p_firma_turu_id = selectedFirmaTuru;
+    if (selectedFirmaTuru) rpcParams.p_firma_turu_id = selectedFirmaTuru;
     if (appliedSearchTerm) rpcParams.p_search = appliedSearchTerm;
     if (fs?.firmaTipleri?.length) rpcParams.p_firma_tipi_ids = fs.firmaTipleri;
     if (fs?.firmaOlcekleri?.length) rpcParams.p_firma_olcegi_ids = fs.firmaOlcekleri;
@@ -506,8 +506,8 @@ export default function TekRehber() {
 
   // Trigger fetch when ready
   useEffect(() => {
-    if (selectedFirmaTuru && slugsReady) fetchFirmalar();
-  }, [fetchFirmalar, selectedFirmaTuru, slugsReady]);
+    if (slugsReady) fetchFirmalar();
+  }, [fetchFirmalar, slugsReady]);
 
   // === SEARCH HANDLERS ===
   const handleSearch = useCallback(async () => {
@@ -654,10 +654,13 @@ export default function TekRehber() {
       setUretimSatisFilter(null);
     } else if (result.type === "Kategori") {
       setUretimSatisFilter({ column: "kategori_id", ids: [result.id] });
+      if (selectedFirmaTuru) navigate(`/firmalar`);
     } else if (result.type === "Grup") {
       setUretimSatisFilter({ column: "grup_id", ids: [result.id] });
+      if (selectedFirmaTuru) navigate(`/firmalar`);
     } else if (result.type === "Ürün Türü") {
       setUretimSatisFilter({ column: "tur_id", ids: [result.id] });
+      if (selectedFirmaTuru) navigate(`/firmalar`);
     } else if (result.type === "Firma") {
       setUretimSatisFilter(null);
       setAppliedSearchTerm(result.name);
