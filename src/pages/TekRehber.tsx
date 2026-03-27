@@ -249,6 +249,8 @@ export default function TekRehber() {
   const [appliedSearchTerm, setAppliedSearchTerm] = useState("");
   // Hero dropdown firma türü — only affects search, NOT the firma list
   const [searchFirmaTuru, setSearchFirmaTuru] = useState(selectedFirmaTuru);
+  // Keep searchFirmaTuru in sync when URL-derived selectedFirmaTuru changes
+  useEffect(() => { setSearchFirmaTuru(selectedFirmaTuru); }, [selectedFirmaTuru]);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
