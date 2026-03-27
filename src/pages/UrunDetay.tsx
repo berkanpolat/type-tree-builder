@@ -362,14 +362,26 @@ export default function UrunDetay() {
     });
 
     if (idsToResolve.length > 0) {
-      const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name").in("id", [...new Set(idsToResolve)]);
+      const { data: names } = await supabase.from("firma_bilgi_secenekleri").select("id, name, slug").in("id", [...new Set(idsToResolve)]);
       if (names) {
         const map: Record<string, string> = {};
         names.forEach(n => { map[n.id] = n.name; });
         setSecenekMap(map);
-        if (urunData.urun_kategori_id) setBreadcrumbKategori(map[urunData.urun_kategori_id] || "");
-        if (urunData.urun_grup_id) setBreadcrumbGrup(map[urunData.urun_grup_id] || "");
-        if (urunData.urun_tur_id) setBreadcrumbTur(map[urunData.urun_tur_id] || "");
+        if (urunData.urun_kategori_id) {
+          setBreadcrumbKategori(map[urunData.urun_kategori_id] || "");
+          const katNode = names.find(n => n.id === urunData.urun_kategori_id);
+          setBreadcrumbKategoriSlug(katNode?.slug || "");
+        }
+        if (urunData.urun_grup_id) {
+          setBreadcrumbGrup(map[urunData.urun_grup_id] || "");
+          const grupNode = names.find(n => n.id === urunData.urun_grup_id);
+          setBreadcrumbGrupSlug(grupNode?.slug || "");
+        }
+        if (urunData.urun_tur_id) {
+          setBreadcrumbTur(map[urunData.urun_tur_id] || "");
+          const turNode = names.find(n => n.id === urunData.urun_tur_id);
+          setBreadcrumbTurSlug(turNode?.slug || "");
+        }
 
         const resolved: Record<string, string> = {};
         Object.entries(teknikData).forEach(([key, val]) => {
