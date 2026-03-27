@@ -654,10 +654,13 @@ export default function TekRehber() {
       setUretimSatisFilter(null);
     } else if (result.type === "Kategori") {
       setUretimSatisFilter({ column: "kategori_id", ids: [result.id] });
+      if (selectedFirmaTuru) navigate(`/firmalar`);
     } else if (result.type === "Grup") {
       setUretimSatisFilter({ column: "grup_id", ids: [result.id] });
+      if (selectedFirmaTuru) navigate(`/firmalar`);
     } else if (result.type === "Ürün Türü") {
       setUretimSatisFilter({ column: "tur_id", ids: [result.id] });
+      if (selectedFirmaTuru) navigate(`/firmalar`);
     } else if (result.type === "Firma") {
       setUretimSatisFilter(null);
       setAppliedSearchTerm(result.name);
