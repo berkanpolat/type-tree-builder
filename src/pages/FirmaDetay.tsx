@@ -287,10 +287,10 @@ export default function FirmaDetay() {
   useSeoMeta({
     slug: `/${slug || ""}`,
     dynamicTitle: firma?.meta_title || (firma ? `${firma.firma_unvani} | Tekstil A.Ş.` : undefined),
-    dynamicDescription: firma?.meta_description || (firma ? `${firma.firma_unvani} firma profili, ürünleri ve iletişim bilgileri.` : undefined),
+    dynamicDescription: firma?.meta_description || (firma ? `${firma.firma_unvani} firma profili, üretim kapasitesi ve iletişim bilgileri. Hemen teklif alın!` : undefined),
     dynamicOgImage: firma?.logo_url || undefined,
     fallbackTitle: "Firma Detay | Tekstil A.Ş.",
-    fallbackDescription: "Firma profili, ürünleri ve iletişim bilgileri.",
+    fallbackDescription: "Firma profili, üretim kapasitesi ve iletişim bilgileri.",
   });
 
   const scrollToSection = (sectionId: string) => {

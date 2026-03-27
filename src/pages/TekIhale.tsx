@@ -129,7 +129,7 @@ function CountdownBadge({ date }: { date: string | null }) {
 }
 
 export default function TekIhale() {
-  useSeoMeta({ slug: "/ihaleler", fallbackTitle: "TekİHale | Tekstil İhaleleri | Tekstil A.Ş." });
+  useSeoMeta({ slug: "/ihaleler", fallbackTitle: `Tekstil İhaleleri ${new Date().getFullYear()} | Tekstil A.Ş.`, fallbackDescription: "Güncel tekstil ihalelerine göz atın, hemen teklif verin. Fason, kumaş ve aksesuar ihaleleri tek platformda." });
   const navigate = useNavigate();
   const location = useLocation();
   const [currentUserId, setCurrentUserId] = useState("");
