@@ -280,6 +280,34 @@ export default function AnaSayfa() {
             }
           }
         }
+
+        // Restore filter state from query params
+        const searchParams = new URLSearchParams(location.search);
+        if (searchParams.toString()) {
+          const restoredFilter: FilterState = {
+            grupId: null,
+            turId: null,
+            minFiyat: searchParams.get("min_fiyat") || "",
+            maxFiyat: searchParams.get("max_fiyat") || "",
+            teknikFiltreler: {},
+            renkFiltreler: searchParams.get("renk")?.split(",").filter(Boolean) || [],
+            bedenFiltreler: searchParams.get("beden")?.split(",").filter(Boolean) || [],
+          };
+          // Restore teknik filtreler from slugified keys
+          searchParams.forEach((value, key) => {
+            if (!["min_fiyat", "max_fiyat", "renk", "beden", "siralama"].includes(key)) {
+              restoredFilter.teknikFiltreler[key] = value.split(",").filter(Boolean);
+            }
+          });
+          const hasFilters = restoredFilter.minFiyat || restoredFilter.maxFiyat || 
+            restoredFilter.renkFiltreler.length > 0 || restoredFilter.bedenFiltreler.length > 0 ||
+            Object.values(restoredFilter.teknikFiltreler).some(v => v.length > 0);
+          if (hasFilters) {
+            setFilterState(restoredFilter);
+          }
+          const sortParam = searchParams.get("siralama");
+          if (sortParam) setSortBy(sortParam);
+        }
       });
   }, [kategoriSlug, grupSlug, urlTurSlug]);
 
