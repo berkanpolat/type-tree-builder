@@ -113,6 +113,29 @@ export function buildEventSchema(event: {
   };
 }
 
+export function buildLocalBusinessSchema(firma: {
+  name: string;
+  description?: string;
+  logo?: string;
+  url?: string;
+  city?: string;
+  phone?: string;
+  email?: string;
+}) {
+  return {
+    "@type": "LocalBusiness",
+    name: firma.name,
+    ...(firma.description && { description: firma.description }),
+    ...(firma.logo && { image: firma.logo }),
+    ...(firma.url && { url: firma.url }),
+    ...(firma.city && {
+      address: { "@type": "PostalAddress", addressLocality: firma.city, addressCountry: "TR" },
+    }),
+    ...(firma.phone && { telephone: firma.phone }),
+    ...(firma.email && { email: firma.email }),
+  };
+}
+
 export function buildFAQSchema(faqs: { question: string; answer: string }[]) {
   return {
     "@type": "FAQPage",
