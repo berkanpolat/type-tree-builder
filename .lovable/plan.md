@@ -1,36 +1,25 @@
 
 
-## İki Aşamalı Firma Türü ve Tipi Dropdown Alanları
+## Problem Analysis
 
-### Veritabanı Oluşturma (Supabase)
+### 1. "Ambalaj tedarikçisi" default filter issue
+In the init effect (line 249-328), **Case 1** (turSlug present) sets `selectedFirmaTuru` but does NOT clear `firmaFilterState` when there are no query params or tipSlug. Since `firmaFilterState` uses `useSessionState`, it restores stale session data (e.g., previously selected "ambalaj tedarikçisi") from `sessionStorage`.
 
-**1. Migration: `firma_turleri` tablosu**
-- `id` (uuid, primary key)
-- `name` (text, not null) — Firma türü adı
-- `created_at` (timestamp)
-- Herkes okuyabilsin diye SELECT RLS politikası
+**Fix**: In Case 1, when there's no `tipSlug` and no query params, explicitly call `setFirmaFilterState(null)` — same as Case 3 already does.
 
-**2. Migration: `firma_tipleri` tablosu**
-- `id` (uuid, primary key)
-- `firma_turu_id` (uuid, foreign key → firma_turleri.id)
-- `name` (text, not null) — Firma tipi adı
-- `created_at` (timestamp)
-- Herkes okuyabilsin diye SELECT RLS politikası
+### 2. Triple loading
+Multiple state changes during initialization each independently trigger `fetchFirmalar`:
+- `slugToId` loads (empty → populated) → init effect runs → sets `selectedFirmaTuru` → fetch #1
+- `firmaFilterState` restored from session → fetch #2  
+- `firmaTurleri` set → fetch #3 (it's in fetchFirmalar's dependency array)
 
-**3. Seed Data: CSV'deki verileri ekleme**
-- 5 firma türü INSERT edilecek
-- 34 firma tipi, doğru `firma_turu_id` ile INSERT edilecek
+**Fix**: Add an `initialized` state flag. Gate `fetchFirmalar` behind it. Set it to `true` only after the init effect completes all state updates. This collapses multiple renders into a single fetch.
 
-### UI Bileşeni
+### Changes — `src/pages/TekRehber.tsx`
 
-**Ana Sayfa (Index.tsx) üzerinde iki dropdown:**
-
-1. **Firma Türü Dropdown** — `firma_turleri` tablosundan veri çeker, 5 seçenek listelenir
-2. **Firma Tipi Dropdown** — Başlangıçta devre dışı (disabled). Firma türü seçildiğinde, seçilen türe ait tipler `firma_tipleri` tablosundan filtrelenerek listelenir
-
-### Davranış
-- Firma türü seçilmeden firma tipi seçilemez
-- Firma türü değiştirildiğinde, firma tipi sıfırlanır ve yeni türe ait tipler yüklenir
-- Supabase'den veri çekilirken loading durumu gösterilir
-- Dropdown'lar opak arka plana ve yüksek z-index'e sahip olacak
+1. Add `const [initialized, setInitialized] = useState(false);`
+2. In the init effect (line 249), at the end (before or after `urlAppliedRef.current = true`), call `setInitialized(true)`
+3. In Case 1 with turSlug but no tipSlug and no query params: add `setFirmaFilterState(null)`
+4. Change the fetch trigger effect (line 587-589) to: `if (initialized && selectedFirmaTuru) fetchFirmalar()`  — add `initialized` to deps
+5. Remove `firmaTurleri` from `fetchFirmalar`'s dependency array (it's only used for display name mapping inside, which can use a ref or be derived differently)
 
