@@ -313,7 +313,7 @@ export default function TekRehber() {
         }
       }
     });
-  }, [turSlug, tipSlug]);
+  }, [turSlug, tipSlug, slugToId]);
 
   // Apply incoming state filters
   useEffect(() => {
