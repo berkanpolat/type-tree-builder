@@ -680,6 +680,7 @@ export default function AdminPortfoy() {
                                         </div>
                                         {a.aciklama && <p className="text-[11px] mt-0.5 line-clamp-1" style={s.muted}>{a.aciklama}</p>}
                                         {a.admin_ad && <span className="text-[10px]" style={s.muted}>— {a.admin_ad}</span>}
+                                        {a.yetkili_ad && <span className="text-[10px] ml-1" style={s.muted}>• Yetkili: {a.yetkili_ad}</span>}
                                       </div>
                                     </div>
                                   );
