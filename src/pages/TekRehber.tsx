@@ -539,41 +539,72 @@ export default function TekRehber() {
       return;
     }
     const timer = setTimeout(async () => {
-      const results: SearchResult[] = [];
+      const firmaResults: SearchResult[] = [];
+      const taxResults: SearchResult[] = [];
       const lowerTerm = searchTerm.toLowerCase();
 
-      firmaTurleri.forEach((t) => {
-        if (t.name.toLowerCase().includes(lowerTerm)) {
-          results.push({ id: t.id, name: t.name, type: "Tür" });
-        }
-      });
-
-      const rootNodes = urunTaxNodes.filter((n) => !n.parent_id);
-      const childOf = (parentId: string) => urunTaxNodes.filter((n) => n.parent_id === parentId);
-
-      rootNodes.forEach((kat) => {
-        if (kat.name.toLowerCase().includes(lowerTerm)) {
-          results.push({ id: kat.id, name: kat.name, type: "Kategori" });
-        }
-        childOf(kat.id).forEach((grup) => {
-          if (grup.name.toLowerCase().includes(lowerTerm)) {
-            results.push({ id: grup.id, name: `${grup.name}`, type: "Grup" });
-          }
-          childOf(grup.id).forEach((tur) => {
-            if (tur.name.toLowerCase().includes(lowerTerm)) {
-              results.push({ id: tur.id, name: `${tur.name}`, type: "Ürün Türü" });
-            }
-          });
-        });
-      });
-
-      const { data } = await supabase
+      // 1) Firma ünvanı araması (önce gösterilecek)
+      const { data: firmaData } = await supabase
         .from("firmalar")
         .select("id, firma_unvani")
         .ilike("firma_unvani", `%${searchTerm}%`)
         .limit(6);
-      if (data) data.forEach((f) => results.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
+      if (firmaData) firmaData.forEach((f) => firmaResults.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
 
+      // 2) firma_uretim_satis üzerinden kategori/grup/tür araması
+      // Üretim tablosunda kullanılan benzersiz ID'leri çek
+      const { data: uretimRows } = await supabase
+        .from("firma_uretim_satis")
+        .select("kategori_id, grup_id, tur_id");
+
+      if (uretimRows && uretimRows.length > 0) {
+        const allIds = new Set<string>();
+        uretimRows.forEach((r) => { allIds.add(r.kategori_id); allIds.add(r.grup_id); allIds.add(r.tur_id); });
+
+        // ID → name çözümle
+        const { data: nameRows } = await supabase
+          .from("firma_bilgi_secenekleri")
+          .select("id, name, parent_id")
+          .in("id", [...allIds]);
+
+        if (nameRows) {
+          const nameMap = new Map(nameRows.map((n) => [n.id, n]));
+          // Benzersiz kategori/grup/tür setleri
+          const addedIds = new Set<string>();
+
+          // Kategoriler
+          const kategoriIds = new Set(uretimRows.map((r) => r.kategori_id));
+          kategoriIds.forEach((id) => {
+            const node = nameMap.get(id);
+            if (node && node.name.toLowerCase().includes(lowerTerm) && !addedIds.has(id)) {
+              taxResults.push({ id, name: node.name, type: "Kategori" });
+              addedIds.add(id);
+            }
+          });
+
+          // Gruplar
+          const grupIds = new Set(uretimRows.map((r) => r.grup_id));
+          grupIds.forEach((id) => {
+            const node = nameMap.get(id);
+            if (node && node.name.toLowerCase().includes(lowerTerm) && !addedIds.has(id)) {
+              taxResults.push({ id, name: node.name, type: "Grup" });
+              addedIds.add(id);
+            }
+          });
+
+          // Türler
+          const turIds = new Set(uretimRows.map((r) => r.tur_id));
+          turIds.forEach((id) => {
+            const node = nameMap.get(id);
+            if (node && node.name.toLowerCase().includes(lowerTerm) && !addedIds.has(id)) {
+              taxResults.push({ id, name: node.name, type: "Ürün Türü" });
+              addedIds.add(id);
+            }
+          });
+        }
+      }
+
+      const results = [...firmaResults, ...taxResults];
       setSearchResults(results.slice(0, 15));
       setShowDropdown(results.length > 0);
     }, 250);
