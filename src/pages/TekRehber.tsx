@@ -182,7 +182,8 @@ export default function TekRehber() {
 
   // Sync URL when filters change (path + query params)
   useEffect(() => {
-    if (turSlug && !urlAppliedRef.current) return;
+    // Don't sync URL until initialization is complete
+    if (!urlAppliedRef.current) return;
     if (Object.keys(idToSlug).length === 0) return; // wait for slug map
 
     if (!selectedFirmaTuru || !selectedFirmaTuruName) {
@@ -244,80 +245,87 @@ export default function TekRehber() {
   const locationState = location.state as { firmaTurId?: string; firmaTipId?: string; firmaTurName?: string } | null;
   const hasIncomingState = !!(locationState?.firmaTurId);
 
-  // Fetch firma türleri + resolve URL slugs (wait for slug map)
+  // Fetch firma türleri + resolve URL slugs (runs once on mount)
   useEffect(() => {
-    // Skip re-running slug resolution after initial application
+    // Only run initialization once
     if (urlAppliedRef.current) return;
 
-    if (Object.keys(slugToId).length === 0 && location.search) return; // wait for slug map if there are query params
+    // Wait for slug map if there are query params to resolve
+    if (Object.keys(slugToId).length === 0 && location.search) return;
+
     supabase.from("firma_turleri").select("id, name, slug").order("name").then(({ data }) => {
-      if (data) {
-        const sorted = sortFirmaTurleri(data.map(d => ({ id: d.id, name: d.name })));
-        setFirmaTurleri(sorted);
+      if (!data || urlAppliedRef.current) return;
+      const sorted = sortFirmaTurleri(data.map(d => ({ id: d.id, name: d.name })));
+      setFirmaTurleri(sorted);
 
-        // Resolve URL slug to set filter
-        if (turSlug) {
-          const matchedTur = (data as any[]).find((t: any) => t.slug === turSlug);
-          if (matchedTur) {
-            setSelectedFirmaTuru(matchedTur.id);
-            setSelectedFirmaTuruName(matchedTur.name);
-            urlAppliedRef.current = true;
+      // Case 1: URL has turSlug → resolve from URL
+      if (turSlug) {
+        const matchedTur = (data as any[]).find((t: any) => t.slug === turSlug);
+        if (matchedTur) {
+          setSelectedFirmaTuru(matchedTur.id);
+          setSelectedFirmaTuruName(matchedTur.name);
 
-            // Resolve tipSlug if present
-            if (tipSlug) {
-              supabase.from("firma_tipleri").select("id, name, slug").eq("firma_turu_id", matchedTur.id).then(({ data: tipData }) => {
-                if (tipData) {
-                  const matchedTip = (tipData as any[]).find((t: any) => t.slug === tipSlug);
-                  if (matchedTip) {
-                    setFirmaFilterState((prev: FirmaFilterState | null) => ({
-                      ...(prev || { firmaTipleri: [], firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
-                      firmaTipleri: [matchedTip.id],
-                    }));
-                  }
+          // Resolve tipSlug if present
+          if (tipSlug) {
+            supabase.from("firma_tipleri").select("id, name, slug").eq("firma_turu_id", matchedTur.id).then(({ data: tipData }) => {
+              if (tipData) {
+                const matchedTip = (tipData as any[]).find((t: any) => t.slug === tipSlug);
+                if (matchedTip) {
+                  setFirmaFilterState((prev: FirmaFilterState | null) => ({
+                    ...(prev || { firmaTipleri: [], firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
+                    firmaTipleri: [matchedTip.id],
+                  }));
                 }
-              });
-            }
-
-            // Restore filters from query params (slugs → IDs)
-            const searchParams = new URLSearchParams(location.search);
-            if (searchParams.toString()) {
-              const restored: Partial<FirmaFilterState> = {};
-              const tipParam = searchParams.get("tip");
-              if (tipParam) restored.firmaTipleri = slugsToIds(tipParam.split(",").filter(Boolean));
-              const olcekParam = searchParams.get("olcek");
-              if (olcekParam) restored.firmaOlcekleri = slugsToIds(olcekParam.split(",").filter(Boolean));
-              const ilParam = searchParams.get("il");
-              if (ilParam) restored.iller = slugsToIds(ilParam.split(",").filter(Boolean));
-              const moqParam = searchParams.get("moq");
-              if (moqParam) restored.moq = moqParam;
-              const usKategori = searchParams.get("us_kategori");
-              if (usKategori) restored.uretimSatisKategoriIds = slugsToIds(usKategori.split(",").filter(Boolean));
-              const usGrup = searchParams.get("us_grup");
-              if (usGrup) restored.uretimSatisGrupIds = slugsToIds(usGrup.split(",").filter(Boolean));
-              const usTur = searchParams.get("us_tur");
-              if (usTur) restored.uretimSatisTurIds = slugsToIds(usTur.split(",").filter(Boolean));
-
-              const hasFilters = Object.values(restored).some(v => v && (typeof v === "string" ? v.length > 0 : (v as string[]).length > 0));
-              if (hasFilters) {
-                setFirmaFilterState((prev: FirmaFilterState | null) => ({
-                  ...(prev || { firmaTipleri: [], firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
-                  ...restored,
-                }));
               }
+            });
+          }
+
+          // Restore filters from query params (slugs → IDs)
+          const searchParams = new URLSearchParams(location.search);
+          if (searchParams.toString()) {
+            const restored: Partial<FirmaFilterState> = {};
+            const tipParam = searchParams.get("tip");
+            if (tipParam) restored.firmaTipleri = slugsToIds(tipParam.split(",").filter(Boolean));
+            const olcekParam = searchParams.get("olcek");
+            if (olcekParam) restored.firmaOlcekleri = slugsToIds(olcekParam.split(",").filter(Boolean));
+            const ilParam = searchParams.get("il");
+            if (ilParam) restored.iller = slugsToIds(ilParam.split(",").filter(Boolean));
+            const moqParam = searchParams.get("moq");
+            if (moqParam) restored.moq = moqParam;
+            const usKategori = searchParams.get("us_kategori");
+            if (usKategori) restored.uretimSatisKategoriIds = slugsToIds(usKategori.split(",").filter(Boolean));
+            const usGrup = searchParams.get("us_grup");
+            if (usGrup) restored.uretimSatisGrupIds = slugsToIds(usGrup.split(",").filter(Boolean));
+            const usTur = searchParams.get("us_tur");
+            if (usTur) restored.uretimSatisTurIds = slugsToIds(usTur.split(",").filter(Boolean));
+
+            const hasFilters = Object.values(restored).some(v => v && (typeof v === "string" ? v.length > 0 : (v as string[]).length > 0));
+            if (hasFilters) {
+              setFirmaFilterState((prev: FirmaFilterState | null) => ({
+                ...(prev || { firmaTipleri: [], firmaOlcekleri: [], iller: [], moq: "", junctionFilters: {}, uretimSatisTurIds: [], uretimSatisGrupIds: [], uretimSatisKategoriIds: [] }),
+                ...restored,
+              }));
             }
-            return;
           }
         }
-
-        // Only set default if no incoming state and no URL slug
-        if (!hasIncomingState && !turSlug) {
-          const tedarikci = sorted.find((t) => t.name.toLowerCase().includes("tedarikçi"));
-          if (tedarikci) { setSelectedFirmaTuru(tedarikci.id); setSelectedFirmaTuruName(tedarikci.name); }
-          else if (sorted.length > 0) { setSelectedFirmaTuru(sorted[0].id); setSelectedFirmaTuruName(sorted[0].name); }
-        }
       }
+      // Case 2: Incoming state from navigation (popüler aramalar etc.)
+      else if (hasIncomingState) {
+        // Will be handled by the separate incoming state effect
+      }
+      // Case 3: No URL slug, no incoming state → always default to "Tedarikçi"
+      else {
+        const tedarikci = sorted.find((t) => t.name.toLowerCase().includes("tedarikçi"));
+        if (tedarikci) { setSelectedFirmaTuru(tedarikci.id); setSelectedFirmaTuruName(tedarikci.name); }
+        else if (sorted.length > 0) { setSelectedFirmaTuru(sorted[0].id); setSelectedFirmaTuruName(sorted[0].name); }
+        // Clear stale session filters when landing fresh
+        setFirmaFilterState(null);
+      }
+
+      // Mark initialization as done — prevents re-running on subsequent param changes
+      urlAppliedRef.current = true;
     });
-  }, [turSlug, tipSlug, slugToId]);
+  }, [slugToId]);
 
   // Apply incoming state filters
   useEffect(() => {
