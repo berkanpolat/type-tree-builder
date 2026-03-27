@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
-const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1"; // Ana Ürün Kategorileri
+const KATEGORI_ID = "f5f6e209-3d32-4816-9842-d520a756c9f1";
 
 interface FilterDef {
   key: string;
@@ -74,7 +74,7 @@ const DIRECT_COLUMN_FILTERS: Record<string, string> = {
   firmaOlcegi: "firma_olcegi_id",
 };
 
-const JUNCTION_FILTER_KEYS = [
+export const JUNCTION_FILTER_KEYS = [
   "faaliyetAlani", "uretimModeli", "uretimYetkinlikleri", "uzmanlikAlani",
   "urunSegmenti", "tedarikHizmetTipi", "temsilTipi", "mevcutPazarlar",
 ];
@@ -98,13 +98,14 @@ export interface FirmaFilterState {
 interface Props {
   firmaTuruId: string;
   firmaTuruName: string;
+  value: FirmaFilterState;
   onFilterChange: (state: FirmaFilterState) => void;
-  initialSelections?: Record<string, string[]>;
 }
 
 const optionsCache: Record<string, Option[]> = {};
 
-export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterChange, initialSelections }: Props) {
+export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, value, onFilterChange }: Props) {
+  // Option loading state (UI only)
   const [firmaTipleri, setFirmaTipleri] = useState<Option[]>([]);
   const [kategoriOptions, setKategoriOptions] = useState<Record<string, Option[]>>({});
   const [ilOptions, setIlOptions] = useState<Option[]>([]);
@@ -112,46 +113,89 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
   const [usGruplar, setUsGruplar] = useState<Option[]>([]);
   const [usTurler, setUsTurler] = useState<Option[]>([]);
 
-  const [selections, setSelections] = useState<Record<string, string[]>>({});
-  const [moq, setMoq] = useState("");
-  const [usSelectedKategoriler, setUsSelectedKategoriler] = useState<string[]>([]);
-  const [usSelectedGruplar, setUsSelectedGruplar] = useState<string[]>([]);
-  const [usSelectedTurler, setUsSelectedTurler] = useState<string[]>([]);
-
+  // UI-only state
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [searchTerms, setSearchTerms] = useState<Record<string, string>>({});
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [moqInput, setMoqInput] = useState(value.moq || "");
 
   const isMobile = useIsMobile();
   const filters = FILTER_CONFIG[firmaTuruName] || FILTER_CONFIG["Tedarikçi"] || [];
 
-  // Reset filters when firma türü changes
+  // Derive selections from controlled value
+  const selections = useMemo(() => {
+    const s: Record<string, string[]> = {};
+    s.firmaTipi = value.firmaTipleri || [];
+    s.firmaOlcegi = value.firmaOlcekleri || [];
+    s.firmaBolgesi = value.iller || [];
+    if (value.junctionFilters) {
+      Object.entries(value.junctionFilters).forEach(([key, ids]) => {
+        s[key] = ids;
+      });
+    }
+    return s;
+  }, [value]);
+
+  const usSelectedKategoriler = value.uretimSatisKategoriIds || [];
+  const usSelectedGruplar = value.uretimSatisGrupIds || [];
+  const usSelectedTurler = value.uretimSatisTurIds || [];
+
+  // Sync moqInput from controlled value
+  useEffect(() => { setMoqInput(value.moq || ""); }, [value.moq]);
+
+  // Debounce MOQ changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (moqInput !== (value.moq || "")) {
+        const jf: Record<string, string[]> = {};
+        JUNCTION_FILTER_KEYS.forEach(key => {
+          const filterDef = filters.find(f => f.key === key);
+          if (filterDef?.kategoriName && selections[key]?.length > 0) jf[key] = selections[key];
+        });
+        onFilterChange({ ...value, moq: moqInput, junctionFilters: jf });
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [moqInput]);
+
+  // Reset UI state when firma türü changes
   const prevTuruRef = useRef(firmaTuruName);
   useEffect(() => {
     if (prevTuruRef.current !== firmaTuruName) {
       prevTuruRef.current = firmaTuruName;
-      setSelections(initialSelections || {});
-      setMoq("");
-      setUsSelectedKategoriler([]);
-      setUsSelectedGruplar([]);
-      setUsSelectedTurler([]);
       setSearchTerms({});
       setExpandedSections({});
+      setMoqInput("");
     }
-  }, [firmaTuruName, initialSelections]);
+  }, [firmaTuruName]);
 
-  // Sync initialSelections when they arrive late (e.g. URL slug resolution)
-  useEffect(() => {
-    if (initialSelections) {
-      setSelections(prev => {
-        const hasChanges = Object.keys(initialSelections).some(
-          key => JSON.stringify(prev[key]) !== JSON.stringify(initialSelections[key])
-        );
-        return hasChanges ? { ...prev, ...initialSelections } : prev;
-      });
-    }
-  }, [initialSelections]);
+  // Build new FirmaFilterState helper
+  const buildState = useCallback((overrides: {
+    sel?: Record<string, string[]>;
+    moqVal?: string;
+    usKat?: string[];
+    usGrp?: string[];
+    usTr?: string[];
+  } = {}): FirmaFilterState => {
+    const sel = overrides.sel ?? selections;
+    const jf: Record<string, string[]> = {};
+    JUNCTION_FILTER_KEYS.forEach(key => {
+      const filterDef = filters.find(f => f.key === key);
+      if (filterDef?.kategoriName && sel[key]?.length > 0) jf[key] = sel[key];
+    });
+    return {
+      firmaTipleri: sel.firmaTipi || [],
+      firmaOlcekleri: sel.firmaOlcegi || [],
+      iller: sel.firmaBolgesi || [],
+      moq: overrides.moqVal ?? (value.moq || ""),
+      junctionFilters: jf,
+      uretimSatisKategoriIds: overrides.usKat ?? usSelectedKategoriler,
+      uretimSatisGrupIds: overrides.usGrp ?? usSelectedGruplar,
+      uretimSatisTurIds: overrides.usTr ?? usSelectedTurler,
+    };
+  }, [selections, value.moq, usSelectedKategoriler, usSelectedGruplar, usSelectedTurler, filters]);
 
+  // Load firma tipleri options
   useEffect(() => {
     if (!firmaTuruId) return;
     supabase
@@ -162,6 +206,7 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
       .then(({ data }) => setFirmaTipleri(data || []));
   }, [firmaTuruId]);
 
+  // Load kategori options
   useEffect(() => {
     const kategoriNames = filters
       .filter((f) => f.type === "kategori" && f.kategoriName)
@@ -170,9 +215,7 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
     const uncached = kategoriNames.filter((n) => !optionsCache[n]);
     if (uncached.length === 0) {
       const opts: Record<string, Option[]> = {};
-      kategoriNames.forEach((n) => {
-        opts[n] = optionsCache[n] || [];
-      });
+      kategoriNames.forEach((n) => { opts[n] = optionsCache[n] || []; });
       setKategoriOptions(opts);
       return;
     }
@@ -193,9 +236,7 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
 
         if (opts) {
           const katIdToName: Record<string, string> = {};
-          kats.forEach((k) => {
-            katIdToName[k.id] = k.name;
-          });
+          kats.forEach((k) => { katIdToName[k.id] = k.name; });
           opts.forEach((o) => {
             const catName = katIdToName[o.kategori_id];
             if (catName) {
@@ -208,13 +249,12 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
         }
 
         const allOpts: Record<string, Option[]> = {};
-        kategoriNames.forEach((n) => {
-          allOpts[n] = optionsCache[n] || [];
-        });
+        kategoriNames.forEach((n) => { allOpts[n] = optionsCache[n] || []; });
         setKategoriOptions(allOpts);
       });
   }, [filters]);
 
+  // Load il options
   useEffect(() => {
     const fetchIller = async () => {
       const { data: firmaData } = await supabase
@@ -234,10 +274,10 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
 
       setIlOptions(names || []);
     };
-
     fetchIller();
   }, []);
 
+  // Load üretim/satış kategoriler
   useEffect(() => {
     supabase
       .from("firma_bilgi_secenekleri")
@@ -248,15 +288,13 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
       .then(({ data }) => setUsKategoriler(data || []));
   }, []);
 
+  // Load grup options based on controlled kategori selection
   useEffect(() => {
     if (usSelectedKategoriler.length === 0) {
       setUsGruplar([]);
-      setUsSelectedGruplar([]);
       setUsTurler([]);
-      setUsSelectedTurler([]);
       return;
     }
-
     supabase
       .from("firma_bilgi_secenekleri")
       .select("id, name")
@@ -264,57 +302,29 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
       .order("name")
       .then(({ data }) => {
         setUsGruplar(data || []);
-        setUsSelectedGruplar([]);
         setUsTurler([]);
-        setUsSelectedTurler([]);
       });
   }, [usSelectedKategoriler]);
 
+  // Load tür options based on controlled grup selection
   useEffect(() => {
     if (usSelectedGruplar.length === 0) {
       setUsTurler([]);
-      setUsSelectedTurler([]);
       return;
     }
-
     supabase
       .from("firma_bilgi_secenekleri")
       .select("id, name")
       .in("parent_id", usSelectedGruplar)
       .order("name")
-      .then(({ data }) => {
-        setUsTurler(data || []);
-        setUsSelectedTurler([]);
-      });
+      .then(({ data }) => setUsTurler(data || []));
   }, [usSelectedGruplar]);
 
-  useEffect(() => {
-    const junctionFilters: Record<string, string[]> = {};
-    JUNCTION_FILTER_KEYS.forEach((key) => {
-      const filterDef = filters.find((f) => f.key === key);
-      if (filterDef?.kategoriName && selections[key]?.length > 0) {
-        junctionFilters[key] = selections[key];
-      }
-    });
-
-    onFilterChange({
-      firmaTipleri: selections.firmaTipi || [],
-      firmaOlcekleri: selections.firmaOlcegi || [],
-      iller: selections.firmaBolgesi || [],
-      moq,
-      junctionFilters,
-      uretimSatisKategoriIds: usSelectedKategoriler,
-      uretimSatisGrupIds: usSelectedGruplar,
-      uretimSatisTurIds: usSelectedTurler,
-    });
-  }, [filters, moq, onFilterChange, selections, usSelectedGruplar, usSelectedKategoriler, usSelectedTurler]);
-
+  // Toggle handlers
   const toggle = (key: string, id: string) => {
-    setSelections((prev) => {
-      const current = prev[key] || [];
-      const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
-      return { ...prev, [key]: next };
-    });
+    const current = selections[key] || [];
+    const next = current.includes(id) ? current.filter((x) => x !== id) : [...current, id];
+    onFilterChange(buildState({ sel: { ...selections, [key]: next } }));
   };
 
   const toggleSection = (key: string) => {
@@ -323,17 +333,23 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
 
   const activeCount =
     Object.values(selections).reduce((a, v) => a + v.length, 0) +
-    (moq ? 1 : 0) +
+    (value.moq ? 1 : 0) +
     usSelectedKategoriler.length +
     usSelectedGruplar.length +
     usSelectedTurler.length;
 
   const clearAll = () => {
-    setSelections({});
-    setMoq("");
-    setUsSelectedKategoriler([]);
-    setUsSelectedGruplar([]);
-    setUsSelectedTurler([]);
+    onFilterChange({
+      firmaTipleri: [],
+      firmaOlcekleri: [],
+      iller: [],
+      moq: "",
+      junctionFilters: {},
+      uretimSatisKategoriIds: [],
+      uretimSatisGrupIds: [],
+      uretimSatisTurIds: [],
+    });
+    setMoqInput("");
   };
 
   const getFilteredOpts = (opts: Option[], key: string) => {
@@ -343,21 +359,24 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
   };
 
   const toggleUsKategori = (id: string) => {
-    setUsSelectedKategoriler((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    const next = usSelectedKategoriler.includes(id)
+      ? usSelectedKategoriler.filter((x) => x !== id)
+      : [...usSelectedKategoriler, id];
+    onFilterChange(buildState({ usKat: next, usGrp: [], usTr: [] }));
   };
 
   const toggleUsGrup = (id: string) => {
-    setUsSelectedGruplar((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    const next = usSelectedGruplar.includes(id)
+      ? usSelectedGruplar.filter((x) => x !== id)
+      : [...usSelectedGruplar, id];
+    onFilterChange(buildState({ usGrp: next, usTr: [] }));
   };
 
   const toggleUsTur = (id: string) => {
-    setUsSelectedTurler((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    const next = usSelectedTurler.includes(id)
+      ? usSelectedTurler.filter((x) => x !== id)
+      : [...usSelectedTurler, id];
+    onFilterChange(buildState({ usTr: next }));
   };
 
   const filterContent = (
@@ -483,13 +502,13 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, onFilterCha
               title={filterDef.label}
               isExpanded={expandedSections[filterDef.key] !== false}
               onToggle={() => toggleSection(filterDef.key)}
-              selectedCount={moq ? 1 : 0}
+              selectedCount={value.moq ? 1 : 0}
             >
               <Input
                 type="number"
                 placeholder="Min. sipariş miktarı"
-                value={moq}
-                onChange={(e) => setMoq(e.target.value)}
+                value={moqInput}
+                onChange={(e) => setMoqInput(e.target.value)}
                 className="h-11 rounded-xl text-base lg:h-8 lg:rounded-md lg:text-sm"
               />
               <p className="text-xs text-muted-foreground">Girilen değer ve üzeri MOQ'ya sahip firmalar</p>
