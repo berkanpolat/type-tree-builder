@@ -183,10 +183,7 @@ const AppContent = () => {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/test-index" element={<Index />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/tekpazar" element={<AnaSayfa />} />
-                <Route path="/tekpazar/:kategoriSlug" element={<AnaSayfa />} />
-                <Route path="/tekpazar/:kategoriSlug/:grupSlug" element={<AnaSayfa />} />
-                <Route path="/tekpazar/:kategoriSlug/:grupSlug/:turSlug" element={<AnaSayfa />} />
+                <Route path="/tekpazar/:kategoriSlug?/:grupSlug?/:turSlug?" element={<AnaSayfa />} />
                 <Route path="/firma-bilgilerim" element={<FirmaBilgilerim />} />
                 <Route path="/ihalelerim" element={<ManuIhale />} />
                 <Route path="/ihalelerim/yeni" element={<YeniIhale />} />
