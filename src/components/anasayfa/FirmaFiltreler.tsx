@@ -402,27 +402,25 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, value, onFi
         )}
       </div>
 
-      {/* Firma Türü filter */}
+      {/* Firma Türü filter — same structure as other filters */}
       {firmaTurleriProp && firmaTurleriProp.length > 0 && onFirmaTuruChange && (
-        <div className="mb-4 pb-4 border-b border-border">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Firma Türü</p>
-          <div className="flex flex-wrap gap-1.5">
+        <FilterSection
+          title="Firma Türü"
+          isExpanded={expandedSections["firmaTuru"] !== false}
+          onToggle={() => toggleSection("firmaTuru")}
+          selectedCount={firmaTuruId ? 1 : 0}
+        >
+          <div className="max-h-64 space-y-2 overflow-y-auto pr-1 lg:max-h-48">
             {firmaTurleriProp.map((tur) => (
-              <button
+              <FilterOptionRow
                 key={tur.id}
-                onClick={() => onFirmaTuruChange(tur.id)}
-                className={cn(
-                  "px-3 py-1.5 rounded-full text-xs font-medium transition-colors border",
-                  firmaTuruId === tur.id
-                    ? "bg-secondary text-secondary-foreground border-secondary shadow-sm"
-                    : "bg-muted/50 text-muted-foreground border-border hover:bg-muted hover:text-foreground"
-                )}
-              >
-                {tur.name}
-              </button>
+                checked={firmaTuruId === tur.id}
+                label={tur.name}
+                onToggle={() => onFirmaTuruChange(tur.id)}
+              />
             ))}
           </div>
-        </div>
+        </FilterSection>
       )}
 
       {filters.map((filterDef) => {
