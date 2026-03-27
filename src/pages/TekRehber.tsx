@@ -131,6 +131,9 @@ export default function TekRehber() {
   const [firmaTipleriData, setFirmaTipleriData] = useState<{ id: string; name: string; slug: string | null }[]>([]);
 
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
+  // Bidirectional slug maps for readable URLs
+  const [idToSlug, setIdToSlug] = useState<Record<string, string>>({});
+  const [slugToId, setSlugToId] = useState<Record<string, string>>({});
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
@@ -147,6 +150,24 @@ export default function TekRehber() {
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter]);
 
+  // Fetch all slug mappings once (firma_bilgi_secenekleri + firma_tipleri)
+  useEffect(() => {
+    const fetchSlugs = async () => {
+      const [secRes, tipRes] = await Promise.all([
+        supabase.from("firma_bilgi_secenekleri").select("id, slug"),
+        supabase.from("firma_tipleri").select("id, slug"),
+      ]);
+      const i2s: Record<string, string> = {};
+      const s2i: Record<string, string> = {};
+      [...(secRes.data || []), ...(tipRes.data || [])].forEach((r: any) => {
+        if (r.slug) { i2s[r.id] = r.slug; s2i[r.slug] = r.id; }
+      });
+      setIdToSlug(i2s);
+      setSlugToId(s2i);
+    };
+    fetchSlugs();
+  }, []);
+
   // Fetch firma tipleri for the selected tür (for URL slugs)
   useEffect(() => {
     if (!selectedFirmaTuru) { setFirmaTipleriData([]); return; }
@@ -155,9 +176,14 @@ export default function TekRehber() {
     });
   }, [selectedFirmaTuru]);
 
+  // Helper: convert array of IDs to slugs (fallback to id if no slug found)
+  const idsToSlugs = useCallback((ids: string[]) => ids.map(id => idToSlug[id] || id), [idToSlug]);
+  const slugsToIds = useCallback((slugs: string[]) => slugs.map(s => slugToId[s] || s), [slugToId]);
+
   // Sync URL when filters change (path + query params)
   useEffect(() => {
     if (turSlug && !urlAppliedRef.current) return;
+    if (Object.keys(idToSlug).length === 0) return; // wait for slug map
 
     if (!selectedFirmaTuru || !selectedFirmaTuruName) {
       if (location.pathname !== "/firmalar") {
@@ -180,21 +206,21 @@ export default function TekRehber() {
       }
     }
 
-    // Build query params from firmaFilterState
+    // Build query params from firmaFilterState (using slugs)
     const params = new URLSearchParams();
     if (firmaFilterState) {
-      if (firmaFilterState.firmaTipleri?.length > 1) params.set("tip", firmaFilterState.firmaTipleri.join(","));
-      if (firmaFilterState.firmaOlcekleri?.length) params.set("olcek", firmaFilterState.firmaOlcekleri.join(","));
-      if (firmaFilterState.iller?.length) params.set("il", firmaFilterState.iller.join(","));
+      if (firmaFilterState.firmaTipleri?.length > 1) params.set("tip", idsToSlugs(firmaFilterState.firmaTipleri).join(","));
+      if (firmaFilterState.firmaOlcekleri?.length) params.set("olcek", idsToSlugs(firmaFilterState.firmaOlcekleri).join(","));
+      if (firmaFilterState.iller?.length) params.set("il", idsToSlugs(firmaFilterState.iller).join(","));
       if (firmaFilterState.moq) params.set("moq", firmaFilterState.moq);
       if (firmaFilterState.junctionFilters) {
         Object.entries(firmaFilterState.junctionFilters).forEach(([key, values]) => {
-          if (values.length > 0) params.set(slugifyTr(key), values.join(","));
+          if (values.length > 0) params.set(slugifyTr(key), idsToSlugs(values).join(","));
         });
       }
-      if (firmaFilterState.uretimSatisKategoriIds?.length) params.set("us_kategori", firmaFilterState.uretimSatisKategoriIds.join(","));
-      if (firmaFilterState.uretimSatisGrupIds?.length) params.set("us_grup", firmaFilterState.uretimSatisGrupIds.join(","));
-      if (firmaFilterState.uretimSatisTurIds?.length) params.set("us_tur", firmaFilterState.uretimSatisTurIds.join(","));
+      if (firmaFilterState.uretimSatisKategoriIds?.length) params.set("us_kategori", idsToSlugs(firmaFilterState.uretimSatisKategoriIds).join(","));
+      if (firmaFilterState.uretimSatisGrupIds?.length) params.set("us_grup", idsToSlugs(firmaFilterState.uretimSatisGrupIds).join(","));
+      if (firmaFilterState.uretimSatisTurIds?.length) params.set("us_tur", idsToSlugs(firmaFilterState.uretimSatisTurIds).join(","));
     }
 
     const qs = params.toString();
@@ -203,7 +229,7 @@ export default function TekRehber() {
     if (location.pathname + location.search !== fullPath) {
       navigate(fullPath, { replace: true });
     }
-  }, [selectedFirmaTuru, selectedFirmaTuruName, firmaFilterState, firmaTipleriData]);
+  }, [selectedFirmaTuru, selectedFirmaTuruName, firmaFilterState, firmaTipleriData, idToSlug]);
 
   // Click outside
   useEffect(() => {
@@ -218,8 +244,9 @@ export default function TekRehber() {
   const locationState = location.state as { firmaTurId?: string; firmaTipId?: string; firmaTurName?: string } | null;
   const hasIncomingState = !!(locationState?.firmaTurId);
 
-  // Fetch firma türleri + resolve URL slugs
+  // Fetch firma türleri + resolve URL slugs (wait for slug map)
   useEffect(() => {
+    if (Object.keys(slugToId).length === 0 && location.search) return; // wait for slug map if there are query params
     supabase.from("firma_turleri").select("id, name, slug").order("name").then(({ data }) => {
       if (data) {
         const sorted = sortFirmaTurleri(data.map(d => ({ id: d.id, name: d.name })));
@@ -248,24 +275,24 @@ export default function TekRehber() {
               });
             }
 
-            // Restore filters from query params
+            // Restore filters from query params (slugs → IDs)
             const searchParams = new URLSearchParams(location.search);
             if (searchParams.toString()) {
               const restored: Partial<FirmaFilterState> = {};
               const tipParam = searchParams.get("tip");
-              if (tipParam) restored.firmaTipleri = tipParam.split(",").filter(Boolean);
+              if (tipParam) restored.firmaTipleri = slugsToIds(tipParam.split(",").filter(Boolean));
               const olcekParam = searchParams.get("olcek");
-              if (olcekParam) restored.firmaOlcekleri = olcekParam.split(",").filter(Boolean);
+              if (olcekParam) restored.firmaOlcekleri = slugsToIds(olcekParam.split(",").filter(Boolean));
               const ilParam = searchParams.get("il");
-              if (ilParam) restored.iller = ilParam.split(",").filter(Boolean);
+              if (ilParam) restored.iller = slugsToIds(ilParam.split(",").filter(Boolean));
               const moqParam = searchParams.get("moq");
               if (moqParam) restored.moq = moqParam;
               const usKategori = searchParams.get("us_kategori");
-              if (usKategori) restored.uretimSatisKategoriIds = usKategori.split(",").filter(Boolean);
+              if (usKategori) restored.uretimSatisKategoriIds = slugsToIds(usKategori.split(",").filter(Boolean));
               const usGrup = searchParams.get("us_grup");
-              if (usGrup) restored.uretimSatisGrupIds = usGrup.split(",").filter(Boolean);
+              if (usGrup) restored.uretimSatisGrupIds = slugsToIds(usGrup.split(",").filter(Boolean));
               const usTur = searchParams.get("us_tur");
-              if (usTur) restored.uretimSatisTurIds = usTur.split(",").filter(Boolean);
+              if (usTur) restored.uretimSatisTurIds = slugsToIds(usTur.split(",").filter(Boolean));
 
               const hasFilters = Object.values(restored).some(v => v && (typeof v === "string" ? v.length > 0 : (v as string[]).length > 0));
               if (hasFilters) {
@@ -287,7 +314,7 @@ export default function TekRehber() {
         }
       }
     });
-  }, [turSlug, tipSlug]);
+  }, [turSlug, tipSlug, slugToId]);
 
   // Apply incoming state filters
   useEffect(() => {
