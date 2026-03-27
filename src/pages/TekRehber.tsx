@@ -101,6 +101,7 @@ export default function TekRehber() {
   const [authLoading, setAuthLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const urlAppliedRef = useRef(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const check = async () => {
@@ -265,6 +266,9 @@ export default function TekRehber() {
           setSelectedFirmaTuru(matchedTur.id);
           setSelectedFirmaTuruName(matchedTur.name);
 
+          const searchParams = new URLSearchParams(location.search);
+          const hasQueryParams = searchParams.toString().length > 0;
+
           // Resolve tipSlug if present
           if (tipSlug) {
             supabase.from("firma_tipleri").select("id, name, slug").eq("firma_turu_id", matchedTur.id).then(({ data: tipData }) => {
@@ -277,12 +281,10 @@ export default function TekRehber() {
                   }));
                 }
               }
+              setInitialized(true);
             });
-          }
-
-          // Restore filters from query params (slugs → IDs)
-          const searchParams = new URLSearchParams(location.search);
-          if (searchParams.toString()) {
+          } else if (hasQueryParams) {
+            // Restore filters from query params (slugs → IDs)
             const restored: Partial<FirmaFilterState> = {};
             const tipParam = searchParams.get("tip");
             if (tipParam) restored.firmaTipleri = slugsToIds(tipParam.split(",").filter(Boolean));
@@ -306,6 +308,11 @@ export default function TekRehber() {
                 ...restored,
               }));
             }
+            setInitialized(true);
+          } else {
+            // turSlug only, no tipSlug, no query params → clear stale session filters
+            setFirmaFilterState(null);
+            setInitialized(true);
           }
         }
       }
@@ -320,6 +327,7 @@ export default function TekRehber() {
         else if (sorted.length > 0) { setSelectedFirmaTuru(sorted[0].id); setSelectedFirmaTuruName(sorted[0].name); }
         // Clear stale session filters when landing fresh
         setFirmaFilterState(null);
+        setInitialized(true);
       }
 
       // Mark initialization as done — prevents re-running on subsequent param changes
@@ -582,11 +590,11 @@ export default function TekRehber() {
 
     setFirmalar(enriched);
     setFirmaLoading(false);
-  }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter, firmaTurleri, currentUserId, currentPage]);
+  }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter, currentUserId, currentPage]);
 
   useEffect(() => {
-    if (selectedFirmaTuru) fetchFirmalar();
-  }, [fetchFirmalar, selectedFirmaTuru]);
+    if (initialized && selectedFirmaTuru) fetchFirmalar();
+  }, [fetchFirmalar, initialized, selectedFirmaTuru]);
 
   // Trigger search on Enter or Ara button — search firma names
   const handleSearch = useCallback(async () => {
