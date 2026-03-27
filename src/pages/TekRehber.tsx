@@ -131,6 +131,9 @@ export default function TekRehber() {
   const [firmaTipleriData, setFirmaTipleriData] = useState<{ id: string; name: string; slug: string | null }[]>([]);
 
   const [secenekMap, setSecenekMap] = useState<Record<string, string>>({});
+  // Bidirectional slug maps for readable URLs
+  const [idToSlug, setIdToSlug] = useState<Record<string, string>>({});
+  const [slugToId, setSlugToId] = useState<Record<string, string>>({});
   const packageInfo = usePackageQuota();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState("");
