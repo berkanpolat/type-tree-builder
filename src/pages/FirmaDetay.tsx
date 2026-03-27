@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, lazy } from "react";
 import NotFound from "@/pages/NotFound";
 import ScrollHintWrapper from "@/components/ScrollHintWrapper";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
+import { injectJsonLd, removeJsonLd, buildLocalBusinessSchema } from "@/lib/seo-jsonld";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
