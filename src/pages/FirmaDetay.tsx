@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, lazy } from "react";
+import NotFound from "@/pages/NotFound";
 import ScrollHintWrapper from "@/components/ScrollHintWrapper";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
 import FirmaAvatar from "@/components/FirmaAvatar";
