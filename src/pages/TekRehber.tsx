@@ -246,6 +246,9 @@ export default function TekRehber() {
 
   // Fetch firma türleri + resolve URL slugs (wait for slug map)
   useEffect(() => {
+    // Skip re-running slug resolution after initial application
+    if (urlAppliedRef.current) return;
+
     if (Object.keys(slugToId).length === 0 && location.search) return; // wait for slug map if there are query params
     supabase.from("firma_turleri").select("id, name, slug").order("name").then(({ data }) => {
       if (data) {
@@ -253,7 +256,7 @@ export default function TekRehber() {
         setFirmaTurleri(sorted);
 
         // Resolve URL slug to set filter
-        if (turSlug && !urlAppliedRef.current) {
+        if (turSlug) {
           const matchedTur = (data as any[]).find((t: any) => t.slug === turSlug);
           if (matchedTur) {
             setSelectedFirmaTuru(matchedTur.id);
