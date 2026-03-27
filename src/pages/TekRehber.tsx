@@ -780,6 +780,8 @@ export default function TekRehber() {
             firmaTuruName={selectedFirmaTuruName}
             value={firmaFilterState}
             onFilterChange={handleFilterChange}
+            firmaTurleri={firmaTurleri}
+            onFirmaTuruChange={handleFirmaTuruChange}
           />
 
           <div className="flex-1 min-w-0 space-y-4">
