@@ -147,6 +147,64 @@ export default function TekRehber() {
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [selectedFirmaTuru, firmaFilterState, appliedSearchTerm, uretimSatisFilter]);
 
+  // Fetch firma tipleri for the selected tür (for URL slugs)
+  useEffect(() => {
+    if (!selectedFirmaTuru) { setFirmaTipleriData([]); return; }
+    supabase.from("firma_tipleri").select("id, name, slug").eq("firma_turu_id", selectedFirmaTuru).order("name").then(({ data }) => {
+      setFirmaTipleriData((data || []) as { id: string; name: string; slug: string | null }[]);
+    });
+  }, [selectedFirmaTuru]);
+
+  // Sync URL when filters change (path + query params)
+  useEffect(() => {
+    if (turSlug && !urlAppliedRef.current) return;
+
+    if (!selectedFirmaTuru || !selectedFirmaTuruName) {
+      if (location.pathname !== "/firmalar") {
+        navigate("/firmalar", { replace: true });
+      }
+      return;
+    }
+
+    const turNameSlug = slugifyTr(selectedFirmaTuruName);
+    if (!turNameSlug) return;
+
+    let path = `/firmalar/${turNameSlug}`;
+
+    // Add tip slug if exactly one tip is selected
+    const selectedTipIds = firmaFilterState?.firmaTipleri || [];
+    if (selectedTipIds.length === 1 && firmaTipleriData.length > 0) {
+      const tipData = firmaTipleriData.find(t => t.id === selectedTipIds[0]);
+      if (tipData?.slug) {
+        path += `/${tipData.slug}`;
+      }
+    }
+
+    // Build query params from firmaFilterState
+    const params = new URLSearchParams();
+    if (firmaFilterState) {
+      if (firmaFilterState.firmaTipleri?.length > 1) params.set("tip", firmaFilterState.firmaTipleri.join(","));
+      if (firmaFilterState.firmaOlcekleri?.length) params.set("olcek", firmaFilterState.firmaOlcekleri.join(","));
+      if (firmaFilterState.iller?.length) params.set("il", firmaFilterState.iller.join(","));
+      if (firmaFilterState.moq) params.set("moq", firmaFilterState.moq);
+      if (firmaFilterState.junctionFilters) {
+        Object.entries(firmaFilterState.junctionFilters).forEach(([key, values]) => {
+          if (values.length > 0) params.set(slugifyTr(key), values.join(","));
+        });
+      }
+      if (firmaFilterState.uretimSatisKategoriIds?.length) params.set("us_kategori", firmaFilterState.uretimSatisKategoriIds.join(","));
+      if (firmaFilterState.uretimSatisGrupIds?.length) params.set("us_grup", firmaFilterState.uretimSatisGrupIds.join(","));
+      if (firmaFilterState.uretimSatisTurIds?.length) params.set("us_tur", firmaFilterState.uretimSatisTurIds.join(","));
+    }
+
+    const qs = params.toString();
+    const fullPath = qs ? `${path}?${qs}` : path;
+
+    if (location.pathname + location.search !== fullPath) {
+      navigate(fullPath, { replace: true });
+    }
+  }, [selectedFirmaTuru, selectedFirmaTuruName, firmaFilterState, firmaTipleriData]);
+
   // Click outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
