@@ -416,7 +416,7 @@ export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, value, onFi
                 key={tur.id}
                 checked={firmaTuruId === tur.id}
                 label={tur.name}
-                onToggle={() => onFirmaTuruChange(tur.id)}
+                onCheckedChange={() => onFirmaTuruChange(tur.id)}
               />
             ))}
           </div>
