@@ -273,9 +273,9 @@ export default function IhaleDetay() {
   useSeoMeta({
     slug: `/ihaleler/${slugParam || ""}`,
     dynamicTitle: ihale?.meta_title || (ihale ? `${ihale.baslik} | İhaleler | Tekstil A.Ş.` : undefined),
-    dynamicDescription: ihale?.meta_description || (ihale ? `${ihale.baslik} ihale detayları, şartları ve başvuru bilgileri.` : undefined),
+    dynamicDescription: ihale?.meta_description || (ihale ? `${ihale.baslik} ihale detayları ve şartları. Hemen teklif verin, fırsatı kaçırmayın!` : undefined),
     fallbackTitle: "İhale Detay | Tekstil A.Ş.",
-    fallbackDescription: "İhale detayları, şartları ve başvuru bilgileri.",
+    fallbackDescription: "Tekstil ihaleleri, detayları ve başvuru bilgileri.",
   });
 
   // Event JSON-LD for ihale

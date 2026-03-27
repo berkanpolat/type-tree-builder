@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, lazy } from "react";
 import NotFound from "@/pages/NotFound";
 import ScrollHintWrapper from "@/components/ScrollHintWrapper";
 import { useSeoMeta } from "@/hooks/use-seo-meta";
+import { injectJsonLd, removeJsonLd, buildLocalBusinessSchema } from "@/lib/seo-jsonld";
 import FirmaAvatar from "@/components/FirmaAvatar";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -287,11 +288,25 @@ export default function FirmaDetay() {
   useSeoMeta({
     slug: `/${slug || ""}`,
     dynamicTitle: firma?.meta_title || (firma ? `${firma.firma_unvani} | Tekstil A.Ş.` : undefined),
-    dynamicDescription: firma?.meta_description || (firma ? `${firma.firma_unvani} firma profili, ürünleri ve iletişim bilgileri.` : undefined),
+    dynamicDescription: firma?.meta_description || (firma ? `${firma.firma_unvani} firma profili, üretim kapasitesi ve iletişim bilgileri. Hemen teklif alın!` : undefined),
     dynamicOgImage: firma?.logo_url || undefined,
     fallbackTitle: "Firma Detay | Tekstil A.Ş.",
-    fallbackDescription: "Firma profili, ürünleri ve iletişim bilgileri.",
+    fallbackDescription: "Firma profili, üretim kapasitesi ve iletişim bilgileri.",
   });
+
+  // LocalBusiness JSON-LD
+  useEffect(() => {
+    if (!firma) return;
+    injectJsonLd("seo-localbiz-ld", buildLocalBusinessSchema({
+      name: firma.firma_unvani,
+      description: firma.firma_hakkinda || undefined,
+      logo: firma.logo_url || undefined,
+      url: `https://tekstilas.com/${slug || ""}`,
+      phone: firma.firma_iletisim_numarasi || undefined,
+      email: firma.firma_iletisim_email || undefined,
+    }));
+    return () => removeJsonLd("seo-localbiz-ld");
+  }, [firma, slug]);
 
   const scrollToSection = (sectionId: string) => {
     setActiveMenu(sectionId);

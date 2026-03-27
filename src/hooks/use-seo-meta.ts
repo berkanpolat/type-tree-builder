@@ -16,6 +16,29 @@ interface SeoMetaOptions {
   dynamicOgImage?: string;
 }
 
+const BRAND_SUFFIX = " | Tekstil A.Ş.";
+const MAX_TITLE_LEN = 60;
+
+/**
+ * Smart truncate: keeps brand suffix visible in SERPs.
+ * If title already ends with the suffix it's left as-is.
+ */
+function truncateTitle(raw: string): string {
+  if (!raw) return raw;
+  // Already includes brand suffix
+  if (raw.endsWith(BRAND_SUFFIX)) {
+    if (raw.length <= MAX_TITLE_LEN) return raw;
+    // Trim the content part, keep suffix
+    const maxContent = MAX_TITLE_LEN - BRAND_SUFFIX.length;
+    return raw.slice(0, maxContent).trimEnd() + "…" + BRAND_SUFFIX;
+  }
+  // No suffix yet — add it
+  const withSuffix = raw + BRAND_SUFFIX;
+  if (withSuffix.length <= MAX_TITLE_LEN) return withSuffix;
+  const maxContent = MAX_TITLE_LEN - BRAND_SUFFIX.length;
+  return raw.slice(0, maxContent).trimEnd() + "…" + BRAND_SUFFIX;
+}
+
 export function useSeoMeta({
   slug,
   fallbackTitle = "Tekstil A.Ş.",
@@ -40,7 +63,8 @@ export function useSeoMeta({
     }) => {
       if (cancelled) return;
 
-      const title = dynamicTitle || meta.title || fallbackTitle;
+      const rawTitle = dynamicTitle || meta.title || fallbackTitle;
+      const title = truncateTitle(rawTitle);
       const description = dynamicDescription || meta.description || fallbackDescription || "";
       const ogTitle = meta.og_title || title;
       const ogDesc = meta.og_description || description;

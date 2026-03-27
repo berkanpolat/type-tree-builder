@@ -103,7 +103,7 @@ const paraBirimiSymbol: Record<string, string> = {
 };
 
 export default function AnaSayfa() {
-  useSeoMeta({ slug: "/tekpazar", fallbackTitle: "TekPazar | Tekstil Ürünleri Pazaryeri" });
+  useSeoMeta({ slug: "/tekpazar", fallbackTitle: "TekPazar | Tekstil Ürünleri Pazaryeri | Tekstil A.Ş.", fallbackDescription: `Tekstil ürünlerini ${new Date().getFullYear()} yılında en uygun fiyatlarla keşfedin. Kumaş, iplik, aksesuar ve daha fazlası.` });
   const navigate = useNavigate();
   const { toast } = useToast();
   const location = useLocation();

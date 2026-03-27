@@ -89,7 +89,7 @@ interface FirmaWithExtra {
 }
 
 export default function TekRehber() {
-  useSeoMeta({ slug: "/firmalar", fallbackTitle: "TekRehber | Tekstil Firma Rehberi | Tekstil A.Ş." });
+  useSeoMeta({ slug: "/firmalar", fallbackTitle: `En İyi Tekstil Üreticileri ve Tedarikçileri ${new Date().getFullYear()} | Tekstil A.Ş.`, fallbackDescription: "Güvenilir tekstil üreticileri ve tedarikçileri burada. Detaylı firma profilleri ile hızlı teklif alın." });
   const navigate = useNavigate();
   const location = useLocation();
   const { turSlug, tipSlug } = useParams<{ turSlug?: string; tipSlug?: string }>();

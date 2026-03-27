@@ -209,11 +209,11 @@ export default function UrunDetay() {
   // SEO meta tags
   useSeoMeta({
     slug: `/urunler/${slugParam || ""}`,
-    dynamicTitle: urun?.meta_title || (urun ? `${urun.baslik} | TekPazar | Tekstil A.Ş.` : undefined),
-    dynamicDescription: urun?.meta_description || (urun ? `${urun.baslik} ürün detayları, fiyatları ve teknik özellikleri.` : undefined),
+    dynamicTitle: urun?.meta_title || (urun ? `${urun.baslik} Fiyatları ve Özellikleri | Tekstil A.Ş.` : undefined),
+    dynamicDescription: urun?.meta_description || (urun ? `${urun.baslik} modellerini en uygun fiyatlarla inceleyin. Detaylı teknik özellikler ve hızlı teklif imkanı.` : undefined),
     dynamicOgImage: urun?.foto_url || undefined,
     fallbackTitle: "Ürün Detay | TekPazar | Tekstil A.Ş.",
-    fallbackDescription: "Ürün detayları, fiyatları ve teknik özellikleri.",
+    fallbackDescription: "Tekstil ürünlerini en uygun fiyatlarla keşfedin. Detaylı teknik özellikler ve hızlı teklif imkanı.",
   });
 
   // Product JSON-LD
