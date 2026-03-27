@@ -510,58 +510,49 @@ export default function TekRehber() {
   }, [fetchFirmalar, slugsReady]);
 
   // === SEARCH HANDLERS ===
+  const getNodeLevel = useCallback((node: UrunTaxNode): "kategori" | "grup" | "tur" => {
+    if (!node.parent_id) return "kategori";
+    const parent = urunTaxNodes.find(n => n.id === node.parent_id);
+    if (parent && !parent.parent_id) return "grup";
+    return "tur";
+  }, [urunTaxNodes]);
+
   const handleSearch = useCallback(async () => {
     const term = searchTerm.trim();
     if (!term) return;
     setShowDropdown(false);
 
-    // Search firma_uretim_satis taxonomy for matching product names
-    const { data: uretimRows } = await supabase
-      .from("firma_uretim_satis")
-      .select("kategori_id, grup_id, tur_id");
+    if (urunTaxNodes.length > 0) {
+      const lowerTerm = term.toLowerCase();
+      const matchingNodes = urunTaxNodes.filter(n => n.name.toLowerCase().includes(lowerTerm));
 
-    if (uretimRows && uretimRows.length > 0) {
-      const allIds = new Set<string>();
-      uretimRows.forEach((r) => { allIds.add(r.kategori_id); allIds.add(r.grup_id); allIds.add(r.tur_id); });
+      // Check tür first (most specific), then grup, then kategori
+      const matchingTurIds = matchingNodes.filter(n => getNodeLevel(n) === "tur").map(n => n.id);
+      if (matchingTurIds.length > 0) {
+        setUretimSatisFilter({ column: "tur_id", ids: matchingTurIds });
+        setAppliedSearchTerm("");
+        return;
+      }
 
-      const { data: nameRows } = await supabase
-        .from("firma_bilgi_secenekleri")
-        .select("id, name")
-        .in("id", [...allIds]);
+      const matchingGrupIds = matchingNodes.filter(n => getNodeLevel(n) === "grup").map(n => n.id);
+      if (matchingGrupIds.length > 0) {
+        setUretimSatisFilter({ column: "grup_id", ids: matchingGrupIds });
+        setAppliedSearchTerm("");
+        return;
+      }
 
-      if (nameRows) {
-        const lowerTerm = term.toLowerCase();
-        // Check tür first (most specific), then grup, then kategori
-        const turIds = new Set(uretimRows.map((r) => r.tur_id));
-        const matchingTurIds = nameRows.filter((n) => turIds.has(n.id) && n.name.toLowerCase().includes(lowerTerm)).map((n) => n.id);
-        if (matchingTurIds.length > 0) {
-          setUretimSatisFilter({ column: "tur_id", ids: matchingTurIds });
-          setAppliedSearchTerm("");
-          return;
-        }
-
-        const grupIds = new Set(uretimRows.map((r) => r.grup_id));
-        const matchingGrupIds = nameRows.filter((n) => grupIds.has(n.id) && n.name.toLowerCase().includes(lowerTerm)).map((n) => n.id);
-        if (matchingGrupIds.length > 0) {
-          setUretimSatisFilter({ column: "grup_id", ids: matchingGrupIds });
-          setAppliedSearchTerm("");
-          return;
-        }
-
-        const kategoriIds = new Set(uretimRows.map((r) => r.kategori_id));
-        const matchingKatIds = nameRows.filter((n) => kategoriIds.has(n.id) && n.name.toLowerCase().includes(lowerTerm)).map((n) => n.id);
-        if (matchingKatIds.length > 0) {
-          setUretimSatisFilter({ column: "kategori_id", ids: matchingKatIds });
-          setAppliedSearchTerm("");
-          return;
-        }
+      const matchingKatIds = matchingNodes.filter(n => getNodeLevel(n) === "kategori").map(n => n.id);
+      if (matchingKatIds.length > 0) {
+        setUretimSatisFilter({ column: "kategori_id", ids: matchingKatIds });
+        setAppliedSearchTerm("");
+        return;
       }
     }
 
     // Fallback: search by firma name
     setUretimSatisFilter(null);
     setAppliedSearchTerm(term);
-  }, [searchTerm]);
+  }, [searchTerm, urunTaxNodes, getNodeLevel]);
 
   // Autocomplete
   useEffect(() => {
@@ -583,57 +574,39 @@ export default function TekRehber() {
         .limit(6);
       if (firmaData) firmaData.forEach((f) => firmaResults.push({ id: f.id, name: f.firma_unvani, type: "Firma" }));
 
-      // 2) firma_uretim_satis üzerinden kategori/grup/tür araması
-      // Üretim tablosunda kullanılan benzersiz ID'leri çek
-      const { data: uretimRows } = await supabase
-        .from("firma_uretim_satis")
-        .select("kategori_id, grup_id, tur_id");
+      // 2) Tüm taksonomi düğümlerinden arama (firma_bilgi_secenekleri)
+      if (urunTaxNodes.length > 0) {
+        const addedIds = new Set<string>();
 
-      if (uretimRows && uretimRows.length > 0) {
-        const allIds = new Set<string>();
-        uretimRows.forEach((r) => { allIds.add(r.kategori_id); allIds.add(r.grup_id); allIds.add(r.tur_id); });
+        // Kategoriler
+        urunTaxNodes.forEach((node) => {
+          if (!node.parent_id && node.name.toLowerCase().includes(lowerTerm) && !addedIds.has(node.id)) {
+            taxResults.push({ id: node.id, name: node.name, type: "Kategori" });
+            addedIds.add(node.id);
+          }
+        });
 
-        // ID → name çözümle
-        const { data: nameRows } = await supabase
-          .from("firma_bilgi_secenekleri")
-          .select("id, name, parent_id")
-          .in("id", [...allIds]);
-
-        if (nameRows) {
-          const nameMap = new Map(nameRows.map((n) => [n.id, n]));
-          // Benzersiz kategori/grup/tür setleri
-          const addedIds = new Set<string>();
-
-          // Kategoriler
-          const kategoriIds = new Set(uretimRows.map((r) => r.kategori_id));
-          kategoriIds.forEach((id) => {
-            const node = nameMap.get(id);
-            if (node && node.name.toLowerCase().includes(lowerTerm) && !addedIds.has(id)) {
-              taxResults.push({ id, name: node.name, type: "Kategori" });
-              addedIds.add(id);
+        // Gruplar
+        urunTaxNodes.forEach((node) => {
+          if (node.parent_id && node.name.toLowerCase().includes(lowerTerm) && !addedIds.has(node.id)) {
+            const parent = urunTaxNodes.find(n => n.id === node.parent_id);
+            if (parent && !parent.parent_id) {
+              taxResults.push({ id: node.id, name: node.name, type: "Grup" });
+              addedIds.add(node.id);
             }
-          });
+          }
+        });
 
-          // Gruplar
-          const grupIds = new Set(uretimRows.map((r) => r.grup_id));
-          grupIds.forEach((id) => {
-            const node = nameMap.get(id);
-            if (node && node.name.toLowerCase().includes(lowerTerm) && !addedIds.has(id)) {
-              taxResults.push({ id, name: node.name, type: "Grup" });
-              addedIds.add(id);
+        // Türler
+        urunTaxNodes.forEach((node) => {
+          if (node.parent_id && node.name.toLowerCase().includes(lowerTerm) && !addedIds.has(node.id)) {
+            const parent = urunTaxNodes.find(n => n.id === node.parent_id);
+            if (parent && parent.parent_id) {
+              taxResults.push({ id: node.id, name: node.name, type: "Ürün Türü" });
+              addedIds.add(node.id);
             }
-          });
-
-          // Türler
-          const turIds = new Set(uretimRows.map((r) => r.tur_id));
-          turIds.forEach((id) => {
-            const node = nameMap.get(id);
-            if (node && node.name.toLowerCase().includes(lowerTerm) && !addedIds.has(id)) {
-              taxResults.push({ id, name: node.name, type: "Ürün Türü" });
-              addedIds.add(id);
-            }
-          });
-        }
+          }
+        });
       }
 
       const results = [...firmaResults, ...taxResults];
@@ -641,7 +614,7 @@ export default function TekRehber() {
       setShowDropdown(results.length > 0);
     }, 250);
     return () => clearTimeout(timer);
-  }, [searchTerm]);
+  }, [searchTerm, urunTaxNodes]);
 
   const handleSearchResultClick = (result: SearchResult) => {
     setSearchTerm(result.name);
