@@ -383,7 +383,7 @@ export default function TekRehber() {
       p_page: currentPage,
       p_per_page: PER_PAGE,
     };
-    if (selectedFirmaTuru) rpcParams.p_firma_turu_id = selectedFirmaTuru;
+    if (selectedFirmaTuru && !uretimSatisFilter) rpcParams.p_firma_turu_id = selectedFirmaTuru;
     if (appliedSearchTerm) rpcParams.p_search = appliedSearchTerm;
     if (fs?.firmaTipleri?.length) rpcParams.p_firma_tipi_ids = fs.firmaTipleri;
     if (fs?.firmaOlcekleri?.length) rpcParams.p_firma_olcegi_ids = fs.firmaOlcekleri;
