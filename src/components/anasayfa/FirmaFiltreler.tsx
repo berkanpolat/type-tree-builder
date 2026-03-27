@@ -100,11 +100,13 @@ interface Props {
   firmaTuruName: string;
   value: FirmaFilterState;
   onFilterChange: (state: FirmaFilterState) => void;
+  firmaTurleri?: { id: string; name: string }[];
+  onFirmaTuruChange?: (id: string) => void;
 }
 
 const optionsCache: Record<string, Option[]> = {};
 
-export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, value, onFilterChange }: Props) {
+export default function FirmaFiltreler({ firmaTuruId, firmaTuruName, value, onFilterChange, firmaTurleri: firmaTurleriProp, onFirmaTuruChange }: Props) {
   // Option loading state (UI only)
   const [firmaTipleri, setFirmaTipleri] = useState<Option[]>([]);
   const [kategoriOptions, setKategoriOptions] = useState<Record<string, Option[]>>({});
